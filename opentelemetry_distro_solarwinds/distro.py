@@ -1,6 +1,11 @@
 """Module to configure OpenTelemetry agent to work with SolarWinds backend"""
 
+from opentelemetry import trace
 from opentelemetry.instrumentation.distro import BaseDistro
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+from opentelemetry_distro_solarwinds.exporter import SolarWindsSpanExporter
 
 
 class SolarWindsDistro(BaseDistro):
@@ -10,4 +15,7 @@ class SolarWindsDistro(BaseDistro):
         - no functionality added at this time
     """
     def _configure(self, **kwargs):
-        pass
+        # Automatically configure the SolarWinds Span exporter
+        trace.set_tracer_provider(TracerProvider())
+        span_exporter = BatchSpanProcessor(SolarWindsSpanExporter())
+        trace.get_tracer_provider().add_span_processor(span_exporter)
