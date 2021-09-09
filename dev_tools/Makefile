@@ -76,4 +76,10 @@ wrapper: check-swig copy-all
 	@echo -e "Generating SWIG wrapper for C/C++ headers."
 	@cd ../opentelemetry_distro_solarwinds/extension && ./gen_bindings.sh
 
-.PHONY: nothing check-swig download-liboboe download-headers wrapper
+# Create package source distribution archive
+sdist: wrapper
+	@echo -e "Generating python agent sdist package"
+	@python3.8 setup.py sdist
+	@echo -e "\nDone."
+
+.PHONY: nothing check-swig download-liboboe download-headers wrapper sdist
