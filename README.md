@@ -41,3 +41,6 @@ Then you can start a build container by running `./run_docker_dev.sh` from withi
    pip install -Ie ~/gitrepos/opentelemetry-python-instrumentation-custom-distro/
    ```
 When installing the agent in development mode every change in the Python source code will be reflected in the Python environment directly without re-installation. However, if changes have been made to the C-extension files, you need to reinstall the agent (as described above) to reflect these changes in the Python environment.
+
+### Build Agent Source Distribution Archive
+* Execute `make sdist` inside the build container. This will create a zip archive (source distribution) of the Python module under the `dist` directory.
