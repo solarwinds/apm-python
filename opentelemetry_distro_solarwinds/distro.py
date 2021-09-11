@@ -6,6 +6,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from opentelemetry_distro_solarwinds.exporter import SolarWindsSpanExporter
+from opentelemetry_distro_solarwinds.sampler import ParentBasedAoSampler
 
 
 class SolarWindsDistro(BaseDistro):
@@ -15,7 +16,9 @@ class SolarWindsDistro(BaseDistro):
         - no functionality added at this time
     """
     def _configure(self, **kwargs):
+        # automatically make use of custom SolarWinds sampler
+        trace.set_tracer_provider(
+            TracerProvider(sampler=ParentBasedAoSampler()))
         # Automatically configure the SolarWinds Span exporter
-        trace.set_tracer_provider(TracerProvider())
         span_exporter = BatchSpanProcessor(SolarWindsSpanExporter())
         trace.get_tracer_provider().add_span_processor(span_exporter)
