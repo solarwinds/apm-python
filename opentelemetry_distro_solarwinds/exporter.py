@@ -63,10 +63,30 @@ class SolarWindsSpanExporter(SpanExporter):
             self.reporter.sendReport(evt)
 
     def _report_exception_event(self, event):
-        pass
+        evt = Context.createEvent(int(event.timestamp / 1000))
+        evt.addInfo('Label', 'error')
+        evt.addInfo('Spec', 'error')
+        evt.addInfo('ErrorClass', event.attributes.get('exception.type', None))
+        evt.addInfo('ErrorMsg', event.attributes.get('exception.message',
+                                                     None))
+        evt.addInfo('Backtrace',
+                    event.attributes.get('exception.stacktrace', None))
+        # add remaining attributes, if any
+        for k, v in event.attributes.items():
+            if k not in ('exception.type', 'exception.message',
+                         'exception.stacktrace'):
+                evt.addInfo(k, v)
+        self.reporter.sendReport(evt)
 
     def _report_info_event(self, event):
-        pass
+        print("Found info event")
+        print(dir(event))
+        print(event)
+        evt = Context.createEvent(int(event.timestamp / 1000))
+        evt.addInfo('Label', 'info')
+        for k, v in event.attributes.items():
+            evt.addInfo(k, v)
+        self.reporter.sendReport(evt)
 
     def _initialize_solarwinds_reporter(self):
         """Initialize liboboe."""
