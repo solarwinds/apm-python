@@ -11,6 +11,6 @@ docker run -it \
     --cap-add SYS_PTRACE \
     --workdir /code/opentelemetry_distro_solarwinds \
     -v "$PWD"/..:/code/opentelemetry_distro_solarwinds \
-    -v "$PWD"/../../otel-oboe/:/code/otel_oboe \
+    -v "$PWD"/../../oboe/:/code/oboe \
     -v `echo ~`:/home/developer \
     dev-container bash

@@ -6,14 +6,15 @@ The custom distro to extend the OpenTelemetry Python agent for compatibility wit
 
 ### Git Repos and Directory Structure
 
-The code in this repository makes use of code located in the [otel-oboe](https://github.com/librato/otel-oboe) GIT repository. Thus, first make sure that you clone the following repositories into the same root directory. For example, if your development directory is `~/gitrepos/`, please clone the `otel-oboe` and the `opentelemetry-python-instrumentation-custom-distro` repositories under `~/gitrepos`, so that your directory structure looks as shown below:
+The code in this repository makes use of code located in an experimental branch of the [oboe](https://github.com/librato/oboe) GIT repository. Thus, first make sure that you clone the following repositories into the same root directory. For example, if your development directory is `~/gitrepos/`, please clone the `oboe` and the `opentelemetry-python-instrumentation-custom-distro` repositories under `~/gitrepos`, so that your directory structure looks as shown below:
 ```
 ~/gitrepos/
 |
-|----otel-oboe/
+|----oboe/
 |
 |----opentelemetry-python-instrumentation-custom-distro/
 ```
+Then in `oboe`, checkout the [add-otel-oboe-features branch](https://github.com/librato/oboe/tree/add-otel-oboe-features).
 
 ### Development (Build) Container
 
@@ -32,7 +33,7 @@ Then you can start a build container by running `./run_docker_dev.sh` from withi
     ./run_docker_dev.sh
    ```
   from within the `dev_tools` directory.
-* Inside the docker container, you can now build the agent with the provided Makefile.
+* Inside the docker container, you can now build the agent with the provided Makefile in the container's `dev_tools` directory.
 
 ### Install Agent from Source in Development Mode
 * Execute `make wrapper` inside the build container. This copies the C-extension artifacts and builds the SWIG bindings.
