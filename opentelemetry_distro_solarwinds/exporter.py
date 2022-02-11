@@ -90,7 +90,7 @@ class SolarWindsSpanExporter(SpanExporter):
 
     def _initialize_solarwinds_reporter(self):
         """Initialize liboboe."""
-        log_level = os.environ.get('APPOPTICS_DEBUG_LEVEL', 3)
+        log_level = os.environ.get('SOLARWINDS_DEBUG_LEVEL', 3)
         try:
             log_level = int(log_level)
         except ValueError:
@@ -104,8 +104,8 @@ class SolarWindsSpanExporter(SpanExporter):
             events_flush_interval=-1,
             max_request_size_bytes=-1,
             reporter='ssl',
-            host=os.environ.get('APPOPTICS_COLLECTOR', ''),
-            service_key=os.environ.get('APPOPTICS_SERVICE_KEY', ''),
+            host=os.environ.get('SOLARWINDS_COLLECTOR', ''),
+            service_key=os.environ.get('SOLARWINDS_SERVICE_KEY', ''),
             trusted_path='',
             buffer_size=-1,
             trace_metrics=-1,
