@@ -117,7 +117,7 @@ class SolarWindsSpanExporter(SpanExporter):
             grpc_proxy='',
             stdout_clear_nonblocking=0,
             is_grpc_clean_hack_enabled=False,
-            w3c_trace_format=0,
+            w3c_trace_format=1,
         )
 
     @staticmethod
