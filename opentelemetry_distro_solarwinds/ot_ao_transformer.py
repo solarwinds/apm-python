@@ -2,15 +2,16 @@
 """
 
 import logging
+import os
 
 logger = logging.getLogger(__file__)
 
 
 def transform_id(span_context):
-    """Generates an AppOptics X-Trace ID from the provided OpenTelemetry span context."""
-    xtr = "2B{0:032X}00000000{1:016X}0{2}".format(span_context.trace_id,
-                                                  span_context.span_id,
-                                                  span_context.trace_flags)
-    logger.debug("Generated X-Trace %s from span context %s", xtr,
+    """Generates a liboboe W3C compatible trace_context from provided OTel span context."""
+    xtr = "00-{0:032X}-{1:016X}-{2:02X}".format(span_context.trace_id,
+                                            span_context.span_id,
+                                            span_context.trace_flags)
+    logger.debug("Generated trace_context %s from span context %s", xtr,
                  span_context)
     return xtr

@@ -19,7 +19,7 @@ SHELL=bash
 #----------------------------------------------------------------------------------------------------------------------#
 # variable definitions and recipes for downloading of required header and library files
 #----------------------------------------------------------------------------------------------------------------------#
-OTELOBOEREPO := /code/otel_oboe/liboboe
+OTELOBOEREPO := /code/oboe/liboboe
 
 # Copy the pre-compiled liboboe shared library from source specified in OTELOBOEREPO
 copy-liboboe:
@@ -58,7 +58,7 @@ copy-bson-headers:
 			if [ $$? -ne 0 ]; then echo " **** fail to copy $$i ****" ; exit 1; fi; \
 		done
 
-# copy artifacts from local otel-oboe
+# copy artifacts from local oboe
 copy-all: copy-headers copy-liboboe
 
 #----------------------------------------------------------------------------------------------------------------------#
