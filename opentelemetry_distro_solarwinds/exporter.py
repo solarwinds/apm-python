@@ -56,7 +56,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 if event.name == 'exception':
                     self._report_exception_event(event)
                 else:
-                    self.reporter().sendReport(event)
+                    self._report_info_event(event)
 
             evt = Context.stopTrace(int(span.end_time / 1000))
             evt.addInfo('Layer', span.name)
