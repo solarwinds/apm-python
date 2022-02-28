@@ -10,8 +10,7 @@ from opentelemetry.trace.span import TraceState
 logger = logging.getLogger(__file__)
 
 class SolarWindsFormat(textmap.TextMapPropagator):
-    """
-    Extracts and injects SolarWinds tracestate header
+    """Extracts and injects SolarWinds tracestate header
 
     See also https://www.w3.org/TR/trace-context-1/
     """
@@ -29,44 +28,43 @@ class SolarWindsFormat(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
-        """
-        Extracts sw tracestate from carrier into SpanContext
-        """
-        # TODO: Is this needed if this is always used
+        """Extracts sw tracestate from carrier into SpanContext"""
+        return context
+
+        # TODO: Is the below needed if this is always used
         #       in composite with TraceContextTextMapPropagator?
-        #       If not, return context?
+        #       If not, return context as currently
         # TODO: If so, are basic validity checks needed?
-        
-        # Get span_id, trace_flags from carrier's traceparent header
-        traceparent_header = getter.get(carrier, self._TRACEPARENT_HEADER_NAME)
-        if not traceparent_header:
-            return context
-        match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, traceparent_header[0])
-        if not match:
-            return context
-        version = match.group(1)
-        trace_id = match.group(2)
-        span_id = match.group(3)
-        trace_flags = match.group(4)
 
-        # Prepare context with carrier's tracestate
-        tracestate_header = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
-        # TODO: Should sw tracestate be added/updated here?
-        if tracestate_header is None:
-            tracestate = None
-        else:
-            tracestate = TraceState.from_header(tracestate_header)
+        # # Get span_id, trace_flags from carrier's traceparent header
+        # traceparent_header = getter.get(carrier, self._TRACEPARENT_HEADER_NAME)
+        # if not traceparent_header:
+        #     return context
+        # match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, traceparent_header[0])
+        # if not match:
+        #     return context
+        # version = match.group(1)
+        # trace_id = match.group(2)
+        # span_id = match.group(3)
+        # trace_flags = match.group(4)
 
-        span_context = trace.SpanContext(
-            trace_id=int(trace_id, 16),
-            span_id=int(span_id, 16),
-            is_remote=True,
-            trace_flags=trace.TraceFlags(trace_flags),
-            trace_state=tracestate,
-        )
-        return trace.set_span_in_context(
-            trace.NonRecordingSpan(span_context), context
-        )
+        # # Prepare context with carrier's tracestate
+        # tracestate_header = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
+        # if tracestate_header is None:
+        #     tracestate = None
+        # else:
+        #     tracestate = TraceState.from_header(tracestate_header)
+
+        # span_context = trace.SpanContext(
+        #     trace_id=int(trace_id, 16),
+        #     span_id=int(span_id, 16),
+        #     is_remote=True,
+        #     trace_flags=trace.TraceFlags(trace_flags),
+        #     trace_state=tracestate,
+        # )
+        # return trace.set_span_in_context(
+        #     trace.NonRecordingSpan(span_context), context
+        # )
 
     def inject(
         self,
@@ -74,8 +72,7 @@ class SolarWindsFormat(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
         setter: textmap.Setter = textmap.default_setter,
     ) -> None:
-        """
-        Injects sw tracestate from SpanContext into carrier for HTTP request
+        """Injects sw tracestate from SpanContext into carrier for HTTP request
 
         See also: https://www.w3.org/TR/trace-context-1/#mutating-the-tracestate-field
         """
@@ -83,17 +80,17 @@ class SolarWindsFormat(textmap.TextMapPropagator):
         #       in composite with TraceContextTextMapPropagator?
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
-        span_id = span_context.span_id
+        span_id = self.format_span_id(span_context.span_id)
+        trace_flags = self.format_trace_flags(span_context.trace_flags)
         trace_state = span_context.trace_state
-        trace_flags = span_context.trace_flags
 
-        # TODO: This isn't working
         # Prepare carrier with context's or new tracestate
         if trace_state:
             # Check if trace_state already contains sw KV
             if "sw" in trace_state.keys():
                 # If so, modify current span_id and trace_flags, and move to beginning of list
                 logger.debug(f"Updating trace state with {span_id}-{trace_flags}")
+                # TODO: Update isn't working
                 trace_state.update("sw", f"{span_id}-{trace_flags}")
             else:
                 # If not, add sw KV to beginning of list
@@ -109,7 +106,13 @@ class SolarWindsFormat(textmap.TextMapPropagator):
 
     @property
     def fields(self) -> typing.Set[str]:
-        """
-        Returns a set with the fields set in `inject`
-        """
+        """Returns a set with the fields set in `inject`"""
         return {self._TRACEPARENT_HEADER_NAME, self._TRACESTATE_HEADER_NAME}
+
+    def format_span_id(self, span_id: int) -> str:
+        """Formats span ID as 16-byte hexadecimal string"""
+        return format(span_id, "016x")
+
+    def format_trace_flags(self, trace_flags: int) -> str:
+        """Formats trace flags as 8-bit field"""
+        return format(trace_flags, "02x")
