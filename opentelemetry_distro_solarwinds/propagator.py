@@ -28,43 +28,10 @@ class SolarWindsFormat(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
-        """Extracts sw tracestate from carrier into SpanContext"""
+        """Extracts sw tracestate from carrier into SpanContext
+        
+        Must be used in composite with TraceContextTextMapPropagator"""
         return context
-
-        # TODO: Is the below needed if this is always used
-        #       in composite with TraceContextTextMapPropagator?
-        #       If not, return context as currently
-        # TODO: If so, are basic validity checks needed?
-
-        # # Get span_id, trace_flags from carrier's traceparent header
-        # traceparent_header = getter.get(carrier, self._TRACEPARENT_HEADER_NAME)
-        # if not traceparent_header:
-        #     return context
-        # match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, traceparent_header[0])
-        # if not match:
-        #     return context
-        # version = match.group(1)
-        # trace_id = match.group(2)
-        # span_id = match.group(3)
-        # trace_flags = match.group(4)
-
-        # # Prepare context with carrier's tracestate
-        # tracestate_header = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
-        # if tracestate_header is None:
-        #     tracestate = None
-        # else:
-        #     tracestate = TraceState.from_header(tracestate_header)
-
-        # span_context = trace.SpanContext(
-        #     trace_id=int(trace_id, 16),
-        #     span_id=int(span_id, 16),
-        #     is_remote=True,
-        #     trace_flags=trace.TraceFlags(trace_flags),
-        #     trace_state=tracestate,
-        # )
-        # return trace.set_span_in_context(
-        #     trace.NonRecordingSpan(span_context), context
-        # )
 
     def inject(
         self,
