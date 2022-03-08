@@ -55,24 +55,9 @@ class SolarWindsFormat(textmap.TextMapPropagator):
         if trace_state:
             # Check if trace_state already contains sw KV
             if "sw" in trace_state.keys():
-
                 # If so, modify current span_id and trace_flags, and move to beginning of list
                 logger.debug(f"Updating trace state with {span_id}-{trace_flags}")
-                
-                # TODO: Python OTEL TraceState update isn't working
-                # trace_state.update("sw", f"{span_id}-{trace_flags}")
-
-                ## Temp: Manual trace_state update
-                from collections import OrderedDict
-                prev_state = OrderedDict(trace_state.items())
-                logger.debug(f"prev_state is {prev_state}")
-                prev_state["sw"] = f"{span_id}-{trace_flags}"
-                logger.debug(f"Updated prev_state is {prev_state}")
-                prev_state.move_to_end("sw", last=False)
-                logger.debug(f"Reordered prev_state is {prev_state}")
-                new_state = list(prev_state.items())
-                logger.debug(f"new_state list is {new_state}")
-                trace_state = TraceState(new_state)
+                trace_state = trace_state.update("sw", f"{span_id}-{trace_flags}")
 
             else:
                 # If not, add sw KV to beginning of list
