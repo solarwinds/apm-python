@@ -30,6 +30,12 @@ def oboe_to_otel_decision(do_metrics, do_sample):
 
 class _SwSampler(Sampler):
     """SolarWinds custom opentelemetry sampler which obeys configuration options provided by the NH/AO Backend."""
+    def __init__(
+        self,
+        is_root_span: bool = False
+    ):
+        self._is_root_span = is_root_span
+
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
 
@@ -46,19 +52,14 @@ class _SwSampler(Sampler):
         """
         Use liboboe trace decision for returned OTel SamplingResult
         """
-
+        # TraceContextTextMapPropagator extracts trace_state etc to SpanContext
         parent_span_context = get_current_span(
             parent_context
         ).get_span_context()
-
-        # (0) Debugging
-        # import ipdb
-        # ipdb.set_trace()
-        logger.debug(f"parent_span_context: {parent_span_context}")
-        logger.debug(f"parent_span_context.is_valid: {parent_span_context.is_valid}")
         
         do_metrics = None
         do_sample = None
+        span_id = parent_span_context.span_id
         trace_state = parent_span_context.trace_state
 
         # traceparent none (root span) or not valid
@@ -71,16 +72,17 @@ class _SwSampler(Sampler):
             or not trace_state.get("sw", None):
 
             # New sampling decision
+            # TODO: Double-check formats liboboe expects
             do_metrics, do_sample, \
             _, _, _, _, _, _, _, _, _ = Context.getDecisions(
                 f"{trace_id:032X}".lower(),
-                repr(trace_state)           # ???
+                f"{span_id:016X}-{parent_span_context.trace_flags:02X}".lower()
             )
 
-            # New tracestate with sampling decision
+            # New tracestate with result of sampling decision
             trace_state = TraceState([(
                 "sw",
-                f"{parent_span_context.span_id:016X}-{do_sample:02X}".lower()
+                f"{span_id:016X}-{do_sample:02X}".lower()
             )])
             logger.debug(f"New trace_state: {trace_state}")
 
@@ -94,7 +96,7 @@ class _SwSampler(Sampler):
             # Update trace_state with span_id and sw trace_flags
             trace_state = trace_state.update(
                 "sw",
-                f"{parent_span_context.span_id:016X}-{do_sample}".lower()
+                f"{span_id:016X}-{do_sample}".lower()
             )
             logger.debug(f"Updated trace_state: {trace_state}")
         
@@ -105,20 +107,37 @@ class _SwSampler(Sampler):
         logger.debug(f"Received attributes: {attributes}")
         if not attributes:
             attributes = {
-                "sw.tracestate_parent_id": f"{parent_span_context.span_id:016X}".lower(),
-                "sw.w3c.tracestate": repr(trace_state)
+                "sw.tracestate_parent_id": f"{span_id:016X}".lower(),
+                "sw.w3c.tracestate": trace_state.to_header()
             }
-            logger.debug(f"New attributes: {attributes}")
+            logger.debug(f"Set new attributes: {attributes}")
         else:
-            # Copy existing KV into new_attributes for modification
+            # Copy existing MappingProxyType KV into new_attributes for modification
+            # attributes may have other vendor info etc
             new_attributes = {}
             for k,v in attributes.items():
                 new_attributes[k] = v
-            # TODO Update sw of sw.w3c.tracestate
+
+            # Add or Update sw KV in sw.w3c.tracestate
+            if not new_attributes.get("sw.w3c.tracestate", None) or new_attributes.get("sw.w3c.tracestate"):
+                new_attributes["sw.w3c.tracestate"] = trace_state.to_header()
+            else:
+                attr_trace_state = TraceState.from_header(new_attributes["sw.w3c.tracestate"])
+                attr_trace_state.update(
+                    "sw",
+                    f"{span_id:016X}-{do_sample}".lower()
+                )
+                new_attributes["sw.w3c.tracestate"] = attr_trace_state.to_header()
+
+            # Only set sw.tracestate_parent_id on the entry (root) span for this service
+            # TODO: Or only at root span for the trace?
+            #       Or if sw.tracestate_parent_id is not set?
+            # if self._is_root_span:
+            new_attributes["sw.tracestate_parent_id"] = f"{span_id:016X}".lower()
 
             # Replace
             attributes = new_attributes
-            logger.debug(f"Updated attributes: {attributes}")
+            logger.debug(f"Set updated attributes: {attributes}")
         
         # attributes must be immutable
         attributes = MappingProxyType(attributes)
@@ -140,7 +159,7 @@ class ParentBasedSwSampler(ParentBased):
     def __init__(self):
         super().__init__(
             # Use liboboe if no parent span
-            root=_SwSampler(),
+            root=_SwSampler(is_root_span=True),
             # Use liboboe if parent span is_remote and sampled
             remote_parent_sampled=_SwSampler(),
             # Use OTEL default if parent span is_remote and NOT sampled (never sample)
