@@ -54,20 +54,8 @@ class _SwSampler(Sampler):
         # (0) Debugging
         # import ipdb
         # ipdb.set_trace()
-        # Unique the first time then always same
-        # logger.debug(f"trace_id: {trace_id}")
-        # logger.debug(f"trace_id as 032X: {trace_id:032X}".lower())
-        # get_current_span > get_value > get_current() gets current context in execution
-        # logger.debug(f"parent_context: {parent_context}")
         logger.debug(f"parent_span_context: {parent_span_context}")
-        # [] at django-a, non-empty at django-b (from custom propagator?)
-        # logger.debug(f"parent_span_context.trace_state: {parent_span_context.trace_state}")
-        # False at django-a, True at django-b
         logger.debug(f"parent_span_context.is_valid: {parent_span_context.is_valid}")
-        # # False at django-a, True at django-b
-        # # At this point with super() init of ParentBased
-        # # we shouldn't need to check this here
-        # logger.debug(f"parent_span_context.is_remote: {parent_span_context.is_remote}")
         
         do_metrics = None
         do_sample = None
@@ -88,11 +76,6 @@ class _SwSampler(Sampler):
                 f"{trace_id:032X}".lower(),
                 repr(trace_state)           # ???
             )
-
-            # # Debugging
-            # trace_id_hex_str = f"{trace_id:032X}".lower()
-            # trace_state_str = repr(trace_state)
-            # logger.debug(f"getDecisions with {trace_id_hex_str} and {trace_state_str}: {do_sample}")
 
             # New tracestate with sampling decision
             trace_state = TraceState([(
@@ -118,13 +101,27 @@ class _SwSampler(Sampler):
         decision = oboe_to_otel_decision(do_metrics, do_sample)
         logger.debug(f"decision for otel: {decision}")
 
-        # TODO
         # Set attributes with sw.tracestate_parent_id and sw.w3c.tracestate
-        attributes = {
-            "sw.tracestate_parent_id": f"{parent_span_context.span_id:016X}".lower(),
-            "sw.w3c.tracestate": trace_state
-        }
-        logger.debug(f"attributes: {attributes}")
+        logger.debug(f"Received attributes: {attributes}")
+        if not attributes:
+            attributes = {
+                "sw.tracestate_parent_id": f"{parent_span_context.span_id:016X}".lower(),
+                "sw.w3c.tracestate": repr(trace_state)
+            }
+            logger.debug(f"New attributes: {attributes}")
+        else:
+            # Copy existing KV into new_attributes for modification
+            new_attributes = {}
+            for k,v in attributes.items():
+                new_attributes[k] = v
+            # TODO Update sw of sw.w3c.tracestate
+
+            # Replace
+            attributes = new_attributes
+            logger.debug(f"Updated attributes: {attributes}")
+        
+        # attributes must be immutable
+        attributes = MappingProxyType(attributes)
 
         # Return result to start_span caller
         # start_span creates a new SpanContext and Span after sampling_result
@@ -144,9 +141,9 @@ class ParentBasedSwSampler(ParentBased):
         super().__init__(
             # Use liboboe if no parent span
             root=_SwSampler(),
-            # Use liboboe if parent span is_remote
+            # Use liboboe if parent span is_remote and sampled
             remote_parent_sampled=_SwSampler(),
-            remote_parent_not_sampled=_SwSampler(),
+            # Use OTEL default if parent span is_remote and NOT sampled (never sample)
             # Use OTEL defaults if parent span is_local
         )
 

@@ -21,6 +21,8 @@ class SolarWindsFormat(textmap.TextMapPropagator):
         + "(-.*)?[ \t]*$"
     )
     _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
+    _SW_TRACESTATE_PARENT_ID_HEADER_NAME = "sw.tracestate_parent_id"
+    _SW_W3C_TRACESTATE_HEADER_NAME = "sw.w3c.tracestate"    
 
     def extract(
         self,
@@ -71,10 +73,26 @@ class SolarWindsFormat(textmap.TextMapPropagator):
             carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()
         )
 
+        # TODO Does the propagator prepare carrier with sw.tracestate_parent_id and sw.w3c.tracestate headers?
+        tracestate_parent_id = span_id
+        setter.set(
+            carrier, self._SW_W3C_TRACESTATE_HEADER_NAME, trace_state.to_header()
+        )
+        setter.set(
+            carrier,
+            self._SW_TRACESTATE_PARENT_ID_HEADER_NAME,
+            tracestate_parent_id
+        )
+
     @property
     def fields(self) -> typing.Set[str]:
         """Returns a set with the fields set in `inject`"""
-        return {self._TRACEPARENT_HEADER_NAME, self._TRACESTATE_HEADER_NAME}
+        return {
+            self._TRACEPARENT_HEADER_NAME,
+            self._TRACESTATE_HEADER_NAME,
+            self._SW_TRACESTATE_PARENT_ID_HEADER_NAME,
+            self._SW_W3C_TRACESTATE_HEADER_NAME,
+        }
 
     def format_span_id(self, span_id: int) -> str:
         """Formats span ID as 16-byte hexadecimal string"""
