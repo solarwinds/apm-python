@@ -3,6 +3,7 @@
 The custom sampler will fetch sampling configurations for the SolarWinds backend.
 """
 
+from inspect import trace
 import logging
 from types import MappingProxyType
 from typing import Optional, Sequence
@@ -103,10 +104,12 @@ class _SwSampler(Sampler):
         decision = oboe_to_otel_decision(do_metrics, do_sample)
         logger.debug(f"decision for otel: {decision}")
 
+
         # Set attributes with sw.tracestate_parent_id and sw.w3c.tracestate
         logger.debug(f"Received attributes: {attributes}")
         if not attributes:
             attributes = {
+                "sw.parent_span_id": f"{span_id:016X}".lower(),
                 "sw.tracestate_parent_id": f"{span_id:016X}".lower(),
                 "sw.w3c.tracestate": trace_state.to_header()
             }
@@ -129,6 +132,7 @@ class _SwSampler(Sampler):
                 )
                 new_attributes["sw.w3c.tracestate"] = attr_trace_state.to_header()
 
+            new_attributes["sw.parent_span_id"] = f"{span_id:016X}".lower()
             # Only set sw.tracestate_parent_id on the entry (root) span for this service
             # TODO: Or only at root span for the trace?
             #       Or if sw.tracestate_parent_id is not set?
