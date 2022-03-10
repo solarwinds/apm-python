@@ -14,6 +14,7 @@ from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
 
 from opentelemetry_distro_solarwinds.extension.oboe import Context
+from opentelemetry_distro_solarwinds.ot_ao_transformer import transform_id
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class _SwSampler(Sampler):
         self._is_root_span = is_root_span
         self._parent_span_context = None
         self._span_id = None
+        self._traceparent = None
         self._trace_state = None
 
     def get_description(self) -> str:
@@ -45,16 +47,19 @@ class _SwSampler(Sampler):
             decision = Decision.RECORD_AND_SAMPLE
         return decision
 
-    def make_trace_decision(self, trace_id: int) -> None:
+    def make_trace_decision(self) -> None:
         """Helper to make oboe trace decision"""
-        # TODO: Double-check formats liboboe expects
+        in_xtrace = self._traceparent
+        tracestate = f"{self._span_id:016X}-{self._parent_span_context.trace_flags:02X}".lower()
+        logger.debug(f"Making oboe decision with in_xtrace {in_xtrace}, tracestate {tracestate}")
+
         self._do_metrics, self._do_sample, \
         _, _, _, _, _, _, _, _, _ = Context.getDecisions(
-            f"{trace_id:032X}".lower(),
-            f"{self._span_id:016X}-{self._parent_span_context.trace_flags:02X}".lower()
+            in_xtrace,
+            tracestate
         )
 
-    def set_trace_state(self, trace_id: int) -> None:
+    def set_trace_state(self) -> None:
         """Helper to set trace_state for sampling result based on parent span.
         Makes trace decision if needed
         """
@@ -66,7 +71,7 @@ class _SwSampler(Sampler):
             or not self._trace_state.get("sw", None):
 
             # New sampling decision
-            self.make_trace_decision(trace_id)
+            self.make_trace_decision()
 
             # New tracestate with result of sampling decision
             self._trace_state = TraceState([(
@@ -154,12 +159,13 @@ class _SwSampler(Sampler):
         self._parent_span_context = get_current_span(
             parent_context
         ).get_span_context()
+        self._traceparent = transform_id(self._parent_span_context)
         self._span_id = self._parent_span_context.span_id
         self._trace_state = self._parent_span_context.trace_state
         self._attributes = attributes
 
         # Set args for new SamplingResult
-        self.set_trace_state(trace_id)
+        self.set_trace_state()
         self.set_decision()
         self.set_attributes()
 
