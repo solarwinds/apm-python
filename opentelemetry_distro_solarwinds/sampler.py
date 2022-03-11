@@ -101,11 +101,15 @@ class _SwSampler(Sampler):
 
     def set_attributes(self) -> None:
         """Helper to set attributes based on parent span"""
-        # Set attributes with sw.tracestate_parent_id and sw.w3c.tracestate
         logger.debug(f"Received attributes: {self._attributes}")
-        if not self._attributes:
+        if not self._parent_span_context.is_valid or not self._trace_state:
+            # Trace's root span has no valid traceparent nor tracestate
+            # so we don't set additional attributes
+            logger.debug(f"No valid traceparent or no tracestate - not setting attributes")
+            return
+        # Set attributes with sw.tracestate_parent_id and sw.w3c.tracestate
+        elif not self._attributes:
             self._attributes = {
-                "sw.parent_span_id": f"{self._span_id:016X}".lower(),
                 "sw.tracestate_parent_id": f"{self._span_id:016X}".lower(),
                 "sw.w3c.tracestate": self._trace_state.to_header()
             }
@@ -128,11 +132,7 @@ class _SwSampler(Sampler):
                 )
                 new_attributes["sw.w3c.tracestate"] = attr_trace_state.to_header()
 
-            new_attributes["sw.parent_span_id"] = f"{self._span_id:016X}".lower()
             # Only set sw.tracestate_parent_id on the entry (root) span for this service
-            # TODO: Or only at root span for the trace?
-            #       Or if sw.tracestate_parent_id is not set?
-            # if self._is_root_span:
             new_attributes["sw.tracestate_parent_id"] = f"{self._span_id:016X}".lower()
 
             # Replace
