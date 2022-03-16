@@ -14,7 +14,12 @@ from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
 
 from opentelemetry_distro_solarwinds.extension.oboe import Context
-from opentelemetry_distro_solarwinds.ot_ao_transformer import transform_id
+from opentelemetry_distro_solarwinds.w3c_transformer import (
+    span_id_from_int,
+    traceparent_from_context,
+    sw_from_context,
+    sw_from_span_and_decision
+)
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +55,7 @@ class _SwSampler(Sampler):
     def make_trace_decision(self) -> None:
         """Helper to make oboe trace decision"""
         in_xtrace = self._traceparent
-        tracestate = f"{self._span_id:016X}-{self._parent_span_context.trace_flags:02X}".lower()
+        tracestate = sw_from_context(self._parent_span_context)
         logger.debug(f"Making oboe decision with in_xtrace {in_xtrace}, tracestate {tracestate}")
 
         self._do_metrics, self._do_sample, \
@@ -76,7 +81,10 @@ class _SwSampler(Sampler):
             # New tracestate with result of sampling decision
             self._trace_state = TraceState([(
                 "sw",
-                f"{self._span_id:016X}-{self._do_sample:02X}".lower()
+                sw_from_span_and_decision(
+                    self._span_id,
+                    self._do_sample
+                )
             )])
             logger.debug(f"New trace_state: {self._trace_state}")
 
@@ -90,7 +98,10 @@ class _SwSampler(Sampler):
             # Update trace_state with span_id and sw trace_flags
             self._trace_state = self._trace_state.update(
                 "sw",
-                f"{self._span_id:016X}-{self._do_sample}".lower()
+                sw_from_span_and_decision(
+                    self._span_id,
+                    self._do_sample
+                )
             )
             logger.debug(f"Updated trace_state: {self._trace_state}")
 
@@ -110,7 +121,7 @@ class _SwSampler(Sampler):
         # Set attributes with sw.tracestate_parent_id and sw.w3c.tracestate
         elif not self._attributes:
             self._attributes = {
-                "sw.tracestate_parent_id": f"{self._span_id:016X}".lower(),
+                "sw.tracestate_parent_id": span_id_from_int(self._span_id),
                 "sw.w3c.tracestate": self._trace_state.to_header()
             }
             logger.debug(f"Set new attributes: {self._attributes}")
@@ -128,12 +139,15 @@ class _SwSampler(Sampler):
                 attr_trace_state = TraceState.from_header(new_attributes["sw.w3c.tracestate"])
                 attr_trace_state.update(
                     "sw",
-                    f"{self._span_id:016X}-{self._do_sample}".lower()
+                    sw_from_span_and_decision(
+                        self._span_id,
+                        self._do_sample
+                    )
                 )
                 new_attributes["sw.w3c.tracestate"] = attr_trace_state.to_header()
 
             # Only set sw.tracestate_parent_id on the entry (root) span for this service
-            new_attributes["sw.tracestate_parent_id"] = f"{self._span_id:016X}".lower()
+            new_attributes["sw.tracestate_parent_id"] = span_id_from_int(self._span_id)
 
             # Replace
             self._attributes = new_attributes
@@ -159,7 +173,7 @@ class _SwSampler(Sampler):
         self._parent_span_context = get_current_span(
             parent_context
         ).get_span_context()
-        self._traceparent = transform_id(self._parent_span_context)
+        self._traceparent = traceparent_from_context(self._parent_span_context)
         self._span_id = self._parent_span_context.span_id
         self._trace_state = self._parent_span_context.trace_state
         self._attributes = attributes

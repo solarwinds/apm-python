@@ -11,7 +11,7 @@ from opentelemetry.sdk.trace.export import SpanExporter
 
 from opentelemetry_distro_solarwinds.extension.oboe import (Context, Metadata,
                                                             Reporter)
-from opentelemetry_distro_solarwinds.ot_ao_transformer import transform_id
+from opentelemetry_distro_solarwinds.w3c_transformer import traceparent_from_context
 
 logger = logging.getLogger(__file__)
 
@@ -122,4 +122,4 @@ class SolarWindsSpanExporter(SpanExporter):
 
     @staticmethod
     def _build_metadata(span_context):
-        return Metadata.fromString(transform_id(span_context))
+        return Metadata.fromString(traceparent_from_context(span_context))

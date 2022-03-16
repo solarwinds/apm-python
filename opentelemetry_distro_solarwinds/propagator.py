@@ -7,6 +7,11 @@ from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
+from opentelemetry_distro_solarwinds.w3c_transformer import (
+    span_id_from_int,
+    trace_flags_from_int
+)
+
 logger = logging.getLogger(__file__)
 
 class SolarWindsPropagator(textmap.TextMapPropagator):
@@ -44,8 +49,8 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         Must be used in composite with TraceContextTextMapPropagator"""
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
-        span_id = self.format_span_id(span_context.span_id)
-        trace_flags = self.format_trace_flags(span_context.trace_flags)
+        span_id = span_id_from_int(span_context.span_id)
+        trace_flags = trace_flags_from_int(span_context.trace_flags)
         trace_state = span_context.trace_state
 
         # Prepare carrier with context's or new tracestate
@@ -75,11 +80,3 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             self._TRACEPARENT_HEADER_NAME,
             self._TRACESTATE_HEADER_NAME
         }
-
-    def format_span_id(self, span_id: int) -> str:
-        """Formats span ID as 16-byte hexadecimal string"""
-        return format(span_id, "016x")
-
-    def format_trace_flags(self, trace_flags: int) -> str:
-        """Formats trace flags as 8-bit field"""
-        return format(trace_flags, "02x")
