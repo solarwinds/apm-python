@@ -9,7 +9,7 @@ from opentelemetry.trace.span import TraceState
 
 logger = logging.getLogger(__file__)
 
-class SolarWindsFormat(textmap.TextMapPropagator):
+class SolarWindsPropagator(textmap.TextMapPropagator):
     """Extracts and injects SolarWinds tracestate header
 
     See also https://www.w3.org/TR/trace-context-1/
@@ -39,12 +39,9 @@ class SolarWindsFormat(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
         setter: textmap.Setter = textmap.default_setter,
     ) -> None:
-        """Injects sw tracestate from SpanContext into carrier for HTTP request
+        """Injects sw tracestate from SpanContext into carrier for HTTP request.
 
-        See also: https://www.w3.org/TR/trace-context-1/#mutating-the-tracestate-field
-        """
-        # TODO: Are basic validity checks necessary if this is always used
-        #       in composite with TraceContextTextMapPropagator?
+        Must be used in composite with TraceContextTextMapPropagator"""
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
         span_id = self.format_span_id(span_context.span_id)
