@@ -10,10 +10,6 @@ def span_id_from_int(span_id: int) -> str:
     """Formats span ID as 16-byte hexadecimal string"""
     return "{:016x}".format(span_id)
 
-def trace_flags_from_int(trace_flags: int) -> str:
-    """Formats trace flags as 8-bit field"""
-    return "{:02x}".format(trace_flags)
-
 def traceparent_from_context(span_context: Context) -> str:
     """Generates a liboboe W3C compatible trace_context from provided OTel span context."""
     xtr = "00-{0:032X}-{1:016X}-{2:02X}".format(span_context.trace_id,
