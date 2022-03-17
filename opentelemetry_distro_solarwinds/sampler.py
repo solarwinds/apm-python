@@ -65,34 +65,6 @@ class _SwSampler(Sampler):
             )
         return _LiboboeDecision(do_metrics, do_sample)
 
-    def continue_liboboe_decision(
-        self,
-        parent_span_context: SpanContext
-    ) -> _LiboboeDecision:
-        """Creates liboboe decision to continue parent trace state decision"""
-        trace_state = parent_span_context.trace_state
-        try:
-            sw_value = trace_state.get("sw")
-        except AttributeError:
-            logger.warning("Cannot continue decision if sw not in \
-                tracestate ({0}). Making new decision.".format(trace_state))
-            return self.create_new_liboboe_decision(parent_span_context)
-        if not re.match(SW_FORMAT, sw_value):
-            logger.warning("Cannot continue decision if tracestate sw not \
-                in format <16_byte_span_id>-<8_bit_trace_flags>, nor if \
-                trace_flags is anything but 01 or 00 ({0}). Making \
-                new decision.".format(trace_state))
-            return self.create_new_liboboe_decision(parent_span_context)
-
-        do_sample = sw_value.split("-")[1]
-        # TODO how do metrics work in OTel
-        do_metrics = None
-        logger.debug("Continuing decision as do_metrics: {0}, do_sample: {1}".format(
-            do_metrics,
-            do_sample
-        ))
-        return _LiboboeDecision(do_metrics, do_sample)
-
     def calculate_liboboe_decision(
         self,
         parent_span_context: SpanContext
@@ -100,16 +72,34 @@ class _SwSampler(Sampler):
         """Calculates oboe trace decision based on parent span context."""
         # No (valid) parent i.e. root span
         if not parent_span_context or not parent_span_context.is_valid:
-            decision = self.create_new_liboboe_decision(parent_span_context)
+            return self.create_new_liboboe_decision(parent_span_context)
         else:
-            # tracestate nonexistent/non-parsable, or no sw KV
             trace_state = parent_span_context.trace_state
-            if not trace_state or not trace_state.get("sw", None):
-                decision = self.create_new_liboboe_decision(parent_span_context)
-            # tracestate has sw KV
+            # tracestate nonexistent
+            if not trace_state:
+                return self.create_new_liboboe_decision(parent_span_context)
+            # tracestate does not have sw KV
+            elif not trace_state.get("sw", None):
+                return self.create_new_liboboe_decision
             else:
-                decision = self.continue_liboboe_decision(parent_span_context)
-        return decision
+                sw_value = trace_state.get("sw")
+                # tracestate has invalid sw value
+                if not re.match(SW_FORMAT, sw_value):
+                    logger.warning("Cannot continue decision if tracestate sw not \
+                        in format <16_byte_span_id>-<8_bit_trace_flags>, nor if \
+                        trace_flags is anything but 01 or 00 ({0}). Making \
+                        new decision.".format(trace_state))
+                    return self.create_new_liboboe_decision(parent_span_context)
+                # tracestate has valid sw value
+                else:
+                    do_sample = sw_value.split("-")[1]
+                    # TODO how do metrics work in OTel
+                    do_metrics = None
+                    logger.debug("Continuing decision as do_metrics: {0}, do_sample: {1}".format(
+                        do_metrics,
+                        do_sample
+                    ))
+                    return _LiboboeDecision(do_metrics, do_sample)
 
     def otel_decision_from_liboboe(
         self,
