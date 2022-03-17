@@ -17,6 +17,7 @@ from opentelemetry.util.types import Attributes
 from opentelemetry_distro_solarwinds.extension.oboe import Context
 from opentelemetry_distro_solarwinds.w3c_transformer import (
     span_id_from_int,
+    trace_flags_from_int,
     traceparent_from_context,
     sw_from_context,
     sw_from_span_and_decision
@@ -83,8 +84,10 @@ class _SwSampler(Sampler):
         do_sample = sw_value.split("-")[1]
         # TODO how do metrics work in OTel
         do_metrics = None
-        logger.debug("Continuing decision as do_metrics: {0}, do_sample: \
-            {1}".format(do_metrics, do_sample))
+        logger.debug("Continuing decision as do_metrics: {0}, do_sample: {1}".format(
+            do_metrics,
+            do_sample
+        ))
         return _LiboboeDecision(do_metrics, do_sample)
 
     def calculate_liboboe_decision(
@@ -129,7 +132,7 @@ class _SwSampler(Sampler):
             "sw",
             sw_from_span_and_decision(
                 parent_span_context.span_id,
-                decision.do_sample
+                trace_flags_from_int(decision.do_sample)
             )
         )])
         logger.debug(f"Created new trace_state: {trace_state}")
@@ -175,14 +178,12 @@ class _SwSampler(Sampler):
 
         # Don't set attributes if not tracing
         if self.otel_decision_from_liboboe(decision) == Decision.DROP:
-            logger.debug(f"Trace decision is to drop - not setting \
-                attributes")
+            logger.debug(f"Trace decision is to drop - not setting attributes")
             return None
         # Trace's root span has no valid traceparent nor tracestate
         # so we don't set additional attributes
         if not parent_span_context.is_valid or not trace_state:
-            logger.debug(f"No valid traceparent or no tracestate - not \
-                setting attributes")
+            logger.debug(f"No valid traceparent or no tracestate - not setting attributes")
             return None
 
         # Set attributes with sw.tracestate_parent_id and sw.w3c.tracestate
