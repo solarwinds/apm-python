@@ -54,7 +54,10 @@ class _SwSampler(Sampler):
         """Creates new liboboe decision using parent span context."""
         in_xtrace = traceparent_from_context(parent_span_context)
         tracestate = sw_from_context(parent_span_context)
-        logger.debug(f"Making oboe decision with in_xtrace {in_xtrace}, tracestate {tracestate}")
+        logger.debug("Making oboe decision with in_xtrace {0}, tracestate {1}".format(
+            in_xtrace,
+            tracestate
+        ))
         do_metrics, do_sample, \
             _, _, _, _, _, _, _, _, _ = Context.getDecisions(
                 in_xtrace,
@@ -119,7 +122,7 @@ class _SwSampler(Sampler):
             decision = Decision.RECORD_ONLY
         if liboboe_decision.do_sample:
             decision = Decision.RECORD_AND_SAMPLE
-        logger.debug(f"OTel decision created: {decision}")
+        logger.debug("OTel decision created: {0}".format(decision))
         return decision
 
     def create_new_trace_state(
@@ -135,7 +138,7 @@ class _SwSampler(Sampler):
                 trace_flags_from_int(decision.do_sample)
             )
         )])
-        logger.debug(f"Created new trace_state: {trace_state}")
+        logger.debug("Created new trace_state: {0}".format(trace_state))
         return trace_state
 
     def calculate_trace_state(
@@ -162,7 +165,7 @@ class _SwSampler(Sampler):
                         decision.do_sample
                     )
                 )
-                logger.debug(f"Updated trace_state: {trace_state}")
+                logger.debug("Updated trace_state: {0}".format(trace_state))
         return trace_state
 
     def calculate_attributes(
@@ -174,16 +177,16 @@ class _SwSampler(Sampler):
     ) -> Attributes or None:
         """Calculates Attributes or None based on trace decision, trace state,
         parent span context, and existing attributes."""
-        logger.debug(f"Received attributes: {attributes}")
+        logger.debug("Received attributes: {0}".format(attributes))
 
         # Don't set attributes if not tracing
         if self.otel_decision_from_liboboe(decision) == Decision.DROP:
-            logger.debug(f"Trace decision is to drop - not setting attributes")
+            logger.debug("Trace decision is to drop - not setting attributes")
             return None
         # Trace's root span has no valid traceparent nor tracestate
         # so we don't set additional attributes
         if not parent_span_context.is_valid or not trace_state:
-            logger.debug(f"No valid traceparent or no tracestate - not setting attributes")
+            logger.debug("No valid traceparent or no tracestate - not setting attributes")
             return None
 
         # Set attributes with sw.tracestate_parent_id and sw.w3c.tracestate
@@ -194,7 +197,7 @@ class _SwSampler(Sampler):
                 ),
                 "sw.w3c.tracestate": trace_state.to_header()
             }
-            logger.debug(f"Created new attributes: {attributes}")
+            logger.debug("Created new attributes: {0}".format(attributes))
         else:
             # Copy existing MappingProxyType KV into new_attributes for modification
             # attributes may have other vendor info etc
@@ -225,7 +228,7 @@ class _SwSampler(Sampler):
             )
 
             attributes = new_attributes
-            logger.debug(f"Set updated attributes: {attributes}")
+            logger.debug("Set updated attributes: {0}".format(attributes))
         
         # attributes must be immutable for SamplingResult
         return MappingProxyType(attributes)
