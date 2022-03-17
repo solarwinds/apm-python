@@ -1,5 +1,4 @@
 import logging
-import re
 import typing
 
 from opentelemetry import trace
@@ -12,17 +11,11 @@ from opentelemetry_distro_solarwinds.w3c_transformer import sw_from_context
 logger = logging.getLogger(__file__)
 
 class SolarWindsPropagator(textmap.TextMapPropagator):
-    """Extracts and injects SolarWinds tracestate header
-
-    See also https://www.w3.org/TR/trace-context-1/
+    """Extracts and injects SolarWinds tracestate header.
+    Must be used in composite with TraceContextTextMapPropagator.
     """
     _TRACEPARENT_HEADER_NAME = "traceparent"
     _TRACESTATE_HEADER_NAME = "tracestate"
-    _TRACEPARENT_HEADER_FORMAT = (
-        "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})"
-        + "(-.*)?[ \t]*$"
-    )
-    _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
 
     def extract(
         self,
@@ -30,9 +23,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
-        """Extracts sw tracestate from carrier into SpanContext
-        
-        Must be used in composite with TraceContextTextMapPropagator"""
+        """Extracts sw tracestate from carrier into SpanContext"""
         return context
 
     def inject(
@@ -41,9 +32,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
         setter: textmap.Setter = textmap.default_setter,
     ) -> None:
-        """Injects sw tracestate from SpanContext into carrier for HTTP request.
-
-        Must be used in composite with TraceContextTextMapPropagator"""
+        """Injects sw tracestate from SpanContext into carrier for HTTP request"""
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
         trace_state = span_context.trace_state
