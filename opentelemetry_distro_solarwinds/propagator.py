@@ -7,10 +7,7 @@ from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
-from opentelemetry_distro_solarwinds.w3c_transformer import (
-    span_id_from_int,
-    trace_flags_from_int
-)
+from opentelemetry_distro_solarwinds.w3c_transformer import sw_from_context
 
 logger = logging.getLogger(__file__)
 
@@ -49,25 +46,24 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         Must be used in composite with TraceContextTextMapPropagator"""
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
-        span_id = span_id_from_int(span_context.span_id)
-        trace_flags = trace_flags_from_int(span_context.trace_flags)
         trace_state = span_context.trace_state
+        sw_value = sw_from_context(span_context)
 
         # Prepare carrier with context's or new tracestate
         if trace_state:
             # Check if trace_state already contains sw KV
             if "sw" in trace_state.keys():
                 # If so, modify current span_id and trace_flags, and move to beginning of list
-                logger.debug(f"Updating trace state with {span_id}-{trace_flags}")
-                trace_state = trace_state.update("sw", f"{span_id}-{trace_flags}")
+                logger.debug(f"Updating trace state with {sw_value}")
+                trace_state = trace_state.update("sw", sw_value)
 
             else:
                 # If not, add sw KV to beginning of list
-                logger.debug(f"Adding KV to trace state with {span_id}-{trace_flags}")
-                trace_state.add("sw", f"{span_id}-{trace_flags}")
+                logger.debug(f"Adding KV to trace state with {sw_value}")
+                trace_state.add("sw", sw_value)
         else:
-            logger.debug(f"Creating new trace state with {span_id}-{trace_flags}")
-            trace_state = TraceState([("sw", f"{span_id}-{trace_flags}")])
+            logger.debug(f"Creating new trace state with {sw_value}")
+            trace_state = TraceState([("sw", sw_value)])
 
         setter.set(
             carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()
