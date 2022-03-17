@@ -54,7 +54,7 @@ class _SwSampler(Sampler):
         """Creates new liboboe decision using parent span context."""
         in_xtrace = traceparent_from_context(parent_span_context)
         tracestate = sw_from_context(parent_span_context)
-        logger.debug("Making oboe decision with in_xtrace {0}, tracestate {1}".format(
+        logger.debug("Creating new oboe decision with in_xtrace {0}, tracestate {1}".format(
             in_xtrace,
             tracestate
         ))
@@ -104,7 +104,7 @@ class _SwSampler(Sampler):
     def otel_decision_from_liboboe(
         self,
         liboboe_decision: _LiboboeDecision
-    ) -> None:
+    ) -> Decision:
         """Formats OTel decision from liboboe decision"""
         decision = Decision.DROP
         if liboboe_decision.do_metrics:

@@ -23,7 +23,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
-        """Extracts sw tracestate from carrier into SpanContext"""
+        """Extracts sw tracestate from carrier into OTel Context"""
         return context
 
     def inject(

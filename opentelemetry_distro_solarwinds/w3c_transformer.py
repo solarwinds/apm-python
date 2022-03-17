@@ -19,15 +19,14 @@ def traceparent_from_context(span_context: Context) -> str:
     xtr = "00-{0:032X}-{1:016X}-{2:02X}".format(span_context.trace_id,
                                             span_context.span_id,
                                             span_context.trace_flags)
-    logger.debug("Generated traceparent %s from %s", xtr,
-                 span_context)
+    logger.debug("Generated traceparent {0} from {1}".format(xtr, span_context))
     return xtr
 
 def sw_from_context(span_context: Context) -> str:
-    """Formats tracestate sw value from SpanContext
-    as 16-byte span_id with 8-bit trace_flags.
+    """Formats tracestate sw value from SpanContext as 16-byte span_id
+    with 8-bit trace_flags.
     
-    Example: 1122334455667788-01"""
+    Example: 1a2b3c4d5e6f7g8h-01"""
     return "{0:016x}-{1:02x}".format(span_context.span_id,
                                      span_context.trace_flags)
 
@@ -35,5 +34,5 @@ def sw_from_span_and_decision(span_id: int, decision: str) -> str:
     """Formats tracestate sw value from span_id and liboboe decision
     as 16-byte span_id with 8-bit trace_flags.
     
-    Example: 1122334455667788-01"""
+    Example: 1a2b3c4d5e6f7g8h-01"""
     return "{0:016x}-{1}".format(span_id, decision)
