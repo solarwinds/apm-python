@@ -113,7 +113,7 @@ class _SwSampler(Sampler):
                     "sw",
                     sw_from_span_and_decision(
                         parent_span_context.span_id,
-                        decision.do_sample
+                        trace_flags_from_int(decision.do_sample)
                     )
                 )
                 logger.debug("Updated trace_state: {0}".format(trace_state))
@@ -170,7 +170,7 @@ class _SwSampler(Sampler):
                     "sw",
                     sw_from_span_and_decision(
                         parent_span_context.span_id,
-                        decision.do_sample
+                        trace_flags_from_int(decision.do_sample)
                     )
                 )
                 new_attributes["sw.w3c.tracestate"] = attr_trace_state.to_header()
