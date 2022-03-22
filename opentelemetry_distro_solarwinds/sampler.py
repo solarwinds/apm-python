@@ -102,11 +102,10 @@ class _SwSampler(Sampler):
         if not parent_span_context.is_valid:
             trace_state = self.create_new_trace_state(decision, parent_span_context)
         else:
-            # tracestate nonexistent/non-parsable, or no sw KV
             trace_state = parent_span_context.trace_state
-            if not trace_state or not trace_state.get("sw", None):
+            if not trace_state:
+                # tracestate nonexistent/non-parsable
                 trace_state = self.create_new_trace_state(decision, parent_span_context)
-            # tracestate has sw KV
             else:
                 # Update trace_state with span_id and sw trace_flags
                 trace_state = trace_state.update(
