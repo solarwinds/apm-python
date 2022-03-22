@@ -145,11 +145,13 @@ class _SwSampler(Sampler):
         # Set attributes with sw.tracestate_parent_id and sw.w3c.tracestate
         if not attributes:
             attributes = {
-                "sw.tracestate_parent_id": span_id_from_int(
-                    parent_span_context.span_id
-                ),
                 "sw.w3c.tracestate": trace_state.to_header()
             }
+            # Only set sw.tracestate_parent_id on the entry (root) span for this service
+            sw_value = parent_span_context.trace_state.get("sw", None)
+            if sw_value:
+                attributes["sw.tracestate_parent_id"] = sw_value
+
             logger.debug("Created new attributes: {0}".format(attributes))
         else:
             # Copy existing MappingProxyType KV into new_attributes for modification
@@ -174,11 +176,6 @@ class _SwSampler(Sampler):
                     )
                 )
                 new_attributes["sw.w3c.tracestate"] = attr_trace_state.to_header()
-
-            # Only set sw.tracestate_parent_id on the entry (root) span for this service
-            new_attributes["sw.tracestate_parent_id"] = span_id_from_int(
-                parent_span_context.span_id
-            )
 
             attributes = new_attributes
             logger.debug("Set updated attributes: {0}".format(attributes))
