@@ -6,6 +6,7 @@ from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
+from opentelemetry_distro_solarwinds.traceoptions import TraceOptions
 from opentelemetry_distro_solarwinds.w3c_transformer import sw_from_context
 
 logger = logging.getLogger(__file__)
@@ -14,8 +15,8 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
     """Extracts and injects SolarWinds tracestate header.
     Must be used in composite with TraceContextTextMapPropagator.
     """
-    _TRACEPARENT_HEADER_NAME = "traceparent"
     _TRACESTATE_HEADER_NAME = "tracestate"
+    _TRACEOPTIONS_HEADER_NAME = "x-trace-options"
 
     def extract(
         self,
@@ -23,7 +24,25 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
-        """Extracts sw tracestate from carrier into OTel Context"""
+        """Extracts sw trace options from carrier into OTel Context"""
+        if context is None:
+            context = Context()
+
+        traceoptions_header = getter.get(
+            carrier,
+            self._TRACEOPTIONS_HEADER_NAME
+        )
+        if not traceoptions_header:
+            return context
+        logger.debug("Extracted traceoptions_header: {0}".format(traceoptions_header[0]))
+
+        traceoptions = TraceOptions(traceoptions_header[0], context)
+        logger.debug("Created TraceOptions: {0}".format(traceoptions.__dict__))
+
+        context.update({
+            # TODO assign individual KVs for each traceoptions
+            self._TRACEOPTIONS_HEADER_NAME: traceoptions_header[0]
+        })
         return context
 
     def inject(
@@ -32,7 +51,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
         setter: textmap.Setter = textmap.default_setter,
     ) -> None:
-        """Injects sw tracestate from SpanContext into carrier for HTTP request"""
+        """Injects sw tracestate and trace options from SpanContext into carrier for HTTP request"""
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
         trace_state = span_context.trace_state
@@ -58,10 +77,12 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()
         )
 
+        # TODO: Prepare carrier with x-trace-options
+
     @property
     def fields(self) -> typing.Set[str]:
         """Returns a set with the fields set in `inject`"""
         return {
-            self._TRACEPARENT_HEADER_NAME,
-            self._TRACESTATE_HEADER_NAME
+            self._TRACESTATE_HEADER_NAME,
+            self._TRACEOPTIONS_HEADER_NAME
         }

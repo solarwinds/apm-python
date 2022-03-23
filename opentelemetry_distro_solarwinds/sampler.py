@@ -15,7 +15,6 @@ from opentelemetry.util.types import Attributes
 
 from opentelemetry_distro_solarwinds.extension.oboe import Context
 from opentelemetry_distro_solarwinds.w3c_transformer import (
-    span_id_from_int,
     trace_flags_from_int,
     traceparent_from_context,
     sw_from_context,
@@ -199,6 +198,9 @@ class _SwSampler(Sampler):
         parent_span_context = get_current_span(
             parent_context
         ).get_span_context()
+
+        # TODO: get individual x-trace-options from parent_context
+        logger.debug("parent_context is {0}".format(parent_context))
 
         decision = self.calculate_liboboe_decision(parent_span_context)
 
