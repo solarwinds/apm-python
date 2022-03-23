@@ -6,7 +6,7 @@ from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
-from opentelemetry_distro_solarwinds.traceoptions import TraceOptions
+from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
 from opentelemetry_distro_solarwinds.w3c_transformer import sw_from_context
 
 logger = logging.getLogger(__file__)
@@ -16,7 +16,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
     Must be used in composite with TraceContextTextMapPropagator.
     """
     _TRACESTATE_HEADER_NAME = "tracestate"
-    _TRACEOPTIONS_HEADER_NAME = "x-trace-options"
+    _XTRACEOPTIONS_HEADER_NAME = "x-trace-options"
 
     def extract(
         self,
@@ -28,21 +28,15 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         if context is None:
             context = Context()
 
-        traceoptions_header = getter.get(
+        xtraceoptions_header = getter.get(
             carrier,
-            self._TRACEOPTIONS_HEADER_NAME
+            self._XTRACEOPTIONS_HEADER_NAME
         )
-        if not traceoptions_header:
+        if not xtraceoptions_header:
             return context
-        logger.debug("Extracted traceoptions_header: {0}".format(traceoptions_header[0]))
-
-        traceoptions = TraceOptions(traceoptions_header[0], context)
-        logger.debug("Created TraceOptions: {0}".format(traceoptions.__dict__))
-
-        context.update({
-            # TODO assign individual KVs for each traceoptions
-            self._TRACEOPTIONS_HEADER_NAME: traceoptions_header[0]
-        })
+        logger.debug("Extracted xtraceoptions_header: {0}".format(xtraceoptions_header[0]))
+        xtraceoptions = XTraceOptions(xtraceoptions_header[0], context)
+        context.update(dict(xtraceoptions))
         return context
 
     def inject(
@@ -84,5 +78,5 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         """Returns a set with the fields set in `inject`"""
         return {
             self._TRACESTATE_HEADER_NAME,
-            self._TRACEOPTIONS_HEADER_NAME
+            self._XTRACEOPTIONS_HEADER_NAME
         }

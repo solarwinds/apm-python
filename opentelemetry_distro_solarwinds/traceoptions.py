@@ -6,7 +6,7 @@ from opentelemetry.context.context import Context
 
 logger = logging.getLogger(__file__)
 
-class TraceOptions():
+class XTraceOptions():
     """Formats X-Trace-Options for trigger tracing"""
 
     _TRACEOPTIONS_CUSTOM = ("^custom-[^\s]*$")
@@ -32,7 +32,9 @@ class TraceOptions():
         self.ts = 0
         self.ignored = []
 
-        # TODO: What if OTel context already has traceoptions
+        if context:
+            self.from_context(context)
+            return
 
         # each of options delimited by semicolon
         traceoptions = re.split(r";+", options)
@@ -62,10 +64,8 @@ class TraceOptions():
                                 assignment
                             ))
                         self.ignore.append(assignment)
-                        continue
-                    self.sw_keys.update({
-                        sw_kv[0]: sw_kv[1]
-                    })
+                    else:
+                        self.sw_keys.update({sw_kv[0]: sw_kv[1]})
 
             elif re.match(self._TRACEOPTIONS_CUSTOM_RE, option_key):
                 self.custom_kvs[option_key] = option_kv[1].strip()
@@ -89,3 +89,58 @@ class TraceOptions():
                     "Some x-trace-options were ignored: {0}".format(
                         ", ".join(self.ignored)
                     ))
+
+    def __iter__(self) -> typing.Iterator:
+        """Iterable representation of XTraceOptions"""
+        yield from self.__dict__.items()
+
+    def __str__(self) -> str:
+        """String representation of XTraceOptions"""
+        options_str = ""
+
+        if self.trigger_trace:
+            options_str += "trigger-trace"
+
+        if len(self.sw_keys) > 0:
+            if len(options_str) > 0:
+                options_str += ";"
+            options_str += "sw-keys="
+            for i, (k, v) in enumerate(self.sw_keys.items()):
+                options_str += "{0}:{1}".format(k, v)
+                if i < len(self.sw_keys) - 1:
+                    options_str += ","
+
+        if len(self.custom_kvs) > 0:
+            if len(options_str) > 0:
+                options_str += ";"
+            for i, (k, v) in enumerate(self.custom_kvs.items()):
+                options_str += "{0}={1}".format(k, v)
+                if i < len(self.custom_kvs) - 1:
+                    options_str += ";"
+        
+        if self.ts > 0:
+            if len(options_str) > 0:
+                options_str += ";"
+            options_str += "ts={0}".format(self.ts)
+
+        return options_str
+
+    def from_context(
+        self,
+        context: typing.Optional[Context]
+    ) -> None:
+        """
+        Args:
+          context: OTel context that may contain x-trace-options
+        """
+        if "trigger_trace" in context and context["trigger_trace"]:
+            self.trigger_trace = True
+
+        if "sw_keys" in context and context["sw_keys"]:
+            self.sw_keys = context["sw_keys"]
+
+        if "custom_kvs" in context and context["custom_kvs"]:
+            self.custom_kvs = context["custom_kvs"]
+
+        if "ts" in context and context["ts"] > 0:
+            self.ts = context["ts"]
