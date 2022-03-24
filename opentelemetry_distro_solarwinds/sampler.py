@@ -19,7 +19,6 @@ from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
 from opentelemetry_distro_solarwinds.w3c_transformer import (
     trace_flags_from_int,
     traceparent_from_context,
-    sw_from_context,
     sw_from_span_and_decision
 )
 
@@ -52,7 +51,7 @@ class _SwSampler(Sampler):
         """Calculates oboe trace decision based on parent span context, for
         non-existent or remote parent spans only."""
         tracestring = traceparent_from_context(parent_span_context)
-        sw_member_value = sw_from_context(parent_span_context)
+        sw_member_value = parent_span_context.trace_state.get("sw")
 
         # TODO: config --> enable/disable tracing, sample_rate, tt mode
         tracing_mode = 1
