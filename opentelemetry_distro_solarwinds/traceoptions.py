@@ -13,7 +13,7 @@ class XTraceOptions():
     _TRACEOPTIONS_CUSTOM_RE = re.compile(_TRACEOPTIONS_CUSTOM)
 
     def __init__(self,
-        options: str,
+        options_header: str,
         context: typing.Optional[Context] = None
     ):
         """
@@ -32,12 +32,12 @@ class XTraceOptions():
         self.ts = 0
         self.ignored = []
 
-        if context:
+        if not options_header:
             self.from_context(context)
             return
 
         # each of options delimited by semicolon
-        traceoptions = re.split(r";+", options)
+        traceoptions = re.split(r";+", options_header)
         for option in traceoptions:
             # KVs (e.g. sw-keys or custom-key1) are assigned by equals
             option_kv = option.split("=", 2)
@@ -133,6 +133,10 @@ class XTraceOptions():
         Args:
           context: OTel context that may contain x-trace-options
         """
+        logger.debug("Setting XTraceOptions from_context with {0}".format(context))
+        if not context:
+            return
+
         if "trigger_trace" in context and context["trigger_trace"]:
             self.trigger_trace = True
 
