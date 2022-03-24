@@ -7,6 +7,7 @@ import logging
 from types import MappingProxyType
 from typing import Optional, Sequence
 
+from opentelemetry.context.context import Context as OtelContext
 from opentelemetry.sdk.trace.sampling import (Decision, ParentBased, Sampler,
                                               SamplingResult)
 from opentelemetry.trace import Link, SpanKind, get_current_span
@@ -14,6 +15,7 @@ from opentelemetry.trace.span import SpanContext, TraceState
 from opentelemetry.util.types import Attributes
 
 from opentelemetry_distro_solarwinds.extension.oboe import Context
+from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
 from opentelemetry_distro_solarwinds.w3c_transformer import (
     trace_flags_from_int,
     traceparent_from_context,
@@ -31,6 +33,7 @@ class _LiboboeDecision():
         do_metrics: str,
         do_sample: str
     ):
+        # TODO all liboboe outputs
         self.do_metrics = do_metrics
         self.do_sample = do_sample
 
@@ -43,21 +46,91 @@ class _SwSampler(Sampler):
 
     def calculate_liboboe_decision(
         self,
-        parent_span_context: SpanContext
+        parent_span_context: SpanContext,
+        parent_context: Optional[OtelContext] = None,
     ) -> _LiboboeDecision:
         """Calculates oboe trace decision based on parent span context, for
         non-existent or remote parent spans only."""
-        in_xtrace = traceparent_from_context(parent_span_context)
-        tracestate = sw_from_context(parent_span_context)
-        logger.debug("Creating new oboe decision with in_xtrace {0}, tracestate {1}".format(
-            in_xtrace,
-            tracestate
+        tracestring = traceparent_from_context(parent_span_context)
+        sw_member_value = sw_from_context(parent_span_context)
+
+        # TODO: config --> enable/disable tracing, sample_rate, tt mode
+        tracing_mode = 1
+        sample_rate = 1000000
+        trigger_tracing_mode_disabled = 0
+
+        xtraceoptions = XTraceOptions("", parent_context)
+        logger.debug("parent_context is {0}".format(parent_context))
+        logger.debug("xtraceoptions is {0}".format(xtraceoptions))
+
+        if xtraceoptions.trigger_trace:
+            trigger_trace = 1
+        else:
+            trigger_trace = 0
+        timestamp = xtraceoptions.ts
+        signature = None
+        options = str(xtraceoptions)
+
+        logger.debug(
+            "Creating new oboe decision with "
+            "tracestring: {0}, "
+            "sw_member_value: {1}, "
+            "tracing_mode: {2}, "
+            "sample_rate: {3}, "
+            "trigger_trace: {4}, "
+            "trigger_tracing_mode_disabled: {5}, "
+            "options: {6}, "
+            "signature: {7}, "
+            "timestamp: {8}".format(
+            tracestring,
+            sw_member_value,
+            tracing_mode,
+            sample_rate,
+            trigger_trace,
+            trigger_tracing_mode_disabled,
+            options,
+            signature,
+            timestamp
         ))
         do_metrics, do_sample, \
-            _, _, _, _, _, _, _, _, _ = Context.getDecisions(
-                in_xtrace,
-                tracestate
+            rate, source, bucket_rate, bucket_cap, \
+            type, auth, status_msg, auth_msg, status = Context.getDecisions(
+                tracestring,
+                sw_member_value,
+                tracing_mode,
+                sample_rate,
+                trigger_trace,
+                trigger_tracing_mode_disabled,
+                options,
+                signature,
+                timestamp
             )
+        logger.debug(
+            "Got liboboe decision outputs "
+            "do_metrics: {0}, "
+            "do_sample: {1}, "
+            "rate: {2}, "
+            "source: {3}, "
+            "bucket_rate: {4}, "
+            "bucket_cap: {5}, "
+            "type: {6}, "
+            "auth: {7}, "
+            "status_msg: {8}, "
+            "auth_msg: {9}, "
+            "status: {10}".format(
+                do_metrics,
+                do_sample,
+                rate,
+                source,
+                bucket_rate,
+                bucket_cap,
+                type,
+                auth,
+                status_msg,
+                auth_msg,
+                status
+            )
+        )
         return _LiboboeDecision(do_metrics, do_sample)
 
     def otel_decision_from_liboboe(
@@ -183,7 +256,7 @@ class _SwSampler(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Optional[OtelContext],
         trace_id: int,
         name: str,
         kind: SpanKind = None,
@@ -199,10 +272,10 @@ class _SwSampler(Sampler):
             parent_context
         ).get_span_context()
 
-        # TODO: get individual x-trace-options from parent_context
-        logger.debug("parent_context is {0}".format(parent_context))
-
-        decision = self.calculate_liboboe_decision(parent_span_context)
+        decision = self.calculate_liboboe_decision(
+            parent_span_context,
+            parent_context
+        )
 
         # Always calculate trace_state for propagation
         trace_state = self.calculate_trace_state(
