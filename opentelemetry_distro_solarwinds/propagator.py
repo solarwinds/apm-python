@@ -17,6 +17,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
     """
     _TRACESTATE_HEADER_NAME = "tracestate"
     _XTRACEOPTIONS_HEADER_NAME = "x-trace-options"
+    _XTRACEOPTIONS_SIGNATURE_HEADER_NAME = "x-trace-options-signature"
 
     def extract(
         self,
@@ -24,7 +25,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
-        """Extracts sw trace options from carrier into OTel Context"""
+        """Extracts sw trace options and signature from carrier into OTel Context"""
         if context is None:
             context = Context()
 
@@ -32,11 +33,21 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             carrier,
             self._XTRACEOPTIONS_HEADER_NAME
         )
-        if not xtraceoptions_header:
-            return context
-        logger.debug("Extracted xtraceoptions_header: {0}".format(xtraceoptions_header[0]))
-        xtraceoptions = XTraceOptions(xtraceoptions_header[0], context)
-        context.update(dict(xtraceoptions))
+        if xtraceoptions_header:
+            logger.debug("Extracted xtraceoptions_header: {0}".format(xtraceoptions_header[0]))
+            xtraceoptions = XTraceOptions(xtraceoptions_header[0], context)
+            context.update(dict(xtraceoptions))
+
+        signature_header = getter.get(
+            carrier,
+            self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME
+        )
+        if signature_header:
+            logger.debug("Extracted signature_header: {0}".format(signature_header[0]))
+            context.update({
+                self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME: signature_header[0]
+            })
+
         return context
 
     def inject(

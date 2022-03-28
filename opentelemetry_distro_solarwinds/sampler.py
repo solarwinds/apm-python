@@ -29,15 +29,35 @@ class _LiboboeDecision():
     """Convenience representation of a liboboe decision"""
     def __init__(
         self,
-        do_metrics: str,
-        do_sample: str
+        do_metrics: int,
+        do_sample: int,
+        sample_rate: int,
+        sample_source: int,
+        bucket_rate: float,
+        bucket_cap: float,
+        decision_type: int,
+        auth: int,
+        status_msg: str,
+        auth_msg: str,
+        status: int,
     ):
-        # TODO all liboboe outputs
         self.do_metrics = do_metrics
         self.do_sample = do_sample
+        self.sample_rate = sample_rate
+        self.sample_source = sample_source
+        self.bucket_rate = bucket_rate
+        self.bucket_cap = bucket_cap
+        self.decision_type = decision_type
+        self.auth = auth
+        self.status_msg = status_msg
+        self.auth_msg = auth_msg
+        self.status = status
 
 
 class _SwSampler(Sampler):
+
+    _XTRACEOPTIONS_SIGNATURE_HEADER_NAME = "x-trace-options-signature"
+
     """SolarWinds custom opentelemetry sampler which obeys configuration options provided by the NH/AO Backend."""
 
     def get_description(self) -> str:
@@ -48,27 +68,31 @@ class _SwSampler(Sampler):
         parent_span_context: SpanContext,
         parent_context: Optional[OtelContext] = None,
     ) -> _LiboboeDecision:
-        """Calculates oboe trace decision based on parent span context, for
-        non-existent or remote parent spans only."""
-        tracestring = traceparent_from_context(parent_span_context)
+        """Calculates oboe trace decision based on parent span context."""
+        tracestring = None
+        if parent_span_context.is_valid and parent_span_context.is_remote:
+            tracestring = traceparent_from_context(parent_span_context)
         sw_member_value = parent_span_context.trace_state.get("sw")
 
         # TODO: config --> enable/disable tracing, sample_rate, tt mode
         tracing_mode = 1
-        sample_rate = 1000000
+        sample_rate = 1
         trigger_tracing_mode_disabled = 0
 
-        xtraceoptions = XTraceOptions("", parent_context)
         logger.debug("parent_context is {0}".format(parent_context))
+        xtraceoptions = XTraceOptions("", parent_context)
         logger.debug("xtraceoptions is {0}".format(xtraceoptions))
 
-        if xtraceoptions.trigger_trace:
-            trigger_trace = 1
-        else:
-            trigger_trace = 0
-        timestamp = xtraceoptions.ts
+        options = None
+        trigger_trace = 0
         signature = None
-        options = str(xtraceoptions)
+        timestamp = None
+        if xtraceoptions:
+            options = str(xtraceoptions)
+            trigger_trace = xtraceoptions.trigger_trace
+            if parent_context:
+                signature = parent_context.get(self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME, None)
+            timestamp = xtraceoptions.ts
 
         logger.debug(
             "Creating new oboe decision with "
@@ -92,8 +116,8 @@ class _SwSampler(Sampler):
             timestamp
         ))
         do_metrics, do_sample, \
-            rate, source, bucket_rate, bucket_cap, \
-            type, auth, status_msg, auth_msg, status = Context.getDecisions(
+            rate, source, bucket_rate, bucket_cap, decision_type, \
+            auth, status_msg, auth_msg, status = Context.getDecisions(
                 tracestring,
                 sw_member_value,
                 tracing_mode,
@@ -123,14 +147,26 @@ class _SwSampler(Sampler):
                 source,
                 bucket_rate,
                 bucket_cap,
-                type,
+                decision_type,
                 auth,
                 status_msg,
                 auth_msg,
                 status
             )
         )
-        return _LiboboeDecision(do_metrics, do_sample)
+        return _LiboboeDecision(
+            do_metrics,
+            do_sample,
+            rate,
+            source,
+            bucket_rate,
+            bucket_cap,
+            decision_type,
+            auth,
+            status_msg,
+            auth_msg,
+            status
+        )
 
     def otel_decision_from_liboboe(
         self,
