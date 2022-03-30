@@ -2,10 +2,12 @@
 
 from opentelemetry import trace
 from opentelemetry.instrumentation.distro import BaseDistro
+from opentelemetry.instrumentation.propagators import set_global_response_propagator
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from opentelemetry_distro_solarwinds.exporter import SolarWindsSpanExporter
+from opentelemetry_distro_solarwinds.response_propagator import SolarWindsTraceResponsePropagator
 from opentelemetry_distro_solarwinds.sampler import ParentBasedSwSampler
 
 
@@ -16,9 +18,11 @@ class SolarWindsDistro(BaseDistro):
         - no functionality added at this time
     """
     def _configure(self, **kwargs):
-        # automatically make use of custom SolarWinds sampler
+        # Automatically make use of custom SolarWinds sampler
         trace.set_tracer_provider(
             TracerProvider(sampler=ParentBasedSwSampler()))
         # Automatically configure the SolarWinds Span exporter
         span_exporter = BatchSpanProcessor(SolarWindsSpanExporter())
         trace.get_tracer_provider().add_span_processor(span_exporter)
+        # Set global HTTP response propagator
+        set_global_response_propagator(SolarWindsTraceResponsePropagator())
