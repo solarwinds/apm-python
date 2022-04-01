@@ -55,9 +55,6 @@ class _LiboboeDecision():
 
 
 class _SwSampler(Sampler):
-
-    _XTRACEOPTIONS_SIGNATURE_HEADER_NAME = "x-trace-options-signature"
-
     """SolarWinds custom opentelemetry sampler which obeys configuration options provided by the NH/AO Backend."""
 
     def get_description(self) -> str:
@@ -67,6 +64,7 @@ class _SwSampler(Sampler):
         self,
         parent_span_context: SpanContext,
         parent_context: Optional[OtelContext] = None,
+        xtraceoptions: Optional[XTraceOptions] = None,
     ) -> _LiboboeDecision:
         """Calculates oboe trace decision based on parent span context."""
         tracestring = None
@@ -80,7 +78,6 @@ class _SwSampler(Sampler):
         trigger_tracing_mode_disabled = 0
 
         logger.debug("parent_context is {0}".format(parent_context))
-        xtraceoptions = XTraceOptions("", parent_context)
         logger.debug("xtraceoptions is {0}".format(xtraceoptions))
 
         options = None
@@ -90,8 +87,7 @@ class _SwSampler(Sampler):
         if xtraceoptions:
             options = str(xtraceoptions)
             trigger_trace = xtraceoptions.trigger_trace
-            if parent_context:
-                signature = parent_context.get(self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME, None)
+            signature = xtraceoptions.signature
             timestamp = xtraceoptions.ts
 
         logger.debug(
@@ -182,10 +178,50 @@ class _SwSampler(Sampler):
         logger.debug("OTel decision created: {0}".format(decision))
         return decision
 
+    def create_xtraceoptions_response_value(
+        self,
+        decision: _LiboboeDecision,
+        parent_span_context: SpanContext,
+        xtraceoptions: XTraceOptions
+    ) -> str:
+        """Use decision and xtraceoptions to create sanitized xtraceoptions
+        response kv with W3C tracestate-allowed delimiters:
+        `####` instead of `=`
+        `....` instead of `,`
+        """
+        response = []
+
+        if xtraceoptions.signature:
+            response.append("auth####{0}".format(decision.auth_msg))
+
+        if not decision.auth or decision.auth < 1:
+            trigger_msg = ""
+            if xtraceoptions.trigger_trace:
+                # If a traceparent header was provided then oboe does not generate the message
+                tracestring = None
+                if parent_span_context.is_valid and parent_span_context.is_remote:
+                    tracestring = traceparent_from_context(parent_span_context)
+
+                if tracestring and decision.type == 0:
+                    trigger_msg = "ignored"
+                else:
+                    trigger_msg = decision.status_msg
+            else:
+                trigger_msg = "not-requested"
+            response.append("trigger-trace####{0}".format(trigger_msg))
+
+        if xtraceoptions.ignored:
+            response.append(
+                "ignored####{0}".format("....".join(decision.ignored))
+            )
+
+        return ";".join(response)
+
     def create_new_trace_state(
         self,
         decision: _LiboboeDecision,
-        parent_span_context: SpanContext
+        parent_span_context: SpanContext,
+        xtraceoptions: Optional[XTraceOptions] = None,
     ) -> TraceState:
         """Creates new TraceState based on trace decision and parent span id."""
         trace_state = TraceState([(
@@ -195,25 +231,44 @@ class _SwSampler(Sampler):
                 trace_flags_from_int(decision.do_sample)
             )
         )])
+        if xtraceoptions and xtraceoptions.trigger_trace:
+            trace_state.add(
+                XTraceOptions.get_sw_xtraceoptions_response_key(),
+                self.create_xtraceoptions_response_value(
+                    decision,
+                    parent_span_context,
+                    xtraceoptions
+                )
+            )
         logger.debug("Created new trace_state: {0}".format(trace_state))
         return trace_state
 
     def calculate_trace_state(
         self,
         decision: _LiboboeDecision,
-        parent_span_context: SpanContext
+        parent_span_context: SpanContext,
+        xtraceoptions: Optional[XTraceOptions] = None,
     ) -> TraceState:
         """Calculates trace_state based on parent span context and trace decision,
         for non-existent or remote parent spans only."""
         # No valid parent i.e. root span, or parent is remote
         if not parent_span_context.is_valid:
-            trace_state = self.create_new_trace_state(decision, parent_span_context)
+            trace_state = self.create_new_trace_state(
+                decision,
+                parent_span_context,
+                xtraceoptions
+            )
         else:
             trace_state = parent_span_context.trace_state
             if not trace_state:
                 # tracestate nonexistent/non-parsable
-                trace_state = self.create_new_trace_state(decision, parent_span_context)
+                trace_state = self.create_new_trace_state(
+                    decision,
+                    parent_span_context,
+                    xtraceoptions
+                )
             else:
+                # TODO: Should traceoptions piggyback ever be updated?
                 # Update trace_state with span_id and sw trace_flags
                 trace_state = trace_state.update(
                     "sw",
@@ -306,16 +361,19 @@ class _SwSampler(Sampler):
         parent_span_context = get_current_span(
             parent_context
         ).get_span_context()
+        xtraceoptions = XTraceOptions(parent_context)
 
         decision = self.calculate_liboboe_decision(
             parent_span_context,
-            parent_context
+            parent_context,
+            xtraceoptions
         )
 
         # Always calculate trace_state for propagation
         trace_state = self.calculate_trace_state(
             decision,
-            parent_span_context
+            parent_span_context,
+            xtraceoptions
         )
         attributes = self.calculate_attributes(
             attributes,

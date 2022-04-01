@@ -5,7 +5,9 @@ from opentelemetry import trace
 from opentelemetry.context.context import Context
 from opentelemetry.instrumentation.propagators import ResponsePropagator
 from opentelemetry.propagators import textmap
+from opentelemetry.trace.span import TraceState
 
+from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
 from opentelemetry_distro_solarwinds.w3c_transformer import traceparent_from_context
 
 logger = logging.getLogger(__file__)
@@ -30,30 +32,44 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
             return
         
         x_trace = traceparent_from_context(span_context)
-
-        # TODO: Should be based on x-trace-options tt
-        sampled = 'trigger-trace='
-        if span_context.trace_flags:
-            sampled += 'ok'
-        else:
-            sampled += 'rate-exceeded'
-
-        exposed_headers = "{0},{1}".format(
-            self._XTRACE_HEADER_NAME,
-            self._XTRACEOPTIONS_RESPONSE_HEADER_NAME
-        )
         setter.set(
             carrier,
             self._XTRACE_HEADER_NAME,
             x_trace,
         )
-        setter.set(
-            carrier,
-            self._XTRACEOPTIONS_RESPONSE_HEADER_NAME,
-            sampled,
+        exposed_headers = self._XTRACE_HEADER_NAME
+
+        xtraceoptions_response = self.recover_response_from_tracestate(
+            span_context.trace_state
         )
+        if xtraceoptions_response:
+            exposed_headers += ",{0}".format(
+                self._XTRACEOPTIONS_RESPONSE_HEADER_NAME
+            )
+            setter.set(
+                carrier,
+                self._XTRACEOPTIONS_RESPONSE_HEADER_NAME,
+                xtraceoptions_response,
+            )
         setter.set(
             carrier,
             self._HTTP_HEADER_ACCESS_CONTROL_EXPOSE_HEADERS,
             exposed_headers,
         )
+    
+    def recover_response_from_tracestate(
+        self,
+        tracestate: TraceState
+    ) -> str:
+        """Use tracestate to recover xtraceoptions response by
+        converting delimiters:
+        `####` becomes `=`
+        `....` becomes `,`
+        """
+        sanitized = tracestate.get(
+            XTraceOptions.get_sw_xtraceoptions_response_key(),
+            None
+        )
+        if not sanitized:
+            return
+        return sanitized.replace("####", "=").replace("....", ",")

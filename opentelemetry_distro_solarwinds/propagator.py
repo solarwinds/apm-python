@@ -12,7 +12,7 @@ from opentelemetry_distro_solarwinds.w3c_transformer import sw_from_context
 logger = logging.getLogger(__file__)
 
 class SolarWindsPropagator(textmap.TextMapPropagator):
-    """Extracts and injects SolarWinds tracestate header.
+    """Extracts and injects SolarWinds headers for trace propagation.
     Must be used in composite with TraceContextTextMapPropagator.
     """
     _TRACESTATE_HEADER_NAME = "tracestate"
@@ -25,7 +25,9 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
-        """Extracts sw trace options and signature from carrier into OTel Context"""
+        """Extracts sw trace options and signature from carrier into OTel
+        Context. Note: tracestate is extracted by TraceContextTextMapPropagator
+        """
         if context is None:
             context = Context()
 
@@ -33,21 +35,29 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             carrier,
             self._XTRACEOPTIONS_HEADER_NAME
         )
-        if xtraceoptions_header:
-            logger.debug("Extracted xtraceoptions_header: {0}".format(xtraceoptions_header[0]))
-            xtraceoptions = XTraceOptions(xtraceoptions_header[0], context)
-            context.update(dict(xtraceoptions))
+        if not xtraceoptions_header:
+            logger.debug("No xtraceoptions to extract; ignoring signature")
+            return context
+        logger.debug("Extracted xtraceoptions_header: {0}".format(
+            xtraceoptions_header[0]
+        ))
 
         signature_header = getter.get(
             carrier,
             self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME
         )
         if signature_header:
-            logger.debug("Extracted signature_header: {0}".format(signature_header[0]))
-            context.update({
-                self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME: signature_header[0]
-            })
-
+            xtraceoptions = XTraceOptions(
+                context,
+                xtraceoptions_header[0],
+                signature_header[0],
+            )
+        else:
+            xtraceoptions = XTraceOptions(
+                context,
+                xtraceoptions_header[0],
+            )
+        context.update(dict(xtraceoptions))
         return context
 
     def inject(
@@ -82,12 +92,9 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()
         )
 
-        # TODO: Prepare carrier with x-trace-options
-
     @property
     def fields(self) -> typing.Set[str]:
         """Returns a set with the fields set in `inject`"""
         return {
-            self._TRACESTATE_HEADER_NAME,
-            self._XTRACEOPTIONS_HEADER_NAME
+            self._TRACESTATE_HEADER_NAME
         }
