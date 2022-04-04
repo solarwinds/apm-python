@@ -128,7 +128,7 @@ class XTraceOptions():
                 options.append("=".join([k, v]))
 
         if self.ts > 0:
-            options.append("=".join(["ts", self.ts]))
+            options.append("=".join(["ts", str(self.ts)]))
 
         return ";".join(options)
 
