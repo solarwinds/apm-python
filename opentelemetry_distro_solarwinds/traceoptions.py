@@ -110,39 +110,27 @@ class XTraceOptions():
         """Iterable representation of XTraceOptions"""
         yield from self.__dict__.items()
 
-    # TODO this should be named something else if excludes signature
-    def __str__(self) -> str:
-        """String representation of XTraceOptions
-
-        Note: Does not include signature."""
-        options_str = ""
+    def to_options_header(self) -> str:
+        """String representation of XTraceOptions, without signature."""
+        options = []
 
         if self.trigger_trace:
-            options_str += "trigger-trace"
+            options.append("trigger-trace")
 
         if len(self.sw_keys) > 0:
-            if len(options_str) > 0:
-                options_str += ";"
-            options_str += "sw-keys="
-            for i, (k, v) in enumerate(self.sw_keys.items()):
-                options_str += "{0}:{1}".format(k, v)
-                if i < len(self.sw_keys) - 1:
-                    options_str += ","
+            sw_keys = []
+            for _, (k, v) in enumerate(self.sw_keys.items()):
+                sw_keys.append(":".join([k, v])) 
+            options.append("=".join(["sw-keys", ",".join(sw_keys)]))
 
         if len(self.custom_kvs) > 0:
-            if len(options_str) > 0:
-                options_str += ";"
-            for i, (k, v) in enumerate(self.custom_kvs.items()):
-                options_str += "{0}={1}".format(k, v)
-                if i < len(self.custom_kvs) - 1:
-                    options_str += ";"
-        
-        if self.ts > 0:
-            if len(options_str) > 0:
-                options_str += ";"
-            options_str += "ts={0}".format(self.ts)
+            for _, (k, v) in enumerate(self.custom_kvs.items()):
+                options.append("=".join([k, v]))
 
-        return options_str
+        if self.ts > 0:
+            options.append("=".join(["ts", self.ts]))
+
+        return ";".join(options)
 
     def from_context(
         self,

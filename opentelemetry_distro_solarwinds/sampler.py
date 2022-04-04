@@ -78,14 +78,14 @@ class _SwSampler(Sampler):
         trigger_tracing_mode_disabled = 0
 
         logger.debug("parent_context is {0}".format(parent_context))
-        logger.debug("xtraceoptions is {0}".format(xtraceoptions))
+        logger.debug("xtraceoptions is {0}".format(dict(xtraceoptions)))
 
         options = None
         trigger_trace = 0
         signature = None
         timestamp = None
         if xtraceoptions:
-            options = str(xtraceoptions)
+            options = xtraceoptions.to_options_header()
             trigger_trace = xtraceoptions.trigger_trace
             signature = xtraceoptions.signature
             timestamp = xtraceoptions.ts
@@ -232,7 +232,7 @@ class _SwSampler(Sampler):
             )
         )])
         if xtraceoptions and xtraceoptions.trigger_trace:
-            trace_state.add(
+            trace_state = trace_state.add(
                 XTraceOptions.get_sw_xtraceoptions_response_key(),
                 self.create_xtraceoptions_response_value(
                     decision,
