@@ -202,7 +202,7 @@ class _SwSampler(Sampler):
                 if parent_span_context.is_valid and parent_span_context.is_remote:
                     tracestring = traceparent_from_context(parent_span_context)
 
-                if tracestring and decision.type == 0:
+                if tracestring and decision.decision_type == 0:
                     trigger_msg = "ignored"
                 else:
                     trigger_msg = decision.status_msg
@@ -223,7 +223,8 @@ class _SwSampler(Sampler):
         parent_span_context: SpanContext,
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> TraceState:
-        """Creates new TraceState based on trace decision and parent span id."""
+        """Creates new TraceState based on trace decision, parent span id,
+        and x-trace-options if provided"""
         trace_state = TraceState([(
             "sw",
             sw_from_span_and_decision(
@@ -249,8 +250,9 @@ class _SwSampler(Sampler):
         parent_span_context: SpanContext,
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> TraceState:
-        """Calculates trace_state based on parent span context and trace decision,
-        for non-existent or remote parent spans only."""
+        """Calculates trace_state based on parent span context, trace decision,
+        and x-trace-options if provided -- for non-existent or remote parent
+        spans only."""
         # No valid parent i.e. root span, or parent is remote
         if not parent_span_context.is_valid:
             trace_state = self.create_new_trace_state(
@@ -268,7 +270,6 @@ class _SwSampler(Sampler):
                     xtraceoptions
                 )
             else:
-                # TODO: Should traceoptions piggyback ever be updated?
                 # Update trace_state with span_id and sw trace_flags
                 trace_state = trace_state.update(
                     "sw",
@@ -277,6 +278,17 @@ class _SwSampler(Sampler):
                         trace_flags_from_int(decision.do_sample)
                     )
                 )
+                # Update trace_state with x-trace-options-response
+                # Not a propagated header, so always an add
+                if xtraceoptions and xtraceoptions.trigger_trace:
+                    trace_state = trace_state.add(
+                        XTraceOptions.get_sw_xtraceoptions_response_key(),
+                        self.create_xtraceoptions_response_value(
+                            decision,
+                            parent_span_context,
+                            xtraceoptions
+                        )
+                    )
                 logger.debug("Updated trace_state: {0}".format(trace_state))
         return trace_state
 
