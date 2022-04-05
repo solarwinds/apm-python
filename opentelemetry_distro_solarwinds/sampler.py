@@ -16,11 +16,7 @@ from opentelemetry.util.types import Attributes
 
 from opentelemetry_distro_solarwinds.extension.oboe import Context
 from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
-from opentelemetry_distro_solarwinds.w3c_transformer import (
-    trace_flags_from_int,
-    traceparent_from_context,
-    sw_from_span_and_decision
-)
+from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +65,9 @@ class _SwSampler(Sampler):
         """Calculates oboe trace decision based on parent span context."""
         tracestring = None
         if parent_span_context.is_valid and parent_span_context.is_remote:
-            tracestring = traceparent_from_context(parent_span_context)
+            tracestring = W3CTransformer.traceparent_from_context(
+                parent_span_context
+            )
         sw_member_value = parent_span_context.trace_state.get("sw")
 
         # TODO: config --> enable/disable tracing, sample_rate, tt mode
@@ -200,7 +198,9 @@ class _SwSampler(Sampler):
                 # If a traceparent header was provided then oboe does not generate the message
                 tracestring = None
                 if parent_span_context.is_valid and parent_span_context.is_remote:
-                    tracestring = traceparent_from_context(parent_span_context)
+                    tracestring = W3CTransformer.traceparent_from_context(
+                        parent_span_context
+                    )
 
                 if tracestring and decision.decision_type == 0:
                     trigger_msg = "ignored"
@@ -227,9 +227,9 @@ class _SwSampler(Sampler):
         and x-trace-options if provided"""
         trace_state = TraceState([(
             "sw",
-            sw_from_span_and_decision(
+            W3CTransformer.sw_from_span_and_decision(
                 parent_span_context.span_id,
-                trace_flags_from_int(decision.do_sample)
+                W3CTransformer.trace_flags_from_int(decision.do_sample)
             )
         )])
         if xtraceoptions and xtraceoptions.trigger_trace:
@@ -273,9 +273,9 @@ class _SwSampler(Sampler):
                 # Update trace_state with span_id and sw trace_flags
                 trace_state = trace_state.update(
                     "sw",
-                    sw_from_span_and_decision(
+                    W3CTransformer.sw_from_span_and_decision(
                         parent_span_context.span_id,
-                        trace_flags_from_int(decision.do_sample)
+                        W3CTransformer.trace_flags_from_int(decision.do_sample)
                     )
                 )
                 # Update trace_state with x-trace-options-response
@@ -343,9 +343,9 @@ class _SwSampler(Sampler):
                 )
                 attr_trace_state.update(
                     "sw",
-                    sw_from_span_and_decision(
+                    W3CTransformer.sw_from_span_and_decision(
                         parent_span_context.span_id,
-                        trace_flags_from_int(decision.do_sample)
+                        W3CTransformer.trace_flags_from_int(decision.do_sample)
                     )
                 )
                 new_attributes["sw.w3c.tracestate"] = attr_trace_state.to_header()

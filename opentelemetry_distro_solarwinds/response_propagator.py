@@ -8,7 +8,7 @@ from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
 from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
-from opentelemetry_distro_solarwinds.w3c_transformer import traceparent_from_context
+from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__file__)
 
@@ -31,7 +31,7 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
         
-        x_trace = traceparent_from_context(span_context)
+        x_trace = W3CTransformer.traceparent_from_context(span_context)
         setter.set(
             carrier,
             self._XTRACE_HEADER_NAME,
