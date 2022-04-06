@@ -75,8 +75,8 @@ class _SwSampler(Sampler):
         sample_rate = -1
         trigger_tracing_mode_disabled = -1
 
-        logger.debug("parent_context is {0}".format(parent_context))
-        logger.debug("xtraceoptions is {0}".format(dict(xtraceoptions)))
+        logger.debug("parent_context is {}".format(parent_context))
+        logger.debug("xtraceoptions is {}".format(dict(xtraceoptions)))
 
         options = None
         trigger_trace = 0
@@ -90,15 +90,15 @@ class _SwSampler(Sampler):
 
         logger.debug(
             "Creating new oboe decision with "
-            "tracestring: {0}, "
-            "sw_member_value: {1}, "
-            "tracing_mode: {2}, "
-            "sample_rate: {3}, "
-            "trigger_trace: {4}, "
-            "trigger_tracing_mode_disabled: {5}, "
-            "options: {6}, "
-            "signature: {7}, "
-            "timestamp: {8}".format(
+            "tracestring: {}, "
+            "sw_member_value: {}, "
+            "tracing_mode: {}, "
+            "sample_rate: {}, "
+            "trigger_trace: {}, "
+            "trigger_tracing_mode_disabled: {}, "
+            "options: {}, "
+            "signature: {}, "
+            "timestamp: {}".format(
             tracestring,
             sw_member_value,
             tracing_mode,
@@ -124,17 +124,17 @@ class _SwSampler(Sampler):
             )
         logger.debug(
             "Got liboboe decision outputs "
-            "do_metrics: {0}, "
-            "do_sample: {1}, "
-            "rate: {2}, "
-            "source: {3}, "
-            "bucket_rate: {4}, "
-            "bucket_cap: {5}, "
-            "type: {6}, "
-            "auth: {7}, "
-            "status_msg: {8}, "
-            "auth_msg: {9}, "
-            "status: {10}".format(
+            "do_metrics: {}, "
+            "do_sample: {}, "
+            "rate: {}, "
+            "source: {}, "
+            "bucket_rate: {}, "
+            "bucket_cap: {}, "
+            "type: {}, "
+            "auth: {}, "
+            "status_msg: {}, "
+            "auth_msg: {}, "
+            "status: {}".format(
                 do_metrics,
                 do_sample,
                 rate,
@@ -173,7 +173,7 @@ class _SwSampler(Sampler):
             decision = Decision.RECORD_ONLY
         if liboboe_decision.do_sample:
             decision = Decision.RECORD_AND_SAMPLE
-        logger.debug("OTel decision created: {0}".format(decision))
+        logger.debug("OTel decision created: {}".format(decision))
         return decision
 
     def create_xtraceoptions_response_value(
@@ -190,7 +190,7 @@ class _SwSampler(Sampler):
         response = []
 
         if xtraceoptions.signature:
-            response.append("auth####{0}".format(decision.auth_msg))
+            response.append("auth####{}".format(decision.auth_msg))
 
         if not decision.auth or decision.auth < 1:
             trigger_msg = ""
@@ -208,11 +208,11 @@ class _SwSampler(Sampler):
                     trigger_msg = decision.status_msg
             else:
                 trigger_msg = "not-requested"
-            response.append("trigger-trace####{0}".format(trigger_msg))
+            response.append("trigger-trace####{}".format(trigger_msg))
 
         if xtraceoptions.ignored:
             response.append(
-                "ignored####{0}".format("....".join(decision.ignored))
+                "ignored####{}".format("....".join(decision.ignored))
             )
 
         return ";".join(response)
@@ -241,7 +241,7 @@ class _SwSampler(Sampler):
                     xtraceoptions
                 )
             )
-        logger.debug("Created new trace_state: {0}".format(trace_state))
+        logger.debug("Created new trace_state: {}".format(trace_state))
         return trace_state
 
     def calculate_trace_state(
@@ -289,7 +289,7 @@ class _SwSampler(Sampler):
                             xtraceoptions
                         )
                     )
-                logger.debug("Updated trace_state: {0}".format(trace_state))
+                logger.debug("Updated trace_state: {}".format(trace_state))
         return trace_state
 
     def calculate_attributes(
@@ -303,7 +303,7 @@ class _SwSampler(Sampler):
         parent span context, and existing attributes.
 
         For non-existent or remote parent spans only."""
-        logger.debug("Received attributes: {0}".format(attributes))
+        logger.debug("Received attributes: {}".format(attributes))
 
         # Don't set attributes if not tracing
         if self.otel_decision_from_liboboe(decision) == Decision.DROP:
@@ -325,7 +325,7 @@ class _SwSampler(Sampler):
             if sw_value:
                 attributes["sw.tracestate_parent_id"] = sw_value
 
-            logger.debug("Created new attributes: {0}".format(attributes))
+            logger.debug("Created new attributes: {}".format(attributes))
         else:
             # Copy existing MappingProxyType KV into new_attributes for modification
             # attributes may have other vendor info etc
@@ -351,7 +351,7 @@ class _SwSampler(Sampler):
                 new_attributes["sw.w3c.tracestate"] = attr_trace_state.to_header()
 
             attributes = new_attributes
-            logger.debug("Set updated attributes: {0}".format(attributes))
+            logger.debug("Set updated attributes: {}".format(attributes))
         
         # attributes must be immutable for SamplingResult
         return MappingProxyType(attributes)

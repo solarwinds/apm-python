@@ -38,7 +38,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         if not xtraceoptions_header:
             logger.debug("No xtraceoptions to extract; ignoring signature")
             return context
-        logger.debug("Extracted xtraceoptions_header: {0}".format(
+        logger.debug("Extracted xtraceoptions_header: {}".format(
             xtraceoptions_header[0]
         ))
 
@@ -77,15 +77,15 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             # Check if trace_state already contains sw KV
             if "sw" in trace_state.keys():
                 # If so, modify current span_id and trace_flags, and move to beginning of list
-                logger.debug("Updating trace state for injection with {0}".format(sw_value))
+                logger.debug("Updating trace state for injection with {}".format(sw_value))
                 trace_state = trace_state.update("sw", sw_value)
 
             else:
                 # If not, add sw KV to beginning of list
-                logger.debug("Adding KV to trace state for injection with {0}".format(sw_value))
+                logger.debug("Adding KV to trace state for injection with {}".format(sw_value))
                 trace_state.add("sw", sw_value)
         else:
-            logger.debug("Creating new trace state for injection with {0}".format(sw_value))
+            logger.debug("Creating new trace state for injection with {}".format(sw_value))
             trace_state = TraceState([("sw", sw_value)])
 
         setter.set(

@@ -52,7 +52,7 @@ def link_oboe_lib(src_lib):
             if os.path.exists(dst):
                 # if the destination library files exist already, they need to be deleted, otherwise linking will fail
                 os.remove(dst)
-                log.info("Removed {0}".format(dst))
+                log.info("Removed {}".format(dst))
             os.symlink(src_lib, dst)
             log.info("Created new link at {} to {}".format(dst, src_lib))
     except Exception as ecp:

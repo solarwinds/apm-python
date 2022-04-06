@@ -73,7 +73,7 @@ class XTraceOptions():
                     sw_kv = assignment.split(":", 2)
                     if not sw_kv[0]:
                         logger.warning(
-                            "Could not parse sw-key assignment {0}. Ignoring.".format(
+                            "Could not parse sw-key assignment {}. Ignoring.".format(
                                 assignment
                             ))
                         self.ignore.append(assignment)
@@ -92,14 +92,14 @@ class XTraceOptions():
             
             else:
                 logger.warning(
-                    "{0} is not a recognized trace option. Ignoring".format(
+                    "{} is not a recognized trace option. Ignoring".format(
                         option_key
                     ))
                 self.ignored.append(option_key)
 
             if self.ignored:
                 logger.warning(
-                    "Some x-trace-options were ignored: {0}".format(
+                    "Some x-trace-options were ignored: {}".format(
                         ", ".join(self.ignored)
                     ))
         
@@ -140,7 +140,7 @@ class XTraceOptions():
         Args:
           context: OTel context that may contain x-trace-options
         """
-        logger.debug("Setting XTraceOptions from_context with {0}".format(context))
+        logger.debug("Setting XTraceOptions from_context with {}".format(context))
         if not context:
             return
         for option_key in self._OPTION_KEYS:

@@ -36,7 +36,7 @@ class SolarWindsSpanExporter(SpanExporter):
             md = self._build_metadata(span.get_span_context())
             if span.parent and span.parent.is_valid:
                 # If there is a parent, we need to add an edge to this parent to this entry event
-                logger.debug("Continue trace from {0}".format(md.toString()))
+                logger.debug("Continue trace from {}".format(md.toString()))
                 parent_md = self._build_metadata(span.parent)
                 evt = Context.startTrace(md, int(span.start_time / 1000),
                                          parent_md)
@@ -44,7 +44,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 # In OpenTelemrtry, there are no events with individual IDs, but only a span ID
                 # and trace ID. Thus, the entry event needs to be generated such that it has the
                 # same op ID as the span ID of the OTel span.
-                logger.debug("Start a new trace {0}".format(md.toString()))
+                logger.debug("Start a new trace {}".format(md.toString()))
                 evt = Context.startTrace(md, int(span.start_time / 1000))
             evt.addInfo('Layer', span.name)
             evt.addInfo('Language', 'Python')

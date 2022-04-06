@@ -43,7 +43,7 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
             span_context.trace_state
         )
         if xtraceoptions_response:
-            exposed_headers += ",{0}".format(
+            exposed_headers += ",{}".format(
                 self._XTRACEOPTIONS_RESPONSE_HEADER_NAME
             )
             setter.set(
