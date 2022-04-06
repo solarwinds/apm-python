@@ -13,8 +13,7 @@ from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
 logger = logging.getLogger(__file__)
 
 class SolarWindsTraceResponsePropagator(ResponsePropagator):
-    """
-    """
+    """Propagator that injects SW values into HTTP responses"""
     _HTTP_HEADER_ACCESS_CONTROL_EXPOSE_HEADERS = "Access-Control-Expose-Headers"
     _XTRACE_HEADER_NAME = "x-trace"
     _XTRACEOPTIONS_RESPONSE_HEADER_NAME = "x-trace-options-response"
@@ -37,15 +36,15 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
             self._XTRACE_HEADER_NAME,
             x_trace,
         )
-        exposed_headers = self._XTRACE_HEADER_NAME
+        exposed_headers = [self._XTRACE_HEADER_NAME]
 
         xtraceoptions_response = self.recover_response_from_tracestate(
             span_context.trace_state
         )
         if xtraceoptions_response:
-            exposed_headers += ",{}".format(
+            exposed_headers.append("{}".format(
                 self._XTRACEOPTIONS_RESPONSE_HEADER_NAME
-            )
+            ))
             setter.set(
                 carrier,
                 self._XTRACEOPTIONS_RESPONSE_HEADER_NAME,
@@ -54,7 +53,7 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
         setter.set(
             carrier,
             self._HTTP_HEADER_ACCESS_CONTROL_EXPOSE_HEADERS,
-            exposed_headers,
+            ",".join(exposed_headers),
         )
     
     def recover_response_from_tracestate(
