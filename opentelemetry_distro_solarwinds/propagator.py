@@ -83,7 +83,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             else:
                 # If not, add sw KV to beginning of list
                 logger.debug("Adding KV to trace state for injection with {}".format(sw_value))
-                trace_state.add("sw", sw_value)
+                trace_state = trace_state.add("sw", sw_value)
         else:
             logger.debug("Creating new trace state for injection with {}".format(sw_value))
             trace_state = TraceState([("sw", sw_value)])
