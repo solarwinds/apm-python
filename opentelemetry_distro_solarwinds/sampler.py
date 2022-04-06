@@ -70,10 +70,10 @@ class _SwSampler(Sampler):
             )
         sw_member_value = parent_span_context.trace_state.get("sw")
 
-        # TODO: config --> enable/disable tracing, sample_rate, tt mode
-        tracing_mode = 1
-        sample_rate = 1
-        trigger_tracing_mode_disabled = 0
+        # TODO: local config --> enable/disable tracing, sample_rate, tt mode
+        tracing_mode = -1
+        sample_rate = -1
+        trigger_tracing_mode_disabled = -1
 
         logger.debug("parent_context is {0}".format(parent_context))
         logger.debug("xtraceoptions is {0}".format(dict(xtraceoptions)))
