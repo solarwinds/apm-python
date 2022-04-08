@@ -60,7 +60,7 @@ class XTraceOptions():
             option_key = option_kv[0].strip()
             if option_key == "trigger-trace":
                 if len(option_kv) > 1:
-                    logger.warning("trigger-trace must be standalone flag. Ignoring.")
+                    logger.debug("trigger-trace must be standalone flag. Ignoring.")
                     self.ignored.append("trigger-trace")
                 else:
                     self.trigger_trace = True
@@ -72,7 +72,7 @@ class XTraceOptions():
                     # each of sw-keys values assigned by colon
                     sw_kv = assignment.split(":", 2)
                     if not sw_kv[0]:
-                        logger.warning(
+                        logger.debug(
                             "Could not parse sw-key assignment {}. Ignoring.".format(
                                 assignment
                             ))
@@ -87,18 +87,18 @@ class XTraceOptions():
                 try:
                     self.ts = int(option_kv[1])
                 except ValueError as e:
-                    logger.warning("ts must be base 10 int. Ignoring.")
+                    logger.debug("ts must be base 10 int. Ignoring.")
                     self.ignore.append("ts")
             
             else:
-                logger.warning(
+                logger.debug(
                     "{} is not a recognized trace option. Ignoring".format(
                         option_key
                     ))
                 self.ignored.append(option_key)
 
             if self.ignored:
-                logger.warning(
+                logger.debug(
                     "Some x-trace-options were ignored: {}".format(
                         ", ".join(self.ignored)
                     ))
