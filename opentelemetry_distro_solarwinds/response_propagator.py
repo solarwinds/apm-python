@@ -7,6 +7,12 @@ from opentelemetry.instrumentation.propagators import ResponsePropagator
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
+from opentelemetry_distro_solarwinds import (
+    COMMA,
+    COMMA_W3C_SANITIZED,
+    EQUALS,
+    EQUALS_W3C_SANITIZED
+)
 from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
 from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
 
@@ -62,8 +68,8 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
     ) -> str:
         """Use tracestate to recover xtraceoptions response by
         converting delimiters:
-        `####` becomes `=`
-        `....` becomes `,`
+        EQUALS_W3C_SANITIZED becomes EQUALS
+        COMMA_W3C_SANITIZED becomes COMMA
         """
         sanitized = tracestate.get(
             XTraceOptions.get_sw_xtraceoptions_response_key(),
@@ -71,4 +77,7 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
         )
         if not sanitized:
             return
-        return sanitized.replace("####", "=").replace("....", ",")
+        return sanitized.replace(
+            EQUALS_W3C_SANITIZED,
+            EQUALS
+        ).replace(COMMA_W3C_SANITIZED, COMMA)

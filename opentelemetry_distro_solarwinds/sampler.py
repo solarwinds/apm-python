@@ -14,6 +14,11 @@ from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import SpanContext, TraceState
 from opentelemetry.util.types import Attributes
 
+from opentelemetry_distro_solarwinds import (
+    COMMA_W3C_SANITIZED,
+    EQUALS_W3C_SANITIZED,
+    SW_TRACESTATE_KEY
+)
 from opentelemetry_distro_solarwinds.extension.oboe import Context
 from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
 from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
@@ -53,6 +58,14 @@ class _LiboboeDecision():
 class _SwSampler(Sampler):
     """SolarWinds custom opentelemetry sampler which obeys configuration options provided by the NH/AO Backend."""
 
+    _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
+    _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
+    _XTRACEOPTIONS_RESP_AUTH = "auth"
+    _XTRACEOPTIONS_RESP_IGNORED = "ignored"
+    _XTRACEOPTIONS_RESP_TRIGGER_IGNORED = "ignored"
+    _XTRACEOPTIONS_RESP_TRIGGER_NOT_REQUESTED = "not-requested"
+    _XTRACEOPTIONS_RESP_TRIGGER_TRACE = "trigger-trace"
+
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
 
@@ -68,7 +81,7 @@ class _SwSampler(Sampler):
             tracestring = W3CTransformer.traceparent_from_context(
                 parent_span_context
             )
-        sw_member_value = parent_span_context.trace_state.get("sw")
+        sw_member_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY)
 
         # TODO: local config --> enable/disable tracing, sample_rate, tt mode
         tracing_mode = -1
@@ -184,13 +197,16 @@ class _SwSampler(Sampler):
     ) -> str:
         """Use decision and xtraceoptions to create sanitized xtraceoptions
         response kv with W3C tracestate-allowed delimiters:
-        `####` instead of `=`
-        `....` instead of `,`
+        EQUALS_W3C_SANITIZED instead of EQUALS
+        COMMA_W3C_SANITIZED instead of COMMA
         """
         response = []
 
         if xtraceoptions.signature:
-            response.append("auth####{}".format(decision.auth_msg))
+            response.append(EQUALS_W3C_SANITIZED.join([
+                self._XTRACEOPTIONS_RESP_AUTH,
+                decision.auth_msg
+            ]))
 
         if not decision.auth or decision.auth < 1:
             trigger_msg = ""
@@ -203,16 +219,22 @@ class _SwSampler(Sampler):
                     )
 
                 if tracestring and decision.decision_type == 0:
-                    trigger_msg = "ignored"
+                    trigger_msg = self._XTRACEOPTIONS_RESP_TRIGGER_IGNORED
                 else:
                     trigger_msg = decision.status_msg
             else:
-                trigger_msg = "not-requested"
-            response.append("trigger-trace####{}".format(trigger_msg))
+                trigger_msg = self.XTRACEOPTIONS_TRIGGER_NOT_REQUESTED
+            response.append(EQUALS_W3C_SANITIZED.join([
+                self._XTRACEOPTIONS_RESP_TRIGGER_TRACE,
+                trigger_msg
+            ]))
 
         if xtraceoptions.ignored:
             response.append(
-                "ignored####{}".format("....".join(decision.ignored))
+                EQUALS_W3C_SANITIZED.join([
+                    self._XTRACEOPTIONS_RESP_IGNORED,
+                    (COMMA_W3C_SANITIZED.join(decision.ignored))
+                ])
             )
 
         return ";".join(response)
@@ -226,7 +248,7 @@ class _SwSampler(Sampler):
         """Creates new TraceState based on trace decision, parent span id,
         and x-trace-options if provided"""
         trace_state = TraceState([(
-            "sw",
+            SW_TRACESTATE_KEY,
             W3CTransformer.sw_from_span_and_decision(
                 parent_span_context.span_id,
                 W3CTransformer.trace_flags_from_int(decision.do_sample)
@@ -272,7 +294,7 @@ class _SwSampler(Sampler):
             else:
                 # Update trace_state with span_id and sw trace_flags
                 trace_state = trace_state.update(
-                    "sw",
+                    SW_TRACESTATE_KEY,
                     W3CTransformer.sw_from_span_and_decision(
                         parent_span_context.span_id,
                         W3CTransformer.trace_flags_from_int(decision.do_sample)
@@ -315,15 +337,15 @@ class _SwSampler(Sampler):
             logger.debug("No valid traceparent or no tracestate - not setting attributes")
             return None
 
-        # Set attributes with sw.tracestate_parent_id and sw.w3c.tracestate
+        # Set attributes with self._SW_TRACESTATE_ROOT_KEY and self._SW_TRACESTATE_CAPTURE_KEY
         if not attributes:
             attributes = {
-                "sw.w3c.tracestate": trace_state.to_header()
+                self._SW_TRACESTATE_CAPTURE_KEY: trace_state.to_header()
             }
-            # Only set sw.tracestate_parent_id on the entry (root) span for this service
-            sw_value = parent_span_context.trace_state.get("sw", None)
+            # Only set self._SW_TRACESTATE_ROOT_KEY on the entry (root) span for this service
+            sw_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY, None)
             if sw_value:
-                attributes["sw.tracestate_parent_id"] = sw_value
+                attributes[self._SW_TRACESTATE_ROOT_KEY] = sw_value
 
             logger.debug("Created new attributes: {}".format(attributes))
         else:
@@ -333,22 +355,22 @@ class _SwSampler(Sampler):
             for k,v in attributes.items():
                 new_attributes[k] = v
 
-            if not new_attributes.get("sw.w3c.tracestate", None):
-                # Add new sw.w3c.tracestate KV
-                new_attributes["sw.w3c.tracestate"] = trace_state.to_header()
+            if not new_attributes.get(self._SW_TRACESTATE_CAPTURE_KEY, None):
+                # Add new self._SW_TRACESTATE_CAPTURE_KEY KV
+                new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state.to_header()
             else:
-                # Update existing sw.w3c.tracestate KV
+                # Update existing self._SW_TRACESTATE_CAPTURE_KEY KV
                 attr_trace_state = TraceState.from_header(
-                    new_attributes["sw.w3c.tracestate"]
+                    new_attributes[self._SW_TRACESTATE_CAPTURE_KEY]
                 )
                 attr_trace_state.update(
-                    "sw",
+                    SW_TRACESTATE_KEY,
                     W3CTransformer.sw_from_span_and_decision(
                         parent_span_context.span_id,
                         W3CTransformer.trace_flags_from_int(decision.do_sample)
                     )
                 )
-                new_attributes["sw.w3c.tracestate"] = attr_trace_state.to_header()
+                new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = attr_trace_state.to_header()
 
             attributes = new_attributes
             logger.debug("Set updated attributes: {}".format(attributes))

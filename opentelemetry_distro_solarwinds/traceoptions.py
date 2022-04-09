@@ -13,6 +13,10 @@ class XTraceOptions():
     _XTRACEOPTIONS_CUSTOM = ("^custom-[^\s]*$")
     _XTRACEOPTIONS_CUSTOM_RE = re.compile(_XTRACEOPTIONS_CUSTOM)
 
+    _XTRACEOPTIONS_HEADER_KEY_SW_KEYS = "sw-keys"
+    _XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE = "trigger-trace"
+    _XTRACEOPTIONS_HEADER_KEY_TS = "ts"
+
     _OPTION_KEYS = [
         "custom_kvs",
         "signature",
@@ -58,14 +62,16 @@ class XTraceOptions():
                 continue
 
             option_key = option_kv[0].strip()
-            if option_key == "trigger-trace":
+            if option_key == self._XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE:
                 if len(option_kv) > 1:
                     logger.debug("trigger-trace must be standalone flag. Ignoring.")
-                    self.ignored.append("trigger-trace")
+                    self.ignored.append(
+                        self._XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE
+                    )
                 else:
                     self.trigger_trace = True
         
-            elif option_key == "sw-keys":
+            elif option_key == self._XTRACEOPTIONS_HEADER_KEY_SW_KEYS:
                 # each of sw-keys KVs delimited by comma
                 sw_kvs = re.split(r",+", option_kv[1])
                 for assignment in sw_kvs:
@@ -83,12 +89,12 @@ class XTraceOptions():
             elif re.match(self._XTRACEOPTIONS_CUSTOM_RE, option_key):
                 self.custom_kvs[option_key] = option_kv[1].strip()
 
-            elif option_key == "ts":
+            elif option_key == self._XTRACEOPTIONS_HEADER_KEY_TS:
                 try:
                     self.ts = int(option_kv[1])
                 except ValueError as e:
                     logger.debug("ts must be base 10 int. Ignoring.")
-                    self.ignore.append("ts")
+                    self.ignore.append(self._XTRACEOPTIONS_HEADER_KEY_TS)
             
             else:
                 logger.debug(
@@ -115,20 +121,29 @@ class XTraceOptions():
         options = []
 
         if self.trigger_trace:
-            options.append("trigger-trace")
+            options.append(self._XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE)
 
         if len(self.sw_keys) > 0:
             sw_keys = []
             for _, (k, v) in enumerate(self.sw_keys.items()):
                 sw_keys.append(":".join([k, v])) 
-            options.append("=".join(["sw-keys", ",".join(sw_keys)]))
+            options.append(
+                "=".join([
+                    self._XTRACEOPTIONS_HEADER_KEY_SW_KEYS,
+                    ",".join(sw_keys)
+                ])
+            )
 
         if len(self.custom_kvs) > 0:
             for _, (k, v) in enumerate(self.custom_kvs.items()):
                 options.append("=".join([k, v]))
 
         if self.ts > 0:
-            options.append("=".join(["ts", str(self.ts)]))
+            options.append(
+                "=".join([
+                    self._XTRACEOPTIONS_HEADER_KEY_TS, str(self.ts)
+                ])
+            )
 
         return ";".join(options)
 

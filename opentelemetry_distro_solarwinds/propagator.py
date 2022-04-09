@@ -6,6 +6,7 @@ from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
+from opentelemetry_distro_solarwinds import SW_TRACESTATE_KEY
 from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
 from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
 
@@ -75,18 +76,18 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         # Prepare carrier with context's or new tracestate
         if trace_state:
             # Check if trace_state already contains sw KV
-            if "sw" in trace_state.keys():
+            if SW_TRACESTATE_KEY in trace_state.keys():
                 # If so, modify current span_id and trace_flags, and move to beginning of list
                 logger.debug("Updating trace state for injection with {}".format(sw_value))
-                trace_state = trace_state.update("sw", sw_value)
+                trace_state = trace_state.update(SW_TRACESTATE_KEY, sw_value)
 
             else:
                 # If not, add sw KV to beginning of list
                 logger.debug("Adding KV to trace state for injection with {}".format(sw_value))
-                trace_state = trace_state.add("sw", sw_value)
+                trace_state = trace_state.add(SW_TRACESTATE_KEY, sw_value)
         else:
             logger.debug("Creating new trace state for injection with {}".format(sw_value))
-            trace_state = TraceState([("sw", sw_value)])
+            trace_state = TraceState([(SW_TRACESTATE_KEY, sw_value)])
 
         setter.set(
             carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()
