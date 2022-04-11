@@ -44,7 +44,7 @@ class W3CTransformer():
             span_context.trace_id,
             span_context.span_id,
             span_context.trace_flags
-        ).upper()
+        )
         logger.debug("Generated traceparent {} from {}".format(xtr, span_context))
         return xtr
 
