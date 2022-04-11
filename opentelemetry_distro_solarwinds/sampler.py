@@ -5,7 +5,7 @@ The custom sampler will fetch sampling configurations for the SolarWinds backend
 
 import logging
 from types import MappingProxyType
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Dict
 
 from opentelemetry.context.context import Context as OtelContext
 from opentelemetry.sdk.trace.sampling import (Decision, ParentBased, Sampler,
@@ -24,35 +24,6 @@ from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
 from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
-
-
-class _LiboboeDecision():
-    """Convenience representation of a liboboe decision"""
-    def __init__(
-        self,
-        do_metrics: int,
-        do_sample: int,
-        sample_rate: int,
-        sample_source: int,
-        bucket_rate: float,
-        bucket_cap: float,
-        decision_type: int,
-        auth: int,
-        status_msg: str,
-        auth_msg: str,
-        status: int,
-    ):
-        self.do_metrics = do_metrics
-        self.do_sample = do_sample
-        self.sample_rate = sample_rate
-        self.sample_source = sample_source
-        self.bucket_rate = bucket_rate
-        self.bucket_cap = bucket_cap
-        self.decision_type = decision_type
-        self.auth = auth
-        self.status_msg = status_msg
-        self.auth_msg = auth_msg
-        self.status = status
 
 
 class _SwSampler(Sampler):
@@ -74,7 +45,7 @@ class _SwSampler(Sampler):
         parent_span_context: SpanContext,
         parent_context: Optional[OtelContext] = None,
         xtraceoptions: Optional[XTraceOptions] = None,
-    ) -> _LiboboeDecision:
+    ) -> Dict:
         """Calculates oboe trace decision based on parent span context."""
         tracestring = None
         if parent_span_context.is_valid and parent_span_context.is_remote:
@@ -135,63 +106,39 @@ class _SwSampler(Sampler):
                 signature,
                 timestamp
             )
-        logger.debug(
-            "Got liboboe decision outputs "
-            "do_metrics: {}, "
-            "do_sample: {}, "
-            "rate: {}, "
-            "source: {}, "
-            "bucket_rate: {}, "
-            "bucket_cap: {}, "
-            "type: {}, "
-            "auth: {}, "
-            "status_msg: {}, "
-            "auth_msg: {}, "
-            "status: {}".format(
-                do_metrics,
-                do_sample,
-                rate,
-                source,
-                bucket_rate,
-                bucket_cap,
-                decision_type,
-                auth,
-                status_msg,
-                auth_msg,
-                status
-            )
-        )
-        return _LiboboeDecision(
-            do_metrics,
-            do_sample,
-            rate,
-            source,
-            bucket_rate,
-            bucket_cap,
-            decision_type,
-            auth,
-            status_msg,
-            auth_msg,
-            status
-        )
+        decision = {
+            "do_metrics": do_metrics,
+            "do_sample": do_sample,
+            "rate": rate,
+            "source": source,
+            "bucket_rate": bucket_rate,
+            "bucket_cap": bucket_cap,
+            "decision_type": decision_type,
+            "auth": auth,
+            "status_msg": status_msg,
+            "auth_msg": auth_msg,
+            "status": status,
+        }
+        logger.debug("Got liboboe decision outputs: {}".format(decision))
+        return decision
 
     def otel_decision_from_liboboe(
         self,
-        liboboe_decision: _LiboboeDecision
+        liboboe_decision: Dict
     ) -> Decision:
         """Formats OTel decision from liboboe decision"""
         decision = Decision.DROP
-        if liboboe_decision.do_metrics:
+        if liboboe_decision["do_metrics"]:
             # TODO: need to eck what record only actually means and how metrics work in OTel
             decision = Decision.RECORD_ONLY
-        if liboboe_decision.do_sample:
+        if liboboe_decision["do_sample"]:
             decision = Decision.RECORD_AND_SAMPLE
         logger.debug("OTel decision created: {}".format(decision))
         return decision
 
     def create_xtraceoptions_response_value(
         self,
-        decision: _LiboboeDecision,
+        decision: Dict,
         parent_span_context: SpanContext,
         xtraceoptions: XTraceOptions
     ) -> str:
@@ -205,10 +152,10 @@ class _SwSampler(Sampler):
         if xtraceoptions.signature:
             response.append(EQUALS_W3C_SANITIZED.join([
                 self._XTRACEOPTIONS_RESP_AUTH,
-                decision.auth_msg
+                decision["auth_msg"]
             ]))
 
-        if not decision.auth or decision.auth < 1:
+        if not decision["auth"] or decision["auth"] < 1:
             trigger_msg = ""
             if xtraceoptions.trigger_trace:
                 # If a traceparent header was provided then oboe does not generate the message
@@ -218,10 +165,10 @@ class _SwSampler(Sampler):
                         parent_span_context
                     )
 
-                if tracestring and decision.decision_type == 0:
+                if tracestring and decision["decision_type"] == 0:
                     trigger_msg = self._XTRACEOPTIONS_RESP_TRIGGER_IGNORED
                 else:
-                    trigger_msg = decision.status_msg
+                    trigger_msg = decision["status_msg"]
             else:
                 trigger_msg = self.XTRACEOPTIONS_TRIGGER_NOT_REQUESTED
             response.append(EQUALS_W3C_SANITIZED.join([
@@ -233,7 +180,7 @@ class _SwSampler(Sampler):
             response.append(
                 EQUALS_W3C_SANITIZED.join([
                     self._XTRACEOPTIONS_RESP_IGNORED,
-                    (COMMA_W3C_SANITIZED.join(decision.ignored))
+                    (COMMA_W3C_SANITIZED.join(decision["ignored"]))
                 ])
             )
 
@@ -241,7 +188,7 @@ class _SwSampler(Sampler):
 
     def create_new_trace_state(
         self,
-        decision: _LiboboeDecision,
+        decision: Dict,
         parent_span_context: SpanContext,
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> TraceState:
@@ -251,7 +198,7 @@ class _SwSampler(Sampler):
             SW_TRACESTATE_KEY,
             W3CTransformer.sw_from_span_and_decision(
                 parent_span_context.span_id,
-                W3CTransformer.trace_flags_from_int(decision.do_sample)
+                W3CTransformer.trace_flags_from_int(decision["do_sample"])
             )
         )])
         if xtraceoptions and xtraceoptions.trigger_trace:
@@ -268,7 +215,7 @@ class _SwSampler(Sampler):
 
     def calculate_trace_state(
         self,
-        decision: _LiboboeDecision,
+        decision: Dict,
         parent_span_context: SpanContext,
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> TraceState:
@@ -297,7 +244,7 @@ class _SwSampler(Sampler):
                     SW_TRACESTATE_KEY,
                     W3CTransformer.sw_from_span_and_decision(
                         parent_span_context.span_id,
-                        W3CTransformer.trace_flags_from_int(decision.do_sample)
+                        W3CTransformer.trace_flags_from_int(decision["do_sample"])
                     )
                 )
                 # Update trace_state with x-trace-options-response
@@ -324,7 +271,7 @@ class _SwSampler(Sampler):
     def calculate_attributes(
         self,
         attributes: Attributes,
-        decision: _LiboboeDecision,
+        decision: Dict,
         trace_state: TraceState,
         parent_span_context: SpanContext
     ) -> Attributes or None:
@@ -377,7 +324,7 @@ class _SwSampler(Sampler):
                     SW_TRACESTATE_KEY,
                     W3CTransformer.sw_from_span_and_decision(
                         parent_span_context.span_id,
-                        W3CTransformer.trace_flags_from_int(decision.do_sample)
+                        W3CTransformer.trace_flags_from_int(decision["do_sample"])
                     )
                 )
                 trace_state_no_response = self.remove_response_from_sw(attr_trace_state)
