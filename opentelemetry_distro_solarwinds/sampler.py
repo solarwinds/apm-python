@@ -314,6 +314,13 @@ class _SwSampler(Sampler):
                 logger.debug("Updated trace_state: {}".format(trace_state))
         return trace_state
 
+    def remove_response_from_sw(
+        self,
+        trace_state: TraceState
+    ) -> TraceState:
+        """Remove xtraceoptions response from tracestate"""
+        return trace_state.delete(XTraceOptions.get_sw_xtraceoptions_response_key())
+
     def calculate_attributes(
         self,
         attributes: Attributes,
@@ -339,13 +346,15 @@ class _SwSampler(Sampler):
 
         # Set attributes with self._SW_TRACESTATE_ROOT_KEY and self._SW_TRACESTATE_CAPTURE_KEY
         if not attributes:
+            trace_state_no_response = self.remove_response_from_sw(trace_state)
             attributes = {
-                self._SW_TRACESTATE_CAPTURE_KEY: trace_state.to_header()
+                self._SW_TRACESTATE_CAPTURE_KEY: trace_state_no_response.to_header()
             }
             # Only set self._SW_TRACESTATE_ROOT_KEY on the entry (root) span for this service
             sw_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY, None)
             if sw_value:
-                attributes[self._SW_TRACESTATE_ROOT_KEY] = sw_value
+                attributes[self._SW_TRACESTATE_ROOT_KEY] \
+                    = W3CTransformer.span_id_from_sw(sw_value)
 
             logger.debug("Created new attributes: {}".format(attributes))
         else:
@@ -357,7 +366,8 @@ class _SwSampler(Sampler):
 
             if not new_attributes.get(self._SW_TRACESTATE_CAPTURE_KEY, None):
                 # Add new self._SW_TRACESTATE_CAPTURE_KEY KV
-                new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state.to_header()
+                trace_state_no_response = self.remove_response_from_sw(trace_state)
+                new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
             else:
                 # Update existing self._SW_TRACESTATE_CAPTURE_KEY KV
                 attr_trace_state = TraceState.from_header(
@@ -370,7 +380,8 @@ class _SwSampler(Sampler):
                         W3CTransformer.trace_flags_from_int(decision.do_sample)
                     )
                 )
-                new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = attr_trace_state.to_header()
+                trace_state_no_response = self.remove_response_from_sw(attr_trace_state)
+                new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
 
             attributes = new_attributes
             logger.debug("Set updated attributes: {}".format(attributes))
