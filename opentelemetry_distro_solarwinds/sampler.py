@@ -43,7 +43,6 @@ class _SwSampler(Sampler):
     def calculate_liboboe_decision(
         self,
         parent_span_context: SpanContext,
-        parent_context: Optional[OtelContext] = None,
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> Dict:
         """Calculates oboe trace decision based on parent span context."""
@@ -59,7 +58,6 @@ class _SwSampler(Sampler):
         sample_rate = -1
         trigger_tracing_mode_disabled = -1
 
-        logger.debug("parent_context is {}".format(parent_context))
         logger.debug("xtraceoptions is {}".format(dict(xtraceoptions)))
 
         options = None
@@ -355,30 +353,29 @@ class _SwSampler(Sampler):
         ).get_span_context()
         xtraceoptions = XTraceOptions(parent_context)
 
-        decision = self.calculate_liboboe_decision(
+        liboboe_decision = self.calculate_liboboe_decision(
             parent_span_context,
-            parent_context,
             xtraceoptions
         )
 
         # Always calculate trace_state for propagation
-        trace_state = self.calculate_trace_state(
-            decision,
+        new_trace_state = self.calculate_trace_state(
+            liboboe_decision,
             parent_span_context,
             xtraceoptions
         )
-        attributes = self.calculate_attributes(
+        new_attributes = self.calculate_attributes(
             attributes,
-            decision,
-            trace_state,
+            liboboe_decision,
+            new_trace_state,
             parent_span_context
         )
-        decision = self.otel_decision_from_liboboe(decision)
+        otel_decision = self.otel_decision_from_liboboe(liboboe_decision)
 
         return SamplingResult(
-            decision,
-            attributes if decision != Decision.DROP else None,
-            trace_state,
+            otel_decision,
+            new_attributes if otel_decision != Decision.DROP else None,
+            new_trace_state,
         )
 
 
