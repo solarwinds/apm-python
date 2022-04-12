@@ -32,7 +32,7 @@ class W3CTransformer():
 
     @classmethod
     def traceparent_from_context(cls, span_context: Context) -> str:
-        """Generates an uppercase liboboe W3C compatible trace_context from
+        """Generates a liboboe W3C compatible trace_context from
         provided OTel span context."""
         template = "-".join([
             cls._VERSION,
