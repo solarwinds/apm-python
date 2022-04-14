@@ -29,6 +29,10 @@ logger = logging.getLogger(__name__)
 class _SwSampler(Sampler):
     """SolarWinds custom opentelemetry sampler which obeys configuration options provided by the NH/AO Backend."""
 
+    _INTERNAL_BUCKET_CAPACITY = "BucketCapacity"
+    _INTERNAL_BUCKET_RATE = "BucketRate"
+    _INTERNAL_SAMPLE_RATE = "SampleRate"
+    _INTERNAL_SAMPLE_SOURCE = "SampleSource"
     _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
     _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
     _XTRACEOPTIONS_RESP_AUTH = "auth"
@@ -283,25 +287,38 @@ class _SwSampler(Sampler):
         if self.otel_decision_from_liboboe(decision) == Decision.DROP:
             logger.debug("Trace decision is to drop - not setting attributes")
             return None
+        
+        new_attributes = {}
+
         # Trace's root span has no valid traceparent nor tracestate
-        # so we don't set additional attributes
+        # so set service entry internal KVs here and only here
         if not parent_span_context.is_valid or not trace_state:
-            logger.debug("No valid traceparent or no tracestate - not setting attributes")
-            return None
+            new_attributes = {
+                self._INTERNAL_BUCKET_CAPACITY: "{}".format(decision["bucket_cap"]),
+                self._INTERNAL_BUCKET_RATE: "{}".format(decision["bucket_rate"]),
+                self._INTERNAL_SAMPLE_RATE: decision["rate"],
+                self._INTERNAL_SAMPLE_SOURCE: decision["source"]
+            }
+            logger.debug(
+                "No valid traceparent or no tracestate - only setting "
+                "service entry internal KVs attributes: {}".format(new_attributes)
+            )
+            # attributes must be immutable for SamplingResult
+            return MappingProxyType(new_attributes)
 
         # Set attributes with self._SW_TRACESTATE_ROOT_KEY and self._SW_TRACESTATE_CAPTURE_KEY
         if not attributes:
             trace_state_no_response = self.remove_response_from_sw(trace_state)
-            attributes = {
+            new_attributes = {
                 self._SW_TRACESTATE_CAPTURE_KEY: trace_state_no_response.to_header()
             }
             # Only set self._SW_TRACESTATE_ROOT_KEY on the entry (root) span for this service
             sw_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY, None)
             if sw_value:
-                attributes[self._SW_TRACESTATE_ROOT_KEY] \
+                new_attributes[self._SW_TRACESTATE_ROOT_KEY] \
                     = W3CTransformer.span_id_from_sw(sw_value)
 
-            logger.debug("Created new attributes: {}".format(attributes))
+            logger.debug("Created new attributes: {}".format(new_attributes))
         else:
             # Copy existing MappingProxyType KV into new_attributes for modification
             # attributes may have other vendor info etc
@@ -327,12 +344,10 @@ class _SwSampler(Sampler):
                 )
                 trace_state_no_response = self.remove_response_from_sw(attr_trace_state)
                 new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
+            logger.debug("Set updated attributes: {}".format(new_attributes))
 
-            attributes = new_attributes
-            logger.debug("Set updated attributes: {}".format(attributes))
-        
         # attributes must be immutable for SamplingResult
-        return MappingProxyType(attributes)
+        return MappingProxyType(new_attributes)
 
     def should_sample(
         self,
