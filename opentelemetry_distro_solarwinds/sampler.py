@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 class _SwSampler(Sampler):
     """SolarWinds custom opentelemetry sampler which obeys configuration options provided by the NH/AO Backend."""
 
+    _INTERNAL_SW_KEYS = "SWKeys"
     _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
     _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
     _XTRACEOPTIONS_RESP_AUTH = "auth"
@@ -65,7 +66,7 @@ class _SwSampler(Sampler):
         signature = None
         timestamp = None
         if xtraceoptions:
-            options = xtraceoptions.to_options_header()
+            options = xtraceoptions.options_header
             trigger_trace = xtraceoptions.trigger_trace
             signature = xtraceoptions.signature
             timestamp = xtraceoptions.ts
@@ -271,7 +272,8 @@ class _SwSampler(Sampler):
         attributes: Attributes,
         decision: Dict,
         trace_state: TraceState,
-        parent_span_context: SpanContext
+        parent_span_context: SpanContext,
+        xtraceoptions: XTraceOptions
     ) -> Attributes or None:
         """Calculates Attributes or None based on trace decision, trace state,
         parent span context, and existing attributes.
@@ -284,10 +286,17 @@ class _SwSampler(Sampler):
             logger.debug("Trace decision is to drop - not setting attributes")
             return None
         # Trace's root span has no valid traceparent nor tracestate
-        # so we don't set additional attributes
+        # so set SWKeys and service entry internal KVs here and only here
         if not parent_span_context.is_valid or not trace_state:
-            logger.debug("No valid traceparent or no tracestate - not setting attributes")
-            return None
+            new_attributes = {
+                self._INTERNAL_SW_KEYS: "{}".format(xtraceoptions.sw_keys),
+            }
+            logger.debug(
+                "No valid traceparent or no tracestate - only setting "
+                "service entry internal KVs attributes: {}".format(new_attributes)
+            )
+            # attributes must be immutable for SamplingResult
+            return MappingProxyType(new_attributes)
 
         # Set attributes with self._SW_TRACESTATE_ROOT_KEY and self._SW_TRACESTATE_CAPTURE_KEY
         if not attributes:
@@ -368,7 +377,8 @@ class _SwSampler(Sampler):
             attributes,
             liboboe_decision,
             new_trace_state,
-            parent_span_context
+            parent_span_context,
+            xtraceoptions
         )
         otel_decision = self.otel_decision_from_liboboe(liboboe_decision)
 

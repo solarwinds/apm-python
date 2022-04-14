@@ -44,14 +44,18 @@ class XTraceOptions():
         """
         self.custom_kvs = {}
         self.signature = None
-        self.sw_keys = {}
-        self.trigger_trace = False
+        self.sw_keys = ""
+        self.trigger_trace = 0
         self.ts = 0
         self.ignored = []
+        self.options_header = ""
 
         if not options_header:
             self.from_context(context)
             return
+
+        # store original header for sample decision later
+        self.options_header = options_header
 
         # each of options delimited by semicolon
         traceoptions = re.split(r";+", options_header)
@@ -69,22 +73,10 @@ class XTraceOptions():
                         self._XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE
                     )
                 else:
-                    self.trigger_trace = True
+                    self.trigger_trace = 1
         
             elif option_key == self._XTRACEOPTIONS_HEADER_KEY_SW_KEYS:
-                # each of sw-keys KVs delimited by comma
-                sw_kvs = re.split(r",+", option_kv[1])
-                for assignment in sw_kvs:
-                    # each of sw-keys values assigned by colon
-                    sw_kv = assignment.split(":", 2)
-                    if not sw_kv[0]:
-                        logger.debug(
-                            "Could not parse sw-key assignment {}. Ignoring.".format(
-                                assignment
-                            ))
-                        self.ignore.append(assignment)
-                    else:
-                        self.sw_keys.update({sw_kv[0]: sw_kv[1]})
+                self.sw_keys = option_kv[1].strip()                    
 
             elif re.match(self._XTRACEOPTIONS_CUSTOM_RE, option_key):
                 self.custom_kvs[option_key] = option_kv[1].strip()
@@ -124,13 +116,10 @@ class XTraceOptions():
             options.append(self._XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE)
 
         if len(self.sw_keys) > 0:
-            sw_keys = []
-            for _, (k, v) in enumerate(self.sw_keys.items()):
-                sw_keys.append(":".join([k, v])) 
             options.append(
                 "=".join([
                     self._XTRACEOPTIONS_HEADER_KEY_SW_KEYS,
-                    ",".join(sw_keys)
+                    self.sw_keys
                 ])
             )
 
@@ -161,6 +150,8 @@ class XTraceOptions():
         for option_key in self._OPTION_KEYS:
             if context.get(option_key, None):
                 setattr(self, option_key, context[option_key])
+        # store header for sample decision
+        self.options_header = self.to_options_header()
 
     @classmethod
     def get_sw_xtraceoptions_response_key(cls) -> str:
