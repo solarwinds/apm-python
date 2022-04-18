@@ -59,8 +59,6 @@ class _SwSampler(Sampler):
         sample_rate = -1
         trigger_tracing_mode_disabled = -1
 
-        logger.debug("xtraceoptions is {}".format(dict(xtraceoptions)))
-
         options = None
         trigger_trace = 0
         signature = None
