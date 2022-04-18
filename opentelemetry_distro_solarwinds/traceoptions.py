@@ -4,10 +4,15 @@ import typing
 
 from opentelemetry.context.context import Context
 
+from opentelemetry_distro_solarwinds import (
+    OTEL_CONTEXT_SW_OPTIONS_KEY,
+    OTEL_CONTEXT_SW_SIGNATURE_KEY
+)
+
 logger = logging.getLogger(__file__)
 
 class XTraceOptions():
-    """Formats X-Trace-Options for trigger tracing"""
+    """Formats X-Trace-Options and signature for trigger tracing"""
 
     _SW_XTRACEOPTIONS_RESPONSE_KEY = "xtrace_options_response"
     _XTRACEOPTIONS_CUSTOM = ("^custom-[^\s]*$")
@@ -17,43 +22,29 @@ class XTraceOptions():
     _XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE = "trigger-trace"
     _XTRACEOPTIONS_HEADER_KEY_TS = "ts"
 
-    _OPTION_KEYS = [
-        "custom_kvs",
-        "signature",
-        "sw_keys",
-        "trigger_trace",
-        "ts",
-        "ignored"
-    ]
-
     def __init__(self,
         context: typing.Optional[Context] = None,
-        options_header: str = None,
-        signature_header: str = None
     ):
         """
         Args:
-          context: OTel context that may contain x-trace-options
-          options_header: A string of x-trace-options
-          signature_header: A string required for signed trigger trace
-        
-        Examples of options_header:
-          "trigger-trace"
-          "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo"
-          "trigger-trace;custom-key1=value1"
+          context: OTel context that may contain OTEL_CONTEXT_SW_OPTIONS_KEY,OTEL_CONTEXT_SW_SIGNATURE_KEY
         """
-        self.custom_kvs = {}
-        self.signature = None
-        self.sw_keys = {}
-        self.trigger_trace = False
-        self.ts = 0
         self.ignored = []
-
+        self.options_header = ""
+        self.signature = None
+        self.sw_keys = ""
+        self.trigger_trace = 0
+        self.ts = 0
+        
+        if not context:
+            return
+        options_header = context.get(OTEL_CONTEXT_SW_OPTIONS_KEY, None)
         if not options_header:
-            self.from_context(context)
             return
 
-        # each of options delimited by semicolon
+        # store original header for sample decision later
+        self.options_header = options_header
+
         traceoptions = re.split(r";+", options_header)
         for option in traceoptions:
             # KVs (e.g. sw-keys or custom-key1) are assigned by equals
@@ -69,25 +60,14 @@ class XTraceOptions():
                         self._XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE
                     )
                 else:
-                    self.trigger_trace = True
+                    self.trigger_trace = 1
         
             elif option_key == self._XTRACEOPTIONS_HEADER_KEY_SW_KEYS:
-                # each of sw-keys KVs delimited by comma
-                sw_kvs = re.split(r",+", option_kv[1])
-                for assignment in sw_kvs:
-                    # each of sw-keys values assigned by colon
-                    sw_kv = assignment.split(":", 2)
-                    if not sw_kv[0]:
-                        logger.debug(
-                            "Could not parse sw-key assignment {}. Ignoring.".format(
-                                assignment
-                            ))
-                        self.ignore.append(assignment)
-                    else:
-                        self.sw_keys.update({sw_kv[0]: sw_kv[1]})
+                self.sw_keys = option_kv[1].strip()                    
 
             elif re.match(self._XTRACEOPTIONS_CUSTOM_RE, option_key):
-                self.custom_kvs[option_key] = option_kv[1].strip()
+                # custom keys are valid but do not need parsing
+                pass
 
             elif option_key == self._XTRACEOPTIONS_HEADER_KEY_TS:
                 try:
@@ -109,58 +89,9 @@ class XTraceOptions():
                         ", ".join(self.ignored)
                     ))
         
-        if signature_header:
-            self.signature = signature_header
-
-    def __iter__(self) -> typing.Iterator:
-        """Iterable representation of XTraceOptions"""
-        yield from self.__dict__.items()
-
-    def to_options_header(self) -> str:
-        """String representation of XTraceOptions, without signature."""
-        options = []
-
-        if self.trigger_trace:
-            options.append(self._XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE)
-
-        if len(self.sw_keys) > 0:
-            sw_keys = []
-            for _, (k, v) in enumerate(self.sw_keys.items()):
-                sw_keys.append(":".join([k, v])) 
-            options.append(
-                "=".join([
-                    self._XTRACEOPTIONS_HEADER_KEY_SW_KEYS,
-                    ",".join(sw_keys)
-                ])
-            )
-
-        if len(self.custom_kvs) > 0:
-            for _, (k, v) in enumerate(self.custom_kvs.items()):
-                options.append("=".join([k, v]))
-
-        if self.ts > 0:
-            options.append(
-                "=".join([
-                    self._XTRACEOPTIONS_HEADER_KEY_TS, str(self.ts)
-                ])
-            )
-
-        return ";".join(options)
-
-    def from_context(
-        self,
-        context: typing.Optional[Context]
-    ) -> None:
-        """
-        Args:
-          context: OTel context that may contain x-trace-options
-        """
-        logger.debug("Setting XTraceOptions from_context with {}".format(context))
-        if not context:
-            return
-        for option_key in self._OPTION_KEYS:
-            if context.get(option_key, None):
-                setattr(self, option_key, context[option_key])
+        options_signature = context.get(OTEL_CONTEXT_SW_SIGNATURE_KEY, None)
+        if options_signature:
+            self.signature = options_signature
 
     @classmethod
     def get_sw_xtraceoptions_response_key(cls) -> str:

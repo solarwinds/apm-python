@@ -33,6 +33,7 @@ class _SwSampler(Sampler):
     _INTERNAL_BUCKET_RATE = "BucketRate"
     _INTERNAL_SAMPLE_RATE = "SampleRate"
     _INTERNAL_SAMPLE_SOURCE = "SampleSource"
+    _INTERNAL_SW_KEYS = "SWKeys"
     _LIBOBOE_CONTINUED = -1
     _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
     _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
@@ -63,14 +64,12 @@ class _SwSampler(Sampler):
         sample_rate = -1
         trigger_tracing_mode_disabled = -1
 
-        logger.debug("xtraceoptions is {}".format(dict(xtraceoptions)))
-
         options = None
         trigger_trace = 0
         signature = None
         timestamp = None
         if xtraceoptions:
-            options = xtraceoptions.to_options_header()
+            options = xtraceoptions.options_header
             trigger_trace = xtraceoptions.trigger_trace
             signature = xtraceoptions.signature
             timestamp = xtraceoptions.ts
@@ -291,14 +290,12 @@ class _SwSampler(Sampler):
         attributes: Attributes,
         decision: Dict,
         trace_state: TraceState,
-        parent_span_context: SpanContext
+        parent_span_context: SpanContext,
+        xtraceoptions: XTraceOptions
     ) -> Attributes or None:
         """Calculates Attributes or None based on trace decision, trace state,
-        parent span context, and existing attributes.
-
-        For non-existent or remote parent spans only."""
+        parent span context, xtraceoptions, and existing attributes."""
         logger.debug("Received attributes: {}".format(attributes))
-
         # Don't set attributes if not tracing
         if self.otel_decision_from_liboboe(decision) == Decision.DROP:
             logger.debug("Trace decision is to drop - not setting attributes")
@@ -306,6 +303,11 @@ class _SwSampler(Sampler):
         
         new_attributes = {}
 
+        # Always (root or is_remote) set _INTERNAL_SW_KEYS if injected
+        internal_sw_keys = xtraceoptions.sw_keys
+        if internal_sw_keys:
+            new_attributes[self._INTERNAL_SW_KEYS] = internal_sw_keys
+    
         # If not a liboboe continued trace, set service entry internal KVs       
         if not self.is_decision_continued(decision):
             new_attributes[self._INTERNAL_BUCKET_CAPACITY] = "{}".format(decision["bucket_cap"])
@@ -323,50 +325,43 @@ class _SwSampler(Sampler):
                 "No valid traceparent or no tracestate - returning attributes: {}"
                 .format(new_attributes)
             )
+
             if new_attributes:
                 # attributes must be immutable for SamplingResult
                 return MappingProxyType(new_attributes)
             else:
                 return None
 
-        # Set attributes with self._SW_TRACESTATE_ROOT_KEY and self._SW_TRACESTATE_CAPTURE_KEY
         if not attributes:
-            trace_state_no_response = self.remove_response_from_sw(trace_state)
-            new_attributes.update({
-                self._SW_TRACESTATE_CAPTURE_KEY: trace_state_no_response.to_header()
-            })
-            # Only set self._SW_TRACESTATE_ROOT_KEY on the entry (root) span for this service
+            # _SW_TRACESTATE_ROOT_KEY is set once per trace, if possible
             sw_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY, None)
             if sw_value:
-                new_attributes[self._SW_TRACESTATE_ROOT_KEY] \
-                    = W3CTransformer.span_id_from_sw(sw_value)
-
-            logger.debug("Created new attributes: {}".format(new_attributes))
+                new_attributes[self._SW_TRACESTATE_ROOT_KEY]= W3CTransformer.span_id_from_sw(sw_value)
         else:
-            # Copy existing MappingProxyType KV into new_attributes for modification
+            # Copy existing MappingProxyType KV into new_attributes for modification.
             # attributes may have other vendor info etc
             for k,v in attributes.items():
                 new_attributes[k] = v
 
-            if not new_attributes.get(self._SW_TRACESTATE_CAPTURE_KEY, None):
-                # Add new self._SW_TRACESTATE_CAPTURE_KEY KV
-                trace_state_no_response = self.remove_response_from_sw(trace_state)
-                new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
-            else:
-                # Update existing self._SW_TRACESTATE_CAPTURE_KEY KV
-                attr_trace_state = TraceState.from_header(
-                    new_attributes[self._SW_TRACESTATE_CAPTURE_KEY]
+        tracestate_capture = new_attributes.get(self._SW_TRACESTATE_CAPTURE_KEY, None)
+        if not tracestate_capture:
+            trace_state_no_response = self.remove_response_from_sw(trace_state)
+        else:
+            # Must retain all potential tracestate pairs for attributes
+            attr_trace_state = TraceState.from_header(
+                tracestate_capture
+            )
+            new_attr_trace_state = attr_trace_state.update(
+                SW_TRACESTATE_KEY,
+                W3CTransformer.sw_from_span_and_decision(
+                    parent_span_context.span_id,
+                    W3CTransformer.trace_flags_from_int(decision["do_sample"])
                 )
-                attr_trace_state.update(
-                    SW_TRACESTATE_KEY,
-                    W3CTransformer.sw_from_span_and_decision(
-                        parent_span_context.span_id,
-                        W3CTransformer.trace_flags_from_int(decision["do_sample"])
-                    )
-                )
-                trace_state_no_response = self.remove_response_from_sw(attr_trace_state)
-                new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
-            logger.debug("Set updated attributes: {}".format(new_attributes))
+            )
+            trace_state_no_response = self.remove_response_from_sw(new_attr_trace_state)
+        new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
+
+        logger.debug("Setting attributes: {}".format(new_attributes))
 
         # attributes must be immutable for SamplingResult
         return MappingProxyType(new_attributes)
@@ -405,7 +400,8 @@ class _SwSampler(Sampler):
             attributes,
             liboboe_decision,
             new_trace_state,
-            parent_span_context
+            parent_span_context,
+            xtraceoptions
         )
         otel_decision = self.otel_decision_from_liboboe(liboboe_decision)
 

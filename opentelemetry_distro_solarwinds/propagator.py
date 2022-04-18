@@ -6,7 +6,11 @@ from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
-from opentelemetry_distro_solarwinds import SW_TRACESTATE_KEY
+from opentelemetry_distro_solarwinds import (
+    OTEL_CONTEXT_SW_OPTIONS_KEY,
+    OTEL_CONTEXT_SW_SIGNATURE_KEY,
+    SW_TRACESTATE_KEY
+)
 from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
 from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
 
@@ -39,7 +43,13 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         if not xtraceoptions_header:
             logger.debug("No xtraceoptions to extract; ignoring signature")
             return context
-        logger.debug("Extracted xtraceoptions_header: {}".format(
+
+        context.update({
+            OTEL_CONTEXT_SW_OPTIONS_KEY: xtraceoptions_header[0]
+        })
+        logger.debug("Extracted {} as {}: {}".format(
+            self._XTRACEOPTIONS_HEADER_NAME,
+            OTEL_CONTEXT_SW_OPTIONS_KEY,
             xtraceoptions_header[0]
         ))
 
@@ -48,17 +58,14 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME
         )
         if signature_header:
-            xtraceoptions = XTraceOptions(
-                context,
-                xtraceoptions_header[0],
-                signature_header[0],
-            )
-        else:
-            xtraceoptions = XTraceOptions(
-                context,
-                xtraceoptions_header[0],
-            )
-        context.update(dict(xtraceoptions))
+            context.update({
+                OTEL_CONTEXT_SW_SIGNATURE_KEY: signature_header[0]
+            })
+            logger.debug("Extracted {} as {}: {}".format(
+                self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME,
+                OTEL_CONTEXT_SW_SIGNATURE_KEY,
+                xtraceoptions_header[0]
+            ))
         return context
 
     def inject(
