@@ -274,72 +274,62 @@ class _SwSampler(Sampler):
         xtraceoptions: XTraceOptions
     ) -> Attributes or None:
         """Calculates Attributes or None based on trace decision, trace state,
-        parent span context, and existing attributes.
-
-        For non-existent or remote parent spans only."""
+        parent span context, xtraceoptions, and existing attributes."""
         logger.debug("Received attributes: {}".format(attributes))
-
         # Don't set attributes if not tracing
         if self.otel_decision_from_liboboe(decision) == Decision.DROP:
             logger.debug("Trace decision is to drop - not setting attributes")
             return None
+
+        new_attributes = {}
+        # Always (root or is_remote) set _INTERNAL_SW_KEYS if injected
+        internal_sw_keys = xtraceoptions.sw_keys
+        if internal_sw_keys:
+            new_attributes[self._INTERNAL_SW_KEYS] = internal_sw_keys
+
         # Trace's root span has no valid traceparent nor tracestate
-        # so set SWKeys and service entry internal KVs here and only here
+        # so we can't calculate remaining attributes
         if not parent_span_context.is_valid or not trace_state:
-            new_attributes = {
-                self._INTERNAL_SW_KEYS: "{}".format(xtraceoptions.sw_keys),
-            }
             logger.debug(
-                "No valid traceparent or no tracestate - only setting "
-                "service entry internal KVs attributes: {}".format(new_attributes)
+                "No valid traceparent or no tracestate - returning attributes: {}"
+                .format(new_attributes)
             )
             # attributes must be immutable for SamplingResult
             return MappingProxyType(new_attributes)
 
-        # Set attributes with self._SW_TRACESTATE_ROOT_KEY and self._SW_TRACESTATE_CAPTURE_KEY
         if not attributes:
-            trace_state_no_response = self.remove_response_from_sw(trace_state)
-            attributes = {
-                self._SW_TRACESTATE_CAPTURE_KEY: trace_state_no_response.to_header()
-            }
-            # Only set self._SW_TRACESTATE_ROOT_KEY on the entry (root) span for this service
+            # _SW_TRACESTATE_ROOT_KEY is set once per trace, if possible
             sw_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY, None)
             if sw_value:
-                attributes[self._SW_TRACESTATE_ROOT_KEY] \
-                    = W3CTransformer.span_id_from_sw(sw_value)
-
-            logger.debug("Created new attributes: {}".format(attributes))
+                new_attributes[self._SW_TRACESTATE_ROOT_KEY]= W3CTransformer.span_id_from_sw(sw_value)
         else:
-            # Copy existing MappingProxyType KV into new_attributes for modification
+            # Copy existing MappingProxyType KV into new_attributes for modification.
             # attributes may have other vendor info etc
-            new_attributes = {}
             for k,v in attributes.items():
                 new_attributes[k] = v
 
-            if not new_attributes.get(self._SW_TRACESTATE_CAPTURE_KEY, None):
-                # Add new self._SW_TRACESTATE_CAPTURE_KEY KV
-                trace_state_no_response = self.remove_response_from_sw(trace_state)
-                new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
-            else:
-                # Update existing self._SW_TRACESTATE_CAPTURE_KEY KV
-                attr_trace_state = TraceState.from_header(
-                    new_attributes[self._SW_TRACESTATE_CAPTURE_KEY]
+        tracestate_capture = new_attributes.get(self._SW_TRACESTATE_CAPTURE_KEY, None)
+        if not tracestate_capture:
+            trace_state_no_response = self.remove_response_from_sw(trace_state)
+        else:
+            # Must retain all potential tracestate pairs for attributes
+            attr_trace_state = TraceState.from_header(
+                tracestate_capture
+            )
+            new_attr_trace_state = attr_trace_state.update(
+                SW_TRACESTATE_KEY,
+                W3CTransformer.sw_from_span_and_decision(
+                    parent_span_context.span_id,
+                    W3CTransformer.trace_flags_from_int(decision["do_sample"])
                 )
-                attr_trace_state.update(
-                    SW_TRACESTATE_KEY,
-                    W3CTransformer.sw_from_span_and_decision(
-                        parent_span_context.span_id,
-                        W3CTransformer.trace_flags_from_int(decision["do_sample"])
-                    )
-                )
-                trace_state_no_response = self.remove_response_from_sw(attr_trace_state)
-                new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
+            )
+            trace_state_no_response = self.remove_response_from_sw(new_attr_trace_state)
+        new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
 
-            attributes = new_attributes
-            logger.debug("Set updated attributes: {}".format(attributes))
-        
+        logger.debug("Setting attributes: {}".format(new_attributes))
+
         # attributes must be immutable for SamplingResult
-        return MappingProxyType(attributes)
+        return MappingProxyType(new_attributes)
 
     def should_sample(
         self,
