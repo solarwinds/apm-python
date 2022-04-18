@@ -33,6 +33,7 @@ class _SwSampler(Sampler):
     _INTERNAL_BUCKET_RATE = "BucketRate"
     _INTERNAL_SAMPLE_RATE = "SampleRate"
     _INTERNAL_SAMPLE_SOURCE = "SampleSource"
+    _LIBOBOE_CONTINUED = -1
     _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
     _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
     _XTRACEOPTIONS_RESP_AUTH = "auth"
@@ -123,6 +124,21 @@ class _SwSampler(Sampler):
         }
         logger.debug("Got liboboe decision outputs: {}".format(decision))
         return decision
+
+    def is_decision_continued(
+        self,
+        liboboe_decision: Dict
+    ) -> bool:
+        """Returns True if liboboe decision is a continued one, else False"""
+        for val in [
+            liboboe_decision["rate"],
+            liboboe_decision["source"],
+            liboboe_decision["bucket_rate"],
+            liboboe_decision["bucket_cap"]
+        ]:
+            if val != self._LIBOBOE_CONTINUED:
+                return False
+        return True
 
     def otel_decision_from_liboboe(
         self,
@@ -290,28 +306,35 @@ class _SwSampler(Sampler):
         
         new_attributes = {}
 
-        # Trace's root span has no valid traceparent nor tracestate
-        # so set service entry internal KVs here and only here
-        if not parent_span_context.is_valid or not trace_state:
-            new_attributes = {
-                self._INTERNAL_BUCKET_CAPACITY: "{}".format(decision["bucket_cap"]),
-                self._INTERNAL_BUCKET_RATE: "{}".format(decision["bucket_rate"]),
-                self._INTERNAL_SAMPLE_RATE: decision["rate"],
-                self._INTERNAL_SAMPLE_SOURCE: decision["source"]
-            }
+        # If not a liboboe continued trace, set service entry internal KVs       
+        if not self.is_decision_continued(decision):
+            new_attributes[self._INTERNAL_BUCKET_CAPACITY] = "{}".format(decision["bucket_cap"])
+            new_attributes[self._INTERNAL_BUCKET_RATE] = "{}".format(decision["bucket_rate"])
+            new_attributes[self._INTERNAL_SAMPLE_RATE] = decision["rate"]
+            new_attributes[self._INTERNAL_SAMPLE_SOURCE] = decision["source"]
             logger.debug(
-                "No valid traceparent or no tracestate - only setting "
-                "service entry internal KVs attributes: {}".format(new_attributes)
+                "Set attributes with service entry internal KVs: {}".format(new_attributes)
             )
-            # attributes must be immutable for SamplingResult
-            return MappingProxyType(new_attributes)
+
+        # Trace's root span has no valid traceparent nor tracestate
+        # so we can't calculate remaining attributes
+        if not parent_span_context.is_valid or not trace_state:
+            logger.debug(
+                "No valid traceparent or no tracestate - returning attributes: {}"
+                .format(new_attributes)
+            )
+            if new_attributes:
+                # attributes must be immutable for SamplingResult
+                return MappingProxyType(new_attributes)
+            else:
+                return None
 
         # Set attributes with self._SW_TRACESTATE_ROOT_KEY and self._SW_TRACESTATE_CAPTURE_KEY
         if not attributes:
             trace_state_no_response = self.remove_response_from_sw(trace_state)
-            new_attributes = {
+            new_attributes.update({
                 self._SW_TRACESTATE_CAPTURE_KEY: trace_state_no_response.to_header()
-            }
+            })
             # Only set self._SW_TRACESTATE_ROOT_KEY on the entry (root) span for this service
             sw_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY, None)
             if sw_value:
@@ -322,7 +345,6 @@ class _SwSampler(Sampler):
         else:
             # Copy existing MappingProxyType KV into new_attributes for modification
             # attributes may have other vendor info etc
-            new_attributes = {}
             for k,v in attributes.items():
                 new_attributes[k] = v
 
