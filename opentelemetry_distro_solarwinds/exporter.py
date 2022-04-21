@@ -38,19 +38,19 @@ class SolarWindsSpanExporter(SpanExporter):
                 # If there is a parent, we need to add an edge to this parent to this entry event
                 logger.debug("Continue trace from {}".format(md.toString()))
                 parent_md = self._build_metadata(span.parent)
-                evt = Context.startTrace(md, int(span.start_time / 1000),
+                evt = Context.createEntry(md, int(span.start_time / 1000),
                                          parent_md)
             else:
                 # In OpenTelemrtry, there are no events with individual IDs, but only a span ID
                 # and trace ID. Thus, the entry event needs to be generated such that it has the
                 # same op ID as the span ID of the OTel span.
                 logger.debug("Start a new trace {}".format(md.toString()))
-                evt = Context.startTrace(md, int(span.start_time / 1000))
+                evt = Context.createEntry(md, int(span.start_time / 1000))
             evt.addInfo('Layer', span.name)
             evt.addInfo('Language', 'Python')
             for k, v in span.attributes.items():
                 evt.addInfo(k, v)
-            self.reporter.sendReport(evt)
+            self.reporter.sendReport(evt, False)
 
             for event in span.events:
                 if event.name == 'exception':
@@ -58,9 +58,9 @@ class SolarWindsSpanExporter(SpanExporter):
                 else:
                     self._report_info_event(event)
 
-            evt = Context.stopTrace(int(span.end_time / 1000))
+            evt = Context.createExit(int(span.end_time / 1000))
             evt.addInfo('Layer', span.name)
-            self.reporter.sendReport(evt)
+            self.reporter.sendReport(evt, False)
 
     def _report_exception_event(self, event):
         evt = Context.createEvent(int(event.timestamp / 1000))
@@ -76,7 +76,7 @@ class SolarWindsSpanExporter(SpanExporter):
             if k not in ('exception.type', 'exception.message',
                          'exception.stacktrace'):
                 evt.addInfo(k, v)
-        self.reporter.sendReport(evt)
+        self.reporter.sendReport(evt, False)
 
     def _report_info_event(self, event):
         print("Found info event")
@@ -86,7 +86,7 @@ class SolarWindsSpanExporter(SpanExporter):
         evt.addInfo('Label', 'info')
         for k, v in event.attributes.items():
             evt.addInfo(k, v)
-        self.reporter.sendReport(evt)
+        self.reporter.sendReport(evt, False)
 
     def _initialize_solarwinds_reporter(self):
         """Initialize liboboe."""
