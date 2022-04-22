@@ -29,7 +29,12 @@ logger = logging.getLogger(__name__)
 class _SwSampler(Sampler):
     """SolarWinds custom opentelemetry sampler which obeys configuration options provided by the NH/AO Backend."""
 
+    _INTERNAL_BUCKET_CAPACITY = "BucketCapacity"
+    _INTERNAL_BUCKET_RATE = "BucketRate"
+    _INTERNAL_SAMPLE_RATE = "SampleRate"
+    _INTERNAL_SAMPLE_SOURCE = "SampleSource"
     _INTERNAL_SW_KEYS = "SWKeys"
+    _LIBOBOE_CONTINUED = -1
     _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
     _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
     _XTRACEOPTIONS_RESP_AUTH = "auth"
@@ -118,6 +123,21 @@ class _SwSampler(Sampler):
         }
         logger.debug("Got liboboe decision outputs: {}".format(decision))
         return decision
+
+    def is_decision_continued(
+        self,
+        liboboe_decision: Dict
+    ) -> bool:
+        """Returns True if liboboe decision is a continued one, else False"""
+        for val in [
+            liboboe_decision["rate"],
+            liboboe_decision["source"],
+            liboboe_decision["bucket_rate"],
+            liboboe_decision["bucket_cap"]
+        ]:
+            if val != self._LIBOBOE_CONTINUED:
+                return False
+        return True
 
     def otel_decision_from_liboboe(
         self,
@@ -280,12 +300,23 @@ class _SwSampler(Sampler):
         if self.otel_decision_from_liboboe(decision) == Decision.DROP:
             logger.debug("Trace decision is to drop - not setting attributes")
             return None
-
+        
         new_attributes = {}
+
         # Always (root or is_remote) set _INTERNAL_SW_KEYS if injected
         internal_sw_keys = xtraceoptions.sw_keys
         if internal_sw_keys:
             new_attributes[self._INTERNAL_SW_KEYS] = internal_sw_keys
+    
+        # If not a liboboe continued trace, set service entry internal KVs       
+        if not self.is_decision_continued(decision):
+            new_attributes[self._INTERNAL_BUCKET_CAPACITY] = "{}".format(decision["bucket_cap"])
+            new_attributes[self._INTERNAL_BUCKET_RATE] = "{}".format(decision["bucket_rate"])
+            new_attributes[self._INTERNAL_SAMPLE_RATE] = decision["rate"]
+            new_attributes[self._INTERNAL_SAMPLE_SOURCE] = decision["source"]
+            logger.debug(
+                "Set attributes with service entry internal KVs: {}".format(new_attributes)
+            )
 
         # Trace's root span has no valid traceparent nor tracestate
         # so we can't calculate remaining attributes
@@ -294,8 +325,12 @@ class _SwSampler(Sampler):
                 "No valid traceparent or no tracestate - returning attributes: {}"
                 .format(new_attributes)
             )
-            # attributes must be immutable for SamplingResult
-            return MappingProxyType(new_attributes)
+
+            if new_attributes:
+                # attributes must be immutable for SamplingResult
+                return MappingProxyType(new_attributes)
+            else:
+                return None
 
         if not attributes:
             # _SW_TRACESTATE_ROOT_KEY is set once per trace, if possible
