@@ -1,4 +1,4 @@
-__version__ = "0.0.1"
+# from w3c_transformer import W3CTransformer
 
 COMMA = ","
 COMMA_W3C_SANITIZED = "...."

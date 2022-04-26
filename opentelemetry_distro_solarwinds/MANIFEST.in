@@ -1,0 +1,11 @@
+include extension/oboe_api.hpp
+include extension/oboe.h
+include extension/oboe_debug.h
+include extension/liboboe-1.0-x86_64.so.0.0.0
+include extension/liboboe-1.0-alpine-x86_64.so.0.0.0
+include extension/bson/bson.h
+include extension/bson/platform_hacks.h
+exclude extension/liboboe-1.0.so.0
+exclude MANIFEST.in
+exclude Makefile
+prune tests
