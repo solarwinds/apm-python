@@ -5,7 +5,7 @@ import sys
 for path in sys.path:
     print(path)
 
-from opentelemetry.distro.solarwinds.w3c_transformer import W3CTransformer
+from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
 
 class TestW3CTransformer():
     def test_span_from_int(self):

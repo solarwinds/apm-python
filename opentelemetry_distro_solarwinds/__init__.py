@@ -1,5 +1,3 @@
-# from w3c_transformer import W3CTransformer
-
 COMMA = ","
 COMMA_W3C_SANITIZED = "...."
 EQUALS = "="

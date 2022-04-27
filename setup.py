@@ -1,4 +1,20 @@
 #!/usr/bin/env python
+
+#    Copyright 2021 SolarWinds, LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# pylint: disable-msg=missing-module-docstring
 """Install script which makes the SolarWinds C-Extension available to the custom distro package.
 """
 import os
@@ -10,7 +26,7 @@ from setuptools.command.build_ext import build_ext
 
 BASE_DIR = os.path.dirname(__file__)
 VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "distro", "solarwinds", "version.py"
+    BASE_DIR, "opentelemetry_distro_solarwinds", "version.py"
 )
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME, encoding="utf-8") as f:
@@ -51,7 +67,7 @@ def link_oboe_lib(src_lib):
     cwd = os.getcwd()
     log.info("Create links to platform specific liboboe library file")
     try:
-        os.chdir('./extension/')
+        os.chdir('./opentelemetry_distro_solarwinds/extension/')
         if not os.path.exists(src_lib):
             raise Exception(
                 "C-extension library file {} does not exist.".format(src_lib))
@@ -83,26 +99,38 @@ class CustomBuildExt(build_ext):
 ext_modules = [
     Extension('opentelemetry_distro_solarwinds.extension._oboe',
               sources=[
-                  'extension/oboe_wrap.cxx',
-                  'extension/oboe_api.cpp'
+                  'opentelemetry_distro_solarwinds/extension/oboe_wrap.cxx',
+                  'opentelemetry_distro_solarwinds/extension/oboe_api.cpp'
               ],
               depends=[
-                  'extension/oboe_api.hpp',
+                  'opentelemetry_distro_solarwinds/extension/oboe_api.hpp',
               ],
               include_dirs=[
-                  'extension',
-                  '.'
+                  'opentelemetry_distro_solarwinds/extension',
+                  'opentelemetry_distro_solarwinds'
               ],
               libraries=['oboe-1.0', 'rt'],
-              library_dirs=['extension'],
+              library_dirs=['opentelemetry_distro_solarwinds/extension'],
               extra_compile_args=["-std=c++11"],
               runtime_library_dirs=['$ORIGIN']),
 ]
 
 setup(
+    # name='opentelemetry_distro_solarwinds',
     cmdclass={
         'build_ext': CustomBuildExt,
     },
     ext_modules=ext_modules,
+    # packages=['opentelemetry_distro_solarwinds', 'opentelemetry_distro_solarwinds.extension'],
+    # package_data={
+    #     'opentelemetry_distro_solarwinds': ['extension/liboboe-1.0.so.0', 'extension/VERSION', 'extension/bson/bson.h', 'extension/bson/platform_hacks.h']
+    # },
+    python_requires='>=3.6',
+    classifiers=[
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+    ],
     version=PACKAGE_INFO["__version__"],
 )

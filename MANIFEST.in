@@ -1,0 +1,11 @@
+include *.md
+include *.txt
+include opentelemetry_distro_solarwinds/extension/VERSION
+recursive-include appoptics_apm *.cxx
+recursive-include appoptics_apm *.h
+recursive-include appoptics_apm *.hpp
+recursive-include appoptics_apm *.so
+recursive-include appoptics_apm *.so.*
+exclude MANIFEST.in
+exclude Makefile
+prune test

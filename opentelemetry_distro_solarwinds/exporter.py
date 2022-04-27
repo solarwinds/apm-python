@@ -9,9 +9,9 @@ import os
 
 from opentelemetry.sdk.trace.export import SpanExporter
 
-from opentelemetry_distro_solarwinds.extension.oboe import (Context, Metadata,
-                                                            Reporter)
+from opentelemetry_distro_solarwinds.extension.oboe import (Context, Metadata, Reporter)
 from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
+
 
 logger = logging.getLogger(__file__)
 
