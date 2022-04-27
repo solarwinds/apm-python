@@ -1,6 +1,6 @@
 include *.md
 include *.txt
-include opentelemetry_distro_solarwinds/extension/VERSION
+include solarwinds_observability/extension/VERSION
 recursive-include appoptics_apm *.cxx
 recursive-include appoptics_apm *.h
 recursive-include appoptics_apm *.hpp

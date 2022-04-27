@@ -14,14 +14,14 @@ from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import SpanContext, TraceState
 from opentelemetry.util.types import Attributes
 
-from opentelemetry_distro_solarwinds import (
+from solarwinds_observability import (
     COMMA_W3C_SANITIZED,
     EQUALS_W3C_SANITIZED,
     SW_TRACESTATE_KEY
 )
-from opentelemetry_distro_solarwinds.extension.oboe import Context
-from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
-from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
+from solarwinds_observability.extension.oboe import Context
+from solarwinds_observability.traceoptions import XTraceOptions
+from solarwinds_observability.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
 

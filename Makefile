@@ -33,8 +33,8 @@ nothing:
 LIBOBOEALPINE := "liboboe-1.0-alpine-x86_64.so.0.0.0"
 LIBOBOEORG := "liboboe-1.0-x86_64.so.0.0.0"
 LIBOBOESERVERLESS := "liboboe-1.0-lambda-x86_64.so.0.0.0"
-# Version of the C-library extension is stored under /opentelemetry_distro_solarwinds/extension/VERSION (Otel export compatible as of 10.3.4)
-OBOEVERSION := $(shell cat ./opentelemetry_distro_solarwinds/extension/VERSION)
+# Version of the C-library extension is stored under /solarwinds_observability/extension/VERSION (Otel export compatible as of 10.3.4)
+OBOEVERSION := $(shell cat ./solarwinds_observability/extension/VERSION)
 
 # specification of source of header and library files
 ifdef S3_OBOE
@@ -45,7 +45,7 @@ endif
 
 verify-oboe-version:
 	@echo -e "Downloading Oboe VERSION file from ${OBOEREPO}"
-	@cd opentelemetry_distro_solarwinds/extension; \
+	@cd solarwinds_observability/extension; \
 		curl -f "${OBOEREPO}/VERSION" -o "VERSION.tmp" ; \
 		if [ $$? -ne 0 ]; then echo " **** Failed to download VERSION  ****" ; exit 1; fi; \
 		diff -q VERSION.tmp VERSION; \
@@ -64,7 +64,7 @@ verify-oboe-version:
 # Download the pre-compiled liboboe shared library from source specified in OBOEREPO
 download-liboboe: verify-oboe-version
 	@echo -e "Downloading ${LIBOBOEORG} and ${LIBOBOEALPINE} shared libraries.\n"
-	@cd opentelemetry_distro_solarwinds/extension; \
+	@cd solarwinds_observability/extension; \
 		curl -o ${LIBOBOEORG}  "${OBOEREPO}/${LIBOBOEORG}"; \
 		if [ $$? -ne 0 ]; then echo " **** fail to download ${LIBOBOEORG} ****" ; exit 1; fi; \
 		curl -o ${LIBOBOEALPINE}  "${OBOEREPO}/${LIBOBOEALPINE}"; \
@@ -72,7 +72,7 @@ download-liboboe: verify-oboe-version
 		curl -f -O "${OBOEREPO}/VERSION"; \
 		if [ $$? -ne 0 ]; then echo " **** fail to download VERSION  ****" ; exit 1; fi
 	@echo -e "Downloading ${LIBOBOESERVERLESS} shared library.\n"
-	@cd opentelemetry_distro_solarwinds/extension; \
+	@cd solarwinds_observability/extension; \
 		curl -o $(LIBOBOESERVERLESS)  "${OBOEREPO}/${LIBOBOESERVERLESS}"; \
 		if [ $$? -ne 0 ]; then echo " **** failed to download ${LIBOBOESERVERLESS} ****" ; exit 1; fi;
 
@@ -80,7 +80,7 @@ download-liboboe: verify-oboe-version
 download-headers: verify-oboe-version download-bson-headers
 	@echo -e "Downloading header files (.hpp, .h, .i)"
 	@echo "Downloading files from ${OBOEREPO}:"
-	@cd opentelemetry_distro_solarwinds/extension; \
+	@cd solarwinds_observability/extension; \
 		for i in oboe.h oboe_api.hpp oboe_api.cpp oboe.i oboe_debug.h; do \
 			echo "Downloading $$i"; \
 			curl -f -O "${OBOEREPO}/include/$$i"; \
@@ -90,12 +90,12 @@ download-headers: verify-oboe-version download-bson-headers
 # Download bson header files from source specified in OBOEREPO
 download-bson-headers:
 	@echo -e "Downloading bson header files (.hpp, .h)"
-	@if [ ! -d opentelemetry_distro_solarwinds/extension/bson ]; then \
-		mkdir opentelemetry_distro_solarwinds/extension/bson; \
-		echo "Created opentelemetry_distro_solarwinds/extension/bson"; \
+	@if [ ! -d solarwinds_observability/extension/bson ]; then \
+		mkdir solarwinds_observability/extension/bson; \
+		echo "Created solarwinds_observability/extension/bson"; \
 	 fi
 	@echo "Downloading files from ${OBOEREPO}:"
-	@cd opentelemetry_distro_solarwinds/extension/bson; \
+	@cd solarwinds_observability/extension/bson; \
 		for i in bson.h platform_hacks.h; do \
 			echo "Downloading $$i"; \
 			curl -f -O "${OBOEREPO}/include/bson/$$i"; \
@@ -115,7 +115,7 @@ OTELOBOEREPO := /code/oboe/liboboe
 # Copy the pre-compiled liboboe shared library from source specified in OTELOBOEREPO
 copy-liboboe:
 	@echo -e "Copying shared library.\n"
-	@cd opentelemetry_distro_solarwinds/extension; \
+	@cd solarwinds_observability/extension; \
 		cp "${OTELOBOEREPO}/liboboe-1.0-x86_64.so.0.0.0" .; \
 		if [ $$? -ne 0 ]; then echo " **** failed to copy shared library ****" ; exit 1; fi;
 
@@ -123,13 +123,13 @@ copy-liboboe:
 copy-headers: copy-bson-headers
 	@echo -e "Copying header files (.hpp, .h, .i)"
 	@echo "Copying files from ${OTELOBOEREPO}:"
-	@cd opentelemetry_distro_solarwinds/extension; \
+	@cd solarwinds_observability/extension; \
 		for i in oboe.h oboe_api.hpp oboe_api.cpp oboe_debug.h; do \
 			echo "Copying $$i"; \
 			cp "${OTELOBOEREPO}/$$i" .; \
 			if [ $$? -ne 0 ]; then echo " **** failed to copy $$i ****" ; exit 1; fi; \
 		done
-	@cd opentelemetry_distro_solarwinds/extension; \
+	@cd solarwinds_observability/extension; \
 		echo "Copying oboe.i"; \
 		cp "${OTELOBOEREPO}/swig/oboe.i" .; \
 		if [ $$? -ne 0 ]; then echo " **** failed to copy oboe.i ****" ; exit 1; fi; \
@@ -137,12 +137,12 @@ copy-headers: copy-bson-headers
 # Copy bson header files from source specified in OTELOBOEREPO
 copy-bson-headers:
 	@echo -e "Copying bson header files (.hpp, .h)"
-	@if [ ! -d opentelemetry_distro_solarwinds/extension/bson ]; then \
-		mkdir opentelemetry_distro_solarwinds/extension/bson; \
-		echo "Created opentelemetry_distro_solarwinds/extension/bson"; \
+	@if [ ! -d solarwinds_observability/extension/bson ]; then \
+		mkdir solarwinds_observability/extension/bson; \
+		echo "Created solarwinds_observability/extension/bson"; \
 	 fi
 	@echo "Copying files from ${OTELOBOEREPO}:"
-	@cd opentelemetry_distro_solarwinds/extension/bson; \
+	@cd solarwinds_observability/extension/bson; \
 		for i in bson.h platform_hacks.h; do \
 			echo "Copying $$i"; \
 			cp "${OTELOBOEREPO}/bson/$$i" .; \
@@ -165,12 +165,12 @@ check-swig:
 # Build the Python wrapper from liboboe headers inside build container
 wrapper: check-swig download-all
 	@echo -e "Generating SWIG wrapper for C/C++ headers."
-	@cd opentelemetry_distro_solarwinds/extension && ./gen_bindings.sh
+	@cd solarwinds_observability/extension && ./gen_bindings.sh
 
 # Build the Python wrapper from liboboe headers inside build container
 wrapper-from-local: check-swig copy-all
 	@echo -e "Generating SWIG wrapper for C/C++ headers, from local neighbouring oboe checkout"
-	@cd opentelemetry_distro_solarwinds/extension && ./gen_bindings.sh
+	@cd solarwinds_observability/extension && ./gen_bindings.sh
 
 # Create package source distribution archive
 sdist: wrapper
@@ -181,7 +181,7 @@ sdist: wrapper
 # clean up everything.
 clean:
 	@echo -e "Cleaning intermediate files."
-	@cd opentelemetry_distro_solarwinds/extension; rm -f oboe.py _oboe.so liboboe-1.0*so*
+	@cd solarwinds_observability/extension; rm -f oboe.py _oboe.so liboboe-1.0*so*
 	@echo -e "Done."
 
 .PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all copy-liboboe copy-headers copy-bson-headers copy-all check-swig wrapper wrapper-from-local sdist clean
