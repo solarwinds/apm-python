@@ -15,10 +15,12 @@ logger = logging.getLogger(__name__)
 class SolarWindsDistro(BaseDistro):
     """OpenTelemetry Distro for SolarWinds reporting environment"""
 
+    _TRACECONTEXT_PROPAGATOR = "tracecontext"
+    _SW_PROPAGATOR = "solarwinds_propagator"
     _DEFAULT_SW_PROPAGATORS = [
-        "tracecontext",
+        _TRACECONTEXT_PROPAGATOR,
         "baggage",
-        "solarwinds_propagator",
+        _SW_PROPAGATOR,
     ]
     _DEFAULT_SW_TRACES_EXPORTER = "solarwinds_exporter"
     _DEFAULT_SW_TRACES_SAMPLER = "solarwinds_sampler"
@@ -27,18 +29,22 @@ class SolarWindsDistro(BaseDistro):
         environ.setdefault(OTEL_TRACES_SAMPLER, self._DEFAULT_SW_TRACES_SAMPLER)
         environ.setdefault(OTEL_TRACES_EXPORTER, self._DEFAULT_SW_TRACES_EXPORTER)
         
-        # Configure context propagators to always include
-        # tracecontext,baggage,solarwinds -- first and in that order
-        # -- plus any others specified by env var
         environ_propagators = environ.get(
             OTEL_PROPAGATORS,
             ",".join(self._DEFAULT_SW_PROPAGATORS)
         ).split(",")
+        # If not using the default propagators,
+        # can any arbitrary list BUT
+        # (1) must include tracecontext and solarwinds_propagator
+        # (2) tracecontext must be before solarwinds_propagator
         if environ_propagators != self._DEFAULT_SW_PROPAGATORS:
-            for default in self._DEFAULT_SW_PROPAGATORS:
-                while default in environ_propagators:
-                    environ_propagators.remove(default)
-            environ_propagators = self._DEFAULT_SW_PROPAGATORS + environ_propagators
+            if not self._TRACECONTEXT_PROPAGATOR in environ_propagators or \
+                not self._SW_PROPAGATOR in environ_propagators:
+                raise ValueError("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability.")
+
+            if environ_propagators.index(self._SW_PROPAGATOR) \
+                < environ_propagators.index(self._TRACECONTEXT_PROPAGATOR):
+                raise ValueError("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability.")
         environ[OTEL_PROPAGATORS] = ",".join(environ_propagators)
 
         logger.debug("Configured SolarWindsDistro: {}, {}, {}".format(
