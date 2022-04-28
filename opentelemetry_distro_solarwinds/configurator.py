@@ -17,7 +17,6 @@ from opentelemetry.sdk.environment_variables import OTEL_TRACES_SAMPLER
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from opentelemetry_distro_solarwinds.distro import SolarWindsDistro
 from opentelemetry_distro_solarwinds.response_propagator import SolarWindsTraceResponsePropagator
 
 logger = logging.getLogger(__name__)
@@ -25,26 +24,28 @@ logger = logging.getLogger(__name__)
 class SolarWindsConfigurator(_OTelSDKConfigurator):
     """OpenTelemetry Configurator for initializing SolarWinds-reporting SDK components"""
 
+    # Cannot set as env default because not part of OTel Python _KNOWN_SAMPLERS
+    # https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-sdk/src/opentelemetry/sdk/trace/sampling.py#L364-L380
+    _DEFAULT_SW_TRACES_SAMPLER = "solarwinds_sampler"
+
     def _configure(self, **kwargs):
-        # If default_traces_sampler is configured then hook up
-        # Else let OTel Python get_from_env_or_default
-        environ_sampler = environ.get(OTEL_TRACES_SAMPLER)
-        if environ_sampler == SolarWindsDistro.default_sw_traces_sampler():
-            try:
-                sampler = next(
-                    iter_entry_points(
-                        "opentelemetry_traces_sampler",
-                        environ_sampler
-                    )).load()()
-            except:
-                logger.exception(
-                    "Failed to load configured sampler `%s`", environ_sampler
-                )
-                raise
-            trace.set_tracer_provider(
-                TracerProvider(sampler=sampler))
-        else:
-            trace.set_tracer_provider()
+        environ_sampler = environ.get(
+            OTEL_TRACES_SAMPLER,
+            self._DEFAULT_SW_TRACES_SAMPLER,
+        )
+        try:
+            sampler = next(
+                iter_entry_points(
+                    "opentelemetry_traces_sampler",
+                    environ_sampler
+                )).load()()
+        except:
+            logger.exception(
+                "Failed to load configured sampler `%s`", environ_sampler
+            )
+            raise
+        trace.set_tracer_provider(
+            TracerProvider(sampler=sampler))
 
         environ_exporter = environ.get(OTEL_TRACES_EXPORTER)
         try:

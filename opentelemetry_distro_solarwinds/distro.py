@@ -21,10 +21,8 @@ class SolarWindsDistro(BaseDistro):
         "solarwinds_propagator",
     ]
     _DEFAULT_SW_TRACES_EXPORTER = "solarwinds_exporter"
-    _DEFAULT_SW_TRACES_SAMPLER = "solarwinds_sampler"
 
     def _configure(self, **kwargs):
-        environ.setdefault(OTEL_TRACES_SAMPLER, self._DEFAULT_SW_TRACES_SAMPLER)
         environ.setdefault(OTEL_TRACES_EXPORTER, self._DEFAULT_SW_TRACES_EXPORTER)
         
         # Configure context propagators to always include
@@ -46,7 +44,3 @@ class SolarWindsDistro(BaseDistro):
             environ.get(OTEL_TRACES_EXPORTER),
             environ.get(OTEL_PROPAGATORS)
         ))
-    
-    @classmethod
-    def default_sw_traces_sampler(cls):
-        return cls._DEFAULT_SW_TRACES_SAMPLER
