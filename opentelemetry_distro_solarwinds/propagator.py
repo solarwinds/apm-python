@@ -83,7 +83,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
 
         # Prepare carrier with carrier's or new tracestate
         if trace_state_header:
-            trace_state = TraceState.from_header(trace_state_header)
+            trace_state = TraceState.from_header([trace_state_header])
             # Check if trace_state already contains sw KV
             if SW_TRACESTATE_KEY in trace_state.keys():
                 # If so, modify current span_id and trace_flags, and move to beginning of list
