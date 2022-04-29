@@ -21,7 +21,7 @@ import os
 import sys
 from distutils import log
 
-from setuptools import Extension, setup
+from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 
 BASE_DIR = os.path.dirname(__file__)
@@ -121,11 +121,7 @@ setup(
         'build_ext': CustomBuildExt,
     },
     ext_modules=ext_modules,
-    packages=['solarwinds_observability', 'solarwinds_observability.extension'],
-    package_data={
-        'solarwinds_observability': ['extension/liboboe-1.0.so.0', 'extension/VERSION', 'extension/bson/bson.h', 'extension/bson/platform_hacks.h']
-    },
-    python_requires='>=3.6',
+    packages=find_packages(exclude=['tests']),  # Include all the python modules except `tests`.
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
