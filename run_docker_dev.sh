@@ -9,8 +9,8 @@
 docker run -it \
     --net=host \
     --cap-add SYS_PTRACE \
-    --workdir /code/solarwinds_observability \
-    -v "$PWD":/code/solarwinds_observability \
+    --workdir /code/solarwinds_apm \
+    -v "$PWD":/code/solarwinds_apm \
     -v "$PWD"/../oboe/:/code/oboe \
     -v `echo ~`:/home/developer \
     dev-container bash

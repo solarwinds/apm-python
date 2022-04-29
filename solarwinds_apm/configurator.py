@@ -17,8 +17,8 @@ from opentelemetry.sdk.environment_variables import OTEL_TRACES_SAMPLER
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from solarwinds_observability.distro import SolarWindsDistro
-from solarwinds_observability.response_propagator import SolarWindsTraceResponsePropagator
+from solarwinds_apm.distro import SolarWindsDistro
+from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
 
 logger = logging.getLogger(__name__)
 

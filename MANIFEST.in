@@ -1,6 +1,6 @@
 include *.md
 include *.txt
-include solarwinds_observability/extension/VERSION
+include solarwinds_apm/extension/VERSION
 recursive-include appoptics_apm *.cxx
 recursive-include appoptics_apm *.h
 recursive-include appoptics_apm *.hpp

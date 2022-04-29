@@ -26,7 +26,7 @@ from setuptools.command.build_ext import build_ext
 
 BASE_DIR = os.path.dirname(__file__)
 VERSION_FILENAME = os.path.join(
-    BASE_DIR, "solarwinds_observability", "version.py"
+    BASE_DIR, "solarwinds_apm", "version.py"
 )
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME, encoding="utf-8") as f:
@@ -67,7 +67,7 @@ def link_oboe_lib(src_lib):
     cwd = os.getcwd()
     log.info("Create links to platform specific liboboe library file")
     try:
-        os.chdir('./solarwinds_observability/extension/')
+        os.chdir('./solarwinds_apm/extension/')
         if not os.path.exists(src_lib):
             raise Exception(
                 "C-extension library file {} does not exist.".format(src_lib))
@@ -97,26 +97,26 @@ class CustomBuildExt(build_ext):
 
 
 ext_modules = [
-    Extension('solarwinds_observability.extension._oboe',
+    Extension('solarwinds_apm.extension._oboe',
               sources=[
-                  'solarwinds_observability/extension/oboe_wrap.cxx',
-                  'solarwinds_observability/extension/oboe_api.cpp'
+                  'solarwinds_apm/extension/oboe_wrap.cxx',
+                  'solarwinds_apm/extension/oboe_api.cpp'
               ],
               depends=[
-                  'solarwinds_observability/extension/oboe_api.hpp',
+                  'solarwinds_apm/extension/oboe_api.hpp',
               ],
               include_dirs=[
-                  'solarwinds_observability/extension',
-                  'solarwinds_observability'
+                  'solarwinds_apm/extension',
+                  'solarwinds_apm'
               ],
               libraries=['oboe-1.0', 'rt'],
-              library_dirs=['solarwinds_observability/extension'],
+              library_dirs=['solarwinds_apm/extension'],
               extra_compile_args=["-std=c++11"],
               runtime_library_dirs=['$ORIGIN']),
 ]
 
 setup(
-    name='solarwinds_observability',
+    name='solarwinds_apm',
     cmdclass={
         'build_ext': CustomBuildExt,
     },
