@@ -348,9 +348,9 @@ class _SwSampler(Sampler):
             trace_state_no_response = self.remove_response_from_sw(trace_state)
         else:
             # Must retain all potential tracestate pairs for attributes
-            attr_trace_state = TraceState.from_header(
+            attr_trace_state = TraceState.from_header([
                 tracestate_capture
-            )
+            ])
             new_attr_trace_state = attr_trace_state.update(
                 SW_TRACESTATE_KEY,
                 W3CTransformer.sw_from_span_and_decision(
