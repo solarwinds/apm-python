@@ -2,7 +2,10 @@
 
 import logging
 from os import environ
-from pkg_resources import iter_entry_points
+from pkg_resources import (
+    iter_entry_points,
+    load_entry_point
+)
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
@@ -34,11 +37,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             self._DEFAULT_SW_TRACES_SAMPLER,
         )
         try:
-            sampler = next(
-                iter_entry_points(
-                    "opentelemetry_traces_sampler",
-                    environ_sampler
-                )).load()()
+            sampler = load_entry_point(
+                "opentelemetry_distro_solarwinds",
+                "opentelemetry_traces_sampler",
+                environ_sampler
+            )()
         except:
             logger.exception(
                 "Failed to load configured sampler `%s`", environ_sampler
@@ -49,11 +52,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         environ_exporter = environ.get(OTEL_TRACES_EXPORTER)
         try:
-            exporter = next(
-                iter_entry_points(
-                    "opentelemetry_traces_exporter",
-                    environ_exporter
-                )).load()()
+            exporter = load_entry_point(
+                "opentelemetry_distro_solarwinds",
+                "opentelemetry_traces_exporter",
+                environ_exporter
+            )()
         except:
             logger.exception(
                 "Failed to load configured exporter `%s`", environ_exporter
