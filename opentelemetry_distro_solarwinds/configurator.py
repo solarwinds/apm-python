@@ -17,7 +17,10 @@ from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk.environment_variables import OTEL_TRACES_SAMPLER
-from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace import (
+    sampling,
+    TracerProvider
+)
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from opentelemetry_distro_solarwinds import DEFAULT_SW_TRACES_EXPORTER
@@ -49,21 +52,28 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             OTEL_TRACES_SAMPLER,
             self._DEFAULT_SW_TRACES_SAMPLER,
         )
-        try:
-            sampler = load_entry_point(
-                "opentelemetry_distro_solarwinds",
-                "opentelemetry_traces_sampler",
-                environ_sampler_name
-            )()
-        except:
-            logger.exception(
-                "Failed to load configured sampler {}".format(
+
+        if environ_sampler_name == self._DEFAULT_SW_TRACES_SAMPLER:
+            try:
+                sampler = load_entry_point(
+                    "opentelemetry_distro_solarwinds",
+                    "opentelemetry_traces_sampler",
                     environ_sampler_name
+                )()
+            except:
+                logger.exception(
+                    "Failed to load configured sampler {}".format(
+                        environ_sampler_name
+                    )
                 )
-            )
-            raise
+                raise
+        else:
+            # OTel SDK uses _get_from_env_or_default, not entrypoints
+            sampler = sampling._get_from_env_or_default()
+
         trace.set_tracer_provider(
-            TracerProvider(sampler=sampler))
+            TracerProvider(sampler=sampler)
+        )
 
     def _configure_exporter(self, reporter):
         """Configure SolarWinds or env-specified OTel span exporter.
@@ -87,11 +97,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 raise
         else:
             try:
-                exporter = load_entry_point(
-                    "opentelemetry_distro_solarwinds",
-                    "opentelemetry_traces_exporter",
-                    environ_exporter_name
-                )()
+                exporter = next(
+                    iter_entry_points(
+                        "opentelemetry_traces_exporter",
+                        environ_exporter_name
+                    )
+                ).load()()
             except:
                 logger.exception(
                     "Failed to load configured exporter {}".format(
@@ -106,17 +117,17 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure CompositePropagator with SolarWinds and other propagators"""
         propagators = []
         environ_propagators_names = environ.get(OTEL_PROPAGATORS).split(",")
-        for propagator in environ_propagators_names:
+        for propagator_name in environ_propagators_names:
             try:
                 propagators.append(
                     next(
-                        iter_entry_points("opentelemetry_propagator", propagator)
+                        iter_entry_points("opentelemetry_propagator", propagator_name)
                     ).load()()
                 )
             except Exception:
                 logger.exception(
                     "Failed to load configured propagator {}".format(
-                        propagator
+                        propagator_name
                     )
                 )
                 raise
