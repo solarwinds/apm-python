@@ -46,31 +46,20 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         set_global_response_propagator(SolarWindsTraceResponsePropagator())
 
     def _configure_sampler(self):
-        """Configure SolarWinds or env-specified OTel sampler"""
-        sampler = None
-        environ_sampler_name = environ.get(
-            OTEL_TRACES_SAMPLER,
-            self._DEFAULT_SW_TRACES_SAMPLER,
-        )
-
-        if environ_sampler_name == self._DEFAULT_SW_TRACES_SAMPLER:
-            try:
-                sampler = load_entry_point(
-                    "opentelemetry_distro_solarwinds",
-                    "opentelemetry_traces_sampler",
-                    environ_sampler_name
-                )()
-            except:
-                logger.exception(
-                    "Failed to load configured sampler {}".format(
-                        environ_sampler_name
-                    )
+        """Always configure SolarWinds OTel sampler"""
+        try:
+            sampler = load_entry_point(
+                "opentelemetry_distro_solarwinds",
+                "opentelemetry_traces_sampler",
+                self._DEFAULT_SW_TRACES_SAMPLER
+            )()
+        except:
+            logger.exception(
+                "Failed to load configured sampler {}".format(
+                    self._DEFAULT_SW_TRACES_SAMPLER
                 )
-                raise
-        else:
-            # OTel SDK uses _get_from_env_or_default, not entrypoints
-            sampler = sampling._get_from_env_or_default()
-
+            )
+            raise
         trace.set_tracer_provider(
             TracerProvider(sampler=sampler)
         )
