@@ -8,35 +8,47 @@ from opentelemetry.environment_variables import (
 
 from solarwinds_apm.distro import SolarWindsDistro
 
-
-# We can mock these, but they aren't used by distro because setup.py
-# is called before tox-triggered tests run
-
-# otel_propagators = "foo"
-# otel_traces_exporter = "bar"
-# otel_traces_sampler = "baz"
-# @pytest.fixture(autouse=True)
-# def fixture_env_and_otel_keys(mocker):
-#     # mocker.patch.dict("os.environ", {})
-#     mocker.patch.object(opentelemetry.environment_variables, "OTEL_PROPAGATORS", otel_propagators)
-#     mocker.patch.object(opentelemetry.sdk.environment_variables, "OTEL_TRACES_SAMPLER", otel_traces_sampler)
-#     mocker.patch.object(opentelemetry.environment_variables, "OTEL_TRACES_EXPORTER", otel_traces_exporter)
-
 class TestDistro:
-    def test_configure_no_env(self):
+    def test_init(self, mocker):
+        distro = SolarWindsDistro()
+        assert distro._TRACECONTEXT_PROPAGATOR == "tracecontext"
+        assert distro._SW_PROPAGATOR == "solarwinds_propagator"
+        assert distro._DEFAULT_SW_PROPAGATORS == [
+            "tracecontext",
+            "baggage",
+            "solarwinds_propagator",
+        ]
+        assert distro._DEFAULT_SW_TRACES_EXPORTER == "solarwinds_exporter"
+
+    def test_configure_no_env(self, mocker):
+        mocker.patch.dict(os.environ, {})
         SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
 
-    # TODO After merging https://github.com/appoptics/opentelemetry-python-instrumentation-custom-distro/pull/14/files
-    def test_configure_env_without_sw_propagator_fails(self):
-        pass
+    def test_configure_env_exporter_ok(self, mocker):
+        mocker.patch.dict(os.environ, {"OTEL_TRACES_EXPORTER": "foobar"})
+        SolarWindsDistro()._configure()
+        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
 
-    def test_configure_env_without_tracecontext_propagator_fails(self):
-        pass
+    def test_configure_env_without_sw_propagator_fails(self, mocker):
+        mocker.patch.dict(os.environ, {"OTEL_PROPAGATORS": "tracecontext,baggage"})
+        with pytest.raises(ValueError):
+            SolarWindsDistro()._configure()
 
-    def test_configure_env_sw_before_tracecontext_propagator_fails(self):
-        pass
+    def test_configure_env_without_tracecontext_propagator_fails(self, mocker):
+        mocker.patch.dict(os.environ, {"OTEL_PROPAGATORS": "solarwinds_propagator"})
+        with pytest.raises(ValueError):
+            SolarWindsDistro()._configure()
 
-    def test_configure_env_with_external_propagator(self):
-        pass
+    def test_configure_env_sw_before_tracecontext_propagator_fails(self, mocker):
+        mocker.patch.dict(os.environ, {"OTEL_PROPAGATORS": "solarwinds_propagator,tracecontext"})
+        with pytest.raises(ValueError):
+            SolarWindsDistro()._configure()
+
+    def test_configure_env_propagators_ok(self, mocker):
+        mocker.patch.dict(os.environ, {"OTEL_PROPAGATORS": "tracecontext,solarwinds_propagator,foobar"})
+        SolarWindsDistro()._configure()
+        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,solarwinds_propagator,foobar"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
