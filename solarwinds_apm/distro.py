@@ -8,7 +8,8 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER
 )
 from opentelemetry.instrumentation.distro import BaseDistro
-from opentelemetry.sdk.environment_variables import OTEL_TRACES_SAMPLER
+
+from solarwinds_apm import DEFAULT_SW_TRACES_EXPORTER
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +23,10 @@ class SolarWindsDistro(BaseDistro):
         "baggage",
         _SW_PROPAGATOR,
     ]
-    _DEFAULT_SW_TRACES_EXPORTER = "solarwinds_exporter"
 
     def _configure(self, **kwargs):
-        environ.setdefault(OTEL_TRACES_EXPORTER, self._DEFAULT_SW_TRACES_EXPORTER)
+        """Configure OTel exporter and propagators"""
+        environ.setdefault(OTEL_TRACES_EXPORTER, DEFAULT_SW_TRACES_EXPORTER)
         
         environ_propagators = environ.get(
             OTEL_PROPAGATORS,
@@ -45,8 +46,7 @@ class SolarWindsDistro(BaseDistro):
                 raise ValueError("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability.")
         environ[OTEL_PROPAGATORS] = ",".join(environ_propagators)
 
-        logger.debug("Configured SolarWindsDistro: {}, {}, {}".format(
-            environ.get(OTEL_TRACES_SAMPLER),
+        logger.debug("Configured SolarWindsDistro: {}, {}".format(
             environ.get(OTEL_TRACES_EXPORTER),
             environ.get(OTEL_PROPAGATORS)
         ))

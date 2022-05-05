@@ -18,7 +18,6 @@ class TestDistro:
             "baggage",
             "solarwinds_propagator",
         ]
-        assert distro._DEFAULT_SW_TRACES_EXPORTER == "solarwinds_exporter"
 
     def test_configure_no_env(self, mocker):
         mocker.patch.dict(os.environ, {})
