@@ -201,6 +201,16 @@ sdist: wrapper
 clean:
 	@echo -e "Cleaning intermediate files."
 	@cd solarwinds_apm/extension; rm -f oboe.py _oboe.so liboboe-1.0*so*
+	@cd ..
+	@find . -type f -name '*.pyc' -delete
+	@find . -type d -name '__pycache__' | xargs rm -rf
+	@find . -type d -name '*.ropeproject' | xargs rm -rf
+	@rm -rf build/
+	@rm -rf dist/
+	@rm -f src/*.egg*
+	@rm -f MANIFEST
+	@rm -rf docs/build/
+	@rm -f .coverage.*
 	@echo -e "Done."
 
 .PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all copy-liboboe copy-headers copy-bson-headers copy-all test test-all format lint check-swig wrapper wrapper-from-local sdist clean
