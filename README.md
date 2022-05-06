@@ -78,10 +78,17 @@ Inside the build container, execute `make sdist`. This will create a zip archive
 
 Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.6, 3.7, 3.8, 3.9, and/or 3.10 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini).
 
-To set up and run tox:
-1. `pip install tox`
-2. `pip install pyenv`
-3. `pyenv install <version>` for several versions to cover 3.6, 3.7, 3.8, 3.9, and 3.10.
-4. To `~/.pyenv/version`, add the above versions (one per line) so they're available globally.
-5. To run all tests for all Python environments: `tox`
-6. To run all tests for a specific version, example: `tox -e py36`
+The functional tests require a compiled C-extension and should be run inside the build container. Here is how to run tests:
+
+1. Create and run the Docker build container as described above.
+2. Inside the build container: `make wrapper`. This downloads the version of oboe defined in `extension/VERSION` from S3 and builds the SWIG bindings.
+3. To run all tests for all Python environments: `make test-all`
+4. To run all tests for a specific version, example: `make test PY=py39 OPTIONS="-- -s"`. If `PY` is not provided, `py36` is used by default. `OPTIONS` are optional.
+
+### Formatting and Linting
+
+TODO
+
+1. Create and run the Docker build container as described above.
+2. `make format`
+3. `make lint`

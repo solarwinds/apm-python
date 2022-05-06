@@ -153,6 +153,25 @@ copy-bson-headers:
 copy-all: copy-headers copy-liboboe
 
 #----------------------------------------------------------------------------------------------------------------------#
+# variable definitions and recipes for testing and linting
+#----------------------------------------------------------------------------------------------------------------------#
+
+PY=py36
+
+# Example: make test PY=py36 OPTIONS="-- -s"
+test:
+	@python3.8 -m tox -e $(PY) $(OPTIONS)
+
+test-all:
+	@python3.8 -m tox $(OPTIONS)
+
+format:
+	@echo -e "Not implemented."
+
+lint:
+	@echo -e "Not implemented."
+
+#----------------------------------------------------------------------------------------------------------------------#
 # recipes for building the package distribution
 #----------------------------------------------------------------------------------------------------------------------#
 # Check if SWIG is installed
@@ -184,4 +203,4 @@ clean:
 	@cd solarwinds_apm/extension; rm -f oboe.py _oboe.so liboboe-1.0*so*
 	@echo -e "Done."
 
-.PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all copy-liboboe copy-headers copy-bson-headers copy-all check-swig wrapper wrapper-from-local sdist clean
+.PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all copy-liboboe copy-headers copy-bson-headers copy-all test test-all format lint check-swig wrapper wrapper-from-local sdist clean

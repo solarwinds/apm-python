@@ -35,5 +35,8 @@ RUN gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys 409B6B1796C275462A17
 # install PackageCloud Cli
 RUN /usr/local/rvm/bin/rvm 2.5.1 do gem install package_cloud
 
-# install boto3 for interatction with AWS and twine to upload to TestPyPi
-RUN python3.8 -m pip install boto3 twine
+# install:
+#   boto3 for interaction with AWS
+#   twine to upload to TestPyPi
+#   tox for automated tests
+RUN python3.8 -m pip install boto3 twine tox
