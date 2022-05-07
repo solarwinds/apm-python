@@ -42,8 +42,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self._configure_sampler()
         self._configure_exporter(reporter)
         self._configure_propagator()
-        # Set global HTTP response propagator
-        set_global_response_propagator(SolarWindsTraceResponsePropagator())
+        self._configure_response_propagator()
 
     def _configure_sampler(self):
         """Always configure SolarWinds OTel sampler"""
@@ -64,7 +63,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             TracerProvider(sampler=sampler)
         )
 
-    def _configure_exporter(self, reporter):
+    def _configure_exporter(self, reporter=None):
         """Configure SolarWinds or env-specified OTel span exporter.
         Initialization of SolarWinds exporter requires a liboboe reporter."""
         exporter = None
@@ -121,6 +120,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
                 raise
         set_global_textmap(CompositePropagator(propagators))
+
+    def _configure_response_propagator(self):
+        # Set global HTTP response propagator
+        set_global_response_propagator(SolarWindsTraceResponsePropagator())
 
     def _initialize_solarwinds_reporter(self) -> Reporter:
         """Initialize SolarWinds reporter used by sampler and exporter. This establishes collector and sampling settings in a background thread."""
