@@ -1,24 +1,52 @@
-"""Module to configure OpenTelemetry agent to work with SolarWinds backend"""
+"""Module to configure OpenTelemetry to work with SolarWinds backend"""
 
-from opentelemetry import trace
+import logging
+from os import environ
+
+from opentelemetry.environment_variables import (
+    OTEL_PROPAGATORS,
+    OTEL_TRACES_EXPORTER
+)
 from opentelemetry.instrumentation.distro import BaseDistro
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from opentelemetry_distro_solarwinds.exporter import SolarWindsSpanExporter
-from opentelemetry_distro_solarwinds.sampler import ParentBasedAoSampler
+from opentelemetry_distro_solarwinds import DEFAULT_SW_TRACES_EXPORTER
 
+logger = logging.getLogger(__name__)
 
 class SolarWindsDistro(BaseDistro):
-    """SolarWinds custom distro for OpenTelemetry agents.
+    """OpenTelemetry Distro for SolarWinds reporting environment"""
 
-    With this custom distro, the following functionality is introduced:
-        - no functionality added at this time
-    """
+    _TRACECONTEXT_PROPAGATOR = "tracecontext"
+    _SW_PROPAGATOR = "solarwinds_propagator"
+    _DEFAULT_SW_PROPAGATORS = [
+        _TRACECONTEXT_PROPAGATOR,
+        "baggage",
+        _SW_PROPAGATOR,
+    ]
+
     def _configure(self, **kwargs):
-        # automatically make use of custom SolarWinds sampler
-        trace.set_tracer_provider(
-            TracerProvider(sampler=ParentBasedAoSampler()))
-        # Automatically configure the SolarWinds Span exporter
-        span_exporter = BatchSpanProcessor(SolarWindsSpanExporter())
-        trace.get_tracer_provider().add_span_processor(span_exporter)
+        """Configure OTel exporter and propagators"""
+        environ.setdefault(OTEL_TRACES_EXPORTER, DEFAULT_SW_TRACES_EXPORTER)
+        
+        environ_propagators = environ.get(
+            OTEL_PROPAGATORS,
+            ",".join(self._DEFAULT_SW_PROPAGATORS)
+        ).split(",")
+        # If not using the default propagators,
+        # can any arbitrary list BUT
+        # (1) must include tracecontext and solarwinds_propagator
+        # (2) tracecontext must be before solarwinds_propagator
+        if environ_propagators != self._DEFAULT_SW_PROPAGATORS:
+            if not self._TRACECONTEXT_PROPAGATOR in environ_propagators or \
+                not self._SW_PROPAGATOR in environ_propagators:
+                raise ValueError("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability.")
+
+            if environ_propagators.index(self._SW_PROPAGATOR) \
+                < environ_propagators.index(self._TRACECONTEXT_PROPAGATOR):
+                raise ValueError("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability.")
+        environ[OTEL_PROPAGATORS] = ",".join(environ_propagators)
+
+        logger.debug("Configured SolarWindsDistro: {}, {}".format(
+            environ.get(OTEL_TRACES_EXPORTER),
+            environ.get(OTEL_PROPAGATORS)
+        ))
