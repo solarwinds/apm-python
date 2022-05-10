@@ -144,7 +144,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             reporter='ssl',
             host=environ.get('SOLARWINDS_COLLECTOR', ''),
             service_key=environ.get('SOLARWINDS_SERVICE_KEY', ''),
-            trusted_path='',
+            trusted_path=environ.get('SOLARWINDS_TRUSTEDPATH', ''),
             buffer_size=-1,
             trace_metrics=-1,
             histogram_precision=-1,

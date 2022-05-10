@@ -40,9 +40,6 @@ logger.addHandler(handler)
 class TestFunctionalSpanAttributesAllSpans(TestBase):
     @classmethod
     def setUpClass(cls):
-        # Prevent duplicate spans from `requests`
-        os.environ["OTEL_PYTHON_DISABLED_INSTRUMENTATIONS"] = "urllib3"
-
         # Based on auto_instrumentation run() and sitecustomize.py
         # Load OTel env vars entry points
         argument_otel_environment_variable = {}
@@ -81,10 +78,10 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
         assert isinstance(propagators[2], SolarWindsPropagator)
         assert isinstance(trace_api.get_tracer_provider().sampler, ParentBasedSwSampler)
 
-        # Wake-up-liboboe request
+        # Wake-up request and wait for oboe_init
         with cls.tracer.start_as_current_span("wakeup_span"):
             requests.get(f"http://solarwinds.com")
-            time.sleep(10)
+            time.sleep(2)
         
     @classmethod
     def tearDownClass(cls):
@@ -105,7 +102,6 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
 
         spans = self.memory_exporter.get_finished_spans()
         # assert len(spans) == 2  # failing
-
 
     def test_attrs_with_valid_traceparent(self):
         """Acceptance Criterion #2"""
