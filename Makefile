@@ -156,13 +156,8 @@ copy-all: copy-headers copy-liboboe
 # variable definitions and recipes for testing and linting
 #----------------------------------------------------------------------------------------------------------------------#
 
-PY=py36
-
-# Example: make test PY=py36 OPTIONS="-- -s"
-test:
-	@python3.8 -m tox -e $(PY) $(OPTIONS)
-
-test-all:
+# Example: make tox OPTIONS="-e py37-nh-staging"
+tox:
 	@python3.8 -m tox $(OPTIONS)
 
 format:

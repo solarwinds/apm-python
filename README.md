@@ -76,14 +76,22 @@ Inside the build container, execute `make sdist`. This will create a zip archive
 
 ### Regression Tests
 
-Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.6, 3.7, 3.8, 3.9, and/or 3.10 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini).
+#### Unit tests
+
+Automated unit testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.6, 3.7, 3.8, 3.9, and/or 3.10 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Tests for each Python version can be run against AO prod or NH staging.
 
 The functional tests require a compiled C-extension and should be run inside the build container. Here is how to run tests:
 
-1. Create and run the Docker build container as described above.
-2. Inside the build container: `make wrapper`. This downloads the version of oboe defined in `extension/VERSION` from S3 and builds the SWIG bindings.
-3. To run all tests for all Python environments: `make test-all`
-4. To run all tests for a specific version, example: `make test PY=py39 OPTIONS="-- -s"`. If `PY` is not provided, `py36` is used by default. `OPTIONS` are optional.
+1. For each backend you'll be running against, obtain an agent token to replace the appropriate `<AGENT_TOKEN>` in `tox.ini`.
+2. _If running against AO prod:_ You'll need to obtain a certificate and save it to `{thisrepo}/tmp/solarwinds-apm/grpc-ao-prod.crt`. 
+3. Create and run the Docker build container as described above.
+4. Inside the build container: `make wrapper`. This downloads the version of oboe defined in `extension/VERSION` from S3 and builds the SWIG bindings.
+5. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.7 against AO prod: `make tox OPTIONS="-e py37-ao-prod"`.
+6. (WARNING: slow!) To run all tests for all Python environments: `make tox`
+
+#### Integration tests
+
+TODO
 
 ### Formatting and Linting
 
