@@ -1,11 +1,7 @@
 """
-Test sw.trace_context, sw.parent_id span KVs are by our custom sampler with liboboe, for every span.
+Test root span attributes creation by SW sampler with liboboe, before export.
 
 See also: https://swicloud.atlassian.net/wiki/spaces/NIT/pages/2325479753/W3C+Trace+Context#Acceptance-Criteria
-
-TODO: (Here or elsewhere): Test other span KVs:
-      * BucketCapacity/Rate, SampleSource/Rate on root spans
-      * sw.w3c.tracestate, sw.tracestate_parent_id on spans with is_remote parent
 """
 import logging
 import os
@@ -15,11 +11,16 @@ import requests
 import sys
 import time
 
+import pytest
+from unittest.mock import patch
+
 from opentelemetry import trace as trace_api
 from opentelemetry.propagate import get_global_textmap
 from opentelemetry.test.globals_test import reset_trace_globals
 from opentelemetry.test.test_base import TestBase
+from opentelemetry.trace.span import SpanContext
 
+from solarwinds_apm import SW_TRACESTATE_KEY
 from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro
 from solarwinds_apm.propagator import SolarWindsPropagator
@@ -38,6 +39,14 @@ logger.addHandler(handler)
 
 
 class TestFunctionalSpanAttributesAllSpans(TestBase):
+
+    SW_SETTINGS_KEYS = [
+        "BucketCapacity",
+        "BucketRate",
+        "SampleRate",
+        "SampleSource"
+    ]
+
     @classmethod
     def setUpClass(cls):
         # Based on auto_instrumentation run() and sitecustomize.py
@@ -90,18 +99,13 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
 
     def test_attrs_no_input_headers(self):
         """Acceptance Criterion #1"""
-        with self.tracer.start_as_current_span("tammys_super_test_span"):
-            resp = requests.get(f"http://postman-echo.com/headers")
-            logger.debug("Request headers:")
-            logger.debug(resp.request.headers)
-            logger.debug("Response content:")
-            logger.debug(resp.content)
-            logger.debug("Response headers:")
-            logger.debug(resp.headers)
-            logger.debug("====================")
-
+        with self.tracer.start_as_current_span("attrs_no_input_headers"):
+            pass
         spans = self.memory_exporter.get_finished_spans()
-        # assert len(spans) == 2  # failing
+        assert len(spans) == 1
+        assert all(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert SW_TRACESTATE_KEY in spans[0].context.trace_state
+        assert spans[0].context.trace_state[SW_TRACESTATE_KEY] == "0000000000000000-01"
 
     def test_attrs_with_valid_traceparent(self):
         """Acceptance Criterion #2"""
@@ -134,3 +138,5 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
     def test_attrs_with_valid_traceparent_more_than_512_bytes_traceparent(self):
         """tracestate is still valid"""
         pass
+
+    # TODO: trigger trace scenarios
