@@ -1,35 +1,69 @@
 import pytest
 
 # unittest cannot reassign members of enum
-from opentelemetry.sdk.trace.sampling import Decision
+from opentelemetry.sdk.trace.sampling import Decision, StaticSampler
+from opentelemetry.trace.span import SpanContext, TraceState
 
+import solarwinds_apm.extension.oboe
 from solarwinds_apm.sampler import _SwSampler, ParentBasedSwSampler
 
 
-@pytest.fixture(name="mock_decision_do_sample")
-def fixture_decision():
+# Mock Fixtures =====================================================
+
+@pytest.fixture(name="mock_liboboe_decision")
+def fixture_mock_liboboe_decision():
+    return 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+
+@pytest.fixture(name="mock_xtraceoptions_tt")
+def fixture_xtraceoptions_tt(mocker):
+    options = mocker.Mock()
+    options.trigger_trace = mocker.Mock(return_value=1)
+    options.options_header = "foo-bar"
+    options.signature = 123456
+    options.ts = 123456
+    return options
+
+# Other Fixtures ====================================================
+
+@pytest.fixture(name="decision_do_sample")
+def fixture_decision_do_sample():
     return {
         "do_metrics": 1,
         "do_sample": 1,
     }
 
-@pytest.fixture(name="mock_parent_span_context")
-def fixture_parent_span_context(mocker):
-    span_context = mocker.Mock()
-    span_context_attrs = {
-        "trace_id": 11112222333344445555666677778888,
-        "span_id": 1111222233334444,
-        "trace_flags": 1,      
-    }
-    span_context.configure_mock(**span_context_attrs)
-    return span_context
+@pytest.fixture(name="parent_span_context_invalid")
+def fixture_parent_span_context_invalid():
+    return SpanContext(
+        trace_id=00000000000000000000000000000000,
+        span_id=0000000000000000,
+        is_remote=False,
+        trace_flags=0,
+        trace_state=None,
+    )
 
-@pytest.fixture(name="mock_xtraceoptions_tt")
-def fixture_xtraceoptions(mocker):
-    options = mocker.Mock()
-    options.trigger_trace = mocker.Mock(return_value=True)
-    return options
+@pytest.fixture(name="parent_span_context_valid_not_remote")
+def fixture_parent_span_context_valid_not_remote():
+    return SpanContext(
+        trace_id=11112222333344445555666677778888,
+        span_id=1111222233334444,
+        is_remote=False,
+        trace_flags=1,
+        trace_state=None,
+    )
 
+@pytest.fixture(name="parent_span_context_valid_remote")
+def fixture_parent_span_context_valid_remote():
+    return SpanContext(
+        trace_id=11112222333344445555666677778888,
+        span_id=1111222233334444,
+        is_remote=True,
+        trace_flags=1,
+        trace_state=TraceState([["sw", "123"]]),
+    )
+
+
+# The Tests =========================================================
 
 class Test_SwSampler():
     @classmethod
@@ -41,15 +75,91 @@ class Test_SwSampler():
         pass
         #TODO: needed?
 
-    def test_calculate_liboboe_decision_root_span(self):
-        # with/without xtraceoptions
-        pass
+    def test_calculate_liboboe_decision_root_span(
+        self,
+        mocker,
+        mock_liboboe_decision,
+        parent_span_context_invalid,
+        mock_xtraceoptions_tt,
+    ):
+        mocker.patch(
+            'solarwinds_apm.extension.oboe.Context.getDecisions',
+            return_value=mock_liboboe_decision
+        )
+        self.sampler.calculate_liboboe_decision(
+            parent_span_context_invalid,
+            mock_xtraceoptions_tt,
+        )
+        solarwinds_apm.extension.oboe.Context.getDecisions.assert_called_once_with(
+            None,
+            None,
+            -1,
+            -1,
+            mock_xtraceoptions_tt.trigger_trace,
+            -1,
+            mock_xtraceoptions_tt.options_header,
+            mock_xtraceoptions_tt.signature,
+            mock_xtraceoptions_tt.ts
+        )
 
-    def test_calculate_liboboe_decision_parent_is_remote(self):
-        # with/without xtraceoptions
-        pass
+    def test_calculate_liboboe_decision_parent_valid_not_remote(
+        self,
+        mocker,
+        mock_liboboe_decision,
+        parent_span_context_valid_not_remote,
+        mock_xtraceoptions_tt
+    ):
+        mocker.patch(
+            'solarwinds_apm.extension.oboe.Context.getDecisions',
+            return_value=mock_liboboe_decision
+        )
+        self.sampler.calculate_liboboe_decision(
+            parent_span_context_valid_not_remote,
+            mock_xtraceoptions_tt,
+        )
+        solarwinds_apm.extension.oboe.Context.getDecisions.assert_called_once_with(
+            None,
+            None,
+            -1,
+            -1,
+            mock_xtraceoptions_tt.trigger_trace,
+            -1,
+            mock_xtraceoptions_tt.options_header,
+            mock_xtraceoptions_tt.signature,
+            mock_xtraceoptions_tt.ts
+        )
 
-    # TODO: test matrix of liboboe inputs/outputs?
+    def test_calculate_liboboe_decision_parent_valid_remote(
+        self,
+        mocker,
+        mock_liboboe_decision,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_tt
+    ):
+        tracestring = "foo-bar"
+        mocker.patch(
+            "solarwinds_apm.w3c_transformer.W3CTransformer.traceparent_from_context",
+            return_value=tracestring
+        )
+        mocker.patch(
+            'solarwinds_apm.extension.oboe.Context.getDecisions',
+            return_value=mock_liboboe_decision
+        )
+        self.sampler.calculate_liboboe_decision(
+            parent_span_context_valid_remote,
+            mock_xtraceoptions_tt,
+        )
+        solarwinds_apm.extension.oboe.Context.getDecisions.assert_called_once_with(
+            tracestring,
+            "123",
+            -1,
+            -1,
+            mock_xtraceoptions_tt.trigger_trace,
+            -1,
+            mock_xtraceoptions_tt.options_header,
+            mock_xtraceoptions_tt.signature,
+            mock_xtraceoptions_tt.ts
+        )
 
     def test_is_decision_continued_false(self):
         assert not self.sampler.is_decision_continued({
@@ -125,8 +235,8 @@ class Test_SwSampler():
     def test_create_new_trace_state(
         self,
         mocker,
-        mock_decision_do_sample,
-        mock_parent_span_context,
+        decision_do_sample,
+        parent_span_context_valid_remote,
         mock_xtraceoptions_tt
     ):
         mocker.patch(
@@ -146,7 +256,7 @@ class Test_SwSampler():
             "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
             return_value="bar"
         )
-        trace_state = self.sampler.create_new_trace_state(mock_decision_do_sample, mock_parent_span_context, mock_xtraceoptions_tt)
+        trace_state = self.sampler.create_new_trace_state(decision_do_sample, parent_span_context_valid_remote, mock_xtraceoptions_tt)
         assert trace_state == {
             "sw": "1111222233334444-01",
             "foo": "bar",
@@ -162,8 +272,13 @@ class Test_SwSampler():
         # with/without xtraceoptions response
         pass
 
-    def test_remove_response_from_sw(self):
-        pass
+    def test_remove_response_from_sw(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.traceoptions.XTraceOptions.get_sw_xtraceoptions_response_key",
+            return_value="foo"
+        )
+        ts = TraceState([["bar", "456"],["foo", "123"]])
+        assert self.sampler.remove_response_from_sw(ts) == TraceState([["bar", "456"]])
 
     def test_calculate_attributes_dont_trace(self):
         pass
@@ -195,7 +310,7 @@ class TestParentBasedSwSampler():
         assert type(sampler._root) == _SwSampler
         assert type(sampler._remote_parent_sampled) == _SwSampler
         assert type(sampler._remote_parent_not_sampled) == _SwSampler
-        from opentelemetry.sdk.trace.sampling import StaticSampler
+        
         assert type(sampler._local_parent_sampled) == StaticSampler
         assert type(sampler._local_parent_not_sampled) == StaticSampler
 
