@@ -10,10 +10,6 @@ from solarwinds_apm.sampler import _SwSampler, ParentBasedSwSampler
 
 # Mock Fixtures =====================================================
 
-@pytest.fixture(name="mock_liboboe_decision")
-def fixture_mock_liboboe_decision():
-    return 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
-
 @pytest.fixture(name="mock_xtraceoptions_tt")
 def fixture_xtraceoptions_tt(mocker):
     options = mocker.Mock()
@@ -22,6 +18,45 @@ def fixture_xtraceoptions_tt(mocker):
     options.signature = 123456
     options.ts = 123456
     return options
+
+@pytest.fixture(name="mock_liboboe_decision")
+def fixture_mock_liboboe_decision():
+    return 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+
+@pytest.fixture(autouse=True)
+def fixture_mock_context_getdecisions(mocker, mock_liboboe_decision):
+    mocker.patch(
+        'solarwinds_apm.extension.oboe.Context.getDecisions',
+        return_value=mock_liboboe_decision
+    )
+
+@pytest.fixture(autouse=True)
+def fixture_mock_sw_from_span_and_decision(mocker):
+    mocker.patch(
+        "solarwinds_apm.w3c_transformer.W3CTransformer.sw_from_span_and_decision",
+        return_value="1111222233334444-01"
+    )
+
+@pytest.fixture(autouse=True)
+def fixture_mock_trace_flags_from_int(mocker):
+    mocker.patch(
+        "solarwinds_apm.w3c_transformer.W3CTransformer.trace_flags_from_int",
+        return_value="01"
+    )
+
+@pytest.fixture(name="mock_traceparent_from_context")
+def fixture_mock_traceparent_from_context(mocker):
+    mocker.patch(
+        "solarwinds_apm.w3c_transformer.W3CTransformer.traceparent_from_context",
+        return_value="foo-bar"
+    )
+
+@pytest.fixture(autouse=True)
+def fixture_mock_get_sw_xtraceoptions_response_key(mocker):
+    mocker.patch(
+        "solarwinds_apm.traceoptions.XTraceOptions.get_sw_xtraceoptions_response_key",
+        return_value="foo"
+    )
 
 # Other Fixtures ====================================================
 
@@ -62,7 +97,6 @@ def fixture_parent_span_context_valid_remote():
         trace_state=TraceState([["sw", "123"]]),
     )
 
-
 # The Tests =========================================================
 
 class Test_SwSampler():
@@ -77,15 +111,9 @@ class Test_SwSampler():
 
     def test_calculate_liboboe_decision_root_span(
         self,
-        mocker,
-        mock_liboboe_decision,
         parent_span_context_invalid,
         mock_xtraceoptions_tt,
     ):
-        mocker.patch(
-            'solarwinds_apm.extension.oboe.Context.getDecisions',
-            return_value=mock_liboboe_decision
-        )
         self.sampler.calculate_liboboe_decision(
             parent_span_context_invalid,
             mock_xtraceoptions_tt,
@@ -104,15 +132,9 @@ class Test_SwSampler():
 
     def test_calculate_liboboe_decision_parent_valid_not_remote(
         self,
-        mocker,
-        mock_liboboe_decision,
         parent_span_context_valid_not_remote,
         mock_xtraceoptions_tt
     ):
-        mocker.patch(
-            'solarwinds_apm.extension.oboe.Context.getDecisions',
-            return_value=mock_liboboe_decision
-        )
         self.sampler.calculate_liboboe_decision(
             parent_span_context_valid_not_remote,
             mock_xtraceoptions_tt,
@@ -131,26 +153,16 @@ class Test_SwSampler():
 
     def test_calculate_liboboe_decision_parent_valid_remote(
         self,
-        mocker,
-        mock_liboboe_decision,
+        mock_traceparent_from_context,
         parent_span_context_valid_remote,
         mock_xtraceoptions_tt
     ):
-        tracestring = "foo-bar"
-        mocker.patch(
-            "solarwinds_apm.w3c_transformer.W3CTransformer.traceparent_from_context",
-            return_value=tracestring
-        )
-        mocker.patch(
-            'solarwinds_apm.extension.oboe.Context.getDecisions',
-            return_value=mock_liboboe_decision
-        )
         self.sampler.calculate_liboboe_decision(
             parent_span_context_valid_remote,
             mock_xtraceoptions_tt,
         )
         solarwinds_apm.extension.oboe.Context.getDecisions.assert_called_once_with(
-            tracestring,
+            "foo-bar",
             "123",
             -1,
             -1,
@@ -239,18 +251,6 @@ class Test_SwSampler():
         parent_span_context_valid_remote,
         mock_xtraceoptions_tt
     ):
-        mocker.patch(
-            "solarwinds_apm.w3c_transformer.W3CTransformer.sw_from_span_and_decision",
-            return_value="1111222233334444-01"
-        )
-        mocker.patch(
-            "solarwinds_apm.w3c_transformer.W3CTransformer.trace_flags_from_int",
-            return_value="01"
-        )
-        mocker.patch(
-            "solarwinds_apm.traceoptions.XTraceOptions.get_sw_xtraceoptions_response_key",
-            return_value="foo"
-        )
         # Should this be mocked?
         mocker.patch(
             "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
@@ -273,10 +273,6 @@ class Test_SwSampler():
         pass
 
     def test_remove_response_from_sw(self, mocker):
-        mocker.patch(
-            "solarwinds_apm.traceoptions.XTraceOptions.get_sw_xtraceoptions_response_key",
-            return_value="foo"
-        )
         ts = TraceState([["bar", "456"],["foo", "123"]])
         assert self.sampler.remove_response_from_sw(ts) == TraceState([["bar", "456"]])
 
