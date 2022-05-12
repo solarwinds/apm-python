@@ -46,26 +46,8 @@ def fixture_mock_traceparent_from_context(mocker):
 def fixture_mock_get_sw_xtraceoptions_response_key(mocker):
     mocker.patch(
         "solarwinds_apm.traceoptions.XTraceOptions.get_sw_xtraceoptions_response_key",
-        return_value="foo"
+        return_value="xtrace_foo"
     )
-
-# @pytest.fixture(name="mock_xtraceoptions_unsigned_tt")
-# def fixture_xtraceoptions_unsigned_tt(mocker):
-#     options = mocker.Mock()
-#     options.trigger_trace = mocker.Mock(return_value=1)
-#     options.options_header = "foo-bar"
-#     options.signature = None
-#     options.ts = 123456
-#     return options
-
-# @pytest.fixture(name="mock_xtraceoptions_unsigned_not_tt")
-# def fixture_xtraceoptions_unsigned_not_tt(mocker):
-#     options = mocker.Mock()
-#     options.trigger_trace = mocker.Mock(return_value=0)
-#     options.options_header = "foo-bar"
-#     options.signature = None
-#     options.ts = 123456
-#     return options
 
 @pytest.fixture(name="mock_xtraceoptions_signed_tt")
 def fixture_xtraceoptions_signed_tt(mocker):
@@ -147,7 +129,19 @@ def fixture_parent_span_context_valid_remote():
         span_id=1111222233334444,
         is_remote=True,
         trace_flags=1,
-        trace_state=TraceState([["sw", "123"]]),
+        trace_state=TraceState([
+            ["sw", "123"]
+        ]),
+    )
+
+@pytest.fixture(name="parent_span_context_valid_remote_no_tracestate")
+def fixture_parent_span_context_valid_remote_no_tracestate():
+    return SpanContext(
+        trace_id=11112222333344445555666677778888,
+        span_id=1111222233334444,
+        is_remote=True,
+        trace_flags=1,
+        trace_state=None,
     )
 
 # The Tests =========================================================
@@ -360,29 +354,78 @@ class Test_SwSampler():
         parent_span_context_valid_remote,
         mock_xtraceoptions_signed_tt
     ):
-        # Should this be mocked?
         mocker.patch(
             "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
             return_value="bar"
         )
-        trace_state = self.sampler.create_new_trace_state(decision_auth, parent_span_context_valid_remote, mock_xtraceoptions_signed_tt)
-        assert trace_state == {
-            "sw": "1111222233334444-01",
-            "foo": "bar",
-        }
+        trace_state = self.sampler.create_new_trace_state(
+            decision_auth,
+            parent_span_context_valid_remote,
+            mock_xtraceoptions_signed_tt
+        )
+        assert trace_state == TraceState([
+            ["sw", "1111222233334444-01"],
+            ["xtrace_foo", "bar"]
+        ])
 
-    def test_calculate_trace_state_root_span(self):
-        pass
+    def test_calculate_trace_state_root_span(
+        self,
+        mocker,
+        decision_auth,
+        parent_span_context_invalid
+    ):
+        mocker.patch(
+            "solarwinds_apm.sampler._SwSampler.create_new_trace_state",
+            return_value="bar"
+        )
+        trace_state = self.sampler.calculate_trace_state(
+            decision_auth,
+            parent_span_context_invalid
+        )
+        assert trace_state == "bar"
 
-    def test_calculate_trace_state_is_remote_create(self):
-        pass
+    def test_calculate_trace_state_is_remote_create(
+        self,
+        mocker,
+        decision_auth,
+        parent_span_context_valid_remote_no_tracestate
+    ):
+        mocker.patch(
+            "solarwinds_apm.sampler._SwSampler.create_new_trace_state",
+            return_value="bar"
+        )
+        trace_state = self.sampler.calculate_trace_state(
+            decision_auth,
+            parent_span_context_valid_remote_no_tracestate
+        )
+        assert trace_state == "bar"
 
-    def test_calculate_trace_state_is_remote_update(self):
-        # with/without xtraceoptions response
-        pass
+    def test_calculate_trace_state_is_remote_update(
+        self,
+        mocker,
+        decision_auth,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_signed_tt,
+    ):
+        mocker.patch(
+            "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
+            return_value="bar"
+        )
+        assert parent_span_context_valid_remote.trace_state == TraceState([
+            ["sw", "123"]
+        ])
+        trace_state = self.sampler.calculate_trace_state(
+            decision_auth,
+            parent_span_context_valid_remote,
+            mock_xtraceoptions_signed_tt,
+        )
+        assert trace_state == TraceState([
+            ["sw", "1111222233334444-01"],
+            ["xtrace_foo", "bar"]
+        ])
 
     def test_remove_response_from_sw(self, mocker):
-        ts = TraceState([["bar", "456"],["foo", "123"]])
+        ts = TraceState([["bar", "456"],["xtrace_foo", "123"]])
         assert self.sampler.remove_response_from_sw(ts) == TraceState([["bar", "456"]])
 
     def test_calculate_attributes_dont_trace(self):
