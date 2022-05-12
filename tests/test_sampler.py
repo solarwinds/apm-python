@@ -10,15 +10,6 @@ from solarwinds_apm.sampler import _SwSampler, ParentBasedSwSampler
 
 # Mock Fixtures =====================================================
 
-@pytest.fixture(name="mock_xtraceoptions_tt")
-def fixture_xtraceoptions_tt(mocker):
-    options = mocker.Mock()
-    options.trigger_trace = mocker.Mock(return_value=1)
-    options.options_header = "foo-bar"
-    options.signature = 123456
-    options.ts = 123456
-    return options
-
 @pytest.fixture(name="mock_liboboe_decision")
 def fixture_mock_liboboe_decision():
     return 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
@@ -58,13 +49,75 @@ def fixture_mock_get_sw_xtraceoptions_response_key(mocker):
         return_value="foo"
     )
 
+# @pytest.fixture(name="mock_xtraceoptions_unsigned_tt")
+# def fixture_xtraceoptions_unsigned_tt(mocker):
+#     options = mocker.Mock()
+#     options.trigger_trace = mocker.Mock(return_value=1)
+#     options.options_header = "foo-bar"
+#     options.signature = None
+#     options.ts = 123456
+#     return options
+
+# @pytest.fixture(name="mock_xtraceoptions_unsigned_not_tt")
+# def fixture_xtraceoptions_unsigned_not_tt(mocker):
+#     options = mocker.Mock()
+#     options.trigger_trace = mocker.Mock(return_value=0)
+#     options.options_header = "foo-bar"
+#     options.signature = None
+#     options.ts = 123456
+#     return options
+
+@pytest.fixture(name="mock_xtraceoptions_signed_tt")
+def fixture_xtraceoptions_signed_tt(mocker):
+    options = mocker.Mock()
+    options.trigger_trace = 1
+    options.options_header = "foo-bar"
+    options.signature = 123456
+    options.ts = 123456
+    options.ignored = ["baz", "qux"]
+    return options
+
+@pytest.fixture(name="mock_xtraceoptions_signed_not_tt")
+def fixture_xtraceoptions_signed_not_tt(mocker):
+    options = mocker.Mock()
+    options.trigger_trace = 0
+    options.options_header = "foo-bar"
+    options.signature = 123456
+    options.ts = 123456
+    options.ignored = ["baz", "qux"]
+    return options
+
 # Other Fixtures ====================================================
 
-@pytest.fixture(name="decision_do_sample")
-def fixture_decision_do_sample():
+@pytest.fixture(name="decision_auth")
+def fixture_decision_auth():
     return {
         "do_metrics": 1,
         "do_sample": 1,
+        "auth": 1,
+        "auth_msg": "foo-bar",
+    }
+
+@pytest.fixture(name="decision_not_auth_type_zero")
+def fixture_decision_not_auth_type_zero():
+    return {
+        "do_metrics": 1,
+        "do_sample": 1,
+        "auth": 0,
+        "auth_msg": "foo-bar",
+        "decision_type": 0,
+        "status_msg": "baz-qux",
+    }
+
+@pytest.fixture(name="decision_not_auth_type_nonzero")
+def fixture_decision_auth_type_nonzero():
+    return {
+        "do_metrics": 1,
+        "do_sample": 1,
+        "auth": 0,
+        "auth_msg": "foo-bar",
+        "decision_type": -1,
+        "status_msg": "baz-qux",
     }
 
 @pytest.fixture(name="parent_span_context_invalid")
@@ -104,73 +157,69 @@ class Test_SwSampler():
     def setup_class(cls):
         cls.sampler = _SwSampler()
 
-    @classmethod
-    def teardown_class(cls):
-        pass
-        #TODO: needed?
-
     def test_calculate_liboboe_decision_root_span(
         self,
         parent_span_context_invalid,
-        mock_xtraceoptions_tt,
+        mock_xtraceoptions_signed_tt,
     ):
         self.sampler.calculate_liboboe_decision(
             parent_span_context_invalid,
-            mock_xtraceoptions_tt,
+            mock_xtraceoptions_signed_tt,
         )
         solarwinds_apm.extension.oboe.Context.getDecisions.assert_called_once_with(
             None,
             None,
             -1,
             -1,
-            mock_xtraceoptions_tt.trigger_trace,
+            mock_xtraceoptions_signed_tt.trigger_trace,
             -1,
-            mock_xtraceoptions_tt.options_header,
-            mock_xtraceoptions_tt.signature,
-            mock_xtraceoptions_tt.ts
+            mock_xtraceoptions_signed_tt.options_header,
+            mock_xtraceoptions_signed_tt.signature,
+            mock_xtraceoptions_signed_tt.ts
         )
 
     def test_calculate_liboboe_decision_parent_valid_not_remote(
         self,
         parent_span_context_valid_not_remote,
-        mock_xtraceoptions_tt
+        mock_xtraceoptions_signed_tt
     ):
         self.sampler.calculate_liboboe_decision(
             parent_span_context_valid_not_remote,
-            mock_xtraceoptions_tt,
+            mock_xtraceoptions_signed_tt,
         )
         solarwinds_apm.extension.oboe.Context.getDecisions.assert_called_once_with(
             None,
             None,
             -1,
             -1,
-            mock_xtraceoptions_tt.trigger_trace,
+            mock_xtraceoptions_signed_tt.trigger_trace,
             -1,
-            mock_xtraceoptions_tt.options_header,
-            mock_xtraceoptions_tt.signature,
-            mock_xtraceoptions_tt.ts
+            mock_xtraceoptions_signed_tt.options_header,
+            mock_xtraceoptions_signed_tt.signature,
+            mock_xtraceoptions_signed_tt.ts
         )
 
+    # pylint:disable=unused-argument
     def test_calculate_liboboe_decision_parent_valid_remote(
         self,
         mock_traceparent_from_context,
         parent_span_context_valid_remote,
-        mock_xtraceoptions_tt
+        mock_xtraceoptions_signed_tt
     ):
         self.sampler.calculate_liboboe_decision(
             parent_span_context_valid_remote,
-            mock_xtraceoptions_tt,
+            mock_xtraceoptions_signed_tt,
         )
         solarwinds_apm.extension.oboe.Context.getDecisions.assert_called_once_with(
             "foo-bar",
             "123",
             -1,
             -1,
-            mock_xtraceoptions_tt.trigger_trace,
+            mock_xtraceoptions_signed_tt.trigger_trace,
             -1,
-            mock_xtraceoptions_tt.options_header,
-            mock_xtraceoptions_tt.signature,
-            mock_xtraceoptions_tt.ts
+            mock_xtraceoptions_signed_tt.options_header,
+            mock_xtraceoptions_signed_tt.signature,
+            mock_xtraceoptions_signed_tt.ts
         )
 
     def test_is_decision_continued_false(self):
@@ -226,37 +275,97 @@ class Test_SwSampler():
             "do_sample": 1,
         }) == Decision.RECORD_AND_SAMPLE
 
-    def test_create_xtraceoptions_response_value_unsigned_tt(self):
-        # trigger_msg ignored vs status
-        # with/without ignored
-        pass
+    def test_create_xtraceoptions_response_value_auth(
+        self,
+        decision_auth,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_signed_tt,
+    ):
+        response_val = self.sampler.create_xtraceoptions_response_value(
+            decision_auth,
+            parent_span_context_valid_remote,
+            mock_xtraceoptions_signed_tt,
+        )
+        assert response_val == "auth####foo-bar;ignored####baz....qux"
 
-    def test_create_xtraceoptions_response_value_unsigned_not_tt(self):
-        # with/without ignored
-        pass
+    def test_create_xtraceoptions_response_value_tt_unauth_type_nonzero_root_span(
+        self,
+        decision_not_auth_type_nonzero,
+        parent_span_context_invalid,
+        mock_xtraceoptions_signed_tt,
+    ):
+        response_val = self.sampler.create_xtraceoptions_response_value(
+            decision_not_auth_type_nonzero,
+            parent_span_context_invalid,
+            mock_xtraceoptions_signed_tt,
+        )
+        assert response_val == "auth####foo-bar;trigger-trace####baz-qux;ignored####baz....qux"
 
-    def test_create_xtraceoptions_response_value_signed_tt(self):
-        # trigger_msg ignored vs status
-        # with/without ignored
-        pass
+    def test_create_xtraceoptions_response_value_tt_unauth_type_nonzero_parent_span_remote(
+        self,
+        decision_not_auth_type_nonzero,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_signed_tt,
+    ):
+        response_val = self.sampler.create_xtraceoptions_response_value(
+            decision_not_auth_type_nonzero,
+            parent_span_context_valid_remote,
+            mock_xtraceoptions_signed_tt, 
+        )
+        assert response_val == "auth####foo-bar;trigger-trace####baz-qux;ignored####baz....qux"
 
-    def test_create_xtraceoptions_response_value_signed_not_tt(self):
-        # with/without ignored
-        pass
+    def test_create_xtraceoptions_response_value_tt_unauth_type_zero_root_span(
+        self,
+        decision_not_auth_type_zero,
+        parent_span_context_invalid,
+        mock_xtraceoptions_signed_tt,
+    ):
+        response_val = self.sampler.create_xtraceoptions_response_value(
+            decision_not_auth_type_zero,
+            parent_span_context_invalid,
+            mock_xtraceoptions_signed_tt,
+        )
+        assert response_val == "auth####foo-bar;trigger-trace####baz-qux;ignored####baz....qux"
+
+    def test_create_xtraceoptions_response_value_tt_unauth_type_zero_parent_span_remote(
+        self,
+        decision_not_auth_type_zero,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_signed_tt,
+    ):
+        response_val = self.sampler.create_xtraceoptions_response_value(
+            decision_not_auth_type_zero,
+            parent_span_context_valid_remote,
+            mock_xtraceoptions_signed_tt,    
+        )
+        assert response_val == "auth####foo-bar;trigger-trace####ignored;ignored####baz....qux"
+
+    def test_create_xtraceoptions_response_value_not_tt_unauth(
+        self,
+        decision_not_auth_type_nonzero,
+        parent_span_context_invalid,
+        mock_xtraceoptions_signed_not_tt,
+    ):
+        response_val = self.sampler.create_xtraceoptions_response_value(
+            decision_not_auth_type_nonzero,
+            parent_span_context_invalid,
+            mock_xtraceoptions_signed_not_tt,     
+        )
+        assert response_val == "auth####foo-bar;trigger-trace####not-requested;ignored####baz....qux"
 
     def test_create_new_trace_state(
         self,
         mocker,
-        decision_do_sample,
+        decision_auth,
         parent_span_context_valid_remote,
-        mock_xtraceoptions_tt
+        mock_xtraceoptions_signed_tt
     ):
         # Should this be mocked?
         mocker.patch(
             "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
             return_value="bar"
         )
-        trace_state = self.sampler.create_new_trace_state(decision_do_sample, parent_span_context_valid_remote, mock_xtraceoptions_tt)
+        trace_state = self.sampler.create_new_trace_state(decision_auth, parent_span_context_valid_remote, mock_xtraceoptions_signed_tt)
         assert trace_state == {
             "sw": "1111222233334444-01",
             "foo": "bar",

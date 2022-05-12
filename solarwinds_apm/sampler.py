@@ -187,7 +187,7 @@ class _SwSampler(Sampler):
                 else:
                     trigger_msg = decision["status_msg"]
             else:
-                trigger_msg = self.XTRACEOPTIONS_TRIGGER_NOT_REQUESTED
+                trigger_msg = self._XTRACEOPTIONS_RESP_TRIGGER_NOT_REQUESTED
             response.append(EQUALS_W3C_SANITIZED.join([
                 self._XTRACEOPTIONS_RESP_TRIGGER_TRACE,
                 trigger_msg
@@ -197,7 +197,7 @@ class _SwSampler(Sampler):
             response.append(
                 EQUALS_W3C_SANITIZED.join([
                     self._XTRACEOPTIONS_RESP_IGNORED,
-                    (COMMA_W3C_SANITIZED.join(decision["ignored"]))
+                    (COMMA_W3C_SANITIZED.join(xtraceoptions.ignored))
                 ])
             )
 
