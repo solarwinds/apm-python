@@ -1,7 +1,8 @@
 import pytest
 
-# unittest cannot reassign members of enum
-from opentelemetry.sdk.trace.sampling import Decision, StaticSampler
+from opentelemetry.sdk.trace.sampling import (
+    Decision, StaticSampler
+)
 from opentelemetry.trace.span import SpanContext, TraceState
 
 import solarwinds_apm.extension.oboe
@@ -424,7 +425,7 @@ class Test_SwSampler():
             ["xtrace_foo", "bar"]
         ])
 
-    def test_remove_response_from_sw(self, mocker):
+    def test_remove_response_from_sw(self):
         ts = TraceState([["bar", "456"],["xtrace_foo", "123"]])
         assert self.sampler.remove_response_from_sw(ts) == TraceState([["bar", "456"]])
 
@@ -446,10 +447,72 @@ class Test_SwSampler():
     def test_calculate_attributes_rm_tracestate_capture(self):
         pass
 
-    def test_should_sample(self):
-        pass
+    def test_should_sample(
+        self,
+        mocker,
+    ):
+        mock_get_current_span = mocker.patch("solarwinds_apm.sampler.get_current_span")
+        mock_get_current_span.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "get_span_context.return_value": "my_span_context",
+                }
+            )
+        )
+        mock_xtraceoptions_cls = mocker.patch(
+            "solarwinds_apm.sampler.XTraceOptions"
+        )
+        mock_xtraceoptions = mocker.Mock()
+        mock_xtraceoptions_cls.configure_mock(
+            return_value=mock_xtraceoptions
+        )
+        mocker.patch(
+            "solarwinds_apm.sampler._SwSampler.calculate_liboboe_decision",
+            return_value="my_decision"
+        )
+        mocker.patch(
+            "solarwinds_apm.sampler._SwSampler.calculate_trace_state",
+            return_value="my_trace_state"
+        )
+        mocker.patch(
+            "solarwinds_apm.sampler._SwSampler.calculate_attributes",
+            return_value="my_attributes"
+        )
+        mocker.patch(
+            "solarwinds_apm.sampler._SwSampler.otel_decision_from_liboboe",
+            return_value="otel_decision"
+        )
 
-    # TODO: test matrix of should_sample root vs is_remote?
+        otel_context = mocker.MagicMock()
+        sampling_result = self.sampler.should_sample(
+            parent_context=otel_context,
+            trace_id=123,
+            name="foo",
+            attributes={"foo": "bar"}
+        )
+
+        solarwinds_apm.sampler._SwSampler.calculate_liboboe_decision.assert_called_once_with(
+            "my_span_context",
+            mock_xtraceoptions
+        )
+        solarwinds_apm.sampler._SwSampler.calculate_trace_state.assert_called_once_with(
+            "my_decision",
+            "my_span_context",
+            mock_xtraceoptions
+        )
+        solarwinds_apm.sampler._SwSampler.calculate_attributes.assert_called_once_with(
+            {"foo": "bar"},
+            "my_decision",
+            "my_trace_state",
+            "my_span_context",
+            mock_xtraceoptions
+        )
+        solarwinds_apm.sampler._SwSampler.otel_decision_from_liboboe.assert_called_once_with(
+            "my_decision"
+        )
+        assert sampling_result.attributes == "my_attributes"
+        assert sampling_result.decision == "otel_decision"
+        assert sampling_result.trace_state == "my_trace_state"
 
 
 class TestParentBasedSwSampler():
@@ -458,8 +521,5 @@ class TestParentBasedSwSampler():
         assert type(sampler._root) == _SwSampler
         assert type(sampler._remote_parent_sampled) == _SwSampler
         assert type(sampler._remote_parent_not_sampled) == _SwSampler
-        
         assert type(sampler._local_parent_sampled) == StaticSampler
         assert type(sampler._local_parent_not_sampled) == StaticSampler
-
-    # TODO: test matrix of should_sample root vs is_remote?
