@@ -4,10 +4,10 @@ import solarwinds_apm.exporter
 import solarwinds_apm.extension.oboe
 
 
-# Fixtures ==========================================================
+# Mock Fixtures =====================================================
 
-def get_mock_spans(mocker, span_context_val=None, valid_parent=False):
-    """Helper to get mock spans (len 1)."""
+def get_mock_spans(mocker, valid_parent=False):
+    """Helper to get mock OTel spans (len 1)."""
     mock_info_event = mocker.Mock()
     mock_info_event.configure_mock(
         **{
@@ -27,8 +27,7 @@ def get_mock_spans(mocker, span_context_val=None, valid_parent=False):
 
     mock_span = mocker.Mock()
     span_config = {
-        "get_span_context.return_value": span_context_val,
-        
+        "get_span_context.return_value": "my_span_context",
         "start_time": 1000,
         "end_time": 2000,
         "name": "foo",
@@ -60,17 +59,7 @@ def fixture_mock_spans_root(mocker):
 
 @pytest.fixture(name="mock_spans_parent_valid")
 def fixture_mock_spans_parent_valid(mocker):
-    return get_mock_spans(mocker, "valid_span_context", True)
-
-@pytest.fixture(name="exporter")
-def fixture_exporter(mocker):
-    mock_reporter = mocker.Mock()
-    mock_reporter.configure_mock(
-        **{
-            "sendReport": mocker.Mock()
-        }
-    )
-    return solarwinds_apm.exporter.SolarWindsSpanExporter(mock_reporter)
+    return get_mock_spans(mocker, True)
 
 @pytest.fixture(name="mock_md")
 def fixture_mock_md(mocker):
@@ -82,74 +71,87 @@ def fixture_mock_md(mocker):
     )
     return mock_md
 
+@pytest.fixture(name="mock_create_entry")
+def fixture_mock_create_entry(mocker):
+    return mocker.patch(
+        "solarwinds_apm.extension.oboe.Context.createEntry"
+    )
+
+@pytest.fixture(name="mock_create_exit")
+def fixture_mock_create_exit(mocker):
+    return mocker.patch(
+        "solarwinds_apm.extension.oboe.Context.createExit"
+    )
+
+@pytest.fixture(name="mock_event")
+def fixture_mock_event(mocker):
+    return mocker.patch(
+        "solarwinds_apm.extension.oboe.Event"
+    )
+
+@pytest.fixture(name="mock_report_exception")
+def fixture_mock_report_exception(mocker):
+    return mocker.patch(
+        "solarwinds_apm.exporter.SolarWindsSpanExporter._report_exception_event",
+    )
+
+@pytest.fixture(name="mock_report_info")
+def fixture_mock_report_info(mocker):
+    return mocker.patch(
+        "solarwinds_apm.exporter.SolarWindsSpanExporter._report_info_event",
+    )
+
+def configure_event_mocks(
+    mocker,
+    mock_event,
+    mock_create_entry,
+    mock_create_exit,
+):
+    """Helper to configure liboboe Event mocks"""
+    mock_add_info = mocker.Mock()
+    mock_event.configure_mock(
+        **{
+            "addInfo": mock_add_info
+        }
+    )
+    mock_create_entry.configure_mock(return_value=mock_event)
+    mock_create_exit.configure_mock(return_value=mock_event)
+    return mock_event, mock_add_info, mock_create_entry, mock_create_exit
+
+
+# Other Fixtures ====================================================
+
+@pytest.fixture(name="exporter")
+def fixture_exporter(mocker):
+    mock_reporter = mocker.Mock()
+    mock_reporter.configure_mock(
+        **{
+            "sendReport": mocker.Mock()
+        }
+    )
+    return solarwinds_apm.exporter.SolarWindsSpanExporter(mock_reporter)
+
 
 # Tests =============================================================
 
 class Test_SolarWindsSpanExporter():
 
-    def test_export_root_span(self, mocker, exporter):
-        # assert _build_metadata called
-        # assert Context.createEntry called with div1000 timestamp
-        # assert Context.addInfo called n times
-        # assert self.exporter.reporter called twice
-        pass
-
-
-    def test_export_parent_valid(self,
+    def assert_export_add_info_and_report(
+        self,
         mocker,
-        exporter,
-        mock_md,
-        mock_spans_parent_valid
+        mock_spans,
+        mock_event,
+        mock_report_info,
+        mock_report_exception,
+        mock_add_info,
+        exporter
     ):
-        mock_create_entry = mocker.patch(
-            "solarwinds_apm.extension.oboe.Context.createEntry"
-        )
-        mock_create_exit = mocker.patch(
-            "solarwinds_apm.extension.oboe.Context.createExit"
-        )
-        mock_event = mocker.patch(
-            "solarwinds_apm.extension.oboe.Event"
-        )
-        mock_add_info = mocker.Mock()
-        mock_event.configure_mock(
-            **{
-                "addInfo": mock_add_info
-            }
-        )
-        mock_create_entry.configure_mock(return_value=mock_event)
-        mock_create_exit.configure_mock(return_value=mock_event)
-
-        mock_build_md = mocker.patch(
-            "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
-            return_value=mock_md
-        )
-        mock_report_exception = mocker.patch(
-            "solarwinds_apm.exporter.SolarWindsSpanExporter._report_exception_event",
-        )
-        mock_report_info = mocker.patch(
-            "solarwinds_apm.exporter.SolarWindsSpanExporter._report_info_event",
-        )
-
-        exporter.export(mock_spans_parent_valid)
-
-        mock_span_parent = mock_spans_parent_valid[0].parent
-        mock_build_md.assert_has_calls([
-            mocker.call("valid_span_context"),
-            mocker.call(mock_span_parent)
-        ])
-        mock_create_entry.assert_called_once_with(
-            mock_md,
-            1,
-            mock_md,
-        )
-        mock_create_exit.assert_called_once_with(2)
-
         # mock_spans has one info event, one exception event
         mock_report_info.assert_called_once_with(
-            mock_spans_parent_valid[0].events[0]
+            mock_spans[0].events[0]
         )
         mock_report_exception.assert_called_once_with(
-            mock_spans_parent_valid[0].events[1]
+            mock_spans[0].events[1]
         )
 
         # addInfo calls for entry and exit events
@@ -165,6 +167,100 @@ class Test_SolarWindsSpanExporter():
             mocker.call(mock_event, False),
             mocker.call(mock_event, False),
         ])
+
+
+    def test_export_root_span(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_entry,
+        mock_create_exit,
+        mock_report_info,
+        mock_report_exception,
+        mock_md,
+        mock_spans_root
+    ):
+        mock_event, mock_add_info, mock_create_entry, \
+            mock_create_exit = configure_event_mocks(
+                    mocker,
+                    mock_event,
+                    mock_create_entry,
+                    mock_create_exit,
+                )
+        mock_build_md = mocker.patch(
+            "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
+            return_value=mock_md
+        )
+
+        exporter.export(mock_spans_root)
+
+        mock_build_md.assert_has_calls([
+            mocker.call("my_span_context")
+        ])
+        mock_create_entry.assert_called_once_with(
+            mock_md,
+            1,
+        )
+        mock_create_exit.assert_called_once_with(2)
+
+        self.assert_export_add_info_and_report(
+            mocker,
+            mock_spans_root,
+            mock_event,
+            mock_report_info,
+            mock_report_exception,
+            mock_add_info,
+            exporter
+        )
+
+    def test_export_parent_valid(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_entry,
+        mock_create_exit,
+        mock_report_info,
+        mock_report_exception,
+        mock_md,
+        mock_spans_parent_valid
+    ):
+        mock_event, mock_add_info, mock_create_entry, \
+            mock_create_exit = configure_event_mocks(
+                    mocker,
+                    mock_event,
+                    mock_create_entry,
+                    mock_create_exit,
+                )
+        mock_build_md = mocker.patch(
+            "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
+            return_value=mock_md
+        )
+
+        exporter.export(mock_spans_parent_valid)
+
+        mock_span_parent = mock_spans_parent_valid[0].parent
+        mock_build_md.assert_has_calls([
+            mocker.call("my_span_context"),
+            mocker.call(mock_span_parent)
+        ])
+        mock_create_entry.assert_called_once_with(
+            mock_md,
+            1,
+            mock_md,
+        )
+        mock_create_exit.assert_called_once_with(2)
+
+        self.assert_export_add_info_and_report(
+            mocker,
+            mock_spans_parent_valid,
+            mock_event,
+            mock_report_info,
+            mock_report_exception,
+            mock_add_info,
+            exporter
+        )
 
     def test__report_exception_event(self, mocker, exporter):
         mocker.patch(
