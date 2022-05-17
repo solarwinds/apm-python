@@ -12,7 +12,7 @@ def get_mock_spans(mocker, span_context_val=None, valid_parent=False):
     mock_info_event.configure_mock(
         **{
             "name": "info",
-            "timestamp": 2000,
+            "timestamp": 1100,
             "attributes": {"foo": "bar"},
         }
     )
@@ -20,7 +20,7 @@ def get_mock_spans(mocker, span_context_val=None, valid_parent=False):
     mock_exception_event.configure_mock(
         **{
             "name": "exception",
-            "timestamp": 2000,
+            "timestamp": 1200,
             "attributes": {"foo": "bar"},
         }
     )
@@ -30,7 +30,7 @@ def get_mock_spans(mocker, span_context_val=None, valid_parent=False):
         "get_span_context.return_value": span_context_val,
         
         "start_time": 1000,
-        "end_time": 3000,
+        "end_time": 2000,
         "name": "foo",
         "attributes": {"foo": "bar"},
         "events": [
@@ -104,6 +104,9 @@ class Test_SolarWindsSpanExporter():
         mock_create_entry = mocker.patch(
             "solarwinds_apm.extension.oboe.Context.createEntry"
         )
+        mock_create_exit = mocker.patch(
+            "solarwinds_apm.extension.oboe.Context.createExit"
+        )
         mock_event = mocker.patch(
             "solarwinds_apm.extension.oboe.Event"
         )
@@ -114,6 +117,7 @@ class Test_SolarWindsSpanExporter():
             }
         )
         mock_create_entry.configure_mock(return_value=mock_event)
+        mock_create_exit.configure_mock(return_value=mock_event)
 
         mock_build_md = mocker.patch(
             "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
@@ -138,6 +142,29 @@ class Test_SolarWindsSpanExporter():
             1,
             mock_md,
         )
+        mock_create_exit.assert_called_once_with(2)
+
+        # mock_spans has one info event, one exception event
+        mock_report_info.assert_called_once_with(
+            mock_spans_parent_valid[0].events[0]
+        )
+        mock_report_exception.assert_called_once_with(
+            mock_spans_parent_valid[0].events[1]
+        )
+
+        # addInfo calls for entry and exit events
+        mock_add_info.assert_has_calls([
+            mocker.call("Layer", "foo"),
+            mocker.call("Language", "Python"),
+            mocker.call("foo", "bar"),
+            mocker.call("Layer", "foo"),
+        ])
+
+        # sendReport for entry and exit events
+        exporter.reporter.sendReport.assert_has_calls([
+            mocker.call(mock_event, False),
+            mocker.call(mock_event, False),
+        ])
 
     def test__report_exception_event(self, mocker, exporter):
         mocker.patch(
