@@ -83,6 +83,12 @@ def fixture_mock_create_exit(mocker):
         "solarwinds_apm.extension.oboe.Context.createExit"
     )
 
+@pytest.fixture(name="mock_create_event")
+def fixture_mock_create_event(mocker):
+    return mocker.patch(
+        "solarwinds_apm.extension.oboe.Context.createEvent"
+    )
+
 @pytest.fixture(name="mock_event")
 def fixture_mock_event(mocker):
     return mocker.patch(
@@ -101,13 +107,13 @@ def fixture_mock_report_info(mocker):
         "solarwinds_apm.exporter.SolarWindsSpanExporter._report_info_event",
     )
 
-def configure_event_mocks(
+def configure_entry_mocks(
     mocker,
     mock_event,
     mock_create_entry,
     mock_create_exit,
 ):
-    """Helper to configure liboboe Event mocks"""
+    """Helper to configure liboboe Entry mocks"""
     mock_add_info = mocker.Mock()
     mock_event.configure_mock(
         **{
@@ -117,6 +123,30 @@ def configure_event_mocks(
     mock_create_entry.configure_mock(return_value=mock_event)
     mock_create_exit.configure_mock(return_value=mock_event)
     return mock_event, mock_add_info, mock_create_entry, mock_create_exit
+
+def configure_event_mocks(
+    mocker,
+    mock_event,
+    mock_create_event,
+    is_exception=False,
+):
+    """Helper to configure liboboe Event mocks"""
+    mock_add_info = mocker.Mock()
+    event_config = {
+            "addInfo": mock_add_info
+        }
+    if is_exception:
+        event_config.update({
+            "attributes": {
+                "exception.type": "foo",
+                "exception.message": "bar",
+                "exception.stacktrace": "baz",
+                "some": "other",
+            }
+        })
+    mock_event.configure_mock(**event_config)
+    mock_create_event.configure_mock(return_value=mock_event)
+    return mock_event, mock_add_info, mock_create_event
 
 
 # Other Fixtures ====================================================
@@ -182,7 +212,7 @@ class Test_SolarWindsSpanExporter():
         mock_spans_root
     ):
         mock_event, mock_add_info, mock_create_entry, \
-            mock_create_exit = configure_event_mocks(
+            mock_create_exit = configure_entry_mocks(
                     mocker,
                     mock_event,
                     mock_create_entry,
@@ -227,7 +257,7 @@ class Test_SolarWindsSpanExporter():
         mock_spans_parent_valid
     ):
         mock_event, mock_add_info, mock_create_entry, \
-            mock_create_exit = configure_event_mocks(
+            mock_create_exit = configure_entry_mocks(
                     mocker,
                     mock_event,
                     mock_create_entry,
@@ -262,38 +292,59 @@ class Test_SolarWindsSpanExporter():
             exporter
         )
 
-    def test__report_exception_event(self, mocker, exporter):
-        mocker.patch(
-            "solarwinds_apm.extension.oboe.Context.createEvent"
-        )
-        mock_event = mocker.Mock()
-        mock_event.configure_mock(
-            **{
-                "timestamp": 5000,
-                "attributes": {"foo": "bar"}
-            }
-        )
+    def test__report_exception_event(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        mock_event, mock_add_info, mock_create_event \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+
         exporter._report_exception_event(mock_event)
-        solarwinds_apm.extension.oboe \
-            .Context.createEvent.assert_called_once_with(5)
-        exporter.reporter.sendReport.assert_called_once()
 
-    def test__report_info_event(self, mocker, exporter):
-        mocker.patch(
-            "solarwinds_apm.extension.oboe.Context.createEvent"
-        )
-        mock_event = mocker.Mock()
-        mock_event.configure_mock(
-            **{
-                "timestamp": 5000,
-                "attributes": {"foo": "bar"}
-            }
-        )
+        mock_create_event.assert_called_once_with(1)
+        mock_add_info.assert_has_calls([
+            mocker.call("Label", "error"),
+            mocker.call("Spec", "error"),
+            mocker.call("ErrorClass", "foo"),
+            mocker.call("ErrorMsg", "bar"),
+            mocker.call("Backtrace", "baz"),
+            mocker.call("some", "other")
+        ])
+        exporter.reporter.sendReport.assert_has_calls([
+            mocker.call(mock_event, False),
+        ])
+
+    def test__report_info_event(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        mock_event, mock_add_info, mock_create_event \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+             )
+
         exporter._report_info_event(mock_event)
-        solarwinds_apm.extension.oboe \
-            .Context.createEvent.assert_called_once_with(5)
-        exporter.reporter.sendReport.assert_called_once()
 
+        mock_create_event.assert_called_once_with(1)
+        mock_add_info.assert_has_calls([
+            mocker.call("Label", "info"),
+        ])
+        exporter.reporter.sendReport.assert_has_calls([
+            mocker.call(mock_event, False),
+        ])
 
     def test__build_metadata(self, mocker, exporter):
         mocker.patch(
