@@ -121,9 +121,11 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
         """Acceptance Criterion #1"""
         pass
 
-
     def test_attrs_with_valid_traceparent_sw_in_tracestate_do_sample(self):
         """Acceptance Criterion #4, decision do_sample"""
+        resp = None
+        traceparent_h = self.tc_propagator._TRACEPARENT_HEADER_NAME
+        tracestate_h = self.sw_propagator._TRACESTATE_HEADER_NAME
 
         # liboboe mocked to guarantee return of “do_sample” and “start
         # decision” rate/capacity values
@@ -135,8 +137,7 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
             new=mock_decision,
         ):
 
-            # get_current_span() and get_span_context() mocked
-
+            # mock get_current_span() and get_span_context() for start_span/should_sample
             mock_parent_span_context = mock.Mock()
             mock_parent_span_context.trace_id = 0x11112222333344445555666677778888
             mock_parent_span_context.span_id = 0x1111aaaa2222bbbb
@@ -155,39 +156,36 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
 
                 # extract valid inbound trace context with our vendor tracestate info
                 self.composite_propagator.extract({
-                    self.tc_propagator._TRACEPARENT_HEADER_NAME: "00-11112222333344445555666677778888-1111aaaa2222bbbb-01",
-                    self.sw_propagator._TRACESTATE_HEADER_NAME: "sw=1111aaaa2222bbbb-01",
-                    "is_remote": True,
+                    traceparent_h: "00-11112222333344445555666677778888-1111aaaa2222bbbb-01",
+                    tracestate_h: "sw=1111aaaa2222bbbb-01",
                 })
                 
-                # with self.tracer.start_as_current_span(
-                with self.tracer.start_span(
-                    "foo-span"
-                ) as foo_span:
-                    # make call to postman-echo to see headers
+                # - traced process makes an outbound RPC
+                with self.tracer.start_span("foo-span") as foo_span:
+                    # make call to postman-echo to get request headers from
+                    # response, though not necessary
+                    # Note: this isn't NH instrumented
                     resp = requests.get(f"http://postman-echo.com/headers")
-                    logger.debug("Request headers:")
-                    logger.debug(resp.request.headers)
-                    logger.debug("Response content:")
-                    logger.debug(resp.content)
-                    logger.debug("Response headers:")
-                    logger.debug(resp.headers)
-                    logger.debug("====================")
 
-        # - traced process makes an outbound RPC
-        # verify
-        # - trace created
-        # - span attrs:
-        #     - present: service entry internal
-        #     - absent: sw.tracestate_parent_id
-        # - correct trace context was injected in outbound call
-        # - correct trace context was injected in response header
+        # verify correct trace context was injected in outbound call
+        assert traceparent_h in resp.request.headers
+        assert tracestate_h in resp.request.headers
+        # assert resp.request.headers[traceparent_h] == "foo"  # !!!
+        # assert resp.request.headers[tracestate_h] == "foo"  # !!!
 
+        # verify trace created
         spans = self.memory_exporter.get_finished_spans()
-        assert len(spans) == 2
-        # assert all(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)
-        # assert SW_TRACESTATE_KEY in spans[0].context.trace_state
-        # assert spans[0].context.trace_state[SW_TRACESTATE_KEY] == "0000000000000000-01"
+        assert len(spans) == 1
+        assert SW_TRACESTATE_KEY in spans[0].context.trace_state
+        assert spans[0].context.trace_state[SW_TRACESTATE_KEY] == "1111aaaa2222bbbb-01"
+
+        # verify span attrs:
+        #   - present: sw.tracestate_parent_id
+        #   - absent: service entry internal
+        assert "sw.tracestate_parent_id" in spans[0].attributes
+        # assert not any(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)  # !!!
+
+        # TODO verify correct trace context was injected in response header ?!?!?!
 
     def test_attrs_with_valid_traceparent_sw_in_tracestate_not_do_sample(self):
         """Acceptance Criterion #4, decision not do_sample"""
