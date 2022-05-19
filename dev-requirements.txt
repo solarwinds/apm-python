@@ -1,5 +1,8 @@
 opentelemetry-test-utils==0.30b0
+opentelemetry-instrumentation-httpx==0.30b0
+opentelemetry-instrumentation-requests==0.30b0
 pytest
 pytest-cov
 pytest-mock
+httpx
 requests
