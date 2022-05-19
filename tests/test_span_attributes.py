@@ -22,7 +22,7 @@ from opentelemetry.propagate import get_global_textmap
 from opentelemetry.test.globals_test import reset_trace_globals
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace import get_current_span
-from opentelemetry.trace.span import SpanContext
+from opentelemetry.trace.span import SpanContext, TraceState
 
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
@@ -125,7 +125,8 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
     def test_attrs_with_valid_traceparent_sw_in_tracestate_do_sample(self):
         """Acceptance Criterion #4, decision do_sample"""
 
-        # liboboe mocked to return “do_sample” and “start decision” rate/capacity values
+        # liboboe mocked to guarantee return of “do_sample” and “start
+        # decision” rate/capacity values
         mock_decision = mock.Mock(
             return_value=(1, 1, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
         )
@@ -134,28 +135,44 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
             new=mock_decision,
         ):
 
-            # valid inbound trace context with our vendor tracestate info
-            self.composite_propagator.extract({
-                self.tc_propagator._TRACEPARENT_HEADER_NAME: "00-11112222333344445555666677778888-1111aaaa2222bbbb-01",
-                self.sw_propagator._TRACESTATE_HEADER_NAME: "sw=1111aaaa2222bbbb-01",
-                "is_remote": True,
-            })
+            # get_current_span() and get_span_context() mocked
 
-            # make call to postman-echo to see headers
-            with self.tracer.start_as_current_span(
-                "foo-span"
-            ) as foo_span:
+            mock_parent_span_context = mock.Mock()
+            mock_parent_span_context.trace_id = 0x11112222333344445555666677778888
+            mock_parent_span_context.span_id = 0x1111aaaa2222bbbb
+            mock_parent_span_context.trace_flags = 0x01
+            mock_parent_span_context.is_remote = True
+            mock_parent_span_context.is_value = True
+            mock_parent_span_context.trace_state = TraceState([["sw", "1111aaaa2222bbbb-01"]])
 
-                foo_span.set_attribute("foofoo", "barbar")
+            mock_get_current_span = mock.Mock()
+            mock_get_current_span.return_value.get_span_context.return_value = mock_parent_span_context
+            
+            with mock.patch(
+                target="solarwinds_apm.sampler.get_current_span",
+                new=mock_get_current_span
+            ):
 
-                resp = requests.get(f"http://postman-echo.com/headers")
-                logger.debug("Request headers:")
-                logger.debug(resp.request.headers)
-                logger.debug("Response content:")
-                logger.debug(resp.content)
-                logger.debug("Response headers:")
-                logger.debug(resp.headers)
-                logger.debug("====================")
+                # extract valid inbound trace context with our vendor tracestate info
+                self.composite_propagator.extract({
+                    self.tc_propagator._TRACEPARENT_HEADER_NAME: "00-11112222333344445555666677778888-1111aaaa2222bbbb-01",
+                    self.sw_propagator._TRACESTATE_HEADER_NAME: "sw=1111aaaa2222bbbb-01",
+                    "is_remote": True,
+                })
+                
+                # with self.tracer.start_as_current_span(
+                with self.tracer.start_span(
+                    "foo-span"
+                ) as foo_span:
+                    # make call to postman-echo to see headers
+                    resp = requests.get(f"http://postman-echo.com/headers")
+                    logger.debug("Request headers:")
+                    logger.debug(resp.request.headers)
+                    logger.debug("Response content:")
+                    logger.debug(resp.content)
+                    logger.debug("Response headers:")
+                    logger.debug(resp.headers)
+                    logger.debug("====================")
 
         # - traced process makes an outbound RPC
         # verify
