@@ -38,9 +38,9 @@ OBOEVERSION := $(shell cat ./solarwinds_apm/extension/VERSION)
 
 # specification of source of header and library files
 ifdef S3_OBOE
-    OBOEREPO := "https://rc-files-t2.s3-us-west-2.amazonaws.com/c-lib/${OBOEVERSION}"
+    OBOEREPO := "https://agent-binaries.global.st-ssp.solarwinds.com/c-lib/${OBOEVERSION}"
 else
-    OBOEREPO := "https://files.appoptics.com/c-lib/${OBOEVERSION}"
+    OBOEREPO := "https://agent-binaries.cloud.solarwinds.com/apm/c-lib/${OBOEVERSION}"
 endif
 
 verify-oboe-version:

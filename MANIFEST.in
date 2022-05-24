@@ -1,11 +1,11 @@
 include *.md
 include *.txt
 include solarwinds_apm/extension/VERSION
-recursive-include appoptics_apm *.cxx
-recursive-include appoptics_apm *.h
-recursive-include appoptics_apm *.hpp
-recursive-include appoptics_apm *.so
-recursive-include appoptics_apm *.so.*
+recursive-include solarwinds_apm *.cxx
+recursive-include solarwinds_apm *.h
+recursive-include solarwinds_apm *.hpp
+recursive-include solarwinds_apm *.so
+recursive-include solarwinds_apm *.so.*
 exclude MANIFEST.in
 exclude Makefile
 prune test

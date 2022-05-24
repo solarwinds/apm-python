@@ -12,5 +12,4 @@ docker run -it \
     --workdir /code/solarwinds_apm \
     -v "$PWD":/code/solarwinds_apm \
     -v "$PWD"/../oboe/:/code/oboe \
-    -v `echo ~`:/home/developer \
     dev-container bash
