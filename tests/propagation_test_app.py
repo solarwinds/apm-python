@@ -41,15 +41,8 @@ def create_app():
         logger.debug("Incoming request headers: {}".format(flask.request.headers))
         resp = requests.get(f"http://postman-echo.com/headers")
 
-        # # CaseInsensitiveDict
-        # logger.debug("Outgoing request headers: (type {})".format(type(resp.request.headers)))
-        # logger.debug(resp.request.headers)
-        # logger.debug("Response content:")
-        # logger.debug(resp.content)
-        # logger.debug("Response headers:")
-        # logger.debug(resp.headers)
-
         #  The return type must be a string, dict, tuple, Response instance, or WSGI callable
+        # (not CaseInsensitiveDict)
         return {
             "traceparent": resp.request.headers["traceparent"],
             "tracestate": resp.request.headers["tracestate"],
