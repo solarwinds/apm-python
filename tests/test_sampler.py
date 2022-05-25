@@ -40,13 +40,6 @@ def fixture_mock_span_id_from_sw(mocker):
         return_value="1111222233334444"
     )
 
-@pytest.fixture(autouse=True)
-def fixture_mock_get_sw_xtraceoptions_response_key(mocker):
-    mocker.patch(
-        "solarwinds_apm.traceoptions.XTraceOptions.get_sw_xtraceoptions_response_key",
-        return_value="xtrace_foo"
-    )
-
 # Mock Fixtures, manually used ======================================
 
 @pytest.fixture(name="mock_liboboe_decision")
@@ -513,7 +506,7 @@ class Test_SwSampler():
         )
         assert trace_state == TraceState([
             ["sw", "1111222233334444-01"],
-            ["xtrace_foo", "bar"]
+            ["xtrace_options_response", "bar"]
         ])
 
     def test_calculate_trace_state_root_span(
@@ -569,11 +562,11 @@ class Test_SwSampler():
         )
         assert trace_state == TraceState([
             ["sw", "1111222233334444-01"],
-            ["xtrace_foo", "bar"]
+            ["xtrace_options_response", "bar"]
         ])
 
     def test_remove_response_from_sw(self):
-        ts = TraceState([["bar", "456"],["xtrace_foo", "123"]])
+        ts = TraceState([["bar", "456"],["xtrace_options_response", "123"]])
         assert self.sampler.remove_response_from_sw(ts) == TraceState([["bar", "456"]])
 
     def test_calculate_attributes_dont_trace(
