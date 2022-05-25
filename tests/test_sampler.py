@@ -107,21 +107,22 @@ def fixture_decision_continued():
     return {
         "do_metrics": 1,
         "do_sample": 1,
-        "rate": 1,
-        "source": 1,
-        "bucket_rate": 1,
-        "bucket_cap": 1,
+        "rate": -1,
+        "source": -1,
+        "bucket_rate": -1,
+        "bucket_cap": -1,
     }
+
 
 @pytest.fixture(name="decision_not_continued")
 def fixture_decision_not_continued():
     return {
         "do_metrics": 1,
         "do_sample": 1,
-        "rate": -1,
-        "source": -1,
-        "bucket_rate": -1,
-        "bucket_cap": -1,
+        "rate": 1,
+        "source": 1,
+        "bucket_rate": 1,
+        "bucket_cap": 1,
     }
 
 @pytest.fixture(name="decision_auth")
@@ -517,13 +518,7 @@ class Test_SwSampler():
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys,
-        ) == MappingProxyType({
-            "BucketCapacity": "1",
-            "BucketRate": "1",
-            "SampleRate": 1,
-            "SampleSource": 1,
-            "SWKeys": "foo",
-        })
+        ) == MappingProxyType({"SWKeys": "foo"})
 
     def test_calculate_attributes_contd_decision_no_sw_keys(
         self,
@@ -537,12 +532,7 @@ class Test_SwSampler():
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys,
-        ) == MappingProxyType({
-            "BucketCapacity": "1",
-            "BucketRate": "1",
-            "SampleRate": 1,
-            "SampleSource": 1,
-        })
+        ) == None
 
     def test_calculate_attributes_not_contd_decision_sw_keys(
         self,
@@ -556,7 +546,13 @@ class Test_SwSampler():
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys,
-        ) == MappingProxyType({"SWKeys": "foo"})
+        ) == MappingProxyType({
+            "BucketCapacity": "1",
+            "BucketRate": "1",
+            "SampleRate": 1,
+            "SampleSource": 1,
+            "SWKeys": "foo",
+        })
 
     def test_calculate_attributes_not_contd_decision_no_sw_keys(
         self,
@@ -570,7 +566,12 @@ class Test_SwSampler():
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys
-        ) == None
+        ) == MappingProxyType({
+            "BucketCapacity": "1",
+            "BucketRate": "1",
+            "SampleRate": 1,
+            "SampleSource": 1,
+        })
 
     def test_calculate_attributes_valid_parent_create_new_attrs(
         self,
@@ -588,10 +589,6 @@ class Test_SwSampler():
         ) == MappingProxyType({
             "sw.tracestate_parent_id": "1111222233334444",
             "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
-            "BucketCapacity": "1",
-            "BucketRate": "1",
-            "SampleRate": 1,
-            "SampleSource": 1,
             'SWKeys': 'foo',
         })
 
@@ -611,15 +608,10 @@ class Test_SwSampler():
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
             "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
-            "BucketCapacity": "1",
-            "BucketRate": "1",
-            "SampleRate": 1,
-            "SampleSource": 1,
             'SWKeys': 'foo',
             "foo": "bar",
             "baz": "qux",
         })
-        
 
     def test_calculate_attributes_valid_parent_update_attrs_tracestate_capture(
         self,
@@ -637,10 +629,6 @@ class Test_SwSampler():
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
             "sw.w3c.tracestate": "sw=1111222233334444-01,some=other",
-            "BucketCapacity": "1",
-            "BucketRate": "1",
-            "SampleRate": 1,
-            "SampleSource": 1,
             'SWKeys': 'foo',
             "foo": "bar",
             "baz": "qux",
