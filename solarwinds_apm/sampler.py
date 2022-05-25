@@ -166,7 +166,7 @@ class _SwSampler(Sampler):
         """
         response = []
 
-        if xtraceoptions.signature:
+        if xtraceoptions.signature and decision["auth_msg"]:
             response.append(EQUALS_W3C_SANITIZED.join([
                 self._XTRACEOPTIONS_RESP_AUTH,
                 decision["auth_msg"]

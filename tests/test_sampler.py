@@ -80,6 +80,14 @@ def fixture_xtraceoptions_signed_not_tt(mocker):
     options.ignored = ["baz", "qux"]
     return options
 
+@pytest.fixture(name="mock_xtraceoptions_unsigned_tt")
+def fixture_xtraceoptions_unsigned_tt(mocker):
+    options = mocker.Mock()
+    options.trigger_trace = 1
+    options.options_header = "foo-bar"
+    options.ignored = ["baz", "qux"]
+    return options
+
 @pytest.fixture(name="mock_xtraceoptions_sw_keys")
 def fixture_xtraceoptions_sw_keys(mocker):
     options = mocker.Mock()
@@ -154,6 +162,42 @@ def fixture_decision_auth_type_nonzero():
         "auth_msg": "foo-bar",
         "decision_type": -1,
         "status_msg": "baz-qux",
+    }
+
+@pytest.fixture(name="decision_signed_tt_traced")
+def fixture_decision_signed_tt_traced(mocker):
+    """Case 8"""
+    return {
+        "do_sample": 1,
+        "decision_type": 1,
+        "auth": 0,
+        "auth_msg": "ok",
+        "status": 0,
+        "status_msg": "ok",
+    }
+
+@pytest.fixture(name="decision_non_tt_traced")
+def fixture_decision_non_tt_traced(mocker):
+    """Case 14"""
+    return {
+        "do_sample": 1,
+        "decision_type": 0,
+        "auth": -1,
+        "auth_msg": "",
+        "status": 0,
+        "status_msg": "ok",
+    }
+
+@pytest.fixture(name="decision_unsigned_tt_not_traced")
+def fixture_decision_unsigned_tt_not_traced(mocker):
+    """Case 11 - feature disabled"""
+    return {
+        "do_sample": 0,
+        "decision_type": -1,
+        "auth": -1,
+        "auth_msg": "",
+        "status": -3,
+        "status_msg": "trigger-tracing-disabled",
     }
 
 @pytest.fixture(name="parent_span_context_invalid")
@@ -411,6 +455,45 @@ class Test_SwSampler():
             mock_xtraceoptions_signed_not_tt,     
         )
         assert response_val == "auth####foo-bar;trigger-trace####not-requested;ignored####baz....qux"
+
+    def test_create_xtraceoptions_response_value_case_8(
+        self,
+        decision_signed_tt_traced,
+        parent_span_context_invalid,
+        mock_xtraceoptions_signed_tt,
+    ):
+        response_val = self.sampler.create_xtraceoptions_response_value(
+            decision_signed_tt_traced,
+            parent_span_context_invalid,
+            mock_xtraceoptions_signed_tt,   
+        )
+        assert response_val == "auth####ok;trigger-trace####ok;ignored####baz....qux"
+
+    def test_create_xtraceoptions_response_value_case_14(
+        self,
+        decision_non_tt_traced,
+        parent_span_context_invalid,
+        mock_xtraceoptions_signed_not_tt,
+    ):
+        response_val = self.sampler.create_xtraceoptions_response_value(
+            decision_non_tt_traced,
+            parent_span_context_invalid,
+            mock_xtraceoptions_signed_not_tt,   
+        )
+        assert response_val == "trigger-trace####not-requested;ignored####baz....qux"
+
+    def test_create_xtraceoptions_response_value_case_11(
+        self,
+        decision_unsigned_tt_not_traced,
+        parent_span_context_invalid,
+        mock_xtraceoptions_unsigned_tt,
+    ):
+        response_val = self.sampler.create_xtraceoptions_response_value(
+            decision_unsigned_tt_not_traced,
+            parent_span_context_invalid,
+            mock_xtraceoptions_unsigned_tt, 
+        )
+        assert response_val == "trigger-trace####trigger-tracing-disabled;ignored####baz....qux"
 
     def test_create_new_trace_state(
         self,
