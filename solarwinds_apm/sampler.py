@@ -19,6 +19,7 @@ from solarwinds_apm import (
     EQUALS_W3C_SANITIZED,
     SW_TRACESTATE_KEY
 )
+from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.extension.oboe import Context
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
@@ -43,6 +44,9 @@ class _SwSampler(Sampler):
     _XTRACEOPTIONS_RESP_TRIGGER_NOT_REQUESTED = "not-requested"
     _XTRACEOPTIONS_RESP_TRIGGER_TRACE = "trigger-trace"
 
+    def __init__(self, apm_config: SolarWindsApmConfig):
+        self.apm_config = apm_config
+
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
 
@@ -59,7 +63,7 @@ class _SwSampler(Sampler):
             )
         sw_member_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY)
 
-        # TODO: local config --> enable/disable tracing, sample_rate, tt mode
+        # TODO use self.apm_config instead of hard-codies
         tracing_mode = -1
         sample_rate = -1
         trigger_tracing_mode_disabled = -1
@@ -416,17 +420,19 @@ class ParentBasedSwSampler(ParentBased):
     """
     Sampler that respects its parent span's sampling decision, but otherwise
     samples according to the configurations from the NH/AO backend.
+
+    Requires SolarWindsApmConfig.
     """
-    def __init__(self):
+    def __init__(self, apm_config: SolarWindsApmConfig):
         """
         Uses _SwSampler/liboboe if no parent span.
         Uses _SwSampler/liboboe if parent span is_remote.
         Uses OTEL defaults if parent span is_local.
         """
         super().__init__(
-            root=_SwSampler(),
-            remote_parent_sampled=_SwSampler(),
-            remote_parent_not_sampled=_SwSampler()
+            root=_SwSampler(apm_config),
+            remote_parent_sampled=_SwSampler(apm_config),
+            remote_parent_not_sampled=_SwSampler(apm_config)
         )
 
     def should_sample(

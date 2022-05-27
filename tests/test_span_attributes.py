@@ -21,6 +21,7 @@ from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.span import SpanContext
 
 from solarwinds_apm import SW_TRACESTATE_KEY
+from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro
 from solarwinds_apm.propagator import SolarWindsPropagator
@@ -67,14 +68,15 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
 
         # Load Configurator to Configure SW custom SDK components
         # except use TestBase InMemorySpanExporter
+        apm_config = SolarWindsApmConfig()
         configurator = SolarWindsConfigurator()
-        configurator._initialize_solarwinds_reporter()
+        configurator._initialize_solarwinds_reporter(apm_config)
         configurator._configure_propagator()
         configurator._configure_response_propagator()
         # This is done because set_tracer_provider cannot override the
         # current tracer provider.
         reset_trace_globals()
-        configurator._configure_sampler()
+        configurator._configure_sampler(apm_config)
         sampler = trace_api.get_tracer_provider().sampler
         # Set InMemorySpanExporter for testing
         cls.tracer_provider, cls.memory_exporter = cls.create_tracer_provider(sampler=sampler)
