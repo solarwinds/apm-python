@@ -14,7 +14,7 @@ from solarwinds_apm import (
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 class SolarWindsPropagator(textmap.TextMapPropagator):
     """Extracts and injects SolarWinds headers for trace propagation.

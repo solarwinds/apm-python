@@ -4,7 +4,7 @@
 import logging
 from opentelemetry.sdk.trace import SpanContext
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 class W3CTransformer():
     """Transforms inputs to W3C-compliant data for SolarWinds context propagation"""

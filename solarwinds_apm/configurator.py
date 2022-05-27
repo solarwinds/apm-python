@@ -16,22 +16,20 @@ from opentelemetry.instrumentation.propagators import set_global_response_propag
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
-from opentelemetry.sdk.environment_variables import OTEL_TRACES_SAMPLER
-from opentelemetry.sdk.trace import (
-    sampling,
-    TracerProvider
-)
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from solarwinds_apm import DEFAULT_SW_TRACES_EXPORTER
+from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.extension.oboe import Reporter
 from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
 
+solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
 
 class SolarWindsConfigurator(_OTelSDKConfigurator):
-    """OpenTelemetry Configurator for initializing SolarWinds-reporting SDK components"""
+    """OpenTelemetry Configurator for initializing APM logger and SolarWinds-reporting SDK components"""
 
     # Cannot set as env default because not part of OTel Python _KNOWN_SAMPLERS
     # https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-sdk/src/opentelemetry/sdk/trace/sampling.py#L364-L380
@@ -169,5 +167,5 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             grpc_proxy=apm_config["proxy"],
             stdout_clear_nonblocking=0,
             is_grpc_clean_hack_enabled=apm_config["is_grpc_clean_hack_enabled"],
-            w3c_trace_format=1,                                      # TODO
+            w3c_trace_format=1,
         )

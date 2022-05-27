@@ -75,3 +75,84 @@ class ApmLoggingLevel:
             return bool(level in list(cls.debug_levels.values()))
         except (ValueError, TypeError):
             return False
+
+
+def _create_stream_handler():
+    """Creates stream handler reporting to stderr."""
+    sh = logging.StreamHandler()  # get stream handler to custom logging prefix
+    f = logging.Formatter('%(asctime)s [ %(name)s %(levelname)-8s p#%(process)d.%(thread)d] %(message)s')
+    sh.setFormatter(f)
+    return sh
+
+
+_stream_handler = _create_stream_handler()
+
+
+def _get_logger():
+    """Creates the logger for agent-internal logging.
+    By default, the logging level of the created logger will be set to ApmLoggingLevel.default_level().
+    If the logging level of the agent-internal logger needs to be changed, this should happen through one of the
+    following options only:
+    (1) Through environment variable SOLARWINDS_DEBUG_LEVEL
+        - When _get_logger is invoked, SOLARWINDS_DEBUG_LEVEL is checked and the logging level will be set to the
+          value provided by the variable. If an invalid value has been provided, the logging level will not be changed.
+    (2) By invoking set_sw_log_level
+    """
+
+    # create base logger for solarwinds_apm package
+    _logger = logging.getLogger('solarwinds_apm')
+
+    # configure logging level of solarwinds_apm logger
+    log_level = ApmLoggingLevel.default_level()
+    # check if SOLARWINDS_DEBUG_LEVEL has been set and configure newly created logger accordingly
+    envv_val = os.getenv('SOLARWINDS_DEBUG_LEVEL', None)
+    if envv_val is not None:
+        if not ApmLoggingLevel.is_valid_level(envv_val):
+            _logger.warning("Misconfigured SOLARWINDS_DEBUG_LEVEL ignored. Defaulted to debug_level %s", log_level)
+            _logger.warning("")
+        else:
+            log_level = int(envv_val)
+
+    _logger.setLevel(ApmLoggingLevel.logging_map[log_level])
+
+    if log_level != ApmLoggingLevel.debug_levels['OBOE_DEBUG_DISABLE']:
+        _logger.addHandler(_stream_handler)
+    else:
+        _logger.propagate = False
+        _logger.addHandler(logging.NullHandler())
+
+    return _logger
+
+
+logger = _get_logger()
+
+
+# TODO used?
+def disable_logger(disable=True):
+    """Disables all logging messages from the `solarwinds_apm` package when disable is True.
+    To restoring logging, set disable as False.
+    """
+    if disable:
+        logger.addHandler(logging.NullHandler())
+        logger.removeHandler(_stream_handler)
+        logger.propagate = False
+    else:
+        logger.addHandler(_stream_handler)
+        logger.removeHandler(logging.NullHandler())
+        logger.propagate = True
+
+
+# TODO used?
+def set_sw_log_level(level):
+    """Set the logging level of the agent-internal logger to the provided level. This function expects the level
+    to be one of the integer representations of the levels defined in ApmLoggingLevel.debug_levels.
+    If an invalid level has been provided, the logging level will not be changed but a warning message will be emitted.
+
+    This function should not be used from outside the solarwinds_apm package to modify agent logging behaviour.
+    """
+    if ApmLoggingLevel.is_valid_level(level):
+        logger.setLevel(ApmLoggingLevel.logging_map[level])
+        if level == ApmLoggingLevel.debug_levels['OBOE_DEBUG_DISABLE']:
+            disable_logger()
+    else:
+        logger.warning("set_sw_log_level: Ignore attempt to set solarwinds_apm logger to invalid logging level.")

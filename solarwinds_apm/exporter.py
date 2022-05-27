@@ -15,7 +15,7 @@ from solarwinds_apm.extension.oboe import (
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class SolarWindsSpanExporter(SpanExporter):
