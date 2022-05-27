@@ -11,7 +11,6 @@ from opentelemetry.instrumentation.distro import BaseDistro
 
 from solarwinds_apm import DEFAULT_SW_TRACES_EXPORTER
 
-logger = logging.getLogger(__name__)
 
 class SolarWindsDistro(BaseDistro):
     """OpenTelemetry Distro for SolarWinds reporting environment"""
@@ -45,8 +44,3 @@ class SolarWindsDistro(BaseDistro):
                 < environ_propagators.index(self._TRACECONTEXT_PROPAGATOR):
                 raise ValueError("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability.")
         environ[OTEL_PROPAGATORS] = ",".join(environ_propagators)
-
-        logger.debug("Configured SolarWindsDistro: {}, {}".format(
-            environ.get(OTEL_TRACES_EXPORTER),
-            environ.get(OTEL_PROPAGATORS)
-        ))
