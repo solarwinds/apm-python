@@ -1,8 +1,32 @@
 
 from collections import defaultdict
+from functools import reduce
+import logging
 import os
 
-from solarwinds_apm import DEFAULT_SW_DEBUG_LEVEL
+from solarwinds_apm.extension.oboe import Context
+from solarwinds_apm.apm_logging import ApmLoggingLevel
+
+logger = logging.getLogger(__name__)
+
+
+# TODO agent_enabled logic
+
+
+class OboeTracingMode:
+    """Provides an interface to translate the string representation of tracing_mode to the C-extension equivalent."""
+    OBOE_SETTINGS_UNSET = -1
+    OBOE_TRACE_DISABLED = 0
+    OBOE_TRACE_ENABLED = 1
+
+    @classmethod
+    def get_oboe_trace_mode(cls, tracing_mode):
+        if tracing_mode == 'enabled':
+            return cls.OBOE_TRACE_ENABLED
+        if tracing_mode == 'disabled':
+            return cls.OBOE_TRACE_DISABLED
+        return cls.OBOE_SETTINGS_UNSET
+
 
 class SolarWindsApmConfig:
     """SolarWinds APM Configuration Class
@@ -22,7 +46,7 @@ class SolarWindsApmConfig:
             'trigger_trace': None,
             'collector': '',  # the collector address in host:port format.
             'reporter': '',  # the reporter mode, either 'udp' or 'ssl'.
-            'debug_level': DEFAULT_SW_DEBUG_LEVEL,
+            'debug_level': ApmLoggingLevel.default_level(),
             'warn_deprecated': True,
             'service_key': '',
             'hostname_alias': '',
@@ -48,7 +72,7 @@ class SolarWindsApmConfig:
             'is_grpc_clean_hack_enabled': False,
         }
 
-        cnf_file = os.environ.get('APPOPTICS_APM_CONFIG_PYTHON', os.environ.get('APPOPTICS_PYCONF', None))
+        cnf_file = os.environ.get('SOLARWINDS_APM_CONFIG_PYTHON', os.environ.get('SOLARWINDS_PYCONF', None))
         if cnf_file:
             self.update_with_cnf_file(cnf_file)
 
@@ -56,7 +80,7 @@ class SolarWindsApmConfig:
         self.update_with_kwargs(kwargs)
 
     def __setitem__(self, key, value):
-        # TODO
+        # TODO ?
         pass
 
     def __getitem__(self, key):
@@ -72,15 +96,119 @@ class SolarWindsApmConfig:
 
     def update_with_env_var(self):
         """Update the settings with environment variables."""
-        # TODO
-        # log_level = os.environ.get('SOLARWINDS_DEBUG_LEVEL', 3)
-        # try:
-        #     log_level = int(log_level)
-        # except ValueError:
-        #     log_level = 3
-        pass
+        val = os.environ.get('SOLARWINDS_APM_PREPEND_DOMAIN_NAME', None)
+        if val is not None:
+            self._set_config_value('transaction.prepend_domain_name', val)
+        available_envvs = set(self._config.keys())
+        # TODO after alpha: is_lambda
+        for key in available_envvs:
+            if key in ('inst_enabled', 'transaction', 'inst'):
+                # we do not allow complex config options to be set via environment variables
+                continue
+            env = 'SOLARWINDS_' + key.upper()
+            val = os.environ.get(env)
+            if val is not None:
+                self._set_config_value(key, val)
 
     def update_with_kwargs(self, kwargs):
         """Update the configuration settings with (in-code) keyword arguments"""
         # TODO
         pass
+
+    def _set_config_value(self, keys, val):
+        """Sets the value of the config option indexed by 'keys' to 'val', where 'keys' is a nested key (separated by
+        self.delimiter, i.e., the position of the element to be changed in the nested dictionary)"""
+        def _convert_to_bool(val):
+            """Converts given value to boolean value"""
+            val = val.lower() if isinstance(val, str) else val
+            return val == 'true' if isinstance(val, str) and val in ('true', 'false') else bool(int(val))
+
+        # _config is a nested dict, thus find most deeply nested sub dict according to the provided keys
+        # by defaulting to None in d.get(), we do not allow the creation of any new (key, value) pair, even
+        # when we are handling a defaultdict (i.e., with this we do not allow e.g. the creation of new instrumentations
+        # through the config)
+        keys = keys.split(self.delimiter)
+        sub_dict = reduce(lambda d, key: d.get(key, None) if isinstance(d, dict) else None, keys[:-1], self._config)
+        key = keys[-1]
+        try:
+            if key in self.deprecated:
+                # there are no concatenated keys in deprecated, thus we only need to check key here
+                if self._config['warn_deprecated']:
+                    logger.warning(
+                        'Ignore deprecated key: {}, use {} instead.'.format(key, self.deprecated.get(key)))
+                return
+            if keys == ['sample_rate']:
+                sample_rate = float(val)
+                if not 0 <= sample_rate <= 1:
+                    raise ValueError
+                self._config[key] = sample_rate
+                Context.setDefaultSampleRate(int(sample_rate * 1e6))
+            elif keys == ['ec2_metadata_timeout']:
+                timeout = int(val)
+                if timeout not in range(0, 3001):
+                    raise ValueError
+                self._config[key] = timeout
+            elif keys == ['token_bucket_capacity']:
+                bucket_cap = float(val)
+                if not 0 <= bucket_cap <= 8.0:
+                    raise ValueError
+                self._config[key] = bucket_cap
+            elif keys == ['token_bucket_rate']:
+                bucket_rate = float(val)
+                if not 0 <= bucket_rate <= 4.0:
+                    raise ValueError
+                self._config[key] = bucket_rate
+            elif keys == ['proxy']:
+                if not isinstance(val, str) or not val.startswith('http://'):
+                    raise ValueError
+                self._config[key] = val
+            elif keys == ['tracing_mode']:
+                if not isinstance(val, str):
+                    raise ValueError
+                val = val.lower()
+                if val in ['always', 'never']:
+                    val = 'enabled' if val == 'always' else 'disabled'
+                    if self._config['warn_deprecated']:
+                        logger.warning(
+                            'solarwinds_apm.config "tracing_mode" configurations "always" and "never" are deprecated.'
+                            'Please use "enabled" and "disabled" instead.')
+                if val not in ['enabled', 'disabled']:
+                    raise ValueError
+                self._config[key] = val
+                Context.setTracingMode(OboeTracingMode.get_oboe_trace_mode(val))
+            elif keys == ['reporter']:
+                if not isinstance(val, str) or val.lower() not in ('udp', 'ssl', 'null', 'file', 'lambda'):
+                    raise ValueError
+                self._config[key] = val.lower()
+            elif keys == ['debug_level']:
+                val = int(val)
+                if not ApmLoggingLevel.is_valid_level(val):
+                    raise ValueError
+                self._config[key] = val
+                # update logging level of agent logger
+                ApmLoggingLevel.set_sw_log_level(val)
+            elif keys == ['log_trace_id']:
+                if not isinstance(val, str) or val.lower() not in [
+                        'never',
+                        'sampled',
+                        'traced',
+                        'always',
+                ]:
+                    raise ValueError
+                self._config[key] = val.lower()
+            elif keys == ['is_grpc_clean_hack_enabled']:
+                self._config[key] = _convert_to_bool(val)
+            elif (keys[0] == 'inst' and keys[1] in self.supported_instrumentations and keys[2] == 'collect_backtraces'):
+                self._config[keys[0]][keys[1]][keys[2]] = _convert_to_bool(val)
+            elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
+                if isinstance(sub_dict[keys[-1]], bool):
+                    val = _convert_to_bool(val)
+                else:
+                    val = type(sub_dict[keys[-1]])(val)
+                sub_dict[keys[-1]] = val
+            else:
+                logger.warning("Ignore invalid configuration key: {}".format('.'.join(keys)))
+        except (ValueError, TypeError):
+            logger.warning(
+                'Ignore config option with invalid (non-convertible or out-of-range) type: ' +
+                '.'.join(keys if keys[0] not in ['inst', 'transaction'] else keys[1:]))
