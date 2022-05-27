@@ -150,7 +150,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         return Reporter(
             hostname_alias=apm_config["hostname_alias"],
             log_level=apm_config["debug_level"],
-            log_file_path='',                                        # TODO
+            log_file_path=apm_config["logname"],
             max_transactions=apm_config["max_transactions"],
             max_flush_wait_time=apm_config["max_flush_wait_time"],
             events_flush_interval=apm_config["events_flush_interval"],
@@ -167,7 +167,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             file_single=apm_config["reporter_file_single"],
             ec2_metadata_timeout=apm_config["ec2_metadata_timeout"],
             grpc_proxy=apm_config["proxy"],
-            stdout_clear_nonblocking=0,                              # TODO
+            stdout_clear_nonblocking=0,
             is_grpc_clean_hack_enabled=apm_config["is_grpc_clean_hack_enabled"],
             w3c_trace_format=1,                                      # TODO
         )
