@@ -4,6 +4,7 @@ from functools import reduce
 import logging
 import os
 
+from solarwinds_apm import apm_logging
 from solarwinds_apm.extension.oboe import Context
 from solarwinds_apm.apm_logging import ApmLoggingLevel
 
@@ -36,6 +37,8 @@ class SolarWindsApmConfig:
     done only once during the initialization and the properties cannot be refreshed.
     """
 
+    delimiter = '.'
+
     def __init__(self, **kwargs):
         self._config = dict()
         # Update the config with default values
@@ -47,7 +50,6 @@ class SolarWindsApmConfig:
             'collector': '',  # the collector address in host:port format.
             'reporter': '',  # the reporter mode, either 'udp' or 'ssl'.
             'debug_level': ApmLoggingLevel.default_level(),
-            'warn_deprecated': True,
             'service_key': '',
             'hostname_alias': '',
             'trustedpath': '',
@@ -88,6 +90,12 @@ class SolarWindsApmConfig:
 
     def __delitem__(self, key):
         del self._config[key]
+
+    def get(self, key, default=None):
+        """Get the value of key. Nested keys separated by a dot are also accepted."""
+        key = key.split(self.delimiter)
+        value = reduce(lambda d, k: d.get(k, None) if isinstance(d, dict) else None, key, self._config)
+        return value if value is not None else default
 
     def update_with_cnf_file(self, cnf_path):
         """Update the settings with the config file, if any."""
@@ -131,12 +139,6 @@ class SolarWindsApmConfig:
         sub_dict = reduce(lambda d, key: d.get(key, None) if isinstance(d, dict) else None, keys[:-1], self._config)
         key = keys[-1]
         try:
-            if key in self.deprecated:
-                # there are no concatenated keys in deprecated, thus we only need to check key here
-                if self._config['warn_deprecated']:
-                    logger.warning(
-                        'Ignore deprecated key: {}, use {} instead.'.format(key, self.deprecated.get(key)))
-                return
             if keys == ['sample_rate']:
                 sample_rate = float(val)
                 if not 0 <= sample_rate <= 1:
@@ -168,10 +170,6 @@ class SolarWindsApmConfig:
                 val = val.lower()
                 if val in ['always', 'never']:
                     val = 'enabled' if val == 'always' else 'disabled'
-                    if self._config['warn_deprecated']:
-                        logger.warning(
-                            'solarwinds_apm.config "tracing_mode" configurations "always" and "never" are deprecated.'
-                            'Please use "enabled" and "disabled" instead.')
                 if val not in ['enabled', 'disabled']:
                     raise ValueError
                 self._config[key] = val
@@ -186,7 +184,7 @@ class SolarWindsApmConfig:
                     raise ValueError
                 self._config[key] = val
                 # update logging level of agent logger
-                ApmLoggingLevel.set_sw_log_level(val)
+                apm_logging.set_sw_log_level(val)
             elif keys == ['log_trace_id']:
                 if not isinstance(val, str) or val.lower() not in [
                         'never',
