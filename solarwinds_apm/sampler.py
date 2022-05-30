@@ -19,7 +19,10 @@ from solarwinds_apm import (
     EQUALS_W3C_SANITIZED,
     SW_TRACESTATE_KEY
 )
-from solarwinds_apm.apm_config import SolarWindsApmConfig
+from solarwinds_apm.apm_config import (
+    OboeTracingMode,
+    SolarWindsApmConfig
+)
 from solarwinds_apm.extension.oboe import Context
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
@@ -62,10 +65,12 @@ class _SwSampler(Sampler):
                 parent_span_context
             )
         sw_member_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY)
+        tracing_mode = OboeTracingMode.get_oboe_trace_mode(
+            self.apm_config.get("tracing_mode")
+        )
+        sample_rate = int(self.apm_config.get("sample_rate"))
 
-        # TODO use self.apm_config instead of hard-codies
-        tracing_mode = -1
-        sample_rate = -1
+        # TODO use self.apm_config
         trigger_tracing_mode_disabled = -1
 
         options = None

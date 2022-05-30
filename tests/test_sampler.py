@@ -97,8 +97,12 @@ def fixture_xtraceoptions_no_sw_keys(mocker):
 # Other Fixtures, manually used =====================================
 
 @pytest.fixture(name="sw_sampler")
-def fixture_swsampler(mocker):
-    return _SwSampler(mocker.MagicMock())
+def fixture_swsampler():
+    apm_config = {
+        "tracing_mode": None,  # mapped to -1
+        "sample_rate": -1,
+    }
+    return _SwSampler(apm_config)
 
 @pytest.fixture(name="decision_drop")
 def fixture_decision_drop():
