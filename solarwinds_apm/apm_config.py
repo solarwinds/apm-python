@@ -82,8 +82,22 @@ class SolarWindsApmConfig:
         self.update_with_kwargs(kwargs)
 
     def __setitem__(self, key, value):
-        # TODO ?
-        pass
+        """Refresh the configurations in liboboe global struct while user changes settings.
+        """
+        if key == 'tracing_mode':
+            self._set_config_value(key, value)
+
+        elif key == 'sample_rate':
+            self._set_config_value(key, value)
+
+        # TODO set up using OTel logging instrumentation
+        elif key == 'log_trace_id':
+            self._set_config_value(key, value)
+
+        elif key in ('enable_sanitize_sql', 'warn_deprecated'):
+            self._set_config_value(key, value)
+        else:
+            logger.warning('Unsupported SolarWinds APM config key: {key}'.format(key=key))
 
     def __getitem__(self, key):
         return self._config[key]
