@@ -58,20 +58,21 @@ class _SwSampler(Sampler):
         parent_span_context: SpanContext,
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> Dict:
-        """Calculates oboe trace decision based on parent span context."""
+        """Calculates oboe trace decision based on parent span context and APM config."""
         tracestring = None
         if parent_span_context.is_valid and parent_span_context.is_remote:
             tracestring = W3CTransformer.traceparent_from_context(
                 parent_span_context
             )
         sw_member_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY)
+
         tracing_mode = OboeTracingMode.get_oboe_trace_mode(
             self.apm_config.get("tracing_mode")
         )
         sample_rate = int(self.apm_config.get("sample_rate"))
-
-        # TODO use self.apm_config
-        trigger_tracing_mode_disabled = -1
+        custom_trigger_mode = OboeTracingMode.get_oboe_custom_trigger_mode(
+            self.apm_config.get("custom_trigger_mode")
+        )
 
         options = None
         trigger_trace = 0
@@ -99,7 +100,7 @@ class _SwSampler(Sampler):
             tracing_mode,
             sample_rate,
             trigger_trace,
-            trigger_tracing_mode_disabled,
+            custom_trigger_mode,
             options,
             signature,
             timestamp
@@ -112,7 +113,7 @@ class _SwSampler(Sampler):
                 tracing_mode,
                 sample_rate,
                 trigger_trace,
-                trigger_tracing_mode_disabled,
+                custom_trigger_mode,
                 options,
                 signature,
                 timestamp
