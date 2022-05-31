@@ -41,6 +41,7 @@ class _SwSampler(Sampler):
     _LIBOBOE_CONTINUED = -1
     _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
     _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
+    _UNSET = -1
     _XTRACEOPTIONS_RESP_AUTH = "auth"
     _XTRACEOPTIONS_RESP_IGNORED = "ignored"
     _XTRACEOPTIONS_RESP_TRIGGER_IGNORED = "ignored"
@@ -69,10 +70,11 @@ class _SwSampler(Sampler):
         tracing_mode = OboeTracingMode.get_oboe_trace_mode(
             self.apm_config.get("tracing_mode")
         )
-        sample_rate = int(self.apm_config.get("sample_rate"))
         trigger_trace_mode = OboeTracingMode.get_oboe_trigger_trace_mode(
             self.apm_config.get("trigger_trace")
         )
+        # 'sample_rate' is legacy and not supported in NH Python, so give as unset
+        sample_rate = self._UNSET
 
         options = None
         trigger_trace_request = 0

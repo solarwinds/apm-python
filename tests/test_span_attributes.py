@@ -66,12 +66,9 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
         SolarWindsDistro().configure()
         assert os.environ["OTEL_PROPAGATORS"] == "tracecontext,baggage,solarwinds_propagator"
 
-        # Manually set some env var for the ApmConfig
-        os.environ["SOLARWINDS_SAMPLE_RATE"] = "1"
-        apm_config = SolarWindsApmConfig()
-
         # Load Configurator to Configure SW custom SDK components
         # except use TestBase InMemorySpanExporter
+        apm_config = SolarWindsApmConfig()
         configurator = SolarWindsConfigurator()
         configurator._initialize_solarwinds_reporter(apm_config)
         configurator._configure_propagator()
@@ -107,11 +104,10 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
         with self.tracer.start_as_current_span("attrs_no_input_headers"):
             pass
         spans = self.memory_exporter.get_finished_spans()
-        # TODO: Broken by apm_config
-        # assert len(spans) == 1
-        # assert all(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)
-        # assert SW_TRACESTATE_KEY in spans[0].context.trace_state
-        # assert spans[0].context.trace_state[SW_TRACESTATE_KEY] == "0000000000000000-01"
+        assert len(spans) == 1
+        assert all(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert SW_TRACESTATE_KEY in spans[0].context.trace_state
+        assert spans[0].context.trace_state[SW_TRACESTATE_KEY] == "0000000000000000-01"
 
     def test_attrs_with_valid_traceparent(self):
         """Acceptance Criterion #2"""

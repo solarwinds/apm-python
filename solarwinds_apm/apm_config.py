@@ -53,8 +53,7 @@ class SolarWindsApmConfig:
         self._config = dict()
         # Update the config with default values
         self._config = {
-            # 'sample_rate' and 'tracing_mode' do not have any default values (i.e. they are unset by default)
-            'sample_rate': None,
+            # 'tracing_mode' is unset by default
             'tracing_mode': None,
             # 'trigger_trace' is enabled by default
             'trigger_trace': 'enabled',
@@ -96,9 +95,6 @@ class SolarWindsApmConfig:
         """Refresh the configurations in liboboe global struct while user changes settings.
         """
         if key == 'tracing_mode':
-            self._set_config_value(key, value)
-
-        elif key == 'sample_rate':
             self._set_config_value(key, value)
 
         # TODO set up using OTel logging instrumentation
@@ -164,13 +160,7 @@ class SolarWindsApmConfig:
         sub_dict = reduce(lambda d, key: d.get(key, None) if isinstance(d, dict) else None, keys[:-1], self._config)
         key = keys[-1]
         try:
-            if keys == ['sample_rate']:
-                sample_rate = float(val)
-                if not 0 <= sample_rate <= 1:
-                    raise ValueError
-                self._config[key] = sample_rate
-                Context.setDefaultSampleRate(int(sample_rate * 1e6))
-            elif keys == ['ec2_metadata_timeout']:
+            if keys == ['ec2_metadata_timeout']:
                 timeout = int(val)
                 if timeout not in range(0, 3001):
                     raise ValueError

@@ -100,7 +100,6 @@ def fixture_xtraceoptions_no_sw_keys(mocker):
 def fixture_swsampler():
     apm_config = {
         "tracing_mode": None,  # mapped to -1
-        "sample_rate": -1,
     }
     return _SwSampler(apm_config)
 
