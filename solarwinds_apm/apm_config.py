@@ -31,10 +31,10 @@ class OboeTracingMode:
         return cls.OBOE_SETTINGS_UNSET
 
     @classmethod
-    def get_oboe_custom_trigger_mode(cls, custom_trigger_mode):
-        if custom_trigger_mode == 'enabled':
+    def get_oboe_trigger_trace_mode(cls, trigger_trace_mode):
+        if trigger_trace_mode == 'enabled':
             return cls.OBOE_TRIGGER_ENABLED
-        if custom_trigger_mode == 'disabled':
+        if trigger_trace_mode == 'disabled':
             return cls.OBOE_TRIGGER_DISABLED
         return cls.OBOE_SETTINGS_UNSET
 
@@ -53,10 +53,11 @@ class SolarWindsApmConfig:
         self._config = dict()
         # Update the config with default values
         self._config = {
-            #'sample_rate' and 'tracing_mode' do not have any default values (i.e. they are unset by default)
+            # 'sample_rate' and 'tracing_mode' do not have any default values (i.e. they are unset by default)
             'sample_rate': None,
             'tracing_mode': None,
-            'custom_trigger_mode': None,
+            # 'trigger_trace' is enabled by default
+            'trigger_trace': 'enabled',
             'collector': '',  # the collector address in host:port format.
             'reporter': '',  # the reporter mode, either 'udp' or 'ssl'.
             'debug_level': ApmLoggingLevel.default_level(),
@@ -198,7 +199,7 @@ class SolarWindsApmConfig:
                     raise ValueError
                 self._config[key] = val
                 Context.setTracingMode(OboeTracingMode.get_oboe_trace_mode(val))
-            elif keys == ['custom_trigger_mode']:
+            elif keys == ['trigger_trace']:
                 if not isinstance(val, str):
                     raise ValueError
                 val = val.lower()
@@ -207,8 +208,8 @@ class SolarWindsApmConfig:
                 if val not in ['enabled', 'disabled']:
                     raise ValueError
                 self._config[key] = val
-                # TODO oboe_settings_trigger_set, not tracing mode set
-                # Context.setTracingMode(OboeTracingMode.get_oboe_custom_trigger_mode(val))
+                # TODO oboe_settings_trigger_set, not setTracingMode
+                # Context.setTracingMode(OboeTracingMode.get_oboe_trigger_trace_mode(val))
             elif keys == ['reporter']:
                 if not isinstance(val, str) or val.lower() not in ('udp', 'ssl', 'null', 'file', 'lambda'):
                     raise ValueError

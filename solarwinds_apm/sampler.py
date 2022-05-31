@@ -70,17 +70,17 @@ class _SwSampler(Sampler):
             self.apm_config.get("tracing_mode")
         )
         sample_rate = int(self.apm_config.get("sample_rate"))
-        custom_trigger_mode = OboeTracingMode.get_oboe_custom_trigger_mode(
-            self.apm_config.get("custom_trigger_mode")
+        trigger_trace_mode = OboeTracingMode.get_oboe_trigger_trace_mode(
+            self.apm_config.get("trigger_trace")
         )
 
         options = None
-        trigger_trace = 0
+        trigger_trace_request = 0
         signature = None
         timestamp = None
         if xtraceoptions:
             options = xtraceoptions.options_header
-            trigger_trace = xtraceoptions.trigger_trace
+            trigger_trace_request = xtraceoptions.trigger_trace
             signature = xtraceoptions.signature
             timestamp = xtraceoptions.ts
 
@@ -99,8 +99,8 @@ class _SwSampler(Sampler):
             sw_member_value,
             tracing_mode,
             sample_rate,
-            trigger_trace,
-            custom_trigger_mode,
+            trigger_trace_request,
+            trigger_trace_mode,
             options,
             signature,
             timestamp
@@ -112,8 +112,8 @@ class _SwSampler(Sampler):
                 sw_member_value,
                 tracing_mode,
                 sample_rate,
-                trigger_trace,
-                custom_trigger_mode,
+                trigger_trace_request,
+                trigger_trace_mode,
                 options,
                 signature,
                 timestamp
