@@ -198,8 +198,7 @@ class SolarWindsApmConfig:
                 if val not in ['enabled', 'disabled']:
                     raise ValueError
                 self._config[key] = val
-                # TODO oboe_settings_trigger_set, not setTracingMode
-                # Context.setTracingMode(OboeTracingMode.get_oboe_trigger_trace_mode(val))
+                Context.setTriggerMode(OboeTracingMode.get_oboe_trigger_trace_mode(val))
             elif keys == ['reporter']:
                 if not isinstance(val, str) or val.lower() not in ('udp', 'ssl', 'null', 'file', 'lambda'):
                     raise ValueError
