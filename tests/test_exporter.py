@@ -159,7 +159,19 @@ def fixture_exporter(mocker):
             "sendReport": mocker.Mock()
         }
     )
-    return solarwinds_apm.exporter.SolarWindsSpanExporter(mock_reporter)
+    mock_from_string = mocker.MagicMock()
+    mock_metadata = mocker.patch(
+        "solarwinds_apm.extension.oboe.Metadata",
+    )
+    mock_metadata.configure_mock(
+        **{
+            "fromString": mock_from_string,
+        }
+    )
+    return solarwinds_apm.exporter.SolarWindsSpanExporter(
+        mock_reporter,
+        True
+    )
 
 
 # Tests =============================================================
@@ -226,7 +238,7 @@ class Test_SolarWindsSpanExporter():
         exporter.export(mock_spans_root)
 
         mock_build_md.assert_has_calls([
-            mocker.call("my_span_context")
+            mocker.call(exporter.metadata, "my_span_context")
         ])
         mock_create_entry.assert_called_once_with(
             mock_md,
@@ -272,8 +284,8 @@ class Test_SolarWindsSpanExporter():
 
         mock_span_parent = mock_spans_parent_valid[0].parent
         mock_build_md.assert_has_calls([
-            mocker.call("my_span_context"),
-            mocker.call(mock_span_parent)
+            mocker.call(exporter.metadata, "my_span_context"),
+            mocker.call(exporter.metadata, mock_span_parent)
         ])
         mock_create_entry.assert_called_once_with(
             mock_md,
@@ -355,10 +367,16 @@ class Test_SolarWindsSpanExporter():
             return_value="foo"
         )
         mock_span_context = mocker.MagicMock()
-        exporter._build_metadata(mock_span_context)
+        mock_from_string = mocker.MagicMock()
+        mock_metadata = mocker.Mock()
+        mock_metadata.configure_mock(
+            **{
+                "fromString": mock_from_string,
+            }
+        )
+        exporter._build_metadata(mock_metadata, mock_span_context)
         solarwinds_apm.exporter.W3CTransformer \
             .traceparent_from_context.assert_called_once_with(
                 mock_span_context
             )
-        solarwinds_apm.extension.oboe \
-            .Metadata.fromString.assert_called_once_with("foo")
+        mock_metadata.fromString.assert_called_once_with("foo")
