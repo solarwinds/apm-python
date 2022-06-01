@@ -8,10 +8,6 @@ import logging
 
 from opentelemetry.sdk.trace.export import SpanExporter
 
-from solarwinds_apm.extension.oboe import (
-    Context,
-    Metadata
-)
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 
@@ -22,9 +18,17 @@ class SolarWindsSpanExporter(SpanExporter):
     """SolarWinds custom span exporter for the SolarWinds backend.
     Initialization requires a liboboe reporter.
     """
-    def __init__(self, reporter, *args, **kw_args):
+    def __init__(self, reporter, agent_enabled, *args, **kw_args):
         super().__init__(*args, **kw_args)
         self.reporter = reporter
+        if agent_enabled:
+            from solarwinds_apm.extension.oboe import Context, Metadata
+            self.context = Context
+            self.metadata = Metadata
+        else:
+            from solarwinds_apm.apm_noop import Context, Metadata
+            self.context = Context
+            self.metadata = Metadata
 
     def export(self, spans):
         """Export to AO events and report via liboboe.
@@ -33,19 +37,19 @@ class SolarWindsSpanExporter(SpanExporter):
         to be in microseconds, thus all times need to be divided by 1000.
         """
         for span in spans:
-            md = self._build_metadata(span.get_span_context())
+            md = self._build_metadata(self.metadata, span.get_span_context())
             if span.parent and span.parent.is_valid:
                 # If there is a parent, we need to add an edge to this parent to this entry event
                 logger.debug("Continue trace from {}".format(md.toString()))
-                parent_md = self._build_metadata(span.parent)
-                evt = Context.createEntry(md, int(span.start_time / 1000),
+                parent_md = self._build_metadata(self.metadata, span.parent)
+                evt = self.context.createEntry(md, int(span.start_time / 1000),
                                          parent_md)
             else:
                 # In OpenTelemrtry, there are no events with individual IDs, but only a span ID
                 # and trace ID. Thus, the entry event needs to be generated such that it has the
                 # same op ID as the span ID of the OTel span.
                 logger.debug("Start a new trace {}".format(md.toString()))
-                evt = Context.createEntry(md, int(span.start_time / 1000))
+                evt = self.context.createEntry(md, int(span.start_time / 1000))
             evt.addInfo('Layer', span.name)
             evt.addInfo('Language', 'Python')
             for k, v in span.attributes.items():
@@ -58,12 +62,12 @@ class SolarWindsSpanExporter(SpanExporter):
                 else:
                     self._report_info_event(event)
 
-            evt = Context.createExit(int(span.end_time / 1000))
+            evt = self.context.createExit(int(span.end_time / 1000))
             evt.addInfo('Layer', span.name)
             self.reporter.sendReport(evt, False)
 
     def _report_exception_event(self, event):
-        evt = Context.createEvent(int(event.timestamp / 1000))
+        evt = self.context.createEvent(int(event.timestamp / 1000))
         evt.addInfo('Label', 'error')
         evt.addInfo('Spec', 'error')
         evt.addInfo('ErrorClass', event.attributes.get('exception.type', None))
@@ -82,14 +86,14 @@ class SolarWindsSpanExporter(SpanExporter):
         print("Found info event")
         print(dir(event))
         print(event)
-        evt = Context.createEvent(int(event.timestamp / 1000))
+        evt = self.context.createEvent(int(event.timestamp / 1000))
         evt.addInfo('Label', 'info')
         for k, v in event.attributes.items():
             evt.addInfo(k, v)
         self.reporter.sendReport(evt, False)
 
     @staticmethod
-    def _build_metadata(span_context):
-        return Metadata.fromString(
+    def _build_metadata(metadata, span_context):
+        return metadata.fromString(
             W3CTransformer.traceparent_from_context(span_context)
         )

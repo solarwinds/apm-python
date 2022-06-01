@@ -6,6 +6,7 @@ from pkg_resources import (
     iter_entry_points,
     load_entry_point
 )
+from typing import TYPE_CHECKING
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
@@ -22,8 +23,10 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from solarwinds_apm import DEFAULT_SW_TRACES_EXPORTER
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
-from solarwinds_apm.extension.oboe import Reporter
 from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
+
+if TYPE_CHECKING:
+    from solarwinds_apm.extension.oboe import Reporter
 
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
@@ -44,11 +47,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_otel_components(
         self,
         apm_config: SolarWindsApmConfig,
-        reporter: Reporter,
+        reporter: "Reporter",
     ):
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
-        self._configure_exporter(reporter)
+        self._configure_exporter(reporter, apm_config.agent_enabled)
         self._configure_propagator()
         self._configure_response_propagator()
 
@@ -76,10 +79,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _configure_exporter(
         self,
-        reporter: Reporter
+        reporter: "Reporter",
+        agent_enabled: bool = True,
     ):
         """Configure SolarWinds or env-specified OTel span exporter.
-        Initialization of SolarWinds exporter requires a liboboe reporter."""
+        Initialization of SolarWinds exporter requires a liboboe reporter
+        and agent_enabled flag."""
         exporter = None
         environ_exporter_name = environ.get(OTEL_TRACES_EXPORTER)
 
@@ -89,7 +94,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     "solarwinds_apm",
                     "opentelemetry_traces_exporter",
                     environ_exporter_name
-                )(reporter)
+                )(reporter, agent_enabled)
             except:
                 logger.exception(
                     "Failed to load configured exporter {} with reporter".format(
@@ -142,8 +147,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _initialize_solarwinds_reporter(
         self,
         apm_config: SolarWindsApmConfig
-    ) -> Reporter:
+    ) -> "Reporter":
         """Initialize SolarWinds reporter used by sampler and exporter, using SolarWindsApmConfig. This establishes collector and sampling settings in a background thread."""
+        if apm_config.agent_enabled:
+            from solarwinds_apm.extension.oboe import Reporter
+        else:
+            from solarwinds_apm.apm_noop import Reporter
 
         return Reporter(
             hostname_alias=apm_config.get("hostname_alias"),

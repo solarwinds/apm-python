@@ -20,12 +20,12 @@ from solarwinds_apm import (
     SW_TRACESTATE_KEY
 )
 from solarwinds_apm.apm_config import OboeTracingMode
-from solarwinds_apm.extension.oboe import Context
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
+    from solarwinds_apm.extension.oboe import Context
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,13 @@ class _SwSampler(Sampler):
 
     def __init__(self, apm_config: "SolarWindsApmConfig"):
         self.apm_config = apm_config
+        self.context = None
+        if self.apm_config.agent_enabled:
+            from solarwinds_apm.extension.oboe import Context
+            self.context = Context
+        else:
+            from solarwinds_apm.apm_noop import Context
+            self.context = Context
 
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
@@ -109,7 +116,7 @@ class _SwSampler(Sampler):
         ))
         do_metrics, do_sample, \
             rate, source, bucket_rate, bucket_cap, decision_type, \
-            auth, status_msg, auth_msg, status = Context.getDecisions(
+            auth, status_msg, auth_msg, status = self.context.getDecisions(
                 tracestring,
                 sw_member_value,
                 tracing_mode,

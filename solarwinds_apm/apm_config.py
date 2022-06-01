@@ -3,16 +3,12 @@ from collections import defaultdict
 from functools import reduce
 import logging
 import os
+import sys
+from typing import Any
 
 from solarwinds_apm import apm_logging
-from solarwinds_apm.extension.oboe import Context
-from solarwinds_apm.apm_logging import ApmLoggingLevel
 
 logger = logging.getLogger(__name__)
-
-
-# TODO agent_enabled logic
-
 
 class OboeTracingMode:
     """Provides an interface to translate the string representation of tracing_mode to the C-extension equivalent."""
@@ -23,7 +19,7 @@ class OboeTracingMode:
     OBOE_TRIGGER_ENABLED = 1
 
     @classmethod
-    def get_oboe_trace_mode(cls, tracing_mode):
+    def get_oboe_trace_mode(cls, tracing_mode: str) -> int:
         if tracing_mode == 'enabled':
             return cls.OBOE_TRACE_ENABLED
         if tracing_mode == 'disabled':
@@ -31,7 +27,7 @@ class OboeTracingMode:
         return cls.OBOE_SETTINGS_UNSET
 
     @classmethod
-    def get_oboe_trigger_trace_mode(cls, trigger_trace_mode):
+    def get_oboe_trigger_trace_mode(cls, trigger_trace_mode: str) -> int:
         if trigger_trace_mode == 'enabled':
             return cls.OBOE_TRIGGER_ENABLED
         if trigger_trace_mode == 'disabled':
@@ -49,7 +45,7 @@ class SolarWindsApmConfig:
 
     delimiter = '.'
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         self._config = dict()
         # Update the config with default values
         self._config = {
@@ -59,7 +55,7 @@ class SolarWindsApmConfig:
             'trigger_trace': 'enabled',
             'collector': '',  # the collector address in host:port format.
             'reporter': '',  # the reporter mode, either 'udp' or 'ssl'.
-            'debug_level': ApmLoggingLevel.default_level(),
+            'debug_level': apm_logging.ApmLoggingLevel.default_level(),
             'service_key': '',
             'hostname_alias': '',
             'trustedpath': '',
@@ -83,6 +79,13 @@ class SolarWindsApmConfig:
             'inst': defaultdict(lambda: True),
             'is_grpc_clean_hack_enabled': False,
         }
+        self.agent_enabled = self._calculate_agent_enabled()
+        if self.agent_enabled:
+            from solarwinds_apm.extension.oboe import Context
+            self.context = Context
+        else:
+            from solarwinds_apm.apm_noop import Context
+            self.context = Context
 
         cnf_file = os.environ.get('SOLARWINDS_APM_CONFIG_PYTHON', os.environ.get('SOLARWINDS_PYCONF', None))
         if cnf_file:
@@ -90,8 +93,60 @@ class SolarWindsApmConfig:
 
         self.update_with_env_var()
         self.update_with_kwargs(kwargs)
+       
+    def _is_lambda(self):
+        """Checks if agent is running in an AWS Lambda environment."""
+        if os.environ.get('AWS_LAMBDA_FUNCTION_NAME') and os.environ.get("LAMBDA_TASK_ROOT"):
+            logger.warning("AWS Lambda is not yet supported by Python SolarWinds APM.")
+            return True
+        return False
 
-    def __setitem__(self, key, value):
+    def _calculate_agent_enabled(self) -> bool:
+        """Checks if agent is enabled/disabled based on config"""
+        agent_enabled = True
+        try:
+            if os.environ.get('SOLARWINDS_AGENT_ENABLED', 'true').lower() == 'false':
+                agent_enabled = False
+                logger.info(
+                    "SolarWinds APM is disabled and will not report any traces because the environment variable "
+                    "SOLARWINDS_AGENT_ENABLED is set to 'false'! If this is not intended either unset the variable or set it to "
+                    "a value other than false. Note that the value of SOLARWINDS_AGENT_ENABLED is case-insensitive.")
+                raise ImportError
+
+            if not os.environ.get('SOLARWINDS_SERVICE_KEY', None) and not self.is_lambda():
+                logger.error("Missing service key. Tracing disabled.")
+                agent_enabled = False
+                raise ImportError
+        except ImportError as e:
+            try:
+                if agent_enabled:
+                    # only log the following messages if agent wasn't explicitly disabled
+                    # via SOLARWINDS_AGENT_ENABLED or due to missing service key
+                    if sys.platform.startswith('linux'):
+                        logger.warning(
+                            """Missing extension library.
+                                    Tracing is disabled and will go into no-op mode.
+                                    Contact support@appoptics.com if this is unexpected.
+                                    Error: %s
+                                    See: https://docs.appoptics.com/kb/apm_tracing/python/""" % e)
+                    else:
+                        logger.warning(
+                            """Platform %s not yet supported.
+                                    See: https://docs.appoptics.com/kb/apm_tracing/supported_platforms/
+                                    Tracing is disabled and will go into no-op mode.
+                                    Contact support@appoptics.com if this is unexpected.""" % sys.platform)
+            except ImportError as err:
+                logger.error(
+                    """Unexpected error: %s.
+                            Please reinstall or contact support@appoptics.com.""" % err)
+            finally:
+                # regardless of how we got into this (outer) exception block, the agent will not be able to trace (and thus be
+                # disabled)
+                agent_enabled = False
+        
+        return agent_enabled
+
+    def __setitem__(self, key: str, value: str) -> None:
         """Refresh the configurations in liboboe global struct while user changes settings.
         """
         if key == 'tracing_mode':
@@ -106,24 +161,24 @@ class SolarWindsApmConfig:
         else:
             logger.warning('Unsupported SolarWinds APM config key: {key}'.format(key=key))
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         return self._config[key]
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         del self._config[key]
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Any = None):
         """Get the value of key. Nested keys separated by a dot are also accepted."""
         key = key.split(self.delimiter)
         value = reduce(lambda d, k: d.get(k, None) if isinstance(d, dict) else None, key, self._config)
         return value if value is not None else default
 
-    def update_with_cnf_file(self, cnf_path):
+    def update_with_cnf_file(self, cnf_path: str) -> None:
         """Update the settings with the config file, if any."""
         # TODO
         pass
 
-    def update_with_env_var(self):
+    def update_with_env_var(self) -> None:
         """Update the settings with environment variables."""
         val = os.environ.get('SOLARWINDS_APM_PREPEND_DOMAIN_NAME', None)
         if val is not None:
@@ -144,7 +199,7 @@ class SolarWindsApmConfig:
         # TODO
         pass
 
-    def _set_config_value(self, keys, val):
+    def _set_config_value(self, keys: str, val: Any) -> Any:
         """Sets the value of the config option indexed by 'keys' to 'val', where 'keys' is a nested key (separated by
         self.delimiter, i.e., the position of the element to be changed in the nested dictionary)"""
         def _convert_to_bool(val):
@@ -188,7 +243,7 @@ class SolarWindsApmConfig:
                 if val not in ['enabled', 'disabled']:
                     raise ValueError
                 self._config[key] = val
-                Context.setTracingMode(OboeTracingMode.get_oboe_trace_mode(val))
+                self.context.setTracingMode(OboeTracingMode.get_oboe_trace_mode(val))
             elif keys == ['trigger_trace']:
                 if not isinstance(val, str):
                     raise ValueError
@@ -198,14 +253,14 @@ class SolarWindsApmConfig:
                 if val not in ['enabled', 'disabled']:
                     raise ValueError
                 self._config[key] = val
-                Context.setTriggerMode(OboeTracingMode.get_oboe_trigger_trace_mode(val))
+                self.context.setTriggerMode(OboeTracingMode.get_oboe_trigger_trace_mode(val))
             elif keys == ['reporter']:
                 if not isinstance(val, str) or val.lower() not in ('udp', 'ssl', 'null', 'file', 'lambda'):
                     raise ValueError
                 self._config[key] = val.lower()
             elif keys == ['debug_level']:
                 val = int(val)
-                if not ApmLoggingLevel.is_valid_level(val):
+                if not apm_logging.ApmLoggingLevel.is_valid_level(val):
                     raise ValueError
                 self._config[key] = val
                 # update logging level of agent logger
