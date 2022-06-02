@@ -45,7 +45,7 @@ class SolarWindsApmConfig:
 
     delimiter = '.'
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: int) -> None:
         self._config = dict()
         # Update the config with default values
         self._config = {

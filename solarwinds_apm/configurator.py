@@ -1,4 +1,4 @@
-"""Module to initialize OpenTelemetry SDK components to work with SolarWinds backend"""
+"""Module to initialize OpenTelemetry SDK components and liboboe to work with SolarWinds backend"""
 
 import logging
 from os import environ
@@ -38,7 +38,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     # https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-sdk/src/opentelemetry/sdk/trace/sampling.py#L364-L380
     _DEFAULT_SW_TRACES_SAMPLER = "solarwinds_sampler"
 
-    def _configure(self, **kwargs):
+    def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
         apm_config = SolarWindsApmConfig()
         reporter = self._initialize_solarwinds_reporter(apm_config)
@@ -48,7 +48,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
         reporter: "Reporter",
-    ):
+    ) -> None:
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
         self._configure_exporter(reporter, apm_config.agent_enabled)
@@ -58,7 +58,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_sampler(
         self,
         apm_config: SolarWindsApmConfig,
-    ):
+    ) -> None:
         """Always configure SolarWinds OTel sampler"""
         try:
             sampler = load_entry_point(
@@ -81,7 +81,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         reporter: "Reporter",
         agent_enabled: bool = True,
-    ):
+    ) -> None:
         """Configure SolarWinds or env-specified OTel span exporter.
         Initialization of SolarWinds exporter requires a liboboe reporter
         and agent_enabled flag."""
@@ -120,7 +120,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         span_processor = BatchSpanProcessor(exporter)
         trace.get_tracer_provider().add_span_processor(span_processor)
 
-    def _configure_propagator(self):
+    def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators"""
         propagators = []
         environ_propagators_names = environ.get(OTEL_PROPAGATORS).split(",")
@@ -140,7 +140,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 raise
         set_global_textmap(CompositePropagator(propagators))
 
-    def _configure_response_propagator(self):
+    def _configure_response_propagator(self) -> None:
         # Set global HTTP response propagator
         set_global_response_propagator(SolarWindsTraceResponsePropagator())
 
