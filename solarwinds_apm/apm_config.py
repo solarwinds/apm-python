@@ -43,7 +43,11 @@ class SolarWindsApmConfig:
     done only once during the initialization and the properties cannot be refreshed.
     """
 
-    delimiter = '.'
+    # TODO: Update support doc urls and email alias
+    _DELIMITER = '.'
+    _DOC_SUPPORTED_PLATFORMS = 'https://docs.appoptics.com/kb/apm_tracing/supported_platforms/'
+    _DOC_TRACING_PYTHON = 'https://docs.appoptics.com/kb/apm_tracing/python/'
+    _SUPPORT_EMAIL = 'support@appoptics.com'
 
     def __init__(self, **kwargs: int) -> None:
         self._config = dict()
@@ -125,20 +129,31 @@ class SolarWindsApmConfig:
                     if sys.platform.startswith('linux'):
                         logger.warning(
                             """Missing extension library.
-                                    Tracing is disabled and will go into no-op mode.
-                                    Contact support@appoptics.com if this is unexpected.
-                                    Error: %s
-                                    See: https://docs.appoptics.com/kb/apm_tracing/python/""" % e)
+                            Tracing is disabled and will go into no-op mode.
+                            Contact {} if this is unexpected.
+                            Error: {}
+                            See: {}""".format(
+                                self._SUPPORT_EMAIL,
+                                e,
+                                self._DOC_TRACING_PYTHON,
+                            ))
                     else:
                         logger.warning(
-                            """Platform %s not yet supported.
-                                    See: https://docs.appoptics.com/kb/apm_tracing/supported_platforms/
-                                    Tracing is disabled and will go into no-op mode.
-                                    Contact support@appoptics.com if this is unexpected.""" % sys.platform)
+                            """Platform {} not yet supported.
+                            See: {}
+                            Tracing is disabled and will go into no-op mode.
+                            Contact {} if this is unexpected.""".format(
+                                sys.platform,
+                                self._DOC_SUPPORTED_PLATFORMS,
+                                self._SUPPORT_EMAIL,
+                            ))
             except ImportError as err:
                 logger.error(
-                    """Unexpected error: %s.
-                            Please reinstall or contact support@appoptics.com.""" % err)
+                    """Unexpected error: {}.
+                    Please reinstall or contact {}.""".format(
+                        err,
+                        self._SUPPORT_EMAIL,
+                    ))
             finally:
                 # regardless of how we got into this (outer) exception block, the agent will not be able to trace (and thus be
                 # disabled)
@@ -169,7 +184,7 @@ class SolarWindsApmConfig:
 
     def get(self, key: str, default: Any = None):
         """Get the value of key. Nested keys separated by a dot are also accepted."""
-        key = key.split(self.delimiter)
+        key = key.split(self._DELIMITER)
         value = reduce(lambda d, k: d.get(k, None) if isinstance(d, dict) else None, key, self._config)
         return value if value is not None else default
 
@@ -211,7 +226,7 @@ class SolarWindsApmConfig:
         # by defaulting to None in d.get(), we do not allow the creation of any new (key, value) pair, even
         # when we are handling a defaultdict (i.e., with this we do not allow e.g. the creation of new instrumentations
         # through the config)
-        keys = keys.split(self.delimiter)
+        keys = keys.split(self._DELIMITER)
         sub_dict = reduce(lambda d, key: d.get(key, None) if isinstance(d, dict) else None, keys[:-1], self._config)
         key = keys[-1]
         try:
