@@ -21,6 +21,8 @@ nothing:
 	@echo -e "\nHi! How can I help you?"
 	@echo -e "  - 'make wrapper':"
 	@echo -e "          Locally generate SWIG wrapper for C/C++ headers."
+	@echo -e "  - 'STAGING_OBOE=1 make wrapper':"
+	@echo -e "          Locally generate SWIG wrapper for C/C++ headers using liboboe VERSION from staging."
 	@echo -e "  - 'make wrapper-from-local':"
 	@echo -e "          Locally generate SWIG wrapper for C/C++ headers using neighbouring oboe checkout."
 	@echo -e "Check the Makefile for other targets/options.\n"
@@ -37,8 +39,8 @@ LIBOBOESERVERLESS := "liboboe-1.0-lambda-x86_64.so.0.0.0"
 OBOEVERSION := $(shell cat ./solarwinds_apm/extension/VERSION)
 
 # specification of source of header and library files
-ifdef S3_OBOE
-    OBOEREPO := "https://agent-binaries.global.st-ssp.solarwinds.com/c-lib/${OBOEVERSION}"
+ifdef STAGING_OBOE
+    OBOEREPO := "https://agent-binaries.global.st-ssp.solarwinds.com/apm/c-lib/${OBOEVERSION}"
 else
     OBOEREPO := "https://agent-binaries.cloud.solarwinds.com/apm/c-lib/${OBOEVERSION}"
 endif
