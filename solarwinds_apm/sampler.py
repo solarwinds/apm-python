@@ -308,15 +308,14 @@ class _SwSampler(Sampler):
         if internal_sw_keys:
             new_attributes[self._INTERNAL_SW_KEYS] = internal_sw_keys
     
-        # If not a liboboe continued trace, set service entry internal KVs       
-        if not self.is_decision_continued(decision):
-            new_attributes[self._INTERNAL_BUCKET_CAPACITY] = "{}".format(decision["bucket_cap"])
-            new_attributes[self._INTERNAL_BUCKET_RATE] = "{}".format(decision["bucket_rate"])
-            new_attributes[self._INTERNAL_SAMPLE_RATE] = decision["rate"]
-            new_attributes[self._INTERNAL_SAMPLE_SOURCE] = decision["source"]
-            logger.debug(
-                "Set attributes with service entry internal KVs: {}".format(new_attributes)
-            )
+        # Always (root or is_remote) set service entry internal KVs       
+        new_attributes[self._INTERNAL_BUCKET_CAPACITY] = "{}".format(decision["bucket_cap"])
+        new_attributes[self._INTERNAL_BUCKET_RATE] = "{}".format(decision["bucket_rate"])
+        new_attributes[self._INTERNAL_SAMPLE_RATE] = decision["rate"]
+        new_attributes[self._INTERNAL_SAMPLE_SOURCE] = decision["source"]
+        logger.debug(
+            "Set attributes with service entry internal KVs: {}".format(new_attributes)
+        )
 
         # Trace's root span has no valid traceparent nor tracestate
         # so we can't calculate remaining attributes
