@@ -73,9 +73,15 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
             )
             raise
-        trace.set_tracer_provider(
-            TracerProvider(sampler=sampler)
-        )
+
+        if apm_config.agent_enabled:
+            trace.set_tracer_provider(
+                TracerProvider(sampler=sampler)
+            )
+        else:
+            trace.set_tracer_provider(
+                trace.NoOpTracerProvider(sampler=sampler)
+            )
 
     def _configure_exporter(
         self,
