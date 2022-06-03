@@ -6,7 +6,9 @@ import os
 import sys
 from typing import Any
 
-from solarwinds_apm import apm_logging
+from solarwinds_apm import (
+    apm_logging, apm_configparser, apm_transactionfilter
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,11 +45,21 @@ class SolarWindsApmConfig:
     done only once during the initialization and the properties cannot be refreshed.
     """
 
-    # TODO: Update support doc urls and email alias
+    # TODO: Update support doc urls and email alias for SWO
     _DELIMITER = '.'
     _DOC_SUPPORTED_PLATFORMS = 'https://docs.appoptics.com/kb/apm_tracing/supported_platforms/'
     _DOC_TRACING_PYTHON = 'https://docs.appoptics.com/kb/apm_tracing/python/'
     _SUPPORT_EMAIL = 'support@appoptics.com'
+
+    # TODO: Needed? see below usage
+    _SUPPORTED_INSTRUMENTATIONS = (
+        'django_orm',
+        'httplib',
+        'memcache',
+        'pymongo',
+        'redis',
+        'sqlalchemy',
+    )
 
     def __init__(self, **kwargs: int) -> None:
         self._config = dict()
@@ -84,6 +96,7 @@ class SolarWindsApmConfig:
             'is_grpc_clean_hack_enabled': False,
         }
         self.agent_enabled = self._calculate_agent_enabled()
+
         if self.agent_enabled:
             from solarwinds_apm.extension.oboe import Context
             self.context = Context
@@ -91,13 +104,16 @@ class SolarWindsApmConfig:
             from solarwinds_apm.apm_noop import Context
             self.context = Context
 
-        cnf_file = os.environ.get('SOLARWINDS_APM_CONFIG_PYTHON', os.environ.get('SOLARWINDS_PYCONF', None))
-        if cnf_file:
-            self.update_with_cnf_file(cnf_file)
+        # TODO Implement config with cnf_file after alpha
+        # cnf_file = os.environ.get('SOLARWINDS_APM_CONFIG_PYTHON', os.environ.get('SOLARWINDS_PYCONF', None))
+        # if cnf_file:
+        #     self.update_with_cnf_file(cnf_file)
 
         self.update_with_env_var()
-        self.update_with_kwargs(kwargs)
-       
+
+        # TODO Implement in-code config with kwargs after alpha
+        # self.update_with_kwargs(kwargs)
+
     def _is_lambda(self):
         """Checks if agent is running in an AWS Lambda environment."""
         if os.environ.get('AWS_LAMBDA_FUNCTION_NAME') and os.environ.get("LAMBDA_TASK_ROOT"):
@@ -117,7 +133,7 @@ class SolarWindsApmConfig:
                     "a value other than false. Note that the value of SOLARWINDS_AGENT_ENABLED is case-insensitive.")
                 raise ImportError
 
-            if not os.environ.get('SOLARWINDS_SERVICE_KEY', None) and not self.is_lambda():
+            if not os.environ.get('SOLARWINDS_SERVICE_KEY', None) and not self._is_lambda():
                 logger.error("Missing service key. Tracing disabled.")
                 agent_enabled = False
                 raise ImportError
@@ -190,7 +206,7 @@ class SolarWindsApmConfig:
 
     def update_with_cnf_file(self, cnf_path: str) -> None:
         """Update the settings with the config file, if any."""
-        # TODO
+        # TODO Implement config with cnf_file after alpha
         pass
 
     def update_with_env_var(self) -> None:
@@ -211,7 +227,7 @@ class SolarWindsApmConfig:
 
     def update_with_kwargs(self, kwargs):
         """Update the configuration settings with (in-code) keyword arguments"""
-        # TODO
+        # TODO Implement in-code config with kwargs after alpha
         pass
 
     def _set_config_value(self, keys: str, val: Any) -> Any:
@@ -291,7 +307,8 @@ class SolarWindsApmConfig:
                 self._config[key] = val.lower()
             elif keys == ['is_grpc_clean_hack_enabled']:
                 self._config[key] = _convert_to_bool(val)
-            elif (keys[0] == 'inst' and keys[1] in self.supported_instrumentations and keys[2] == 'collect_backtraces'):
+            # TODO Is this needed for Python OTel instrumentation libraries?
+            elif (keys[0] == 'inst' and keys[1] in self._SUPPORTED_INSTRUMENTATIONS and keys[2] == 'collect_backtraces'):
                 self._config[keys[0]][keys[1]][keys[2]] = _convert_to_bool(val)
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
