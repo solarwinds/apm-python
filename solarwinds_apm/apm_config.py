@@ -65,7 +65,7 @@ class SolarWindsApmConfig:
         self._config = dict()
         # Update the config with default values
         self._config = {
-            # 'tracing_mode' is unset by default
+            # 'tracing_mode' is unset by default and not supported in NH Python
             'tracing_mode': None,
             # 'trigger_trace' is enabled by default
             'trigger_trace': 'enabled',

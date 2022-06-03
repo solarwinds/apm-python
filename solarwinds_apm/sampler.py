@@ -74,9 +74,9 @@ class _SwSampler(Sampler):
             )
         sw_member_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY)
 
-        tracing_mode = OboeTracingMode.get_oboe_trace_mode(
-            self.apm_config.get("tracing_mode")
-        )
+        # 'tracing_mode' is not supported in NH Python, so give as unset
+        tracing_mode = self._UNSET
+
         trigger_trace_mode = OboeTracingMode.get_oboe_trigger_trace_mode(
             self.apm_config.get("trigger_trace")
         )
@@ -99,8 +99,8 @@ class _SwSampler(Sampler):
             "sw_member_value: {}, "
             "tracing_mode: {}, "
             "sample_rate: {}, "
-            "trigger_trace: {}, "
-            "trigger_tracing_mode_disabled: {}, "
+            "trigger_trace_request: {}, "
+            "trigger_trace_mode: {}, "
             "options: {}, "
             "signature: {}, "
             "timestamp: {}".format(
