@@ -134,7 +134,6 @@ class TestFunctionalHeaderPropagation(PropagationTest, TestBase):
 
     def test_attrs_with_valid_traceparent_sw_in_tracestate_do_sample(self):
         """Acceptance Criterion #4, decision do_sample"""
-        FlaskInstrumentor().instrument()
         resp = None
 
         # # TODO This is not working
@@ -190,8 +189,6 @@ class TestFunctionalHeaderPropagation(PropagationTest, TestBase):
         #   - absent: sw.tracestate_parent_id
         assert all(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert not "sw.tracestate_parent_id" in spans[0].attributes
-
-        FlaskInstrumentor().uninstrument()
         
     def test_attrs_with_valid_traceparent_sw_in_tracestate_not_do_sample(self):
         """Acceptance Criterion #4, decision not do_sample"""
