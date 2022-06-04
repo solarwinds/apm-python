@@ -9,7 +9,7 @@ from opentelemetry.environment_variables import (
 )
 from opentelemetry.instrumentation.distro import BaseDistro
 
-from opentelemetry_distro_solarwinds import DEFAULT_SW_TRACES_EXPORTER
+from solarwinds_apm import DEFAULT_SW_TRACES_EXPORTER
 
 logger = logging.getLogger(__name__)
 

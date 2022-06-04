@@ -4,3 +4,4 @@
 !.gitignore
 !__init__.py
 !gen_bindings.sh
+!VERSION

@@ -14,14 +14,14 @@ from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import SpanContext, TraceState
 from opentelemetry.util.types import Attributes
 
-from opentelemetry_distro_solarwinds import (
+from solarwinds_apm import (
     COMMA_W3C_SANITIZED,
     EQUALS_W3C_SANITIZED,
     SW_TRACESTATE_KEY
 )
-from opentelemetry_distro_solarwinds.extension.oboe import Context
-from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
-from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
+from solarwinds_apm.extension.oboe import Context
+from solarwinds_apm.traceoptions import XTraceOptions
+from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +166,7 @@ class _SwSampler(Sampler):
         """
         response = []
 
-        if xtraceoptions.signature:
+        if xtraceoptions.signature and decision["auth_msg"]:
             response.append(EQUALS_W3C_SANITIZED.join([
                 self._XTRACEOPTIONS_RESP_AUTH,
                 decision["auth_msg"]
@@ -187,7 +187,7 @@ class _SwSampler(Sampler):
                 else:
                     trigger_msg = decision["status_msg"]
             else:
-                trigger_msg = self.XTRACEOPTIONS_TRIGGER_NOT_REQUESTED
+                trigger_msg = self._XTRACEOPTIONS_RESP_TRIGGER_NOT_REQUESTED
             response.append(EQUALS_W3C_SANITIZED.join([
                 self._XTRACEOPTIONS_RESP_TRIGGER_TRACE,
                 trigger_msg
@@ -197,7 +197,7 @@ class _SwSampler(Sampler):
             response.append(
                 EQUALS_W3C_SANITIZED.join([
                     self._XTRACEOPTIONS_RESP_IGNORED,
-                    (COMMA_W3C_SANITIZED.join(decision["ignored"]))
+                    (COMMA_W3C_SANITIZED.join(xtraceoptions.ignored))
                 ])
             )
 

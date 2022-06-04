@@ -7,14 +7,14 @@ from opentelemetry.instrumentation.propagators import ResponsePropagator
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
-from opentelemetry_distro_solarwinds import (
+from solarwinds_apm import (
     COMMA,
     COMMA_W3C_SANITIZED,
     EQUALS,
     EQUALS_W3C_SANITIZED
 )
-from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
-from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
+from solarwinds_apm.traceoptions import XTraceOptions
+from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__file__)
 

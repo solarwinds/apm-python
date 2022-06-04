@@ -2,7 +2,7 @@
 """
 
 import logging
-from opentelemetry.context.context import Context
+from opentelemetry.sdk.trace import SpanContext
 
 logger = logging.getLogger(__file__)
 
@@ -31,7 +31,7 @@ class W3CTransformer():
         return cls._TRACE_FLAGS_HEX.format(trace_flags)
 
     @classmethod
-    def traceparent_from_context(cls, span_context: Context) -> str:
+    def traceparent_from_context(cls, span_context: SpanContext) -> str:
         """Generates a liboboe W3C compatible trace_context from
         provided OTel span context."""
         template = "-".join([
@@ -49,7 +49,7 @@ class W3CTransformer():
         return xtr
 
     @classmethod
-    def sw_from_context(cls, span_context: Context) -> str:
+    def sw_from_context(cls, span_context: SpanContext) -> str:
         """Formats tracestate sw value from SpanContext as 16-byte span_id
         with 8-bit trace_flags.
         

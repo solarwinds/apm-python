@@ -23,9 +23,9 @@ from opentelemetry.sdk.trace import (
 )
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from opentelemetry_distro_solarwinds import DEFAULT_SW_TRACES_EXPORTER
-from opentelemetry_distro_solarwinds.extension.oboe import Reporter
-from opentelemetry_distro_solarwinds.response_propagator import SolarWindsTraceResponsePropagator
+from solarwinds_apm import DEFAULT_SW_TRACES_EXPORTER
+from solarwinds_apm.extension.oboe import Reporter
+from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
 
 logger = logging.getLogger(__name__)
 
@@ -42,14 +42,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self._configure_sampler()
         self._configure_exporter(reporter)
         self._configure_propagator()
-        # Set global HTTP response propagator
-        set_global_response_propagator(SolarWindsTraceResponsePropagator())
+        self._configure_response_propagator()
 
     def _configure_sampler(self):
         """Always configure SolarWinds OTel sampler"""
         try:
             sampler = load_entry_point(
-                "opentelemetry_distro_solarwinds",
+                "solarwinds_apm",
                 "opentelemetry_traces_sampler",
                 self._DEFAULT_SW_TRACES_SAMPLER
             )()
@@ -64,7 +63,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             TracerProvider(sampler=sampler)
         )
 
-    def _configure_exporter(self, reporter):
+    def _configure_exporter(self, reporter=None):
         """Configure SolarWinds or env-specified OTel span exporter.
         Initialization of SolarWinds exporter requires a liboboe reporter."""
         exporter = None
@@ -73,7 +72,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         if environ_exporter_name == DEFAULT_SW_TRACES_EXPORTER:
             try:
                 exporter = load_entry_point(
-                    "opentelemetry_distro_solarwinds",
+                    "solarwinds_apm",
                     "opentelemetry_traces_exporter",
                     environ_exporter_name
                 )(reporter)
@@ -122,6 +121,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 raise
         set_global_textmap(CompositePropagator(propagators))
 
+    def _configure_response_propagator(self):
+        # Set global HTTP response propagator
+        set_global_response_propagator(SolarWindsTraceResponsePropagator())
+
     def _initialize_solarwinds_reporter(self) -> Reporter:
         """Initialize SolarWinds reporter used by sampler and exporter. This establishes collector and sampling settings in a background thread."""
         log_level = environ.get('SOLARWINDS_DEBUG_LEVEL', 3)
@@ -141,7 +144,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             reporter='ssl',
             host=environ.get('SOLARWINDS_COLLECTOR', ''),
             service_key=environ.get('SOLARWINDS_SERVICE_KEY', ''),
-            trusted_path='',
+            trusted_path=environ.get('SOLARWINDS_TRUSTEDPATH', ''),
             buffer_size=-1,
             trace_metrics=-1,
             histogram_precision=-1,

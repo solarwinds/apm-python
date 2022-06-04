@@ -1,5 +1,3 @@
-__version__ = "0.0.1"
-
 COMMA = ","
 COMMA_W3C_SANITIZED = "...."
 EQUALS = "="

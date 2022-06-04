@@ -1,0 +1,5 @@
+opentelemetry-test-utils==0.30b0
+pytest
+pytest-cov
+pytest-mock
+requests

@@ -6,13 +6,13 @@ from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
-from opentelemetry_distro_solarwinds import (
+from solarwinds_apm import (
     OTEL_CONTEXT_SW_OPTIONS_KEY,
     OTEL_CONTEXT_SW_SIGNATURE_KEY,
     SW_TRACESTATE_KEY
 )
-from opentelemetry_distro_solarwinds.traceoptions import XTraceOptions
-from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
+from solarwinds_apm.traceoptions import XTraceOptions
+from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__file__)
 

@@ -1,47 +1,102 @@
 # opentelemetry-python-instrumentation-custom-distro
-The custom distro to extend the OpenTelemetry Python agent for compatibility with AO
+SolarWinds APM custom distro for OpenTelemetry Python compatibility with SolarWinds Observability backend.
 
+----
 
-## Prerequisites
+## Installation
+
+TODO: `pypi` image
+
+TODO: `pip install solarwinds_apm`
+
+----
+## Development
+
+### Prerequisites
+
+* Docker
 
 ### Git Repos and Directory Structure
 
-The code in this repository makes use of code located in an experimental branch of the [oboe](https://github.com/librato/oboe) GIT repository. Thus, first make sure that you clone the following repositories into the same root directory. For example, if your development directory is `~/gitrepos/`, please clone the `oboe` and the `opentelemetry-python-instrumentation-custom-distro` repositories under `~/gitrepos`, so that your directory structure looks as shown below:
+The following is highly recommended for development work on SolarWinds APM.
+
+This repo can be used to auto-instrument [testbed apps](https://github.com/appoptics/opentelemetry-python-testbed) for manual testing and exploring. The code in this repository uses code in [oboe](https://github.com/librato/oboe) via C-extension with SWIG (see further below). Setup of the oboe extension is done by downloading oboe from S3 OR with local oboe code.
+
+To accommodate these dependencies locally, clone the following repositories into the same root directory. For example, if your development directory is `~/gitrepos/`, please clone `oboe`, `opentelemetry-python-testbed`, and `opentelemetry-python-instrumentation-custom-distro` repositories under `~/gitrepos`, so that your directory structure looks as shown below:
 ```
 ~/gitrepos/
 |
 |----oboe/
 |
+|----opentelemetry-python-testbed/
+|
 |----opentelemetry-python-instrumentation-custom-distro/
 ```
-Then in `oboe`, checkout the [add-otel-oboe-features branch](https://github.com/librato/oboe/tree/add-otel-oboe-features).
+### Build Container
 
-### Development (Build) Container
-
-In order to compile the C-extension which is part of this Python module, SWIG needs to be installed. This repository provides a Linux-based Dockerfile which can be used to create a Docker image in which the C-extension can be build easily.
-
-To build the Docker image which provides all necessary build tools, run the following command inside the `dev_tools` directory:
+To create and run the Docker container which provides all necessary build tools, run the following command:
 ```bash
 docker build -t dev-container .
+./run_docker_dev.sh
 ```
 
-Then you can start a build container by running `./run_docker_dev.sh` from within the `dev_tools` location. This will provide you with a docker container which has all volumes mapped as required so you can easily build the agent.
+The successfully-built build container can use [SWIG](https://www.swig.org/Doc1.3/Python.html), a tool to connect C/C++ libraries with other languages via compiling a C-extension. This can be done with this repo's `Makefile` as described next.
 
-## How to Build and Install the Agent
-* Switch into the build container by running
-    ```bash
-    ./run_docker_dev.sh
-   ```
-  from within the `dev_tools` directory.
-* Inside the docker container, you can now build the agent with the provided Makefile in the container's `dev_tools` directory.
+#### Install Agent in Development Mode
 
-### Install Agent from Source in Development Mode
-* Execute `make wrapper` inside the build container. This copies the C-extension artifacts and builds the SWIG bindings.
-* Install the agent in your application (Linux environment only) in development mode by running
+##### (A) oboe S3 download
+
+If you don't need to make changes to oboe:
+
+1. Inside the build container: `make wrapper`. This downloads the version of oboe defined in `extension/VERSION` from S3 and builds the SWIG bindings.
+2. Install the agent in your application (Linux environment only) in development mode by running
    ```python
    pip install -Ie ~/gitrepos/opentelemetry-python-instrumentation-custom-distro/
    ```
-When installing the agent in development mode every change in the Python source code will be reflected in the Python environment directly without re-installation. However, if changes have been made to the C-extension files, you need to reinstall the agent (as described above) to reflect these changes in the Python environment.
+When installing the agent in development mode, every change in the Python source code will be reflected in the Python environment directly without re-installation.
 
-### Build Agent Source Distribution Archive
-* Execute `make sdist` inside the build container. This will create a zip archive (source distribution) of the Python module under the `dist` directory.
+##### (B) local oboe build
+
+If you are making local changes to oboe for the custom-distro to use:
+
+1. Go to `oboe/liboboe` repo, save your changes.
+2. Run this container: `docker run -it --rm -v "$PWD"/../:/oboe tracetools/clib-amazonlinux-build bash`
+3. Inside the container: `INSTALL_DEPS=aws oboe/liboboe/build-scripts/c-lib.sh`
+4. In another Terminal at `oboe/liboboe` while container is still running, after `c-lib.sh` is done: `docker cp <container_id>:/liboboe-1.0-x86_64.so.0.0.0 .`
+5. Return to this repo.
+6. Inside the build container: `make wrapper-from-local`. This copies the local C-extension artifacts and builds the SWIG bindings.
+7. Install the agent in your application (Linux environment only) in development mode by running
+   ```python
+   pip install -Ie ~/gitrepos/opentelemetry-python-instrumentation-custom-distro/
+   ```
+Like (A) above, when installing the agent in development mode, every change in the Python source code will be reflected in the Python environment directly without re-installation. _However_, if changes have been made to the C-extension files, you need to reinstall the agent to reflect these changes in the Python environment.
+
+#### Build Agent Source Distribution Archive
+Inside the build container, execute `make sdist`. This will create a zip archive (source distribution) of the Python module under the `dist` directory.
+
+### Regression Tests
+
+#### Unit tests
+
+Automated unit testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.6, 3.7, 3.8, 3.9, and/or 3.10 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Tests for each Python version can be run against AO prod or NH staging.
+
+The functional tests require a compiled C-extension and should be run inside the build container. Here is how to run tests:
+
+1. For each backend you'll be running against, obtain an agent token to replace the appropriate `<AGENT_TOKEN>` in `tox.ini`.
+2. _If running against AO prod:_ You'll need to obtain a certificate and save it to `{thisrepo}/tmp/solarwinds-apm/grpc-ao-prod.crt`. 
+3. Create and run the Docker build container as described above.
+4. Inside the build container: `make wrapper`. This downloads the version of oboe defined in `extension/VERSION` from S3 and builds the SWIG bindings.
+5. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.7 against AO prod: `make tox OPTIONS="-e py37-ao-prod"`.
+6. (WARNING: slow!) To run all tests for all Python environments: `make tox`
+
+#### Integration tests
+
+TODO
+
+### Formatting and Linting
+
+TODO
+
+1. Create and run the Docker build container as described above.
+2. `make format`
+3. `make lint`

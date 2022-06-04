@@ -4,7 +4,7 @@ import typing
 
 from opentelemetry.context.context import Context
 
-from opentelemetry_distro_solarwinds import (
+from solarwinds_apm import (
     OTEL_CONTEXT_SW_OPTIONS_KEY,
     OTEL_CONTEXT_SW_SIGNATURE_KEY
 )

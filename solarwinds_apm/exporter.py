@@ -8,11 +8,12 @@ import logging
 
 from opentelemetry.sdk.trace.export import SpanExporter
 
-from opentelemetry_distro_solarwinds.extension.oboe import (
+from solarwinds_apm.extension.oboe import (
     Context,
     Metadata
 )
-from opentelemetry_distro_solarwinds.w3c_transformer import W3CTransformer
+from solarwinds_apm.w3c_transformer import W3CTransformer
+
 
 logger = logging.getLogger(__file__)
 
