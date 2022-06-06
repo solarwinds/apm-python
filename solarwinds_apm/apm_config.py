@@ -105,7 +105,7 @@ class SolarWindsApmConfig:
             self.context = Context
 
         # TODO Implement config with cnf_file after alpha
-        # cnf_file = os.environ.get('SOLARWINDS_APM_CONFIG_PYTHON', os.environ.get('SOLARWINDS_PYCONF', None))
+        # cnf_file = os.environ.get('SW_APM_APM_CONFIG_PYTHON', os.environ.get('SW_APM_PYCONF', None))
         # if cnf_file:
         #     self.update_with_cnf_file(cnf_file)
 
@@ -125,15 +125,15 @@ class SolarWindsApmConfig:
         """Checks if agent is enabled/disabled based on config"""
         agent_enabled = True
         try:
-            if os.environ.get('SOLARWINDS_AGENT_ENABLED', 'true').lower() == 'false':
+            if os.environ.get('SW_APM_AGENT_ENABLED', 'true').lower() == 'false':
                 agent_enabled = False
                 logger.info(
                     "SolarWinds APM is disabled and will not report any traces because the environment variable "
-                    "SOLARWINDS_AGENT_ENABLED is set to 'false'! If this is not intended either unset the variable or set it to "
-                    "a value other than false. Note that the value of SOLARWINDS_AGENT_ENABLED is case-insensitive.")
+                    "SW_APM_AGENT_ENABLED is set to 'false'! If this is not intended either unset the variable or set it to "
+                    "a value other than false. Note that the value of SW_APM_AGENT_ENABLED is case-insensitive.")
                 raise ImportError
 
-            if not os.environ.get('SOLARWINDS_SERVICE_KEY', None) and not self._is_lambda():
+            if not os.environ.get('SW_APM_SERVICE_KEY', None) and not self._is_lambda():
                 logger.error("Missing service key. Tracing disabled.")
                 agent_enabled = False
                 raise ImportError
@@ -141,7 +141,7 @@ class SolarWindsApmConfig:
             try:
                 if agent_enabled:
                     # only log the following messages if agent wasn't explicitly disabled
-                    # via SOLARWINDS_AGENT_ENABLED or due to missing service key
+                    # via SW_APM_AGENT_ENABLED or due to missing service key
                     if sys.platform.startswith('linux'):
                         logger.warning(
                             """Missing extension library.
@@ -211,7 +211,7 @@ class SolarWindsApmConfig:
 
     def update_with_env_var(self) -> None:
         """Update the settings with environment variables."""
-        val = os.environ.get('SOLARWINDS_APM_PREPEND_DOMAIN_NAME', None)
+        val = os.environ.get('SW_APM_APM_PREPEND_DOMAIN_NAME', None)
         if val is not None:
             self._set_config_value('transaction.prepend_domain_name', val)
         available_envvs = set(self._config.keys())
@@ -220,7 +220,7 @@ class SolarWindsApmConfig:
             if key in ('inst_enabled', 'transaction', 'inst'):
                 # we do not allow complex config options to be set via environment variables
                 continue
-            env = 'SOLARWINDS_' + key.upper()
+            env = 'SW_APM_' + key.upper()
             val = os.environ.get(env)
             if val is not None:
                 self._set_config_value(key, val)

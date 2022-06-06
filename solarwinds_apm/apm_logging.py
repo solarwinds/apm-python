@@ -93,8 +93,8 @@ def _get_logger():
     By default, the logging level of the created logger will be set to ApmLoggingLevel.default_level().
     If the logging level of the agent-internal logger needs to be changed, this should happen through one of the
     following options only:
-    (1) Through environment variable SOLARWINDS_DEBUG_LEVEL
-        - When _get_logger is invoked, SOLARWINDS_DEBUG_LEVEL is checked and the logging level will be set to the
+    (1) Through environment variable SW_APM_DEBUG_LEVEL
+        - When _get_logger is invoked, SW_APM_DEBUG_LEVEL is checked and the logging level will be set to the
           value provided by the variable. If an invalid value has been provided, the logging level will not be changed.
     (2) By invoking set_sw_log_level
     """
@@ -104,11 +104,11 @@ def _get_logger():
 
     # configure logging level of solarwinds_apm logger
     log_level = ApmLoggingLevel.default_level()
-    # check if SOLARWINDS_DEBUG_LEVEL has been set and configure newly created logger accordingly
-    envv_val = os.getenv('SOLARWINDS_DEBUG_LEVEL', None)
+    # check if SW_APM_DEBUG_LEVEL has been set and configure newly created logger accordingly
+    envv_val = os.getenv('SW_APM_DEBUG_LEVEL', None)
     if envv_val is not None:
         if not ApmLoggingLevel.is_valid_level(envv_val):
-            _logger.warning("Misconfigured SOLARWINDS_DEBUG_LEVEL ignored. Defaulted to debug_level %s", log_level)
+            _logger.warning("Misconfigured SW_APM_DEBUG_LEVEL ignored. Defaulted to debug_level %s", log_level)
             _logger.warning("")
         else:
             log_level = int(envv_val)
