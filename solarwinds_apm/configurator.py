@@ -132,6 +132,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
             )
             raise
+        logger.debug("Setting trace with BatchSpanProcessor using {}".format(environ_exporter_name))
         span_processor = BatchSpanProcessor(exporter)
         trace.get_tracer_provider().add_span_processor(span_processor)
 
@@ -153,6 +154,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     )
                 )
                 raise
+        logger.debug("Setting CompositePropagator with {}".format(environ_propagators_names))
         set_global_textmap(CompositePropagator(propagators))
 
     def _configure_response_propagator(self) -> None:

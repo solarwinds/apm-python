@@ -167,7 +167,7 @@ class SolarWindsApmConfig:
                         environ_exporter_name
                     )
                 )
-        except IndexError:
+        except StopIteration:
             logger.error(
                 "Failed to load configured OTEL_TRACES_EXPORTER {}. "
                 "Tracing disabled".format(
@@ -227,6 +227,7 @@ class SolarWindsApmConfig:
                 # disabled)
                 agent_enabled = False
         
+        logger.debug("agent_enabled: {}".format(agent_enabled))
         return agent_enabled
 
     def __setitem__(self, key: str, value: str) -> None:
