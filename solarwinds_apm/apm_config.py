@@ -7,7 +7,10 @@ import sys
 from typing import Any
 
 from solarwinds_apm import (
-    apm_logging, apm_configparser, apm_transactionfilter
+    apm_logging,
+    DOC_SUPPORTED_PLATFORMS,
+    DOC_TRACING_PYTHON,
+    SUPPORT_EMAIL,
 )
 
 logger = logging.getLogger(__name__)
@@ -45,11 +48,7 @@ class SolarWindsApmConfig:
     done only once during the initialization and the properties cannot be refreshed.
     """
 
-    # TODO: Update support doc urls and email alias for SWO
     _DELIMITER = '.'
-    _DOC_SUPPORTED_PLATFORMS = 'https://docs.appoptics.com/kb/apm_tracing/supported_platforms/'
-    _DOC_TRACING_PYTHON = 'https://docs.appoptics.com/kb/apm_tracing/python/'
-    _SUPPORT_EMAIL = 'support@appoptics.com'
 
     # TODO: Needed? see below usage
     _SUPPORTED_INSTRUMENTATIONS = (
@@ -149,9 +148,9 @@ class SolarWindsApmConfig:
                             Contact {} if this is unexpected.
                             Error: {}
                             See: {}""".format(
-                                self._SUPPORT_EMAIL,
+                                SUPPORT_EMAIL,
                                 e,
-                                self._DOC_TRACING_PYTHON,
+                                DOC_TRACING_PYTHON,
                             ))
                     else:
                         logger.warning(
@@ -160,15 +159,15 @@ class SolarWindsApmConfig:
                             Tracing is disabled and will go into no-op mode.
                             Contact {} if this is unexpected.""".format(
                                 sys.platform,
-                                self._DOC_SUPPORTED_PLATFORMS,
-                                self._SUPPORT_EMAIL,
+                                DOC_SUPPORTED_PLATFORMS,
+                                SUPPORT_EMAIL,
                             ))
             except ImportError as err:
                 logger.error(
                     """Unexpected error: {}.
                     Please reinstall or contact {}.""".format(
                         err,
-                        self._SUPPORT_EMAIL,
+                        SUPPORT_EMAIL,
                     ))
             finally:
                 # regardless of how we got into this (outer) exception block, the agent will not be able to trace (and thus be
@@ -286,7 +285,8 @@ class SolarWindsApmConfig:
                 self._config[key] = val
                 self.context.setTriggerMode(OboeTracingMode.get_oboe_trigger_trace_mode(val))
             elif keys == ['reporter']:
-                if not isinstance(val, str) or val.lower() not in ('udp', 'ssl', 'null', 'file', 'lambda'):
+                # TODO: support 'lambda'
+                if not isinstance(val, str) or val.lower() not in ('udp', 'ssl', 'null', 'file'):
                     raise ValueError
                 self._config[key] = val.lower()
             elif keys == ['debug_level']:

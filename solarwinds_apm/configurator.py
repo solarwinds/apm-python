@@ -20,7 +20,10 @@ from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from solarwinds_apm import DEFAULT_SW_TRACES_EXPORTER
+from solarwinds_apm import (
+    DEFAULT_SW_TRACES_EXPORTER,
+    SUPPORT_EMAIL
+)
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
@@ -52,14 +55,24 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
         self._configure_exporter(reporter, apm_config.agent_enabled)
-        self._configure_propagator()
-        self._configure_response_propagator()
+        if apm_config.agent_enabled:
+            self._configure_propagator()
+            self._configure_response_propagator()
+        else:
+            # Warning: This may still set OTEL_PROPAGATORS if set because OTel API
+            logger.error("Tracing disabled. Not setting propagators.")
 
     def _configure_sampler(
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Always configure SolarWinds OTel sampler"""
+        """Always configure SolarWinds OTel sampler, or none if disabled"""
+        if not apm_config.agent_enabled:
+            logger.error("Tracing disabled. Using OTel no-op tracer provider.")
+            trace.set_tracer_provider(
+                trace.NoOpTracerProvider()
+            )
+            return
         try:
             sampler = load_entry_point(
                 "solarwinds_apm",
@@ -68,29 +81,29 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )(apm_config)
         except:
             logger.exception(
-                "Failed to load configured sampler {}".format(
-                    self._DEFAULT_SW_TRACES_SAMPLER
+                "Failed to load configured sampler {}. "
+                "Please reinstall or contact {}.".format(
+                    self._DEFAULT_SW_TRACES_SAMPLER,
+                    SUPPORT_EMAIL,
                 )
             )
             raise
-
-        if apm_config.agent_enabled:
-            trace.set_tracer_provider(
-                TracerProvider(sampler=sampler)
-            )
-        else:
-            trace.set_tracer_provider(
-                trace.NoOpTracerProvider(sampler=sampler)
-            )
+        trace.set_tracer_provider(
+            TracerProvider(sampler=sampler)
+        )
 
     def _configure_exporter(
         self,
         reporter: "Reporter",
         agent_enabled: bool = True,
     ) -> None:
-        """Configure SolarWinds or env-specified OTel span exporter.
-        Initialization of SolarWinds exporter requires a liboboe reporter
-        and agent_enabled flag."""
+        """Configure SolarWinds or env-specified OTel span exporter,
+        or none if disabled. Initialization of SolarWinds exporter 
+        requires a liboboe reporter and agent_enabled flag."""
+        if not agent_enabled:
+            logger.error("Tracing disabled. Cannot set span_processor.")
+            return
+
         exporter = None
         environ_exporter_name = environ.get(OTEL_TRACES_EXPORTER)
 
