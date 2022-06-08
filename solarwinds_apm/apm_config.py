@@ -3,14 +3,24 @@ from collections import defaultdict
 from functools import reduce
 import logging
 import os
+from pkg_resources import iter_entry_points
 import sys
 from typing import Any
 
+from opentelemetry.environment_variables import (
+    OTEL_PROPAGATORS,
+    OTEL_TRACES_EXPORTER,
+)
+
 from solarwinds_apm import (
     apm_logging,
+    DEFAULT_SW_TRACES_EXPORTER,
+    DEFAULT_SW_PROPAGATORS,
     DOC_SUPPORTED_PLATFORMS,
     DOC_TRACING_PYTHON,
     SUPPORT_EMAIL,
+    SW_PROPAGATOR,
+    TRACECONTEXT_PROPAGATOR,
 )
 
 logger = logging.getLogger(__name__)
@@ -121,8 +131,51 @@ class SolarWindsApmConfig:
         return False
 
     def _calculate_agent_enabled(self) -> bool:
-        """Checks if agent is enabled/disabled based on config"""
+        """Checks if agent is enabled/disabled based on config:
+        - OTEL_PROPAGATORS
+        - OTEL_TRACE_EXPORTER
+        - SW_APM_SERVICE_KEY
+        - SW_APM_AGENT_ENABLED
+        """
         agent_enabled = True
+
+        try:
+            environ_propagators = os.environ.get(OTEL_PROPAGATORS).split(",")
+            # If not using the default propagators,
+            # can any arbitrary list BUT
+            # (1) must include tracecontext and solarwinds_propagator
+            # (2) tracecontext must be before solarwinds_propagator
+            if environ_propagators != DEFAULT_SW_PROPAGATORS:
+                if not TRACECONTEXT_PROPAGATOR in environ_propagators or \
+                    not SW_PROPAGATOR in environ_propagators:
+                    logger.error("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability. Tracing disabled.")
+                    raise ValueError
+
+                if environ_propagators.index(SW_PROPAGATOR) \
+                    < environ_propagators.index(TRACECONTEXT_PROPAGATOR):
+                    logger.error("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability. Tracing disabled.")
+                    raise ValueError
+        except ValueError:
+            agent_enabled = False
+
+        environ_exporter_name = os.environ.get(OTEL_TRACES_EXPORTER)
+        try:
+            if environ_exporter_name != DEFAULT_SW_TRACES_EXPORTER:
+                next(
+                    iter_entry_points(
+                        "opentelemetry_traces_exporter",
+                        environ_exporter_name
+                    )
+                )
+        except IndexError:
+            logger.error(
+                "Failed to load configured OTEL_TRACES_EXPORTER {}. "
+                "Tracing disabled".format(
+                    environ_exporter_name
+                )
+            )
+            agent_enabled = False
+
         try:
             if os.environ.get('SW_APM_AGENT_ENABLED', 'true').lower() == 'false':
                 agent_enabled = False

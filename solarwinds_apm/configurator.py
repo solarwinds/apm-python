@@ -22,7 +22,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from solarwinds_apm import (
     DEFAULT_SW_TRACES_EXPORTER,
-    SUPPORT_EMAIL
+    SUPPORT_EMAIL,
 )
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
@@ -106,36 +106,32 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         exporter = None
         environ_exporter_name = environ.get(OTEL_TRACES_EXPORTER)
-
-        if environ_exporter_name == DEFAULT_SW_TRACES_EXPORTER:
-            try:
+        try:
+            if environ_exporter_name == DEFAULT_SW_TRACES_EXPORTER:
                 exporter = load_entry_point(
                     "solarwinds_apm",
                     "opentelemetry_traces_exporter",
                     environ_exporter_name
                 )(reporter, agent_enabled)
-            except:
-                logger.exception(
-                    "Failed to load configured exporter {} with reporter".format(
-                        environ_exporter_name
-                    )
-                )
-                raise
-        else:
-            try:
+            else:
                 exporter = next(
                     iter_entry_points(
                         "opentelemetry_traces_exporter",
                         environ_exporter_name
                     )
                 ).load()()
-            except:
-                logger.exception(
-                    "Failed to load configured exporter {}".format(
-                        environ_exporter_name
-                    )
+        except:
+            # At this point any non-default OTEL_TRACES_EXPORTER has 
+            # been checked by ApmConfig so exception here means 
+            # something quite wrong
+            logger.exception(
+                "Failed to load configured exporter {}. "
+                "Please reinstall or contact {}.".format(
+                    environ_exporter_name,
+                    SUPPORT_EMAIL,
                 )
-                raise
+            )
+            raise
         span_processor = BatchSpanProcessor(exporter)
         trace.get_tracer_provider().add_span_processor(span_processor)
 
