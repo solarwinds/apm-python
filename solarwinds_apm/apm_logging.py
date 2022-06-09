@@ -127,7 +127,6 @@ def _get_logger():
 logger = _get_logger()
 
 
-# TODO used?
 def disable_logger(disable=True):
     """Disables all logging messages from the `solarwinds_apm` package when disable is True.
     To restoring logging, set disable as False.
@@ -142,7 +141,6 @@ def disable_logger(disable=True):
         logger.propagate = True
 
 
-# TODO used?
 def set_sw_log_level(level):
     """Set the logging level of the agent-internal logger to the provided level. This function expects the level
     to be one of the integer representations of the levels defined in ApmLoggingLevel.debug_levels.
