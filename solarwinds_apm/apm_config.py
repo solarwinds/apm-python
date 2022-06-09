@@ -123,6 +123,8 @@ class SolarWindsApmConfig:
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
 
+        logger.debug("Set ApmConfig as: {}".format(self._config))
+
     def _is_lambda(self):
         """Checks if agent is running in an AWS Lambda environment."""
         if os.environ.get('AWS_LAMBDA_FUNCTION_NAME') and os.environ.get("LAMBDA_TASK_ROOT"):
