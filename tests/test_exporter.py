@@ -210,6 +210,37 @@ class Test_SolarWindsSpanExporter():
             mocker.call(mock_event, False),
         ])
 
+    def test_init_agent_enabled_true(self, mocker):
+        mock_reporter = mocker.Mock()
+        mock_ext_context = mocker.patch(
+            "solarwinds_apm.extension.oboe.Context",      
+        )
+        mock_ext_metadata = mocker.patch(
+            "solarwinds_apm.extension.oboe.Metadata",
+        )
+        exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
+            mock_reporter,
+            True,
+        )
+        assert exporter.reporter == mock_reporter
+        assert exporter.context == mock_ext_context
+        assert exporter.metadata == mock_ext_metadata
+
+    def test_init_agent_enabled_false(self, mocker):
+        mock_reporter = mocker.Mock()
+        mock_noop_context = mocker.patch(
+            "solarwinds_apm.apm_noop.Context",      
+        )
+        mock_noop_metadata = mocker.patch(
+            "solarwinds_apm.apm_noop.Metadata",
+        )
+        exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
+            mock_reporter,
+            False,
+        )
+        assert exporter.reporter == mock_reporter
+        assert exporter.context == mock_noop_context
+        assert exporter.metadata == mock_noop_metadata
 
     def test_export_root_span(
         self,
