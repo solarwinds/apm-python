@@ -607,7 +607,13 @@ class Test_SwSampler():
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys,
-        ) == MappingProxyType({"SWKeys": "foo"})
+        ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "SWKeys": "foo",
+        })
 
     def test_calculate_attributes_contd_decision_no_sw_keys(
         self,
@@ -622,7 +628,12 @@ class Test_SwSampler():
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys,
-        ) == None
+        ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+        })
 
     def test_calculate_attributes_not_contd_decision_sw_keys(
         self,
@@ -680,6 +691,10 @@ class Test_SwSampler():
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
             "sw.tracestate_parent_id": "1111222233334444",
             "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
             'SWKeys': 'foo',
@@ -701,6 +716,10 @@ class Test_SwSampler():
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
             "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
             'SWKeys': 'foo',
             "foo": "bar",
@@ -723,6 +742,10 @@ class Test_SwSampler():
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
             "sw.w3c.tracestate": "sw=1111222233334444-01,some=other",
             'SWKeys': 'foo',
             "foo": "bar",
