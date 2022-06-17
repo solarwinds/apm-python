@@ -1,6 +1,9 @@
 
 import logging
-from typing import TYPE_CHECKING
+from typing import (
+    TYPE_CHECKING,
+    Tuple,
+)
 
 from opentelemetry.trace import SpanKind, StatusCode
 from opentelemetry.sdk.trace import SpanProcessor
@@ -16,8 +19,8 @@ logger = logging.getLogger(__name__)
 class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
     _HTTP_METHOD = "http.method"
+    _HTTP_ROUTE = "http.route"
     _HTTP_STATUS_CODE = "http.status_code"
-    _HTTP_URL = "http.url"
 
     def __init__(
         self,
@@ -34,30 +37,30 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics"""
-        # Only calculate inbound metrics for service entry root spans
+        # Only calculate inbound metrics for service root spans
         parent_span_context = span.parent
-        if parent_span_context and parent_span_context != None:
+        if parent_span_context and parent_span_context.is_valid \
+            and not parent_span_context.is_remote:
             return
 
-        # tmp: make sure one for django-only or two for script-sdk-spp
+        # tmp: check for one for each service in the distributed trace
         logger.info("Finished span.name: {}".format(span.name))
 
         is_span_http = self.is_span_http(span)
-        # tmp: make sure True for django-only or False for script-sdk-spp
+        # tmp: check False for script-sdk-spp manual spans, True all others
         logger.info("is_span_http: {}".format(is_span_http))
 
-        span_time = self.get_span_time(
+        span_time = self.calculate_span_time(
             span.start_time,
             span.end_time,
         )
         # TODO Use `domain` for custom transaction naming after alpha/beta
         domain = None
         has_error = self.has_error(span)
-        trans_name = self.get_transaction_name()
+        trans_name, url_tran = self.calculate_transaction_names(span)
 
         if is_span_http:
-            # Only createHttpSpan needs these other params:
-            url_tran = span.attributes.get(self._HTTP_URL, None)
+            # createHttpSpan needs these other params
             status_code = span.attributes.get(self._HTTP_STATUS_CODE, None) 
             request_method = span.attributes.get(self._HTTP_METHOD, None)
 
@@ -91,23 +94,31 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         self._reporter.flush()
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
-        """This span from inbound HTTP request if from a SERVER by some http.method"""
-        if span.kind == SpanKind.SERVER and span.attributes.get(self._HTTP_METHOD, None):
+        """This span from inbound HTTP request if from a SERVER by some http.route"""
+        if span.kind == SpanKind.SERVER and span.attributes.get(self._HTTP_ROUTE, None):
             return True
         return False
 
-    def get_transaction_name(self):
-        """Get transaction name of this span instance"""
-        # TODO
-        return ""
-
-    def has_error(self, span: "ReadableSpan"):
+    def has_error(self, span: "ReadableSpan") -> bool:
         """Calculate if this span instance has_error"""
         if span.status == StatusCode.ERROR:
             return True
         return False
 
-    def get_span_time(
+    def calculate_transaction_names(self, span: "ReadableSpan") -> Tuple[str, str]:
+        """Get trans_name and url_tran of this span instance.
+        If url_tran is not None, then trans_name is None."""
+        url_tran = span.attributes.get(self._HTTP_ROUTE, None)
+        if url_tran:
+            return None, url_tran
+
+        trans_name = span.name
+        if not span.name:
+            trans_name = "unknown"
+
+        return trans_name, url_tran
+
+    def calculate_span_time(
         self,
         start_time: int,
         end_time: int,
