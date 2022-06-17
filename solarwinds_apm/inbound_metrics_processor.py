@@ -2,7 +2,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-from opentelemetry.trace import SpanKind
+from opentelemetry.trace import SpanKind, StatusCode
 from opentelemetry.sdk.trace import SpanProcessor
 
 if TYPE_CHECKING:
@@ -43,6 +43,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         logger.info("Finished span.name: {}".format(span.name))
 
         is_span_http = self.is_span_http(span)
+        # tmp: make sure True for django-only or False for script-sdk-spp
         logger.info("is_span_http: {}".format(is_span_http))
 
         span_time = self.get_span_time(
@@ -51,7 +52,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         )
         # TODO Use `domain` for custom transaction naming after alpha/beta
         domain = None
-        has_error = self.has_error()
+        has_error = self.has_error(span)
         trans_name = self.get_transaction_name()
 
         if is_span_http:
@@ -100,9 +101,10 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         # TODO
         return ""
 
-    def has_error(self):
+    def has_error(self, span: "ReadableSpan"):
         """Calculate if this span instance has_error"""
-        # TODO
+        if span.status == StatusCode.ERROR:
+            return True
         return False
 
     def get_span_time(
