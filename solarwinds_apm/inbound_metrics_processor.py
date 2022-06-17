@@ -15,6 +15,10 @@ logger = logging.getLogger(__name__)
 
 class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
+    _HTTP_METHOD = "http.method"
+    _HTTP_STATUS_CODE = "http.status_code"
+    _HTTP_URL = "http.url"
+
     def __init__(
         self,
         reporter: "Reporter",
@@ -30,25 +34,13 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics"""
+        # Only calculate inbound metrics for service entry root spans
+        parent_span_context = span.parent
+        if parent_span_context and parent_span_context != None:
+            return
 
-        # TODO - We only do all this for root spans
-        span_context = span.get_span_context()
-        logger.info("span_context is {}".format(span_context))
-
-        # The following is for Django A triggered trace
-        # Always True and False
-        logger.info("is_valid: {}, is_remote: {}".format(
-            span_context.is_valid,
-            span_context.is_remote,
-        ))
-        # Either SERVER or CLIENT
-        logger.info("span.kind: {}".format(
-            span.kind
-        ))
-        # Always GET, whether SERVER or CLIENT
-        logger.info("span.attributes.get(http.method): {}".format(
-            span.attributes.get("http.method", None)
-        ))
+        # tmp: make sure one for django-only or two for script-sdk-spp
+        logger.info("Finished span.name: {}".format(span.name))
 
         is_span_http = self.is_span_http(span)
         logger.info("is_span_http: {}".format(is_span_http))
@@ -64,9 +56,9 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
         if is_span_http:
             # Only createHttpSpan needs these other params:
-            url_tran = span.attributes.get("http.url", None)
-            status_code = span.attributes.get("http.status_code", None) 
-            request_method = span.attributes.get("http.method", None)
+            url_tran = span.attributes.get(self._HTTP_URL, None)
+            status_code = span.attributes.get(self._HTTP_STATUS_CODE, None) 
+            request_method = span.attributes.get(self._HTTP_METHOD, None)
 
             logger.debug(
                 "createHttpSpan with trans_name: {}, url_tran: {}, domain: {}, span_time: {} status_code: {}, request_method: {}, has_error: {}".format(
@@ -98,8 +90,8 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         self._reporter.flush()
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
-        """This span from inbound HTTP request if from a SERVER"""
-        if span.kind == SpanKind.SERVER:
+        """This span from inbound HTTP request if from a SERVER by some http.method"""
+        if span.kind == SpanKind.SERVER and span.attributes.get(self._HTTP_METHOD, None):
             return True
         return False
 
