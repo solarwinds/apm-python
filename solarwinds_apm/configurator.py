@@ -27,6 +27,7 @@ from solarwinds_apm import (
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
+from solarwinds_apm.inbound_metrics_processor import SolarWindsInboundMetricsSpanProcessor
 
 if TYPE_CHECKING:
     from solarwinds_apm.extension.oboe import Reporter
@@ -55,6 +56,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
         self._configure_exporter(reporter, apm_config.agent_enabled)
+        self._configure_metrics_span_processor(reporter, apm_config)
         if apm_config.agent_enabled:
             self._configure_propagator()
             self._configure_response_propagator()
@@ -135,6 +137,19 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         logger.debug("Setting trace with BatchSpanProcessor using {}".format(environ_exporter_name))
         span_processor = BatchSpanProcessor(exporter)
         trace.get_tracer_provider().add_span_processor(span_processor)
+
+    def _configure_metrics_span_processor(
+        self,
+        reporter: "Reporter",
+        apm_config: SolarWindsApmConfig,
+    ) -> None:
+        """Configure SolarWindsInboundMetricsSpanProcessor"""
+        trace.get_tracer_provider().add_span_processor(
+            SolarWindsInboundMetricsSpanProcessor(
+                reporter,
+                apm_config.agent_enabled,
+            )
+        )
 
     def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators"""
