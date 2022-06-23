@@ -106,16 +106,11 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         return False
 
     def calculate_transaction_names(self, span: "ReadableSpan") -> Tuple[str, str]:
-        """Get trans_name and url_tran of this span instance.
-        If url_tran is not None, then trans_name is None."""
+        """Get trans_name and url_tran of this span instance."""
+        trans_name = "unknown"
+        if span.name:
+            trans_name = span.name
         url_tran = span.attributes.get(self._HTTP_ROUTE, None)
-        if url_tran:
-            return None, url_tran
-
-        trans_name = span.name
-        if not span.name:
-            trans_name = "unknown"
-
         return trans_name, url_tran
 
     def calculate_span_time(
