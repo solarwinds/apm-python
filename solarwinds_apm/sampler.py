@@ -38,6 +38,9 @@ class _SwSampler(Sampler):
     _INTERNAL_SAMPLE_RATE = "SampleRate"
     _INTERNAL_SAMPLE_SOURCE = "SampleSource"
     _INTERNAL_SW_KEYS = "SWKeys"
+    _INTERNAL_SW_TRANSACTION = "sw.transaction"
+    _INTERNAL_TRANSACTION = "Transaction"
+    _INTERNAL_TRANSACTION_NAME = "TransactionName"
     _LIBOBOE_CONTINUED = -1
     _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
     _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
@@ -304,8 +307,37 @@ class _SwSampler(Sampler):
         """Remove xtraceoptions response from tracestate"""
         return trace_state.delete(XTraceOptions.get_sw_xtraceoptions_response_key())
 
+    def add_tracestate_capture_to_attributes_dict(
+        self,
+        attributes_dict: dict,
+        decision: Dict,
+        trace_state: TraceState,
+        parent_span_context: SpanContext,
+    ) -> dict:
+        """Calculate and add SW tracestate capture to attributes object,
+        which is a dict not an Attributes/MappingProxy object"""
+        tracestate_capture = attributes_dict.get(self._SW_TRACESTATE_CAPTURE_KEY, None)
+        if not tracestate_capture:
+            trace_state_no_response = self.remove_response_from_sw(trace_state)
+        else:
+            # Must retain all potential tracestate pairs for attributes
+            attr_trace_state = TraceState.from_header([
+                tracestate_capture
+            ])
+            new_attr_trace_state = attr_trace_state.update(
+                SW_TRACESTATE_KEY,
+                W3CTransformer.sw_from_span_and_decision(
+                    parent_span_context.span_id,
+                    W3CTransformer.trace_flags_from_int(decision["do_sample"])
+                )
+            )
+            trace_state_no_response = self.remove_response_from_sw(new_attr_trace_state)
+        attributes_dict[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
+        return attributes_dict
+
     def calculate_attributes(
         self,
+        span_name: str,
         attributes: Attributes,
         decision: Dict,
         trace_state: TraceState,
@@ -336,10 +368,15 @@ class _SwSampler(Sampler):
             "Set attributes with service entry internal KVs: {}".format(new_attributes)
         )
 
+        # Always (root or is_remote) set Transaction KVs
+        new_attributes[self._INTERNAL_SW_TRANSACTION] = span_name
+        new_attributes[self._INTERNAL_TRANSACTION] = span_name
+        new_attributes[self._INTERNAL_TRANSACTION_NAME] = span_name
+
         # Trace's root span has no valid traceparent nor tracestate
         # so we can't calculate remaining attributes
         if not parent_span_context.is_valid or not trace_state:
-            logger.debug(
+            logger.info(
                 "No valid traceparent or no tracestate - returning attributes: {}"
                 .format(new_attributes)
             )
@@ -361,25 +398,14 @@ class _SwSampler(Sampler):
             for k,v in attributes.items():
                 new_attributes[k] = v
 
-        tracestate_capture = new_attributes.get(self._SW_TRACESTATE_CAPTURE_KEY, None)
-        if not tracestate_capture:
-            trace_state_no_response = self.remove_response_from_sw(trace_state)
-        else:
-            # Must retain all potential tracestate pairs for attributes
-            attr_trace_state = TraceState.from_header([
-                tracestate_capture
-            ])
-            new_attr_trace_state = attr_trace_state.update(
-                SW_TRACESTATE_KEY,
-                W3CTransformer.sw_from_span_and_decision(
-                    parent_span_context.span_id,
-                    W3CTransformer.trace_flags_from_int(decision["do_sample"])
-                )
-            )
-            trace_state_no_response = self.remove_response_from_sw(new_attr_trace_state)
-        new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
+        new_attributes = self.add_tracestate_capture_to_attributes_dict(
+            new_attributes,
+            decision,
+            trace_state,
+            parent_span_context,
+        )
 
-        logger.debug("Setting attributes: {}".format(new_attributes))
+        logger.info("Setting attributes: {}".format(new_attributes))
 
         # attributes must be immutable for SamplingResult
         return MappingProxyType(new_attributes)
@@ -415,6 +441,7 @@ class _SwSampler(Sampler):
             xtraceoptions
         )
         new_attributes = self.calculate_attributes(
+            name,
             attributes,
             liboboe_decision,
             new_trace_state,

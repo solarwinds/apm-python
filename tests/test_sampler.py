@@ -587,6 +587,7 @@ class Test_SwSampler():
         decision_drop
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=mocker.Mock(),
             decision=decision_drop,
             trace_state=mocker.Mock(),
@@ -602,12 +603,16 @@ class Test_SwSampler():
         mock_xtraceoptions_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=None,
             decision=decision_continued,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
+            "sw.transaction": "foo",
+            "Transaction": "foo",
+            "TransactionName": "foo",
             "BucketCapacity": "-1",
             "BucketRate": "-1",
             "SampleRate": -1,
@@ -623,12 +628,16 @@ class Test_SwSampler():
         mock_xtraceoptions_no_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=None,
             decision=decision_continued,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys,
         ) == MappingProxyType({
+            "sw.transaction": "foo",
+            "Transaction": "foo",
+            "TransactionName": "foo",
             "BucketCapacity": "-1",
             "BucketRate": "-1",
             "SampleRate": -1,
@@ -643,12 +652,16 @@ class Test_SwSampler():
         mock_xtraceoptions_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=None,
             decision=decision_not_continued,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
+            "sw.transaction": "foo",
+            "Transaction": "foo",
+            "TransactionName": "foo",
             "BucketCapacity": "1",
             "BucketRate": "1",
             "SampleRate": 1,
@@ -664,12 +677,16 @@ class Test_SwSampler():
         mock_xtraceoptions_no_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=None,
             decision=decision_not_continued,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys
         ) == MappingProxyType({
+            "sw.transaction": "foo",
+            "Transaction": "foo",
+            "TransactionName": "foo",
             "BucketCapacity": "1",
             "BucketRate": "1",
             "SampleRate": 1,
@@ -685,12 +702,16 @@ class Test_SwSampler():
         mock_xtraceoptions_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=None,
             decision=decision_continued,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
+            "sw.transaction": "foo",
+            "Transaction": "foo",
+            "TransactionName": "foo",
             "BucketCapacity": "-1",
             "BucketRate": "-1",
             "SampleRate": -1,
@@ -710,12 +731,16 @@ class Test_SwSampler():
         mock_xtraceoptions_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=attributes_no_tracestate,
             decision=decision_continued,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
+            "sw.transaction": "foo",
+            "Transaction": "foo",
+            "TransactionName": "foo",
             "BucketCapacity": "-1",
             "BucketRate": "-1",
             "SampleRate": -1,
@@ -736,12 +761,16 @@ class Test_SwSampler():
         mock_xtraceoptions_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=attributes_with_tracestate,
             decision=decision_continued,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
+            "sw.transaction": "foo",
+            "Transaction": "foo",
+            "TransactionName": "foo",
             "BucketCapacity": "-1",
             "BucketRate": "-1",
             "SampleRate": -1,
@@ -806,6 +835,7 @@ class Test_SwSampler():
             mock_xtraceoptions
         )
         solarwinds_apm.sampler._SwSampler.calculate_attributes.assert_called_once_with(
+            "foo",
             {"foo": "bar"},
             "my_decision",
             "my_trace_state",
