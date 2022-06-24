@@ -43,13 +43,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             and not parent_span_context.is_remote:
             return
 
-        # tmp: check for one for each service in the distributed trace
-        logger.info("Finished span.name: {}".format(span.name))
-
         is_span_http = self.is_span_http(span)
-        # tmp: check False for script-sdk-spp manual spans, True all others
-        logger.info("is_span_http: {}".format(is_span_http))
-
         span_time = self.calculate_span_time(
             span.start_time,
             span.end_time,
