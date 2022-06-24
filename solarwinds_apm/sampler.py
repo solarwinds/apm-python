@@ -314,7 +314,7 @@ class _SwSampler(Sampler):
         trace_state: TraceState,
         parent_span_context: SpanContext,
     ) -> dict:
-        """Calculate and add SW tracestate capture to attributes object,
+        """Calculate and add SW tracestate capture to attributes_dict,
         which is a dict not an Attributes/MappingProxy object"""
         tracestate_capture = attributes_dict.get(self._SW_TRACESTATE_CAPTURE_KEY, None)
         if not tracestate_capture:
@@ -376,7 +376,7 @@ class _SwSampler(Sampler):
         # Trace's root span has no valid traceparent nor tracestate
         # so we can't calculate remaining attributes
         if not parent_span_context.is_valid or not trace_state:
-            logger.info(
+            logger.debug(
                 "No valid traceparent or no tracestate - returning attributes: {}"
                 .format(new_attributes)
             )
@@ -405,7 +405,7 @@ class _SwSampler(Sampler):
             parent_span_context,
         )
 
-        logger.info("Setting attributes: {}".format(new_attributes))
+        logger.debug("Setting attributes: {}".format(new_attributes))
 
         # attributes must be immutable for SamplingResult
         return MappingProxyType(new_attributes)
