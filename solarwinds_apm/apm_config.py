@@ -57,18 +57,7 @@ class SolarWindsApmConfig:
     read environment variables and/or config files and pass them into oboe. This is
     done only once during the initialization and the properties cannot be refreshed.
     """
-
     _DELIMITER = '.'
-
-    # TODO: Needed? see below usage
-    _SUPPORTED_INSTRUMENTATIONS = (
-        'django_orm',
-        'httplib',
-        'memcache',
-        'pymongo',
-        'redis',
-        'sqlalchemy',
-    )
 
     def __init__(self, **kwargs: int) -> None:
         self._config = dict()
@@ -372,9 +361,6 @@ class SolarWindsApmConfig:
                 self._config[key] = val.lower()
             elif keys == ['is_grpc_clean_hack_enabled']:
                 self._config[key] = _convert_to_bool(val)
-            # TODO Is this needed for Python OTel instrumentation libraries?
-            elif (keys[0] == 'inst' and keys[1] in self._SUPPORTED_INSTRUMENTATIONS and keys[2] == 'collect_backtraces'):
-                self._config[keys[0]][keys[1]][keys[2]] = _convert_to_bool(val)
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
                     val = _convert_to_bool(val)
