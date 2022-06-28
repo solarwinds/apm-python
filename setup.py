@@ -17,9 +17,11 @@
 # pylint: disable-msg=missing-module-docstring
 """Install script which makes the SolarWinds C-Extension available to the custom distro package.
 """
+import io
 import os
 import sys
 from distutils import log
+from distutils.command.build import build
 
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
@@ -46,6 +48,12 @@ def is_alpine_distro():
     except Exception:
         pass
 
+    return False
+
+
+def python_version_supported():
+    if sys.version_info[0] == 3 and sys.version_info[1] > 3:
+        return True
     return False
 
 
@@ -85,15 +93,14 @@ def link_oboe_lib(src_lib):
         os.chdir(cwd)
 
 
-class CustomBuildExt(build_ext):
-    def run(self):
-        if sys.platform == 'darwin':
-            return
+def os_supported():
+    return sys.platform.startswith('linux')
 
-        oboe_lib = "liboboe-1.0-alpine-x86_64.so.0.0.0" if is_alpine_distro(
-        ) else "liboboe-1.0-x86_64.so.0.0.0"
-        link_oboe_lib(oboe_lib)
-        build_ext.run(self)
+
+if not (python_version_supported() and os_supported()):
+    log.warn(
+        "[SETUP] This package supports only Python 3.7 and above on Linux. "
+        "Other platform or python versions may not work as expected.")
 
 
 ext_modules = [
@@ -115,11 +122,43 @@ ext_modules = [
               runtime_library_dirs=['$ORIGIN']),
 ]
 
+
+class CustomBuild(build):
+    def run(self):
+        self.run_command('build_ext')
+        build.run(self)
+
+
+class CustomBuildExt(build_ext):
+    def run(self):
+        if sys.platform == 'darwin':
+            return
+
+        oboe_lib = "liboboe-1.0-alpine-x86_64.so.0.0.0" if is_alpine_distro(
+        ) else "liboboe-1.0-x86_64.so.0.0.0"
+        link_oboe_lib(oboe_lib)
+        build_ext.run(self)
+
+
+with io.open('README.md', encoding='utf-8') as f:
+    long_description = f.read()
+
+
 setup(
     name='solarwinds_apm',
     cmdclass={
         'build_ext': CustomBuildExt,
+        'build': CustomBuild,
     },
+    version=PACKAGE_INFO["__version__"],
+    author='SolarWinds, LLC',
+    author_email='support@appoptics.com',
+    url='https://www.appoptics.com/monitor/python-performance',
+    download_url='TODO',
+    description='SolarWinds Observability APM custom distro for OpenTelemetry instrumentation',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    keywords='solarwinds_apm appoptics_apm traceview tracelytics oboe liboboe instrumentation performance',
     ext_modules=ext_modules,
     packages=find_packages(exclude=['tests']),  # Include all the python modules except `tests`.
     classifiers=[
@@ -128,5 +167,4 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
     ],
-    version=PACKAGE_INFO["__version__"],
 )
