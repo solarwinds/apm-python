@@ -5,7 +5,7 @@ The custom sampler will fetch sampling configurations for the SolarWinds backend
 
 import logging
 from types import MappingProxyType
-from typing import Optional, Sequence, Dict
+from typing import Optional, Sequence, Dict, TYPE_CHECKING
 
 from opentelemetry.context.context import Context as OtelContext
 from opentelemetry.sdk.trace.sampling import (Decision, ParentBased, Sampler,
@@ -19,9 +19,13 @@ from solarwinds_apm import (
     EQUALS_W3C_SANITIZED,
     SW_TRACESTATE_KEY
 )
-from solarwinds_apm.extension.oboe import Context
+from solarwinds_apm.apm_config import OboeTracingMode
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
+
+if TYPE_CHECKING:
+    from solarwinds_apm.apm_config import SolarWindsApmConfig
+    from solarwinds_apm.extension.oboe import Context
 
 logger = logging.getLogger(__name__)
 
@@ -37,11 +41,22 @@ class _SwSampler(Sampler):
     _LIBOBOE_CONTINUED = -1
     _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
     _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
+    _UNSET = -1
     _XTRACEOPTIONS_RESP_AUTH = "auth"
     _XTRACEOPTIONS_RESP_IGNORED = "ignored"
     _XTRACEOPTIONS_RESP_TRIGGER_IGNORED = "ignored"
     _XTRACEOPTIONS_RESP_TRIGGER_NOT_REQUESTED = "not-requested"
     _XTRACEOPTIONS_RESP_TRIGGER_TRACE = "trigger-trace"
+
+    def __init__(self, apm_config: "SolarWindsApmConfig"):
+        self.apm_config = apm_config
+        self.context = None
+        if self.apm_config.agent_enabled:
+            from solarwinds_apm.extension.oboe import Context
+            self.context = Context
+        else:
+            from solarwinds_apm.apm_noop import Context
+            self.context = Context
 
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
@@ -51,7 +66,7 @@ class _SwSampler(Sampler):
         parent_span_context: SpanContext,
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> Dict:
-        """Calculates oboe trace decision based on parent span context."""
+        """Calculates oboe trace decision based on parent span context and APM config."""
         tracestring = None
         if parent_span_context.is_valid and parent_span_context.is_remote:
             tracestring = W3CTransformer.traceparent_from_context(
@@ -59,18 +74,22 @@ class _SwSampler(Sampler):
             )
         sw_member_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY)
 
-        # TODO: local config --> enable/disable tracing, sample_rate, tt mode
-        tracing_mode = -1
-        sample_rate = -1
-        trigger_tracing_mode_disabled = -1
+        # 'tracing_mode' is not supported in NH Python, so give as unset
+        tracing_mode = self._UNSET
+
+        trigger_trace_mode = OboeTracingMode.get_oboe_trigger_trace_mode(
+            self.apm_config.get("trigger_trace")
+        )
+        # 'sample_rate' is legacy and not supported in NH Python, so give as unset
+        sample_rate = self._UNSET
 
         options = None
-        trigger_trace = 0
+        trigger_trace_request = 0
         signature = None
         timestamp = None
         if xtraceoptions:
             options = xtraceoptions.options_header
-            trigger_trace = xtraceoptions.trigger_trace
+            trigger_trace_request = xtraceoptions.trigger_trace
             signature = xtraceoptions.signature
             timestamp = xtraceoptions.ts
 
@@ -80,8 +99,8 @@ class _SwSampler(Sampler):
             "sw_member_value: {}, "
             "tracing_mode: {}, "
             "sample_rate: {}, "
-            "trigger_trace: {}, "
-            "trigger_tracing_mode_disabled: {}, "
+            "trigger_trace_request: {}, "
+            "trigger_trace_mode: {}, "
             "options: {}, "
             "signature: {}, "
             "timestamp: {}".format(
@@ -89,21 +108,21 @@ class _SwSampler(Sampler):
             sw_member_value,
             tracing_mode,
             sample_rate,
-            trigger_trace,
-            trigger_tracing_mode_disabled,
+            trigger_trace_request,
+            trigger_trace_mode,
             options,
             signature,
             timestamp
         ))
         do_metrics, do_sample, \
             rate, source, bucket_rate, bucket_cap, decision_type, \
-            auth, status_msg, auth_msg, status = Context.getDecisions(
+            auth, status_msg, auth_msg, status = self.context.getDecisions(
                 tracestring,
                 sw_member_value,
                 tracing_mode,
                 sample_rate,
-                trigger_trace,
-                trigger_tracing_mode_disabled,
+                trigger_trace_request,
+                trigger_trace_mode,
                 options,
                 signature,
                 timestamp
@@ -415,17 +434,19 @@ class ParentBasedSwSampler(ParentBased):
     """
     Sampler that respects its parent span's sampling decision, but otherwise
     samples according to the configurations from the NH/AO backend.
+
+    Requires "SolarWindsApmConfig".
     """
-    def __init__(self):
+    def __init__(self, apm_config: "SolarWindsApmConfig"):
         """
         Uses _SwSampler/liboboe if no parent span.
         Uses _SwSampler/liboboe if parent span is_remote.
         Uses OTEL defaults if parent span is_local.
         """
         super().__init__(
-            root=_SwSampler(),
-            remote_parent_sampled=_SwSampler(),
-            remote_parent_not_sampled=_SwSampler()
+            root=_SwSampler(apm_config),
+            remote_parent_sampled=_SwSampler(apm_config),
+            remote_parent_not_sampled=_SwSampler(apm_config)
         )
 
     def should_sample(

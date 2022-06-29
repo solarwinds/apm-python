@@ -112,7 +112,7 @@ download-all: download-headers download-liboboe
 # DEPRECATED: variable definitions and recipes for copying required header and library files from neighbouring local liboboe directory
 #----------------------------------------------------------------------------------------------------------------------#
 
-OTELOBOEREPO := /code/oboe/liboboe
+OTELOBOEREPO := /code/solarwinds-apm-liboboe/liboboe
 
 # Copy the pre-compiled liboboe shared library from source specified in OTELOBOEREPO
 copy-liboboe:

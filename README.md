@@ -20,13 +20,13 @@ TODO: `pip install solarwinds_apm`
 
 The following is highly recommended for development work on SolarWinds APM.
 
-This repo can be used to auto-instrument [testbed apps](https://github.com/appoptics/opentelemetry-python-testbed) for manual testing and exploring. The code in this repository uses code in [oboe](https://github.com/librato/oboe) via C-extension with SWIG (see further below). Setup of the oboe extension is done by downloading oboe from S3 OR with local oboe code.
+This repo can be used to auto-instrument [testbed apps](https://github.com/appoptics/opentelemetry-python-testbed) for manual testing and exploring. The code in this repository uses code in [solarwinds-apm-liboboe](https://github.com/librato/solarwinds-apm-liboboe) via C-extension with SWIG (see further below). Setup of the oboe extension is done by downloading oboe from S3 OR with local oboe code.
 
-To accommodate these dependencies locally, clone the following repositories into the same root directory. For example, if your development directory is `~/gitrepos/`, please clone `oboe`, `opentelemetry-python-testbed`, and `opentelemetry-python-instrumentation-custom-distro` repositories under `~/gitrepos`, so that your directory structure looks as shown below:
+To accommodate these dependencies locally, clone the following repositories into the same root directory. For example, if your development directory is `~/gitrepos/`, please clone `solarwinds-apm-liboboe`, `opentelemetry-python-testbed`, and `opentelemetry-python-instrumentation-custom-distro` repositories under `~/gitrepos`, so that your directory structure looks as shown below:
 ```
 ~/gitrepos/
 |
-|----oboe/
+|----solarwinds-apm-liboboe/
 |
 |----opentelemetry-python-testbed/
 |
@@ -59,10 +59,10 @@ When installing the agent in development mode, every change in the Python source
 
 If you are making local changes to oboe for the custom-distro to use:
 
-1. Go to `oboe/liboboe` repo, save your changes.
-2. Run this container: `docker run -it --rm -v "$PWD"/../:/oboe tracetools/clib-amazonlinux-build bash`
-3. Inside the container: `INSTALL_DEPS=aws oboe/liboboe/build-scripts/c-lib.sh`
-4. In another Terminal at `oboe/liboboe` while container is still running, after `c-lib.sh` is done: `docker cp <container_id>:/liboboe-1.0-x86_64.so.0.0.0 .`
+1. Go to `solarwinds-apm-liboboe/liboboe` repo, save your changes.
+2. Run this container: `docker run -it --rm -v "$PWD"/../:/solarwinds-apm-oboe tracetools/clib-amazonlinux-build bash`
+3. Inside the container: `INSTALL_DEPS=aws solarwinds-apm-liboboe/liboboe/build-scripts/c-lib.sh`
+4. In another Terminal at `solarwinds-apm-liboboe/liboboe` while container is still running, after `c-lib.sh` is done: `docker cp <container_id>:/liboboe-1.0-x86_64.so.0.0.0 .`
 5. Return to this repo.
 6. Inside the build container: `make wrapper-from-local`. This copies the local C-extension artifacts and builds the SWIG bindings.
 7. Install the agent in your application (Linux environment only) in development mode by running

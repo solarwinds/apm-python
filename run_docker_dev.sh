@@ -11,5 +11,5 @@ docker run -it \
     --cap-add SYS_PTRACE \
     --workdir /code/solarwinds_apm \
     -v "$PWD":/code/solarwinds_apm \
-    -v "$PWD"/../oboe/:/code/oboe \
+    -v "$PWD"/../solarwinds-apm-liboboe/:/code/solarwinds-apm-liboboe \
     dev-container bash

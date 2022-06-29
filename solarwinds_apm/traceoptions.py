@@ -9,13 +9,13 @@ from solarwinds_apm import (
     OTEL_CONTEXT_SW_SIGNATURE_KEY
 )
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 class XTraceOptions():
     """Formats X-Trace-Options and signature for trigger tracing"""
 
     _SW_XTRACEOPTIONS_RESPONSE_KEY = "xtrace_options_response"
-    _XTRACEOPTIONS_CUSTOM = ("^custom-[^\s]*$")
+    _XTRACEOPTIONS_CUSTOM = (r"^custom-[^\s]*$")
     _XTRACEOPTIONS_CUSTOM_RE = re.compile(_XTRACEOPTIONS_CUSTOM)
 
     _XTRACEOPTIONS_HEADER_KEY_SW_KEYS = "sw-keys"

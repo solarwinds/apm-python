@@ -1,4 +1,4 @@
-"""Module to initialize OpenTelemetry SDK components to work with SolarWinds backend"""
+"""Module to initialize OpenTelemetry SDK components and liboboe to work with SolarWinds backend"""
 
 import logging
 from os import environ
@@ -6,6 +6,7 @@ from pkg_resources import (
     iter_entry_points,
     load_entry_point
 )
+from typing import TYPE_CHECKING
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
@@ -16,46 +17,74 @@ from opentelemetry.instrumentation.propagators import set_global_response_propag
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
-from opentelemetry.sdk.environment_variables import OTEL_TRACES_SAMPLER
-from opentelemetry.sdk.trace import (
-    sampling,
-    TracerProvider
-)
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from solarwinds_apm import DEFAULT_SW_TRACES_EXPORTER
-from solarwinds_apm.extension.oboe import Reporter
+from solarwinds_apm import (
+    DEFAULT_SW_TRACES_EXPORTER,
+    SUPPORT_EMAIL,
+)
+from solarwinds_apm import apm_logging
+from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
 
+if TYPE_CHECKING:
+    from solarwinds_apm.extension.oboe import Reporter
+
+solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
 
 class SolarWindsConfigurator(_OTelSDKConfigurator):
-    """OpenTelemetry Configurator for initializing SolarWinds-reporting SDK components"""
+    """OpenTelemetry Configurator for initializing APM logger and SolarWinds-reporting SDK components"""
 
     # Cannot set as env default because not part of OTel Python _KNOWN_SAMPLERS
     # https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-sdk/src/opentelemetry/sdk/trace/sampling.py#L364-L380
     _DEFAULT_SW_TRACES_SAMPLER = "solarwinds_sampler"
 
-    def _configure(self, **kwargs):
-        """Configure OTel sampler, exporter, propagator, response propagator"""
-        reporter = self._initialize_solarwinds_reporter()
-        self._configure_sampler()
-        self._configure_exporter(reporter)
-        self._configure_propagator()
-        self._configure_response_propagator()
+    def _configure(self, **kwargs: int) -> None:
+        """Configure SolarWinds APM and OTel components"""
+        apm_config = SolarWindsApmConfig()
+        reporter = self._initialize_solarwinds_reporter(apm_config)
+        self._configure_otel_components(apm_config, reporter)
 
-    def _configure_sampler(self):
-        """Always configure SolarWinds OTel sampler"""
+    def _configure_otel_components(
+        self,
+        apm_config: SolarWindsApmConfig,
+        reporter: "Reporter",
+    ) -> None:
+        """Configure OTel sampler, exporter, propagator, response propagator"""
+        self._configure_sampler(apm_config)
+        if apm_config.agent_enabled:
+            self._configure_exporter(reporter, apm_config.agent_enabled)
+            self._configure_propagator()
+            self._configure_response_propagator()
+        else:
+            # Warning: This may still set OTEL_PROPAGATORS if set because OTel API
+            logger.error("Tracing disabled. Not setting propagators.")
+
+    def _configure_sampler(
+        self,
+        apm_config: SolarWindsApmConfig,
+    ) -> None:
+        """Always configure SolarWinds OTel sampler, or none if disabled"""
+        if not apm_config.agent_enabled:
+            logger.error("Tracing disabled. Using OTel no-op tracer provider.")
+            trace.set_tracer_provider(
+                trace.NoOpTracerProvider()
+            )
+            return
         try:
             sampler = load_entry_point(
                 "solarwinds_apm",
                 "opentelemetry_traces_sampler",
                 self._DEFAULT_SW_TRACES_SAMPLER
-            )()
+            )(apm_config)
         except:
             logger.exception(
-                "Failed to load configured sampler {}".format(
-                    self._DEFAULT_SW_TRACES_SAMPLER
+                "Failed to load configured sampler {}. "
+                "Please reinstall or contact {}.".format(
+                    self._DEFAULT_SW_TRACES_SAMPLER,
+                    SUPPORT_EMAIL,
                 )
             )
             raise
@@ -63,45 +92,51 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             TracerProvider(sampler=sampler)
         )
 
-    def _configure_exporter(self, reporter=None):
-        """Configure SolarWinds or env-specified OTel span exporter.
-        Initialization of SolarWinds exporter requires a liboboe reporter."""
+    def _configure_exporter(
+        self,
+        reporter: "Reporter",
+        agent_enabled: bool = True,
+    ) -> None:
+        """Configure SolarWinds or env-specified OTel span exporter,
+        or none if disabled. Initialization of SolarWinds exporter 
+        requires a liboboe reporter and agent_enabled flag."""
+        if not agent_enabled:
+            logger.error("Tracing disabled. Cannot set span_processor.")
+            return
+
         exporter = None
         environ_exporter_name = environ.get(OTEL_TRACES_EXPORTER)
-
-        if environ_exporter_name == DEFAULT_SW_TRACES_EXPORTER:
-            try:
+        try:
+            if environ_exporter_name == DEFAULT_SW_TRACES_EXPORTER:
                 exporter = load_entry_point(
                     "solarwinds_apm",
                     "opentelemetry_traces_exporter",
                     environ_exporter_name
-                )(reporter)
-            except:
-                logger.exception(
-                    "Failed to load configured exporter {} with reporter".format(
-                        environ_exporter_name
-                    )
-                )
-                raise
-        else:
-            try:
+                )(reporter, agent_enabled)
+            else:
                 exporter = next(
                     iter_entry_points(
                         "opentelemetry_traces_exporter",
                         environ_exporter_name
                     )
                 ).load()()
-            except:
-                logger.exception(
-                    "Failed to load configured exporter {}".format(
-                        environ_exporter_name
-                    )
+        except:
+            # At this point any non-default OTEL_TRACES_EXPORTER has 
+            # been checked by ApmConfig so exception here means 
+            # something quite wrong
+            logger.exception(
+                "Failed to load configured exporter {}. "
+                "Please reinstall or contact {}.".format(
+                    environ_exporter_name,
+                    SUPPORT_EMAIL,
                 )
-                raise
+            )
+            raise
+        logger.debug("Setting trace with BatchSpanProcessor using {}".format(environ_exporter_name))
         span_processor = BatchSpanProcessor(exporter)
         trace.get_tracer_provider().add_span_processor(span_processor)
 
-    def _configure_propagator(self):
+    def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators"""
         propagators = []
         environ_propagators_names = environ.get(OTEL_PROPAGATORS).split(",")
@@ -119,41 +154,44 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     )
                 )
                 raise
+        logger.debug("Setting CompositePropagator with {}".format(environ_propagators_names))
         set_global_textmap(CompositePropagator(propagators))
 
-    def _configure_response_propagator(self):
+    def _configure_response_propagator(self) -> None:
         # Set global HTTP response propagator
         set_global_response_propagator(SolarWindsTraceResponsePropagator())
 
-    def _initialize_solarwinds_reporter(self) -> Reporter:
-        """Initialize SolarWinds reporter used by sampler and exporter. This establishes collector and sampling settings in a background thread."""
-        log_level = environ.get('SOLARWINDS_DEBUG_LEVEL', 3)
-        try:
-            log_level = int(log_level)
-        except ValueError:
-            log_level = 3
-        # TODO make some of these customizable
+    def _initialize_solarwinds_reporter(
+        self,
+        apm_config: SolarWindsApmConfig
+    ) -> "Reporter":
+        """Initialize SolarWinds reporter used by sampler and exporter, using SolarWindsApmConfig. This establishes collector and sampling settings in a background thread."""
+        if apm_config.agent_enabled:
+            from solarwinds_apm.extension.oboe import Reporter
+        else:
+            from solarwinds_apm.apm_noop import Reporter
+
         return Reporter(
-            hostname_alias='',
-            log_level=log_level,
-            log_file_path='',
-            max_transactions=-1,
-            max_flush_wait_time=-1,
-            events_flush_interval=-1,
-            max_request_size_bytes=-1,
-            reporter='ssl',
-            host=environ.get('SOLARWINDS_COLLECTOR', ''),
-            service_key=environ.get('SOLARWINDS_SERVICE_KEY', ''),
-            trusted_path=environ.get('SOLARWINDS_TRUSTEDPATH', ''),
-            buffer_size=-1,
-            trace_metrics=-1,
-            histogram_precision=-1,
-            token_bucket_capacity=-1,
-            token_bucket_rate=-1,
-            file_single=0,
-            ec2_metadata_timeout=1000,
-            grpc_proxy='',
+            hostname_alias=apm_config.get("hostname_alias"),
+            log_level=apm_config.get("debug_level"),
+            log_file_path=apm_config.get("logname"),
+            max_transactions=apm_config.get("max_transactions"),
+            max_flush_wait_time=apm_config.get("max_flush_wait_time"),
+            events_flush_interval=apm_config.get("events_flush_interval"),
+            max_request_size_bytes=apm_config.get("max_request_size_bytes"),
+            reporter=apm_config.get("reporter"),
+            host=apm_config.get("collector"),
+            service_key=apm_config.get("service_key"),
+            trusted_path=apm_config.get("trustedpath"),
+            buffer_size=apm_config.get("bufsize"),
+            trace_metrics=apm_config.get("trace_metrics"),
+            histogram_precision=apm_config.get("histogram_precision"),
+            token_bucket_capacity=apm_config.get("token_bucket_capacity"),
+            token_bucket_rate=apm_config.get("token_bucket_rate"),
+            file_single=apm_config.get("reporter_file_single"),
+            ec2_metadata_timeout=apm_config.get("ec2_metadata_timeout"),
+            grpc_proxy=apm_config.get("proxy"),
             stdout_clear_nonblocking=0,
-            is_grpc_clean_hack_enabled=False,
+            is_grpc_clean_hack_enabled=apm_config.get("is_grpc_clean_hack_enabled"),
             w3c_trace_format=1,
         )
