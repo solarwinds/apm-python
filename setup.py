@@ -15,8 +15,6 @@
 # limitations under the License.
 
 # pylint: disable-msg=missing-module-docstring
-"""Install script which makes the SolarWinds C-Extension available to the custom distro package.
-"""
 import io
 import os
 import sys
@@ -60,35 +58,28 @@ def python_version_supported():
 def link_oboe_lib(src_lib):
     """Set up the C-extension libraries.
 
-    Create two .so library symlinks, namely 'liboboe-1.0.so' and 'liboboe-1.0.so.0 which are
-    needed when the package is built from source. This step is needed since Oboe library is
-    platform specific.
+    Create two .so library symlinks, namely 'liboboe-1.0.so' and 'liboboe-1.0.so.0 which are needed when the
+    solarwinds_apm package is built from source. This step is needed since Oboe library is platform specific.
 
-    The src_lib parameter is the name of the library file under
-        extension
-    the above mentioned symlinks will point to.
+    The src_lib parameter is the name of the library file under solarwinds_apm/extension the above mentioned symlinks will
+    point to. If a file with the provided name does not exist, no symlinks will be created."""
 
-    If a file with the provided name does not exist, no symlinks will be created.
-    """
-
+    log.info("Create links to platform specific liboboe library file")
     link_dst = ('liboboe-1.0.so', 'liboboe-1.0.so.0')
     cwd = os.getcwd()
-    log.info("Create links to platform specific liboboe library file")
     try:
         os.chdir('./solarwinds_apm/extension/')
         if not os.path.exists(src_lib):
-            raise Exception(
-                "C-extension library file {} does not exist.".format(src_lib))
+            raise Exception("C-extension library file {} does not exist.".format(src_lib))
         for dst in link_dst:
             if os.path.exists(dst):
                 # if the destination library files exist already, they need to be deleted, otherwise linking will fail
                 os.remove(dst)
-                log.info("Removed {}".format(dst))
+                log.info("Removed %s" % dst)
             os.symlink(src_lib, dst)
             log.info("Created new link at {} to {}".format(dst, src_lib))
     except Exception as ecp:
-        log.info("[SETUP] failed to set up links to C-extension library: {e}".
-                 format(e=ecp))
+        log.info("[SETUP] failed to set up links to C-extension library: {e}".format(e=ecp))
     finally:
         os.chdir(cwd)
 
@@ -99,9 +90,8 @@ def os_supported():
 
 if not (python_version_supported() and os_supported()):
     log.warn(
-        "[SETUP] This package supports only Python 3.7 and above on Linux. "
+        "[SETUP] This package supports only Python 3.5 and above on Linux. "
         "Other platform or python versions may not work as expected.")
-
 
 ext_modules = [
     Extension('solarwinds_apm.extension._oboe',
@@ -122,7 +112,6 @@ ext_modules = [
               runtime_library_dirs=['$ORIGIN']),
 ]
 
-
 class CustomBuild(build):
     def run(self):
         self.run_command('build_ext')
@@ -134,37 +123,50 @@ class CustomBuildExt(build_ext):
         if sys.platform == 'darwin':
             return
 
-        oboe_lib = "liboboe-1.0-alpine-x86_64.so.0.0.0" if is_alpine_distro(
-        ) else "liboboe-1.0-x86_64.so.0.0.0"
+        oboe_lib = "liboboe-1.0-alpine-x86_64.so.0.0.0" if is_alpine_distro() else "liboboe-1.0-x86_64.so.0.0.0"
         link_oboe_lib(oboe_lib)
+        build_ext.run(self)
+
+
+class CustomBuildExtLambda(build_ext):
+    def run(self):
+        link_oboe_lib("liboboe-1.0-lambda-x86_64.so.0.0.0")
         build_ext.run(self)
 
 
 with io.open('README.md', encoding='utf-8') as f:
     long_description = f.read()
 
-
 setup(
     name='solarwinds_apm',
     cmdclass={
         'build_ext': CustomBuildExt,
+        'build_ext_lambda': CustomBuildExtLambda,
         'build': CustomBuild,
     },
     version=PACKAGE_INFO["__version__"],
     author='SolarWinds, LLC',
     author_email='support@appoptics.com',
     url='https://www.appoptics.com/monitor/python-performance',
-    download_url='TODO',
-    description='SolarWinds Observability APM custom distro for OpenTelemetry instrumentation',
+    download_url='https://pypi.python.org/pypi/solarwinds_apm',
+    description='AppOptics APM libraries, instrumentation, and web middleware components '
+    'for WSGI, Django, and Tornado.',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    keywords='solarwinds_apm appoptics_apm traceview tracelytics oboe liboboe instrumentation performance',
+    keywords='solarwinds_apm traceview tracelytics oboe liboboe instrumentation performance wsgi middleware django',
     ext_modules=ext_modules,
-    packages=find_packages(exclude=['tests']),  # Include all the python modules except `tests`.
+    packages=['solarwinds_apm', 'solarwinds_apm.extension'],
+    package_data={
+        'solarwinds_apm': ['extension/liboboe-1.0.so.0', 'extension/VERSION', 'extension/bson/bson.h', 'extension/bson/platform_hacks.h']
+    },
+    license='LICENSE',
+    install_requires=['decorator<5.0.0', 'six'],
+    python_requires='>=3.5',
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
 )
