@@ -16,13 +16,17 @@
 
 # pylint: disable-msg=missing-module-docstring
 import io
+import logging
 import os
 import sys
-from distutils import log
-from distutils.command.build import build
 
-from setuptools import Extension, find_packages, setup
+from setuptools import (
+    Extension,
+    setup
+)
 from setuptools.command.build_ext import build_ext
+from setuptools.command.build_py import build_py
+
 
 BASE_DIR = os.path.dirname(__file__)
 VERSION_FILENAME = os.path.join(
@@ -31,6 +35,9 @@ VERSION_FILENAME = os.path.join(
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME, encoding="utf-8") as f:
     exec(f.read(), PACKAGE_INFO)
+
+
+logger = logging.getLogger(__name__)
 
 def is_alpine_distro():
     """Checks if current system is Alpine Linux."""
@@ -64,7 +71,7 @@ def link_oboe_lib(src_lib):
     The src_lib parameter is the name of the library file under solarwinds_apm/extension the above mentioned symlinks will
     point to. If a file with the provided name does not exist, no symlinks will be created."""
 
-    log.info("Create links to platform specific liboboe library file")
+    logger.info("Create links to platform specific liboboe library file")
     link_dst = ('liboboe-1.0.so', 'liboboe-1.0.so.0')
     cwd = os.getcwd()
     try:
@@ -75,11 +82,11 @@ def link_oboe_lib(src_lib):
             if os.path.exists(dst):
                 # if the destination library files exist already, they need to be deleted, otherwise linking will fail
                 os.remove(dst)
-                log.info("Removed %s" % dst)
+                logger.info("Removed %s" % dst)
             os.symlink(src_lib, dst)
-            log.info("Created new link at {} to {}".format(dst, src_lib))
+            logger.info("Created new link at {} to {}".format(dst, src_lib))
     except Exception as ecp:
-        log.info("[SETUP] failed to set up links to C-extension library: {e}".format(e=ecp))
+        logger.info("[SETUP] failed to set up links to C-extension library: {e}".format(e=ecp))
     finally:
         os.chdir(cwd)
 
@@ -89,7 +96,7 @@ def os_supported():
 
 
 if not (python_version_supported() and os_supported()):
-    log.warn(
+    logger.warn(
         "[SETUP] This package supports only Python 3.5 and above on Linux. "
         "Other platform or python versions may not work as expected.")
 
@@ -112,10 +119,10 @@ ext_modules = [
               runtime_library_dirs=['$ORIGIN']),
 ]
 
-class CustomBuild(build):
+class CustomBuild(build_py):
     def run(self):
         self.run_command('build_ext')
-        build.run(self)
+        build_py.run(self)
 
 
 class CustomBuildExt(build_ext):
@@ -143,7 +150,7 @@ setup(
     cmdclass={
         'build_ext': CustomBuildExt,
         'build_ext_lambda': CustomBuildExtLambda,
-        'build': CustomBuild,
+        'build_py': CustomBuild,
     },
     version=PACKAGE_INFO["__version__"],
     author='SolarWinds, LLC',
