@@ -161,8 +161,6 @@ setup(
     },
     license_files=('LICENSE',),
     install_requires=[
-        'decorator<5.0.0',
-        'six',
         'opentelemetry-api==1.12.0rc1',
         'opentelemetry-sdk==1.12.0rc1',
         'opentelemetry-instrumentation==0.31b0',
