@@ -57,7 +57,7 @@ def is_alpine_distro():
 
 
 def python_version_supported():
-    if sys.version_info[0] == 3 and sys.version_info[1] > 3:
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 6:
         return True
     return False
 
@@ -97,7 +97,7 @@ def os_supported():
 
 if not (python_version_supported() and os_supported()):
     logger.warn(
-        "[SETUP] This package supports only Python 3.5 and above on Linux. "
+        "[SETUP] This package supports only Python 3.6 and above on Linux. "
         "Other platform or python versions may not work as expected.")
 
 ext_modules = [
