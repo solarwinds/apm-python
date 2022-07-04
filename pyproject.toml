@@ -6,12 +6,11 @@ build-backend = "setuptools.build_meta"
 name = "solarwinds_apm"
 description = "Custom distro for OpenTelemetry to connect to SolarWinds"
 authors = [
-    "SolarWinds, LLC <support@appoptics.com>"
+    {email = "support@appoptics.com"},
+    {name = "SolarWinds, LLC"}
 ]
 license = {file = "LICENSE"}
 readme = "README.md"
-repository = "https://pypi.python.org/pypi/solarwinds_apm"
-homepage = "https://www.appoptics.com/monitor/python-performance"
 keywords = ["solarwinds_apm", "appoptics_apm", "traceview", "tracelytics", "oboe", "liboboe", "instrumentation", "performance"]
 requires-python = ">=3.6"
 classifiers = [
@@ -29,26 +28,28 @@ dependencies = [
     "opentelemetry-sdk==1.12.0rc1",
     "opentelemetry-instrumentation==0.31b0",
 ]
+dynamic = ["version"]
+
+[project.urls]
+repository = "https://pypi.python.org/pypi/solarwinds_apm"
+documentation = "https://www.appoptics.com/monitor/python-performance"
+
+[project.entry-points.opentelemetry_distro]
+solarwinds_distro = "solarwinds_apm.distro:SolarWindsDistro"
+[project.entry-points.opentelemetry_configurator]
+solarwinds_configurator = "solarwinds_apm.configurator:SolarWindsConfigurator"
+[project.entry-points.opentelemetry_propagator]
+solarwinds_propagator = "solarwinds_apm.propagator:SolarWindsPropagator"
+[project.entry-points.opentelemetry_traces_exporter]
+solarwinds_exporter = "solarwinds_apm.exporter:SolarWindsSpanExporter"
+[project.entry-points.opentelemetry_traces_sampler]
+solarwinds_sampler = "solarwinds_apm.sampler:ParentBasedSwSampler"
+
+[tool.setuptools]
 packages = [
     "solarwinds_apm",
     "solarwinds_apm.extension"
 ]
-dynamic = ["version"]
-
-[tool.setuptools.entry-points]
-opentelemetry_distro =
-    solarwinds_distro = "solarwinds_apm.distro:SolarWindsDistro"
-opentelemetry_configurator =
-    solarwinds_configurator = "solarwinds_apm.configurator:SolarWindsConfigurator"
-opentelemetry_propagator =
-    solarwinds_propagator = "solarwinds_apm.propagator:SolarWindsPropagator"
-opentelemetry_traces_exporter =
-    solarwinds_exporter = "solarwinds_apm.exporter:SolarWindsSpanExporter"
-opentelemetry_traces_sampler =
-    solarwinds_sampler = "solarwinds_apm.sampler:ParentBasedSwSampler"
-
-[tool.setuptools.packages.find]
-where = ["solarwinds_apm"]
 
 [tool.setuptools.package-data]
 solarwinds_apm = [
