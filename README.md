@@ -20,7 +20,7 @@ TODO: `pip install solarwinds_apm`
 
 The following is highly recommended for development work on SolarWinds APM.
 
-This repo can be used to auto-instrument [testbed apps](https://github.com/appoptics/opentelemetry-python-testbed) for manual testing and exploring. The code in this repository uses code in [solarwinds-apm-liboboe](https://github.com/librato/solarwinds-apm-liboboe) via C-extension with SWIG (see further below). Setup of the oboe extension is done by downloading oboe from S3 OR with local oboe code.
+This repo can be used to auto-instrument [testbed apps](https://github.com/appoptics/opentelemetry-python-testbed) for manual testing and exploring. The code in this repository uses code in [solarwinds-apm-liboboe](https://github.com/librato/solarwinds-apm-liboboe) via C-extension with SWIG (see further below). Setup of the oboe extension is done by downloading oboe from SolarWinds Cloud OR with local oboe code.
 
 To accommodate these dependencies locally, clone the following repositories into the same root directory. For example, if your development directory is `~/gitrepos/`, please clone `solarwinds-apm-liboboe`, `opentelemetry-python-testbed`, and `opentelemetry-python-instrumentation-custom-distro` repositories under `~/gitrepos`, so that your directory structure looks as shown below:
 ```
@@ -40,15 +40,15 @@ docker build -t dev-container .
 ./run_docker_dev.sh
 ```
 
-The successfully-built build container can use [SWIG](https://www.swig.org/Doc1.3/Python.html), a tool to connect C/C++ libraries with other languages via compiling a C-extension. This can be done with this repo's `Makefile` as described next.
+The successfully-built build container is based on the [PyPA image](https://github.com/pypa/manylinux) `manylinux2014_x86_64`. It can use [SWIG](https://www.swig.org/Doc1.3/Python.html), a tool to connect C/C++ libraries with other languages via compiling a C-extension. This can be done with this repo's `Makefile` as described next.
 
 #### Install Agent in Development Mode
 
-##### (A) oboe S3 download
+##### (A) oboe SolarWinds Cloud download
 
 If you don't need to make changes to oboe:
 
-1. Inside the build container: `make wrapper`. This downloads the version of oboe defined in `extension/VERSION` from S3 and builds the SWIG bindings.
+1. Inside the build container: `make wrapper`. This downloads the version of oboe defined in `extension/VERSION` from SolarWinds Cloud and builds the SWIG bindings.
 2. Install the agent in your application (Linux environment only) in development mode by running
    ```python
    pip install -Ie ~/gitrepos/opentelemetry-python-instrumentation-custom-distro/
@@ -72,7 +72,10 @@ If you are making local changes to oboe for the custom-distro to use:
 Like (A) above, when installing the agent in development mode, every change in the Python source code will be reflected in the Python environment directly without re-installation. _However_, if changes have been made to the C-extension files, you need to reinstall the agent to reflect these changes in the Python environment.
 
 #### Build Agent Source Distribution Archive
-Inside the build container, execute `make sdist`. This will create a zip archive (source distribution) of the Python module under the `dist` directory.
+
+The `manylinux` build container can be used to generate a zipped archive source distribution (sdist), a wheel / build distribution (bdist), or both (package distribution). For prereleases, the container can be used to upload a package to SolarWinds PackageCloud.
+
+For more information, run `make` inside the build container.
 
 ### Regression Tests
 
@@ -85,9 +88,9 @@ The functional tests require a compiled C-extension and should be run inside the
 1. For each backend you'll be running against, obtain an agent token to replace the appropriate `<AGENT_TOKEN>` in `tox.ini`.
 2. _If running against AO prod:_ You'll need to obtain a certificate and save it to `{thisrepo}/tmp/solarwinds-apm/grpc-ao-prod.crt`. 
 3. Create and run the Docker build container as described above.
-4. Inside the build container: `make wrapper`. This downloads the version of oboe defined in `extension/VERSION` from S3 and builds the SWIG bindings.
+4. Inside the build container: `make wrapper`. This downloads the version of oboe defined in `extension/VERSION` from SolarWinds Cloud and builds the SWIG bindings.
 5. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.7 against AO prod: `make tox OPTIONS="-e py37-ao-prod"`.
-6. (WARNING: slow!) To run all tests for all Python environments: `make tox`
+6. (WARNING: slow!) To run all tests for all supported Python environments: `make tox`
 
 #### Integration tests
 
