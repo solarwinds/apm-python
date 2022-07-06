@@ -166,10 +166,8 @@ class _SwSampler(Sampler):
         liboboe_decision: Dict
     ) -> Decision:
         """Formats OTel decision from liboboe decision"""
-        decision = Decision.DROP
-        if liboboe_decision["do_metrics"]:
-            # TODO: need to eck what record only actually means and how metrics work in OTel
-            decision = Decision.RECORD_ONLY
+        # Always record metrics if we get here i.e. when agent_enabled
+        decision = Decision.RECORD_ONLY
         if liboboe_decision["do_sample"]:
             decision = Decision.RECORD_AND_SAMPLE
         logger.debug("OTel decision created: {}".format(decision))
@@ -348,8 +346,9 @@ class _SwSampler(Sampler):
         parent span context, xtraceoptions, and existing attributes."""
         logger.debug("Received attributes: {}".format(attributes))
         # Don't set attributes if not tracing
-        if self.otel_decision_from_liboboe(decision) == Decision.DROP:
-            logger.debug("Trace decision is to drop - not setting attributes")
+        otel_decision = self.otel_decision_from_liboboe(decision)
+        if not Decision.is_sampled(otel_decision):
+            logger.debug("Trace decision not is_sampled - not setting attributes")
             return None
         
         new_attributes = {}
@@ -452,7 +451,7 @@ class _SwSampler(Sampler):
 
         return SamplingResult(
             otel_decision,
-            new_attributes if otel_decision != Decision.DROP else None,
+            new_attributes if Decision.is_sampled(otel_decision) else None,
             new_trace_state,
         )
 
