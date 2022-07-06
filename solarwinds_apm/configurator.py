@@ -57,6 +57,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self._configure_sampler(apm_config)
         if apm_config.agent_enabled:
             self._configure_exporter(reporter, apm_config.agent_enabled)
+            self._configure_metrics_span_processor(reporter, apm_config)
             self._configure_propagator()
             self._configure_response_propagator()
         else:
