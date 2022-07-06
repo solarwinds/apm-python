@@ -22,13 +22,13 @@ nothing:
 	@echo -e "  - 'make package-and-publish':"
 	@echo -e "          Build the agent package distribution and upload it to packagecloud."
 	@echo -e "  - 'make package':"
-	@echo -e "          Build the agent package distribution (sdist and bdist (wheels))."
+	@echo -e "          Build the agent package distribution (sdist and bdist)."
 	@echo -e "  - 'make sdist':"
-	@echo -e "          Just build the agent package in sdist format."
+	@echo -e "          Build sdist zip archive (.tar.gz in dist/)."
 	@echo -e "  - 'make manylinux-wheels':"
-	@echo -e "          Just build manylinux 64-bit Python wheels (bdist)."
+	@echo -e "          Build manylinux 64-bit Python bdist (.whl in dist/)."
 	@echo -e "  - 'make aws-lambda':"
-	@echo -e "          Build the AWS Lambda layer (zip archive)."
+	@echo -e "          Build the AWS Lambda layer (zip archive in dist/)."
 	@echo -e "  - 'make wrapper':"
 	@echo -e "          Locally generate SWIG wrapper for C/C++ headers."
 	@echo -e "  - 'STAGING_OBOE=1 make wrapper':"
@@ -149,7 +149,7 @@ sdist: wrapper
 # in the corresponding repo of the Docker images: https://github.com/pypa/manylinux#example.
 manylinux-wheels: wrapper
 	@echo -e "Generating python agent package any-linux wheels for 64 bit systems"
-	@set -e; for PYBIN in /opt/python/*/bin; do "$${PYBIN}/pip" wheel . -w ./tmp_dist/ --no-deps; done
+	@set -e; for PYBIN in /opt/python/*/bin; do "$${PYBIN}/pip" -v wheel . -w ./tmp_dist/ --no-deps; done
 	@echo -e "Tagging wheels with $(wheel_tag)"
 	@set -e; for whl in ./tmp_dist/*.whl; do auditwheel repair --plat $(wheel_tag) "$$whl" -w ./dist/; done
 	@rm -rf ./tmp_dist
