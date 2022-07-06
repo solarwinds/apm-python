@@ -5,9 +5,13 @@ SolarWinds APM custom distro for OpenTelemetry Python compatibility with SolarWi
 
 ## Installation
 
-TODO: `pypi` image
+```
+pip install solarwinds-apm
+opentelemetry-bootstrap --action=install
+opentelemetry-instrument <command_to_run_your_service>
+```
 
-TODO: `pip install solarwinds_apm`
+Download URL: https://pypi.org/project/solarwinds-apm/
 
 ----
 ## Development
