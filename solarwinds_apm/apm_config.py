@@ -112,21 +112,22 @@ class SolarWindsApmConfig:
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
 
-        self._safe_log()
+        if self._config.get("debug_level") == apm_logging.ApmLoggingLevel.debug_levels.get("OBOE_DEBUG_HIGH", -1):
+            self._logger.debug("Set ApmConfig as: {}".format(
+                self._config_mask_service_key()
+            ))
 
-    def _safe_log(self):
-        """Log entire config with service key masked, only if DEBUG_HIGH"""
-        if self._config.get("debug_level") < apm_logging.ApmLoggingLevel.debug_levels.get("OBOE_DEBUG_HIGH", -1):
-            return
-        # TODO one-line print not multiline
-        self._logger.debug("Set ApmConfig as:")
+    def _config_mask_service_key(self) -> dict:
+        """Return new config with service key masked"""
+        config_masked = {}
         for k, v in self._config.items():
             if k == "service_key":
                 v = self._mask_service_key()
-            self._logger.debug("{}: {}".format(k, v))
+            config_masked[k] = v
+        return config_masked
 
-    def _mask_service_key(self):
-        """Mask service key except first 4 and last 4 chars"""
+    def _mask_service_key(self) -> str:
+        """Return masked service key except first 4 and last 4 chars"""
         if not self._config.get('service_key'):
             return ""
         key_parts = self._config.get('service_key').split(":")
@@ -142,7 +143,7 @@ class SolarWindsApmConfig:
             key_parts[1],
         )
 
-    def _is_lambda(self):
+    def _is_lambda(self) -> bool:
         """Checks if agent is running in an AWS Lambda environment."""
         if os.environ.get('AWS_LAMBDA_FUNCTION_NAME') and os.environ.get("LAMBDA_TASK_ROOT"):
             self._logger.warning("AWS Lambda is not yet supported by Python SolarWinds APM.")

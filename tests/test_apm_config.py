@@ -32,6 +32,10 @@ class TestSolarWindsApmConfig:
             return_value=mock_points
         )
 
+    def test_config_mask_service_key(self, mocker):
+        self._mock_with_service_key(mocker, "valid-and-long:key")
+        assert apm_config.SolarWindsApmConfig()._config_mask_service_key().get("service_key") == "vali...long:key"
+
     def test_mask_service_key_no_key_empty_default(self, mocker):
         old_service_key = os.environ.get("SW_APM_SERVICE_KEY", None)
         if old_service_key:
