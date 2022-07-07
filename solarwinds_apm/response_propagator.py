@@ -8,10 +8,10 @@ from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
 from solarwinds_apm.apm_constants import (
-    COMMA,
-    COMMA_W3C_SANITIZED,
-    EQUALS,
-    EQUALS_W3C_SANITIZED
+    INTL_SWO_COMMA,
+    INTL_SWO_COMMA_W3C_SANITIZED,
+    INTL_SWO_EQUALS,
+    INTL_SWO_EQUALS_W3C_SANITIZED
 )
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
@@ -78,6 +78,6 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
         if not sanitized:
             return
         return sanitized.replace(
-            EQUALS_W3C_SANITIZED,
-            EQUALS
-        ).replace(COMMA_W3C_SANITIZED, COMMA)
+            INTL_SWO_EQUALS_W3C_SANITIZED,
+            INTL_SWO_EQUALS
+        ).replace(INTL_SWO_COMMA_W3C_SANITIZED, INTL_SWO_COMMA)

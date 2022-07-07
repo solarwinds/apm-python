@@ -15,9 +15,9 @@ from opentelemetry.trace.span import SpanContext, TraceState
 from opentelemetry.util.types import Attributes
 
 from solarwinds_apm.apm_constants import (
-    COMMA_W3C_SANITIZED,
-    EQUALS_W3C_SANITIZED,
-    SW_TRACESTATE_KEY
+    INTL_SWO_COMMA_W3C_SANITIZED,
+    INTL_SWO_EQUALS_W3C_SANITIZED,
+    INTL_SWO_TRACESTATE_KEY
 )
 from solarwinds_apm.apm_config import OboeTracingMode
 from solarwinds_apm.traceoptions import XTraceOptions
@@ -75,7 +75,7 @@ class _SwSampler(Sampler):
             tracestring = W3CTransformer.traceparent_from_context(
                 parent_span_context
             )
-        sw_member_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY)
+        sw_member_value = parent_span_context.trace_state.get(INTL_SWO_TRACESTATE_KEY)
 
         # 'tracing_mode' is not supported in NH Python, so give as unset
         tracing_mode = self._UNSET
@@ -187,7 +187,7 @@ class _SwSampler(Sampler):
         response = []
 
         if xtraceoptions.signature and decision["auth_msg"]:
-            response.append(EQUALS_W3C_SANITIZED.join([
+            response.append(INTL_SWO_EQUALS_W3C_SANITIZED.join([
                 self._XTRACEOPTIONS_RESP_AUTH,
                 decision["auth_msg"]
             ]))
@@ -208,16 +208,16 @@ class _SwSampler(Sampler):
                     trigger_msg = decision["status_msg"]
             else:
                 trigger_msg = self._XTRACEOPTIONS_RESP_TRIGGER_NOT_REQUESTED
-            response.append(EQUALS_W3C_SANITIZED.join([
+            response.append(INTL_SWO_EQUALS_W3C_SANITIZED.join([
                 self._XTRACEOPTIONS_RESP_TRIGGER_TRACE,
                 trigger_msg
             ]))
 
         if xtraceoptions.ignored:
             response.append(
-                EQUALS_W3C_SANITIZED.join([
+                INTL_SWO_EQUALS_W3C_SANITIZED.join([
                     self._XTRACEOPTIONS_RESP_IGNORED,
-                    (COMMA_W3C_SANITIZED.join(xtraceoptions.ignored))
+                    (INTL_SWO_COMMA_W3C_SANITIZED.join(xtraceoptions.ignored))
                 ])
             )
 
@@ -232,7 +232,7 @@ class _SwSampler(Sampler):
         """Creates new TraceState based on trace decision, parent span id,
         and x-trace-options if provided"""
         trace_state = TraceState([(
-            SW_TRACESTATE_KEY,
+            INTL_SWO_TRACESTATE_KEY,
             W3CTransformer.sw_from_span_and_decision(
                 parent_span_context.span_id,
                 W3CTransformer.trace_flags_from_int(decision["do_sample"])
@@ -278,7 +278,7 @@ class _SwSampler(Sampler):
             else:
                 # Update trace_state with span_id and sw trace_flags
                 trace_state = trace_state.update(
-                    SW_TRACESTATE_KEY,
+                    INTL_SWO_TRACESTATE_KEY,
                     W3CTransformer.sw_from_span_and_decision(
                         parent_span_context.span_id,
                         W3CTransformer.trace_flags_from_int(decision["do_sample"])
@@ -323,7 +323,7 @@ class _SwSampler(Sampler):
                 tracestate_capture
             ])
             new_attr_trace_state = attr_trace_state.update(
-                SW_TRACESTATE_KEY,
+                INTL_SWO_TRACESTATE_KEY,
                 W3CTransformer.sw_from_span_and_decision(
                     parent_span_context.span_id,
                     W3CTransformer.trace_flags_from_int(decision["do_sample"])
@@ -388,7 +388,7 @@ class _SwSampler(Sampler):
 
         if not attributes:
             # _SW_TRACESTATE_ROOT_KEY is set once per trace, if possible
-            sw_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY, None)
+            sw_value = parent_span_context.trace_state.get(INTL_SWO_TRACESTATE_KEY, None)
             if sw_value:
                 new_attributes[self._SW_TRACESTATE_ROOT_KEY]= W3CTransformer.span_id_from_sw(sw_value)
         else:
