@@ -354,7 +354,7 @@ class Test_SwSampler():
         assert sw_sampler.otel_decision_from_liboboe({
             "do_metrics": 0,
             "do_sample": 0,
-        }) == Decision.DROP
+        }) == Decision.RECORD_ONLY
         assert sw_sampler.otel_decision_from_liboboe({
             "do_metrics": 1,
             "do_sample": 0,
@@ -815,7 +815,7 @@ class Test_SwSampler():
         )
         mocker.patch(
             "solarwinds_apm.sampler._SwSampler.otel_decision_from_liboboe",
-            return_value="otel_decision"
+            return_value=Decision.RECORD_AND_SAMPLE
         )
 
         sampling_result = sw_sampler.should_sample(
@@ -846,7 +846,7 @@ class Test_SwSampler():
             "my_decision"
         )
         assert sampling_result.attributes == "my_attributes"
-        assert sampling_result.decision == "otel_decision"
+        assert sampling_result.decision == Decision.RECORD_AND_SAMPLE
         assert sampling_result.trace_state == "my_trace_state"
 
 
