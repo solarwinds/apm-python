@@ -20,7 +20,7 @@ from opentelemetry.test.globals_test import reset_trace_globals
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.span import SpanContext
 
-from solarwinds_apm import SW_TRACESTATE_KEY
+from solarwinds_apm.apm_constants import SW_TRACESTATE_KEY
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro

@@ -2,7 +2,7 @@ import os
 import pytest
 
 from solarwinds_apm import apm_config
-from solarwinds_apm import (
+from solarwinds_apm.apm_constants import (
     DEFAULT_SW_PROPAGATORS,
     DEFAULT_SW_TRACES_EXPORTER,
 )

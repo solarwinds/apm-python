@@ -8,7 +8,7 @@ from opentelemetry.environment_variables import (
 )
 from opentelemetry.instrumentation.distro import BaseDistro
 
-from solarwinds_apm import (
+from solarwinds_apm.apm_constants import (
     DEFAULT_SW_TRACES_EXPORTER,
     DEFAULT_SW_PROPAGATORS
 ) 

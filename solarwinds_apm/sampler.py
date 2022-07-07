@@ -14,7 +14,7 @@ from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import SpanContext, TraceState
 from opentelemetry.util.types import Attributes
 
-from solarwinds_apm import (
+from solarwinds_apm.apm_constants import (
     COMMA_W3C_SANITIZED,
     EQUALS_W3C_SANITIZED,
     SW_TRACESTATE_KEY

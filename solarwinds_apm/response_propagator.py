@@ -7,7 +7,7 @@ from opentelemetry.instrumentation.propagators import ResponsePropagator
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
-from solarwinds_apm import (
+from solarwinds_apm.apm_constants import (
     COMMA,
     COMMA_W3C_SANITIZED,
     EQUALS,

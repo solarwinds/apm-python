@@ -12,8 +12,8 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 
-from solarwinds_apm import (
-    apm_logging,
+from solarwinds_apm import apm_logging
+from solarwinds_apm.apm_constants import (
     DEFAULT_SW_TRACES_EXPORTER,
     DEFAULT_SW_PROPAGATORS,
     DOC_SUPPORTED_PLATFORMS,

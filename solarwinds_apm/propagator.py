@@ -6,7 +6,7 @@ from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
-from solarwinds_apm import (
+from solarwinds_apm.apm_constants import (
     OTEL_CONTEXT_SW_OPTIONS_KEY,
     OTEL_CONTEXT_SW_SIGNATURE_KEY,
     SW_TRACESTATE_KEY

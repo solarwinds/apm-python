@@ -20,7 +20,7 @@ from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from solarwinds_apm import (
+from solarwinds_apm.apm_constants import (
     DEFAULT_SW_TRACES_EXPORTER,
     SUPPORT_EMAIL,
 )
