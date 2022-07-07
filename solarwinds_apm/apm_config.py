@@ -259,10 +259,12 @@ class SolarWindsApmConfig:
     def __str__(self) -> str:
         """String representation of ApmConfig is config with masked service key,
         plus agent_enabled and context"""
-        masked_config = self._config_mask_service_key()
-        masked_config["agent_enabled"] = self.agent_enabled
-        masked_config["context"] = self.context
-        return "{}".format(masked_config)
+        apm_config = {
+            "__config": self._config_mask_service_key(),
+            "agent_enabled": self.agent_enabled,
+            "context": self.context,
+        }
+        return "{}".format(apm_config)
 
     def __setitem__(self, key: str, value: str) -> None:
         """Refresh the configurations in liboboe global struct while user changes settings.
