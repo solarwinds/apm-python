@@ -23,7 +23,6 @@ from solarwinds_apm import (
     TRACECONTEXT_PROPAGATOR,
 )
 
-logger = logging.getLogger(__name__)
 
 class OboeTracingMode:
     """Provides an interface to translate the string representation of tracing_mode to the C-extension equivalent."""
@@ -60,6 +59,7 @@ class SolarWindsApmConfig:
     _DELIMITER = '.'
 
     def __init__(self, **kwargs: int) -> None:
+        self._logger = logging.getLogger(__name__)
         self._config = dict()
         # Update the config with default values
         self._config = {
@@ -112,12 +112,40 @@ class SolarWindsApmConfig:
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
 
-        logger.debug("Set ApmConfig as: {}".format(self._config))
+        self._safe_log()
+
+    def _safe_log(self):
+        """Log entire config with service key masked, only if DEBUG_HIGH"""
+        if self._config.get("debug_level") < apm_logging.ApmLoggingLevel.debug_levels.get("OBOE_DEBUG_HIGH", -1):
+            return
+        # TODO one-line print not multiline
+        self._logger.debug("Set ApmConfig as:")
+        for k, v in self._config.items():
+            if k == "service_key":
+                v = self._mask_service_key()
+            self._logger.debug("{}: {}".format(k, v))
+
+    def _mask_service_key(self):
+        """Mask service key except first 4 and last 4 chars"""
+        if not self._config.get('service_key'):
+            return ""
+        key_parts = self._config.get('service_key').split(":")
+        if len(key_parts) < 2:
+            return self._config.get('service_key')
+        api_token = key_parts[0]
+        if len(api_token) < 9:
+            return self._config.get('service_key')
+
+        return "{}...{}:{}".format(
+            api_token[0:4],
+            api_token[-4:],
+            key_parts[1],
+        )
 
     def _is_lambda(self):
         """Checks if agent is running in an AWS Lambda environment."""
         if os.environ.get('AWS_LAMBDA_FUNCTION_NAME') and os.environ.get("LAMBDA_TASK_ROOT"):
-            logger.warning("AWS Lambda is not yet supported by Python SolarWinds APM.")
+            self._logger.warning("AWS Lambda is not yet supported by Python SolarWinds APM.")
             return True
         return False
 
@@ -139,12 +167,12 @@ class SolarWindsApmConfig:
             if environ_propagators != DEFAULT_SW_PROPAGATORS:
                 if not TRACECONTEXT_PROPAGATOR in environ_propagators or \
                     not SW_PROPAGATOR in environ_propagators:
-                    logger.error("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability. Tracing disabled.")
+                    self._logger.error("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability. Tracing disabled.")
                     raise ValueError
 
                 if environ_propagators.index(SW_PROPAGATOR) \
                     < environ_propagators.index(TRACECONTEXT_PROPAGATOR):
-                    logger.error("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability. Tracing disabled.")
+                    self._logger.error("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability. Tracing disabled.")
                     raise ValueError
         except ValueError:
             agent_enabled = False
@@ -159,7 +187,7 @@ class SolarWindsApmConfig:
                     )
                 )
         except StopIteration:
-            logger.error(
+            self._logger.error(
                 "Failed to load configured OTEL_TRACES_EXPORTER {}. "
                 "Tracing disabled".format(
                     environ_exporter_name
@@ -170,14 +198,14 @@ class SolarWindsApmConfig:
         try:
             if os.environ.get('SW_APM_AGENT_ENABLED', 'true').lower() == 'false':
                 agent_enabled = False
-                logger.info(
+                self._logger.info(
                     "SolarWinds APM is disabled and will not report any traces because the environment variable "
                     "SW_APM_AGENT_ENABLED is set to 'false'! If this is not intended either unset the variable or set it to "
                     "a value other than false. Note that the value of SW_APM_AGENT_ENABLED is case-insensitive.")
                 raise ImportError
 
             if not os.environ.get('SW_APM_SERVICE_KEY', None) and not self._is_lambda():
-                logger.error("Missing service key. Tracing disabled.")
+                self._logger.error("Missing service key. Tracing disabled.")
                 agent_enabled = False
                 raise ImportError
 
@@ -185,7 +213,7 @@ class SolarWindsApmConfig:
                 # Key must be at least one char + ":" + at least one other char
                 key_parts = [p for p in os.environ.get('SW_APM_SERVICE_KEY', "").split(":") if len(p) > 0]
                 if len(key_parts) != 2:
-                    logger.error("Incorrect service key format. Tracing disabled.")
+                    self._logger.error("Incorrect service key format. Tracing disabled.")
                     agent_enabled = False
                     raise ImportError
 
@@ -195,7 +223,7 @@ class SolarWindsApmConfig:
                     # only log the following messages if agent wasn't explicitly disabled
                     # via SW_APM_AGENT_ENABLED or due to missing service key
                     if sys.platform.startswith('linux'):
-                        logger.warning(
+                        self._logger.warning(
                             """Missing extension library.
                             Tracing is disabled and will go into no-op mode.
                             Contact {} if this is unexpected.
@@ -206,7 +234,7 @@ class SolarWindsApmConfig:
                                 DOC_TRACING_PYTHON,
                             ))
                     else:
-                        logger.warning(
+                        self._logger.warning(
                             """Platform {} not yet supported.
                             See: {}
                             Tracing is disabled and will go into no-op mode.
@@ -216,7 +244,7 @@ class SolarWindsApmConfig:
                                 SUPPORT_EMAIL,
                             ))
             except ImportError as err:
-                logger.error(
+                self._logger.error(
                     """Unexpected error: {}.
                     Please reinstall or contact {}.""".format(
                         err,
@@ -227,7 +255,7 @@ class SolarWindsApmConfig:
                 # disabled)
                 agent_enabled = False
         
-        logger.debug("agent_enabled: {}".format(agent_enabled))
+        self._logger.debug("agent_enabled: {}".format(agent_enabled))
         return agent_enabled
 
     def __setitem__(self, key: str, value: str) -> None:
@@ -243,7 +271,7 @@ class SolarWindsApmConfig:
         elif key in ('enable_sanitize_sql', 'warn_deprecated'):
             self._set_config_value(key, value)
         else:
-            logger.warning('Unsupported SolarWinds APM config key: {key}'.format(key=key))
+            self._logger.warning('Unsupported SolarWinds APM config key: {key}'.format(key=key))
 
     def __getitem__(self, key: str) -> Any:
         return self._config[key]
@@ -368,8 +396,8 @@ class SolarWindsApmConfig:
                     val = type(sub_dict[keys[-1]])(val)
                 sub_dict[keys[-1]] = val
             else:
-                logger.warning("Ignore invalid configuration key: {}".format('.'.join(keys)))
+                self._logger.warning("Ignore invalid configuration key: {}".format('.'.join(keys)))
         except (ValueError, TypeError):
-            logger.warning(
+            self._logger.warning(
                 'Ignore config option with invalid (non-convertible or out-of-range) type: ' +
                 '.'.join(keys if keys[0] not in ['inst', 'transaction'] else keys[1:]))
