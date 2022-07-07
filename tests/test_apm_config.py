@@ -241,68 +241,68 @@ class TestSolarWindsApmConfig:
     def test_set_config_value_invalid_key(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("invalid_key", "foo")
-        assert test_config._config.get("invalid_key", None) == None
+        assert test_config.get("invalid_key", None) == None
         assert "Ignore invalid configuration key" in caplog.text
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_ec2(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("ec2_metadata_timeout", "9999")
-        assert test_config._config.get("ec2_metadata_timeout") == 1000
+        assert test_config.get("ec2_metadata_timeout") == 1000
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_token_cap(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("token_bucket_capacity", "9999")
-        assert test_config._config.get("token_bucket_capacity") == -1
+        assert test_config.get("token_bucket_capacity") == -1
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_token_rate(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("token_bucket_rate", "9999")
-        assert test_config._config.get("token_bucket_rate") == -1
+        assert test_config.get("token_bucket_rate") == -1
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_proxy(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("proxy", "not-valid-url")
-        assert test_config._config.get("proxy") == ""
+        assert test_config.get("proxy") == ""
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_tracing_mode(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("tracing_mode", "not-valid-mode")
-        assert test_config._config.get("tracing_mode") == None
+        assert test_config.get("tracing_mode") == None
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_trigger_trace(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("trigger_trace", "not-valid-mode")
-        assert test_config._config.get("trigger_trace") == "enabled"
+        assert test_config.get("trigger_trace") == "enabled"
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_reporter(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("reporter", "not-valid-mode")
-        assert test_config._config.get("reporter") == ""
+        assert test_config.get("reporter") == ""
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_debug_level(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("debug_level", "not-valid-level")
-        assert test_config._config.get("debug_level") == 2
+        assert test_config.get("debug_level") == 2
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_log_trace_id(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("log_trace_id", "not-valid-mode")
-        assert test_config._config.get("log_trace_id") == "never"
+        assert test_config.get("log_trace_id") == "never"
         assert "Ignore config option" in caplog.text
