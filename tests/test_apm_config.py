@@ -1,3 +1,4 @@
+import json
 import os
 import pytest
 
@@ -31,75 +32,6 @@ class TestSolarWindsApmConfig:
         mock_iter_entry_points.configure_mock(
             return_value=mock_points
         )
-
-    def test_config_mask_service_key(self, mocker):
-        self._mock_with_service_key(mocker, "valid-and-long:key")
-        assert apm_config.SolarWindsApmConfig()._config_mask_service_key().get("service_key") == "vali...long:key"
-
-    def test_mask_service_key_no_key_empty_default(self, mocker):
-        old_service_key = os.environ.get("SW_APM_SERVICE_KEY", None)
-        if old_service_key:
-            del os.environ["SW_APM_SERVICE_KEY"]
-        mocker.patch.dict(os.environ, {
-            "OTEL_PROPAGATORS": ",".join(DEFAULT_SW_PROPAGATORS),
-            "OTEL_TRACES_EXPORTER": DEFAULT_SW_TRACES_EXPORTER,
-        })
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.iter_entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_iter_entry_points.configure_mock(
-            return_value=mock_points
-        )
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == ""
-        # Restore that service key
-        if old_service_key:
-            os.environ["SW_APM_SERVICE_KEY"] = old_service_key
-
-    def test_mask_service_key_empty_key(self, mocker):
-        self._mock_with_service_key(mocker, "")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == ""
-
-    def test_mask_service_key_whitespace_key(self, mocker):
-        self._mock_with_service_key(mocker, " ")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == " "
-
-    def test_mask_service_key_missing_service_name(self, mocker):
-        self._mock_with_service_key(mocker, "CyUuit1W--8RVmUXX6_cVjTWemaUyBh1ruL0nMPiFdrPo1iiRnO31_pwiUCPzdzv9UMHK6I")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "CyUuit1W--8RVmUXX6_cVjTWemaUyBh1ruL0nMPiFdrPo1iiRnO31_pwiUCPzdzv9UMHK6I"
-
-    def test_mask_service_key_less_than_9_char_token(self, mocker):
-        self._mock_with_service_key(mocker, ":foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == ":foo-bar"
-        self._mock_with_service_key(mocker, "a:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "a:foo-bar"
-        self._mock_with_service_key(mocker, "ab:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "ab:foo-bar"
-        self._mock_with_service_key(mocker, "abc:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abc:foo-bar"
-        self._mock_with_service_key(mocker, "abcd:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd:foo-bar"
-        self._mock_with_service_key(mocker, "abcde:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcde:foo-bar"
-        self._mock_with_service_key(mocker, "abcdef:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcdef:foo-bar"
-        self._mock_with_service_key(mocker, "abcdefg:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcdefg:foo-bar"
-        self._mock_with_service_key(mocker, "abcdefgh:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcdefgh:foo-bar"
-
-    def test_mask_service_key_9_or_more_char_token(self, mocker):
-        self._mock_with_service_key(mocker, "abcd1efgh:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...efgh:foo-bar"
-        self._mock_with_service_key(mocker, "abcd12efgh:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...efgh:foo-bar"
-        self._mock_with_service_key(mocker, "abcd123efgh:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...efgh:foo-bar"
-        self._mock_with_service_key(mocker, "abcd1234567890efgh:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...efgh:foo-bar"
-        self._mock_with_service_key(mocker, "CyUuit1W--8RVmUXX6_cVjTWemaUyBh1ruL0nMPiFdrPo1iiRnO31_pwiUCPzdzv9UMHK6I:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "CyUu...HK6I:foo-bar"
 
     def test_calculate_agent_enabled_ok_defaults(self, mocker):
         mocker.patch.dict(os.environ, {
@@ -228,6 +160,82 @@ class TestSolarWindsApmConfig:
             return_value=mock_points
         )
         assert not apm_config.SolarWindsApmConfig()._calculate_agent_enabled()
+
+    def test_mask_service_key_no_key_empty_default(self, mocker):
+        old_service_key = os.environ.get("SW_APM_SERVICE_KEY", None)
+        if old_service_key:
+            del os.environ["SW_APM_SERVICE_KEY"]
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": ",".join(DEFAULT_SW_PROPAGATORS),
+            "OTEL_TRACES_EXPORTER": DEFAULT_SW_TRACES_EXPORTER,
+        })
+        mock_iter_entry_points = mocker.patch(
+            "solarwinds_apm.apm_config.iter_entry_points"
+        )
+        mock_points = mocker.MagicMock()
+        mock_points.__iter__.return_value = ["foo"]
+        mock_iter_entry_points.configure_mock(
+            return_value=mock_points
+        )
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == ""
+        # Restore that service key
+        if old_service_key:
+            os.environ["SW_APM_SERVICE_KEY"] = old_service_key
+
+    def test_mask_service_key_empty_key(self, mocker):
+        self._mock_with_service_key(mocker, "")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == ""
+
+    def test_mask_service_key_whitespace_key(self, mocker):
+        self._mock_with_service_key(mocker, " ")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == " "
+
+    def test_mask_service_key_missing_service_name(self, mocker):
+        self._mock_with_service_key(mocker, "CyUuit1W--8RVmUXX6_cVjTWemaUyBh1ruL0nMPiFdrPo1iiRnO31_pwiUCPzdzv9UMHK6I")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "CyUuit1W--8RVmUXX6_cVjTWemaUyBh1ruL0nMPiFdrPo1iiRnO31_pwiUCPzdzv9UMHK6I"
+
+    def test_mask_service_key_less_than_9_char_token(self, mocker):
+        self._mock_with_service_key(mocker, ":foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == ":foo-bar"
+        self._mock_with_service_key(mocker, "a:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "a:foo-bar"
+        self._mock_with_service_key(mocker, "ab:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "ab:foo-bar"
+        self._mock_with_service_key(mocker, "abc:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abc:foo-bar"
+        self._mock_with_service_key(mocker, "abcd:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd:foo-bar"
+        self._mock_with_service_key(mocker, "abcde:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcde:foo-bar"
+        self._mock_with_service_key(mocker, "abcdef:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcdef:foo-bar"
+        self._mock_with_service_key(mocker, "abcdefg:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcdefg:foo-bar"
+        self._mock_with_service_key(mocker, "abcdefgh:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcdefgh:foo-bar"
+
+    def test_mask_service_key_9_or_more_char_token(self, mocker):
+        self._mock_with_service_key(mocker, "abcd1efgh:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...efgh:foo-bar"
+        self._mock_with_service_key(mocker, "abcd12efgh:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...efgh:foo-bar"
+        self._mock_with_service_key(mocker, "abcd123efgh:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...efgh:foo-bar"
+        self._mock_with_service_key(mocker, "abcd1234567890efgh:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...efgh:foo-bar"
+        self._mock_with_service_key(mocker, "CyUuit1W--8RVmUXX6_cVjTWemaUyBh1ruL0nMPiFdrPo1iiRnO31_pwiUCPzdzv9UMHK6I:foo-bar")
+        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "CyUu...HK6I:foo-bar"
+
+    def test_config_mask_service_key(self, mocker):
+        self._mock_with_service_key(mocker, "valid-and-long:key")
+        assert apm_config.SolarWindsApmConfig()._config_mask_service_key().get("service_key") == "vali...long:key"
+
+    def test_str(self, mocker):
+        self._mock_with_service_key(mocker, "valid-and-long:key")
+        result = str(apm_config.SolarWindsApmConfig())
+        assert "vali...long:key" in result
+        assert "agent_enabled" in result
+        assert "solarwinds_apm.extension.oboe.Context" in result
 
     # pylint:disable=unused-argument
     def test_set_config_value_invalid_key(self, caplog, mock_env_vars):

@@ -112,36 +112,7 @@ class SolarWindsApmConfig:
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
 
-        if self._config.get("debug_level") == apm_logging.ApmLoggingLevel.debug_levels.get("OBOE_DEBUG_HIGH", -1):
-            logger.debug("Set ApmConfig as: {}".format(
-                self._config_mask_service_key()
-            ))
-
-    def _config_mask_service_key(self) -> dict:
-        """Return new config with service key masked"""
-        config_masked = {}
-        for k, v in self._config.items():
-            if k == "service_key":
-                v = self._mask_service_key()
-            config_masked[k] = v
-        return config_masked
-
-    def _mask_service_key(self) -> str:
-        """Return masked service key except first 4 and last 4 chars"""
-        if not self._config.get('service_key'):
-            return ""
-        key_parts = self._config.get('service_key').split(":")
-        if len(key_parts) < 2:
-            return self._config.get('service_key')
-        api_token = key_parts[0]
-        if len(api_token) < 9:
-            return self._config.get('service_key')
-
-        return "{}...{}:{}".format(
-            api_token[0:4],
-            api_token[-4:],
-            key_parts[1],
-        )
+        logger.debug("Set ApmConfig as: {}".format(self))
 
     def _is_lambda(self) -> bool:
         """Checks if agent is running in an AWS Lambda environment."""
@@ -258,6 +229,40 @@ class SolarWindsApmConfig:
         
         logger.debug("agent_enabled: {}".format(agent_enabled))
         return agent_enabled
+
+    def _mask_service_key(self) -> str:
+        """Return masked service key except first 4 and last 4 chars"""
+        if not self._config.get('service_key'):
+            return ""
+        key_parts = self._config.get('service_key').split(":")
+        if len(key_parts) < 2:
+            return self._config.get('service_key')
+        api_token = key_parts[0]
+        if len(api_token) < 9:
+            return self._config.get('service_key')
+
+        return "{}...{}:{}".format(
+            api_token[0:4],
+            api_token[-4:],
+            key_parts[1],
+        )
+
+    def _config_mask_service_key(self) -> dict:
+        """Return new config with service key masked"""
+        config_masked = {}
+        for k, v in self._config.items():
+            if k == "service_key":
+                v = self._mask_service_key()
+            config_masked[k] = v
+        return config_masked
+
+    def __str__(self) -> str:
+        """String representation of ApmConfig is config with masked service key,
+        plus agent_enabled and context"""
+        masked_config = self._config_mask_service_key()
+        masked_config["agent_enabled"] = self.agent_enabled
+        masked_config["context"] = self.context
+        return "{}".format(masked_config)
 
     def __setitem__(self, key: str, value: str) -> None:
         """Refresh the configurations in liboboe global struct while user changes settings.
