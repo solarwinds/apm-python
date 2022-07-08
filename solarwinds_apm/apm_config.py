@@ -58,6 +58,9 @@ class SolarWindsApmConfig:
     done only once during the initialization and the properties cannot be refreshed.
     """
     _DELIMITER = '.'
+    _KEY_MASK = '{}...{}:{}'
+    _KEY_MASK_BAD_FORMAT = '{}...<invalid_format>'
+    _KEY_MASK_BAD_FORMAT_SHORT = '{}<invalid_format>'
 
     def __init__(self, **kwargs: int) -> None:
         self.__config = dict()
@@ -232,16 +235,25 @@ class SolarWindsApmConfig:
 
     def _mask_service_key(self) -> str:
         """Return masked service key except first 4 and last 4 chars"""
-        if not self.__config.get('service_key'):
+        service_key = self.__config.get('service_key')
+        if not service_key:
             return ""
-        key_parts = self.__config.get('service_key').split(":")
+        if service_key.strip() == "":
+            return service_key
+
+        key_parts = service_key.split(":")
         if len(key_parts) < 2:
-            return self.__config.get('service_key')
+            bad_format_key = key_parts[0]
+            if len(bad_format_key) < 5:
+                return self._KEY_MASK_BAD_FORMAT_SHORT.format(bad_format_key)
+            return self._KEY_MASK_BAD_FORMAT.format(
+                bad_format_key[0:4],
+            )
+
         api_token = key_parts[0]
         if len(api_token) < 9:
-            return self.__config.get('service_key')
-
-        return "{}...{}:{}".format(
+            return service_key
+        return self._KEY_MASK.format(
             api_token[0:4],
             api_token[-4:],
             key_parts[1],
