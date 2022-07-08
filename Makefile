@@ -19,7 +19,7 @@ SHELL=bash
 # By default, 'make' does nothing and only prints available options
 nothing:
 	@echo -e "\nHi! How can I help you?"
-	@echo -e "  - 'make package-and-publish':"
+	@echo -e "  - 'make package-and-upload':"
 	@echo -e "          Build the agent package distribution and upload it to packagecloud."
 	@echo -e "  - 'make package':"
 	@echo -e "          Build the agent package distribution (sdist and bdist)."
@@ -192,7 +192,7 @@ aws-lambda: wrapper
 # current version of solarwinds_apm package
 package_version :=$(shell grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')
 # Build package from working tree and upload to packagecloud
-package-and-publish: package upload-to-packagecloud clean
+package-and-upload: package upload-to-packagecloud clean
 	@echo -e "Built the agent package from local code and uploaded to packagecloud.io"
 
 # Go through the build process and publish AWS Lambda layer RC version
@@ -293,4 +293,4 @@ clean:
 	@rm -f .coverage.*
 	@echo -e "Done."
 
-.PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all check-swig wrapper sdist manylinux-wheels package aws-lambda package-and-publish publish-lambda-layer-rc upload-to-packagecloud copy-liboboe copy-headers copy-bson-headers copy-all wrapper-from-local tox format lint clean
+.PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all check-swig wrapper sdist manylinux-wheels package aws-lambda package-and-upload publish-lambda-layer-rc upload-to-packagecloud copy-liboboe copy-headers copy-bson-headers copy-all wrapper-from-local tox format lint clean
