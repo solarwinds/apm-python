@@ -1,0 +1,10 @@
+name: build_appoptics_apm
+
+description: Build appoptics_apm package
+
+runs:
+  using: 'docker'
+  image: quay.io/pypa/manylinux2014_x86_64:latest
+  entrypoint: 'make'
+  args:
+    - 'package'
