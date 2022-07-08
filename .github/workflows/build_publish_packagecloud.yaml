@@ -1,0 +1,12 @@
+name: Publish to PackageCloud
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions/package_solarwinds_apm
+    - uses: ./.github/actions/upload_solarwinds_apm
