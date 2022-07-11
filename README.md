@@ -31,4 +31,4 @@ with tracer.start_as_current_span("my_custom_span"):
 
 ## Documentation
 
-Online documentation on SWO APM features, configuration, and more is available at: https://www.appoptics.com/monitor/python-performance
+Online documentation on SWO APM features, configuration, and more is coming soon.
