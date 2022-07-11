@@ -9,7 +9,7 @@
 
 ### Git Repos and Directory Structure
 
-The following is highly recommended for development work on SolarWinds Observability application performance management library (SWO APM)
+The following is highly recommended for development work on SolarWinds APM.
 
 This repo can be used to auto-instrument [testbed apps](https://github.com/appoptics/opentelemetry-python-testbed) for manual testing and exploring. The code in this repository uses code in [solarwinds-apm-liboboe](https://github.com/librato/solarwinds-apm-liboboe) via C-extension with SWIG (see further below). Setup of the oboe extension is done by downloading oboe from SolarWinds Cloud OR with local oboe code.
 

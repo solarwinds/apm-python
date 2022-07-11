@@ -139,12 +139,12 @@ class SolarWindsApmConfig:
             if environ_propagators != INTL_SWO_DEFAULT_PROPAGATORS:
                 if not INTL_SWO_TRACECONTEXT_PROPAGATOR in environ_propagators or \
                     not INTL_SWO_PROPAGATOR in environ_propagators:
-                    logger.error("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability. Tracing disabled.")
+                    logger.error("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM Tracing disabled.")
                     raise ValueError
 
                 if environ_propagators.index(INTL_SWO_PROPAGATOR) \
                     < environ_propagators.index(INTL_SWO_TRACECONTEXT_PROPAGATOR):
-                    logger.error("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability. Tracing disabled.")
+                    logger.error("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled.")
                     raise ValueError
         except ValueError:
             agent_enabled = False

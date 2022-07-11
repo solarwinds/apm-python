@@ -1,12 +1,12 @@
 # solarwinds_apm
-SolarWinds Observability application performance management library (SWO APM) for Python, providing OpenTelemetry compatibility with the SolarWinds platform.
+SolarWinds Observability distribution of OpenTelemetry Python, providing automatic instrumentation of Python applications for APM.
 
 ----
 ## Requirements
 All published artifacts support Python 3.6 or higher. See [CONTRIBUTING.md](https://github.com/appoptics/opentelemetry-python-instrumentation-custom-distro/blob/main/CONTRIBUTING.md) for how to build for development.
 
 ## Getting Started
-SWO APM captures distributed traces and metrics from your application and sends them to the SolarWinds platform for analysis and visualization.
+SolarWinds APM captures distributed traces and metrics from your application and sends them to SolarWinds Observability for analysis and visualization.
 
 To install `solarwinds_apm` in your Python service (already includes OpenTelemetry API and SDK):
 ```
@@ -31,4 +31,4 @@ with tracer.start_as_current_span("my_custom_span"):
 
 ## Documentation
 
-Online documentation on SWO APM features, configuration, and more is coming soon.
+Online documentation on SolarWinds APM features, configuration, and more is coming soon.
