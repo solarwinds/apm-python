@@ -294,8 +294,6 @@ class SolarWindsApmConfig:
             logger.warning('Unsupported SolarWinds APM config key: {key}'.format(key=key))
 
     def __getitem__(self, key: str) -> Any:
-        if key == "service_key":
-            return self._mask_service_key()
         return self.__config[key]
 
     def __delitem__(self, key: str) -> None:
@@ -304,8 +302,6 @@ class SolarWindsApmConfig:
     def get(self, key: str, default: Any = None):
         """Get the value of key. Nested keys separated by a dot are also accepted.
         Mask service_key if requested."""
-        if key == "service_key":
-            return self._mask_service_key()
         key = key.split(self._DELIMITER)
         value = reduce(lambda d, k: d.get(k, None) if isinstance(d, dict) else None, key, self.__config)
         return value if value is not None else default
