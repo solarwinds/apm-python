@@ -20,9 +20,9 @@ from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from solarwinds_apm import (
-    DEFAULT_SW_TRACES_EXPORTER,
-    SUPPORT_EMAIL,
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_DEFAULT_TRACES_EXPORTER,
+    INTL_SWO_SUPPORT_EMAIL,
 )
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
@@ -86,7 +86,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "Failed to load configured sampler {}. "
                 "Please reinstall or contact {}.".format(
                     self._DEFAULT_SW_TRACES_SAMPLER,
-                    SUPPORT_EMAIL,
+                    INTL_SWO_SUPPORT_EMAIL,
                 )
             )
             raise
@@ -109,7 +109,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         exporter = None
         environ_exporter_name = environ.get(OTEL_TRACES_EXPORTER)
         try:
-            if environ_exporter_name == DEFAULT_SW_TRACES_EXPORTER:
+            if environ_exporter_name == INTL_SWO_DEFAULT_TRACES_EXPORTER:
                 exporter = load_entry_point(
                     "solarwinds_apm",
                     "opentelemetry_traces_exporter",
@@ -130,7 +130,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "Failed to load configured exporter {}. "
                 "Please reinstall or contact {}.".format(
                     environ_exporter_name,
-                    SUPPORT_EMAIL,
+                    INTL_SWO_SUPPORT_EMAIL,
                 )
             )
             raise

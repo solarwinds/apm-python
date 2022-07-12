@@ -3,16 +3,16 @@ import os
 import pytest
 
 from solarwinds_apm import apm_config
-from solarwinds_apm import (
-    DEFAULT_SW_PROPAGATORS,
-    DEFAULT_SW_TRACES_EXPORTER,
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_DEFAULT_PROPAGATORS,
+    INTL_SWO_DEFAULT_TRACES_EXPORTER,
 )
 
 @pytest.fixture(name="mock_env_vars")
 def fixture_mock_env_vars(mocker):
     mocker.patch.dict(os.environ, {
-        "OTEL_PROPAGATORS": ",".join(DEFAULT_SW_PROPAGATORS),
-        "OTEL_TRACES_EXPORTER": DEFAULT_SW_TRACES_EXPORTER,
+        "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+        "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
         "SW_APM_SERVICE_KEY": "valid:key",
     })
 
@@ -35,8 +35,8 @@ class TestSolarWindsApmConfig:
 
     def test_calculate_agent_enabled_ok_defaults(self, mocker):
         mocker.patch.dict(os.environ, {
-            "OTEL_PROPAGATORS": ",".join(DEFAULT_SW_PROPAGATORS),
-            "OTEL_TRACES_EXPORTER": DEFAULT_SW_TRACES_EXPORTER,
+            "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
             "SW_APM_SERVICE_KEY": "valid:key",
         })
         mock_iter_entry_points = mocker.patch(
@@ -69,7 +69,7 @@ class TestSolarWindsApmConfig:
     def test_calculate_agent_enabled_no_sw_propagator(self, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": "tracecontext,baggage",
-            "OTEL_TRACES_EXPORTER": DEFAULT_SW_TRACES_EXPORTER,
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
             "SW_APM_SERVICE_KEY": "valid:key",
         })
         assert not apm_config.SolarWindsApmConfig()._calculate_agent_enabled()
@@ -77,7 +77,7 @@ class TestSolarWindsApmConfig:
     def test_calculate_agent_enabled_no_tracecontext_propagator(self, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": "solarwinds_propagator",
-            "OTEL_TRACES_EXPORTER": DEFAULT_SW_TRACES_EXPORTER,
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
             "SW_APM_SERVICE_KEY": "valid:key",
         })
         assert not apm_config.SolarWindsApmConfig()._calculate_agent_enabled()
@@ -85,14 +85,14 @@ class TestSolarWindsApmConfig:
     def test_calculate_agent_enabled_sw_before_tracecontext_propagator(self, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": "solarwinds_propagator,tracecontext",
-            "OTEL_TRACES_EXPORTER": DEFAULT_SW_TRACES_EXPORTER,
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
             "SW_APM_SERVICE_KEY": "valid:key",
         })
         assert not apm_config.SolarWindsApmConfig()._calculate_agent_enabled()
 
     def test_calculate_agent_enabled_no_such_exporter(self, mocker):
         mocker.patch.dict(os.environ, {
-            "OTEL_PROPAGATORS": ",".join(DEFAULT_SW_PROPAGATORS),
+            "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
             "OTEL_TRACES_EXPORTER": "not-valid",
             "SW_APM_SERVICE_KEY": "valid:key",
         })

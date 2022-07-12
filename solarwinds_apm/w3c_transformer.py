@@ -1,4 +1,4 @@
-"""Provides functionality to transform OpenTelemetry Data to SolarWinds AppOptics data.
+"""Provides functionality to transform OpenTelemetry Data to SolarWinds Observability data.
 """
 
 import logging

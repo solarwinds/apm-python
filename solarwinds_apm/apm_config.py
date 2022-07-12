@@ -12,15 +12,15 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 
-from solarwinds_apm import (
-    apm_logging,
-    DEFAULT_SW_TRACES_EXPORTER,
-    DEFAULT_SW_PROPAGATORS,
-    DOC_SUPPORTED_PLATFORMS,
-    DOC_TRACING_PYTHON,
-    SUPPORT_EMAIL,
-    SW_PROPAGATOR,
-    TRACECONTEXT_PROPAGATOR,
+from solarwinds_apm import apm_logging
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_DEFAULT_TRACES_EXPORTER,
+    INTL_SWO_DEFAULT_PROPAGATORS,
+    INTL_SWO_DOC_SUPPORTED_PLATFORMS,
+    INTL_SWO_DOC_TRACING_PYTHON,
+    INTL_SWO_SUPPORT_EMAIL,
+    INTL_SWO_PROPAGATOR,
+    INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
 
 logger = logging.getLogger(__name__)
@@ -139,22 +139,22 @@ class SolarWindsApmConfig:
             # can any arbitrary list BUT
             # (1) must include tracecontext and solarwinds_propagator
             # (2) tracecontext must be before solarwinds_propagator
-            if environ_propagators != DEFAULT_SW_PROPAGATORS:
-                if not TRACECONTEXT_PROPAGATOR in environ_propagators or \
-                    not SW_PROPAGATOR in environ_propagators:
-                    logger.error("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability. Tracing disabled.")
+            if environ_propagators != INTL_SWO_DEFAULT_PROPAGATORS:
+                if not INTL_SWO_TRACECONTEXT_PROPAGATOR in environ_propagators or \
+                    not INTL_SWO_PROPAGATOR in environ_propagators:
+                    logger.error("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM Tracing disabled.")
                     raise ValueError
 
-                if environ_propagators.index(SW_PROPAGATOR) \
-                    < environ_propagators.index(TRACECONTEXT_PROPAGATOR):
-                    logger.error("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability. Tracing disabled.")
+                if environ_propagators.index(INTL_SWO_PROPAGATOR) \
+                    < environ_propagators.index(INTL_SWO_TRACECONTEXT_PROPAGATOR):
+                    logger.error("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled.")
                     raise ValueError
         except ValueError:
             agent_enabled = False
 
         environ_exporter_name = os.environ.get(OTEL_TRACES_EXPORTER)
         try:
-            if environ_exporter_name != DEFAULT_SW_TRACES_EXPORTER:
+            if environ_exporter_name != INTL_SWO_DEFAULT_TRACES_EXPORTER:
                 next(
                     iter_entry_points(
                         "opentelemetry_traces_exporter",
@@ -204,9 +204,9 @@ class SolarWindsApmConfig:
                             Contact {} if this is unexpected.
                             Error: {}
                             See: {}""".format(
-                                SUPPORT_EMAIL,
+                                INTL_SWO_SUPPORT_EMAIL,
                                 e,
-                                DOC_TRACING_PYTHON,
+                                INTL_SWO_DOC_TRACING_PYTHON,
                             ))
                     else:
                         logger.warning(
@@ -215,15 +215,15 @@ class SolarWindsApmConfig:
                             Tracing is disabled and will go into no-op mode.
                             Contact {} if this is unexpected.""".format(
                                 sys.platform,
-                                DOC_SUPPORTED_PLATFORMS,
-                                SUPPORT_EMAIL,
+                                INTL_SWO_DOC_SUPPORTED_PLATFORMS,
+                                INTL_SWO_SUPPORT_EMAIL,
                             ))
             except ImportError as err:
                 logger.error(
                     """Unexpected error: {}.
                     Please reinstall or contact {}.""".format(
                         err,
-                        SUPPORT_EMAIL,
+                        INTL_SWO_SUPPORT_EMAIL,
                     ))
             finally:
                 # regardless of how we got into this (outer) exception block, the agent will not be able to trace (and thus be
