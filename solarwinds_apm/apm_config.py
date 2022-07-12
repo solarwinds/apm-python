@@ -233,7 +233,7 @@ class SolarWindsApmConfig:
         logger.debug("agent_enabled: {}".format(agent_enabled))
         return agent_enabled
 
-    def _mask_service_key(self) -> str:
+    def mask_service_key(self) -> str:
         """Return masked service key except first 4 and last 4 chars"""
         service_key = self.__config.get('service_key')
         if not service_key:
@@ -264,7 +264,7 @@ class SolarWindsApmConfig:
         config_masked = {}
         for k, v in self.__config.items():
             if k == "service_key":
-                v = self._mask_service_key()
+                v = self.mask_service_key()
             config_masked[k] = v
         return config_masked
 

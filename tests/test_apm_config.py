@@ -177,64 +177,64 @@ class TestSolarWindsApmConfig:
         mock_iter_entry_points.configure_mock(
             return_value=mock_points
         )
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == ""
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == ""
         # Restore that service key
         if old_service_key:
             os.environ["SW_APM_SERVICE_KEY"] = old_service_key
 
     def test_mask_service_key_empty_key(self, mocker):
         self._mock_with_service_key(mocker, "")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == ""
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == ""
 
     def test_mask_service_key_whitespace_key(self, mocker):
         self._mock_with_service_key(mocker, " ")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == " "
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == " "
 
     def test_mask_service_key_invalid_format_no_colon(self, mocker):
         self._mock_with_service_key(mocker, "a")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "a<invalid_format>"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "a<invalid_format>"
         self._mock_with_service_key(mocker, "abcd")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd<invalid_format>"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcd<invalid_format>"
         self._mock_with_service_key(mocker, "abcde")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...<invalid_format>"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcd...<invalid_format>"
         self._mock_with_service_key(mocker, "abcdefgh")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...<invalid_format>"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcd...<invalid_format>"
         self._mock_with_service_key(mocker, "abcd1efgh")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...<invalid_format>"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcd...<invalid_format>"
         self._mock_with_service_key(mocker, "CyUuit1W--8RVmUXX6_cVjTWemaUyBh1ruL0nMPiFdrPo1iiRnO31_pwiUCPzdzv9UMHK6I")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "CyUu...<invalid_format>"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "CyUu...<invalid_format>"
 
     def test_mask_service_key_less_than_9_char_token(self, mocker):
         self._mock_with_service_key(mocker, ":foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == ":foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == ":foo-bar"
         self._mock_with_service_key(mocker, "a:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "a:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "a:foo-bar"
         self._mock_with_service_key(mocker, "ab:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "ab:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "ab:foo-bar"
         self._mock_with_service_key(mocker, "abc:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abc:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abc:foo-bar"
         self._mock_with_service_key(mocker, "abcd:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcd:foo-bar"
         self._mock_with_service_key(mocker, "abcde:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcde:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcde:foo-bar"
         self._mock_with_service_key(mocker, "abcdef:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcdef:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcdef:foo-bar"
         self._mock_with_service_key(mocker, "abcdefg:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcdefg:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcdefg:foo-bar"
         self._mock_with_service_key(mocker, "abcdefgh:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcdefgh:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcdefgh:foo-bar"
 
     def test_mask_service_key_9_or_more_char_token(self, mocker):
         self._mock_with_service_key(mocker, "abcd1efgh:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...efgh:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcd...efgh:foo-bar"
         self._mock_with_service_key(mocker, "abcd12efgh:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...efgh:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcd...efgh:foo-bar"
         self._mock_with_service_key(mocker, "abcd123efgh:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...efgh:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcd...efgh:foo-bar"
         self._mock_with_service_key(mocker, "abcd1234567890efgh:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "abcd...efgh:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcd...efgh:foo-bar"
         self._mock_with_service_key(mocker, "CyUuit1W--8RVmUXX6_cVjTWemaUyBh1ruL0nMPiFdrPo1iiRnO31_pwiUCPzdzv9UMHK6I:foo-bar")
-        assert apm_config.SolarWindsApmConfig()._mask_service_key() == "CyUu...HK6I:foo-bar"
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "CyUu...HK6I:foo-bar"
 
     def test_config_mask_service_key(self, mocker):
         self._mock_with_service_key(mocker, "valid-and-long:key")
