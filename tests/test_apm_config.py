@@ -21,8 +21,8 @@ class TestSolarWindsApmConfig:
 
     def _mock_with_service_key(self, mocker, service_key):
         mocker.patch.dict(os.environ, {
-            "OTEL_PROPAGATORS": ",".join(DEFAULT_SW_PROPAGATORS),
-            "OTEL_TRACES_EXPORTER": DEFAULT_SW_TRACES_EXPORTER,"SW_APM_SERVICE_KEY": service_key,
+            "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,"SW_APM_SERVICE_KEY": service_key,
         })
         mock_iter_entry_points = mocker.patch(
             "solarwinds_apm.apm_config.iter_entry_points"
@@ -166,8 +166,8 @@ class TestSolarWindsApmConfig:
         if old_service_key:
             del os.environ["SW_APM_SERVICE_KEY"]
         mocker.patch.dict(os.environ, {
-            "OTEL_PROPAGATORS": ",".join(DEFAULT_SW_PROPAGATORS),
-            "OTEL_TRACES_EXPORTER": DEFAULT_SW_TRACES_EXPORTER,
+            "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
         })
         mock_iter_entry_points = mocker.patch(
             "solarwinds_apm.apm_config.iter_entry_points"
