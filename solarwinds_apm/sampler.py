@@ -7,6 +7,7 @@ import logging
 from types import MappingProxyType
 from typing import Optional, Sequence, Dict, TYPE_CHECKING
 
+from opentelemetry import trace as trace_api
 from opentelemetry.context.context import Context as OtelContext
 from opentelemetry.sdk.trace.sampling import (Decision, ParentBased, Sampler,
                                               SamplingResult)
@@ -42,6 +43,7 @@ class _SwSampler(Sampler):
     _INTERNAL_TRANSACTION = "Transaction"
     _INTERNAL_TRANSACTION_NAME = "TransactionName"
     _LIBOBOE_CONTINUED = -1
+    _RESOURCE_UNAVAILABLE = "n/a"
     _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
     _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
     _UNSET = -1
@@ -372,9 +374,19 @@ class _SwSampler(Sampler):
         new_attributes[self._INTERNAL_TRANSACTION] = span_name
         new_attributes[self._INTERNAL_TRANSACTION_NAME] = span_name
 
-        # Trace's root span has no valid traceparent nor tracestate
-        # so we can't calculate remaining attributes
+        # ROOT SPAN
         if not parent_span_context.is_valid or not trace_state:
+            # Language and SDK-related KVs
+            resources = trace_api.get_tracer_provider().resource.attributes
+            new_attributes["Language"] = "Python"
+            new_attributes["telemetry.sdk.language"] = resources.get("telemetry.sdk.language", self._RESOURCE_UNAVAILABLE)
+            new_attributes["telemetry.sdk.name"]= resources.get("telemetry.sdk.name", self._RESOURCE_UNAVAILABLE)
+            new_attributes["telemetry.sdk.version"]= resources.get("telemetry.sdk.version", self._RESOURCE_UNAVAILABLE)
+            new_attributes["service.name"]= resources.get("service.name", self._RESOURCE_UNAVAILABLE)
+            new_attributes["service.instance.id"] = resources.get("service.instance.id", self._RESOURCE_UNAVAILABLE)
+
+            # Trace's root span has no valid traceparent nor tracestate
+            # so we can't calculate attributes that need those
             logger.debug(
                 "No valid traceparent or no tracestate - returning attributes: {}"
                 .format(new_attributes)
@@ -386,6 +398,7 @@ class _SwSampler(Sampler):
             else:
                 return None
 
+        # IS_REMOTE SPAN
         if not attributes:
             # _SW_TRACESTATE_ROOT_KEY is set once per trace, if possible
             sw_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY, None)

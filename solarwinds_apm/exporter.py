@@ -51,7 +51,6 @@ class SolarWindsSpanExporter(SpanExporter):
                 logger.debug("Start a new trace {}".format(md.toString()))
                 evt = self.context.createEntry(md, int(span.start_time / 1000))
             evt.addInfo('Layer', span.name)
-            evt.addInfo('Language', 'Python')
             for k, v in span.attributes.items():
                 evt.addInfo(k, v)
             self.reporter.sendReport(evt, False)
