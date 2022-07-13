@@ -9,4 +9,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: ./.github/actions/package_solarwinds_apm
-    - uses: ./.github/actions/upload_solarwinds_apm
+  upload_publish:
+    using: 'docker'
+    image: quay.io/pypa/manylinux2014_x86_64:latest
+    env:
+      PC_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
+    entrypoint: 'make'
+    args:
+      - 'PACKAGECLOUD_TOKEN=$PC_TOKEN'
+      - 'upload-to-packagecloud' 
