@@ -301,7 +301,7 @@ class SolarWindsApmConfig:
 
     def get(self, key: str, default: Any = None):
         """Get the value of key. Nested keys separated by a dot are also accepted.
-        Mask service_key if requested."""
+        Suggestion: Use mask_service_key() to safely get service_key value"""
         key = key.split(self._DELIMITER)
         value = reduce(lambda d, k: d.get(k, None) if isinstance(d, dict) else None, key, self.__config)
         return value if value is not None else default
