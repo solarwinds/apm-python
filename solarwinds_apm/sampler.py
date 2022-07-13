@@ -380,12 +380,10 @@ class _SwSampler(Sampler):
             resources = trace_api.get_tracer_provider().resource.attributes
             new_attributes["Language"] = "Python"
             new_attributes["telemetry.sdk.language"] = resources.get("telemetry.sdk.language", self._RESOURCE_UNAVAILABLE)
+            new_attributes["telemetry.sdk.name"]= resources.get("telemetry.sdk.name", self._RESOURCE_UNAVAILABLE)
             new_attributes["telemetry.sdk.version"]= resources.get("telemetry.sdk.version", self._RESOURCE_UNAVAILABLE)
             new_attributes["service.name"]= resources.get("service.name", self._RESOURCE_UNAVAILABLE)
             new_attributes["service.instance.id"] = resources.get("service.instance.id", self._RESOURCE_UNAVAILABLE)
-
-            # TODO This one breaks root span entry/exit event matching
-            # new_attributes["telemetry.sdk.name"]= resources.get("telemetry.sdk.name", self._RESOURCE_UNAVAILABLE)
 
             # Trace's root span has no valid traceparent nor tracestate
             # so we can't calculate attributes that need those
