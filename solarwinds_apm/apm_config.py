@@ -233,7 +233,7 @@ class SolarWindsApmConfig:
         logger.debug("agent_enabled: {}".format(agent_enabled))
         return agent_enabled
 
-    def _mask_service_key(self) -> str:
+    def mask_service_key(self) -> str:
         """Return masked service key except first 4 and last 4 chars"""
         service_key = self.__config.get('service_key')
         if not service_key:
@@ -264,7 +264,7 @@ class SolarWindsApmConfig:
         config_masked = {}
         for k, v in self.__config.items():
             if k == "service_key":
-                v = self._mask_service_key()
+                v = self.mask_service_key()
             config_masked[k] = v
         return config_masked
 
@@ -294,8 +294,6 @@ class SolarWindsApmConfig:
             logger.warning('Unsupported SolarWinds APM config key: {key}'.format(key=key))
 
     def __getitem__(self, key: str) -> Any:
-        if key == "service_key":
-            return self._mask_service_key()
         return self.__config[key]
 
     def __delitem__(self, key: str) -> None:
@@ -303,9 +301,7 @@ class SolarWindsApmConfig:
 
     def get(self, key: str, default: Any = None):
         """Get the value of key. Nested keys separated by a dot are also accepted.
-        Mask service_key if requested."""
-        if key == "service_key":
-            return self._mask_service_key()
+        Suggestion: Use mask_service_key() to safely get service_key value"""
         key = key.split(self._DELIMITER)
         value = reduce(lambda d, k: d.get(k, None) if isinstance(d, dict) else None, key, self.__config)
         return value if value is not None else default
