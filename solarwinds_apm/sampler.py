@@ -38,9 +38,6 @@ class _SwSampler(Sampler):
     _INTERNAL_SAMPLE_RATE = "SampleRate"
     _INTERNAL_SAMPLE_SOURCE = "SampleSource"
     _INTERNAL_SW_KEYS = "SWKeys"
-    _INTERNAL_SW_TRANSACTION = "sw.transaction"
-    _INTERNAL_TRANSACTION = "Transaction"
-    _INTERNAL_TRANSACTION_NAME = "TransactionName"
     _LIBOBOE_CONTINUED = -1
     _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
     _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
@@ -367,11 +364,6 @@ class _SwSampler(Sampler):
         logger.debug(
             "Set attributes with service entry internal KVs: {}".format(new_attributes)
         )
-
-        # Always (root or is_remote) set Transaction KVs
-        new_attributes[self._INTERNAL_SW_TRANSACTION] = span_name
-        new_attributes[self._INTERNAL_TRANSACTION] = span_name
-        new_attributes[self._INTERNAL_TRANSACTION_NAME] = span_name
 
         # Trace's root span has no valid traceparent nor tracestate
         # so we can't calculate remaining attributes
