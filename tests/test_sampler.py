@@ -354,7 +354,7 @@ class Test_SwSampler():
         assert sw_sampler.otel_decision_from_liboboe({
             "do_metrics": 0,
             "do_sample": 0,
-        }) == Decision.RECORD_ONLY
+        }) == Decision.DROP
         assert sw_sampler.otel_decision_from_liboboe({
             "do_metrics": 1,
             "do_sample": 0,
@@ -363,7 +363,7 @@ class Test_SwSampler():
             "do_metrics": 1,
             "do_sample": 1,
         }) == Decision.RECORD_AND_SAMPLE
-        # Shouldn't happen
+        # Technically possible but we don't handle this
         assert sw_sampler.otel_decision_from_liboboe({
             "do_metrics": 0,
             "do_sample": 1,

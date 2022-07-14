@@ -166,10 +166,11 @@ class _SwSampler(Sampler):
         liboboe_decision: Dict
     ) -> Decision:
         """Formats OTel decision from liboboe decision"""
-        # Always record metrics if we get here i.e. when agent_enabled
-        decision = Decision.RECORD_ONLY
+        decision = Decision.DROP
         if liboboe_decision["do_sample"]:
-            decision = Decision.RECORD_AND_SAMPLE
+            decision = Decision.RECORD_AND_SAMPLE  # even if not do_metrics
+        elif liboboe_decision["do_metrics"]:
+            decision = Decision.RECORD_ONLY
         logger.debug("OTel decision created: {}".format(decision))
         return decision
 
