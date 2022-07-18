@@ -29,11 +29,9 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
     def __init__(
         self,
-        reporter: "Reporter",
         apm_txname_manager: "SolarWindsTxnNameManager",
         agent_enabled: bool,
     ) -> None:
-        self._reporter = reporter
         self._apm_txname_manager = apm_txname_manager
         if agent_enabled:
             from solarwinds_apm.extension.oboe import Span

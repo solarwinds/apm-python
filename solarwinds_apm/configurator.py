@@ -65,7 +65,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_config.agent_enabled,
             )
             self._configure_metrics_span_processor(
-                reporter,
                 apm_txname_manager,
                 apm_config,
             )
@@ -152,14 +151,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _configure_metrics_span_processor(
         self,
-        reporter: "Reporter",
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
     ) -> None:
         """Configure SolarWindsInboundMetricsSpanProcessor"""
         trace.get_tracer_provider().add_span_processor(
             SolarWindsInboundMetricsSpanProcessor(
-                reporter,
                 apm_txname_manager,
                 apm_config.agent_enabled,
             )
