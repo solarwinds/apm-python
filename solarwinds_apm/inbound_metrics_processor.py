@@ -5,7 +5,11 @@ from typing import (
     Tuple,
 )
 
-from opentelemetry.trace import SpanKind, StatusCode
+from opentelemetry.trace import (
+    SpanKind,
+    StatusCode,
+    TraceFlags,
+)
 from opentelemetry.sdk.trace import SpanProcessor
 
 if TYPE_CHECKING:
@@ -90,8 +94,9 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
                 has_error,
             )
 
-        # Cache txn_name for span export
-        self._apm_txname_manager[span.context.trace_id] = liboboe_txn_name
+        if span.context.trace_flags == TraceFlags.SAMPLED:
+            # Cache txn_name for span export
+            self._apm_txname_manager[span.context.trace_id] = liboboe_txn_name
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
         """This span from inbound HTTP request if from a SERVER by some http.method"""
