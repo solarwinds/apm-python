@@ -610,9 +610,6 @@ class Test_SwSampler():
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
-            "sw.transaction": "foo",
-            "Transaction": "foo",
-            "TransactionName": "foo",
             "BucketCapacity": "-1",
             "BucketRate": "-1",
             "SampleRate": -1,
@@ -635,9 +632,6 @@ class Test_SwSampler():
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys,
         ) == MappingProxyType({
-            "sw.transaction": "foo",
-            "Transaction": "foo",
-            "TransactionName": "foo",
             "BucketCapacity": "-1",
             "BucketRate": "-1",
             "SampleRate": -1,
@@ -659,9 +653,6 @@ class Test_SwSampler():
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
-            "sw.transaction": "foo",
-            "Transaction": "foo",
-            "TransactionName": "foo",
             "BucketCapacity": "1",
             "BucketRate": "1",
             "SampleRate": 1,
@@ -684,9 +675,6 @@ class Test_SwSampler():
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys
         ) == MappingProxyType({
-            "sw.transaction": "foo",
-            "Transaction": "foo",
-            "TransactionName": "foo",
             "BucketCapacity": "1",
             "BucketRate": "1",
             "SampleRate": 1,
@@ -709,9 +697,6 @@ class Test_SwSampler():
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
-            "sw.transaction": "foo",
-            "Transaction": "foo",
-            "TransactionName": "foo",
             "BucketCapacity": "-1",
             "BucketRate": "-1",
             "SampleRate": -1,
@@ -738,9 +723,6 @@ class Test_SwSampler():
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
-            "sw.transaction": "foo",
-            "Transaction": "foo",
-            "TransactionName": "foo",
             "BucketCapacity": "-1",
             "BucketRate": "-1",
             "SampleRate": -1,
@@ -768,9 +750,6 @@ class Test_SwSampler():
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys,
         ) == MappingProxyType({
-            "sw.transaction": "foo",
-            "Transaction": "foo",
-            "TransactionName": "foo",
             "BucketCapacity": "-1",
             "BucketRate": "-1",
             "SampleRate": -1,
