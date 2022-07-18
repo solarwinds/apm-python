@@ -26,6 +26,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     _HTTP_METHOD = "http.method"
     _HTTP_ROUTE = "http.route"
     _HTTP_STATUS_CODE = "http.status_code"
+    _HTTP_URL = "http.url"
 
     def __init__(
         self,
@@ -110,12 +111,13 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
     def calculate_transaction_names(self, span: "ReadableSpan") -> Tuple[str, str]:
         """Get trans_name and url_tran of this span instance."""
+        url_tran = span.attributes.get(self._HTTP_URL, None)
+        http_route = span.attributes.get(self._HTTP_ROUTE, None)
         trans_name = "unknown"
-        if span.name:
+        if http_route:
+            trans_name = http_route
+        elif span.name:
             trans_name = span.name
-        url_tran = None
-        if span.attributes.get(self._HTTP_METHOD, None):
-            url_tran = span.attributes.get(self._HTTP_ROUTE, None)
         return trans_name, url_tran
 
     def calculate_span_time(
