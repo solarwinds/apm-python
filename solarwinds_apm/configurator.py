@@ -26,6 +26,7 @@ from solarwinds_apm.apm_constants import (
 )
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
+from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
 from solarwinds_apm.inbound_metrics_processor import SolarWindsInboundMetricsSpanProcessor
 
@@ -44,20 +45,30 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
+        apm_txname_manager = SolarWindsTxnNameManager()
         apm_config = SolarWindsApmConfig()
         reporter = self._initialize_solarwinds_reporter(apm_config)
-        self._configure_otel_components(apm_config, reporter)
+        self._configure_otel_components(apm_txname_manager, apm_config, reporter)
 
     def _configure_otel_components(
         self,
+        apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
         reporter: "Reporter",
     ) -> None:
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
         if apm_config.agent_enabled:
-            self._configure_exporter(reporter, apm_config.agent_enabled)
-            self._configure_metrics_span_processor(reporter, apm_config)
+            self._configure_exporter(
+                reporter,
+                apm_txname_manager,
+                apm_config.agent_enabled,
+            )
+            self._configure_metrics_span_processor(
+                reporter,
+                apm_txname_manager,
+                apm_config,
+            )
             self._configure_propagator()
             self._configure_response_propagator()
         else:
@@ -97,6 +108,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_exporter(
         self,
         reporter: "Reporter",
+        apm_txname_manager: SolarWindsTxnNameManager,
         agent_enabled: bool = True,
     ) -> None:
         """Configure SolarWinds or env-specified OTel span exporter,
@@ -114,7 +126,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     "solarwinds_apm",
                     "opentelemetry_traces_exporter",
                     environ_exporter_name
-                )(reporter, agent_enabled)
+                )(reporter, apm_txname_manager, agent_enabled)
             else:
                 exporter = next(
                     iter_entry_points(
@@ -141,12 +153,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_metrics_span_processor(
         self,
         reporter: "Reporter",
+        apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
     ) -> None:
         """Configure SolarWindsInboundMetricsSpanProcessor"""
         trace.get_tracer_provider().add_span_processor(
             SolarWindsInboundMetricsSpanProcessor(
                 reporter,
+                apm_txname_manager,
                 apm_config.agent_enabled,
             )
         )
@@ -178,7 +192,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _initialize_solarwinds_reporter(
         self,
-        apm_config: SolarWindsApmConfig
+        apm_config: SolarWindsApmConfig,
     ) -> "Reporter":
         """Initialize SolarWinds reporter used by sampler and exporter, using SolarWindsApmConfig. This establishes collector and sampling settings in a background thread."""
         if apm_config.agent_enabled:
