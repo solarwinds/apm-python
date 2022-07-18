@@ -59,14 +59,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
         if apm_config.agent_enabled:
+            self._configure_metrics_span_processor(
+                apm_txname_manager,
+                apm_config,
+            )
             self._configure_exporter(
                 reporter,
                 apm_txname_manager,
                 apm_config.agent_enabled,
-            )
-            self._configure_metrics_span_processor(
-                apm_txname_manager,
-                apm_config,
             )
             self._configure_propagator()
             self._configure_response_propagator()
@@ -102,6 +102,19 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             raise
         trace.set_tracer_provider(
             TracerProvider(sampler=sampler)
+        )
+
+    def _configure_metrics_span_processor(
+        self,
+        apm_txname_manager: SolarWindsTxnNameManager,
+        apm_config: SolarWindsApmConfig,
+    ) -> None:
+        """Configure SolarWindsInboundMetricsSpanProcessor"""
+        trace.get_tracer_provider().add_span_processor(
+            SolarWindsInboundMetricsSpanProcessor(
+                apm_txname_manager,
+                apm_config.agent_enabled,
+            )
         )
 
     def _configure_exporter(
@@ -148,19 +161,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         logger.debug("Setting trace with BatchSpanProcessor using {}".format(environ_exporter_name))
         span_processor = BatchSpanProcessor(exporter)
         trace.get_tracer_provider().add_span_processor(span_processor)
-
-    def _configure_metrics_span_processor(
-        self,
-        apm_txname_manager: SolarWindsTxnNameManager,
-        apm_config: SolarWindsApmConfig,
-    ) -> None:
-        """Configure SolarWindsInboundMetricsSpanProcessor"""
-        trace.get_tracer_provider().add_span_processor(
-            SolarWindsInboundMetricsSpanProcessor(
-                apm_txname_manager,
-                apm_config.agent_enabled,
-            )
-        )
 
     def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators"""
