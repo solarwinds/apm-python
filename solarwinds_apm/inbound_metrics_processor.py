@@ -5,12 +5,17 @@ from typing import (
     Tuple,
 )
 
-from opentelemetry.trace import SpanKind, StatusCode
+from opentelemetry.trace import (
+    SpanKind,
+    StatusCode,
+    TraceFlags,
+)
 from opentelemetry.sdk.trace import SpanProcessor
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
     from solarwinds_apm.extension.oboe import Reporter
+    from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 
 
 logger = logging.getLogger(__name__)
@@ -21,13 +26,14 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     _HTTP_METHOD = "http.method"
     _HTTP_ROUTE = "http.route"
     _HTTP_STATUS_CODE = "http.status_code"
+    _HTTP_URL = "http.url"
 
     def __init__(
         self,
-        reporter: "Reporter",
+        apm_txname_manager: "SolarWindsTxnNameManager",
         agent_enabled: bool,
     ) -> None:
-        self._reporter = reporter
+        self._apm_txname_manager = apm_txname_manager
         if agent_enabled:
             from solarwinds_apm.extension.oboe import Span
             self._span = Span
@@ -36,7 +42,8 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             self._span = Span
 
     def on_end(self, span: "ReadableSpan") -> None:
-        """Calculates and reports inbound trace metrics"""
+        """Calculates and reports inbound trace metrics,
+        and caches liboboe transaction name"""
         # Only calculate inbound metrics for service root spans
         parent_span_context = span.parent
         if parent_span_context and parent_span_context.is_valid \
@@ -53,6 +60,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         has_error = self.has_error(span)
         trans_name, url_tran = self.calculate_transaction_names(span)
 
+        liboboe_txn_name = None
         if is_span_http:
             # createHttpSpan needs these other params
             status_code = span.attributes.get(self._HTTP_STATUS_CODE, None) 
@@ -63,7 +71,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
                     trans_name, url_tran, domain, span_time, status_code, request_method, has_error,
                 )
             )
-            self._span.createHttpSpan(
+            liboboe_txn_name = self._span.createHttpSpan(
                 trans_name,
                 url_tran,
                 domain,
@@ -78,18 +86,20 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
                     trans_name, domain, span_time, has_error,
                 )
             )
-            self._span.createSpan(
+            liboboe_txn_name = self._span.createSpan(
                 trans_name,
                 domain,
                 span_time,
                 has_error,
             )
 
-        self._reporter.flush()
+        if span.context.trace_flags == TraceFlags.SAMPLED:
+            # Cache txn_name for span export
+            self._apm_txname_manager[span.context.trace_id] = liboboe_txn_name
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
-        """This span from inbound HTTP request if from a SERVER by some http.route"""
-        if span.kind == SpanKind.SERVER and span.attributes.get(self._HTTP_ROUTE, None):
+        """This span from inbound HTTP request if from a SERVER by some http.method"""
+        if span.kind == SpanKind.SERVER and span.attributes.get(self._HTTP_METHOD, None):
             return True
         return False
 
@@ -101,10 +111,13 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
     def calculate_transaction_names(self, span: "ReadableSpan") -> Tuple[str, str]:
         """Get trans_name and url_tran of this span instance."""
+        url_tran = span.attributes.get(self._HTTP_URL, None)
+        http_route = span.attributes.get(self._HTTP_ROUTE, None)
         trans_name = "unknown"
-        if span.name:
+        if http_route:
+            trans_name = http_route
+        elif span.name:
             trans_name = span.name
-        url_tran = span.attributes.get(self._HTTP_ROUTE, None)
         return trans_name, url_tran
 
     def calculate_span_time(

@@ -12,15 +12,15 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 
-from solarwinds_apm import (
-    apm_logging,
-    DEFAULT_SW_TRACES_EXPORTER,
-    DEFAULT_SW_PROPAGATORS,
-    DOC_SUPPORTED_PLATFORMS,
-    DOC_TRACING_PYTHON,
-    SUPPORT_EMAIL,
-    SW_PROPAGATOR,
-    TRACECONTEXT_PROPAGATOR,
+from solarwinds_apm import apm_logging
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_DEFAULT_TRACES_EXPORTER,
+    INTL_SWO_DEFAULT_PROPAGATORS,
+    INTL_SWO_DOC_SUPPORTED_PLATFORMS,
+    INTL_SWO_DOC_TRACING_PYTHON,
+    INTL_SWO_SUPPORT_EMAIL,
+    INTL_SWO_PROPAGATOR,
+    INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
 
 logger = logging.getLogger(__name__)
@@ -58,11 +58,14 @@ class SolarWindsApmConfig:
     done only once during the initialization and the properties cannot be refreshed.
     """
     _DELIMITER = '.'
+    _KEY_MASK = '{}...{}:{}'
+    _KEY_MASK_BAD_FORMAT = '{}...<invalid_format>'
+    _KEY_MASK_BAD_FORMAT_SHORT = '{}<invalid_format>'
 
     def __init__(self, **kwargs: int) -> None:
-        self._config = dict()
+        self.__config = dict()
         # Update the config with default values
-        self._config = {
+        self.__config = {
             # 'tracing_mode' is unset by default and not supported in NH Python
             'tracing_mode': None,
             # 'trigger_trace' is enabled by default
@@ -112,9 +115,9 @@ class SolarWindsApmConfig:
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
 
-        logger.debug("Set ApmConfig as: {}".format(self._config))
+        logger.debug("Set ApmConfig as: {}".format(self))
 
-    def _is_lambda(self):
+    def _is_lambda(self) -> bool:
         """Checks if agent is running in an AWS Lambda environment."""
         if os.environ.get('AWS_LAMBDA_FUNCTION_NAME') and os.environ.get("LAMBDA_TASK_ROOT"):
             logger.warning("AWS Lambda is not yet supported by Python SolarWinds APM.")
@@ -136,22 +139,22 @@ class SolarWindsApmConfig:
             # can any arbitrary list BUT
             # (1) must include tracecontext and solarwinds_propagator
             # (2) tracecontext must be before solarwinds_propagator
-            if environ_propagators != DEFAULT_SW_PROPAGATORS:
-                if not TRACECONTEXT_PROPAGATOR in environ_propagators or \
-                    not SW_PROPAGATOR in environ_propagators:
-                    logger.error("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability. Tracing disabled.")
+            if environ_propagators != INTL_SWO_DEFAULT_PROPAGATORS:
+                if not INTL_SWO_TRACECONTEXT_PROPAGATOR in environ_propagators or \
+                    not INTL_SWO_PROPAGATOR in environ_propagators:
+                    logger.error("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM Tracing disabled.")
                     raise ValueError
 
-                if environ_propagators.index(SW_PROPAGATOR) \
-                    < environ_propagators.index(TRACECONTEXT_PROPAGATOR):
-                    logger.error("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds Observability. Tracing disabled.")
+                if environ_propagators.index(INTL_SWO_PROPAGATOR) \
+                    < environ_propagators.index(INTL_SWO_TRACECONTEXT_PROPAGATOR):
+                    logger.error("tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled.")
                     raise ValueError
         except ValueError:
             agent_enabled = False
 
         environ_exporter_name = os.environ.get(OTEL_TRACES_EXPORTER)
         try:
-            if environ_exporter_name != DEFAULT_SW_TRACES_EXPORTER:
+            if environ_exporter_name != INTL_SWO_DEFAULT_TRACES_EXPORTER:
                 next(
                     iter_entry_points(
                         "opentelemetry_traces_exporter",
@@ -201,9 +204,9 @@ class SolarWindsApmConfig:
                             Contact {} if this is unexpected.
                             Error: {}
                             See: {}""".format(
-                                SUPPORT_EMAIL,
+                                INTL_SWO_SUPPORT_EMAIL,
                                 e,
-                                DOC_TRACING_PYTHON,
+                                INTL_SWO_DOC_TRACING_PYTHON,
                             ))
                     else:
                         logger.warning(
@@ -212,15 +215,15 @@ class SolarWindsApmConfig:
                             Tracing is disabled and will go into no-op mode.
                             Contact {} if this is unexpected.""".format(
                                 sys.platform,
-                                DOC_SUPPORTED_PLATFORMS,
-                                SUPPORT_EMAIL,
+                                INTL_SWO_DOC_SUPPORTED_PLATFORMS,
+                                INTL_SWO_SUPPORT_EMAIL,
                             ))
             except ImportError as err:
                 logger.error(
                     """Unexpected error: {}.
                     Please reinstall or contact {}.""".format(
                         err,
-                        SUPPORT_EMAIL,
+                        INTL_SWO_SUPPORT_EMAIL,
                     ))
             finally:
                 # regardless of how we got into this (outer) exception block, the agent will not be able to trace (and thus be
@@ -229,6 +232,51 @@ class SolarWindsApmConfig:
         
         logger.debug("agent_enabled: {}".format(agent_enabled))
         return agent_enabled
+
+    def mask_service_key(self) -> str:
+        """Return masked service key except first 4 and last 4 chars"""
+        service_key = self.__config.get('service_key')
+        if not service_key:
+            return ""
+        if service_key.strip() == "":
+            return service_key
+
+        key_parts = service_key.split(":")
+        if len(key_parts) < 2:
+            bad_format_key = key_parts[0]
+            if len(bad_format_key) < 5:
+                return self._KEY_MASK_BAD_FORMAT_SHORT.format(bad_format_key)
+            return self._KEY_MASK_BAD_FORMAT.format(
+                bad_format_key[0:4],
+            )
+
+        api_token = key_parts[0]
+        if len(api_token) < 9:
+            return service_key
+        return self._KEY_MASK.format(
+            api_token[0:4],
+            api_token[-4:],
+            key_parts[1],
+        )
+
+    def _config_mask_service_key(self) -> dict:
+        """Return new config with service key masked"""
+        config_masked = {}
+        for k, v in self.__config.items():
+            if k == "service_key":
+                v = self.mask_service_key()
+            config_masked[k] = v
+        return config_masked
+
+    def __str__(self) -> str:
+        """String representation of ApmConfig is config with masked service key,
+        plus agent_enabled and context"""
+        apm_config = {
+            "__config": self._config_mask_service_key(),
+            "agent_enabled": self.agent_enabled,
+            "context": self.context,
+        }
+        return "{}".format(apm_config)
 
     def __setitem__(self, key: str, value: str) -> None:
         """Refresh the configurations in liboboe global struct while user changes settings.
@@ -246,15 +294,16 @@ class SolarWindsApmConfig:
             logger.warning('Unsupported SolarWinds APM config key: {key}'.format(key=key))
 
     def __getitem__(self, key: str) -> Any:
-        return self._config[key]
+        return self.__config[key]
 
     def __delitem__(self, key: str) -> None:
-        del self._config[key]
+        del self.__config[key]
 
     def get(self, key: str, default: Any = None):
-        """Get the value of key. Nested keys separated by a dot are also accepted."""
+        """Get the value of key. Nested keys separated by a dot are also accepted.
+        Suggestion: Use mask_service_key() to safely get service_key value"""
         key = key.split(self._DELIMITER)
-        value = reduce(lambda d, k: d.get(k, None) if isinstance(d, dict) else None, key, self._config)
+        value = reduce(lambda d, k: d.get(k, None) if isinstance(d, dict) else None, key, self.__config)
         return value if value is not None else default
 
     def update_with_cnf_file(self, cnf_path: str) -> None:
@@ -264,10 +313,10 @@ class SolarWindsApmConfig:
 
     def update_with_env_var(self) -> None:
         """Update the settings with environment variables."""
-        val = os.environ.get('SW_APM_APM_PREPEND_DOMAIN_NAME', None)
+        val = os.environ.get('SW_APM_PREPEND_DOMAIN_NAME', None)
         if val is not None:
             self._set_config_value('transaction.prepend_domain_name', val)
-        available_envvs = set(self._config.keys())
+        available_envvs = set(self.__config.keys())
         # TODO after alpha: is_lambda
         for key in available_envvs:
             if key in ('inst_enabled', 'transaction', 'inst'):
@@ -296,28 +345,28 @@ class SolarWindsApmConfig:
         # when we are handling a defaultdict (i.e., with this we do not allow e.g. the creation of new instrumentations
         # through the config)
         keys = keys.split(self._DELIMITER)
-        sub_dict = reduce(lambda d, key: d.get(key, None) if isinstance(d, dict) else None, keys[:-1], self._config)
+        sub_dict = reduce(lambda d, key: d.get(key, None) if isinstance(d, dict) else None, keys[:-1], self.__config)
         key = keys[-1]
         try:
             if keys == ['ec2_metadata_timeout']:
                 timeout = int(val)
                 if timeout not in range(0, 3001):
                     raise ValueError
-                self._config[key] = timeout
+                self.__config[key] = timeout
             elif keys == ['token_bucket_capacity']:
                 bucket_cap = float(val)
                 if not 0 <= bucket_cap <= 8.0:
                     raise ValueError
-                self._config[key] = bucket_cap
+                self.__config[key] = bucket_cap
             elif keys == ['token_bucket_rate']:
                 bucket_rate = float(val)
                 if not 0 <= bucket_rate <= 4.0:
                     raise ValueError
-                self._config[key] = bucket_rate
+                self.__config[key] = bucket_rate
             elif keys == ['proxy']:
                 if not isinstance(val, str) or not val.startswith('http://'):
                     raise ValueError
-                self._config[key] = val
+                self.__config[key] = val
             elif keys == ['tracing_mode']:
                 if not isinstance(val, str):
                     raise ValueError
@@ -326,7 +375,7 @@ class SolarWindsApmConfig:
                     val = 'enabled' if val == 'always' else 'disabled'
                 if val not in ['enabled', 'disabled']:
                     raise ValueError
-                self._config[key] = val
+                self.__config[key] = val
                 self.context.setTracingMode(OboeTracingMode.get_oboe_trace_mode(val))
             elif keys == ['trigger_trace']:
                 if not isinstance(val, str):
@@ -336,18 +385,18 @@ class SolarWindsApmConfig:
                     val = 'enabled' if val == 'always' else 'disabled'
                 if val not in ['enabled', 'disabled']:
                     raise ValueError
-                self._config[key] = val
+                self.__config[key] = val
                 self.context.setTriggerMode(OboeTracingMode.get_oboe_trigger_trace_mode(val))
             elif keys == ['reporter']:
                 # TODO: support 'lambda'
                 if not isinstance(val, str) or val.lower() not in ('udp', 'ssl', 'null', 'file'):
                     raise ValueError
-                self._config[key] = val.lower()
+                self.__config[key] = val.lower()
             elif keys == ['debug_level']:
                 val = int(val)
                 if not apm_logging.ApmLoggingLevel.is_valid_level(val):
                     raise ValueError
-                self._config[key] = val
+                self.__config[key] = val
                 # update logging level of agent logger
                 apm_logging.set_sw_log_level(val)
             elif keys == ['log_trace_id']:
@@ -358,9 +407,9 @@ class SolarWindsApmConfig:
                         'always',
                 ]:
                     raise ValueError
-                self._config[key] = val.lower()
+                self.__config[key] = val.lower()
             elif keys == ['is_grpc_clean_hack_enabled']:
-                self._config[key] = _convert_to_bool(val)
+                self.__config[key] = _convert_to_bool(val)
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
                     val = _convert_to_bool(val)
