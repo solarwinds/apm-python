@@ -1,6 +1,6 @@
-name: build_appoptics_apm
+name: package_solarwinds_apm
 
-description: Build appoptics_apm package
+description: Package solarwinds_apm
 
 runs:
   using: 'docker'
