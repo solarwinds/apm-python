@@ -4,17 +4,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_publish:
+  build_packagecloud:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - uses: ./.github/actions/package_solarwinds_apm
-  upload_publish:
-    using: 'docker'
-    image: quay.io/pypa/manylinux2014_x86_64:latest
-    env:
-      PC_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
-    entrypoint: 'make'
-    args:
-      - 'PACKAGECLOUD_TOKEN=$PC_TOKEN'
-      - 'upload-to-packagecloud' 
+    - name: Upload publish to PackageCloud
+      env:
+        PC_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
+      run: PACKAGECLOUD_TOKEN=$PC_TOKEN docker run quay.io/pypa/manylinux2014_x86_64:latest make upload-to-packagecloud
