@@ -113,7 +113,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         """Get trans_name and url_tran of this span instance."""
         url_tran = span.attributes.get(self._HTTP_URL, None)
         http_route = span.attributes.get(self._HTTP_ROUTE, None)
-        trans_name = "unknown"
+        trans_name = None
         if http_route:
             trans_name = http_route
         elif span.name:
