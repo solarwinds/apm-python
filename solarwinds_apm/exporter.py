@@ -58,6 +58,8 @@ class SolarWindsSpanExporter(SpanExporter):
                 parent_md = self._build_metadata(self.metadata, span.parent)
                 evt = self.context.createEntry(md, int(span.start_time / 1000),
                                          parent_md)
+                if span.parent.is_remote:
+                    self._add_info_transaction_name(span, evt)
             else:
                 # In OpenTelemrtry, there are no events with individual IDs, but only a span ID
                 # and trace ID. Thus, the entry event needs to be generated such that it has the
@@ -85,10 +87,11 @@ class SolarWindsSpanExporter(SpanExporter):
     def _add_info_transaction_name(self, span, evt) -> None:
         """Add transaction name from cache to root span
         then removes from cache"""
-        txname = self.apm_txname_manager.get(span.context.trace_id)
+        trace_span_id = "{}-{}".format(span.context.trace_id, span.context.span_id)
+        txname = self.apm_txname_manager.get(trace_span_id)
         if txname:
             evt.addInfo(self._INTERNAL_TRANSACTION_NAME, txname)
-            del self.apm_txname_manager[span.context.trace_id]
+            del self.apm_txname_manager[trace_span_id]
         else:
             logger.warning(
                 "There was an issue setting trace TransactionName. "
