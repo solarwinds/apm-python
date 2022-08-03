@@ -22,8 +22,6 @@ class SolarWindsSpanExporter(SpanExporter):
     Initialization requires a liboboe reporter.
     """
 
-    _INTERNAL_SW_TRANSACTION = "sw.transaction"
-    _INTERNAL_TRANSACTION = "Transaction"
     _INTERNAL_TRANSACTION_NAME = "TransactionName"
 
     def __init__(
@@ -89,8 +87,6 @@ class SolarWindsSpanExporter(SpanExporter):
         then removes from cache"""
         txname = self.apm_txname_manager.get(span.context.trace_id)
         if txname:
-            evt.addInfo(self._INTERNAL_SW_TRANSACTION, txname)
-            evt.addInfo(self._INTERNAL_TRANSACTION, txname)
             evt.addInfo(self._INTERNAL_TRANSACTION_NAME, txname)
             del self.apm_txname_manager[span.context.trace_id]
         else:
