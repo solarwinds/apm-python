@@ -1,0 +1,22 @@
+name: Publish to TestPyPi
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions/package_solarwinds_apm
+    - name: Install Twine
+      run: pip install --upgrade --no-cache-dir --prefer-binary twine
+    - name: Check distribution artifacts
+      run: twine check dist/*
+    - name: Publish to TestPyPi
+      env:
+        TWINE_NON_INTERACTIVE: 1
+        TWINE_REPOSITORY: testpypi
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.APPOPTICS_TESTPYPI_UPLOAD_TOKEN }}
+      run: twine upload dist/*

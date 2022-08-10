@@ -1,0 +1,15 @@
+name: Publish to PackageCloud
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_packagecloud:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions/package_solarwinds_apm
+    - name: Upload publish to PackageCloud
+      env:
+        PC_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
+      run: PACKAGECLOUD_TOKEN=$PC_TOKEN docker run quay.io/pypa/manylinux2014_x86_64:latest make upload-to-packagecloud

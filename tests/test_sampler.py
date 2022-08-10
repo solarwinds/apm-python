@@ -363,7 +363,7 @@ class Test_SwSampler():
             "do_metrics": 1,
             "do_sample": 1,
         }) == Decision.RECORD_AND_SAMPLE
-        # Shouldn't happen
+        # Technically possible but we don't handle this
         assert sw_sampler.otel_decision_from_liboboe({
             "do_metrics": 0,
             "do_sample": 1,
@@ -587,6 +587,7 @@ class Test_SwSampler():
         decision_drop
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=mocker.Mock(),
             decision=decision_drop,
             trace_state=mocker.Mock(),
@@ -602,6 +603,7 @@ class Test_SwSampler():
         mock_xtraceoptions_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=None,
             decision=decision_continued,
             trace_state=None,
@@ -623,6 +625,7 @@ class Test_SwSampler():
         mock_xtraceoptions_no_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=None,
             decision=decision_continued,
             trace_state=None,
@@ -643,6 +646,7 @@ class Test_SwSampler():
         mock_xtraceoptions_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=None,
             decision=decision_not_continued,
             trace_state=None,
@@ -664,6 +668,7 @@ class Test_SwSampler():
         mock_xtraceoptions_no_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=None,
             decision=decision_not_continued,
             trace_state=None,
@@ -685,6 +690,7 @@ class Test_SwSampler():
         mock_xtraceoptions_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=None,
             decision=decision_continued,
             trace_state=tracestate_with_sw_and_others,
@@ -710,6 +716,7 @@ class Test_SwSampler():
         mock_xtraceoptions_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=attributes_no_tracestate,
             decision=decision_continued,
             trace_state=tracestate_with_sw_and_others,
@@ -736,6 +743,7 @@ class Test_SwSampler():
         mock_xtraceoptions_sw_keys
     ):
         assert sw_sampler.calculate_attributes(
+            span_name="foo",
             attributes=attributes_with_tracestate,
             decision=decision_continued,
             trace_state=tracestate_with_sw_and_others,
@@ -786,7 +794,7 @@ class Test_SwSampler():
         )
         mocker.patch(
             "solarwinds_apm.sampler._SwSampler.otel_decision_from_liboboe",
-            return_value="otel_decision"
+            return_value=Decision.RECORD_AND_SAMPLE
         )
 
         sampling_result = sw_sampler.should_sample(
@@ -806,6 +814,7 @@ class Test_SwSampler():
             mock_xtraceoptions
         )
         solarwinds_apm.sampler._SwSampler.calculate_attributes.assert_called_once_with(
+            "foo",
             {"foo": "bar"},
             "my_decision",
             "my_trace_state",
@@ -816,7 +825,7 @@ class Test_SwSampler():
             "my_decision"
         )
         assert sampling_result.attributes == "my_attributes"
-        assert sampling_result.decision == "otel_decision"
+        assert sampling_result.decision == Decision.RECORD_AND_SAMPLE
         assert sampling_result.trace_state == "my_trace_state"
 
 

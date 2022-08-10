@@ -1,4 +1,4 @@
-# build development environment to locally build appoptics_apm Python agent and publish RC versions
+# build development environment to locally build solarwinds_apm Python agent and publish RC versions
 FROM quay.io/pypa/manylinux2014_x86_64
 
 # install packages need to build Ruby and dependencies need to build agent locally

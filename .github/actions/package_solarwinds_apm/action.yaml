@@ -1,0 +1,10 @@
+name: package_solarwinds_apm
+
+description: Package solarwinds_apm
+
+runs:
+  using: 'docker'
+  image: quay.io/pypa/manylinux2014_x86_64:latest
+  entrypoint: 'make'
+  args:
+    - 'package'
