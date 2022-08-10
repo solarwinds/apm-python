@@ -93,6 +93,11 @@ The functional tests require a compiled C-extension and should be run inside the
 
 TODO
 
+### Install tests
+
+TODO
+
+
 ### Formatting and Linting
 
 TODO
