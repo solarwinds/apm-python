@@ -10,8 +10,6 @@ jobs:
       image: quay.io/pypa/manylinux2014_x86_64:latest
     steps:
     - uses: actions/checkout@v2
-    - name: Get solarwinds_apm version
-      run: echo $(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')
     - name: Install Ruby
       env:
         GPG_RECV_KEY_01: ${{ secrets.GPG_RECV_KEY_01 }}
