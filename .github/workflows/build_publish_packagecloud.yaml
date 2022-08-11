@@ -4,22 +4,28 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_packagecloud:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: ./.github/actions/package_solarwinds_apm
-
-  publish_packagecloud:
-    needs: [build_packagecloud]
+  build_publish:
     runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux2014_x86_64:latest
     steps:
-    - name: Upload publish to PackageCloud
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions/package_solarwinds_apm
+    - name: Install Ruby
+      env:
+        GPG_RECV_KEY_01: ${{ secrets.GPG_RECV_KEY_01 }}
+        GPG_RECV_KEY_02: ${{ secrets.GPG_RECV_KEY_02 }}
+      run: |
+        gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys $GPG_RECV_KEY_01 $GPG_RECV_KEY_02 && \
+        curl -sSL https://get.rvm.io | bash -s stable && source /etc/profile.d/rvm.sh && \
+        /usr/local/rvm/bin/rvm install 2.5.1 --disable-binary
+    - name: Install PackageCloud CLI
+      run: /usr/local/rvm/bin/rvm 2.5.1 do gem install package_cloud
+    - name: Upload to PackageCloud
       env:
         PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
-      with:
-        entrypoint: 'make'
-        args:
-          - 'upload-to-packagecloud'
+      run: |
+        /usr/local/rvm/bin/rvm 2.5.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
+        dist/solarwinds_apm-$(shell grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "').tar.gz
+        /usr/local/rvm/bin/rvm 2.5.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
+        dist/solarwinds_apm-$(shell grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')*.whl
