@@ -9,8 +9,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: ./.github/actions/package_solarwinds_apm
-    - name: Debug
-      run: echo "foo"
     - name: Install Twine
       run: pip install --upgrade --no-cache-dir --prefer-binary twine
     - name: Check distribution artifacts
@@ -20,5 +18,5 @@ jobs:
         TWINE_NON_INTERACTIVE: 1
         TWINE_REPOSITORY: testpypi
         TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKENN }}
+        TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
       run: twine upload dist/*
