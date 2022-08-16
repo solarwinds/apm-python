@@ -14,10 +14,10 @@ from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import SpanContext, TraceState
 from opentelemetry.util.types import Attributes
 
-from solarwinds_apm import (
-    COMMA_W3C_SANITIZED,
-    EQUALS_W3C_SANITIZED,
-    SW_TRACESTATE_KEY
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_COMMA_W3C_SANITIZED,
+    INTL_SWO_EQUALS_W3C_SANITIZED,
+    INTL_SWO_TRACESTATE_KEY
 )
 from solarwinds_apm.apm_config import OboeTracingMode
 from solarwinds_apm.traceoptions import XTraceOptions
@@ -72,7 +72,7 @@ class _SwSampler(Sampler):
             tracestring = W3CTransformer.traceparent_from_context(
                 parent_span_context
             )
-        sw_member_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY)
+        sw_member_value = parent_span_context.trace_state.get(INTL_SWO_TRACESTATE_KEY)
 
         # 'tracing_mode' is not supported in NH Python, so give as unset
         tracing_mode = self._UNSET
@@ -164,11 +164,10 @@ class _SwSampler(Sampler):
     ) -> Decision:
         """Formats OTel decision from liboboe decision"""
         decision = Decision.DROP
-        if liboboe_decision["do_metrics"]:
-            # TODO: need to eck what record only actually means and how metrics work in OTel
-            decision = Decision.RECORD_ONLY
         if liboboe_decision["do_sample"]:
-            decision = Decision.RECORD_AND_SAMPLE
+            decision = Decision.RECORD_AND_SAMPLE  # even if not do_metrics
+        elif liboboe_decision["do_metrics"]:
+            decision = Decision.RECORD_ONLY
         logger.debug("OTel decision created: {}".format(decision))
         return decision
 
@@ -186,7 +185,7 @@ class _SwSampler(Sampler):
         response = []
 
         if xtraceoptions.signature and decision["auth_msg"]:
-            response.append(EQUALS_W3C_SANITIZED.join([
+            response.append(INTL_SWO_EQUALS_W3C_SANITIZED.join([
                 self._XTRACEOPTIONS_RESP_AUTH,
                 decision["auth_msg"]
             ]))
@@ -207,16 +206,16 @@ class _SwSampler(Sampler):
                     trigger_msg = decision["status_msg"]
             else:
                 trigger_msg = self._XTRACEOPTIONS_RESP_TRIGGER_NOT_REQUESTED
-            response.append(EQUALS_W3C_SANITIZED.join([
+            response.append(INTL_SWO_EQUALS_W3C_SANITIZED.join([
                 self._XTRACEOPTIONS_RESP_TRIGGER_TRACE,
                 trigger_msg
             ]))
 
         if xtraceoptions.ignored:
             response.append(
-                EQUALS_W3C_SANITIZED.join([
+                INTL_SWO_EQUALS_W3C_SANITIZED.join([
                     self._XTRACEOPTIONS_RESP_IGNORED,
-                    (COMMA_W3C_SANITIZED.join(xtraceoptions.ignored))
+                    (INTL_SWO_COMMA_W3C_SANITIZED.join(xtraceoptions.ignored))
                 ])
             )
 
@@ -231,7 +230,7 @@ class _SwSampler(Sampler):
         """Creates new TraceState based on trace decision, parent span id,
         and x-trace-options if provided"""
         trace_state = TraceState([(
-            SW_TRACESTATE_KEY,
+            INTL_SWO_TRACESTATE_KEY,
             W3CTransformer.sw_from_span_and_decision(
                 parent_span_context.span_id,
                 W3CTransformer.trace_flags_from_int(decision["do_sample"])
@@ -277,7 +276,7 @@ class _SwSampler(Sampler):
             else:
                 # Update trace_state with span_id and sw trace_flags
                 trace_state = trace_state.update(
-                    SW_TRACESTATE_KEY,
+                    INTL_SWO_TRACESTATE_KEY,
                     W3CTransformer.sw_from_span_and_decision(
                         parent_span_context.span_id,
                         W3CTransformer.trace_flags_from_int(decision["do_sample"])
@@ -304,8 +303,37 @@ class _SwSampler(Sampler):
         """Remove xtraceoptions response from tracestate"""
         return trace_state.delete(XTraceOptions.get_sw_xtraceoptions_response_key())
 
+    def add_tracestate_capture_to_attributes_dict(
+        self,
+        attributes_dict: dict,
+        decision: Dict,
+        trace_state: TraceState,
+        parent_span_context: SpanContext,
+    ) -> dict:
+        """Calculate and add SW tracestate capture to attributes_dict,
+        which is a dict not an Attributes/MappingProxy object"""
+        tracestate_capture = attributes_dict.get(self._SW_TRACESTATE_CAPTURE_KEY, None)
+        if not tracestate_capture:
+            trace_state_no_response = self.remove_response_from_sw(trace_state)
+        else:
+            # Must retain all potential tracestate pairs for attributes
+            attr_trace_state = TraceState.from_header([
+                tracestate_capture
+            ])
+            new_attr_trace_state = attr_trace_state.update(
+                INTL_SWO_TRACESTATE_KEY,
+                W3CTransformer.sw_from_span_and_decision(
+                    parent_span_context.span_id,
+                    W3CTransformer.trace_flags_from_int(decision["do_sample"])
+                )
+            )
+            trace_state_no_response = self.remove_response_from_sw(new_attr_trace_state)
+        attributes_dict[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
+        return attributes_dict
+
     def calculate_attributes(
         self,
+        span_name: str,
         attributes: Attributes,
         decision: Dict,
         trace_state: TraceState,
@@ -316,8 +344,9 @@ class _SwSampler(Sampler):
         parent span context, xtraceoptions, and existing attributes."""
         logger.debug("Received attributes: {}".format(attributes))
         # Don't set attributes if not tracing
-        if self.otel_decision_from_liboboe(decision) == Decision.DROP:
-            logger.debug("Trace decision is to drop - not setting attributes")
+        otel_decision = self.otel_decision_from_liboboe(decision)
+        if not Decision.is_sampled(otel_decision):
+            logger.debug("Trace decision not is_sampled - not setting attributes")
             return None
         
         new_attributes = {}
@@ -352,7 +381,7 @@ class _SwSampler(Sampler):
 
         if not attributes:
             # _SW_TRACESTATE_ROOT_KEY is set once per trace, if possible
-            sw_value = parent_span_context.trace_state.get(SW_TRACESTATE_KEY, None)
+            sw_value = parent_span_context.trace_state.get(INTL_SWO_TRACESTATE_KEY, None)
             if sw_value:
                 new_attributes[self._SW_TRACESTATE_ROOT_KEY]= W3CTransformer.span_id_from_sw(sw_value)
         else:
@@ -361,23 +390,12 @@ class _SwSampler(Sampler):
             for k,v in attributes.items():
                 new_attributes[k] = v
 
-        tracestate_capture = new_attributes.get(self._SW_TRACESTATE_CAPTURE_KEY, None)
-        if not tracestate_capture:
-            trace_state_no_response = self.remove_response_from_sw(trace_state)
-        else:
-            # Must retain all potential tracestate pairs for attributes
-            attr_trace_state = TraceState.from_header([
-                tracestate_capture
-            ])
-            new_attr_trace_state = attr_trace_state.update(
-                SW_TRACESTATE_KEY,
-                W3CTransformer.sw_from_span_and_decision(
-                    parent_span_context.span_id,
-                    W3CTransformer.trace_flags_from_int(decision["do_sample"])
-                )
-            )
-            trace_state_no_response = self.remove_response_from_sw(new_attr_trace_state)
-        new_attributes[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
+        new_attributes = self.add_tracestate_capture_to_attributes_dict(
+            new_attributes,
+            decision,
+            trace_state,
+            parent_span_context,
+        )
 
         logger.debug("Setting attributes: {}".format(new_attributes))
 
@@ -415,6 +433,7 @@ class _SwSampler(Sampler):
             xtraceoptions
         )
         new_attributes = self.calculate_attributes(
+            name,
             attributes,
             liboboe_decision,
             new_trace_state,
@@ -425,7 +444,7 @@ class _SwSampler(Sampler):
 
         return SamplingResult(
             otel_decision,
-            new_attributes if otel_decision != Decision.DROP else None,
+            new_attributes if Decision.is_sampled(otel_decision) else None,
             new_trace_state,
         )
 

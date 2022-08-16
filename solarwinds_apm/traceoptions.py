@@ -4,9 +4,9 @@ import typing
 
 from opentelemetry.context.context import Context
 
-from solarwinds_apm import (
-    OTEL_CONTEXT_SW_OPTIONS_KEY,
-    OTEL_CONTEXT_SW_SIGNATURE_KEY
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_X_OPTIONS_KEY,
+    INTL_SWO_SIGNATURE_KEY
 )
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class XTraceOptions():
         
         if not context:
             return
-        options_header = context.get(OTEL_CONTEXT_SW_OPTIONS_KEY, None)
+        options_header = context.get(INTL_SWO_X_OPTIONS_KEY, None)
         if not options_header:
             return
 
@@ -89,7 +89,7 @@ class XTraceOptions():
                         ", ".join(self.ignored)
                     ))
         
-        options_signature = context.get(OTEL_CONTEXT_SW_SIGNATURE_KEY, None)
+        options_signature = context.get(INTL_SWO_SIGNATURE_KEY, None)
         if options_signature:
             self.signature = options_signature
 

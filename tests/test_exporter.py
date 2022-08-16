@@ -154,6 +154,16 @@ def configure_event_mocks(
 @pytest.fixture(name="exporter")
 def fixture_exporter(mocker):
     mock_reporter = mocker.Mock()
+    mock_apm_txname_manager = mocker.patch(
+        "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager",
+        return_value=mocker.Mock()
+    )
+    mock_apm_txname_manager.configure_mock(
+        **{
+            "__delitem__": mocker.Mock()
+        }
+    )
+
     mock_reporter.configure_mock(
         **{
             "sendReport": mocker.Mock()
@@ -170,6 +180,7 @@ def fixture_exporter(mocker):
     )
     return solarwinds_apm.exporter.SolarWindsSpanExporter(
         mock_reporter,
+        mock_apm_txname_manager,
         True
     )
 
@@ -212,6 +223,7 @@ class Test_SolarWindsSpanExporter():
 
     def test_init_agent_enabled_true(self, mocker):
         mock_reporter = mocker.Mock()
+        mock_apm_txname_manager = mocker.Mock()
         mock_ext_context = mocker.patch(
             "solarwinds_apm.extension.oboe.Context",      
         )
@@ -220,6 +232,7 @@ class Test_SolarWindsSpanExporter():
         )
         exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
             mock_reporter,
+            mock_apm_txname_manager,
             True,
         )
         assert exporter.reporter == mock_reporter
@@ -228,6 +241,7 @@ class Test_SolarWindsSpanExporter():
 
     def test_init_agent_enabled_false(self, mocker):
         mock_reporter = mocker.Mock()
+        mock_apm_txname_manager = mocker.Mock()
         mock_noop_context = mocker.patch(
             "solarwinds_apm.apm_noop.Context",      
         )
@@ -236,6 +250,7 @@ class Test_SolarWindsSpanExporter():
         )
         exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
             mock_reporter,
+            mock_apm_txname_manager,
             False,
         )
         assert exporter.reporter == mock_reporter
