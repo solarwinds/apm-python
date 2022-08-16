@@ -19,8 +19,6 @@ SHELL=bash
 # By default, 'make' does nothing and only prints available options
 nothing:
 	@echo -e "\nHi! How can I help you?"
-	@echo -e "  - 'make package-and-upload':"
-	@echo -e "          Build the agent package distribution and upload it to packagecloud."
 	@echo -e "  - 'make package':"
 	@echo -e "          Build the agent package distribution (sdist and bdist)."
 	@echo -e "  - 'make sdist':"
@@ -189,27 +187,10 @@ aws-lambda: wrapper
 # variable and recipe definitions for distribution/ publishing workflow
 #----------------------------------------------------------------------------------------------------------------------#
 
-# current version of solarwinds_apm package
-package_version :=$(shell grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')
-# Build package from working tree and upload to packagecloud
-package-and-upload: package upload-to-packagecloud clean
-	@echo -e "Built the agent package from local code and uploaded to packagecloud.io"
-
 # Go through the build process and publish AWS Lambda layer RC version
 publish-lambda-layer-rc: aws-lambda
 	@python3.8 publish_lambda_layer.py rc
 	@echo -e "Done: Built the AWS Lambda layer and uploaded it to AWS."
-
-# Upload built package to packagecloud
-pc_repo := "solarwinds/solarwinds-apm-python/python"
-pc_token := $(PACKAGECLOUD_TOKEN)
-upload-to-packagecloud:
-	@if [ -z $(pc_token) ]; then \
-		echo "PACKAGECLOUD_TOKEN environment variable is not set but required to upload to package cloud."; \
-		exit 1; \
-	 fi
-	@PACKAGECLOUD_TOKEN=$(pc_token) /usr/local/rvm/bin/rvm 2.5.1 do package_cloud push $(pc_repo) dist/solarwinds_apm-$(package_version).tar.gz
-	@PACKAGECLOUD_TOKEN=$(pc_token) /usr/local/rvm/bin/rvm 2.5.1 do package_cloud push $(pc_repo) dist/solarwinds_apm-$(package_version)*.whl
 
 #----------------------------------------------------------------------------------------------------------------------#
 # recipes for local development
@@ -293,4 +274,4 @@ clean:
 	@rm -f .coverage.*
 	@echo -e "Done."
 
-.PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all check-swig wrapper sdist manylinux-wheels package aws-lambda package-and-upload publish-lambda-layer-rc upload-to-packagecloud copy-liboboe copy-headers copy-bson-headers copy-all wrapper-from-local tox format lint clean
+.PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all check-swig wrapper sdist manylinux-wheels package aws-lambda publish-lambda-layer-rc copy-liboboe copy-headers copy-bson-headers copy-all wrapper-from-local tox format lint clean

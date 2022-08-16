@@ -17,5 +17,5 @@ jobs:
       env:
         TWINE_NON_INTERACTIVE: 1
         TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.APPOPTICS_PYPI_UPLOAD_TOKEN }}
+        TWINE_PASSWORD: ${{ secrets.SW_APM_PYPI_UPLOAD_TOKEN }}
       run: twine upload dist/*

@@ -18,5 +18,5 @@ jobs:
         TWINE_NON_INTERACTIVE: 1
         TWINE_REPOSITORY: testpypi
         TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.APPOPTICS_TESTPYPI_UPLOAD_TOKEN }}
+        TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
       run: twine upload dist/*
