@@ -53,14 +53,25 @@ function check_extension_files(){
 function check_installation(){
     echo "---- Verifying agent installation ----"
 
-    EXPECTED_SWIG_FILES_INST='./VERSION
+    EXPECTED_SWIG_FILES_INST="./VERSION
 ./__init__.py
-./_oboe.*.so
+./_oboe.cpython-36m-x86_64-linux-gnu.so
+./_oboe.cpython-37m-x86_64-linux-gnu.so
+./_oboe.cpython-39-x86_64-linux-gnu.so
 ./bson
 ./bson/bson.h
 ./bson/platform_hacks.h
+./liboboe-1.0-alpine-x86_64.so.0.0.0
+./liboboe-1.0-lambda-x86_64.so.0.0.0
+./liboboe-1.0-x86_64.so.0.0.0
+./liboboe-1.0.so
 ./liboboe-1.0.so.0
-./oboe.py'
+./oboe.h
+./oboe.py
+./oboe_api.cpp
+./oboe_api.hpp
+./oboe_debug.h
+./oboe_wrap.cxx"
 
     # agent has been installed already, we only need to find the installed location
     install_location=$(pip show solarwinds-apm | egrep -io 'location: .*' | cut -d ':' -f 2)
@@ -169,19 +180,24 @@ function check_sdist(){
         echo "Aborting tests."
         exit 1
     fi
-    expected_files='./VERSION
+    expected_files="./VERSION
 ./__init__.py
+./_oboe.cpython-36m-x86_64-linux-gnu.so
+./_oboe.cpython-39-x86_64-linux-gnu.so
 ./bson
 ./bson/bson.h
 ./bson/platform_hacks.h
 ./liboboe-1.0-alpine-x86_64.so.0.0.0
+./liboboe-1.0-lambda-x86_64.so.0.0.0
 ./liboboe-1.0-x86_64.so.0.0.0
+./liboboe-1.0.so
+./liboboe-1.0.so.0
 ./oboe.h
 ./oboe.py
 ./oboe_api.cpp
 ./oboe_api.hpp
 ./oboe_debug.h
-./oboe_wrap.cxx'
+./oboe_wrap.cxx"
     tar xzf $agent_distribution --directory $unpack_directory
     check_extension_files "$unpack_directory/solarwinds_apm-${AGENT_VERSION}/solarwinds_apm/extension" "$expected_files"
     echo "Installing Python agent from source"
@@ -224,12 +240,22 @@ function check_wheel(){
     mkdir -p $unpack_directory
     expected_files="./VERSION
 ./__init__.py
-./_oboe.*.so
+./_oboe.cpython-36m-x86_64-linux-gnu.so
+./_oboe.cpython-39-x86_64-linux-gnu.so
 ./bson
 ./bson/bson.h
 ./bson/platform_hacks.h
+./liboboe-1.0-alpine-x86_64.so.0.0.0
+./liboboe-1.0-lambda-x86_64.so.0.0.0
+./liboboe-1.0-x86_64.so.0.0.0
+./liboboe-1.0.so
 ./liboboe-1.0.so.0
-./oboe.py"
+./oboe.h
+./oboe.py
+./oboe_api.cpp
+./oboe_api.hpp
+./oboe_debug.h
+./oboe_wrap.cxx"
     unzip $tested_wheel -d $unpack_directory
     check_extension_files "$unpack_directory/solarwinds_apm/extension" "$expected_files"
     echo "Installing Python agent from wheel"
