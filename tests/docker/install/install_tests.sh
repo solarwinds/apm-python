@@ -111,18 +111,10 @@ function check_agent_startup(){
     export SW_APM_SERVICE_KEY=invalid-token-for-testing-1234567890:servicename
 
     expected_agent_return=1
-    if [[ -f /etc/centos-release && "$(cat /etc/centos-release)" =~ "CentOS release 6" ]]; then
-        # the agent will report an unknown error (0) if we try to run on a OS where the C-extension does not compile
-        expected_agent_return=0
-        TEST_EXP_LOG_MESSAGES=(
-            "Missing extension library."
-            "Tracing is disabled and will go into no-op mode."
-        )
-    else
-        TEST_EXP_LOG_MESSAGES=(
-        ">> SSL Reporter using host='collector.solarwinds.com' port='443' log='' clientid='inva...7890:servicename'"
-        "Got 1 remote settings from the collector to update"
-        )
+    TEST_EXP_LOG_MESSAGES=(
+    ">> SSL Reporter using host='collector.solarwinds.com' port='443' log='' clientid='inva...7890:servicename'"
+    "Got 1 remote settings from the collector to update"
+    )
     fi
 
     echo -e "Agent startup verified successfully.\n"
