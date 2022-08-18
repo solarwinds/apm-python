@@ -115,7 +115,8 @@ function check_agent_startup(){
     ">> SSL Reporter using host='collector.solarwinds.com' port='443' log='' clientid='inva...7890:servicename'"
     "Got 1 remote settings from the collector to update"
     )
-    fi
+
+    # TODO: Check solarwinds_ready() output
 
     echo -e "Agent startup verified successfully.\n"
 }
