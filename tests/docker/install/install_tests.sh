@@ -163,10 +163,6 @@ function check_wheel(){
         echo "Wheels are not available on Alpine Linux, skip wheel tests."
         exit 0
     fi
-    if [ "$HOSTNAME" = "py3.6-centos6" ]; then
-        echo "Wheels are not compatible with CentOS6, thus skipping wheel tests."
-        exit 0
-    fi
 
     # we need to select the right wheel (there might be multiple wheel versions in the dist directory)
     wheel_dir=$PWD/tmp
