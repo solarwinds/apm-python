@@ -107,6 +107,18 @@ docker-compose run --rm py3.7-install-debian10 /bin/bash
 ./install_tests.sh
 ```
 
+Example setup and run for Python 3.8 in Alpine 3.13+, which needs bash and build-related tools installed:
+```
+./run_docker_dev.sh
+make clean
+make package
+exit
+cd tests/docker/install
+docker-compose run --rm py3.8-install-alpine3.13 /bin/sh
+apk add bash python3-dev g++ make
+./install_tests.sh
+```
+
 ### Formatting and Linting
 
 TODO
