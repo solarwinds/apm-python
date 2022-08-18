@@ -30,17 +30,6 @@ services:
   # install test matrix
   # each service is a combination of python version and distro to test.
   #--------------------------------------------------------------------
-  # CentOs6 is not supported by the c-lib, this service checks that agent properly goes into no-op mode
-  py3.6-install-centos6:
-    hostname: "py3.6-centos6"
-    image: "centos:6"
-    user: root
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
   py3.6-install-centos8:
     hostname: "py3.6-centos8"
     image: "centos:8"
