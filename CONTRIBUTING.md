@@ -89,7 +89,23 @@ TODO
 
 ### Install tests
 
-TODO
+The tests in `tests/docker/install` install the Python agent from sdist and wheel (if applicable) to check these work as expected. 
+
+TODO Then, a minimal startup test is performed to check the installed agent can connect to the collector.
+
+When running the install tests locally, a pre-built agent distribution found under dist will be used. The agent version of the pre-built distribution is determined by the SOLARWINDS_APM_VERSION environment variable and the tests will fail no source distribution or compatible wheel can be found under dist. If the environment variable is unset, the version as specified by the source code currently checked out will be assumed.
+
+Example setup and run for Python 3.7 in Debian, for testing agent version 0.0.3.2:
+```
+./run_docker_dev.sh
+make clean
+make package
+exit
+cd tests/docker/install
+export SOLARWINDS_APM_VERSION=0.0.3.2
+docker-compose run --rm py3.7-install-debian10 /bin/bash
+./install_tests.sh
+```
 
 ### Formatting and Linting
 
