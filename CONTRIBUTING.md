@@ -95,28 +95,14 @@ TODO Then, a minimal startup test is performed to check the installed agent can 
 
 When running the install tests locally, a pre-built agent distribution found under dist will be used. The agent version of the pre-built distribution is determined by the SOLARWINDS_APM_VERSION environment variable and the tests will fail no source distribution or compatible wheel can be found under dist. If the environment variable is unset, the version as specified by the source code currently checked out will be assumed.
 
-Example setup and run for Python 3.7 in Debian, for testing agent version 0.0.3.2:
+Example setup and run for Python 3.7 in Debian:
 ```
 ./run_docker_dev.sh
 make clean
 make package
 exit
 cd tests/docker/install
-export SOLARWINDS_APM_VERSION=0.0.3.2
-docker-compose run --rm py3.7-install-debian10 /bin/bash
-./install_tests.sh
-```
-
-Example setup and run for Python 3.8 in Alpine 3.13+, which needs bash and build-related tools installed:
-```
-./run_docker_dev.sh
-make clean
-make package
-exit
-cd tests/docker/install
-docker-compose run --rm py3.8-install-alpine3.13 /bin/sh
-apk add bash python3-dev g++ make
-./install_tests.sh
+docker-compose run --rm py3.7-install-debian10
 ```
 
 ### Formatting and Linting

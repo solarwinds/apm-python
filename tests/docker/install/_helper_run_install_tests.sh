@@ -16,8 +16,12 @@ rm -f $log_file
         # test deps
         apk add bash
         # agent deps
-        apk add python-dev g++ make
+        apk add python3-dev g++ make
     elif [[ "$HOSTNAME" == "py3.6-centos8" ]]; then
+        # fix centos8 metadata download failures for repo 'appstream'
+        # https://stackoverflow.com/a/71077606
+        sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+        sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
         # agent deps
         dnf install -y python36-devel python3-pip gcc-c++
         # test deps
