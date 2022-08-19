@@ -19,7 +19,7 @@ rm -f "$log_file"
         apk add bash
         # agent deps
         apk add python3-dev g++ make
-    elif [[ "$HOSTNAME" == "py3.6-centos8" ]]; then
+    elif [ "$(hostname)" = "py3.6-centos8" ]; then
         # fix centos8 metadata download failures for repo 'appstream'
         # https://stackoverflow.com/a/71077606
         sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
