@@ -11,7 +11,7 @@ echo "Pip version: $(pip --version)"
 agent_root='/code/python-solarwinds'
 
 # setup: check inputs and clean out previous run
-if [ -z $SOLARWINDS_APM_VERSION ]; then
+if [ -z "$SOLARWINDS_APM_VERSION" ]; then
     # no SOLARWINDS_APM_VERSION provided, thus test version of current source code
     version_file=$agent_root/solarwinds_apm/version.py
     AGENT_VERSION="$(sed -n 's/__version__ = "\(.*\)"/\1/p' $version_file)"
@@ -34,9 +34,8 @@ function check_extension_files(){
 
     expected_files="$2"
 
-    pushd $1 >/dev/null
+    pushd "$1" >/dev/null
     found_swig_files=$(find . -not -path '.' | LC_ALL=C sort)
-    found_oboe_version=$(cat VERSION)
     popd >/dev/null
 
     if [[ ! "$found_swig_files" =~ $expected_files ]]; then
@@ -63,14 +62,16 @@ function check_installation(){
 ./oboe.py"
 
     # agent has been installed already, we only need to find the installed location
-    install_location=$(pip show solarwinds-apm | egrep -io 'location: .*' | cut -d ':' -f 2)
-
+    install_location=$(pip show solarwinds-apm | grep -Eio "location: .*" | cut -d ':' -f 2)
+    # pushd is stubborn and complains about double quotes
+    # https://inst.eecs.berkeley.edu/html/acl/doc/cl/pages/other/tpl-commands/pushd.htm
+    # shellcheck disable=SC2086
     pushd ${install_location}/solarwinds_apm/extension >/dev/null
     found_swig_files_inst=$(find . -not -path '.' -a -not -name '*.pyc' -a -not -name '__pycache__' | LC_ALL=C sort)
 
     # in Python3.8 with https://bugs.python.org/issue21536, C-extensions are not linked to libpython anymore, this leads to
     # ldd not finding the symbols defined libpython3.8.so
-    if [[ -f /etc/os-release && ! "$(cat /etc/os-release)" =~ "Alpine" || ! "$(python -V 2>&1)" =~ "3.8" ]]; then
+    if [[ -f /etc/os-release && ! "$(cat /etc/os-release)" =~ "Alpine" || ! "$(python -V 2>&1)" =~ 3.8 ]]; then
         found_oboe_ldd=$(ldd ./_oboe*.so)
     fi
     popd >/dev/null
@@ -94,7 +95,7 @@ function check_installation(){
     export SW_APM_SERVICE_KEY=invalid-token-for-testing-1234567890:servicename
     result=$(python -c "from solarwinds_apm.extension.oboe import Config as l_config; r=l_config.getVersionString(); print(r)")
 
-    if [ $result  != $expected_oboe_version ]; then
+    if [ "$result"  != "$expected_oboe_version" ]; then
         echo "FAILED! Expected agent using Oboe extension version $expected_oboe_version but found version $result."
         exit 1
     fi
@@ -110,13 +111,14 @@ function check_agent_startup(){
     export SW_APM_DEBUG_LEVEL=6
     export SW_APM_SERVICE_KEY=invalid-token-for-testing-1234567890:servicename
 
-    expected_agent_return=1
-    TEST_EXP_LOG_MESSAGES=(
-    ">> SSL Reporter using host='collector.solarwinds.com' port='443' log='' clientid='inva...7890:servicename'"
-    "Got 1 remote settings from the collector to update"
-    )
+    # TODO: instrument to check connection
+    # expected_agent_return=1
+    # TEST_EXP_LOG_MESSAGES=(
+    # ">> SSL Reporter using host='collector.solarwinds.com' port='443' log='' clientid='inva...7890:servicename'"
+    # "Got 1 remote settings from the collector to update"
+    # )
 
-    # TODO: Check solarwinds_ready() output
+    # TODO: Check solarwinds_ready() output instead
 
     echo -e "Agent startup verified successfully.\n"
 }
@@ -124,8 +126,8 @@ function check_agent_startup(){
 function check_sdist(){
     echo "#### Verifying Python agent source distribution ####"
     unpack_directory="$PWD/tmp/sdist"
-    rm -rf $unpack_directory
-    mkdir -p $unpack_directory
+    rm -rf "$unpack_directory"
+    mkdir -p "$unpack_directory"
     if [ ! -f "$agent_distribution" ]; then
         echo "FAILED: Did not find sdist for version $AGENT_VERSION. Please run 'make package' before running tests."
         echo "Aborting tests."
@@ -147,10 +149,10 @@ function check_sdist(){
 ./oboe_api.hpp
 ./oboe_debug.h
 ./oboe_wrap.cxx"
-    tar xzf $agent_distribution --directory $unpack_directory
+    tar xzf "$agent_distribution" --directory "$unpack_directory"
     check_extension_files "$unpack_directory/solarwinds_apm-${AGENT_VERSION}/solarwinds_apm/extension" "$expected_files"
     echo "Installing Python agent from source"
-    pip install -I $agent_distribution
+    pip install -I "$agent_distribution"
     check_installation
     check_agent_startup
     echo -e "Source distribution verified successfully.\n"
@@ -166,23 +168,23 @@ function check_wheel(){
 
     # we need to select the right wheel (there might be multiple wheel versions in the dist directory)
     wheel_dir=$PWD/tmp
-    rm -rf $wheel_dir
+    rm -rf "$wheel_dir"
     pip download \
         --only-binary solarwinds_apm \
         --find-links $agent_root/dist \
         --no-index \
-        --dest $wheel_dir \
+        --dest "$wheel_dir" \
         --no-deps \
-        solarwinds_apm==$AGENT_VERSION
-    tested_wheel=$(ls -d $wheel_dir/* | grep solarwinds_apm-$AGENT_VERSION.*.whl)
+        solarwinds_apm=="$AGENT_VERSION"
+    tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-$AGENT_VERSION*.*.whl")
     if [ ! -f "$tested_wheel" ]; then
         echo "FAILED: Did not find wheel for version $AGENT_VERSION. Please run 'make package' before running tests."
         echo "Aborting tests."
         exit 1
     fi
     unpack_directory="$PWD/tmp/wheel"
-    rm -rf $unpack_directory
-    mkdir -p $unpack_directory
+    rm -rf "$unpack_directory"
+    mkdir -p "$unpack_directory"
     expected_files="./VERSION
 ./__init__.py
 ./_oboe.*.so
@@ -191,10 +193,10 @@ function check_wheel(){
 ./bson/platform_hacks.h
 ./liboboe-1.0.so.0
 ./oboe.py"
-    unzip $tested_wheel -d $unpack_directory
+    unzip "$tested_wheel" -d "$unpack_directory"
     check_extension_files "$unpack_directory/solarwinds_apm/extension" "$expected_files"
     echo "Installing Python agent from wheel"
-    pip install -I $tested_wheel
+    pip install -I "$tested_wheel"
     check_installation
     check_agent_startup
     echo -e "Python wheel verified successfully.\n"

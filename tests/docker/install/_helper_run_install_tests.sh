@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # helper script to set up dependencies for the install tests, mainly to
 # account for alpine not having bash or agent install deps, then run the tests.
 
@@ -8,7 +10,7 @@ set -e
 log_file=/code/python-solarwinds/tests/docker/install/logs/install-$(hostname).log
 
 # clean up from previous run
-rm -f $log_file
+rm -f "$log_file"
 
 # setup dependencies
 {
