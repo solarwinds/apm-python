@@ -152,8 +152,6 @@ function check_sdist(){
     fi
     expected_files="./VERSION
 ./__init__.py
-./_oboe.cpython-36m-x86_64-linux-gnu.so
-./_oboe.cpython-39-x86_64-linux-gnu.so
 ./bson
 ./bson/bson.h
 ./bson/platform_hacks.h
