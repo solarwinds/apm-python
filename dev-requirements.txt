@@ -1,4 +1,4 @@
-opentelemetry-test-utils==0.31b0
+opentelemetry-test-utils==0.30b1
 pytest
 pytest-cov
 pytest-mock

@@ -1,0 +1,105 @@
+# compose the regression tests
+#
+# environment variables:
+# * SOLARWINDS_APM_VERSION: the agent version being tested, it must already be built
+#   under the project dist/ directory
+#
+# use the `run` command to get an interactive container for debugging:
+# (debian) $ docker-compose run --rm <service name> /bin/bash
+# (alpine) $ docker-compose run --rm <service name> /bin/sh
+# (centos) $ docker-compose run --rm --user root <service name> /bin/bash
+
+version: '2.4'
+
+x-command-install-test: &command-install-test
+  command: sh _helper_run_install_tests.sh
+
+x-envvars-install-test: &envvars-install-test
+  SOLARWINDS_APM_VERSION: ${SOLARWINDS_APM_VERSION:-}
+
+x-volumes-codebase: &volumes-codebase
+  volumes:
+    - ../../../:/code/python-solarwinds
+    - ./_helper_run_install_tests.sh:/workspace/_helper_run_install_tests.sh
+    - ./install_tests.sh:/workspace/install_tests.sh
+
+x-workdir: &workdir
+  working_dir: /workspace
+
+services:
+  #--------------------------------------------------------------------
+  # install test matrix
+  # each service is a combination of python version and distro to test.
+  #--------------------------------------------------------------------
+  py3.6-install-centos8:
+    hostname: "py3.6-centos8"
+    image: "centos:8"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.7-install-debian10:
+    hostname: "py3.7-debian10"
+    image: "python:3.7-buster"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.8-install-alpine3.13:
+    hostname: "py3.8-alpine3.13"
+    image: "python:3.8-alpine3.13"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.8-install-alpine3.14:
+    hostname: "py3.8-alpine3.14"
+    image: "python:3.8-alpine3.14"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.8-install-centos7:
+    hostname: "py3.8-centos7"
+    image: "centos/python-38-centos7"
+    user: root
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.8-install-debian10:
+    hostname: "py3.8-debian10"
+    image: "python:3.8-buster"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.9-install-debian10:
+    hostname: "py3.9-debian10"
+    image: "python:3.9-buster"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.10-install-debian10:
+    hostname: "py3.10-debian10"
+    image: "python:3.10-buster"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test

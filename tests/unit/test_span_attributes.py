@@ -109,8 +109,8 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         # assert len(spans) == 1
         # assert all(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)
-        # assert SW_TRACESTATE_KEY in spans[0].context.trace_state
-        # assert spans[0].context.trace_state[SW_TRACESTATE_KEY] == "0000000000000000-01"
+        # assert INTL_SWO_TRACESTATE_KEY in spans[0].context.trace_state
+        # assert spans[0].context.trace_state[INTL_SWO_TRACESTATE_KEY] == "0000000000000000-01"
 
     def test_attrs_with_valid_traceparent(self):
         """Acceptance Criterion #2"""

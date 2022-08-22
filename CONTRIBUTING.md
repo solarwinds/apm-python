@@ -87,6 +87,30 @@ The functional tests require a compiled C-extension and should be run inside the
 
 TODO
 
+### Install tests
+
+#### GitHub Action
+
+Agent installation tests can be run via [GitHub Actions](https://github.com/appoptics/opentelemetry-python-instrumentation-custom-distro/actions/workflows/verify_install.yaml).
+
+#### Locally
+
+The tests in `tests/docker/install` install the Python agent from sdist and wheel (if applicable) to check these work as expected. 
+
+TODO Then, a minimal startup test is performed to check the installed agent can connect to the collector.
+
+When running the install tests locally, a pre-built agent distribution found under dist will be used. The agent version of the pre-built distribution is determined by the SOLARWINDS_APM_VERSION environment variable and the tests will fail no source distribution or compatible wheel can be found under dist. If the environment variable is unset, the version as specified by the source code currently checked out will be assumed.
+
+Example setup and run for Python 3.7 in Debian:
+```
+./run_docker_dev.sh
+make clean
+make package
+exit
+cd tests/docker/install
+docker-compose run --rm py3.7-install-debian10
+```
+
 ### Formatting and Linting
 
 TODO
