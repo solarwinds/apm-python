@@ -39,7 +39,6 @@ else
     AGENT_VERSION=$SOLARWINDS_APM_VERSION
 fi
 
-agent_distribution=$agent_root/dist/solarwinds_apm-${AGENT_VERSION}.tar.gz
 
 function check_extension_files(){
     # Verifies content in the extension directory solarwinds_apm/extension. The absolute path of the directory to be verified
@@ -164,11 +163,6 @@ function check_sdist(){
     unpack_directory="$PWD/tmp/sdist"
     rm -rf "$unpack_directory"
     mkdir -p "$unpack_directory"
-    if [ ! -f "$agent_distribution" ]; then
-        echo "FAILED: Did not find sdist for version $AGENT_VERSION. Please run 'make package' before running tests."
-        echo "Aborting tests."
-        exit 1
-    fi
     expected_files="./VERSION
 ./__init__.py
 ./bson
@@ -183,39 +177,48 @@ function check_sdist(){
 ./oboe_api.hpp
 ./oboe_debug.h
 ./oboe_wrap.cxx"
-    tar xzf "$agent_distribution" --directory "$unpack_directory"
+    tar xzf "$1" --directory "$unpack_directory"
     check_extension_files "$unpack_directory/solarwinds_apm-${AGENT_VERSION}/solarwinds_apm/extension" "$expected_files"
     echo "Installing Python agent from source"
-    pip install -I "$agent_distribution"
+    pip install -I "$1"
     check_installation
     check_agent_startup
     echo -e "Source distribution verified successfully.\n"
 }
 
-function check_wheel(){
-    echo "#### Verifying Python agent wheel distribution ####"
-    # Python wheels are not available under Alpine Linux
-    if [[ -f /etc/os-release && "$(cat /etc/os-release)" =~ "Alpine" ]]; then
-        echo "Wheels are not available on Alpine Linux, skip wheel tests."
-        exit 0
-    fi
+function download_wheel(){
+    if [ "$MODE" == "local" ]
+    then
+      # we need to select the right wheel (there might be multiple wheel versions in the dist directory)
+      wheel_dir=$PWD/tmp
+      rm -rf "$wheel_dir"
+      pip download \
+          --only-binary solarwinds_apm \
+          --find-links $agent_root/dist \
+          --no-index \
+          --dest "$wheel_dir" \
+          --no-deps \
+          solarwinds_apm=="$AGENT_VERSION"
+      tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-$AGENT_VERSION*.*.whl")
+      if [ ! -f "$tested_wheel" ]; then
+          echo "FAILED: Did not find wheel for version $AGENT_VERSION. Please run 'make package' before running tests."
+          echo "Aborting tests."
+          exit 1
+      fi
 
-    # we need to select the right wheel (there might be multiple wheel versions in the dist directory)
-    wheel_dir=$PWD/tmp
-    rm -rf "$wheel_dir"
-    pip download \
-        --only-binary solarwinds_apm \
-        --find-links $agent_root/dist \
-        --no-index \
-        --dest "$wheel_dir" \
-        --no-deps \
-        solarwinds_apm=="$AGENT_VERSION"
-    tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-$AGENT_VERSION*.*.whl")
-    if [ ! -f "$tested_wheel" ]; then
-        echo "FAILED: Did not find wheel for version $AGENT_VERSION. Please run 'make package' before running tests."
-        echo "Aborting tests."
-        exit 1
+    elif [ "$MODE" == "testpypi" ]
+    then
+      echo "TODO"
+    elif [ "$MODE" == "packagecloud" ]
+    then
+      echo "TODO"
+    elif [ "$MODE" == "pypi" ]
+    then
+      echo "TODO"
     fi
+}
+
+function check_wheel(){
     unpack_directory="$PWD/tmp/wheel"
     rm -rf "$unpack_directory"
     mkdir -p "$unpack_directory"
@@ -236,11 +239,27 @@ function check_wheel(){
     echo -e "Python wheel verified successfully.\n"
 }
 
+function download_and_check_wheel(){
+    echo "#### Verifying Python agent wheel distribution ####"
+    # Python wheels are not available under Alpine Linux
+    if [[ -f /etc/os-release && "$(cat /etc/os-release)" =~ "Alpine" ]]; then
+        echo "Wheels are not available on Alpine Linux, skip wheel tests."
+        exit 0
+    fi
+    download_wheel
+    check_wheel "$tested_wheel"
+}
+
 # start testing
 if [ "$MODE" == "local" ]
 then
-  check_sdist
-  check_wheel
+  agent_distribution=$agent_root/dist/solarwinds_apm-${AGENT_VERSION}.tar.gz
+  if [ ! -f "$agent_distribution" ]; then
+    echo "FAILED: Did not find sdist for version $AGENT_VERSION. Please run 'make package' before running tests."
+    echo "Aborting tests."
+    exit 1
+  fi
+  check_sdist "$agent_distribution"
 elif [ "$MODE" == "testpypi" ]
 then
   echo "TODO Haven't implemented for MODE=$MODE!!!"
@@ -251,3 +270,5 @@ elif [ "$MODE" == "pypi" ]
 then
   echo "TODO Haven't implemented for MODE=$MODE!!!"
 fi
+
+download_and_check_wheel
