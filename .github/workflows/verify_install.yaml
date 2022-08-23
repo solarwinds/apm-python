@@ -9,6 +9,15 @@ jobs:
     container:
       image: centos:8
     steps:
+    - name: Install pip and test deps
+      run: |
+        sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+        sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+        dnf install -y python36-devel python3-pip gcc-c++
+        dnf install -y unzip
+        command -v python || ln -s /usr/bin/python3 /usr/local/bin/python
+        command -v pip || ln -s /usr/bin/pip3 /usr/local/bin/pip
+        pip install --upgrade pip >/dev/null
     - name: Install solarwinds-apm sdist (tar)
       run: pip install --extra-index-url https://test.pypi.org/simple/ --dest sdist/ solarwinds-apm --no-binary solarwinds-apm
     - name: Check sdist-installed agent startup
