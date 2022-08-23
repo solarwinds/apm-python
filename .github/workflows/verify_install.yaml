@@ -9,7 +9,7 @@ jobs:
     container:
       image: centos:8
     steps:
-    - name: Install pip and test deps
+    - name: Install pip and test deps (centos8 only)
       run: |
         sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
         sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
@@ -19,7 +19,7 @@ jobs:
         command -v pip || ln -s /usr/bin/pip3 /usr/local/bin/pip
         pip install --upgrade pip >/dev/null
     - name: Install solarwinds-apm sdist (tar)
-      run: pip install --extra-index-url https://test.pypi.org/simple/ --dest sdist/ solarwinds-apm --no-binary solarwinds-apm
+      run: pip install --extra-index-url https://test.pypi.org/simple/ solarwinds-apm --no-binary solarwinds-apm
     - name: Check sdist-installed agent startup
       run: |
         export SW_APM_DEBUG_LEVEL=6
@@ -42,8 +42,10 @@ jobs:
         fi
         set -e
         echo -e "Agent startup verified successfully.\n"
+    - name: Uninstall
+      run: pip uninstall -y solarwinds-apm
     - name: Download solarwinds-apm bdist (wheel)
-      run: pip install --extra-index-url https://test.pypi.org/simple/ --dest bdist/ solarwinds-apm
+      run: pip install --extra-index-url https://test.pypi.org/simple/ solarwinds-apm
     - name: Check bdist-installed agent startup
       run: |
         export SW_APM_DEBUG_LEVEL=6
