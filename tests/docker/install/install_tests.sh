@@ -3,6 +3,25 @@
 # stop on error
 set -e
 
+# get test mode
+TEST_MODES=(
+    "local"
+    "testpypi"
+    "packagecloud"
+    "pypi"
+)
+if [ -z "$MODE" ]
+then
+  echo "WARNING: Did not provide MODE for install test run."
+  echo "Defaulting to MODE=testpypi"
+  MODE=testpypi
+fi
+if [[ ! " ${TEST_MODES[*]} " =~ ${MODE} ]]
+then
+  echo "FAILED: Did not provide valid MODE. Must be one of: testpypi (default), local, packagecloud, pypi."
+  exit 1
+fi
+
 echo "Python system information"
 echo "Python version: $(python --version 2>&1)"
 echo "Pip version: $(pip --version)"
@@ -218,5 +237,17 @@ function check_wheel(){
 }
 
 # start testing
-check_sdist
-check_wheel
+if [ "$MODE" == "local" ]
+then
+  check_sdist
+  check_wheel
+elif [ "$MODE" == "testpypi" ]
+then
+  echo "TODO Haven't implemented for MODE=$MODE!!!"
+elif [ "$MODE" == "packagecloud" ]
+then
+  echo "TODO Haven't implemented for MODE=$MODE!!!"
+elif [ "$MODE" == "pypi" ]
+then
+  echo "TODO Haven't implemented for MODE=$MODE!!!"
+fi
