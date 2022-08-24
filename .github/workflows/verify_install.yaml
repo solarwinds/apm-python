@@ -37,7 +37,7 @@ jobs:
       shell: bash
       env:
         MODE: packagecloud
-  py38_install_alpine313_pypi:
+  py38_install_alpine313_testpypi:
     runs-on: ubuntu-latest
     container:
       image: python:3.8-alpine3.13
@@ -52,4 +52,4 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: bash
       env:
-        MODE: pypi
+        MODE: testpypi
