@@ -14,28 +14,31 @@ env:
 jobs:
   py36_install_centos8_testpypi:
     runs-on: ubuntu-latest
-    env:
-      MODE: testpypi
     container:
       image: centos:8
     steps:
     - name: Install and run test
-      run: bash tests/docker/install/_helper_run_install_tests.sh
+      run: ./tests/docker/install/_helper_run_install_tests.sh
+      shell: bash
+      env:
+        MODE: testpypi
   py37_install_debian10_packagecloud:
     runs-on: ubuntu-latest
-    env:
-      MODE: packagecloud
     container:
       image: python:3.7-buster
     steps:
     - name: Install and run test
-      run: bash tests/docker/install/_helper_run_install_tests.sh
+      run: ./tests/docker/install/_helper_run_install_tests.sh
+      shell: bash
+      env:
+        MODE: packagecloud
   py38_install_alpine313_pypi:
     runs-on: ubuntu-latest
-    env:
-      MODE: pypi
     container:
       image: python:3.8-alpine3.13
     steps:
     - name: Install and run test
-      run: bash tests/docker/install/_helper_run_install_tests.sh
+      run: ./tests/docker/install/_helper_run_install_tests.sh
+      shell: bash
+      env:
+        MODE: pypi
