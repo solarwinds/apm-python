@@ -13,8 +13,8 @@ TEST_MODES=(
 if [ -z "$MODE" ]
 then
   echo "WARNING: Did not provide MODE for install test run."
-  echo "Defaulting to MODE=testpypi"
-  MODE=testpypi
+  echo "Defaulting to MODE=local"
+  MODE=local
 fi
 if [[ ! " ${TEST_MODES[*]} " =~ ${MODE} ]]
 then
