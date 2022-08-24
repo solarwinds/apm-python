@@ -97,7 +97,7 @@ function check_installation(){
     if [ "$MODE" == "local" ]
     then
         # verify that version of C-extension of installed agent is same as what we expect (i.e. as determined by VERSION)
-        expected_oboe_version=$(cat $agent_root/solarwinds_apm/extension/VERSION)
+        expected_oboe_version=$(cat "$agent_root"/solarwinds_apm/extension/VERSION)
         export SW_APM_SERVICE_KEY=invalid-token-for-testing-1234567890:servicename
         result=$(python -c "from solarwinds_apm.extension.oboe import Config as l_config; r=l_config.getVersionString(); print(r)")
 
@@ -166,6 +166,8 @@ function download_sdist(){
         pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
     fi
 
+    # shellcheck disable=SC2048
+    # shellcheck disable=SC2086
     pip download ${pip_options[*]}
     sdist_tar=$(find "$sdist_dir"/* -name "solarwinds_apm-*.tar.gz")
 }
@@ -207,7 +209,7 @@ function download_wheel(){
         # we need to select the right wheel (there might be multiple wheel versions in the dist directory)
         pip download \
             --only-binary solarwinds_apm \
-            --find-links $agent_root/dist \
+            --find-links "$agent_root"/dist \
             --no-index \
             --dest "$wheel_dir" \
             --no-deps \
@@ -236,6 +238,8 @@ function download_wheel(){
             pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
         fi
 
+        # shellcheck disable=SC2048
+        # shellcheck disable=SC2086
         pip download ${pip_options[*]}
         tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-*.*.whl")
     fi

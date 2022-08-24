@@ -11,7 +11,7 @@ log_file=./logs/install-$(hostname).log
 
 # clean up from previous run
 rm -f "$log_file"
-mkdir -p ./logs && touch $log_file
+mkdir -p ./logs && touch "$log_file"
 
 # setup dependencies
 {
