@@ -38,4 +38,4 @@ rm -f "$log_file"
 } >/dev/null
 
 # run tests using bash so we can use pipefail
-bash -c "set -o pipefail && /code/python-solarwinds/tests/docker/install/install_tests.sh MODE=$MODE 2>&1 | tee -a $log_file"
+bash -c "set -o pipefail && ./install_tests.sh MODE=$MODE 2>&1 | tee -a $log_file"
