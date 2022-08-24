@@ -276,7 +276,7 @@ function download_and_check_wheel(){
 # start testing
 if [ "$MODE" == "local" ]
 then
-    # root of local solarwinds_apm package
+    # docker-compose-set root of local solarwinds_apm package
     agent_root='/code/python-solarwinds'
     # optionally test a previous version on local for debugging
     if [ -z "$SOLARWINDS_APM_VERSION" ]; then

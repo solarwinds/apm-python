@@ -7,7 +7,7 @@
 set -e
 
 # set log file
-log_file=/code/python-solarwinds/tests/docker/install/logs/install-$(hostname).log
+log_file=./logs/install-$(hostname).log
 
 # clean up from previous run
 rm -f "$log_file"
