@@ -18,7 +18,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup and run install test
-      run: ./tests/docker/install/_helper_run_install_tests.sh
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
       shell: bash
       env:
         MODE: testpypi
@@ -29,7 +30,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup and run install test
-      run: ./tests/docker/install/_helper_run_install_tests.sh
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
       shell: bash
       env:
         MODE: packagecloud
@@ -40,7 +42,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup and run install test
-      run: ./tests/docker/install/_helper_run_install_tests.sh
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
       shell: bash
       env:
         MODE: pypi
