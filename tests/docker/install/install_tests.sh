@@ -150,33 +150,24 @@ function check_agent_startup(){
 function download_sdist(){
     sdist_dir="$PWD/tmp/sdist"
     rm -rf sdist_dir
-
+    pip_options=(pip download --no-binary solarwinds-apm --dest "$sdist_dir")
     if [ "$MODE" == "testpypi" ]
     then
-        pip download \
-            --extra-index-url https://test.pypi.org/simple/ \
-            --no-binary solarwinds-apm \
-            --dest "$sdist_dir" \
-            solarwinds-apm
-        sdist_tar=$(find "$sdist_dir"/* -name "solarwinds_apm-*.tar.gz")
-
+        pip_options+=(--extra-index-url https://test.pypi.org/simple/)
     elif [ "$MODE" == "packagecloud" ]
     then
         curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
-        pip download \
-            --no-binary solarwinds-apm \
-            --dest "$sdist_dir" \
-            solarwinds-apm
-        sdist_tar=$(find "$sdist_dir"/* -name "solarwinds_apm-*.tar.gz")
-
-    elif [ "$MODE" == "pypi" ]
-    then
-        pip download \
-            --no-binary solarwinds-apm \
-            --dest "$sdist_dir" \
-            solarwinds-apm
-        sdist_tar=$(find "$sdist_dir"/* -name "solarwinds_apm-*.tar.gz")
     fi
+
+    if [ -z "$SOLARWINDS_APM_VERSION" ]
+    then
+        pip_options+=(solarwinds-apm)
+    else
+        pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
+    fi
+
+    pip download ${pip_options[*]}
+    sdist_tar=$(find "$sdist_dir"/* -name "solarwinds_apm-*.tar.gz")
 }
 
 function check_sdist(){
@@ -228,30 +219,24 @@ function download_wheel(){
             exit 1
         fi
 
-    elif [ "$MODE" == "testpypi" ]
-    then
-        pip download \
-            --extra-index-url https://test.pypi.org/simple/ \
-            --only-binary solarwinds-apm \
-            --dest "$wheel_dir" \
-            solarwinds-apm
-        tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-*.*.whl")
+    else
+        pip_options=(pip download --only-binary solarwinds-apm --dest "$wheel_dir")
+        if [ "$MODE" == "testpypi" ]
+        then
+            pip_options+=(--extra-index-url https://test.pypi.org/simple/)
+        elif [ "$MODE" == "packagecloud" ]
+        then
+            curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
+        fi
 
-    elif [ "$MODE" == "packagecloud" ]
-    then
-        curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
-        pip download \
-            --only-binary solarwinds-apm \
-            --dest "$wheel_dir" \
-            solarwinds-apm
-        tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-*.*.whl")
+        if [ -z "$SOLARWINDS_APM_VERSION" ]
+        then
+            pip_options+=(solarwinds-apm)
+        else
+            pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
+        fi
 
-    elif [ "$MODE" == "pypi" ]
-    then
-        pip download \
-            --only-binary solarwinds-apm \
-            --dest "$wheel_dir" \
-            solarwinds-apm
+        pip download ${pip_options[*]}
         tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-*.*.whl")
     fi
 }
