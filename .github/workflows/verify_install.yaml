@@ -44,6 +44,9 @@ jobs:
       options: --hostname py3.8-alpine3.13
     steps:
     - uses: actions/checkout@v2
+    - name: Install bash and Python
+      run: |
+        apk add bash python3-dev g++ make
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
