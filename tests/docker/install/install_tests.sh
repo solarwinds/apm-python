@@ -162,8 +162,12 @@ function download_sdist(){
 
     elif [ "$MODE" == "packagecloud" ]
     then
-        echo "ERROR: Haven't implemented download_sdist for MODE=$MODE"
-        exit 1
+        curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
+        pip download \
+            --no-binary solarwinds-apm \
+            --dest "$sdist_dir" \
+            solarwinds-apm
+        sdist_tar=$(find "$sdist_dir"/* -name "solarwinds_apm-*.tar.gz")
 
     elif [ "$MODE" == "pypi" ]
     then
@@ -235,8 +239,12 @@ function download_wheel(){
 
     elif [ "$MODE" == "packagecloud" ]
     then
-        echo "ERROR: Haven't implemented download_wheel for MODE=$MODE"
-        exit 1
+        curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
+        pip download \
+            --only-binary solarwinds-apm \
+            --dest "$wheel_dir" \
+            solarwinds-apm
+        tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-*.*.whl")
 
     elif [ "$MODE" == "pypi" ]
     then
