@@ -16,7 +16,8 @@ jobs:
     container:
       image: centos:8
     steps:
-    - name: Install and run test
+    - uses: actions/checkout@v2
+    - name: Setup and run install test
       run: ./tests/docker/install/_helper_run_install_tests.sh
       shell: bash
       env:
@@ -26,7 +27,8 @@ jobs:
     container:
       image: python:3.7-buster
     steps:
-    - name: Install and run test
+    - uses: actions/checkout@v2
+    - name: Setup and run install test
       run: ./tests/docker/install/_helper_run_install_tests.sh
       shell: bash
       env:
@@ -36,7 +38,8 @@ jobs:
     container:
       image: python:3.8-alpine3.13
     steps:
-    - name: Install and run test
+    - uses: actions/checkout@v2
+    - name: Setup and run install test
       run: ./tests/docker/install/_helper_run_install_tests.sh
       shell: bash
       env:
