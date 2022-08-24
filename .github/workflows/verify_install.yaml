@@ -2,66 +2,34 @@ name: Verify Installation
 
 on:
   workflow_dispatch:
+    inputs: 
+      solarwinds-version:
+        required: false
+        description: 'solarwinds-apm version (e.g. solarwinds-apm@prerelease)'
+        default: 'solarwinds-apm@latest'
 
 jobs:
-  build_package:
+  py36_install_centos8_testpypi:
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: ./.github/actions/package_solarwinds_apm
-  py3.6_install_centos8:
-    needs: build_package
-    runs-on: ubuntu-latest
+    container:
+      image: centos:8
     steps:
     - name: Install and run test
       working-directory: ./tests/docker/install
-      run: docker-compose run py3.6-install-centos8
-  py3.7_install_debian10:
-    needs: build_package
+      run: SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} MODE=testpypi ./_helper_run_install_tests.sh
+  py37_install_debian10_packagecloud:
     runs-on: ubuntu-latest
+    container:
+      image: python:3.7-buster
     steps:
     - name: Install and run test
       working-directory: ./tests/docker/install
-      run: docker-compose run py3.7-install-debian10
-  py3.8_install_alpine3.13:
-    needs: build_package
+      run: SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} MODE=packagecloud ./_helper_run_install_tests.sh
+  py38_install_alpine313_pypi:
     runs-on: ubuntu-latest
+    container:
+      image: python:3.8-alpine3.13
     steps:
     - name: Install and run test
       working-directory: ./tests/docker/install
-      run: docker-compose run py3.8-install-alpine3.13
-  py3.8_install_alpine3.14:
-    needs: build_package
-    runs-on: ubuntu-latest
-    steps:
-    - name: Install and run test
-      working-directory: ./tests/docker/install
-      run: docker-compose run py3.8-install-alpine3.14
-  py3.8_install_centos7:
-    needs: build_package
-    runs-on: ubuntu-latest
-    steps:
-    - name: Install and run test
-      working-directory: ./tests/docker/install
-      run: docker-compose run py3.8-install-centos7
-  py3.8_install_debian10:
-    needs: build_package
-    runs-on: ubuntu-latest
-    steps:
-    - name: Install and run test
-      working-directory: ./tests/docker/install
-      run: docker-compose run py3.8-install-debian10
-  py3.9_install_debian10:
-    needs: build_package
-    runs-on: ubuntu-latest
-    steps:
-    - name: Install and run test
-      working-directory: ./tests/docker/install
-      run: docker-compose run py3.9-install-debian10
-  py3.10_install_debian10:
-    needs: build_package
-    runs-on: ubuntu-latest
-    steps:
-    - name: Install and run test
-      working-directory: ./tests/docker/install
-      run: docker-compose run py3.10-install-debian10
+      run: SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} MODE=pypi ./_helper_run_install_tests.sh
