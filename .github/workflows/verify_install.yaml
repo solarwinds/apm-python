@@ -5,8 +5,7 @@ on:
     inputs: 
       solarwinds-version:
         required: false
-        description: 'solarwinds-apm version (e.g. solarwinds-apm@prerelease)'
-        default: 'solarwinds-apm@latest'
+        description: 'Optional solarwinds-apm version (e.g. 0.0.3.2)'
 
 env:
   SOLARWINDS_APM_VERSION: ${{ github.event.inputs.solarwinds-version }}
