@@ -167,8 +167,11 @@ function download_sdist(){
 
     elif [ "$MODE" == "pypi" ]
     then
-        echo "ERROR: Haven't implemented download_sdist for MODE=$MODE"
-        exit 1
+        pip download \
+            --no-binary solarwinds-apm \
+            --dest "$sdist_dir" \
+            solarwinds-apm
+        sdist_tar=$(find "$sdist_dir"/* -name "solarwinds_apm-*.tar.gz")
     fi
 }
 
@@ -234,10 +237,14 @@ function download_wheel(){
     then
         echo "ERROR: Haven't implemented download_wheel for MODE=$MODE"
         exit 1
+
     elif [ "$MODE" == "pypi" ]
     then
-        echo "ERROR: Haven't implemented download_wheel for MODE=$MODE"
-        exit 1
+        pip download \
+            --only-binary solarwinds-apm \
+            --dest "$wheel_dir" \
+            solarwinds-apm
+        tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-*.*.whl")
     fi
 }
 
