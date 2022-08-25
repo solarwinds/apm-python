@@ -26,24 +26,30 @@ jobs:
         MODE: testpypi
     - name: Install test app dependencies
       run: pip install flask requests
+    - name: Bootstrap opentelemetry libraries
+      run: opentelemetry-bootstrap --action=install
     - name: Run instrumented server and client - staging
       working-directory: .github/utils
-      run: opentelemetry-instrument flask run && python client.py
+      run: |
+        nohup opentelemetry-instrument flask run > log.txt 2>&1 &
+        python client.py
       env:
         FLASK_RUN_HOST: 0.0.0.0
         FLASK_RUN_PORT: 8001
         OTEL_PYTHON_DISABLED_INSTRUMENTATIONS: urllib3
-        SW_APM_DEBUG_LEVEL: 6
+        SW_APM_DEBUG_LEVEL: 3
         SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}-py3.6-centos8
         SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR_STAGING }}
     - name: Run instrumented server and client - prod
       working-directory: .github/utils
-      run: opentelemetry-instrument flask run && python client.py
+      run: |
+        nohup opentelemetry-instrument flask run > log.txt 2>&1 &
+        python client.py
       env:
         FLASK_RUN_HOST: 0.0.0.0
         FLASK_RUN_PORT: 8002
         OTEL_PYTHON_DISABLED_INSTRUMENTATIONS: urllib3
-        SW_APM_DEBUG_LEVEL: 6
+        SW_APM_DEBUG_LEVEL: 3
         SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}-py3.6-centos8
         SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR_PROD }}
   py37_install_debian10_packagecloud:
