@@ -93,17 +93,13 @@ TODO
 
 Testing agent installation from the public registries can be run using the GitHub workflow [Verify Installation](https://github.com/appoptics/opentelemetry-python-instrumentation-custom-distro/actions/workflows/verify_install.yaml). Input Solarwinds APM version is optional (defaults to latest published).
 
-TODO check traces
-
-TODO separate workflows for each registry
+Part of this testing is launching minimal, instrumented Flask apps and submitting requests to them. This checks that the installed agent can connect to the collector, and traces can be generated and exported to SolarWinds. Services on staging and prod are named `apm-python-install-testing-<python_version>_<linux_distro>` and exported traces there can be inspected manually after GH workflow trigger.
 
 #### Locally
 
 During development, the tests in `tests/docker/install` can be used to install the Python agent from sdist and wheel (if applicable) to check these work as expected.
 
-TODO Then, a minimal startup test is performed to check the installed agent can connect to the collector.
-
-TODO check traces
+TODO (Not complete) These export traces to staging and production platforms the same way as the Github Actions do though with different naming -- see above section.
 
 When `MODE=local`, the sdist and wheel must be pre-built by the build container. Local mode also assumes the tests are run with `docker-compose`. For all other modes, the tests pull the agent from one of the public registries so local builds aren't needed.
 
