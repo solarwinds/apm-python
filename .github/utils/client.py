@@ -15,7 +15,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 # we need to wait for the Oboe reporter to be ready first, thus add some wait time here
-time.sleep(30)
+time.sleep(5)
 
 # request to instrumented Flask server
 resp = requests.get("http://{}:{}/test/".format(
@@ -26,4 +26,4 @@ logger.debug("Response headers from Flask server:")
 logger.debug(resp.headers)
 
 # we give the reporter more time to finish trace export before exit
-time.sleep(30)
+time.sleep(5)
