@@ -159,11 +159,11 @@ function download_sdist(){
         curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
     fi
 
-    if [ -z "$SOLARWINDS_APM_VERSION" ]
+    if [ -z "$AGENT_VERSION" ]
     then
         pip_options+=(solarwinds-apm)
     else
-        pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
+        pip_options+=(solarwinds-apm=="$AGENT_VERSION")
     fi
 
     # shellcheck disable=SC2048
@@ -231,11 +231,11 @@ function download_wheel(){
             curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
         fi
 
-        if [ -z "$SOLARWINDS_APM_VERSION" ]
+        if [ -z "$AGENT_VERSION" ]
         then
             pip_options+=(solarwinds-apm)
         else
-            pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
+            pip_options+=(solarwinds-apm=="$AGENT_VERSION")
         fi
 
         # shellcheck disable=SC2048
@@ -300,6 +300,7 @@ then
     fi
     check_sdist "$agent_distribution"
 else
+    AGENT_VERSION=$SOLARWINDS_APM_VERSION
     download_sdist
     check_sdist "$sdist_tar"
 fi
