@@ -105,7 +105,7 @@ TODO Then, a minimal startup test is performed to check the installed agent can 
 
 TODO check traces
 
-When `MODE=local`, the sdist and wheel must be pre-built by the build container. Local mode also assumes the tests are run with `docker-compose`. For all other modes, the tests pull the agent from one of the public registries so local builds aren't needed.
+When `MODE=local`, the sdist and wheel must be pre-built by the build container. Local mode also assumes the tests are run with `docker-compose` and (note!) logs should be output before container teardown. For all other modes, the tests pull the agent from one of the public registries so local builds aren't needed.
 
 The version of distribution installed is determined by the `SOLARWINDS_APM_VERSION` environment variable and the tests will fail if no source distribution or compatible wheel can be found under `dist/` or in the registries. If the environment variable is unset, the version as specified by the source code currently checked out will be assumed.
 
