@@ -20,6 +20,8 @@ if [[ ! " ${TEST_MODES[*]} " =~ ${MODE} ]]
 then
   echo "FAILED: Did not provide valid MODE. Must be one of: testpypi (default), local, packagecloud, pypi."
   exit 1
+else
+  echo "Using provided MODE=$MODE"
 fi
 
 echo "Python system information"

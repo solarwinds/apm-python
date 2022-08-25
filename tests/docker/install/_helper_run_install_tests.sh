@@ -32,4 +32,4 @@ set -e
 } >/dev/null
 
 # run tests using bash so we can use pipefail
-bash -c "set -o pipefail && ./install_tests.sh MODE=$MODE 2>&1"
+bash -c "set -o pipefail && ./install_tests.sh 2>&1"
