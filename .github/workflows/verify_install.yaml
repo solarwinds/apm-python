@@ -33,34 +33,10 @@ jobs:
       shell: bash
       env:
         MODE: ${{ github.event.inputs.install-registry }}
-    - name: Install test app dependencies
-      run: pip install flask requests
-    - name: Bootstrap opentelemetry libraries
-      run: opentelemetry-bootstrap --action=install
-    - name: Run instrumented server and client - staging
-      working-directory: .github/utils
-      run: |
-        nohup opentelemetry-instrument flask run > log.txt 2>&1 &
-        python client.py
-      env:
-        FLASK_RUN_HOST: 0.0.0.0
-        FLASK_RUN_PORT: 8001
-        OTEL_PYTHON_DISABLED_INSTRUMENTATIONS: urllib3
-        SW_APM_DEBUG_LEVEL: 3
-        SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}-py3.6-centos8
-        SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR_STAGING }}
-    - name: Run instrumented server and client - prod
-      working-directory: .github/utils
-      run: |
-        nohup opentelemetry-instrument flask run > log.txt 2>&1 &
-        python client.py
-      env:
-        FLASK_RUN_HOST: 0.0.0.0
-        FLASK_RUN_PORT: 8002
-        OTEL_PYTHON_DISABLED_INSTRUMENTATIONS: urllib3
-        SW_APM_DEBUG_LEVEL: 3
-        SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}-py3.6-centos8
-        SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR_PROD }}
+        SW_APM_COLLECTOR_PROD: ${{ secrets.SW_APM_COLLECTOR_PROD }}
+        SW_APM_COLLECTOR_STAGING: ${{ secrets.SW_APM_COLLECTOR_STAGING }}
+        SW_APM_SERVICE_KEY_PROD: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}-py3.6-centos8
+        SW_APM_SERVICE_KEY_STAGING: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}-py3.6-centos8
   py37_install_debian10:
     runs-on: ubuntu-latest
     container:
@@ -74,34 +50,10 @@ jobs:
       shell: bash
       env:
         MODE: ${{ github.event.inputs.install-registry }}
-    - name: Install test app dependencies
-      run: pip install flask requests
-    - name: Bootstrap opentelemetry libraries
-      run: opentelemetry-bootstrap --action=install
-    - name: Run instrumented server and client - staging
-      working-directory: .github/utils
-      run: |
-        nohup opentelemetry-instrument flask run > log.txt 2>&1 &
-        python client.py
-      env:
-        FLASK_RUN_HOST: 0.0.0.0
-        FLASK_RUN_PORT: 8001
-        OTEL_PYTHON_DISABLED_INSTRUMENTATIONS: urllib3
-        SW_APM_DEBUG_LEVEL: 3
-        SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}-py3.7-debian10
-        SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR_STAGING }}
-    - name: Run instrumented server and client - prod
-      working-directory: .github/utils
-      run: |
-        nohup opentelemetry-instrument flask run > log.txt 2>&1 &
-        python client.py
-      env:
-        FLASK_RUN_HOST: 0.0.0.0
-        FLASK_RUN_PORT: 8002
-        OTEL_PYTHON_DISABLED_INSTRUMENTATIONS: urllib3
-        SW_APM_DEBUG_LEVEL: 3
-        SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}-py3.7-debian10
-        SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR_PROD }}
+        SW_APM_COLLECTOR_PROD: ${{ secrets.SW_APM_COLLECTOR_PROD }}
+        SW_APM_COLLECTOR_STAGING: ${{ secrets.SW_APM_COLLECTOR_STAGING }}
+        SW_APM_SERVICE_KEY_PROD: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}-py3.7-debian10
+        SW_APM_SERVICE_KEY_STAGING: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}-py3.7-debian10
   py38_install_alpine313:
     runs-on: ubuntu-latest
     container:
@@ -118,31 +70,7 @@ jobs:
       shell: bash
       env:
         MODE: ${{ github.event.inputs.install-registry }}
-    - name: Install test app dependencies
-      run: pip install flask requests
-    - name: Bootstrap opentelemetry libraries
-      run: opentelemetry-bootstrap --action=install
-    - name: Run instrumented server and client - staging
-      working-directory: .github/utils
-      run: |
-        nohup opentelemetry-instrument flask run > log.txt 2>&1 &
-        python client.py
-      env:
-        FLASK_RUN_HOST: 0.0.0.0
-        FLASK_RUN_PORT: 8001
-        OTEL_PYTHON_DISABLED_INSTRUMENTATIONS: urllib3
-        SW_APM_DEBUG_LEVEL: 3
-        SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}-py3.8-alpine3.13
-        SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR_STAGING }}
-    - name: Run instrumented server and client - prod
-      working-directory: .github/utils
-      run: |
-        nohup opentelemetry-instrument flask run > log.txt 2>&1 &
-        python client.py
-      env:
-        FLASK_RUN_HOST: 0.0.0.0
-        FLASK_RUN_PORT: 8002
-        OTEL_PYTHON_DISABLED_INSTRUMENTATIONS: urllib3
-        SW_APM_DEBUG_LEVEL: 3
-        SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}-py3.8-alpine3.13
-        SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR_PROD }}
+        SW_APM_COLLECTOR_PROD: ${{ secrets.SW_APM_COLLECTOR_PROD }}
+        SW_APM_COLLECTOR_STAGING: ${{ secrets.SW_APM_COLLECTOR_STAGING }}
+        SW_APM_SERVICE_KEY_PROD: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}-py3.8-alpine3.13
+        SW_APM_SERVICE_KEY_STAGING: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}-py3.8-alpine3.13
