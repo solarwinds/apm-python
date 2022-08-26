@@ -93,13 +93,13 @@ TODO
 
 Agent installation tests are run using the GitHub workflow [Verify Installation](https://github.com/appoptics/opentelemetry-python-instrumentation-custom-distro/actions/workflows/verify_install.yaml). Select one of PyPI, PackageCloud, or TestPyPI from which the tests will download and install. Input Solarwinds APM version is optional (defaults to latest published).
 
-Part of this test workflow is the launch of minimal, instrumented Flask apps and submitting requests to them. This checks that the installed agent can connect to the collector, and traces can be generated and exported to SolarWinds. Installation test-dedicated services on SolarWinds staging (org: Demo) and production (org: SWI) are named `apm-python-install-testing-<python_version>-<linux_distro>` (e.g. `apm-python-install-testing-py3.7-debian10`). Traces exported there can be inspected manually after GH workflow trigger.
+Part of this test workflow is the launch of minimal, instrumented Flask apps and submitting requests to them. This checks that the installed agent can connect to the collector, and traces can be generated and exported to SolarWinds. Installation test-dedicated services on SolarWinds staging (org: Staging) and production (org: SWI) are named `apm-python-install-testing-<python_version>-<linux_distro>` (e.g. `apm-python-install-testing-py3.7-debian10`). Traces exported there can be inspected manually after GH workflow trigger.
 
 #### Locally
 
 During development, `tests/docker/install` can be used to test agent installation from sdist and wheel (if applicable, i.e. no wheels on Alpine).
 
-To set up, you'll need the API tokens for SolarWinds staging (org: Demo) and production (org: SWI) named `apm-python-install-testing`. Set these and the staging/prod collector endpoints as environment variables:
+To set up, you'll need the API tokens for SolarWinds staging (org: Staging) and production (org: SWI) named `apm-python-install-testing`. Set these and the staging/prod collector endpoints as environment variables:
 
 ```
 export SW_APM_COLLECTOR_PROD: apm.collector.cloud.solarwinds.com
