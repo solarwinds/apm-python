@@ -18,6 +18,10 @@ on:
 
 env:
   SOLARWINDS_APM_VERSION: ${{ github.event.inputs.solarwinds-version }}
+  SW_APM_COLLECTOR_PROD: ${{ secrets.SW_APM_COLLECTOR_PROD }}
+  SW_APM_COLLECTOR_STAGING: ${{ secrets.SW_APM_COLLECTOR_STAGING }}
+  SW_APM_SERVICE_KEY_PROD: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}
+  SW_APM_SERVICE_KEY_STAGING: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}
 
 jobs:
   py36_install_centos8:
@@ -33,10 +37,6 @@ jobs:
       shell: bash
       env:
         MODE: ${{ github.event.inputs.install-registry }}
-        SW_APM_COLLECTOR_PROD: ${{ secrets.SW_APM_COLLECTOR_PROD }}
-        SW_APM_COLLECTOR_STAGING: ${{ secrets.SW_APM_COLLECTOR_STAGING }}
-        SW_APM_SERVICE_KEY_PROD: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}-py3.6-centos8
-        SW_APM_SERVICE_KEY_STAGING: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}-py3.6-centos8
   py37_install_debian10:
     runs-on: ubuntu-latest
     container:
@@ -50,10 +50,6 @@ jobs:
       shell: bash
       env:
         MODE: ${{ github.event.inputs.install-registry }}
-        SW_APM_COLLECTOR_PROD: ${{ secrets.SW_APM_COLLECTOR_PROD }}
-        SW_APM_COLLECTOR_STAGING: ${{ secrets.SW_APM_COLLECTOR_STAGING }}
-        SW_APM_SERVICE_KEY_PROD: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}-py3.7-debian10
-        SW_APM_SERVICE_KEY_STAGING: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}-py3.7-debian10
   py38_install_alpine313:
     runs-on: ubuntu-latest
     container:
@@ -70,7 +66,3 @@ jobs:
       shell: bash
       env:
         MODE: ${{ github.event.inputs.install-registry }}
-        SW_APM_COLLECTOR_PROD: ${{ secrets.SW_APM_COLLECTOR_PROD }}
-        SW_APM_COLLECTOR_STAGING: ${{ secrets.SW_APM_COLLECTOR_STAGING }}
-        SW_APM_SERVICE_KEY_PROD: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}-py3.8-alpine3.13
-        SW_APM_SERVICE_KEY_STAGING: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}-py3.8-alpine3.13
