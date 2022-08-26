@@ -91,47 +91,54 @@ TODO
 
 #### GitHub Action
 
-Testing agent installation from the public registries can be run using the GitHub workflow [Verify Installation](https://github.com/appoptics/opentelemetry-python-instrumentation-custom-distro/actions/workflows/verify_install.yaml). Input Solarwinds APM version is optional (defaults to latest published).
+Agent installation tests are run using the GitHub workflow [Verify Installation](https://github.com/appoptics/opentelemetry-python-instrumentation-custom-distro/actions/workflows/verify_install.yaml). Select one of PyPI, PackageCloud, or TestPyPI from which the tests will download and install. Input Solarwinds APM version is optional (defaults to latest published).
 
-Part of this testing is launching minimal, instrumented Flask apps and submitting requests to them. This checks that the installed agent can connect to the collector, and traces can be generated and exported to SolarWinds. Services on staging and prod are named `apm-python-install-testing-<python_version>_<linux_distro>` and exported traces there can be inspected manually after GH workflow trigger.
+Part of this test workflow is the launch of minimal, instrumented Flask apps and submitting requests to them. This checks that the installed agent can connect to the collector, and traces can be generated and exported to SolarWinds. Installation test-dedicated services on SolarWinds staging (org: Demo) and production (org: SWI) are named `apm-python-install-testing-<python_version>-<linux_distro>` (e.g. `apm-python-install-testing-py3.7-debian10`). Traces exported there can be inspected manually after GH workflow trigger.
 
 #### Locally
 
-During development, the tests in `tests/docker/install` can be used to install the Python agent from sdist and wheel (if applicable) to check these work as expected.
+During development, `tests/docker/install` can be used to test agent installation from sdist and wheel (if applicable, i.e. no wheels on Alpine).
 
-TODO (Not complete) These export traces to staging and production platforms the same way as the Github Actions do though with different naming -- see above section.
+To set up, you'll need the API tokens for SolarWinds staging (org: Demo) and production (org: SWI) named `apm-python-install-testing`. Set these and the staging/prod collector endpoints as environment variables:
 
-When `MODE=local`, the sdist and wheel must be pre-built by the build container. Local mode also assumes the tests are run with `docker-compose` and (note!) logs should be output before container teardown. For all other modes, the tests pull the agent from one of the public registries so local builds aren't needed.
+```
+export SW_APM_COLLECTOR_PROD: apm.collector.cloud.solarwinds.com
+export SW_APM_COLLECTOR_STAGING: apm-collector.dc-01.st-ssp.solarwinds.com
+export SW_APM_SERVICE_KEY_PROD: <api_token>:apm-python-install-testing
+export SW_APM_SERVICE_KEY_STAGING: <api_token>:apm-python-install-testing
+```
 
-The version of distribution installed is determined by the `SOLARWINDS_APM_VERSION` environment variable and the tests will fail if no source distribution or compatible wheel can be found under `dist/` or in the registries. If the environment variable is unset, the version as specified by the source code currently checked out will be assumed.
+Optionally, you can set `MODE` (defaults to `local`). When `MODE=local`, the sdist and wheel must be pre-built by the build container (i.e. `run_docker.dev.sh`, `make package`). For all other modes (`MODE=testpypi`, `MODE=packagecloud`, `MODE=pypi`), the tests pull the agent from one of the public registries so local builds aren't needed.
 
-Example setup and run of local install tests:
+You can also set `SOLARWINDS_APM_VERSION`. This determines the version of distribution installed. If `MODE=local` or not set, the tests will fail if no source distribution or compatible wheel can be found under `dist/` or in the registries. If `SOLARWINDS_APM_VERSION` is not set, the version as specified by the source code currently checked out will be assumed.
+
+To run the install tests, use `docker-compose` in `tests/docker/install`. Note: any logs of interest should be output before container teardown. The tests export traces to staging and production platforms the same way as the Github Actions do -- see above section.
+
+Example setup and run of local install tests, default `MODE=local`:
 ```
 ./run_docker_dev.sh
 make clean
 make package
 exit
 cd tests/docker/install
-MODE=local docker-compose up
+docker-compose up
 ```
 
-Example setup and run of local install tests for Python 3.7 in Debian only:
+Example setup and run of local install tests, only for Python 3.8 in Alpine 3.14:
 ```
 ./run_docker_dev.sh
 make clean
 make package
 exit
 cd tests/docker/install
-docker-compose run --rm py3.7-install-debian10
+docker-compose run --rm py3.8-install-alpine3.14
 ```
 
-Example run of install tests from all the registries using agent version 0.0.3.2:
+Example run of install tests from TestPyPI using agent version 0.0.3.2:
 ```
 export SOLARWINDS_APM_VERSION=0.0.3.2
 cd tests/docker/install
 MODE=testpypi docker-compose up
-MODE=packagecloud docker-compose up
-MODE=pypi docker-compose up
 ```
 
 ### Formatting and Linting

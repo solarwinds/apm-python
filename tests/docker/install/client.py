@@ -14,6 +14,7 @@ formatter = logging.Formatter('%(levelname)s | %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+# TODO Use agent ready()
 # we need to wait for the Oboe reporter to be ready first, thus add some wait time here
 time.sleep(5)
 
@@ -26,4 +27,4 @@ logger.debug("Response headers from Flask server:")
 logger.debug(resp.headers)
 
 # we give the reporter more time to finish trace export before exit
-time.sleep(5)
+time.sleep(10)
