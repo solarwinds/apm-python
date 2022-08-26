@@ -299,13 +299,32 @@ function get_and_check_wheel(){
     # Python wheels are not available under Alpine Linux
     if [[ -f /etc/os-release && "$(cat /etc/os-release)" =~ "Alpine" ]]; then
         echo "Wheels are not available on Alpine Linux, skip wheel tests."
-        exit 0
+    else
+        get_wheel
+        check_wheel "$tested_wheel"
     fi
-    get_wheel
-    check_wheel "$tested_wheel"
+}
+
+function install_test_app_dependencies(){
+    pip install flask requests
+    opentelemetry-bootstrap --action=install
+}
+
+function run_instrumented_server_and_client(){
+    export FLASK_RUN_HOST="0.0.0.0"
+    export FLASK_RUN_PORT="$1"
+    export OTEL_PYTHON_DISABLED_INSTRUMENTATIONS="urllib3"
+    export SW_APM_DEBUG_LEVEL="3"
+    export SW_APM_SERVICE_KEY="$2"
+    export SW_APM_COLLECTOR="$3"
+    nohup opentelemetry-instrument flask run > log.txt 2>&1 &
+    python client.py
 }
 
 # start testing
 AGENT_VERSION=$SOLARWINDS_APM_VERSION
 get_and_check_sdist
 get_and_check_wheel
+install_test_app_dependencies
+run_instrumented_server_and_client "8001" "$SW_APM_SERVICE_KEY_STAGING-$(hostname)" "$SW_APM_COLLECTOR_STAGING"
+run_instrumented_server_and_client "8002" "$SW_APM_SERVICE_KEY_PROD-$(hostname)" "$SW_APM_COLLECTOR_PROD"
