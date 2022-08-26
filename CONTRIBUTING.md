@@ -91,17 +91,35 @@ TODO
 
 #### GitHub Action
 
-Agent installation tests can be run via [GitHub Actions](https://github.com/appoptics/opentelemetry-python-instrumentation-custom-distro/actions/workflows/verify_install.yaml).
+Testing agent installation from the public registries can be run using the GitHub workflow [Verify Installation](https://github.com/appoptics/opentelemetry-python-instrumentation-custom-distro/actions/workflows/verify_install.yaml). Input Solarwinds APM version is optional (defaults to latest published).
+
+TODO check traces
+
+TODO separate workflows for each registry
 
 #### Locally
 
-The tests in `tests/docker/install` install the Python agent from sdist and wheel (if applicable) to check these work as expected. 
+During development, the tests in `tests/docker/install` can be used to install the Python agent from sdist and wheel (if applicable) to check these work as expected.
 
 TODO Then, a minimal startup test is performed to check the installed agent can connect to the collector.
 
-When running the install tests locally, a pre-built agent distribution found under dist will be used. The agent version of the pre-built distribution is determined by the SOLARWINDS_APM_VERSION environment variable and the tests will fail no source distribution or compatible wheel can be found under dist. If the environment variable is unset, the version as specified by the source code currently checked out will be assumed.
+TODO check traces
 
-Example setup and run for Python 3.7 in Debian:
+When `MODE=local`, the sdist and wheel must be pre-built by the build container. Local mode also assumes the tests are run with `docker-compose` and (note!) logs should be output before container teardown. For all other modes, the tests pull the agent from one of the public registries so local builds aren't needed.
+
+The version of distribution installed is determined by the `SOLARWINDS_APM_VERSION` environment variable and the tests will fail if no source distribution or compatible wheel can be found under `dist/` or in the registries. If the environment variable is unset, the version as specified by the source code currently checked out will be assumed.
+
+Example setup and run of local install tests:
+```
+./run_docker_dev.sh
+make clean
+make package
+exit
+cd tests/docker/install
+MODE=local docker-compose up
+```
+
+Example setup and run of local install tests for Python 3.7 in Debian only:
 ```
 ./run_docker_dev.sh
 make clean
@@ -109,6 +127,15 @@ make package
 exit
 cd tests/docker/install
 docker-compose run --rm py3.7-install-debian10
+```
+
+Example run of install tests from all the registries using agent version 0.0.3.2:
+```
+export SOLARWINDS_APM_VERSION=0.0.3.2
+cd tests/docker/install
+MODE=testpypi docker-compose up
+MODE=packagecloud docker-compose up
+MODE=pypi docker-compose up
 ```
 
 ### Formatting and Linting

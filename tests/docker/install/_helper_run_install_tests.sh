@@ -6,12 +6,6 @@
 # stop on error
 set -e
 
-# set log file
-log_file=/code/python-solarwinds/tests/docker/install/logs/install-$(hostname).log
-
-# clean up from previous run
-rm -f "$log_file"
-
 # setup dependencies
 {
     if grep Alpine /etc/os-release; then
@@ -38,4 +32,4 @@ rm -f "$log_file"
 } >/dev/null
 
 # run tests using bash so we can use pipefail
-bash -c "set -o pipefail && /code/python-solarwinds/tests/docker/install/install_tests.sh 2>&1 | tee -a $log_file"
+bash -c "set -o pipefail && ./install_tests.sh 2>&1"
