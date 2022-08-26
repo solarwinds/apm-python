@@ -299,10 +299,10 @@ function get_and_check_wheel(){
     # Python wheels are not available under Alpine Linux
     if [[ -f /etc/os-release && "$(cat /etc/os-release)" =~ "Alpine" ]]; then
         echo "Wheels are not available on Alpine Linux, skip wheel tests."
-        exit 0
+    else
+        get_wheel
+        check_wheel "$tested_wheel"
     fi
-    get_wheel
-    check_wheel "$tested_wheel"
 }
 
 function install_test_app_dependencies(){
