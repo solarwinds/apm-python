@@ -20,6 +20,8 @@ if [[ ! " ${TEST_MODES[*]} " =~ ${MODE} ]]
 then
   echo "FAILED: Did not provide valid MODE. Must be one of: testpypi (default), local, packagecloud, pypi."
   exit 1
+else
+  echo "Using provided MODE=$MODE"
 fi
 
 echo "Python system information"
@@ -147,33 +149,53 @@ function check_agent_startup(){
     echo -e "Agent startup verified successfully.\n"
 }
 
-function download_sdist(){
+function get_sdist(){
     sdist_dir="$PWD/tmp/sdist"
     rm -rf sdist_dir
-    pip_options=(pip download --no-binary solarwinds-apm --dest "$sdist_dir")
-    if [ "$MODE" == "testpypi" ]
-    then
-        pip_options+=(--extra-index-url https://test.pypi.org/simple/)
-    elif [ "$MODE" == "packagecloud" ]
-    then
-        curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
-    fi
 
-    if [ -z "$SOLARWINDS_APM_VERSION" ]
+    if [ "$MODE" == "local" ]
     then
-        pip_options+=(solarwinds-apm)
+        # docker-compose-set root of local solarwinds_apm package
+        agent_root='/code/python-solarwinds'
+        # optionally test a previous version on local for debugging
+        if [ -z "$SOLARWINDS_APM_VERSION" ]; then
+            # no SOLARWINDS_APM_VERSION provided, thus test version of current source code
+            version_file=$agent_root/solarwinds_apm/version.py
+            AGENT_VERSION="$(sed -n 's/__version__ = "\(.*\)"/\1/p' $version_file)"
+            echo "No SOLARWINDS_APM_VERSION provided, thus testing source code version ($AGENT_VERSION)"
+        fi
+
+        sdist_tar=$agent_root/dist/solarwinds_apm-${AGENT_VERSION}.tar.gz
+        if [ ! -f "$sdist_tar" ]; then
+            echo "FAILED: Did not find sdist for version $AGENT_VERSION. Please run 'make package' before running tests."
+            echo "Aborting tests."
+            exit 1
+        fi
     else
-        pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
-    fi
+        pip_options=(pip download --no-binary solarwinds-apm --dest "$sdist_dir")
+        if [ "$MODE" == "testpypi" ]
+        then
+            pip_options+=(--extra-index-url https://test.pypi.org/simple/)
+        elif [ "$MODE" == "packagecloud" ]
+        then
+            curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
+        fi
 
-    # shellcheck disable=SC2048
-    # shellcheck disable=SC2086
-    pip download ${pip_options[*]}
-    sdist_tar=$(find "$sdist_dir"/* -name "solarwinds_apm-*.tar.gz")
+        if [ -z "$AGENT_VERSION" ]
+        then
+            pip_options+=(solarwinds-apm)
+        else
+            pip_options+=(solarwinds-apm=="$AGENT_VERSION")
+        fi
+
+        # shellcheck disable=SC2048
+        # shellcheck disable=SC2086
+        pip download ${pip_options[*]}
+        sdist_tar=$(find "$sdist_dir"/* -name "solarwinds_apm-*.tar.gz")
+    fi
 }
 
 function check_sdist(){
-    echo "#### Verifying Python agent source distribution ####"
     unpack_directory="$PWD/unpack/sdist"
     rm -rf "$unpack_directory"
     mkdir -p "$unpack_directory"
@@ -201,7 +223,13 @@ function check_sdist(){
     echo -e "Source distribution verified successfully.\n"
 }
 
-function download_wheel(){
+function get_and_check_sdist(){
+    echo "#### Verifying Python agent source distribution ####"
+    get_sdist
+    check_sdist "$sdist_tar"
+}
+
+function get_wheel(){
     wheel_dir="$PWD/tmp/wheel"
     rm -rf "$wheel_dir"
     if [ "$MODE" == "local" ]
@@ -231,11 +259,11 @@ function download_wheel(){
             curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
         fi
 
-        if [ -z "$SOLARWINDS_APM_VERSION" ]
+        if [ -z "$AGENT_VERSION" ]
         then
             pip_options+=(solarwinds-apm)
         else
-            pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
+            pip_options+=(solarwinds-apm=="$AGENT_VERSION")
         fi
 
         # shellcheck disable=SC2048
@@ -266,41 +294,18 @@ function check_wheel(){
     echo -e "Python wheel verified successfully.\n"
 }
 
-function download_and_check_wheel(){
+function get_and_check_wheel(){
     echo "#### Verifying Python agent wheel distribution ####"
     # Python wheels are not available under Alpine Linux
     if [[ -f /etc/os-release && "$(cat /etc/os-release)" =~ "Alpine" ]]; then
         echo "Wheels are not available on Alpine Linux, skip wheel tests."
         exit 0
     fi
-    download_wheel
+    get_wheel
     check_wheel "$tested_wheel"
 }
 
 # start testing
-if [ "$MODE" == "local" ]
-then
-    # docker-compose-set root of local solarwinds_apm package
-    agent_root='/code/python-solarwinds'
-    # optionally test a previous version on local for debugging
-    if [ -z "$SOLARWINDS_APM_VERSION" ]; then
-        # no SOLARWINDS_APM_VERSION provided, thus test version of current source code
-        version_file=$agent_root/solarwinds_apm/version.py
-        AGENT_VERSION="$(sed -n 's/__version__ = "\(.*\)"/\1/p' $version_file)"
-        echo "No SOLARWINDS_APM_VERSION provided, thus testing source code version ($AGENT_VERSION)"
-    else
-        AGENT_VERSION=$SOLARWINDS_APM_VERSION
-    fi
-
-    agent_distribution=$agent_root/dist/solarwinds_apm-${AGENT_VERSION}.tar.gz
-    if [ ! -f "$agent_distribution" ]; then
-        echo "FAILED: Did not find sdist for version $AGENT_VERSION. Please run 'make package' before running tests."
-        echo "Aborting tests."
-        exit 1
-    fi
-    check_sdist "$agent_distribution"
-else
-    download_sdist
-    check_sdist "$sdist_tar"
-fi
-download_and_check_wheel
+AGENT_VERSION=$SOLARWINDS_APM_VERSION
+get_and_check_sdist
+get_and_check_wheel

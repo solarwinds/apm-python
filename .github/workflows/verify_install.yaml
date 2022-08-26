@@ -2,16 +2,25 @@ name: Verify Installation
 
 on:
   workflow_dispatch:
-    inputs: 
+    inputs:
+      install-registry:
+        required: true
+        description: 'Registry used for install tests, e.g. pypi, testpypi, packagecloud'
+        type: choice
+        default: 'pypi'
+        options:
+        - pypi
+        - packagecloud
+        - testpypi
       solarwinds-version:
         required: false
-        description: 'Optional solarwinds-apm version (e.g. 0.0.3.2)'
+        description: 'Optional solarwinds-apm version, e.g. 0.0.3.2'
 
 env:
   SOLARWINDS_APM_VERSION: ${{ github.event.inputs.solarwinds-version }}
 
 jobs:
-  py36_install_centos8_testpypi:
+  py36_install_centos8:
     runs-on: ubuntu-latest
     container:
       image: centos:8
@@ -23,7 +32,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: bash
       env:
-        MODE: testpypi
+        MODE: ${{ github.event.inputs.install-registry }}
     - name: Install test app dependencies
       run: pip install flask requests
     - name: Bootstrap opentelemetry libraries
@@ -52,7 +61,7 @@ jobs:
         SW_APM_DEBUG_LEVEL: 3
         SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}-py3.6-centos8
         SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR_PROD }}
-  py37_install_debian10_packagecloud:
+  py37_install_debian10:
     runs-on: ubuntu-latest
     container:
       image: python:3.7-buster
@@ -64,7 +73,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: bash
       env:
-        MODE: packagecloud
+        MODE: ${{ github.event.inputs.install-registry }}
     - name: Install test app dependencies
       run: pip install flask requests
     - name: Bootstrap opentelemetry libraries
@@ -93,7 +102,7 @@ jobs:
         SW_APM_DEBUG_LEVEL: 3
         SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}-py3.7-debian10
         SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR_PROD }}
-  py38_install_alpine313_testpypi:
+  py38_install_alpine313:
     runs-on: ubuntu-latest
     container:
       image: python:3.8-alpine3.13
@@ -108,7 +117,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: bash
       env:
-        MODE: testpypi
+        MODE: ${{ github.event.inputs.install-registry }}
     - name: Install test app dependencies
       run: pip install flask requests
     - name: Bootstrap opentelemetry libraries

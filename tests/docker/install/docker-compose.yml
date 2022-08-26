@@ -16,6 +16,7 @@ x-command-install-test: &command-install-test
 
 x-envvars-install-test: &envvars-install-test
   SOLARWINDS_APM_VERSION: ${SOLARWINDS_APM_VERSION:-}
+  MODE: ${MODE}
 
 x-volumes-codebase: &volumes-codebase
   volumes:

@@ -6,13 +6,6 @@
 # stop on error
 set -e
 
-# set log file
-log_file=./logs/install-$(hostname).log
-
-# clean up from previous run
-rm -f "$log_file"
-mkdir -p ./logs && touch "$log_file"
-
 # setup dependencies
 {
     if grep Alpine /etc/os-release; then
@@ -39,4 +32,4 @@ mkdir -p ./logs && touch "$log_file"
 } >/dev/null
 
 # run tests using bash so we can use pipefail
-bash -c "set -o pipefail && ./install_tests.sh MODE=$MODE 2>&1 | tee -a $log_file"
+bash -c "set -o pipefail && ./install_tests.sh 2>&1"
