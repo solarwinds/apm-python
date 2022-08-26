@@ -27,4 +27,4 @@ logger.debug("Response headers from Flask server:")
 logger.debug(resp.headers)
 
 # we give the reporter more time to finish trace export before exit
-time.sleep(10)
+time.sleep(15)
