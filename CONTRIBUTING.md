@@ -93,19 +93,25 @@ TODO
 
 Agent installation tests are run using the GitHub workflow [Verify Installation](https://github.com/appoptics/opentelemetry-python-instrumentation-custom-distro/actions/workflows/verify_install.yaml). Select one of PyPI, PackageCloud, or TestPyPI from which the tests will download and install. Input Solarwinds APM version is optional (defaults to latest published).
 
-Part of this test workflow is the launch of minimal, instrumented Flask apps and submitting requests to them. This checks that the installed agent can connect to the collector, and traces can be generated and exported to SolarWinds. Installation test-dedicated services on SolarWinds staging (org: Demo) and production (org: SWI) are named `apm-python-install-testing-<python_version>-<linux_distro>` (e.g. `apm-python-install-testing-py3.7-debian10`). Traces exported there can be inspected manually after GH workflow trigger.
+Part of this test workflow is the launch of minimal, instrumented Flask apps and submitting requests to them. This checks that the installed agent can connect to the collector, and traces can be generated and exported to SolarWinds. Installation test-dedicated services on SolarWinds staging (org: Staging), SolarWinds production (org: SWI), and AppOptics production (org: Agent Testing) are named `apm-python-install-testing-<python_version>-<linux_distro>` (e.g. `apm-python-install-testing-py3.7-debian10`). Traces exported there can be inspected manually after GH workflow trigger.
 
 #### Locally
 
 During development, `tests/docker/install` can be used to test agent installation from sdist and wheel (if applicable, i.e. no wheels on Alpine).
 
-To set up, you'll need the API tokens for SolarWinds staging (org: Demo) and production (org: SWI) named `apm-python-install-testing`. Set these and the staging/prod collector endpoints as environment variables:
+To set up, you'll need the API tokens named `apm-python-install-testing` for each of:
+* SolarWinds staging (org: Staging)
+* SolarWinds production (org: SWI)
+* AppOptics production (org: Agent Testing)
 
+Set these and the staging/prod collector endpoints as environment variables:
 ```
-export SW_APM_COLLECTOR_PROD: apm.collector.cloud.solarwinds.com
-export SW_APM_COLLECTOR_STAGING: apm-collector.dc-01.st-ssp.solarwinds.com
-export SW_APM_SERVICE_KEY_PROD: <api_token>:apm-python-install-testing
-export SW_APM_SERVICE_KEY_STAGING: <api_token>:apm-python-install-testing
+export SW_APM_COLLECTOR_AO_PROD=collector.appoptics.com
+export SW_APM_COLLECTOR_PROD=apm.collector.cloud.solarwinds.com
+export SW_APM_COLLECTOR_STAGING=apm-collector.dc-01.st-ssp.solarwinds.com
+export SW_APM_SERVICE_KEY_AO_PROD=<api_token>:apm-python-install-testing
+export SW_APM_SERVICE_KEY_PROD=<api_token>:apm-python-install-testing
+export SW_APM_SERVICE_KEY_STAGING=<api_token>:apm-python-install-testing
 ```
 
 Optionally, you can set `MODE` (defaults to `local`). When `MODE=local`, the sdist and wheel must be pre-built by the build container (i.e. `run_docker.dev.sh`, `make package`). For all other modes (`MODE=testpypi`, `MODE=packagecloud`, `MODE=pypi`), the tests pull the agent from one of the public registries so local builds aren't needed.
