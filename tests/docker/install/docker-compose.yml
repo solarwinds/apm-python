@@ -41,6 +41,84 @@ services:
   # install test matrix
   # each service is a combination of python version and distro to test.
   #--------------------------------------------------------------------
+
+  #--------------------------------------------------------------------
+  # Python 3.6
+  #--------------------------------------------------------------------
+
+  py3.6-install-debian8:
+    hostname: "py3.6-debian8"
+    image: "python:3.6-jessie"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-debian9:
+    hostname: "py3.6-debian9"
+    image: "python:3.6-stretch"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-debian10:
+    hostname: "py3.6-debian10"
+    image: "python:3.6-buster"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-ubuntu14.04:
+    hostname: "py3.6-ubuntu14.04"
+    image: "ubuntu:14.04"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-ubuntu16.04:
+    hostname: "py3.6-ubuntu16.04"
+    image: "ubuntu:16.04"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-ubuntu18.04:
+    hostname: "py3.6-ubuntu18.04"
+    image: "ubuntu:18.04"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-ubuntu20.04:
+    hostname: "py3.6-ubuntu20.04"
+    image: "ubuntu:20.04"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-centos7:
+    hostname: "py3.6-centos7"
+    image: "centos/python-36-centos7"
+    user: root
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
   py3.6-install-centos8:
     hostname: "py3.6-centos8"
     image: "centos:8"
@@ -50,6 +128,100 @@ services:
     environment:
       << : *envvars-install-test
 
+  py3.6-install-amazon2016.09:
+    hostname: "py3.6-amazon2016.09"
+    image: "amazonlinux:2016.09"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-amazon2017.03:
+    hostname: "py3.6-amazon2017.03"
+    image: "amazonlinux:2017.03"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-amazon2017.09:
+    hostname: "py3.6-amazon2017.09"
+    image: "amazonlinux:2017.09"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-amazon2018.03:
+    hostname: "py3.6-amazon2018.03"
+    image: "amazonlinux:2018.03"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-amazon2:
+    hostname: "py3.6-amazon2"
+    image: "amazonlinux:2"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-alpine3.12:
+    hostname: "py3.6-alpine3.12"
+    image: "python:3.6-alpine3.12"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-alpine3.13:
+    hostname: "py3.6-alpine3.13"
+    image: "python:3.6-alpine3.13"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-alpine3.14:
+    hostname: "py3.6-alpine3.14"
+    image: "python:3.6-alpine3.14"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-alpine3.15:
+    hostname: "py3.6-alpine3.15"
+    image: "python:3.6-alpine3.15"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.6-install-alpine3.16:
+    hostname: "py3.6-alpine3.16"
+    image: "alpine:3.16"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  #--------------------------------------------------------------------
+  # Python 3.7
+  #--------------------------------------------------------------------
+
   py3.7-install-debian10:
     hostname: "py3.7-debian10"
     image: "python:3.7-buster"
@@ -58,6 +230,10 @@ services:
     << : *volumes-codebase
     environment:
       << : *envvars-install-test
+
+  #--------------------------------------------------------------------
+  # Python 3.8
+  #--------------------------------------------------------------------
 
   py3.8-install-alpine3.13:
     hostname: "py3.8-alpine3.13"
@@ -96,6 +272,10 @@ services:
     environment:
       << : *envvars-install-test
 
+  #--------------------------------------------------------------------
+  # Python 3.9
+  #--------------------------------------------------------------------
+
   py3.9-install-debian10:
     hostname: "py3.9-debian10"
     image: "python:3.9-buster"
@@ -105,6 +285,10 @@ services:
     environment:
       << : *envvars-install-test
 
+  #--------------------------------------------------------------------
+  # Python 3.10
+  #--------------------------------------------------------------------
+
   py3.10-install-debian10:
     hostname: "py3.10-debian10"
     image: "python:3.10-buster"
@@ -113,3 +297,7 @@ services:
     << : *volumes-codebase
     environment:
       << : *envvars-install-test
+
+  #--------------------------------------------------------------------
+  # Python 3.11
+  #--------------------------------------------------------------------

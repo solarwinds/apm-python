@@ -13,7 +13,7 @@ set -e
         apk add bash
         # agent deps
         apk add python3-dev g++ make
-    elif [ "$(hostname)" = "py3.6-centos8" ]; then
+    elif grep "CentOS Linux 8" /etc/os-release; then
         # fix centos8 metadata download failures for repo 'appstream'
         # https://stackoverflow.com/a/71077606
         sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
@@ -28,6 +28,14 @@ set -e
             ln -s /usr/bin/pip3 /usr/local/bin/pip
         # the installed python uses pip 9.0.3 by default, however we need at least pip 19.3 to find manylinux2014 wheels
         pip install --upgrade pip >/dev/null
+    
+    elif grep Ubuntu /etc/os-release; then
+        # TODO Ubuntu install particular python version
+        echo "got ubuntu"
+    
+    elif grep "Amazon Linux" /etc/os-release; then
+        # TODO Amazon Linux particular python version
+        echo "got amazon linux"
     fi
 } >/dev/null
 
