@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 
-# helper script to set up dependencies for the install tests, mainly to
-# account for alpine not having bash or agent install deps, then run the tests.
+# Helper script to set up dependencies for the install tests, then runs the tests.
+# Accounts for:
+#   * Alpine not having bash nor agent install deps
+#   * Amazon Linux not having agent install deps
+#   * CentOS 8 being at end-of-life and needing a mirror re-point
+#   * Ubuntu not having agent install deps
 
 # stop on error
 set -e
+
+# get Python version from container hostname, e.g. "3.6", "3.10"
+python_version=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.[0-9]+[0-9]*')
 
 # setup dependencies
 {
@@ -30,12 +37,26 @@ set -e
         pip install --upgrade pip >/dev/null
     
     elif grep Ubuntu /etc/os-release; then
-        # TODO Ubuntu install particular python version
-        echo "got ubuntu"
+        apt-get update && apt-get upgrade -y
+        # agent deps
+        apt-get install -y "python$python_version"-dev python3-pip gcc unzip
+        update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+        update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+        # need at least pip 19.3 to find manylinux2014 wheels
+        pip install --upgrade pip >/dev/null
     
     elif grep "Amazon Linux" /etc/os-release; then
-        # TODO Amazon Linux particular python version
-        echo "got amazon linux"
+        echo "ERROR: Not implemented"
+        exit 1
+    fi
+} >/dev/null
+
+# Click with Python3.6 requires unicode locale
+# https://click.palletsprojects.com/en/8.1.x/unicode-support/
+{
+    if [ $python_version = "3.6" ]; then
+        export LC_ALL=C.UTF-8
+        export LANG=C.UTF-8
     fi
 } >/dev/null
 
