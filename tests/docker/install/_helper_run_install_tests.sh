@@ -13,7 +13,7 @@ set -e
 # get Python version from container hostname, e.g. "3.6", "3.10"
 python_version=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.[0-9]+[0-9]*')
 
-# setup dependencies
+# setup dependencies quietly
 {
     if grep Alpine /etc/os-release; then
         # test deps
@@ -38,7 +38,7 @@ python_version=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.
     
     elif grep Ubuntu /etc/os-release; then
         apt-get update && apt-get upgrade -y
-        # agent deps
+        # agent and test deps
         apt-get install -y "python$python_version"-dev python3-pip gcc unzip
         update-alternatives --install /usr/bin/python python /usr/bin/python3 1
         update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
@@ -46,8 +46,20 @@ python_version=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.
         pip install --upgrade pip >/dev/null
     
     elif grep "Amazon Linux" /etc/os-release; then
-        echo "ERROR: Not implemented"
-        exit 1
+        # get no-dot Python version from container hostname, e.g. "36", "310"
+        python_version_no_dot=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | sed 's/py//' | sed 's/\.//')
+        # agent and test deps
+        yum install -y \
+            "python$python_version_no_dot-devel" \
+            "python$python_version_no_dot-pip" \
+            "python$python_version_no_dot-setuptools" \
+            gcc \
+            gcc-c++ \
+            unzip \
+            findutils
+        alternatives --set python "/usr/bin/python$python_version"
+        # need at least pip 19.3 to find manylinux2014 wheels
+        pip install --upgrade pip >/dev/null
     fi
 } >/dev/null
 
@@ -55,8 +67,13 @@ python_version=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.
 # https://click.palletsprojects.com/en/8.1.x/unicode-support/
 {
     if [ $python_version = "3.6" ]; then
-        export LC_ALL=C.UTF-8
-        export LANG=C.UTF-8
+        if grep "Amazon Linux" /etc/os-release; then
+            export LC_ALL=en_CA.utf8
+            export LANG=en_CA.utf8
+        else
+            export LC_ALL=C.UTF-8
+            export LANG=C.UTF-8
+        fi
     fi
 } >/dev/null
 
