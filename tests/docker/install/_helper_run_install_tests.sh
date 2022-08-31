@@ -6,14 +6,20 @@
 #   * Amazon Linux not having agent install deps
 #   * CentOS 8 being at end-of-life and needing a mirror re-point
 #   * Ubuntu not having agent install deps
+#
+# Note: centos8 can only install Python 3.6, 3.8, 3.9
 
 # stop on error
 set -e
 
 # get Python version from container hostname, e.g. "3.6", "3.10"
 python_version=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.[0-9]+[0-9]*')
+# no-dot Python version, e.g. "36", "310"
+python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
 
 # setup dependencies quietly
+pretty_name=$(cat /etc/os-release | grep PRETTY_NAME | sed 's/PRETTY_NAME="//' | sed 's/"//')
+echo "Installing test dependencies for Python $python_version on $pretty_name"
 {
     if grep Alpine /etc/os-release; then
         # test deps
@@ -25,12 +31,21 @@ python_version=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.
         # https://stackoverflow.com/a/71077606
         sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
         sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-        # agent deps
-        dnf install -y python36-devel python3-pip gcc-c++
-        # test deps
-        dnf install -y unzip
+        # agent and test deps
+        dnf install -y \
+            "python$python_version_no_dot-devel" \
+            gcc \
+            gcc-c++ \
+            unzip \
+            findutils
+        if [ $python_version = "3.6" ]; then
+            dnf install -y python3-pip python3-setuptools
+        else
+            dnf install -y "python$python_version_no_dot-pip" "python$python_version_no_dot-setuptools"
+        fi
+
         command -v python ||
-            ln -s /usr/bin/python3 /usr/local/bin/python
+            ln -s "/usr/bin/python$python_version" /usr/local/bin/python
         command -v pip ||
             ln -s /usr/bin/pip3 /usr/local/bin/pip
         # the installed python uses pip 9.0.3 by default, however we need at least pip 19.3 to find manylinux2014 wheels
@@ -46,8 +61,6 @@ python_version=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.
         pip install --upgrade pip >/dev/null
     
     elif grep "Amazon Linux" /etc/os-release; then
-        # get no-dot Python version from container hostname, e.g. "36", "310"
-        python_version_no_dot=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | sed 's/py//' | sed 's/\.//')
         # agent and test deps
         yum install -y \
             "python$python_version_no_dot-devel" \

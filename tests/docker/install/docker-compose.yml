@@ -263,6 +263,15 @@ services:
     environment:
       << : *envvars-install-test
 
+  py3.8-install-centos8:
+    hostname: "py3.8-centos8"
+    image: "centos:8"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
   py3.8-install-debian10:
     hostname: "py3.8-debian10"
     image: "python:3.8-buster"
@@ -275,6 +284,15 @@ services:
   #--------------------------------------------------------------------
   # Python 3.9
   #--------------------------------------------------------------------
+
+  py3.9-install-centos8:
+    hostname: "py3.9-centos8"
+    image: "centos:8"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
 
   py3.9-install-debian10:
     hostname: "py3.9-debian10"
