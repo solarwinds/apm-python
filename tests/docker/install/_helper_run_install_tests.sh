@@ -12,14 +12,19 @@
 # stop on error
 set -e
 
+# Required to read hostname
+if grep "Amazon Linux" /etc/os-release; then
+    yum install -y net-tools
+fi
+
 # get Python version from container hostname, e.g. "3.6", "3.10"
 python_version=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.[0-9]+[0-9]*')
 # no-dot Python version, e.g. "36", "310"
 python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
 
-# setup dependencies quietly
 pretty_name=$(cat /etc/os-release | grep PRETTY_NAME | sed 's/PRETTY_NAME="//' | sed 's/"//')
 echo "Installing test dependencies for Python $python_version on $pretty_name"
+# setup dependencies quietly
 {
     if grep Alpine /etc/os-release; then
         # test deps
