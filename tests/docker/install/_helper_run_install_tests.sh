@@ -25,7 +25,7 @@ python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
 pretty_name=$(cat /etc/os-release | grep PRETTY_NAME | sed 's/PRETTY_NAME="//' | sed 's/"//')
 echo "Installing test dependencies for Python $python_version on $pretty_name"
 # setup dependencies quietly
-{
+# {
     if grep Alpine /etc/os-release; then
         # test deps
         apk add bash
@@ -57,7 +57,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
     elif grep Ubuntu /etc/os-release; then
         ubuntu_version=$(cat /etc/os-release | grep VERSION_ID | sed 's/VERSION_ID="//' | sed 's/"//')
         if [ "$ubuntu_version" = "18.04" ] || [ "$ubuntu_version" = "20.04" ]; then
-            # apt/PPA provides Python for Ubuntu 18.04+
+            # apt/other PPA provide Python for Ubuntu 18.04+
             # agent and test deps
             apt-get upgrade && apt-get update -y
             apt-get install -y \
@@ -66,15 +66,31 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 python3-pip \
                 gcc \
                 unzip
+            update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+            update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
         else
-            # Older Ubuntu versions can't use apt/PPA for Python (libssl incompatibility?)
-            echo "ERROR: Not implemented."
-            echo "Cannot install Python $python_version on Ubuntu $ubuntu_version from apt/PPA."
-            exit 1
-        fi
+            # Older Ubuntu versions can't use apt/other PPA (e.g. deadsnakes) for Python
+            # (libssl incompatibility?)
+            # "Option 2" from https://phoenixnap.com/kb/how-to-install-python-3-ubuntu
+            apt-get upgrade && apt-get update -y
+            apt-get install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev wget make
+            starting_dir=$PWD
+            cd /tmp
+            # Assuming 3.7.9, 3.8.9, 3.9.9 all exist
+            # https://www.python.org/ftp/python/
+            wget "https://www.python.org/ftp/python/$python_version.9/Python-$python_version.9.tgz"
+            tar -xf "Python-$python_version.9.tgz"
+            cd "Python-$python_version.9"
+            ./configure --enable-optimizations
+            make altinstall  # "This can take up to 30 minutes to complete"
+            sudo make install
+            cd $starting_dir
+            apt-get install -y gcc unzip
+            update-alternatives --install /usr/bin/python python /usr/local/bin/python3 1
 
-        update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-        update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+            # TODO fix this
+            update-alternatives --install /usr/bin/pip pip "/usr/local/bin/pip$python_version" 1
+        fi
     
     elif grep "Amazon Linux" /etc/os-release; then
         # agent and test deps
@@ -88,7 +104,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             findutils
         alternatives --set python "/usr/bin/python$python_version"
     fi
-} >/dev/null
+# } >/dev/null
 
 # Click requires unicode locale
 # https://click.palletsprojects.com/en/8.1.x/unicode-support/
