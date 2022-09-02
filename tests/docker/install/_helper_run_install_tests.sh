@@ -55,9 +55,24 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             ln -s /usr/bin/pip3 /usr/local/bin/pip
     
     elif grep Ubuntu /etc/os-release; then
-        apt-get update && apt-get upgrade -y
-        # agent and test deps
-        apt-get install -y "python$python_version"-dev python3-pip gcc unzip
+        ubuntu_version=$(cat /etc/os-release | grep VERSION_ID | sed 's/VERSION_ID="//' | sed 's/"//')
+        if [ "$ubuntu_version" = "18.04" ] || [ "$ubuntu_version" = "20.04" ]; then
+            # apt/PPA provides Python for Ubuntu 18.04+
+            # agent and test deps
+            apt-get upgrade && apt-get update -y
+            apt-get install -y \
+                "python$python_version" \
+                "python$python_version-dev" \
+                python3-pip \
+                gcc \
+                unzip
+        else
+            # Older Ubuntu versions can't use apt/PPA for Python (libssl incompatibility?)
+            echo "ERROR: Not implemented."
+            echo "Cannot install Python $python_version on Ubuntu $ubuntu_version from apt/PPA."
+            exit 1
+        fi
+
         update-alternatives --install /usr/bin/python python /usr/bin/python3 1
         update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
     
@@ -75,17 +90,15 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
     fi
 } >/dev/null
 
-# Click with Python3.6 requires unicode locale
+# Click requires unicode locale
 # https://click.palletsprojects.com/en/8.1.x/unicode-support/
 {
-    if [ $python_version = "3.6" ]; then
-        if grep "Amazon Linux" /etc/os-release || grep "CentOS Linux" /etc/os-release; then
-            export LC_ALL=en_CA.utf8
-            export LANG=en_CA.utf8
-        else
-            export LC_ALL=C.UTF-8
-            export LANG=C.UTF-8
-        fi
+    if grep "Amazon Linux" /etc/os-release || grep "CentOS Linux" /etc/os-release; then
+        export LC_ALL=en_CA.utf8
+        export LANG=en_CA.utf8
+    else
+        export LC_ALL=C.UTF-8
+        export LANG=C.UTF-8
     fi
 } >/dev/null
 
