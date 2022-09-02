@@ -75,9 +75,15 @@ function check_installation(){
     pushd ${install_location}/solarwinds_apm/extension >/dev/null
     found_swig_files_inst=$(find . -not -path '.' -a -not -name '*.pyc' -a -not -name '__pycache__' | LC_ALL=C sort)
 
-    # in Python3.8 with https://bugs.python.org/issue21536, C-extensions are not linked to libpython anymore, this leads to
-    # ldd not finding the symbols defined libpython3.8.so
-    if [[ -f /etc/os-release && ! "$(cat /etc/os-release)" =~ "Alpine" || ! "$(python -V 2>&1)" =~ 3.8 ]]; then
+
+    # in Python3.7, 3.8, 3.9 with https://bugs.python.org/issue21536, C-extensions are not linked 
+    # to libpython anymore, this leads to ldd not finding the symbols defined libpython3.(7|8|9).so
+    sad_pythons=(
+        3.7
+        3.8
+        3.9
+    )
+    if [[ -f /etc/os-release && ! "$(cat /etc/os-release)" =~ "Alpine" || " ${sad_pythons[*]} " =~ "$(python -V 2>&1)" ]]; then
         found_oboe_ldd=$(ldd ./_oboe*.so)
     fi
     popd >/dev/null
@@ -333,4 +339,4 @@ get_and_check_wheel
 install_test_app_dependencies
 run_instrumented_server_and_client "8001" "$SW_APM_SERVICE_KEY_STAGING-$(hostname)" "$SW_APM_COLLECTOR_STAGING"
 run_instrumented_server_and_client "8002" "$SW_APM_SERVICE_KEY_PROD-$(hostname)" "$SW_APM_COLLECTOR_PROD"
-run_instrumented_server_and_client "8003" "$SW_APM_SERVICE_KEY_AO_PROD-$(hostname)" "$SW_APM_COLLECTOR_AO_PROD" "cert_override"
+run_instrumented_server_and_client "8003" "$SW_APM_SERVICE_KEY_AO_PROD-$(hostname)" "$SW_APM_COLLECTOR_AO_PROD" true
