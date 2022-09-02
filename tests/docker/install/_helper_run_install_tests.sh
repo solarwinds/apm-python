@@ -31,6 +31,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         apk add bash
         # agent deps
         apk add python3-dev g++ make
+
     elif grep "CentOS Linux 8" /etc/os-release; then
         # fix centos8 metadata download failures for repo 'appstream'
         # https://stackoverflow.com/a/71077606
@@ -48,13 +49,10 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         else
             dnf install -y "python$python_version_no_dot-pip" "python$python_version_no_dot-setuptools"
         fi
-
         command -v python ||
             ln -s "/usr/bin/python$python_version" /usr/local/bin/python
         command -v pip ||
             ln -s /usr/bin/pip3 /usr/local/bin/pip
-        # the installed python uses pip 9.0.3 by default, however we need at least pip 19.3 to find manylinux2014 wheels
-        pip install --upgrade pip >/dev/null
     
     elif grep Ubuntu /etc/os-release; then
         apt-get update && apt-get upgrade -y
@@ -62,8 +60,6 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         apt-get install -y "python$python_version"-dev python3-pip gcc unzip
         update-alternatives --install /usr/bin/python python /usr/bin/python3 1
         update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
-        # need at least pip 19.3 to find manylinux2014 wheels
-        pip install --upgrade pip >/dev/null
     
     elif grep "Amazon Linux" /etc/os-release; then
         # agent and test deps
@@ -76,8 +72,6 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             unzip \
             findutils
         alternatives --set python "/usr/bin/python$python_version"
-        # need at least pip 19.3 to find manylinux2014 wheels
-        pip install --upgrade pip >/dev/null
     fi
 } >/dev/null
 
@@ -85,7 +79,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
 # https://click.palletsprojects.com/en/8.1.x/unicode-support/
 {
     if [ $python_version = "3.6" ]; then
-        if grep "Amazon Linux" /etc/os-release; then
+        if grep "Amazon Linux" /etc/os-release || grep "CentOS Linux" /etc/os-release; then
             export LC_ALL=en_CA.utf8
             export LANG=en_CA.utf8
         else
@@ -94,6 +88,9 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         fi
     fi
 } >/dev/null
+
+# need at least pip 19.3 to find manylinux2014 wheels
+pip install --upgrade pip >/dev/null
 
 # run tests using bash so we can use pipefail
 bash -c "set -o pipefail && ./install_tests.sh 2>&1"
