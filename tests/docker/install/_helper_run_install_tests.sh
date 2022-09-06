@@ -25,7 +25,7 @@ python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
 pretty_name=$(cat /etc/os-release | grep PRETTY_NAME | sed 's/PRETTY_NAME="//' | sed 's/"//')
 echo "Installing test dependencies for Python $python_version on $pretty_name"
 # setup dependencies quietly
-# {
+{
     if grep Alpine /etc/os-release; then
         # test deps
         apk add bash
@@ -87,8 +87,6 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             cd $starting_dir
             apt-get install -y gcc unzip
             update-alternatives --install /usr/bin/python python /usr/local/bin/python3 1
-
-            # TODO fix this
             update-alternatives --install /usr/bin/pip pip "/usr/local/bin/pip$python_version" 1
         fi
     
@@ -104,7 +102,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             findutils
         alternatives --set python "/usr/bin/python$python_version"
     fi
-# } >/dev/null
+} >/dev/null
 
 # Click requires unicode locale
 # https://click.palletsprojects.com/en/8.1.x/unicode-support/
