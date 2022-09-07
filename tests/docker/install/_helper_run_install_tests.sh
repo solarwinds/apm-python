@@ -101,6 +101,8 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             # apt-get install libssl-dev does not install openssl headers
             # so we do it manually
             # https://help.dreamhost.com/hc/en-us/articles/360001435926-Installing-OpenSSL-locally-under-your-username
+            # TODO Sept 2023 this openssl version won't be supported anymore
+            # https://www.openssl.org/source/
             first_pwd=$PWD
             wget --no-check-certificate https://www.openssl.org/source/openssl-1.1.1q.tar.gz.sha256
             wget --no-check-certificate https://www.openssl.org/source/openssl-1.1.1q.tar.gz
@@ -133,8 +135,10 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             # https://github.com/pyenv/pyenv-update/issues/13
             # https://github.com/pyenv/pyenv-update/blob/master/bin/pyenv-update
             # Commenting out this check seems necessary :(
-            sed -i 's/verify_repo "$1" &&/#verify_repo "$1" &&/' /root/.pyenv/plugins/pyenv-update/bin/pyenv-update
-            sed -i "s/git pull --tags --no-rebase --ff/git pull --tags/" /root/.pyenv/plugins/pyenv-update/bin/pyenv-update
+            sed -i 's/verify_repo "$1" &&/#verify_repo "$1" &&/' \
+                /root/.pyenv/plugins/pyenv-update/bin/pyenv-update
+            sed -i "s/git pull --tags --no-rebase --ff/git pull --tags/" \
+                /root/.pyenv/plugins/pyenv-update/bin/pyenv-update
             pyenv update
 
             # Then, install python
