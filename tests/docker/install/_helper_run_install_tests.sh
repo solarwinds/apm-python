@@ -25,7 +25,7 @@ python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
 pretty_name=$(cat /etc/os-release | grep PRETTY_NAME | sed 's/PRETTY_NAME="//' | sed 's/"//')
 echo "Installing test dependencies for Python $python_version on $pretty_name"
 # setup dependencies quietly
-# {
+{
     if grep Alpine /etc/os-release; then
         # test deps
         apk add bash
@@ -58,7 +58,13 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         ubuntu_version=$(cat /etc/os-release | grep VERSION_ID | sed 's/VERSION_ID="//' | sed 's/"//')
         if [ "$ubuntu_version" = "18.04" ] || [ "$ubuntu_version" = "20.04" ]; then
             apt-get upgrade && apt-get update -y
+            if [ "$python_version" = "3.9" ]; then
+                # This particular version asks for a geographic area for some reason
+                TZ=America
+                ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+            fi
             if [ "$python_version" = "3.10" ]; then
+                # py3.10 not currently on main apt repo
                 apt-get install -y software-properties-common
                 add-apt-repository ppa:deadsnakes/ppa
             fi
@@ -87,7 +93,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             findutils
         alternatives --set python "/usr/bin/python$python_version"
     fi
-# } >/dev/null
+} >/dev/null
 
 # Click requires unicode locale
 # https://click.palletsprojects.com/en/8.1.x/unicode-support/
