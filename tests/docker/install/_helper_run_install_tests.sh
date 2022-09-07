@@ -63,8 +63,8 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 TZ=America
                 ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
             fi
-            if [ "$python_version" = "3.10" ]; then
-                # py3.10 not currently on main apt repo
+            if [ "$python_version" = "3.10" ] || [ "$python_version" = "3.11" ]; then
+                # py3.10,3.11 not currently on main apt repo so use deadsnakes
                 apt-get install -y software-properties-common
                 add-apt-repository ppa:deadsnakes/ppa
             fi
