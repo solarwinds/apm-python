@@ -25,7 +25,7 @@ python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
 pretty_name=$(cat /etc/os-release | grep PRETTY_NAME | sed 's/PRETTY_NAME="//' | sed 's/"//')
 echo "Installing test dependencies for Python $python_version on $pretty_name"
 # setup dependencies quietly
-# {
+{
     if grep Alpine /etc/os-release; then
         # test deps
         apk add bash
@@ -96,7 +96,8 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 libxmlsec1-dev \
                 libffi-dev \
                 liblzma-dev \
-                python-openssl
+                python-openssl \
+                unzip
             # apt-get install libssl-dev does not install openssl headers
             # so we do it manually
             # https://help.dreamhost.com/hc/en-us/articles/360001435926-Installing-OpenSSL-locally-under-your-username
@@ -131,21 +132,20 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             # pyenv git compatibility issue on older versions
             # https://github.com/pyenv/pyenv-update/issues/13
             # https://github.com/pyenv/pyenv-update/blob/master/bin/pyenv-update
+            # Commenting out this check seems necessary :(
             sed -i 's/verify_repo "$1" &&/#verify_repo "$1" &&/' /root/.pyenv/plugins/pyenv-update/bin/pyenv-update
             sed -i "s/git pull --tags --no-rebase --ff/git pull --tags/" /root/.pyenv/plugins/pyenv-update/bin/pyenv-update
             pyenv update
 
             # Then, install python
-            # Assumes 3.7.9, 3.8.9, 3.9.9 all exist
+            # Assumes 3.6.9, 3.7.9, 3.8.9, 3.9.9 all exist
             # https://www.python.org/ftp/python/
-            # CPPFLAGS="-I/usr/lib/ssl/include" LDFLAGS="-L/usr/lib/ssl/lib" pyenv install -v "$python_version.9"
-            # echo "openssl version -d" | CPPFLAGS="-I$1/include" LDFLAGS="-L$1/lib" pyenv install -v "$python_version.9"
-            pyenv install -v "$python_version.9"
+            # py3.7+ needs CONFIGURE_OPTS flag too
+            # https://github.com/pyenv/pyenv/wiki/Common-build-problems
+            LDFLAGS="-Wl,-rpath,/usr/lib/openssl/lib" \
+                CONFIGURE_OPTS="--with-openssl=/usr/lib/openssl" \
+                pyenv install -v "$python_version.9"
             pyenv global "$python_version.9"
-
-            # ???
-            # update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-            # update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
         fi
     
     elif grep "Amazon Linux" /etc/os-release; then
@@ -160,7 +160,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             findutils
         alternatives --set python "/usr/bin/python$python_version"
     fi
-# } >/dev/null
+} >/dev/null
 
 # Click requires unicode locale
 # https://click.palletsprojects.com/en/8.1.x/unicode-support/
