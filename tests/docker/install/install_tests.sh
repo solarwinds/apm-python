@@ -324,7 +324,7 @@ function run_instrumented_server_and_client(){
     export SW_APM_SERVICE_KEY="$2"
     export SW_APM_COLLECTOR="$3"
     # Only set certificate trustedpath for AO prod
-    if [ -n "$4" ]; then
+    if [ -n "$4" ] && [ "$4" = "cert_override" ]; then
         export SW_APM_TRUSTEDPATH="$PWD/ao_issuer_ca_public_cert.crt"
     fi
 
@@ -339,4 +339,4 @@ get_and_check_wheel
 install_test_app_dependencies
 run_instrumented_server_and_client "8001" "$SW_APM_SERVICE_KEY_STAGING-$(hostname)" "$SW_APM_COLLECTOR_STAGING"
 run_instrumented_server_and_client "8002" "$SW_APM_SERVICE_KEY_PROD-$(hostname)" "$SW_APM_COLLECTOR_PROD"
-run_instrumented_server_and_client "8003" "$SW_APM_SERVICE_KEY_AO_PROD-$(hostname)" "$SW_APM_COLLECTOR_AO_PROD" true
+run_instrumented_server_and_client "8003" "$SW_APM_SERVICE_KEY_AO_PROD-$(hostname)" "$SW_APM_COLLECTOR_AO_PROD" "cert_override"
