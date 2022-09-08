@@ -83,7 +83,7 @@ function check_installation(){
         3.8
         3.9
     )
-    if [[ -f /etc/os-release && ! "$(cat /etc/os-release)" =~ "Alpine" || " ${sad_pythons[*]} " =~ "$(python -V 2>&1)" ]]; then
+    if [[ -f /etc/os-release && ! "$(cat /etc/os-release)" =~ "Alpine" || " ${sad_pythons[*]} " =~ $(python -V 2>&1) ]]; then
         found_oboe_ldd=$(ldd ./_oboe*.so)
     fi
     popd >/dev/null

@@ -13,11 +13,11 @@
 set -e
 
 # get Python version from container hostname, e.g. "3.6", "3.10"
-python_version=$(cat /etc/hostname | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.[0-9]+[0-9]*')
+python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')
 # no-dot Python version, e.g. "36", "310"
-python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
+python_version_no_dot="${python_version//./}"
 
-pretty_name=$(cat /etc/os-release | grep PRETTY_NAME | sed 's/PRETTY_NAME="//' | sed 's/"//')
+pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
 echo "Installing test dependencies for Python $python_version on $pretty_name"
 # setup dependencies quietly
 {
@@ -39,7 +39,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             gcc-c++ \
             unzip \
             findutils
-        if [ $python_version = "3.6" ]; then
+        if [ "$python_version" = "3.6" ]; then
             dnf install -y python3-pip python3-setuptools
         else
             dnf install -y "python$python_version_no_dot-pip" "python$python_version_no_dot-setuptools"
@@ -50,7 +50,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             ln -s /usr/bin/pip3 /usr/local/bin/pip
     
     elif grep Ubuntu /etc/os-release; then
-        ubuntu_version=$(cat /etc/os-release | grep VERSION_ID | sed 's/VERSION_ID="//' | sed 's/"//')
+        ubuntu_version=$(grep VERSION_ID /etc/os-release | sed 's/VERSION_ID="//' | sed 's/"//')
         if [ "$ubuntu_version" = "18.04" ] || [ "$ubuntu_version" = "20.04" ]; then
             apt-get upgrade && apt-get update -y
             if [ "$python_version" = "3.9" ]; then
