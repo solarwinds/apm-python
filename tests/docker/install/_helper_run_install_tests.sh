@@ -12,17 +12,8 @@
 # stop on error
 set -e
 
-# Required to read hostname
-if grep "Amazon Linux" /etc/os-release; then
-    yum install -y net-tools
-fi
-
 # get Python version from container hostname, e.g. "3.6", "3.10"
-if grep "Amazon Linux 2" /etc/os-release; then
-    python_version=$(cat /etc/hostname | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.[0-9]+[0-9]*')
-else
-    python_version=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.[0-9]+[0-9]*')
-fi
+python_version=$(cat /etc/hostname | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.[0-9]+[0-9]*')
 # no-dot Python version, e.g. "36", "310"
 python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
 
@@ -86,16 +77,33 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         fi
     
     elif grep "Amazon Linux" /etc/os-release; then
-        # agent and test deps
-        yum install -y \
-            "python$python_version_no_dot-devel" \
-            "python$python_version_no_dot-pip" \
-            "python$python_version_no_dot-setuptools" \
-            gcc \
-            gcc-c++ \
-            unzip \
-            findutils
-        alternatives --set python "/usr/bin/python$python_version"
+        yum update -y
+        if grep "Amazon Linux 2" /etc/os-release; then
+            # agent and test deps for py3.7
+            yum install -y \
+                python3-devel \
+                python3-pip \
+                python3-setuptools \
+                gcc \
+                gcc-c++ \
+                unzip \
+                findutils \
+                tar \
+                gzip
+            update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+            update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1              
+        else
+            # agent and test deps
+            yum install -y \
+                "python$python_version_no_dot-devel" \
+                "python$python_version_no_dot-pip" \
+                "python$python_version_no_dot-setuptools" \
+                gcc \
+                gcc-c++ \
+                unzip \
+                findutils
+            alternatives --set python "/usr/bin/python$python_version"
+        fi
     fi
 } >/dev/null
 
