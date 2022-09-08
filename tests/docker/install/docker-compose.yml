@@ -5,12 +5,10 @@
 #   under the project dist/ directory
 #
 # use the `run` command to get an interactive container for debugging:
-# (debian) $ docker-compose run --rm <service name> /bin/bash
+# (debian|centos|amazon) $ docker-compose run --rm <service name> /bin/bash
 # (alpine) $ docker-compose run --rm <service name> /bin/sh
-# (centos) $ docker-compose run --rm --user root <service name> /bin/bash
-# (amazon) $ docker-compose run --rm <service name> /bin/bash
 #
-# See Confluence for the Linux distro X Python version combinations tested:
+# See Confluence for more info:
 # https://swicloud.atlassian.net/wiki/spaces/NIT/pages/3218014998/NH+Python+agent+install+testing#Using-official-Docker-images
 
 version: '2.4'
@@ -68,27 +66,9 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.6-install-debian10:
-    hostname: "py3.6-debian10"
-    image: "python:3.6-buster"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
   py3.6-install-ubuntu18.04:
     hostname: "py3.6-ubuntu18.04"
     image: "ubuntu:18.04"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.6-install-ubuntu20.04:
-    hostname: "py3.6-ubuntu20.04"
-    image: "ubuntu:20.04"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
@@ -105,15 +85,6 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.6-install-centos8:
-    hostname: "py3.6-centos8"
-    image: "centos:8"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
   py3.6-install-amazon2017.03:
     hostname: "py3.6-amazon2017.03"
     image: "amazonlinux:2017.03"
@@ -123,45 +94,9 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.6-install-amazon2017.09:
-    hostname: "py3.6-amazon2017.09"
-    image: "amazonlinux:2017.09"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.6-install-amazon2018.03:
-    hostname: "py3.6-amazon2018.03"
-    image: "amazonlinux:2018.03"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
   py3.6-install-alpine3.13:
     hostname: "py3.6-alpine3.13"
     image: "python:3.6-alpine3.13"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.6-install-alpine3.14:
-    hostname: "py3.6-alpine3.14"
-    image: "python:3.6-alpine3.14"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.6-install-alpine3.15:
-    hostname: "py3.6-alpine3.15"
-    image: "python:3.6-alpine3.15"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
@@ -199,15 +134,6 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.7-install-ubuntu20.04:
-    hostname: "py3.7-ubuntu20.04"
-    image: "ubuntu:20.04"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
   py3.7-install-amazon2:
     hostname: "py3.7-amazon2"
     image: "amazonlinux:2"
@@ -226,36 +152,18 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.7-install-alpine3.14:
-    hostname: "py3.7-alpine3.14"
-    image: "python:3.7-alpine3.14"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.7-install-alpine3.15:
-    hostname: "py3.7-alpine3.15"
-    image: "python:3.7-alpine3.15"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.7-install-alpine3.16:
-    hostname: "py3.7-alpine3.16"
-    image: "python:3.7-alpine3.16"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
   #--------------------------------------------------------------------
   # Python 3.8
   #--------------------------------------------------------------------
+
+  py3.8-install-debian10:
+    hostname: "py3.8-debian10"
+    image: "python:3.8-buster"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
 
   py3.8-install-ubuntu18.04:
     hostname: "py3.8-ubuntu18.04"
@@ -269,6 +177,25 @@ services:
   py3.8-install-ubuntu20.04:
     hostname: "py3.8-ubuntu20.04"
     image: "ubuntu:20.04"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.8-install-centos7:
+    hostname: "py3.8-centos7"
+    image: "centos/python-38-centos7"
+    user: root
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.8-install-amazon2018.03:
+    hostname: "py3.8-amazon2018.03"
+    image: "amazonlinux:2018.03"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
@@ -293,73 +220,9 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.8-install-centos7:
-    hostname: "py3.8-centos7"
-    image: "centos/python-38-centos7"
-    user: root
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.8-install-centos8:
-    hostname: "py3.8-centos8"
-    image: "centos:8"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.8-install-debian10:
-    hostname: "py3.8-debian10"
-    image: "python:3.8-buster"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.8-install-amazon2017.03:
-    hostname: "py3.8-amazon2017.03"
-    image: "amazonlinux:2017.03"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.8-install-amazon2017.09:
-    hostname: "py3.8-amazon2017.09"
-    image: "amazonlinux:2017.09"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.8-install-amazon2018.03:
-    hostname: "py3.8-amazon2018.03"
-    image: "amazonlinux:2018.03"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
   #--------------------------------------------------------------------
   # Python 3.9
   #--------------------------------------------------------------------
-
-  py3.9-install-centos8:
-    hostname: "py3.9-centos8"
-    image: "centos:8"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
 
   py3.9-install-debian10:
     hostname: "py3.9-debian10"
@@ -370,18 +233,27 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.9-install-ubuntu18.04:
-    hostname: "py3.9-ubuntu18.04"
-    image: "ubuntu:18.04"
+  py3.9-install-ubuntu20.04:
+    hostname: "py3.9-ubuntu20.04"
+    image: "ubuntu:20.04"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
     environment:
       << : *envvars-install-test
 
-  py3.9-install-ubuntu20.04:
-    hostname: "py3.9-ubuntu20.04"
-    image: "ubuntu:20.04"
+  py3.9-install-centos8:
+    hostname: "py3.9-centos8"
+    image: "centos:8"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.9-install-amazon2018.03:
+    hostname: "py3.9-amazon2018.03"
+    image: "amazonlinux:2018.03"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
@@ -406,33 +278,6 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.9-install-amazon2017.03:
-    hostname: "py3.9-amazon2017.03"
-    image: "amazonlinux:2017.03"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.9-install-amazon2017.09:
-    hostname: "py3.9-amazon2017.09"
-    image: "amazonlinux:2017.09"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.9-install-amazon2018.03:
-    hostname: "py3.9-amazon2018.03"
-    image: "amazonlinux:2018.03"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
   #--------------------------------------------------------------------
   # Python 3.10
   #--------------------------------------------------------------------
@@ -446,18 +291,18 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.10-install-ubuntu18.04:
-    hostname: "py3.10-ubuntu18.04"
-    image: "ubuntu:18.04"
+  py3.10-install-ubuntu20.04:
+    hostname: "py3.10-ubuntu20.04"
+    image: "ubuntu:20.04"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
     environment:
       << : *envvars-install-test
 
-  py3.10-install-ubuntu20.04:
-    hostname: "py3.10-ubuntu20.04"
-    image: "ubuntu:20.04"
+  py3.10-install-amazon2018.03:
+    hostname: "py3.10-amazon2018.03"
+    image: "amazonlinux:2018.03"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
@@ -476,33 +321,6 @@ services:
   py3.10-install-alpine3.16:
     hostname: "py3.10-alpine3.16"
     image: "python:3.10-alpine3.16"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.10-install-amazon2017.03:
-    hostname: "py3.10-amazon2017.03"
-    image: "amazonlinux:2017.03"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.10-install-amazon2017.09:
-    hostname: "py3.10-amazon2017.09"
-    image: "amazonlinux:2017.09"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.10-install-amazon2018.03:
-    hostname: "py3.10-amazon2018.03"
-    image: "amazonlinux:2018.03"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
