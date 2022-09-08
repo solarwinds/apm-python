@@ -18,7 +18,11 @@ if grep "Amazon Linux" /etc/os-release; then
 fi
 
 # get Python version from container hostname, e.g. "3.6", "3.10"
-python_version=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.[0-9]+[0-9]*')
+if grep "Amazon Linux 2" /etc/os-release; then
+    python_version=$(cat /etc/hostname | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.[0-9]+[0-9]*')
+else
+    python_version=$(echo "$(hostname)" | grep -Eo 'py3.[0-9]+[0-9]*' | grep -Eo '3.[0-9]+[0-9]*')
+fi
 # no-dot Python version, e.g. "36", "310"
 python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
 

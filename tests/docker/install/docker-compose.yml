@@ -8,6 +8,7 @@
 # (debian) $ docker-compose run --rm <service name> /bin/bash
 # (alpine) $ docker-compose run --rm <service name> /bin/sh
 # (centos) $ docker-compose run --rm --user root <service name> /bin/bash
+# (amazon) $ docker-compose run --rm <service name> /bin/bash
 #
 # See Confluence for the Linux distro X Python version combinations tested:
 # https://swicloud.atlassian.net/wiki/spaces/NIT/pages/3218014998/NH+Python+agent+install+testing#Using-official-Docker-images
