@@ -334,9 +334,10 @@ function run_instrumented_server_and_client(){
 
 # start testing
 AGENT_VERSION=$SOLARWINDS_APM_VERSION
+HOSTNAME=$(cat /etc/hostname)
 get_and_check_sdist
 get_and_check_wheel
 install_test_app_dependencies
-run_instrumented_server_and_client "8001" "$SW_APM_SERVICE_KEY_STAGING-$(hostname)" "$SW_APM_COLLECTOR_STAGING"
-run_instrumented_server_and_client "8002" "$SW_APM_SERVICE_KEY_PROD-$(hostname)" "$SW_APM_COLLECTOR_PROD"
-run_instrumented_server_and_client "8003" "$SW_APM_SERVICE_KEY_AO_PROD-$(hostname)" "$SW_APM_COLLECTOR_AO_PROD" "cert_override"
+run_instrumented_server_and_client "8001" "$SW_APM_SERVICE_KEY_STAGING-$HOSTNAME" "$SW_APM_COLLECTOR_STAGING"
+run_instrumented_server_and_client "8002" "$SW_APM_SERVICE_KEY_PROD-$HOSTNAME" "$SW_APM_COLLECTOR_PROD"
+run_instrumented_server_and_client "8003" "$SW_APM_SERVICE_KEY_AO_PROD-$HOSTNAME" "$SW_APM_COLLECTOR_AO_PROD" "cert_override"
