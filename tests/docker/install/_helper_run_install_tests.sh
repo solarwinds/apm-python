@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # Helper script to set up dependencies for the install tests, then runs the tests.
 # Accounts for:
