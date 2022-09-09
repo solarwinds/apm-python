@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 # Helper script to set up dependencies for the install tests, then runs the tests.
 # Accounts for:
@@ -15,7 +15,7 @@ set -e
 # get Python version from container hostname, e.g. "3.6", "3.10"
 python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')
 # no-dot Python version, e.g. "36", "310"
-python_version_no_dot="${python_version//./}"
+python_version_no_dot=$(echo "$python_version" | sed 's/.//')
 
 pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
 echo "Installing test dependencies for Python $python_version on $pretty_name"
