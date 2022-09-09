@@ -211,15 +211,6 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.8-install-alpine3.14:
-    hostname: "py3.8-alpine3.14"
-    image: "python:3.8-alpine3.14"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
   #--------------------------------------------------------------------
   # Python 3.9
   #--------------------------------------------------------------------
