@@ -242,15 +242,6 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.9-install-amazon2018.03:
-    hostname: "py3.9-amazon2018.03"
-    image: "amazonlinux:2018.03"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
   py3.9-install-alpine3.13:
     hostname: "py3.9-alpine3.13"
     image: "python:3.9-alpine3.13"
@@ -285,15 +276,6 @@ services:
   py3.10-install-ubuntu20.04:
     hostname: "py3.10-ubuntu20.04"
     image: "ubuntu:20.04"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.10-install-amazon2018.03:
-    hostname: "py3.10-amazon2018.03"
-    image: "amazonlinux:2018.03"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
