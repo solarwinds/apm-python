@@ -40,7 +40,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -54,7 +54,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -68,7 +68,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -82,7 +82,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -96,7 +96,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -110,7 +110,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -128,7 +128,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -142,7 +142,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -156,7 +156,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -170,7 +170,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -184,7 +184,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -202,7 +202,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -216,7 +216,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -230,7 +230,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -244,7 +244,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -258,7 +258,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -272,7 +272,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -290,7 +290,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -304,7 +304,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -318,7 +318,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -332,7 +332,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -346,7 +346,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -360,7 +360,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -378,7 +378,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -392,7 +392,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -406,7 +406,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -420,7 +420,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -434,7 +434,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -452,7 +452,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -466,7 +466,7 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
@@ -480,6 +480,6 @@ jobs:
     - name: Setup and run install test
       working-directory: ./tests/docker/install
       run: ./_helper_run_install_tests.sh
-      shell: bash
+      shell: sh
       env:
         MODE: ${{ github.event.inputs.install-registry }}
