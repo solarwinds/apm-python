@@ -11,17 +11,17 @@
 
 The following is highly recommended for development work on SolarWinds APM.
 
-This repo can be used to auto-instrument [testbed apps](https://github.com/appoptics/opentelemetry-python-testbed) for manual testing and exploring. The code in this repository uses code in [solarwinds-apm-liboboe](https://github.com/librato/solarwinds-apm-liboboe) via C-extension with SWIG (see further below). Setup of the oboe extension is done by downloading oboe from SolarWinds Cloud OR with local oboe code.
+This repo can be used to auto-instrument [testbed apps](https://github.com/appoptics/solarwinds-apm-python-testbed) for manual testing and exploring. The code in this repository uses code in [solarwinds-apm-liboboe](https://github.com/librato/solarwinds-apm-liboboe) via C-extension with SWIG (see further below). Setup of the oboe extension is done by downloading oboe from SolarWinds Cloud OR with local oboe code.
 
-To accommodate these dependencies locally, clone the following repositories into the same root directory. For example, if your development directory is `~/gitrepos/`, please clone `solarwinds-apm-liboboe`, `opentelemetry-python-testbed`, and `opentelemetry-python-instrumentation-custom-distro` repositories under `~/gitrepos`, so that your directory structure looks as shown below:
+To accommodate these dependencies locally, clone the following repositories into the same root directory. For example, if your development directory is `~/gitrepos/`, please clone `solarwinds-apm-liboboe`, `solarwinds-apm-python-testbed`, and `solarwinds-apm-python` repositories under `~/gitrepos`, so that your directory structure looks as shown below:
 ```
 ~/gitrepos/
 |
 |----solarwinds-apm-liboboe/
 |
-|----opentelemetry-python-testbed/
+|----solarwinds-apm-python-testbed/
 |
-|----opentelemetry-python-instrumentation-custom-distro/
+|----solarwinds-apm-python/
 ```
 ### Build Container
 
@@ -42,7 +42,7 @@ If you don't need to make changes to oboe:
 1. Inside the build container: `make wrapper`. This downloads the version of oboe defined in `extension/VERSION` from SolarWinds Cloud and builds the SWIG bindings.
 2. Install the agent in your application (Linux environment only) in development mode by running
    ```python
-   pip install -Ie ~/gitrepos/opentelemetry-python-instrumentation-custom-distro/
+   pip install -Ie ~/gitrepos/solarwinds-apm-python/
    ```
 When installing the agent in development mode, every change in the Python source code will be reflected in the Python environment directly without re-installation.
 
@@ -58,7 +58,7 @@ If you are making local changes to oboe for the custom-distro to use:
 6. Inside the build container: `make wrapper-from-local`. This copies the local C-extension artifacts and builds the SWIG bindings.
 7. Install the agent in your application (Linux environment only) in development mode by running
    ```python
-   pip install -Ie ~/gitrepos/opentelemetry-python-instrumentation-custom-distro/
+   pip install -Ie ~/gitrepos/solarwinds-apm-python/
    ```
 Like (A) above, when installing the agent in development mode, every change in the Python source code will be reflected in the Python environment directly without re-installation. _However_, if changes have been made to the C-extension files, you need to reinstall the agent to reflect these changes in the Python environment.
 
@@ -91,7 +91,7 @@ TODO
 
 #### GitHub Action
 
-Agent installation tests are run using the GitHub workflow [Verify Installation](https://github.com/appoptics/opentelemetry-python-instrumentation-custom-distro/actions/workflows/verify_install.yaml). Select one of PyPI, PackageCloud, or TestPyPI from which the tests will download and install. Input Solarwinds APM version is optional (defaults to latest published).
+Agent installation tests are run using the GitHub workflow [Verify Installation](https://github.com/appoptics/solarwinds-apm-python/actions/workflows/verify_install.yaml). Select one of PyPI, PackageCloud, or TestPyPI from which the tests will download and install. Input Solarwinds APM version is optional (defaults to latest published).
 
 Part of this test workflow is the launch of minimal, instrumented Flask apps and submitting requests to them. This checks that the installed agent can connect to the collector, and traces can be generated and exported to SolarWinds. Installation test-dedicated services on SolarWinds staging (org: Staging), SolarWinds production (org: SWI), and AppOptics production (org: Agent Testing) are named `apm-python-install-testing-<python_version>-<linux_distro>` (e.g. `apm-python-install-testing-py3.7-debian10`). Traces exported there can be inspected manually after GH workflow trigger.
 

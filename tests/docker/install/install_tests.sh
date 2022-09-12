@@ -75,9 +75,15 @@ function check_installation(){
     pushd ${install_location}/solarwinds_apm/extension >/dev/null
     found_swig_files_inst=$(find . -not -path '.' -a -not -name '*.pyc' -a -not -name '__pycache__' | LC_ALL=C sort)
 
-    # in Python3.8 with https://bugs.python.org/issue21536, C-extensions are not linked to libpython anymore, this leads to
-    # ldd not finding the symbols defined libpython3.8.so
-    if [[ -f /etc/os-release && ! "$(cat /etc/os-release)" =~ "Alpine" || ! "$(python -V 2>&1)" =~ 3.8 ]]; then
+
+    # in Python3.7, 3.8, 3.9 with https://bugs.python.org/issue21536, C-extensions are not linked 
+    # to libpython anymore, this leads to ldd not finding the symbols defined libpython3.(7|8|9).so
+    sad_pythons=(
+        3.7
+        3.8
+        3.9
+    )
+    if [[ -f /etc/os-release && ! "$(cat /etc/os-release)" =~ "Alpine" || " ${sad_pythons[*]} " =~ $(python -V 2>&1) ]]; then
         found_oboe_ldd=$(ldd ./_oboe*.so)
     fi
     popd >/dev/null
@@ -172,7 +178,7 @@ function get_sdist(){
             exit 1
         fi
     else
-        pip_options=(pip download --no-binary solarwinds-apm --dest "$sdist_dir")
+        pip_options=(--no-binary solarwinds-apm --dest "$sdist_dir")
         if [ "$MODE" == "testpypi" ]
         then
             pip_options+=(--extra-index-url https://test.pypi.org/simple/)
@@ -250,7 +256,7 @@ function get_wheel(){
         fi
 
     else
-        pip_options=(pip download --only-binary solarwinds-apm --dest "$wheel_dir")
+        pip_options=(--only-binary solarwinds-apm --dest "$wheel_dir")
         if [ "$MODE" == "testpypi" ]
         then
             pip_options+=(--extra-index-url https://test.pypi.org/simple/)
@@ -311,6 +317,12 @@ function install_test_app_dependencies(){
 }
 
 function run_instrumented_server_and_client(){
+    pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
+    echo "Distro: $pretty_name"
+    echo "Python version: $(python --version 2>&1)"
+    echo "Pip version: $(pip --version)"
+    echo "Instrumenting Flask with solarwinds_apm Python from $MODE."
+
     export FLASK_RUN_HOST="0.0.0.0"
     export FLASK_RUN_PORT="$1"
     export OTEL_PYTHON_DISABLED_INSTRUMENTATIONS="urllib3"
@@ -318,19 +330,20 @@ function run_instrumented_server_and_client(){
     export SW_APM_SERVICE_KEY="$2"
     export SW_APM_COLLECTOR="$3"
     # Only set certificate trustedpath for AO prod
-    if [ -n "$4" ]; then
+    if [ "$4" = "AO Prod" ]; then
         export SW_APM_TRUSTEDPATH="$PWD/ao_issuer_ca_public_cert.crt"
     fi
-
+    echo "Testing trace export from Flask to $4..."
     nohup opentelemetry-instrument flask run > log.txt 2>&1 &
     python client.py
 }
 
 # start testing
 AGENT_VERSION=$SOLARWINDS_APM_VERSION
+HOSTNAME=$(cat /etc/hostname)
 get_and_check_sdist
 get_and_check_wheel
 install_test_app_dependencies
-run_instrumented_server_and_client "8001" "$SW_APM_SERVICE_KEY_STAGING-$(hostname)" "$SW_APM_COLLECTOR_STAGING"
-run_instrumented_server_and_client "8002" "$SW_APM_SERVICE_KEY_PROD-$(hostname)" "$SW_APM_COLLECTOR_PROD"
-run_instrumented_server_and_client "8003" "$SW_APM_SERVICE_KEY_AO_PROD-$(hostname)" "$SW_APM_COLLECTOR_AO_PROD" true
+run_instrumented_server_and_client "8001" "$SW_APM_SERVICE_KEY_STAGING-$HOSTNAME" "$SW_APM_COLLECTOR_STAGING" "NH Staging"
+run_instrumented_server_and_client "8002" "$SW_APM_SERVICE_KEY_PROD-$HOSTNAME" "$SW_APM_COLLECTOR_PROD" "NH Prod"
+run_instrumented_server_and_client "8003" "$SW_APM_SERVICE_KEY_AO_PROD-$HOSTNAME" "$SW_APM_COLLECTOR_AO_PROD" "AO Prod"
