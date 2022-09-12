@@ -317,6 +317,8 @@ function install_test_app_dependencies(){
 }
 
 function run_instrumented_server_and_client(){
+    pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
+    echo "Distro: $pretty_name"
     echo "Python version: $(python --version 2>&1)"
     echo "Pip version: $(pip --version)"
     echo "Instrumenting Flask with solarwinds_apm Python from $MODE."
