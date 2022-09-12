@@ -52,7 +52,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
     elif grep Ubuntu /etc/os-release; then
         ubuntu_version=$(grep VERSION_ID /etc/os-release | sed 's/VERSION_ID="//' | sed 's/"//')
         if [ "$ubuntu_version" = "18.04" ] || [ "$ubuntu_version" = "20.04" ]; then
-            apt-get upgrade && apt-get update -y
+            apt-get update -y
             if [ "$python_version" = "3.9" ]; then
                 # This particular version asks for a geographic area for some reason
                 TZ=America
