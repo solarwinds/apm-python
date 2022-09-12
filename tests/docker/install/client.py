@@ -30,6 +30,8 @@ def request_server(attempts=10):
         if attempts > 0:
             time.sleep(1)
             request_server(attempts)
+        else:
+            sys.exit("ERROR: No response from instrumented test server after several attempts.")
 
 
 if __name__ == "__main__":
