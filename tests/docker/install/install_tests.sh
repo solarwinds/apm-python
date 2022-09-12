@@ -317,6 +317,10 @@ function install_test_app_dependencies(){
 }
 
 function run_instrumented_server_and_client(){
+    echo "Python version: $(python --version 2>&1)"
+    echo "Pip version: $(pip --version)"
+    echo "Instrumenting Flask with solarwinds_apm Python from $MODE."
+
     export FLASK_RUN_HOST="0.0.0.0"
     export FLASK_RUN_PORT="$1"
     export OTEL_PYTHON_DISABLED_INSTRUMENTATIONS="urllib3"
@@ -324,10 +328,10 @@ function run_instrumented_server_and_client(){
     export SW_APM_SERVICE_KEY="$2"
     export SW_APM_COLLECTOR="$3"
     # Only set certificate trustedpath for AO prod
-    if [ -n "$4" ] && [ "$4" = "cert_override" ]; then
+    if [ "$4" = "AO Prod" ]; then
         export SW_APM_TRUSTEDPATH="$PWD/ao_issuer_ca_public_cert.crt"
     fi
-
+    echo "Testing trace export from Flask to $4..."
     nohup opentelemetry-instrument flask run > log.txt 2>&1 &
     python client.py
 }
@@ -338,6 +342,6 @@ HOSTNAME=$(cat /etc/hostname)
 get_and_check_sdist
 get_and_check_wheel
 install_test_app_dependencies
-run_instrumented_server_and_client "8001" "$SW_APM_SERVICE_KEY_STAGING-$HOSTNAME" "$SW_APM_COLLECTOR_STAGING"
-run_instrumented_server_and_client "8002" "$SW_APM_SERVICE_KEY_PROD-$HOSTNAME" "$SW_APM_COLLECTOR_PROD"
-run_instrumented_server_and_client "8003" "$SW_APM_SERVICE_KEY_AO_PROD-$HOSTNAME" "$SW_APM_COLLECTOR_AO_PROD" "cert_override"
+run_instrumented_server_and_client "8001" "$SW_APM_SERVICE_KEY_STAGING-$HOSTNAME" "$SW_APM_COLLECTOR_STAGING" "NH Staging"
+run_instrumented_server_and_client "8002" "$SW_APM_SERVICE_KEY_PROD-$HOSTNAME" "$SW_APM_COLLECTOR_PROD" "NH Prod"
+run_instrumented_server_and_client "8003" "$SW_APM_SERVICE_KEY_AO_PROD-$HOSTNAME" "$SW_APM_COLLECTOR_AO_PROD" "AO Prod"
