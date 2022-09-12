@@ -107,15 +107,20 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
     fi
 } >/dev/null
 
-# Click requires unicode locale
+# Flask (test service, see `run_instrumented_server_and_client`) uses Click
+# for unicode handling. The test service will give RuntimeError if
+# run in py3.6 and unicode locale is not provided because ASCII is the default.
+# Depending on locales available in each Linux distro, we set them here.
 # https://click.palletsprojects.com/en/8.1.x/unicode-support/
 {
-    if grep "Amazon Linux" /etc/os-release || grep "CentOS Linux" /etc/os-release; then
-        export LC_ALL=en_CA.utf8
-        export LANG=en_CA.utf8
-    else
-        export LC_ALL=C.UTF-8
-        export LANG=C.UTF-8
+    if [ "$python_version" = "3.6" ]; then
+        if grep "Amazon Linux" /etc/os-release || grep "CentOS Linux" /etc/os-release; then
+            export LC_ALL=en_CA.utf8
+            export LANG=en_CA.utf8
+        else
+            export LC_ALL=C.UTF-8
+            export LANG=C.UTF-8
+        fi
     fi
 } >/dev/null
 
