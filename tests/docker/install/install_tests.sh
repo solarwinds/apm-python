@@ -178,7 +178,7 @@ function get_sdist(){
             exit 1
         fi
     else
-        pip_options=(pip download --no-binary solarwinds-apm --dest "$sdist_dir")
+        pip_options=(--no-binary solarwinds-apm --dest "$sdist_dir")
         if [ "$MODE" == "testpypi" ]
         then
             pip_options+=(--extra-index-url https://test.pypi.org/simple/)
@@ -256,7 +256,7 @@ function get_wheel(){
         fi
 
     else
-        pip_options=(pip download --only-binary solarwinds-apm --dest "$wheel_dir")
+        pip_options=(--only-binary solarwinds-apm --dest "$wheel_dir")
         if [ "$MODE" == "testpypi" ]
         then
             pip_options+=(--extra-index-url https://test.pypi.org/simple/)
