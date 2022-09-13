@@ -316,7 +316,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: centos:8
-      options: --hostname py3.9-centos7
+      options: --hostname py3.9-centos8
     steps:
     - uses: actions/checkout@v2
     - name: Setup and run install test

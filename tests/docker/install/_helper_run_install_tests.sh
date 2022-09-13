@@ -53,24 +53,32 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         ubuntu_version=$(grep VERSION_ID /etc/os-release | sed 's/VERSION_ID="//' | sed 's/"//')
         if [ "$ubuntu_version" = "18.04" ] || [ "$ubuntu_version" = "20.04" ]; then
             apt-get update -y
-            if [ "$python_version" = "3.9" ]; then
-                # This particular version asks for a geographic area for some reason
-                TZ=America
-                ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-            fi
+            TZ=America
+            ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
             if [ "$python_version" = "3.10" ] || [ "$python_version" = "3.11" ]; then
                 # py3.10,3.11 not currently on main apt repo so use deadsnakes
                 apt-get install -y software-properties-common
-                add-apt-repository ppa:deadsnakes/ppa
+                add-apt-repository ppa:deadsnakes/ppa -y
             fi
             apt-get install -y \
                 "python$python_version" \
+                "python$python_version-distutils" \
                 "python$python_version-dev" \
-                python3-pip \
-                gcc \
-                unzip
-            update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-            update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+                build-essential \
+                unzip \
+                wget
+            update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
+            
+            if [ "$python_version" = "3.6" ]; then
+                apt-get install -y python3-pip
+                update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+            else
+                # Make sure we don't install py3.6's pip
+                # Official get-pip documentation:
+                # https://pip.pypa.io/en/stable/installation/#get-pip-py
+                wget https://bootstrap.pypa.io/get-pip.py
+                python get-pip.py
+            fi
         else
             echo "ERROR: Testing on Ubuntu <18.04 not supported."
             exit 1
