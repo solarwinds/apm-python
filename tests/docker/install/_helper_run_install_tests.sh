@@ -20,7 +20,7 @@ python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
 pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
 echo "Installing test dependencies for Python $python_version on $pretty_name"
 # setup dependencies quietly
-# {
+{
     if grep Alpine /etc/os-release; then
         # test deps
         apk add bash
@@ -115,7 +115,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             alternatives --set python "/usr/bin/python$python_version"
         fi
     fi
-# } >/dev/null
+} >/dev/null
 
 # Flask (test service, see `run_instrumented_server_and_client`) uses Click
 # for unicode handling. The test service will give RuntimeError if
