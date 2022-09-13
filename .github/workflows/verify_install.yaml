@@ -30,33 +30,33 @@ jobs:
   # Python 3.6
   #--------------------------------------------------------------------
 
-  py36_install_debian8:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.6-jessie
-      options: --hostname py3.6-debian8
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py36_install_debian8:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.6-jessie
+  #     options: --hostname py3.6-debian8
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
-  py36_install_debian9:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.6-stretch
-      options: --hostname py3.6-debian9
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py36_install_debian9:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.6-stretch
+  #     options: --hostname py3.6-debian9
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
   py36_install_ubuntu1804:
     runs-on: ubuntu-latest
@@ -72,79 +72,79 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
-  py36_install_centos7:
-    runs-on: ubuntu-latest
-    container:
-      image: centos/python-36-centos7
-      options: --hostname py3.6-centos7
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py36_install_centos7:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: centos/python-36-centos7
+  #     options: --hostname py3.6-centos7
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
-  py36_install_amazon201703:
-    runs-on: ubuntu-latest
-    container:
-      image: amazonlinux:2017.03
-      options: --hostname py3.6-amazon2017.03
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py36_install_amazon201703:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: amazonlinux:2017.03
+  #     options: --hostname py3.6-amazon2017.03
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
-  py36_install_alpine313:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.6-alpine3.13
-      options: --hostname py3.6-alpine3.13
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py36_install_alpine313:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.6-alpine3.13
+  #     options: --hostname py3.6-alpine3.13
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
   # Python 3.7
   #--------------------------------------------------------------------
 
-  py37_install_debian9:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.7-stretch
-      options: --hostname py3.7-debian9
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py37_install_debian9:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.7-stretch
+  #     options: --hostname py3.7-debian9
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
-  py37_install_debian10:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.7-buster
-      options: --hostname py3.7-debian10
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py37_install_debian10:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.7-buster
+  #     options: --hostname py3.7-debian10
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
   py37_install_ubuntu1804:
     runs-on: ubuntu-latest
@@ -160,55 +160,55 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
-  py37_install_amazon2:
-    runs-on: ubuntu-latest
-    container:
-      image: amazonlinux:2
-      options: --hostname py3.7-install-amazon2
-    steps:
-    - name: Install latest git and tar
-      run: |
-        yum update -y
-        yum install -y git tar
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py37_install_amazon2:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: amazonlinux:2
+  #     options: --hostname py3.7-install-amazon2
+  #   steps:
+  #   - name: Install latest git and tar
+  #     run: |
+  #       yum update -y
+  #       yum install -y git tar
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
-  py37_install_alpine313:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.7-alpine3.13
-      options: --hostname py3.7-alpine3.13
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py37_install_alpine313:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.7-alpine3.13
+  #     options: --hostname py3.7-alpine3.13
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
   # Python 3.8
   #--------------------------------------------------------------------
 
-  py38_install_debian10:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.8-buster
-      options: --hostname py3.8-debian10
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py38_install_debian10:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.8-buster
+  #     options: --hostname py3.8-debian10
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
   py38_install_ubuntu1804:
     runs-on: ubuntu-latest
@@ -238,65 +238,65 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
-  py38_install_centos7:
-    runs-on: ubuntu-latest
-    container:
-      image: centos/python-38-centos7
-      options: --hostname py3.8-centos7
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py38_install_centos7:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: centos/python-38-centos7
+  #     options: --hostname py3.8-centos7
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
-  py38_install_amazon201803:
-    runs-on: ubuntu-latest
-    container:
-      image: amazonlinux:2018.03
-      options: --hostname py3.8-amazon2018.03
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py38_install_amazon201803:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: amazonlinux:2018.03
+  #     options: --hostname py3.8-amazon2018.03
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
-  py38_install_alpine313:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.8-alpine3.13
-      options: --hostname py3.8-alpine3.13
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py38_install_alpine313:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.8-alpine3.13
+  #     options: --hostname py3.8-alpine3.13
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
   # Python 3.9
   #--------------------------------------------------------------------
 
-  py39_install_debian10:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.9-buster
-      options: --hostname py3.9-debian10
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py39_install_debian10:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.9-buster
+  #     options: --hostname py3.9-debian10
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_ubuntu2004:
     runs-on: ubuntu-latest
@@ -312,65 +312,65 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
-  py39_install_centos8:
-    runs-on: ubuntu-latest
-    container:
-      image: centos:8
-      options: --hostname py3.9-centos7
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py39_install_centos8:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: centos:8
+  #     options: --hostname py3.9-centos7
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
-  py39_install_alpine313:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.9-alpine3.13
-      options: --hostname py3.9-alpine3.13
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py39_install_alpine313:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.9-alpine3.13
+  #     options: --hostname py3.9-alpine3.13
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
-  py39_install_alpine316:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.9-alpine3.16
-      options: --hostname py3.9-alpine3.16
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py39_install_alpine316:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.9-alpine3.16
+  #     options: --hostname py3.9-alpine3.16
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
   # Python 3.10
   #--------------------------------------------------------------------
 
-  py310_install_debian10:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.10-buster
-      options: --hostname py3.10-debian10
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py310_install_debian10:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.10-buster
+  #     options: --hostname py3.10-debian10
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
   py310_install_ubuntu2004:
     runs-on: ubuntu-latest
@@ -386,51 +386,51 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
-  py310_install_alpine313:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.10-alpine3.13
-      options: --hostname py3.10-alpine3.13
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py310_install_alpine313:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.10-alpine3.13
+  #     options: --hostname py3.10-alpine3.13
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
-  py310_install_alpine316:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.10-alpine3.16
-      options: --hostname py3.10-alpine3.16
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py310_install_alpine316:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.10-alpine3.16
+  #     options: --hostname py3.10-alpine3.16
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
   # Python 3.11
   #--------------------------------------------------------------------
 
-  py311_install_debian10:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.11-rc-buster
-      options: --hostname py3.11-debian10
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py311_install_debian10:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.11-rc-buster
+  #     options: --hostname py3.11-debian10
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
 
   py311_install_ubuntu2004:
     runs-on: ubuntu-latest
@@ -446,16 +446,16 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
-  py311_install_alpine316:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.11-rc-alpine3.16
-      options: --hostname py3.11-alpine3.16
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
+  # py311_install_alpine316:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: python:3.11-rc-alpine3.16
+  #     options: --hostname py3.11-alpine3.16
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Setup and run install test
+  #     working-directory: ./tests/docker/install
+  #     run: ./_helper_run_install_tests.sh
+  #     shell: sh
+  #     env:
+  #       MODE: ${{ github.event.inputs.install-registry }}
