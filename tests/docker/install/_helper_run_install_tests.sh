@@ -53,8 +53,6 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         ubuntu_version=$(grep VERSION_ID /etc/os-release | sed 's/VERSION_ID="//' | sed 's/"//')
         if [ "$ubuntu_version" = "18.04" ] || [ "$ubuntu_version" = "20.04" ]; then
             apt-get update -y
-            # To avoid gcc-related errors
-            apt-get install -y --reinstall build-essential
             TZ=America
             ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
             if [ "$python_version" = "3.10" ] || [ "$python_version" = "3.11" ]; then
@@ -66,7 +64,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 "python$python_version" \
                 "python$python_version-distutils" \
                 "python$python_version-dev" \
-                gcc \
+                build-essential \
                 unzip \
                 wget
             update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
