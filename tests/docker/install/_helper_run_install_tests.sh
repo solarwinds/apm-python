@@ -20,7 +20,7 @@ python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
 pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
 echo "Installing test dependencies for Python $python_version on $pretty_name"
 # setup dependencies quietly
-{
+# {
     if grep Alpine /etc/os-release; then
         # test deps
         apk add bash
@@ -71,11 +71,16 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 wget
             update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
             
-            # Make sure we don't install py3.6's pip
-            # Official get-pip documentation:
-            # https://pip.pypa.io/en/stable/installation/#get-pip-py
-            wget https://bootstrap.pypa.io/get-pip.py
-            python get-pip.py
+            if [ "$python_version" = "3.6" ]; then
+                apt-get install -y python3-pip
+                update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+            else
+                # Make sure we don't install py3.6's pip
+                # Official get-pip documentation:
+                # https://pip.pypa.io/en/stable/installation/#get-pip-py
+                wget https://bootstrap.pypa.io/get-pip.py
+                python get-pip.py
+            fi
         else
             echo "ERROR: Testing on Ubuntu <18.04 not supported."
             exit 1
@@ -110,7 +115,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             alternatives --set python "/usr/bin/python$python_version"
         fi
     fi
-} >/dev/null
+# } >/dev/null
 
 # Flask (test service, see `run_instrumented_server_and_client`) uses Click
 # for unicode handling. The test service will give RuntimeError if
