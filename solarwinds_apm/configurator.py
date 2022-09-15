@@ -78,7 +78,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Always configure SolarWinds OTel sampler, or none if disabled"""
+        """Loads SolarWinds OTel sampler, configures no-op"""
         if not apm_config.agent_enabled:
             logger.error("Tracing disabled. Using OTel no-op tracer provider.")
             trace.set_tracer_provider(
@@ -101,7 +101,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             raise
         trace.set_tracer_provider(
-            TracerProvider(sampler=sampler)
+            trace.NoOpTracerProvider()
         )
 
     def _configure_metrics_span_processor(
@@ -109,13 +109,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure SolarWindsInboundMetricsSpanProcessor"""
-        trace.get_tracer_provider().add_span_processor(
-            SolarWindsInboundMetricsSpanProcessor(
-                apm_txname_manager,
-                apm_config.agent_enabled,
-            )
-        )
+        """Does nothing"""
+        return
 
     def _configure_exporter(
         self,
@@ -123,9 +118,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager: SolarWindsTxnNameManager,
         agent_enabled: bool = True,
     ) -> None:
-        """Configure SolarWinds or env-specified OTel span exporter,
-        or none if disabled. Initialization of SolarWinds exporter 
-        requires a liboboe reporter and agent_enabled flag."""
+        """Loads SolarWinds OTel exporter, doesn't configure"""
         if not agent_enabled:
             logger.error("Tracing disabled. Cannot set span_processor.")
             return
@@ -159,8 +152,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             raise
         logger.debug("Setting trace with BatchSpanProcessor using {}".format(environ_exporter_name))
-        span_processor = BatchSpanProcessor(exporter)
-        trace.get_tracer_provider().add_span_processor(span_processor)
 
     def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators"""
@@ -191,11 +182,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> "Reporter":
-        """Initialize SolarWinds reporter used by sampler and exporter, using SolarWindsApmConfig. This establishes collector and sampling settings in a background thread."""
-        if apm_config.agent_enabled:
-            from solarwinds_apm.extension.oboe import Reporter
-        else:
-            from solarwinds_apm.apm_noop import Reporter
+        """No-op reporter"""
+        from solarwinds_apm.apm_noop import Reporter
 
         return Reporter(
             hostname_alias=apm_config.get("hostname_alias"),
