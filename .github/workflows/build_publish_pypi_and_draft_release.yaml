@@ -14,7 +14,7 @@ jobs:
   is_publishable:
     name: Check if version valid and package not already published
     runs-on: ubuntu-latest
-    step:
+    steps:
     - uses: actions/checkout@v2
     - name: Check version
       run: .github/scripts/is_publishable.sh ${{ github.event.inputs.version }}
