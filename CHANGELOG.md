@@ -9,3 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/v0.1.0) - 2022-XX-XX
 ### Added
 - Initial release
+
+## [0.0.4](https://github.com/appoptics/solarwinds-apm-python/releases/tag/v0.0.4) - 2022-09-16
+### Added
+- TEST of production release
