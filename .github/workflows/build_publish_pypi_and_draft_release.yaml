@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Check version
-      run: run: cd .github/scripts && ./is_publishable.sh ${{ github.event.inputs.version }}
+      run: cd .github/scripts && ./is_publishable.sh ${{ github.event.inputs.version }}
 
   build_publish_and_release:
     needs: is_publishable
