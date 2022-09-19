@@ -25,7 +25,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         # test deps
         apk add bash
         # agent deps
-        apk add python3-dev g++ make
+        apk add python3-dev g++ make curl
 
     elif grep "CentOS Linux 8" /etc/os-release; then
         # fix centos8 metadata download failures for repo 'appstream'
@@ -66,7 +66,8 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 "python$python_version-dev" \
                 build-essential \
                 unzip \
-                wget
+                wget \
+                curl
             update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
             
             if [ "$python_version" = "3.6" ]; then
