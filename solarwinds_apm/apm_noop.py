@@ -75,7 +75,7 @@ class Context:
         do_metrics, do_sample, sample_rate, sample_source, bucket_rate, bucket_capacity, typ, auth, status_msg,
         auth_msg, status
 
-        Go to oboe_api.hpp to see the descriptions of all the return values.
+        Go to oboe_api.h to see the descriptions of all the return values.
         """
         return 0, 0, 0, 6, 0, 0, 0, -1, "", "", 0
 

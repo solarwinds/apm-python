@@ -220,4 +220,5 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             stdout_clear_nonblocking=0,
             is_grpc_clean_hack_enabled=apm_config.get("is_grpc_clean_hack_enabled"),
             w3c_trace_format=1,
+            metric_format=0,
         )

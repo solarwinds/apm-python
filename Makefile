@@ -91,7 +91,7 @@ download-headers: verify-oboe-version download-bson-headers
 	@echo -e "Downloading header files (.hpp, .h, .i)"
 	@echo "Downloading files from ${OBOEREPO}:"
 	@cd solarwinds_apm/extension; \
-		for i in oboe.h oboe_api.hpp oboe_api.cpp oboe.i oboe_debug.h; do \
+		for i in oboe.h oboe_api.h oboe_api.cpp oboe.i oboe_debug.h; do \
 			echo "Downloading $$i"; \
 			curl -f -O "${OBOEREPO}/include/$$i"; \
 			if [ $$? -ne 0 ]; then echo " **** fail to download $$i ****" ; exit 1; fi; \
@@ -211,7 +211,7 @@ copy-headers: copy-bson-headers
 	@echo -e "Copying header files (.hpp, .h, .i)"
 	@echo "Copying files from ${OTELOBOEREPO}:"
 	@cd solarwinds_apm/extension; \
-		for i in oboe.h oboe_api.hpp oboe_api.cpp oboe_debug.h; do \
+		for i in oboe.h oboe_api.h oboe_api.cpp oboe_debug.h; do \
 			echo "Copying $$i"; \
 			cp "${OTELOBOEREPO}/$$i" .; \
 			if [ $$? -ne 0 ]; then echo " **** failed to copy $$i ****" ; exit 1; fi; \
