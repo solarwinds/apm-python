@@ -98,7 +98,6 @@ class SolarWindsApmConfig:
             'is_grpc_clean_hack_enabled': False,
         }
         self.agent_enabled = self._calculate_agent_enabled()
-        self.metric_format = self._calculate_metric_format()
 
         if self.agent_enabled:
             from solarwinds_apm.extension.oboe import Context
@@ -113,6 +112,8 @@ class SolarWindsApmConfig:
         #     self.update_with_cnf_file(cnf_file)
 
         self.update_with_env_var()
+
+        self.metric_format = self._calculate_metric_format()
 
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
@@ -241,7 +242,6 @@ class SolarWindsApmConfig:
         host = self.get("collector")
         if host and host == INTL_SWO_AO_COLLECTOR:
             logger.warning("AO collector detected. Only exporting TransactionResponseTime metrics")
-            # TransactionResponseTime only
             metric_format = 1
         return metric_format
 
