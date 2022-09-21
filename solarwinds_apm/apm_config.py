@@ -14,6 +14,7 @@ from opentelemetry.environment_variables import (
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_constants import (
+    INTL_SWO_AO_COLLECTOR,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DOC_SUPPORTED_PLATFORMS,
@@ -97,6 +98,7 @@ class SolarWindsApmConfig:
             'is_grpc_clean_hack_enabled': False,
         }
         self.agent_enabled = self._calculate_agent_enabled()
+        self.metric_format = self._calculate_metric_format()
 
         if self.agent_enabled:
             from solarwinds_apm.extension.oboe import Context
@@ -232,6 +234,16 @@ class SolarWindsApmConfig:
         
         logger.debug("agent_enabled: {}".format(agent_enabled))
         return agent_enabled
+
+    def _calculate_metric_format(self) -> int:
+        """Return one of 0 (both), 1 (TransactionResponseTime only), or 2 (ResponseTime only)"""
+        metric_format = 0
+        host = self.get("collector")
+        if host and host == INTL_SWO_AO_COLLECTOR:
+            logger.warning("AO collector detected. Only exporting TransactionResponseTime metrics")
+            # TransactionResponseTime only
+            metric_format = 1
+        return metric_format
 
     def mask_service_key(self) -> str:
         """Return masked service key except first 4 and last 4 chars"""
