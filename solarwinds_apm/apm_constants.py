@@ -1,3 +1,4 @@
+INTL_SWO_AO_COLLECTOR = "collector.appoptics.com"
 INTL_SWO_COMMA = ","
 INTL_SWO_COMMA_W3C_SANITIZED = "...."
 INTL_SWO_EQUALS = "="

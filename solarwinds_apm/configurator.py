@@ -21,6 +21,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from solarwinds_apm.apm_constants import (
+    INTL_SWO_AO_COLLECTOR,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_SUPPORT_EMAIL,
 )
@@ -197,6 +198,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         else:
             from solarwinds_apm.apm_noop import Reporter
 
+        # Sends both TransactionResponseTime and ResponseTime metrics
+        metric_format = 0
+        host = apm_config.get("collector")
+        if host and host == INTL_SWO_AO_COLLECTOR:
+            logger.warning("AO collector detected. Only exporting TransactionResponseTime metrics")
+            # TransactionResponseTime only
+            metric_format = 1
+
         return Reporter(
             hostname_alias=apm_config.get("hostname_alias"),
             log_level=apm_config.get("debug_level"),
@@ -220,5 +229,5 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             stdout_clear_nonblocking=0,
             is_grpc_clean_hack_enabled=apm_config.get("is_grpc_clean_hack_enabled"),
             w3c_trace_format=1,
-            metric_format=0,
+            metric_format=metric_format,
         )
