@@ -14,6 +14,8 @@ from opentelemetry.environment_variables import (
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_constants import (
+    INTL_SWO_AO_COLLECTOR,
+    INTL_SWO_AO_STG_COLLECTOR,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DOC_SUPPORTED_PLATFORMS,
@@ -111,6 +113,8 @@ class SolarWindsApmConfig:
         #     self.update_with_cnf_file(cnf_file)
 
         self.update_with_env_var()
+
+        self.metric_format = self._calculate_metric_format()
 
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
@@ -232,6 +236,18 @@ class SolarWindsApmConfig:
         
         logger.debug("agent_enabled: {}".format(agent_enabled))
         return agent_enabled
+
+    def _calculate_metric_format(self) -> int:
+        """Return one of 0 (both) or 1 (TransactionResponseTime only). Future: return 2 (ResponseTime only) instead of 0. Based on collector URL which may have a port e.g. foo-collector.com:443"""
+        metric_format = 0
+        host = self.get("collector")
+        if host:
+            if len(host.split(":")) > 1:
+                host = host.split(":")[0]
+            if host in [INTL_SWO_AO_COLLECTOR, INTL_SWO_AO_STG_COLLECTOR]:
+                logger.warning("AO collector detected. Only exporting TransactionResponseTime metrics")
+                metric_format = 1
+        return metric_format
 
     def mask_service_key(self) -> str:
         """Return masked service key except first 4 and last 4 chars"""

@@ -216,7 +216,7 @@ function check_sdist(){
 ./oboe.h
 ./oboe.py
 ./oboe_api.cpp
-./oboe_api.hpp
+./oboe_api.h
 ./oboe_debug.h
 ./oboe_wrap.cxx"
     tar xzf "$1" --directory "$unpack_directory"

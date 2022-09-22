@@ -4,6 +4,8 @@ import pytest
 
 from solarwinds_apm import apm_config
 from solarwinds_apm.apm_constants import (
+    INTL_SWO_AO_COLLECTOR,
+    INTL_SWO_AO_STG_COLLECTOR,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
 )
@@ -161,6 +163,40 @@ class TestSolarWindsApmConfig:
         )
         assert not apm_config.SolarWindsApmConfig()._calculate_agent_enabled()
 
+    def test_calculate_metric_format_no_collector(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 0
+
+    def test_calculate_metric_format_not_ao(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "SW_APM_COLLECTOR": "foo-collector-not-ao"
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 0
+
+    def test_calculate_metric_format_ao_prod(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 1
+
+    def test_calculate_metric_format_ao_staging(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 1
+
+    def test_calculate_metric_format_ao_prod_with_port(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR)
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 1
+
     def test_mask_service_key_no_key_empty_default(self, mocker):
         old_service_key = os.environ.get("SW_APM_SERVICE_KEY", None)
         if old_service_key:
@@ -307,7 +343,7 @@ class TestSolarWindsApmConfig:
     def test_set_config_value_default_debug_level(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("debug_level", "not-valid-level")
-        assert test_config.get("debug_level") == 2
+        assert test_config.get("debug_level") == 3
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
