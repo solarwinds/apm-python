@@ -16,6 +16,6 @@ INTL_SWO_DEFAULT_PROPAGATORS = [
     INTL_SWO_PROPAGATOR,
 ]
 # TODO: Update support doc urls and email alias for SWO
-INTL_SWO_DOC_SUPPORTED_PLATFORMS = 'https://docs.appoptics.com/kb/apm_tracing/supported_platforms/'
-INTL_SWO_DOC_TRACING_PYTHON = 'https://docs.appoptics.com/kb/apm_tracing/python/'
+INTL_SWO_DOC_SUPPORTED_PLATFORMS = 'https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-sysreqs-python-agent'
+INTL_SWO_DOC_TRACING_PYTHON = 'https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-add-python-agent'
 INTL_SWO_SUPPORT_EMAIL = 'SWO-support@solarwinds.com'
