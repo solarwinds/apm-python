@@ -3,7 +3,9 @@ SolarWinds Observability distribution of OpenTelemetry Python, providing automat
 
 ----
 ## Requirements
-All published artifacts support Python 3.6 or higher. See [CONTRIBUTING.md](https://github.com/appoptics/solarwinds-apm-python/blob/main/CONTRIBUTING.md) for how to build for development.
+All published artifacts support Python 3.6 or higher. A full list of system requirements is available at: https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-sysreqs-python-agent
+
+See [CONTRIBUTING.md](https://github.com/appoptics/solarwinds-apm-python/blob/main/CONTRIBUTING.md) for how to build for development.
 
 ## Getting Started
 SolarWinds APM captures distributed traces and metrics from your application and sends them to SolarWinds Observability for analysis and visualization.
@@ -31,4 +33,5 @@ with tracer.start_as_current_span("my_custom_span"):
 
 ## Documentation
 
-Online documentation on SolarWinds APM features, configuration, and more is coming soon.
+Online documentation on SolarWinds APM features, configuration, and more is available at https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-add-python-agent
+
