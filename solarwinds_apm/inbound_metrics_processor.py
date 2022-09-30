@@ -63,7 +63,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         liboboe_txn_name = None
         if is_span_http:
             # createHttpSpan needs these other params
-            status_code = span.attributes.get(self._HTTP_STATUS_CODE, None) 
+            status_code = self.get_http_status_code(span, has_error)
             request_method = span.attributes.get(self._HTTP_METHOD, None)
 
             logger.debug(
@@ -110,6 +110,14 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         if span.status.status_code == StatusCode.ERROR:
             return True
         return False
+
+    def get_http_status_code(self, span: "ReadableSpan", has_error: bool) -> int:
+        """Calculate HTTP status_code from span, accounting for has_error"""
+        status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
+        # Something went wrong in OTel if no status_code in attributes of HTTP span
+        if has_error or not status_code:
+            status_code = 500
+        return status_code
 
     def calculate_transaction_names(self, span: "ReadableSpan") -> Tuple[str, str]:
         """Get trans_name and url_tran of this span instance."""
