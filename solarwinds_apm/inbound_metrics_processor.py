@@ -107,7 +107,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
     def has_error(self, span: "ReadableSpan") -> bool:
         """Calculate if this span instance has_error"""
-        if span.status == StatusCode.ERROR:
+        if span.status.status_code == StatusCode.ERROR:
             return True
         return False
 
