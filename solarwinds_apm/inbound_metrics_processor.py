@@ -11,6 +11,7 @@ from opentelemetry.trace import (
     TraceFlags,
 )
 from opentelemetry.sdk.trace import SpanProcessor
+from opentelemetry.semconv.trace import SpanAttributes
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
@@ -23,10 +24,12 @@ logger = logging.getLogger(__name__)
 
 class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
-    _HTTP_METHOD = "http.method"
-    _HTTP_ROUTE = "http.route"
-    _HTTP_STATUS_CODE = "http.status_code"
-    _HTTP_URL = "http.url"
+    _HTTP_METHOD = SpanAttributes.HTTP_METHOD            # "http.method"
+    _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE              # "http.route"
+    _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
+    _HTTP_URL = SpanAttributes.HTTP_URL                  # "http.url"
+
+    _LIBOBOE_HTTP_SPAN_STATUS_ERROR = 500
 
     def __init__(
         self,
@@ -116,7 +119,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
         # Something went wrong in OTel if no status_code in attributes of HTTP span
         if has_error or not status_code:
-            status_code = 500
+            status_code = self._LIBOBOE_HTTP_SPAN_STATUS_ERROR
         return status_code
 
     def calculate_transaction_names(self, span: "ReadableSpan") -> Tuple[str, str]:
