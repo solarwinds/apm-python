@@ -118,7 +118,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         """Calculate HTTP status_code from span, accounting for has_error"""
         status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
         # Something went wrong in OTel if no status_code in attributes of HTTP span
-        if has_error or not status_code:
+        if not status_code:
             status_code = self._LIBOBOE_HTTP_SPAN_STATUS_ERROR
         return status_code
 
