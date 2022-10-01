@@ -1,7 +1,15 @@
+from enum import Enum
+
 import pytest
 
 import solarwinds_apm.exporter
 import solarwinds_apm.extension.oboe
+
+
+# Little helper =====================================================
+
+class FooNum(Enum):
+    FOO = "foo"
 
 
 # Mock Fixtures =====================================================
@@ -12,6 +20,7 @@ def get_mock_spans(mocker, valid_parent=False):
     mock_info_event.configure_mock(
         **{
             "name": "info",
+            "kind": FooNum.FOO,
             "timestamp": 1100,
             "attributes": {"foo": "bar"},
         }
@@ -20,6 +29,7 @@ def get_mock_spans(mocker, valid_parent=False):
     mock_exception_event.configure_mock(
         **{
             "name": "exception",
+            "kind": FooNum.FOO,
             "timestamp": 1200,
             "attributes": {"foo": "bar"},
         }
@@ -31,6 +41,7 @@ def get_mock_spans(mocker, valid_parent=False):
         "start_time": 1000,
         "end_time": 2000,
         "name": "foo",
+        "kind": FooNum.FOO,
         "attributes": {"foo": "bar"},
         "events": [
             mock_info_event,
@@ -210,6 +221,7 @@ class Test_SolarWindsSpanExporter():
         # addInfo calls for entry and exit events
         mock_add_info.assert_has_calls([
             mocker.call("Layer", "foo"),
+            mocker.call(solarwinds_apm.exporter.SolarWindsSpanExporter._SW_SPAN_KIND, FooNum.FOO.name),
             mocker.call("Language", "Python"),
             mocker.call("foo", "bar"),
             mocker.call("Layer", "foo"),
