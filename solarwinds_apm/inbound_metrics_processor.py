@@ -11,6 +11,7 @@ from opentelemetry.trace import (
     TraceFlags,
 )
 from opentelemetry.sdk.trace import SpanProcessor
+from opentelemetry.semconv.trace import SpanAttributes
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
@@ -23,10 +24,12 @@ logger = logging.getLogger(__name__)
 
 class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
-    _HTTP_METHOD = "http.method"
-    _HTTP_ROUTE = "http.route"
-    _HTTP_STATUS_CODE = "http.status_code"
-    _HTTP_URL = "http.url"
+    _HTTP_METHOD = SpanAttributes.HTTP_METHOD            # "http.method"
+    _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE              # "http.route"
+    _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
+    _HTTP_URL = SpanAttributes.HTTP_URL                  # "http.url"
+
+    _LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE = 0
 
     def __init__(
         self,
@@ -63,7 +66,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         liboboe_txn_name = None
         if is_span_http:
             # createHttpSpan needs these other params
-            status_code = span.attributes.get(self._HTTP_STATUS_CODE, None) 
+            status_code = self.get_http_status_code(span)
             request_method = span.attributes.get(self._HTTP_METHOD, None)
 
             logger.debug(
@@ -107,9 +110,18 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
     def has_error(self, span: "ReadableSpan") -> bool:
         """Calculate if this span instance has_error"""
-        if span.status == StatusCode.ERROR:
+        if span.status.status_code == StatusCode.ERROR:
             return True
         return False
+
+    def get_http_status_code(self, span: "ReadableSpan") -> int:
+        """Calculate HTTP status_code from span or default to UNAVAILABLE"""
+        status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
+        # Something went wrong in OTel or instrumented service crashed early
+        # if no status_code in attributes of HTTP span
+        if not status_code:
+            status_code = self._LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE
+        return status_code
 
     def calculate_transaction_names(self, span: "ReadableSpan") -> Tuple[str, str]:
         """Get trans_name and url_tran of this span instance."""
