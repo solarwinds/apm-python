@@ -29,7 +29,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
     _HTTP_URL = SpanAttributes.HTTP_URL                  # "http.url"
 
-    _LIBOBOE_HTTP_SPAN_STATUS_ERROR = 500
+    _LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE = 0
 
     def __init__(
         self,
@@ -66,7 +66,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         liboboe_txn_name = None
         if is_span_http:
             # createHttpSpan needs these other params
-            status_code = self.get_http_status_code(span, has_error)
+            status_code = self.get_http_status_code(span)
             request_method = span.attributes.get(self._HTTP_METHOD, None)
 
             logger.debug(
@@ -114,12 +114,13 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             return True
         return False
 
-    def get_http_status_code(self, span: "ReadableSpan", has_error: bool) -> int:
-        """Calculate HTTP status_code from span, accounting for has_error"""
+    def get_http_status_code(self, span: "ReadableSpan") -> int:
+        """Calculate HTTP status_code from span or default to UNAVAILABLE"""
         status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
-        # Something went wrong in OTel if no status_code in attributes of HTTP span
+        # Something went wrong in OTel or instrumented service crashed early
+        # if no status_code in attributes of HTTP span
         if not status_code:
-            status_code = self._LIBOBOE_HTTP_SPAN_STATUS_ERROR
+            status_code = self._LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE
         return status_code
 
     def calculate_transaction_names(self, span: "ReadableSpan") -> Tuple[str, str]:
