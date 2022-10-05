@@ -7,12 +7,12 @@
 #   * CentOS 8 being at end-of-life and needing a mirror re-point
 #   * Ubuntu not having agent install deps
 #
-# Note: centos8 can only install Python 3.6, 3.8, 3.9
+# Note: centos8 can only install Python 3.8, 3.9
 
 # stop on error
 set -e
 
-# get Python version from container hostname, e.g. "3.6", "3.10"
+# get Python version from container hostname, e.g. "3.7", "3.10"
 python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')
 # no-dot Python version, e.g. "36", "310"
 python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
@@ -39,11 +39,8 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             gcc-c++ \
             unzip \
             findutils
-        if [ "$python_version" = "3.6" ]; then
-            dnf install -y python3-pip python3-setuptools
-        else
-            dnf install -y "python$python_version_no_dot-pip" "python$python_version_no_dot-setuptools"
-        fi
+        dnf install -y "python$python_version_no_dot-pip" "python$python_version_no_dot-setuptools"
+
         command -v python ||
             ln -s "/usr/bin/python$python_version" /usr/local/bin/python
         command -v pip ||
@@ -70,16 +67,11 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 curl
             update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
             
-            if [ "$python_version" = "3.6" ]; then
-                apt-get install -y python3-pip
-                update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
-            else
-                # Make sure we don't install py3.6's pip
-                # Official get-pip documentation:
-                # https://pip.pypa.io/en/stable/installation/#get-pip-py
-                wget https://bootstrap.pypa.io/get-pip.py
-                python get-pip.py
-            fi
+            # Make sure we don't install py3.6's pip
+            # Official get-pip documentation:
+            # https://pip.pypa.io/en/stable/installation/#get-pip-py
+            wget https://bootstrap.pypa.io/get-pip.py
+            python get-pip.py
         else
             echo "ERROR: Testing on Ubuntu <18.04 not supported."
             exit 1
@@ -112,23 +104,6 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 unzip \
                 findutils
             alternatives --set python "/usr/bin/python$python_version"
-        fi
-    fi
-} >/dev/null
-
-# Flask (test service, see `run_instrumented_server_and_client`) uses Click
-# for unicode handling. The test service will give RuntimeError if
-# run in py3.6 and unicode locale is not provided because ASCII is the default.
-# Depending on locales available in each Linux distro, we set them here.
-# https://click.palletsprojects.com/en/8.1.x/unicode-support/
-{
-    if [ "$python_version" = "3.6" ]; then
-        if grep "Amazon Linux" /etc/os-release || grep "CentOS Linux" /etc/os-release; then
-            export LC_ALL=en_CA.utf8
-            export LANG=en_CA.utf8
-        else
-            export LC_ALL=C.UTF-8
-            export LANG=C.UTF-8
         fi
     fi
 } >/dev/null
