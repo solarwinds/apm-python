@@ -143,11 +143,11 @@ sdist: wrapper
 	@echo -e "\nDone."
 
 # Build the Python agent package bdist (wheels) for 64 bit many linux systems (except Alpine).
-# The recipe builds the wheels for all Python versions available in the docker image, similarly to the example provided
+# The recipe builds the wheels for all Python versions available in the docker image EXCEPT py36, similarly to the example provided
 # in the corresponding repo of the Docker images: https://github.com/pypa/manylinux#example.
 manylinux-wheels: wrapper
 	@echo -e "Generating python agent package any-linux wheels for 64 bit systems"
-	@set -e; for PYBIN in /opt/python/*/bin; do "$${PYBIN}/pip" -v wheel . -w ./tmp_dist/ --no-deps; done
+	@set -e; for PYBIN in /opt/python/*/bin; do if [ "$${PYBIN}" != "/opt/python/cp36-cp36m/bin" ]; then "$${PYBIN}/pip" -v wheel . -w ./tmp_dist/ --no-deps; fi; done
 	@echo -e "Tagging wheels with $(wheel_tag)"
 	@set -e; for whl in ./tmp_dist/*.whl; do auditwheel repair --plat $(wheel_tag) "$$whl" -w ./dist/; done
 	@rm -rf ./tmp_dist
