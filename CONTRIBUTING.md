@@ -108,7 +108,7 @@ Set these and the staging/prod collector endpoints as environment variables:
 ```
 export SW_APM_COLLECTOR_AO_PROD=collector.appoptics.com
 export SW_APM_COLLECTOR_PROD=apm.collector.cloud.solarwinds.com
-export SW_APM_COLLECTOR_STAGING=apm-collector.dc-01.st-ssp.solarwinds.com
+export SW_APM_COLLECTOR_STAGING=apm.collector.st-ssp.solarwinds.com
 export SW_APM_SERVICE_KEY_AO_PROD=<api_token>:apm-python-install-testing
 export SW_APM_SERVICE_KEY_PROD=<api_token>:apm-python-install-testing
 export SW_APM_SERVICE_KEY_STAGING=<api_token>:apm-python-install-testing
