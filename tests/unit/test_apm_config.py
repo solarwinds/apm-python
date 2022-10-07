@@ -164,10 +164,17 @@ class TestSolarWindsApmConfig:
         assert not apm_config.SolarWindsApmConfig()._calculate_agent_enabled()
 
     def test_calculate_metric_format_no_collector(self, mocker):
+        # Save any collector in os for later
+        old_collector = os.environ.get("SW_APM_COLLECTOR", None)
+        if old_collector:
+            del os.environ["SW_APM_COLLECTOR"]
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
         })
         assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 0
+        # Restore old collector
+        if old_collector:
+            os.environ["SW_APM_COLLECTOR"] = old_collector
 
     def test_calculate_metric_format_not_ao(self, mocker):
         mocker.patch.dict(os.environ, {
@@ -341,10 +348,17 @@ class TestSolarWindsApmConfig:
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_debug_level(self, caplog, mock_env_vars):
+        # Save any debug_level in os for later
+        old_debug_level = os.environ.get("SW_APM_DEBUG_LEVEL", None)
+        if old_debug_level:
+            del os.environ["SW_APM_DEBUG_LEVEL"]
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("debug_level", "not-valid-level")
-        assert test_config.get("debug_level") == 3
+        assert test_config.get("debug_level") == 2
         assert "Ignore config option" in caplog.text
+        # Restore old debug_level
+        if old_debug_level:
+            os.environ["SW_APM_DEBUG_LEVEL"] = old_debug_level
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_log_trace_id(self, caplog, mock_env_vars):

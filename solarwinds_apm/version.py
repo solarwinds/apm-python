@@ -1,2 +1,2 @@
 """Version of SolarWinds Custom-Distro for OpenTelemetry agents"""
-__version__ = "0.0.5.0"
+__version__ = "0.0.6.0"

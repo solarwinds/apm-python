@@ -72,7 +72,7 @@ For more information, run `make` inside the build container.
 
 #### Unit tests
 
-Automated unit testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.6, 3.7, 3.8, 3.9, and/or 3.10 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Tests for each Python version can be run against AO prod or NH staging.
+Automated unit testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.7, 3.8, 3.9, and/or 3.10 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Tests for each Python version can be run against AO prod or NH staging.
 
 The functional tests require a compiled C-extension and should be run inside the build container. Here is how to run tests:
 
@@ -108,7 +108,7 @@ Set these and the staging/prod collector endpoints as environment variables:
 ```
 export SW_APM_COLLECTOR_AO_PROD=collector.appoptics.com
 export SW_APM_COLLECTOR_PROD=apm.collector.cloud.solarwinds.com
-export SW_APM_COLLECTOR_STAGING=apm-collector.dc-01.st-ssp.solarwinds.com
+export SW_APM_COLLECTOR_STAGING=apm.collector.st-ssp.solarwinds.com
 export SW_APM_SERVICE_KEY_AO_PROD=<api_token>:apm-python-install-testing
 export SW_APM_SERVICE_KEY_PROD=<api_token>:apm-python-install-testing
 export SW_APM_SERVICE_KEY_STAGING=<api_token>:apm-python-install-testing
