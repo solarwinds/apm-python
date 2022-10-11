@@ -132,15 +132,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         environ_exporter_names = environ.get(OTEL_TRACES_EXPORTER).split(",")
         for exporter_name in environ_exporter_names:
+            exporter = None
             try:
                 if exporter_name == INTL_SWO_DEFAULT_TRACES_EXPORTER:
-                    load_entry_point(
+                    exporter = load_entry_point(
                         "solarwinds_apm",
                         "opentelemetry_traces_exporter",
                         exporter_name
                     )(reporter, apm_txname_manager, agent_enabled)
                 else:
-                    next(
+                    exporter = next(
                         iter_entry_points(
                             "opentelemetry_traces_exporter",
                             exporter_name
@@ -159,7 +160,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
                 raise
             logger.debug("Setting trace with BatchSpanProcessor using {}".format(exporter_name))
-            span_processor = BatchSpanProcessor(exporter_name)
+            span_processor = BatchSpanProcessor(exporter)
             trace.get_tracer_provider().add_span_processor(span_processor)
 
     def _configure_propagator(self) -> None:
