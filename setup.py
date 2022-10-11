@@ -15,7 +15,6 @@
 # limitations under the License.
 
 # pylint: disable-msg=missing-module-docstring
-import io
 import logging
 import os
 import sys
