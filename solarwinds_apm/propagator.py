@@ -11,7 +11,6 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_SIGNATURE_KEY,
     INTL_SWO_TRACESTATE_KEY
 )
-from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)

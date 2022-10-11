@@ -15,7 +15,6 @@ from opentelemetry.semconv.trace import SpanAttributes
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
-    from solarwinds_apm.extension.oboe import Reporter
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 
 
