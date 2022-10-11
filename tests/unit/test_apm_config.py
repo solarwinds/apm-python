@@ -24,7 +24,8 @@ class TestSolarWindsApmConfig:
     def _mock_with_service_key(self, mocker, service_key):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
-            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,"SW_APM_SERVICE_KEY": service_key,
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
+            "SW_APM_SERVICE_KEY": service_key,
         })
         mock_iter_entry_points = mocker.patch(
             "solarwinds_apm.apm_config.iter_entry_points"
@@ -54,7 +55,7 @@ class TestSolarWindsApmConfig:
     def test_calculate_agent_enabled_ok_explicit(self, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": "foo,tracecontext,bar,solarwinds_propagator",
-            "OTEL_TRACES_EXPORTER": "foo",
+            "OTEL_TRACES_EXPORTER": "solarwinds_exporter,foo",
             "SW_APM_SERVICE_KEY": "valid:key",
             "SW_APM_AGENT_ENABLED": "true",
         })
@@ -92,10 +93,26 @@ class TestSolarWindsApmConfig:
         })
         assert not apm_config.SolarWindsApmConfig()._calculate_agent_enabled()
 
-    def test_calculate_agent_enabled_no_such_exporter(self, mocker):
+    def test_calculate_agent_enabled_valid_other_but_missing_sw_exporter(self, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
-            "OTEL_TRACES_EXPORTER": "not-valid",
+            "OTEL_TRACES_EXPORTER": "foo",
+            "SW_APM_SERVICE_KEY": "valid:key",
+        })
+        mock_iter_entry_points = mocker.patch(
+            "solarwinds_apm.apm_config.iter_entry_points"
+        )
+        mock_points = mocker.MagicMock()
+        mock_points.__iter__.return_value = ["foo"]
+        mock_iter_entry_points.configure_mock(
+            return_value=mock_points
+        )
+        assert not apm_config.SolarWindsApmConfig()._calculate_agent_enabled()
+
+    def test_calculate_agent_enabled_sw_but_no_such_other_exporter(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "OTEL_TRACES_EXPORTER": "solarwinds_exporter,not-valid",
             "SW_APM_SERVICE_KEY": "valid:key",
         })
         mock_iter_entry_points = mocker.patch(
@@ -105,6 +122,22 @@ class TestSolarWindsApmConfig:
             side_effect=StopIteration("mock error")
         )
         assert not apm_config.SolarWindsApmConfig()._calculate_agent_enabled()
+
+    def test_calculate_agent_enabled_sw_and_two_other_valid_exporters(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "OTEL_TRACES_EXPORTER": "foo,solarwinds_exporter,bar",
+            "SW_APM_SERVICE_KEY": "valid:key",
+        })
+        mock_iter_entry_points = mocker.patch(
+            "solarwinds_apm.apm_config.iter_entry_points"
+        )
+        mock_points = mocker.MagicMock()
+        mock_points.__iter__.return_value = ["foo", "bar"]
+        mock_iter_entry_points.configure_mock(
+            return_value=mock_points
+        )
+        assert apm_config.SolarWindsApmConfig()._calculate_agent_enabled()
 
     def test_calculate_agent_enabled_set_false(self, mocker):
         mocker.patch.dict(os.environ, {
@@ -170,6 +203,7 @@ class TestSolarWindsApmConfig:
             del os.environ["SW_APM_COLLECTOR"]
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
         })
         assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 0
         # Restore old collector
@@ -179,6 +213,7 @@ class TestSolarWindsApmConfig:
     def test_calculate_metric_format_not_ao(self, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
             "SW_APM_COLLECTOR": "foo-collector-not-ao"
         })
         assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 0
@@ -186,6 +221,7 @@ class TestSolarWindsApmConfig:
     def test_calculate_metric_format_ao_prod(self, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
             "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR
         })
         assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 1
@@ -193,6 +229,7 @@ class TestSolarWindsApmConfig:
     def test_calculate_metric_format_ao_staging(self, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
             "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR
         })
         assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 1
@@ -200,6 +237,7 @@ class TestSolarWindsApmConfig:
     def test_calculate_metric_format_ao_prod_with_port(self, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
             "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR)
         })
         assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 1
@@ -210,6 +248,7 @@ class TestSolarWindsApmConfig:
             del os.environ["SW_APM_SERVICE_KEY"]
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
             "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
         })
         mock_iter_entry_points = mocker.patch(
