@@ -21,6 +21,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from solarwinds_apm.apm_constants import (
+    INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_SUPPORT_EMAIL,
 )
@@ -123,14 +124,20 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager: SolarWindsTxnNameManager,
         agent_enabled: bool = True,
     ) -> None:
-        """Configure SolarWinds and any other env-specified OTel span
-        exporters, or none if disabled. Initialization of SolarWinds
+        """Configure SolarWinds OTel span exporters, defaults or environment
+        configured, or none if agent disabled. Initialization of SolarWinds
         exporter requires a liboboe reporter and agent_enabled flag."""
         if not agent_enabled:
             logger.error("Tracing disabled. Cannot set span_processor.")
             return
 
-        environ_exporter_names = environ.get(OTEL_TRACES_EXPORTER).split(",")
+        # SolarWindsDistro._configure does setdefault so this shouldn't
+        # be None, but safer and more explicit this way
+        environ_exporter_names = environ.get(
+            OTEL_TRACES_EXPORTER,
+            INTL_SWO_DEFAULT_TRACES_EXPORTER,
+        ).split(",")
+
         for exporter_name in environ_exporter_names:
             exporter = None
             try:
@@ -164,9 +171,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             trace.get_tracer_provider().add_span_processor(span_processor)
 
     def _configure_propagator(self) -> None:
-        """Configure CompositePropagator with SolarWinds and other propagators"""
+        """Configure CompositePropagator with SolarWinds and other propagators, default or environment configured"""
         propagators = []
-        environ_propagators_names = environ.get(OTEL_PROPAGATORS).split(",")
+
+        # SolarWindsDistro._configure does setdefault so this shouldn't
+        # be None, but safer and more explicit this way
+        environ_propagators_names = environ.get(
+            OTEL_PROPAGATORS,
+            ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+        ).split(",")
+
         for propagator_name in environ_propagators_names:
             try:
                 propagators.append(

@@ -130,15 +130,20 @@ class SolarWindsApmConfig:
 
     def _calculate_agent_enabled(self) -> bool:
         """Checks if agent is enabled/disabled based on config:
-        - OTEL_PROPAGATORS
-        - OTEL_TRACES_EXPORTER
-        - SW_APM_SERVICE_KEY
-        - SW_APM_AGENT_ENABLED
+        - SW_APM_SERVICE_KEY   (required)
+        - OTEL_PROPAGATORS     (optional)
+        - OTEL_TRACES_EXPORTER (optional)
+        - SW_APM_AGENT_ENABLED (optional)
         """
         agent_enabled = True
 
         try:
-            environ_propagators = os.environ.get(OTEL_PROPAGATORS).split(",")
+            # SolarWindsDistro._configure does setdefault so this shouldn't
+            # be None, but safer and more explicit this way
+            environ_propagators = os.environ.get(
+                OTEL_PROPAGATORS,
+                ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            ).split(",")
             # If not using the default propagators,
             # can any arbitrary list BUT
             # (1) must include tracecontext and solarwinds_propagator
@@ -157,7 +162,12 @@ class SolarWindsApmConfig:
             agent_enabled = False
 
         try:
-            environ_exporters = os.environ.get(OTEL_TRACES_EXPORTER).split(",")
+            # SolarWindsDistro._configure does setdefault so this shouldn't
+            # be None, but safer and more explicit this way
+            environ_exporters = os.environ.get(
+                OTEL_TRACES_EXPORTER,
+                INTL_SWO_DEFAULT_TRACES_EXPORTER,
+            ).split(",")
             # If not using the default propagators,
             # can any arbitrary list BUT
             # (1) must include solarwinds_exporter
