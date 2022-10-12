@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/appoptics/solarwinds-apm-python/compare/v0.1.0...HEAD)
 
-## [0.1.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/v0.1.0) - 2022-XX-XX
+## [0.1.0.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/v0.1.0) - 2022-10-12
 ### Added
-- Initial release
+- Initial release for GA (alpha)
+- OpenTelemetry API/SDK 1.13.0, for trace generation
+- OpenTelemetry Instrumentation 0.34b, for (auto-)instrumentation of common Python frameworks
+- SolarWinds c-lib 10.6.1, for unified inbound metrics generation, trace sample decision, and export to SWO
+- W3C trace context propagation
+- OTel, APM instrumentation startup, and trigger trace configurable with environment variables
