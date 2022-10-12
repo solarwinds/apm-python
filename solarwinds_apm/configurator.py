@@ -21,6 +21,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from solarwinds_apm.apm_constants import (
+    INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_SUPPORT_EMAIL,
 )
@@ -123,49 +124,63 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager: SolarWindsTxnNameManager,
         agent_enabled: bool = True,
     ) -> None:
-        """Configure SolarWinds or env-specified OTel span exporter,
-        or none if disabled. Initialization of SolarWinds exporter 
-        requires a liboboe reporter and agent_enabled flag."""
+        """Configure SolarWinds OTel span exporters, defaults or environment
+        configured, or none if agent disabled. Initialization of SolarWinds
+        exporter requires a liboboe reporter and agent_enabled flag."""
         if not agent_enabled:
             logger.error("Tracing disabled. Cannot set span_processor.")
             return
 
-        exporter = None
-        environ_exporter_name = environ.get(OTEL_TRACES_EXPORTER)
-        try:
-            if environ_exporter_name == INTL_SWO_DEFAULT_TRACES_EXPORTER:
-                exporter = load_entry_point(
-                    "solarwinds_apm",
-                    "opentelemetry_traces_exporter",
-                    environ_exporter_name
-                )(reporter, apm_txname_manager, agent_enabled)
-            else:
-                exporter = next(
-                    iter_entry_points(
+        # SolarWindsDistro._configure does setdefault so this shouldn't
+        # be None, but safer and more explicit this way
+        environ_exporter_names = environ.get(
+            OTEL_TRACES_EXPORTER,
+            INTL_SWO_DEFAULT_TRACES_EXPORTER,
+        ).split(",")
+
+        for exporter_name in environ_exporter_names:
+            exporter = None
+            try:
+                if exporter_name == INTL_SWO_DEFAULT_TRACES_EXPORTER:
+                    exporter = load_entry_point(
+                        "solarwinds_apm",
                         "opentelemetry_traces_exporter",
-                        environ_exporter_name
+                        exporter_name
+                    )(reporter, apm_txname_manager, agent_enabled)
+                else:
+                    exporter = next(
+                        iter_entry_points(
+                            "opentelemetry_traces_exporter",
+                            exporter_name
+                        )
+                    ).load()()
+            except:
+                # At this point any non-default OTEL_TRACES_EXPORTER has 
+                # been checked by ApmConfig so exception here means 
+                # something quite wrong
+                logger.exception(
+                    "Failed to load configured exporter {}. "
+                    "Please reinstall or contact {}.".format(
+                        exporter_name,
+                        INTL_SWO_SUPPORT_EMAIL,
                     )
-                ).load()()
-        except:
-            # At this point any non-default OTEL_TRACES_EXPORTER has 
-            # been checked by ApmConfig so exception here means 
-            # something quite wrong
-            logger.exception(
-                "Failed to load configured exporter {}. "
-                "Please reinstall or contact {}.".format(
-                    environ_exporter_name,
-                    INTL_SWO_SUPPORT_EMAIL,
                 )
-            )
-            raise
-        logger.debug("Setting trace with BatchSpanProcessor using {}".format(environ_exporter_name))
-        span_processor = BatchSpanProcessor(exporter)
-        trace.get_tracer_provider().add_span_processor(span_processor)
+                raise
+            logger.debug("Setting trace with BatchSpanProcessor using {}".format(exporter_name))
+            span_processor = BatchSpanProcessor(exporter)
+            trace.get_tracer_provider().add_span_processor(span_processor)
 
     def _configure_propagator(self) -> None:
-        """Configure CompositePropagator with SolarWinds and other propagators"""
+        """Configure CompositePropagator with SolarWinds and other propagators, default or environment configured"""
         propagators = []
-        environ_propagators_names = environ.get(OTEL_PROPAGATORS).split(",")
+
+        # SolarWindsDistro._configure does setdefault so this shouldn't
+        # be None, but safer and more explicit this way
+        environ_propagators_names = environ.get(
+            OTEL_PROPAGATORS,
+            ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+        ).split(",")
+
         for propagator_name in environ_propagators_names:
             try:
                 propagators.append(

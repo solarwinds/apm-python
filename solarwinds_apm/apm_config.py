@@ -130,15 +130,20 @@ class SolarWindsApmConfig:
 
     def _calculate_agent_enabled(self) -> bool:
         """Checks if agent is enabled/disabled based on config:
-        - OTEL_PROPAGATORS
-        - OTEL_TRACE_EXPORTER
-        - SW_APM_SERVICE_KEY
-        - SW_APM_AGENT_ENABLED
+        - SW_APM_SERVICE_KEY   (required)
+        - OTEL_PROPAGATORS     (optional)
+        - OTEL_TRACES_EXPORTER (optional)
+        - SW_APM_AGENT_ENABLED (optional)
         """
         agent_enabled = True
 
         try:
-            environ_propagators = os.environ.get(OTEL_PROPAGATORS).split(",")
+            # SolarWindsDistro._configure does setdefault so this shouldn't
+            # be None, but safer and more explicit this way
+            environ_propagators = os.environ.get(
+                OTEL_PROPAGATORS,
+                ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
+            ).split(",")
             # If not using the default propagators,
             # can any arbitrary list BUT
             # (1) must include tracecontext and solarwinds_propagator
@@ -146,7 +151,7 @@ class SolarWindsApmConfig:
             if environ_propagators != INTL_SWO_DEFAULT_PROPAGATORS:
                 if not INTL_SWO_TRACECONTEXT_PROPAGATOR in environ_propagators or \
                     not INTL_SWO_PROPAGATOR in environ_propagators:
-                    logger.error("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM Tracing disabled.")
+                    logger.error("Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled.")
                     raise ValueError
 
                 if environ_propagators.index(INTL_SWO_PROPAGATOR) \
@@ -156,22 +161,38 @@ class SolarWindsApmConfig:
         except ValueError:
             agent_enabled = False
 
-        environ_exporter_name = os.environ.get(OTEL_TRACES_EXPORTER)
         try:
-            if environ_exporter_name != INTL_SWO_DEFAULT_TRACES_EXPORTER:
-                next(
-                    iter_entry_points(
-                        "opentelemetry_traces_exporter",
-                        environ_exporter_name
+            # SolarWindsDistro._configure does setdefault so this shouldn't
+            # be None, but safer and more explicit this way
+            environ_exporters = os.environ.get(
+                OTEL_TRACES_EXPORTER,
+                INTL_SWO_DEFAULT_TRACES_EXPORTER,
+            ).split(",")
+            # If not using the default propagators,
+            # can any arbitrary list BUT
+            # (1) must include solarwinds_exporter
+            # (2) other exporters must be loadable by OTel
+            if INTL_SWO_DEFAULT_TRACES_EXPORTER not in environ_exporters:
+                logger.error("Must include solarwinds_exporter in OTEL_TRACES_EXPORTER to use Solarwinds APM. Tracing disabled.")
+                raise ValueError
+            for environ_exporter_name in environ_exporters:
+                try:
+                    if environ_exporter_name != INTL_SWO_DEFAULT_TRACES_EXPORTER:
+                        next(
+                            iter_entry_points(
+                                "opentelemetry_traces_exporter",
+                                environ_exporter_name
+                            )
+                        )
+                except StopIteration:
+                    logger.error(
+                        "Failed to load configured OTEL_TRACES_EXPORTER {}. "
+                        "Tracing disabled".format(
+                            environ_exporter_name
+                        )
                     )
-                )
-        except StopIteration:
-            logger.error(
-                "Failed to load configured OTEL_TRACES_EXPORTER {}. "
-                "Tracing disabled".format(
-                    environ_exporter_name
-                )
-            )
+                    agent_enabled = False
+        except ValueError:
             agent_enabled = False
 
         try:
