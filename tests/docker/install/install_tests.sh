@@ -312,7 +312,7 @@ function get_and_check_wheel(){
 }
 
 function install_test_app_dependencies(){
-    pip install flask requests
+    pip install flask requests flask-talisman
     opentelemetry-bootstrap --action=install
 }
 

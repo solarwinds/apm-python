@@ -18,7 +18,7 @@ logger.addHandler(handler)
 def request_server(attempts=10):
     # Brute force until server responds
     try:
-        resp = requests.get("http://{}:{}/test/".format(
+        resp = requests.get("https://{}:{}/test/".format(
             os.getenv("FLASK_RUN_HOST"),
             os.getenv("FLASK_RUN_PORT"),
         ))
