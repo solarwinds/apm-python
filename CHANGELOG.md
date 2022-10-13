@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/appoptics/solarwinds-apm-python/compare/v0.1.0...HEAD)
 
-## [0.1.0.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/v0.1.0) - 2022-10-12
+## [0.1.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/v0.1.0) - 2022-10-13
 ### Added
 - Initial release for GA (alpha)
 - OpenTelemetry API/SDK 1.13.0, for trace generation
