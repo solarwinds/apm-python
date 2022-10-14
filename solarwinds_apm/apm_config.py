@@ -98,6 +98,7 @@ class SolarWindsApmConfig:
             'inst': defaultdict(lambda: True),
             'is_grpc_clean_hack_enabled': False,
         }
+        self.__config['transaction']['prepend_domain_name'] = False
         self.agent_enabled = self._calculate_agent_enabled()
 
         if self.agent_enabled:
@@ -186,10 +187,7 @@ class SolarWindsApmConfig:
                         )
                 except StopIteration:
                     logger.error(
-                        "Failed to load configured OTEL_TRACES_EXPORTER {}. "
-                        "Tracing disabled".format(
-                            environ_exporter_name
-                        )
+                        "Failed to load configured OTEL_TRACES_EXPORTER. Tracing disabled."
                     )
                     agent_enabled = False
         except ValueError:
