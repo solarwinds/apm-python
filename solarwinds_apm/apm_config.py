@@ -186,7 +186,10 @@ class SolarWindsApmConfig:
                         )
                 except StopIteration:
                     logger.error(
-                        "Failed to load configured OTEL_TRACES_EXPORTER. Tracing disabled."
+                        "Failed to load configured OTEL_TRACES_EXPORTER {}. "
+                        "Tracing disabled".format(
+                            environ_exporter_name
+                        )
                     )
                     agent_enabled = False
         except ValueError:

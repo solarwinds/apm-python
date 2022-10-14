@@ -1,11 +1,9 @@
 import requests
 
 from flask import Flask
-from flask_talisman import Talisman
 from opentelemetry import trace
 
 app = Flask(__name__)
-Talisman(app)
 tracer = trace.get_tracer(__name__)
 
 @app.route("/test/")
@@ -18,5 +16,5 @@ def test_trace():
         with tracer.start_as_current_span("test_manual_inner"):
             current_span = trace.get_current_span()
             current_span.set_attribute("test.custom_attribute", "inner-foo-bar")
-            requests.get("https://www.solarwinds.com/")
+            requests.get("http://www.solarwinds.com/")
             return "Done"

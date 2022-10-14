@@ -94,7 +94,7 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
 
         # Wake-up request and wait for oboe_init
         with cls.tracer.start_as_current_span("wakeup_span"):
-            requests.get(f"https://solarwinds.com")
+            requests.get(f"http://solarwinds.com")
             time.sleep(2)
         
     @classmethod
