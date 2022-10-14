@@ -15,7 +15,7 @@ from werkzeug.wrappers import Response
 
 
 # Logging
-level = os.getenv("PYTHON_DEBUG_LEVEL", logging.DEBUG)
+level = os.getenv("TEST_DEBUG_LEVEL", logging.DEBUG)
 logger = logging.getLogger()
 logger.setLevel(level)
 handler = logging.StreamHandler(sys.stdout)

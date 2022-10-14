@@ -1,0 +1,45 @@
+name: Publish to PyPi and Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semantic version of release (e.g. 1.0.0)'
+        required: true
+
+env:
+  RELEASE_NAME: rel-${{ github.event.inputs.version }}
+
+jobs:
+  is_publishable:
+    name: Check if version valid and package not already published
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check version
+      run: cd .github/scripts && ./is_publishable.sh ${{ github.event.inputs.version }}
+
+  build_publish_and_release:
+    needs: is_publishable
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions/package_solarwinds_apm
+    - name: Install Twine
+      run: pip install --upgrade --no-cache-dir --prefer-binary twine
+    - name: Check distribution artifacts
+      run: twine check dist/*
+    - name: Publish to PyPi
+      env:
+        TWINE_NON_INTERACTIVE: 1
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.SW_APM_PYPI_UPLOAD_TOKEN }}
+      run: twine upload dist/*
+    - name: Initialize git
+      run: |
+       git config user.name "GitHub Actions"
+       git config user.email noreply@github.com
+    - name: Create draft release
+      run: gh release create ${{ env.RELEASE_NAME }} --title "${{ env.RELEASE_NAME }}" --target release/${{ env.RELEASE_NAME }} --draft
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

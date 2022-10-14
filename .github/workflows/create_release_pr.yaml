@@ -1,0 +1,43 @@
+name: Create Release PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semantic version of release (e.g. 1.0.0)'
+        required: true
+
+env:
+  RELEASE_VERSION: ${{ github.event.inputs.version }}
+  RELEASE_NAME: rel-${{ github.event.inputs.version }}
+
+jobs:
+  create_release_pr:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Initialize git
+      run: |
+       git config user.name "GitHub Actions"
+       git config user.email noreply@github.com
+    - name: Check that tag does not exist yet
+      run: |
+        git fetch --tags --quiet
+        if git show-ref --tags ${{ env.RELEASE_NAME }} --quiet; then
+          echo "FATAL ERROR: Release tag ${{ env.RELEASE_NAME }} already exists!"
+          exit 1
+        fi
+    - name: Create release branch
+      run: git checkout -b release/${{ env.RELEASE_NAME }}
+    - name: Update agent version
+      run: sed -i -e "s/^__version__ = \".*\"$/__version__ = \"${{ env.RELEASE_VERSION }}\"/" solarwinds_apm/version.py
+    - name: Commit version.py
+      run: |
+        git add solarwinds_apm/version.py
+        git commit --message "Update agent version to ${{ env.RELEASE_VERSION }}"
+    - name: Push new release branch to remote repositories
+      run: git push origin release/${{ env.RELEASE_NAME }}
+    - name: Open Pull Request for version bump
+      run: gh pr create --title "Update agent version to ${{ env.RELEASE_VERSION }}" --body "Upgrade agent version"
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

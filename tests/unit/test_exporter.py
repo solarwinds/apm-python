@@ -1,7 +1,15 @@
+from enum import Enum
+
 import pytest
 
 import solarwinds_apm.exporter
 import solarwinds_apm.extension.oboe
+
+
+# Little helper =====================================================
+
+class FooNum(Enum):
+    FOO = "foo"
 
 
 # Mock Fixtures =====================================================
@@ -12,6 +20,7 @@ def get_mock_spans(mocker, valid_parent=False):
     mock_info_event.configure_mock(
         **{
             "name": "info",
+            "kind": FooNum.FOO,
             "timestamp": 1100,
             "attributes": {"foo": "bar"},
         }
@@ -20,6 +29,7 @@ def get_mock_spans(mocker, valid_parent=False):
     mock_exception_event.configure_mock(
         **{
             "name": "exception",
+            "kind": FooNum.FOO,
             "timestamp": 1200,
             "attributes": {"foo": "bar"},
         }
@@ -31,6 +41,7 @@ def get_mock_spans(mocker, valid_parent=False):
         "start_time": 1000,
         "end_time": 2000,
         "name": "foo",
+        "kind": FooNum.FOO,
         "attributes": {"foo": "bar"},
         "events": [
             mock_info_event,
@@ -154,12 +165,35 @@ def configure_event_mocks(
 @pytest.fixture(name="exporter")
 def fixture_exporter(mocker):
     mock_reporter = mocker.Mock()
+    mock_apm_txname_manager = mocker.patch(
+        "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager",
+        return_value=mocker.Mock()
+    )
+    mock_apm_txname_manager.configure_mock(
+        **{
+            "__delitem__": mocker.Mock()
+        }
+    )
+
     mock_reporter.configure_mock(
         **{
             "sendReport": mocker.Mock()
         }
     )
-    return solarwinds_apm.exporter.SolarWindsSpanExporter(mock_reporter)
+    mock_from_string = mocker.MagicMock()
+    mock_metadata = mocker.patch(
+        "solarwinds_apm.extension.oboe.Metadata",
+    )
+    mock_metadata.configure_mock(
+        **{
+            "fromString": mock_from_string,
+        }
+    )
+    return solarwinds_apm.exporter.SolarWindsSpanExporter(
+        mock_reporter,
+        mock_apm_txname_manager,
+        True
+    )
 
 
 # Tests =============================================================
@@ -187,6 +221,7 @@ class Test_SolarWindsSpanExporter():
         # addInfo calls for entry and exit events
         mock_add_info.assert_has_calls([
             mocker.call("Layer", "foo"),
+            mocker.call(solarwinds_apm.exporter.SolarWindsSpanExporter._SW_SPAN_KIND, FooNum.FOO.name),
             mocker.call("Language", "Python"),
             mocker.call("foo", "bar"),
             mocker.call("Layer", "foo"),
@@ -198,6 +233,41 @@ class Test_SolarWindsSpanExporter():
             mocker.call(mock_event, False),
         ])
 
+    def test_init_agent_enabled_true(self, mocker):
+        mock_reporter = mocker.Mock()
+        mock_apm_txname_manager = mocker.Mock()
+        mock_ext_context = mocker.patch(
+            "solarwinds_apm.extension.oboe.Context",      
+        )
+        mock_ext_metadata = mocker.patch(
+            "solarwinds_apm.extension.oboe.Metadata",
+        )
+        exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
+            mock_reporter,
+            mock_apm_txname_manager,
+            True,
+        )
+        assert exporter.reporter == mock_reporter
+        assert exporter.context == mock_ext_context
+        assert exporter.metadata == mock_ext_metadata
+
+    def test_init_agent_enabled_false(self, mocker):
+        mock_reporter = mocker.Mock()
+        mock_apm_txname_manager = mocker.Mock()
+        mock_noop_context = mocker.patch(
+            "solarwinds_apm.apm_noop.Context",      
+        )
+        mock_noop_metadata = mocker.patch(
+            "solarwinds_apm.apm_noop.Metadata",
+        )
+        exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
+            mock_reporter,
+            mock_apm_txname_manager,
+            False,
+        )
+        assert exporter.reporter == mock_reporter
+        assert exporter.context == mock_noop_context
+        assert exporter.metadata == mock_noop_metadata
 
     def test_export_root_span(
         self,
@@ -226,7 +296,7 @@ class Test_SolarWindsSpanExporter():
         exporter.export(mock_spans_root)
 
         mock_build_md.assert_has_calls([
-            mocker.call("my_span_context")
+            mocker.call(exporter.metadata, "my_span_context")
         ])
         mock_create_entry.assert_called_once_with(
             mock_md,
@@ -272,8 +342,8 @@ class Test_SolarWindsSpanExporter():
 
         mock_span_parent = mock_spans_parent_valid[0].parent
         mock_build_md.assert_has_calls([
-            mocker.call("my_span_context"),
-            mocker.call(mock_span_parent)
+            mocker.call(exporter.metadata, "my_span_context"),
+            mocker.call(exporter.metadata, mock_span_parent)
         ])
         mock_create_entry.assert_called_once_with(
             mock_md,
@@ -355,10 +425,16 @@ class Test_SolarWindsSpanExporter():
             return_value="foo"
         )
         mock_span_context = mocker.MagicMock()
-        exporter._build_metadata(mock_span_context)
+        mock_from_string = mocker.MagicMock()
+        mock_metadata = mocker.Mock()
+        mock_metadata.configure_mock(
+            **{
+                "fromString": mock_from_string,
+            }
+        )
+        exporter._build_metadata(mock_metadata, mock_span_context)
         solarwinds_apm.exporter.W3CTransformer \
             .traceparent_from_context.assert_called_once_with(
                 mock_span_context
             )
-        solarwinds_apm.extension.oboe \
-            .Metadata.fromString.assert_called_once_with("foo")
+        mock_metadata.fromString.assert_called_once_with("foo")
