@@ -98,6 +98,7 @@ class SolarWindsApmConfig:
             'inst': defaultdict(lambda: True),
             'is_grpc_clean_hack_enabled': False,
         }
+        self.__config['transaction']['prepend_domain_name'] = False
         self.agent_enabled = self._calculate_agent_enabled()
 
         if self.agent_enabled:
