@@ -35,7 +35,7 @@ from opentelemetry.instrumentation.flask import FlaskInstrumentor
 # from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
-from tests.propagation_test_app import PropagationTest
+from functional.propagation_test_app import PropagationTest
 from solarwinds_apm.apm_constants import INTL_SWO_TRACESTATE_KEY
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.configurator import SolarWindsConfigurator
