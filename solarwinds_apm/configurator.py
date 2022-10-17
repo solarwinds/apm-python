@@ -59,7 +59,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(apm_txname_manager, apm_config, reporter)
         # Report an status event after everything is done.
-        self._report_init(reporter, apm_config)
+        self._report_init_event(reporter, apm_config)
 
     def _configure_otel_components(
         self,
@@ -248,7 +248,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             metric_format=apm_config.metric_format,
         )  # type: ignore
 
-    def _report_init(
+    def _report_init_event(
         self,
         reporter: "Reporter",
         apm_config: SolarWindsApmConfig,
@@ -256,9 +256,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         keys: Any = None,
     ) -> None:
         """Report the APM library's init message."""
-        # TODO check if APM python is_ready
-        logger.warning("Sleeping 5 seconds for fun")
-        time.sleep(5)
+        # TODO check if APM python is_ready instead of doing this
+        logger.warning("Sleeping 15 seconds")
+        time.sleep(15)
 
         if apm_config.agent_enabled:
             from solarwinds_apm.extension.oboe import Config, Context, Event, Metadata
