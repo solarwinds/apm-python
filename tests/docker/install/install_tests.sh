@@ -126,6 +126,11 @@ function check_agent_startup(){
     export SW_APM_DEBUG_LEVEL=6
     export SW_APM_SERVICE_KEY=invalid-token-for-testing-1234567890:servicename
     
+    # return value we expect form solarwinds_apm.solarwinds_ready().
+    # This should normally be 1 (ready), because the collector does not send
+    # "invalid api token" response; it sends "ok" with soft disable settings.
+    expected_agent_return=1
+
     TEST_EXP_LOG_MESSAGES=(
     ">> SSL Reporter using host='apm.collector.cloud.solarwinds.com' port='443' log='' clientid='inva...7890:servicename' buf=1000 maxTransactions='200' flushMaxWaitTime='5000' eventsFlushInterval='2' maxRequestSizeBytes='3000000' proxy=''"
     "Warning: There is an problem getting the API token authorized. Metrics and tracing for this agent are currently disabled. If you'd like to learn more about resolving this issue, please contact technicalsupport@solarwinds.com."
@@ -134,7 +139,14 @@ function check_agent_startup(){
     # unset stop on error so we can catch debug messages in case of failures
     set +e
 
-    result=$(opentelemetry-instrument python -c 'from solarwinds_apm import version; print(version.__version__)' 2>startup.log)
+    result=$(opentelemetry-instrument python -c 'from solarwinds_apm import version; r=solarwinds_apm.solarwinds_ready(wait_milliseconds=10000, integer_response=True); print(r)' 2>startup.log)
+
+    if [ $result -ne $expected_agent_return ]; then
+        echo "FAILED! Expected solarwinds_ready to return $expected_agent_return, but got: $result"
+        echo "-- startup.log content --"
+        cat startup.log
+        exit 1
+    fi
 
     logs_ok=true
     for expected in "${TEST_EXP_LOG_MESSAGES[@]}"; do
@@ -149,8 +161,6 @@ function check_agent_startup(){
 
     # Restore stop on error
     set -e
-
-    # TODO: Use solarwinds_ready() to check collector connection instead of above
 
     echo -e "Agent startup verified successfully.\n"
 }
