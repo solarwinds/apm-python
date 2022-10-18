@@ -32,7 +32,7 @@ from solarwinds_apm.apm_constants import (
 )
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
-# from solarwinds_apm.apm_ready import solarwinds_ready
+from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
 from solarwinds_apm.inbound_metrics_processor import SolarWindsInboundMetricsSpanProcessor
@@ -44,7 +44,6 @@ if TYPE_CHECKING:
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
 
-AGENT_ENABLED = False
 
 class SolarWindsConfigurator(_OTelSDKConfigurator):
     """OpenTelemetry Configurator for initializing APM logger and SolarWinds-reporting SDK components"""
@@ -59,12 +58,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure SolarWinds APM and OTel components"""
         apm_txname_manager = SolarWindsTxnNameManager()
         apm_config = SolarWindsApmConfig()
-        global AGENT_ENABLED
-        AGENT_ENABLED = apm_config.agent_enabled
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(apm_txname_manager, apm_config, reporter)
         # Report an status event after everything is done.
-        self._report_init_event(reporter)
+        self._report_init_event(reporter, apm_config)
 
     def _configure_otel_components(
         self,
@@ -256,15 +253,24 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _report_init_event(
         self,
         reporter: "Reporter",
+        apm_config: SolarWindsApmConfig,
         layer: str = "Python",
         keys: Any = None,
     ) -> None:
-        """Report the APM library's init message.
+        """Report the APM library's init message, when reporter ready.
         Note: We keep the original “brand” keynames with AppOptics, instead of SolarWinds"""
-        ready = solarwinds_ready(5000)
-        if not ready:
-            logger.warning("Warning: solarwinds_ready returned False. Skipping init message.")
-            return
+        reporter_ready = False
+        if reporter.init_status in (
+            OboeReporterCode.OBOE_INIT_OK,
+            OboeReporterCode.OBOE_INIT_ALREADY_INIT
+        ):
+            reporter_ready = apm_config.agent_enabled
+        if not reporter_ready:
+            logger.error(
+                "Failed to initialize the reporter, error code={} ({})".format(
+                    reporter.init_status, OboeReporterCode.get_text_code(reporter.init_status)
+                )
+            )
 
         # solarwinds_ready only if agent_enabled
         from solarwinds_apm.extension.oboe import Config, Context, Metadata
@@ -307,52 +313,3 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         for k, v in version_keys.items():
             evt.addInfo(k, v)
         reporter.sendStatus(evt)
-
-
-class oboe_ready_code:
-    OBOE_SERVER_RESPONSE_UNKNOWN = (0, "Oboe server : unknown error")
-    OBOE_SERVER_RESPONSE_OK = (1, "Oboe server : is ready")
-    OBOE_SERVER_RESPONSE_TRY_LATER = (2, "Oboe server : not ready yet, try later")
-    OBOE_SERVER_RESPONSE_LIMIT_EXCEEDED = (3, "Oboe server : limit exceeded")
-    OBOE_SERVER_RESPONSE_INVALID_API_KEY = (4, "Oboe server : invalid API key")
-    OBOE_SERVER_RESPONSE_CONNECT_ERROR = (5, "Oboe server : connection error")
-
-    @classmethod
-    def code_values(cls):
-        code_pairs = [v for k, v in cls.__dict__.items() if not k.startswith("__")]
-        return {p[0]: p[1] for p in code_pairs if isinstance(p, tuple)}
-
-
-def solarwinds_ready(
-    wait_milliseconds: int=3000,
-    integer_response: Any=False,
-) -> Any:
-    """
-     Wait for SolarWinds to be ready to send traces.
-
-     This may be useful in short lived background processes when it is important to capture
-     information during the whole time the process is running. Usually SolarWinds doesn't block an
-     application while it is starting up.
-
-     :param wait_milliseconds:int default 3000, the maximum time to wait in milliseconds
-     :param integer_response:int default false, return boolean value, otherwise return integer for
-     detail information
-
-     :return: return True for ready, False not ready, integer 1 for ready, others not ready
-
-     :Example:
-
-      if not solarwinds_ready(10000):
-         Logger.info("SolarWinds not ready after 10 seconds, no metrics will be sent")
-    """
-    if not AGENT_ENABLED:
-        return 0 if integer_response else False
-
-    from solarwinds_apm.extension.oboe import Context
-    rc = Context.isReady(wait_milliseconds)
-    if not isinstance(rc, int) or not rc in oboe_ready_code.code_values():
-        logger.warning("Unrecognized return code:{rc}".format(rc=rc))
-    elif rc != oboe_ready_code.OBOE_SERVER_RESPONSE_OK[0]:
-        logger.warning(oboe_ready_code.code_values()[rc])
-
-    return rc if integer_response else rc == oboe_ready_code.OBOE_SERVER_RESPONSE_OK[0]
