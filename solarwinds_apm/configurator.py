@@ -258,7 +258,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         keys: Any = None,
     ) -> None:
         """Report the APM library's init message, when reporter ready.
-        Note: We keep the original “brand” keynames with AppOptics, instead of SolarWinds"""
+        Note: We keep the original "brand" keynames with AppOptics, instead of SolarWinds"""
         reporter_ready = False
         if reporter.init_status in (
             OboeReporterCode.OBOE_INIT_OK,
@@ -267,10 +267,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             reporter_ready = apm_config.agent_enabled
         if not reporter_ready:
             logger.error(
-                "Failed to initialize the reporter, error code={} ({})".format(
-                    reporter.init_status, OboeReporterCode.get_text_code(reporter.init_status)
+                "Failed to initialize the reporter, error code={} ({}). Not sending init message.".format(
+                    reporter.init_status,
+                    OboeReporterCode.get_text_code(reporter.init_status),
                 )
             )
+            return
 
         # solarwinds_ready only if agent_enabled
         from solarwinds_apm.extension.oboe import Config, Context, Metadata
