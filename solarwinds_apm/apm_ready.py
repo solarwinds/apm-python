@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def solarwinds_ready(
     wait_milliseconds: int=3000,
-    integer_response: Any=False,
+    integer_response: bool=False,
 ) -> Any:
     """
      Wait for SolarWinds to be ready to send traces.
@@ -26,10 +26,12 @@ def solarwinds_ready(
      application while it is starting up.
 
      :param wait_milliseconds:int default 3000, the maximum time to wait in milliseconds
-     :param integer_response:int default false, return boolean value, otherwise return integer for
-     detail information
+     :param integer_response:bool default False to return boolean value, otherwise True to
+     return integer for detailed information
 
-     :return: return True for ready, False not ready, integer 1 for ready, others not ready
+     :return:
+     if integer_response:int code 1 for ready; 0,2,3,4,5 for not ready
+     else:bool True for ready, False not ready,
 
      :Example:
 
@@ -39,6 +41,7 @@ def solarwinds_ready(
     rc = Context.isReady(wait_milliseconds)
     if not isinstance(rc, int) or not rc in OboeReadyCode.code_values():
         logger.warning("Unrecognized return code:{rc}".format(rc=rc))
+        return OboeReadyCode.OBOE_SERVER_RESPONSE_UNKNOWN if integer_response else False
     elif rc != OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]:
         logger.warning(OboeReadyCode.code_values()[rc])
 

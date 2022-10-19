@@ -266,19 +266,21 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         ):
             reporter_ready = apm_config.agent_enabled
         if not reporter_ready:
-            logger.error(
-                "Failed to initialize the reporter, error code={} ({}). Not sending init message.".format(
-                    reporter.init_status,
-                    OboeReporterCode.get_text_code(reporter.init_status),
+            if apm_config.agent_enabled:
+                logger.error(
+                    "Failed to initialize the reporter, error code={} ({}). Not sending init message.".format(
+                        reporter.init_status,
+                        OboeReporterCode.get_text_code(reporter.init_status),
+                    )
                 )
-            )
+            else:
+                logger.warning("Agent disabled. Not sending init message.")
             return
 
         # solarwinds_ready only if agent_enabled
         from solarwinds_apm.extension.oboe import Config, Context, Metadata
 
         version_keys = dict()
-        other_keys = keys or dict()
 
         version_keys["__Init"] = "True"
         # liboboe adds key Hostname for us
@@ -302,7 +304,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             version_keys['Python.InstallTimestamp'] = 0
         version_keys['Python.LastRestart'] = self._AGENT_START_TIME  # in usec
 
-        version_keys.update(other_keys)
+        version_keys.update(keys)
 
         md = Metadata.makeRandom(True)
         if not md.isValid():
