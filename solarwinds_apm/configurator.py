@@ -1,12 +1,17 @@
 """Module to initialize OpenTelemetry SDK components and liboboe to work with SolarWinds backend"""
 
 import logging
-from os import environ
+import os
 from pkg_resources import (
     iter_entry_points,
     load_entry_point
 )
-from typing import TYPE_CHECKING
+import sys
+import time
+from typing import (
+    Any,
+    TYPE_CHECKING
+)
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
@@ -27,9 +32,11 @@ from solarwinds_apm.apm_constants import (
 )
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
+from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
 from solarwinds_apm.inbound_metrics_processor import SolarWindsInboundMetricsSpanProcessor
+from solarwinds_apm.version import __version__
 
 if TYPE_CHECKING:
     from solarwinds_apm.extension.oboe import Reporter
@@ -37,9 +44,12 @@ if TYPE_CHECKING:
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
 
+
 class SolarWindsConfigurator(_OTelSDKConfigurator):
     """OpenTelemetry Configurator for initializing APM logger and SolarWinds-reporting SDK components"""
 
+    # Agent process start time, which is supposed to be a constant. -- don't modify it.
+    _AGENT_START_TIME = time.time() * 1e6
     # Cannot set as env default because not part of OTel Python _KNOWN_SAMPLERS
     # https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-sdk/src/opentelemetry/sdk/trace/sampling.py#L364-L380
     _DEFAULT_SW_TRACES_SAMPLER = "solarwinds_sampler"
@@ -50,6 +60,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config = SolarWindsApmConfig()
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(apm_txname_manager, apm_config, reporter)
+        # Report an status event after everything is done.
+        self._report_init_event(reporter, apm_config)
 
     def _configure_otel_components(
         self,
@@ -133,7 +145,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         # SolarWindsDistro._configure does setdefault so this shouldn't
         # be None, but safer and more explicit this way
-        environ_exporter_names = environ.get(
+        environ_exporter_names = os.environ.get(
             OTEL_TRACES_EXPORTER,
             INTL_SWO_DEFAULT_TRACES_EXPORTER,
         ).split(",")
@@ -176,7 +188,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         # SolarWindsDistro._configure does setdefault so this shouldn't
         # be None, but safer and more explicit this way
-        environ_propagators_names = environ.get(
+        environ_propagators_names = os.environ.get(
             OTEL_PROPAGATORS,
             ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
         ).split(",")
@@ -236,4 +248,72 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             is_grpc_clean_hack_enabled=apm_config.get("is_grpc_clean_hack_enabled"),
             w3c_trace_format=1,
             metric_format=apm_config.metric_format,
-        )
+        )  # type: ignore
+
+    def _report_init_event(
+        self,
+        reporter: "Reporter",
+        apm_config: SolarWindsApmConfig,
+        layer: str = "Python",
+        keys: Any = None,
+    ) -> None:
+        """Report the APM library's init message, when reporter ready.
+        Note: We keep the original "brand" keynames with AppOptics, instead of SolarWinds"""
+        reporter_ready = False
+        if reporter.init_status in (
+            OboeReporterCode.OBOE_INIT_OK,
+            OboeReporterCode.OBOE_INIT_ALREADY_INIT
+        ):
+            reporter_ready = apm_config.agent_enabled
+        if not reporter_ready:
+            if apm_config.agent_enabled:
+                logger.error(
+                    "Failed to initialize the reporter, error code={} ({}). Not sending init message.".format(
+                        reporter.init_status,
+                        OboeReporterCode.get_text_code(reporter.init_status),
+                    )
+                )
+            else:
+                logger.warning("Agent disabled. Not sending init message.")
+            return
+
+        # solarwinds_ready only if agent_enabled
+        from solarwinds_apm.extension.oboe import Config, Context, Metadata
+
+        version_keys = dict()
+
+        version_keys["__Init"] = "True"
+        # liboboe adds key Hostname for us
+        try:
+            version_keys['Python.Version'] = "{major}.{minor}.{patch}".format(
+                major=sys.version_info[0], minor=sys.version_info[1], patch=sys.version_info[2])
+        except Exception as e:
+            logger.warning("Could not retrieve Python version {}".format(e))
+
+        version_keys['Python.AppOptics.Version'] = __version__
+        version_keys['Python.AppOpticsExtension.Version'] = Config.getVersionString()
+
+        # Attempt to get the following info if we are in a regular file.
+        # Else the path operations fail, for example when the agent is running
+        # in an application zip archive.
+        if os.path.isfile(__file__):
+            version_keys['Python.InstallDirectory'] = os.path.dirname(__file__)
+            version_keys['Python.InstallTimestamp'] = os.path.getmtime(__file__)  # in sec since epoch
+        else:
+            version_keys['Python.InstallDirectory'] = "Unknown"
+            version_keys['Python.InstallTimestamp'] = 0
+        version_keys['Python.LastRestart'] = self._AGENT_START_TIME  # in usec
+
+        version_keys.update(keys)
+
+        md = Metadata.makeRandom(True)
+        if not md.isValid():
+            logger.warning("Warning: Could not generate Metadata for reporter init. Skipping init message.")
+            return
+        Context.set(md)
+        evt = md.createEvent()
+        evt.addInfo("Label", "single")
+        evt.addInfo("Layer", layer)
+        for k, v in version_keys.items():
+            evt.addInfo(k, v)
+        reporter.sendStatus(evt)
