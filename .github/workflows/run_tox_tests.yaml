@@ -15,5 +15,7 @@ jobs:
       image: quay.io/pypa/manylinux2014_x86_64:latest
     steps:
     - uses: actions/checkout@v2
+    - name: Install tox
+      run: pip install --upgrade --no-cache-dir --prefer-binary tox
     - name: Run tox
       run: make tox
