@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - NH-11538-gh-run-tox-tests
   pull_request:
     type: [opened, reopened]
 
