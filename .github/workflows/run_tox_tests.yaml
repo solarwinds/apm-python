@@ -1,0 +1,19 @@
+name: Run tox tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    type: [opened, reopened]
+
+jobs:
+  run_tox_tests:
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/pypa/manylinux2014_x86_64:latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tox
+      run: make tox
