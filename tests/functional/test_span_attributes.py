@@ -122,8 +122,8 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
         cls.httpx_inst.uninstrument()
         cls.requests_inst.uninstrument()
 
-    def test_root_span_attrs_no_context(self):
-        """Test attribute setting for a root span with no parent, no injected context"""
+    def test_root_span_attrs(self):
+        """Test attribute setting for a root span with no parent"""
         # liboboe mocked to guarantee return of “do_sample” and “start
         # decision” rate/capacity values in order to trace and set attrs
         mock_decision = mock.Mock(
@@ -163,6 +163,56 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
         # clean up for other tests
         self.memory_exporter.clear()
 
+    def test_root_span_attrs_with_traceparent_and_tracestate(self):
+        """Test attribute setting for a root span with no parent,
+        but OTel context has valid traceparent and sw-containing tracestate"""
+        # Need to explicitly extract and give to tracer so sampler receives these
+        extracted_context = self.composite_propagator.extract({
+            "traceparent": "00-11112222333344445555666677778888-1000100010001000-01",
+            "tracestate": "sw=e000baa4e000baa4-01",
+        })
+
+        # liboboe mocked to guarantee return of “do_sample” and “start
+        # decision” rate/capacity values
+        mock_decision = mock.Mock(
+            return_value=(1, 1, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
+        )
+        with patch(
+            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            new=mock_decision,
+        ):
+            with self.tracer.start_span(name="span-01", context=extracted_context) as s1:
+                logger.debug("Created local root span-01")
+
+        # verify span created
+        self.memory_exporter.export([s1])
+        spans = self.memory_exporter.get_finished_spans()
+        assert len(spans) == 1
+        root_span = spans[0]
+        assert root_span.name == "span-01"
+
+        # verify trace_state calculated for span-01
+        assert "sw" in root_span.get_span_context().trace_state
+        assert root_span.get_span_context().trace_state.get("sw") == "1000100010001000-01"
+
+        # verify span attrs calculated for span-01:
+        #   :present:
+        #     service entry internal KVs, which are on all spans
+        #     sw.tracestate_parent_id, because only set if not root and no attributes at 
+        #   :absent:
+        #     SWKeys, because no xtraceoptions in otel context
+        assert all(attr_key in root_span.attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert root_span.attributes["BucketCapacity"] == "6.0"
+        assert root_span.attributes["BucketRate"] == "5.0"
+        assert root_span.attributes["SampleRate"] == 3
+        assert root_span.attributes["SampleSource"] == 4
+        assert "sw.tracestate_parent_id" in root_span.attributes
+        assert root_span.attributes["sw.tracestate_parent_id"] == "e000baa4e000baa4"
+        assert not "SWKeys" in root_span.attributes
+
+        # clean up for other tests
+        self.memory_exporter.clear()
+
     def test_child_span_attrs(self):
         """Test attribute setting for a span under existing, valid Otel context (child span)"""
         # liboboe mocked to guarantee return of “do_sample” and “start
@@ -192,7 +242,7 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
                 new=mock_get_current_span
             ):
                 with self.tracer.start_span("span-01") as s1:
-                    logger.debug("Created local root span-01")
+                    logger.debug("Created local child span-01")
                 
                 self.memory_exporter.export([s1])
 
