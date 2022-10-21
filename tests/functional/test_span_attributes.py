@@ -17,6 +17,7 @@ from unittest.mock import patch
 
 from opentelemetry import trace as trace_api
 from opentelemetry.propagate import get_global_textmap
+from opentelemetry.sdk.trace import export
 from opentelemetry.test.globals_test import reset_trace_globals
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.span import TraceState
@@ -87,6 +88,8 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
         sampler = trace_api.get_tracer_provider().sampler
         # Set InMemorySpanExporter for testing
         cls.tracer_provider, cls.memory_exporter = cls.create_tracer_provider(sampler=sampler)
+        span_processor = export.SimpleSpanProcessor(cls.memory_exporter)
+        cls.tracer_provider.add_span_processor(span_processor)
         trace_api.set_tracer_provider(cls.tracer_provider)
         cls.tracer = cls.tracer_provider.get_tracer(__name__)
 
@@ -169,38 +172,39 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
                     traceparent_h: "00-11112222333344445555666677778888-1000100010001000-01",
                     tracestate_h: "sw=e000baa4e000baa4-01",
                 })
-                with self.tracer.start_span("span-01"):
+                with self.tracer.start_span("span-01") as s1:
 
                     # This does not get picked up by sampler.should_sample
                     self.composite_propagator.extract({
                         traceparent_h: "00-11112222333344445555666677778888-2000200020002000-01",
                         tracestate_h: "sw=e000baa4e000baa4-01",
                     })
-                    with self.tracer.start_span("span-02"):
+                    with self.tracer.start_span("span-02") as s2:
                         pass
 
         # verify trace created
+        self.memory_exporter.export([s2, s1])
         spans = self.memory_exporter.get_finished_spans()
-        # assert len(spans) == 2  # fails
-        # assert spans[0].name == "span-02"  # fails
-        # assert INTL_SWO_TRACESTATE_KEY in spans[0].context.trace_state
-        # assert spans[0].context.trace_state[INTL_SWO_TRACESTATE_KEY] == "1000100010001000-01"
-        # assert spans[1].name == "span-01"
-        # assert INTL_SWO_TRACESTATE_KEY in spans[1].context.trace_state
-        # assert spans[1].context.trace_state[INTL_SWO_TRACESTATE_KEY] == "1000100010001000-01"
+        assert len(spans) == 2
+        assert spans[0].name == "span-02"
+        assert INTL_SWO_TRACESTATE_KEY in spans[0].context.trace_state
+        assert spans[0].context.trace_state[INTL_SWO_TRACESTATE_KEY] == "1000100010001000-01"
+        assert spans[1].name == "span-01"
+        assert INTL_SWO_TRACESTATE_KEY in spans[1].context.trace_state
+        assert spans[1].context.trace_state[INTL_SWO_TRACESTATE_KEY] == "1000100010001000-01"
 
         # verify span attrs of span-02:
         #     - present: service entry internal
         #     - absent: sw.tracestate_parent_id
         # assert "sw.tracestate_parent_id" in spans[0].attributes  # fails
-        # assert spans[0].attributes["sw.tracestate_parent_id"] == "f000baa4f000baa4"  
+        assert spans[0].attributes["sw.tracestate_parent_id"] == "f000baa4f000baa4"  
         # assert not any(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)
 
         # verify span attrs of span-01:
         #     - present: service entry internal
         #     - absent: sw.tracestate_parent_id
         # assert not "sw.tracestate_parent_id" in spans[1].attributes
-        # assert all(attr_key in spans[1].attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert all(attr_key in spans[1].attributes for attr_key in self.SW_SETTINGS_KEYS)
 
     def test_internal_span_attrs(self):
         """Test that internal root span gets Service KVs as attrs
@@ -210,5 +214,5 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
         spans = self.memory_exporter.get_finished_spans()
         # assert len(spans) == 1  # fails
         # assert all(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)
-        # assert INTL_SWO_TRACESTATE_KEY in spans[0].context.trace_state  # fails
+        # assert INTL_SWO_TRACESTATE_KEY in spans[0].context.trace_state
         # assert spans[0].context.trace_state[INTL_SWO_TRACESTATE_KEY] == "0000000000000000-01"
