@@ -136,25 +136,91 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
             with self.tracer.start_span("span-01") as s1:
                 logger.debug("Created local root span-01")
 
-        # verify trace created
+        # verify span created
         self.memory_exporter.export([s1])
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 1
-        assert spans[0].name == "span-01"
+        root_span = spans[0]
+        assert root_span.name == "span-01"
 
-        # verify span attrs of span-01:
+        # verify trace_state calculated for span-01, though it'll be random here
+        assert "sw" in root_span.get_span_context().trace_state
+
+        # verify span attrs calculated for span-01:
         #   :present:
         #     service entry internal KVs, which are on all spans
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set without attributes at decision
         #     SWKeys, because no xtraceoptions in otel context
-        assert all(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert spans[0].attributes["BucketCapacity"] == "6.0"
-        assert spans[0].attributes["BucketRate"] == "5.0"
-        assert spans[0].attributes["SampleRate"] == 3
-        assert spans[0].attributes["SampleSource"] == 4
-        assert not "sw.tracestate_parent_id" in spans[0].attributes
-        assert not "SWKeys" in spans[0].attributes
+        assert all(attr_key in root_span.attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert root_span.attributes["BucketCapacity"] == "6.0"
+        assert root_span.attributes["BucketRate"] == "5.0"
+        assert root_span.attributes["SampleRate"] == 3
+        assert root_span.attributes["SampleSource"] == 4
+        assert not "sw.tracestate_parent_id" in root_span.attributes
+        assert not "SWKeys" in root_span.attributes
+
+        # clean up for other tests
+        self.memory_exporter.clear()
+
+    def test_child_span_attrs(self):
+        """Test attribute setting for a span under existing, valid Otel context (child span)"""
+        # liboboe mocked to guarantee return of “do_sample” and “start
+        # decision” rate/capacity values in order to trace and set attrs
+        mock_decision = mock.Mock(
+            return_value=(1, 1, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
+        )
+        with patch(
+            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            new=mock_decision,
+        ):
+            # mock get_current_span() and get_span_context() for start_span/should_sample
+            # representing the parent span
+            mock_parent_span_context = mock.Mock()
+            mock_parent_span_context.trace_id = 0x11112222333344445555666677778888
+            mock_parent_span_context.span_id = 0x1000100010001000
+            mock_parent_span_context.trace_flags = 0x01
+            mock_parent_span_context.is_remote = True
+            mock_parent_span_context.is_valid = True
+            mock_parent_span_context.trace_state = TraceState([["sw", "f000baa4f000baa4-01"]])
+
+            mock_get_current_span = mock.Mock()
+            mock_get_current_span.return_value.get_span_context.return_value = mock_parent_span_context
+            
+            with mock.patch(
+                target="solarwinds_apm.sampler.get_current_span",
+                new=mock_get_current_span
+            ):
+                with self.tracer.start_span("span-01") as s1:
+                    logger.debug("Created local root span-01")
+                
+                self.memory_exporter.export([s1])
+
+        # verify span and its parent created
+        self.memory_exporter.export([s1])
+        spans = self.memory_exporter.get_finished_spans()
+        assert len(spans) == 2
+        child_span = spans[0]
+        assert child_span.name == "span-01"
+
+        # verify trace_state calculated for span-01
+        assert "sw" in child_span.get_span_context().trace_state
+        assert child_span.get_span_context().trace_state.get("sw") == "1000100010001000-01"
+
+        # verify span attrs of span-01:
+        #   :present:
+        #     service entry internal KVs, which are on all spans
+        #     sw.tracestate_parent_id, because only set if not root and no attributes at decision
+        #   :absent:
+        #     SWKeys, because no xtraceoptions in otel context
+        assert all(attr_key in child_span.attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert child_span.attributes["BucketCapacity"] == "6.0"
+        assert child_span.attributes["BucketRate"] == "5.0"
+        assert child_span.attributes["SampleRate"] == 3
+        assert child_span.attributes["SampleSource"] == 4
+        assert "sw.tracestate_parent_id" in child_span.attributes
+        assert child_span.attributes["sw.tracestate_parent_id"] == "f000baa4f000baa4"
+        assert not "SWKeys" in child_span.attributes
 
         # clean up for other tests
         self.memory_exporter.clear()
