@@ -1,8 +1,5 @@
 """
-Test non-root span attributes creation by SW sampler.
-Has nearly the same setUpClass as TestFunctionalHeaderPropagation.
-Demos what is possible with mocks alone, without test clients nor containers.
-Not a great test script. Might remove later.
+Test span attributes calculation by SW sampler.
 """
 import logging
 import os
@@ -25,7 +22,6 @@ from opentelemetry.trace.span import TraceState
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
-from solarwinds_apm.apm_constants import INTL_SWO_TRACESTATE_KEY
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro
@@ -274,99 +270,3 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
 
         # clean up for other tests
         self.memory_exporter.clear()
-
-
-    def test_non_root_attrs_only_do_sample(self):
-        """A not-great test with mocked decision do_sample.
-        Only tests span attributes, not context propagation.
-        Only tests non-root spans.
-        
-        It seems that the only way for the custom sampler should_sample
-        to call oboe decision using a non-None tracestring is to mock
-        parent_span_context. Manual extract with custom propagator alone
-        still ends up setting trace state sw as 0000000000000000-01 even
-        if not the root span (span-02) which isn't correct. If we do set
-        parent_span_context it picks up a valid tracestate, but we can
-        never generate a root span to check it has present Service KVs
-        and absent sw.tracestate_parent_id.
-        """
-        traceparent_h = self.tc_propagator._TRACEPARENT_HEADER_NAME
-        tracestate_h = self.sw_propagator._TRACESTATE_HEADER_NAME
-
-        # liboboe mocked to guarantee return of “do_sample” and “start
-        # decision” rate/capacity values
-        mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
-        )
-        with patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=mock_decision,
-        ):
-            # mock get_current_span() and get_span_context() for start_span/should_sample
-            # representing the root span
-            mock_parent_span_context = mock.Mock()
-            mock_parent_span_context.trace_id = 0x11112222333344445555666677778888
-            mock_parent_span_context.span_id = 0x1000100010001000
-            mock_parent_span_context.trace_flags = 0x01
-            mock_parent_span_context.is_remote = True
-            mock_parent_span_context.is_value = True
-            mock_parent_span_context.trace_state = TraceState([["sw", "f000baa4f000baa4-01"]])
-
-            mock_get_current_span = mock.Mock()
-            mock_get_current_span.return_value.get_span_context.return_value = mock_parent_span_context
-            
-            with mock.patch(
-                target="solarwinds_apm.sampler.get_current_span",
-                new=mock_get_current_span
-            ):
-                # Begin trace of manually started spans
-
-                # This does not get picked up by sampler.should_sample
-                self.composite_propagator.extract({
-                    traceparent_h: "00-11112222333344445555666677778888-1000100010001000-01",
-                    tracestate_h: "sw=e000baa4e000baa4-01",
-                })
-                with self.tracer.start_span("span-01") as s1:
-
-                    # This does not get picked up by sampler.should_sample
-                    self.composite_propagator.extract({
-                        traceparent_h: "00-11112222333344445555666677778888-2000200020002000-01",
-                        tracestate_h: "sw=e000baa4e000baa4-01",
-                    })
-                    with self.tracer.start_span("span-02") as s2:
-                        pass
-
-        # verify trace created
-        self.memory_exporter.export([s2, s1])
-        spans = self.memory_exporter.get_finished_spans()
-        assert len(spans) == 2
-        assert spans[0].name == "span-02"
-        assert INTL_SWO_TRACESTATE_KEY in spans[0].context.trace_state
-        assert spans[0].context.trace_state[INTL_SWO_TRACESTATE_KEY] == "1000100010001000-01"
-        assert spans[1].name == "span-01"
-        assert INTL_SWO_TRACESTATE_KEY in spans[1].context.trace_state
-        assert spans[1].context.trace_state[INTL_SWO_TRACESTATE_KEY] == "1000100010001000-01"
-
-        # verify span attrs of span-02:
-        #     - present: service entry internal
-        #     - absent: sw.tracestate_parent_id
-        # assert "sw.tracestate_parent_id" in spans[0].attributes  # fails
-        assert spans[0].attributes["sw.tracestate_parent_id"] == "f000baa4f000baa4"  
-        # assert not any(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)
-
-        # verify span attrs of span-01:
-        #     - present: service entry internal
-        #     - absent: sw.tracestate_parent_id
-        # assert not "sw.tracestate_parent_id" in spans[1].attributes
-        assert all(attr_key in spans[1].attributes for attr_key in self.SW_SETTINGS_KEYS)
-
-    def test_internal_span_attrs(self):
-        """Test that internal root span gets Service KVs as attrs
-        and a tracestate created with our key"""
-        with self.tracer.start_as_current_span("foo-span"):
-            pass
-        spans = self.memory_exporter.get_finished_spans()
-        # assert len(spans) == 1  # fails
-        # assert all(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)
-        # assert INTL_SWO_TRACESTATE_KEY in spans[0].context.trace_state
-        # assert spans[0].context.trace_state[INTL_SWO_TRACESTATE_KEY] == "0000000000000000-01"
