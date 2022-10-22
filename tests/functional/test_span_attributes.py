@@ -209,6 +209,12 @@ class TestFunctionalSpanAttributesAllSpans(TestBase):
         # clean up for other tests
         self.memory_exporter.clear()
 
+    def test_root_span_attrs_with_signed_trigger_trace(self):
+        """Test attribute setting for a root span with no parent,
+        but OTel context has signed trigger trace headers"""
+        # TODO
+        pass
+
     def test_child_span_attrs(self):
         """Test attribute setting for a span under existing, valid Otel context (child span)"""
         # liboboe mocked to guarantee return of “do_sample” and “start
