@@ -1,5 +1,6 @@
 """
-Test span attributes calculation by SW sampler.
+Test span attributes calculation by SW sampler given different OTel
+contexts for root/child spans, extracted headers.
 """
 import hashlib
 import hmac
@@ -42,7 +43,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-class TestFunctionalSpanAttributesAllSpans(TestBase):
+class TestSpanAttributes(TestBase):
 
     SW_SETTINGS_KEYS = [
         "BucketCapacity",
