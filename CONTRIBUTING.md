@@ -72,9 +72,13 @@ For more information, run `make` inside the build container.
 
 #### Unit tests
 
-Automated unit testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.7, 3.8, 3.9, and/or 3.10 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Tests for each Python version can be run against AO prod or NH staging.
+Automated unit testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.7, 3.8, 3.9, and/or 3.10 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Tests for each Python version can be run against AO prod or NH staging. The unit tests are defined in `tests/unit/`.
 
-The functional tests require a compiled C-extension and should be run inside the build container. Here is how to run tests locally:
+Both unit tests an integration tests are run together. See next section for how to run.
+
+#### Integration tests
+
+The integration tests are defined in `tests/integration/`. They require a compiled C-extension and should be run inside the build container. They are also run under tox as per the unit tests. Here is how to run tests locally:
 
 1. For running tox against both NH staging and AO prod, set two service keys:
   - `SW_APM_SERVICE_KEY_TOX_NH_STAGING`, as `<API_TOKEN>:solarwinds-apm-python-tox-test`
@@ -84,11 +88,8 @@ The functional tests require a compiled C-extension and should be run inside the
 4. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.7 against AO prod: `make tox OPTIONS="-e py37-ao-prod"`.
 5. (WARNING: slow!) To run all tests for all supported Python environments: `make tox`
 
-The unit tests are also run on GitHub with the [Run tox tests](https://github.com/appoptics/solarwinds-apm-python/actions/workflows/run_tox_tests.yaml) workflow.
+The unit and integration tests are also run on GitHub with the [Run tox tests](https://github.com/appoptics/solarwinds-apm-python/actions/workflows/run_tox_tests.yaml) workflow.
 
-#### Integration tests
-
-TODO
 
 ### Install tests
 
