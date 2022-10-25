@@ -13,6 +13,7 @@ import time
 from unittest import mock
 from unittest.mock import patch
 
+from opentelemetry.trace.span import Span
 from opentelemetry.trace.span import TraceState
 
 from .sw_distro_test import SolarWindsDistroTestBase
@@ -36,12 +37,13 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
         super().setUpClass()
         cls.wakeup_request()
 
-    def test_root_span_attrs(self):
-        """Test attribute setting for a root span with no parent"""
+    def helper_test_root_span_attrs(self, trace_flags, do_sample) -> "Span":
+        """Returns a root span. Shared setup and assertions for 
+        similar tests with different do_sample decision"""
         # liboboe mocked to guarantee return of "do_sample" and "start
         # decision" rate/capacity values in order to trace and set attrs
         mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
+            return_value=(1, do_sample, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
         )
         with patch(
             target="solarwinds_apm.extension.oboe.Context.getDecisions",
@@ -70,8 +72,12 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
             _TRACESTATE_SW_FORMAT_RE,
             root_span.get_span_context().trace_state.get("sw"),
         )
-        assert "01" == tracestate_re_result.group(2)
+        assert trace_flags == tracestate_re_result.group(2)
+        return root_span
 
+    def test_root_span_attrs(self):
+        """Test attribute setting for a root span with no parent"""
+        root_span = self.helper_test_root_span_attrs("01", 1)
         # verify span attrs calculated for span-01:
         #   :present:
         #     service entry internal KVs, which are on all spans
@@ -91,40 +97,7 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
 
     def test_root_span_attrs_not_sampled(self):
         """Test attributes are not set for a root span when not do_sample (NonRecordingSpan)"""
-        # liboboe mocked to guarantee return of NOT "do_sample" and "start
-        # decision" rate/capacity values in order to trace and set attrs
-        mock_decision = mock.Mock(
-            return_value=(1, 0, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
-        )
-        with patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=mock_decision,
-        ):
-            with self.tracer.start_span("span-01") as s1:
-                logger.debug("Created local root span-01")
-
-        # verify span created
-        self.memory_exporter.export([s1])
-        spans = self.memory_exporter.get_finished_spans()
-        assert len(spans) == 1
-        root_span = spans[0]
-        assert root_span.name == "span-01"
-
-        # verify trace_state calculated for span-01
-        # In this there there will only be `sw` key.
-        # We won't know span_id but can check trace_flags.
-        assert "sw" in root_span.get_span_context().trace_state
-        _TRACESTATE_SW_FORMAT = (
-            "^[ \t]*([0-9a-f]{16})-([0-9a-f]{2})"
-            + "(-.*)?[ \t]*$"
-        )
-        _TRACESTATE_SW_FORMAT_RE = re.compile(_TRACESTATE_SW_FORMAT)
-        tracestate_re_result = re.search(
-            _TRACESTATE_SW_FORMAT_RE,
-            root_span.get_span_context().trace_state.get("sw"),
-        )
-        assert "00" == tracestate_re_result.group(2)
-
+        root_span = self.helper_test_root_span_attrs("00", 0)
         # verify span attrs are empty for span-01
         assert not root_span.attributes
 
