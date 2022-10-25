@@ -1,7 +1,9 @@
 """
-Tests propagator header injection by SW propagator given different incoming headers.
+Tests propagator header injection by SW propagator given different incoming
+headers. Runs PropagationTest app to make requests and check responses.
 
-Runs PropagationTest app to make requests and check responses.
+See Confluence for full descriptions of each "scenario":
+https://swicloud.atlassian.net/wiki/spaces/NIT/pages/2325479753/W3C+Trace+Context#Acceptance-Criteria
 """
 import hashlib
 import hmac
@@ -47,7 +49,7 @@ class TestHeaderPropagation(PropagationTest, SolarWindsDistroTestBase):
         cls.requests_inst.uninstrument()
 
     def test_injection_new_decision(self):
-        """Test that some traceparent and tracestate are injected
+        """Scenario #1: Test that some traceparent and tracestate are injected
         when a new decision to do_sample is made"""
         resp = None
 
@@ -176,17 +178,17 @@ class TestHeaderPropagation(PropagationTest, SolarWindsDistroTestBase):
         assert trace_id in resp.headers["x-trace"]
 
     def test_injection_with_existing_traceparent_tracestate_sampled(self):
-        """Test that the provided traceparent and tracestate are injected
+        """Scenario #4: Test that the provided traceparent and tracestate are injected
         to continue the existing decision to sample"""
         self.helper_existing_traceparent_tracestate("01", 1)
         
     def test_injection_with_existing_traceparent_tracestate_not_sampled(self):
-        """Test that the provided traceparent and tracestate are injected
+        """Scenario #4: Test that the provided traceparent and tracestate are injected
         to continue the existing decision to NOT sample"""
         self.helper_existing_traceparent_tracestate("00", 0)
 
     def test_injection_signed_tt(self):
-        """Test that successful signed trigger trace results in injection
+        """Scenario #6: Test that successful signed trigger trace results in injection
         of x-trace-options-response"""
         trace_id = "11112222333344445555666677778888"
         span_id = "1000100010001000"

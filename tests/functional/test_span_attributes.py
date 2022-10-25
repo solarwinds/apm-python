@@ -1,6 +1,9 @@
 """
 Test span attributes and trace_state calculation by SW sampler given
 different OTel contexts for root/child spans, extracted headers.
+
+See Confluence for full descriptions of each "scenario":
+https://swicloud.atlassian.net/wiki/spaces/NIT/pages/2325479753/W3C+Trace+Context#Acceptance-Criteria
 """
 import hashlib
 import hmac
@@ -60,8 +63,7 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
         assert root_span.name == "span-01"
 
         # verify trace_state calculated for span-01
-        # In this there there will only be `sw` key.
-        # We won't know span_id but can check trace_flags.
+        # We won't know span_id but can check trace_flags under `sw` KV.
         assert "sw" in root_span.get_span_context().trace_state
         _TRACESTATE_SW_FORMAT = (
             "^[ \t]*([0-9a-f]{16})-([0-9a-f]{2})"
@@ -76,7 +78,7 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
         return root_span
 
     def test_root_span_attrs(self):
-        """Test attribute setting for a root span with no parent"""
+        """Scenario #1: Test attribute setting for a root span with no parent."""
         root_span = self.helper_test_root_span_attrs("01", 1)
         # verify span attrs calculated for span-01:
         #   :present:
@@ -96,7 +98,7 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
         self.memory_exporter.clear()
 
     def test_root_span_attrs_not_sampled(self):
-        """Test attributes are not set for a root span when not do_sample (NonRecordingSpan)"""
+        """Scenario #1: Test attributes are not set for a root span when not do_sample (NonRecordingSpan)"""
         root_span = self.helper_test_root_span_attrs("00", 0)
         # verify span attrs are empty for span-01
         assert not root_span.attributes
@@ -105,7 +107,7 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
         self.memory_exporter.clear()
 
     def test_root_span_attrs_with_traceparent_and_tracestate(self):
-        """Test attribute setting for a root span with no parent,
+        """Scenario #4: Test attribute setting for a root span with no parent,
         but OTel context has valid traceparent and sw-containing tracestate"""
         # Need to explicitly extract and give to tracer so sampler receives these
         extracted_context = self.composite_propagator.extract({
@@ -155,7 +157,7 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
         self.memory_exporter.clear()
 
     def test_root_span_attrs_with_signed_trigger_trace(self):
-        """Test attribute setting for a root span with no parent,
+        """Scenario #6: Test attribute setting for a root span with no parent,
         but OTel context has signed trigger trace headers"""
         # Calculate current timestamp, signature, x-trace-options headers
         xtraceoptions = "trigger-trace;custom-from=lin;foo=bar;sw-keys=custom-sw-from:tammy,baz:qux;ts={}".format(int(time.time()))
@@ -221,7 +223,9 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
         self.memory_exporter.clear()
 
     def test_child_span_attrs(self):
-        """Test attribute setting for a span under existing, valid Otel context (child span)"""
+        """Test attribute setting for a span under existing, valid Otel context (child span).
+        Child's sw.tracestate_parent_id comes from its parent's tracestate.
+        Child's trace_state comes from its parent's span_id."""
         # liboboe mocked to guarantee return of "do_sample" and "start
         # decision" rate/capacity values in order to trace and set attrs
         mock_decision = mock.Mock(
