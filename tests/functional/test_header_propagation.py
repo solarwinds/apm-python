@@ -1,16 +1,5 @@
 """
-Instruments test app with SolarWinds APM to test propagation and trace.
-Exports spans to InMemorySpanExporter.
-
-Mocks:
-  - liboboe getDecisions, to guarantee sampling and rate/capacity values
-  - exporter, as InMemorySpanExporter.
-Real:
-  - requests
-  - liboboe init
-  - SW propagator
-  - SW sampler
-  - SW response propagator
+Tests propagator header injection by SW propagator given different incoming headers
 """
 import json
 import logging
@@ -28,11 +17,12 @@ from unittest.mock import patch
 
 from opentelemetry import trace as trace_api
 from opentelemetry.propagate import get_global_textmap
+from opentelemetry.sdk.trace import export
 from opentelemetry.test.globals_test import reset_trace_globals
 from opentelemetry.test.test_base import TestBase
 
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
-# from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from functional.propagation_test_app import PropagationTest
@@ -55,7 +45,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-class TestFunctionalHeaderPropagation(PropagationTest, TestBase):
+class TestHeaderPropagation(PropagationTest, TestBase):
 
     SW_SETTINGS_KEYS = [
         "BucketCapacity",
@@ -99,20 +89,10 @@ class TestFunctionalHeaderPropagation(PropagationTest, TestBase):
         sampler = trace_api.get_tracer_provider().sampler
         # Set InMemorySpanExporter for testing
         cls.tracer_provider, cls.memory_exporter = cls.create_tracer_provider(sampler=sampler)
+        span_processor = export.SimpleSpanProcessor(cls.memory_exporter)
+        cls.tracer_provider.add_span_processor(span_processor)
         trace_api.set_tracer_provider(cls.tracer_provider)
         cls.tracer = cls.tracer_provider.get_tracer(__name__)
-
-        # Load and instrument OTel Python library
-        # so any `requests` should have headers
-        RequestsInstrumentor().instrument()
-        # HTTPXClientInstrumentor().instrument()
-
-        # Set up test app
-        cls._app_init(cls)
-        FlaskInstrumentor().instrument_app(
-            app=cls.app,
-            tracer_provider=cls.tracer_provider
-        )
 
         # Make sure SW SDK components were set
         propagators = get_global_textmap()._propagators
@@ -123,78 +103,114 @@ class TestFunctionalHeaderPropagation(PropagationTest, TestBase):
         cls.composite_propagator = get_global_textmap()
         cls.tc_propagator = cls.composite_propagator._propagators[0]
         cls.sw_propagator = cls.composite_propagator._propagators[2]
-        cls.traceparent_h = cls.tc_propagator._TRACEPARENT_HEADER_NAME
-        cls.tracestate_h = cls.sw_propagator._TRACESTATE_HEADER_NAME
-        cls.response_h = "x-trace"
+
+        # So we can make requests and check headers
+        # Real requests (at least for now) with OTel Python instrumentation libraries
+        cls.httpx_inst = HTTPXClientInstrumentor()
+        cls.httpx_inst.instrument()
+        cls.requests_inst = RequestsInstrumentor()
+        cls.requests_inst.instrument()
 
         # Wake-up request and wait for oboe_init
         with cls.tracer.start_as_current_span("wakeup_span"):
             r = requests.get(f"http://solarwinds.com")
             logger.debug("Wake-up request with headers: {}".format(r.headers))
             time.sleep(2)
+
+        # Set up test app
+        cls._app_init(cls)
+        FlaskInstrumentor().instrument_app(
+            app=cls.app,
+            tracer_provider=cls.tracer_provider
+        )
         
     @classmethod
-    def tearDownClass(self):
-        FlaskInstrumentor().uninstrument_app(self.app)
+    def tearDownClass(cls):
+        FlaskInstrumentor().uninstrument_app(cls.app)
 
-    def test_attrs_with_valid_traceparent_sw_in_tracestate_do_sample(self):
-        """Acceptance Criterion #4, decision do_sample"""
+    def test_injection_new_decision(self):
+        """Test that some traceparent and tracestate are injected
+        when a new decision to do_sample is made"""
+        pass
+
+    def test_injection_with_existing_traceparent_tracestate(self):
+        """Test that the provided traceparent and tracestate are injected
+        to continue the existing decision to sample"""
+        trace_id = "11112222333344445555666677778888"
+        span_id = "1000100010001000"
+        trace_flags = "01"
+        traceparent = "00-{}-{}-{}".format(trace_id, span_id, trace_flags)
+        tracestate = "sw=e000baa4e000baa4-{}".format(trace_flags)
         resp = None
 
-        # # TODO This is not working
-        # # liboboe mocked to guarantee return of “do_sample” and “start
-        # # decision” rate/capacity values
-        # mock_decision = mock.Mock(
-        #     return_value=(1, 1, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
-        # )
-        # with patch(
-        #     target="solarwinds_apm.extension.oboe.Context.getDecisions",
-        #     new=mock_decision,
-        # ):
-        # Request to instrumented app
-        resp = self.client.get(
-            "/test_trace",
-            # # TODO Not working: these are extracted by sw propagator
-            # # but not used by sw sampler
-            # headers={
-            #     self.traceparent_h: "00-11112222333344445555666677778888-000100010001000-01",
-            #     self.tracestate_h: "sw=1111111111111111-01",
-            # }
+        # TODO check this
+        # liboboe mocked to guarantee return of "do_sample" and "start
+        # decision" rate/capacity values in order to trace and set attrs
+        mock_decision = mock.Mock(
+            return_value=(1, 1, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
         )
-
-        # verify SW trace created
-        spans = self.memory_exporter.get_finished_spans()
-        # assert len(spans) == 1  # fails
-        # assert INTL_SWO_TRACESTATE_KEY in spans[0].context.trace_state  # fails
-        # assert spans[0].context.trace_state[INTL_SWO_TRACESTATE_KEY] == "000100010001000-01"  # TODO when sw sampler works
-        
-        # trace_id = "{:032x}".format(spans[0].context.trace_id)
-        # span_id = "{:016x}".format(spans[0].context.span_id)
-
-        # Verify correct trace context was injected in app's outbound call
-        # via same injected headers returned in response
+        with patch(
+            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            new=mock_decision,
+        ):
+            # Request to instrumented app
+            resp = self.client.get(
+                "/test_trace",
+                headers={
+                    "traceparent": traceparent,
+                    "tracestate": tracestate,
+                }
+            )
         resp_json = json.loads(resp.data)
-        # assert self.traceparent_h in resp_json
-        # assert trace_id in resp_json[self.traceparent_h]
-        # _TRACEPARENT_HEADER_FORMAT = (
-        #     "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})"
-        #     + "(-.*)?[ \t]*$"
-        # )
-        # _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
-        # span_match = re.search(_TRACEPARENT_HEADER_FORMAT_RE, resp_json[self.traceparent_h]).group(3)
-        # assert self.tracestate_h in resp_json
-        # assert span_match in resp_json[self.tracestate_h]
-        
-        # # Verify correct trace context was injected in response
-        # assert self.response_h in resp.headers
-        # assert trace_id in resp.headers[self.response_h]
+       
+        # Verify Flask app's response data (trace context injected to its 
+        # outgoing postman echo call) includes:
+        #    - traceparent with same trace_id and trace_flags, new span_id
+        #    - tracestate with same trace_flags, new span_id
+        assert "traceparent" in resp_json
+        assert trace_id in resp_json["traceparent"]
+        _TRACEPARENT_HEADER_FORMAT = (
+            "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})"
+            + "(-.*)?[ \t]*$"
+        )
+        _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
+        traceparent_re_result = re.search(
+            _TRACEPARENT_HEADER_FORMAT_RE,
+            resp_json["traceparent"],
+        )
+        new_span_id = traceparent_re_result.group(3)
+        assert span_id not in resp_json["traceparent"]
+        assert new_span_id in resp_json["traceparent"]
+        assert trace_flags == traceparent_re_result.group(4)
 
-        # Verify span attrs:
-        #   - present: service entry internal
-        #   - absent: sw.tracestate_parent_id
-        # assert all(attr_key in spans[0].attributes for attr_key in self.SW_SETTINGS_KEYS)  # fails
-        # assert not "sw.tracestate_parent_id" in spans[0].attributes
+        assert "tracestate" in resp_json
+        assert span_id not in resp_json["tracestate"]
+        assert new_span_id in resp_json["tracestate"]
+        # In this test we know there is only `sw` in tracestate
+        # i.e. sw=e000baa4e000baa4-01
+        _TRACESTATE_HEADER_FORMAT = (
+            "^[ \t]*sw=([0-9a-f]{16})-([0-9a-f]{2})"
+            + "(-.*)?[ \t]*$"
+        )
+        _TRACESTATE_HEADER_FORMAT_RE = re.compile(_TRACESTATE_HEADER_FORMAT)
+        tracestate_re_result = re.search(
+            _TRACESTATE_HEADER_FORMAT_RE,
+            resp_json["tracestate"],
+        )
+        assert trace_flags == tracestate_re_result.group(2)
+
+        # Verify x-trace response header has same trace_id
+        # though it will have different span ID because of Flask
+        # app's outgoing request
+        assert "x-trace" in resp.headers
+        assert trace_id in resp.headers["x-trace"]
         
-    def test_attrs_with_valid_traceparent_sw_in_tracestate_not_do_sample(self):
-        """Acceptance Criterion #4, decision not do_sample"""
+    def test_injection_with_existing_traceparent_tracestate_not_sampled(self):
+        """Test that the provided traceparent and tracestate are injected
+        to continue the existing decision to NOT sample"""
+        pass
+
+    def test_injection_signed_tt(self):
+        """Test that successful signed trigger trace results in injection
+        of x-trace-options-response"""
         pass
