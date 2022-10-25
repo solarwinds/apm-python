@@ -1,11 +1,12 @@
 """
-Test span attributes calculation by SW sampler given different OTel
-contexts for root/child spans, extracted headers.
+Test span attributes and trace_state calculation by SW sampler given
+different OTel contexts for root/child spans, extracted headers.
 """
 import hashlib
 import hmac
 import logging
 import os
+import re
 import sys
 import time
 
@@ -40,7 +41,7 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
         # liboboe mocked to guarantee return of "do_sample" and "start
         # decision" rate/capacity values in order to trace and set attrs
         mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
+            return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
         )
         with patch(
             target="solarwinds_apm.extension.oboe.Context.getDecisions",
@@ -56,8 +57,20 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
         root_span = spans[0]
         assert root_span.name == "span-01"
 
-        # verify trace_state calculated for span-01, though it'll be random here
+        # verify trace_state calculated for span-01
+        # In this there there will only be `sw` key.
+        # We won't know span_id but can check trace_flags.
         assert "sw" in root_span.get_span_context().trace_state
+        _TRACESTATE_SW_FORMAT = (
+            "^[ \t]*([0-9a-f]{16})-([0-9a-f]{2})"
+            + "(-.*)?[ \t]*$"
+        )
+        _TRACESTATE_SW_FORMAT_RE = re.compile(_TRACESTATE_SW_FORMAT)
+        tracestate_re_result = re.search(
+            _TRACESTATE_SW_FORMAT_RE,
+            root_span.get_span_context().trace_state.get("sw"),
+        )
+        assert "01" == tracestate_re_result.group(2)
 
         # verify span attrs calculated for span-01:
         #   :present:
@@ -76,6 +89,48 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
         # clean up for other tests
         self.memory_exporter.clear()
 
+    def test_root_span_attrs_not_sampled(self):
+        """Test attributes are not set for a root span when not do_sample (NonRecordingSpan)"""
+        # liboboe mocked to guarantee return of NOT "do_sample" and "start
+        # decision" rate/capacity values in order to trace and set attrs
+        mock_decision = mock.Mock(
+            return_value=(1, 0, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
+        )
+        with patch(
+            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            new=mock_decision,
+        ):
+            with self.tracer.start_span("span-01") as s1:
+                logger.debug("Created local root span-01")
+
+        # verify span created
+        self.memory_exporter.export([s1])
+        spans = self.memory_exporter.get_finished_spans()
+        assert len(spans) == 1
+        root_span = spans[0]
+        assert root_span.name == "span-01"
+
+        # verify trace_state calculated for span-01
+        # In this there there will only be `sw` key.
+        # We won't know span_id but can check trace_flags.
+        assert "sw" in root_span.get_span_context().trace_state
+        _TRACESTATE_SW_FORMAT = (
+            "^[ \t]*([0-9a-f]{16})-([0-9a-f]{2})"
+            + "(-.*)?[ \t]*$"
+        )
+        _TRACESTATE_SW_FORMAT_RE = re.compile(_TRACESTATE_SW_FORMAT)
+        tracestate_re_result = re.search(
+            _TRACESTATE_SW_FORMAT_RE,
+            root_span.get_span_context().trace_state.get("sw"),
+        )
+        assert "00" == tracestate_re_result.group(2)
+
+        # verify span attrs are empty for span-01
+        assert not root_span.attributes
+
+        # clean up for other tests
+        self.memory_exporter.clear()
+
     def test_root_span_attrs_with_traceparent_and_tracestate(self):
         """Test attribute setting for a root span with no parent,
         but OTel context has valid traceparent and sw-containing tracestate"""
@@ -88,7 +143,7 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
         # liboboe mocked to guarantee return of "do_sample" and "start
         # decision" rate/capacity values
         mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
+            return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
         )
         with patch(
             target="solarwinds_apm.extension.oboe.Context.getDecisions",
@@ -197,7 +252,7 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
         # liboboe mocked to guarantee return of "do_sample" and "start
         # decision" rate/capacity values in order to trace and set attrs
         mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
+            return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
         )
         with patch(
             target="solarwinds_apm.extension.oboe.Context.getDecisions",

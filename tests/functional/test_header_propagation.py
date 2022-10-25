@@ -54,7 +54,7 @@ class TestHeaderPropagation(PropagationTest, SolarWindsDistroTestBase):
         # liboboe mocked to guarantee return of "do_sample" and "start
         # decision" rate/capacity values in order to trace and set attrs
         mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
+            return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
         )
         with patch(
             target="solarwinds_apm.extension.oboe.Context.getDecisions",
@@ -117,7 +117,7 @@ class TestHeaderPropagation(PropagationTest, SolarWindsDistroTestBase):
         # liboboe mocked to guarantee return of "do_sample" and "start
         # decision" rate/capacity values in order to trace and set attrs
         mock_decision = mock.Mock(
-            return_value=(1, do_sample, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
+            return_value=(1, do_sample, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
         )
         with patch(
             target="solarwinds_apm.extension.oboe.Context.getDecisions",
