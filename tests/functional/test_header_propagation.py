@@ -128,26 +128,18 @@ class TestHeaderPropagation(PropagationTest, TestBase):
     def tearDownClass(cls):
         FlaskInstrumentor().uninstrument_app(cls.app)
 
-    def test_injection_new_decision(self):
-        """Test that some traceparent and tracestate are injected
-        when a new decision to do_sample is made"""
-        pass
-
-    def test_injection_with_existing_traceparent_tracestate(self):
-        """Test that the provided traceparent and tracestate are injected
-        to continue the existing decision to sample"""
+    def helper_existing_traceparent_tracestate(self, trace_flags, do_sample) -> None:
+        """Helper for similar tests with different trace_flags, do_sample decision"""
         trace_id = "11112222333344445555666677778888"
         span_id = "1000100010001000"
-        trace_flags = "01"
         traceparent = "00-{}-{}-{}".format(trace_id, span_id, trace_flags)
         tracestate = "sw=e000baa4e000baa4-{}".format(trace_flags)
         resp = None
 
-        # TODO check this
         # liboboe mocked to guarantee return of "do_sample" and "start
         # decision" rate/capacity values in order to trace and set attrs
         mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
+            return_value=(1, do_sample, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
         )
         with patch(
             target="solarwinds_apm.extension.oboe.Context.getDecisions",
@@ -204,11 +196,21 @@ class TestHeaderPropagation(PropagationTest, TestBase):
         # app's outgoing request
         assert "x-trace" in resp.headers
         assert trace_id in resp.headers["x-trace"]
+
+    def test_injection_new_decision(self):
+        """Test that some traceparent and tracestate are injected
+        when a new decision to do_sample is made"""
+        pass
+
+    def test_injection_with_existing_traceparent_tracestate(self):
+        """Test that the provided traceparent and tracestate are injected
+        to continue the existing decision to sample"""
+        self.helper_existing_traceparent_tracestate("01", 1)
         
     def test_injection_with_existing_traceparent_tracestate_not_sampled(self):
         """Test that the provided traceparent and tracestate are injected
         to continue the existing decision to NOT sample"""
-        pass
+        self.helper_existing_traceparent_tracestate("00", 0)
 
     def test_injection_signed_tt(self):
         """Test that successful signed trigger trace results in injection
