@@ -1,19 +1,17 @@
 """
-Tests propagator header injection by SW propagator given different incoming headers
+Tests propagator header injection by SW propagator given different incoming headers.
+
+Runs PropagationTest app to make requests and check responses.
 """
 import hashlib
 import hmac
 import json
-import logging
 import os
 from pkg_resources import iter_entry_points
 import re
 import requests
-import sys
 import time
 
-from flask import Flask, request
-import pytest
 from unittest import mock
 from unittest.mock import patch
 
@@ -34,17 +32,6 @@ from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro
 from solarwinds_apm.propagator import SolarWindsPropagator
 from solarwinds_apm.sampler import ParentBasedSwSampler
-
-
-# Logging
-level = os.getenv("TEST_DEBUG_LEVEL", logging.DEBUG)
-logger = logging.getLogger()
-logger.setLevel(level)
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(level)
-formatter = logging.Formatter('%(levelname)s | %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
 
 
 class TestHeaderPropagation(PropagationTest, TestBase):
@@ -116,7 +103,6 @@ class TestHeaderPropagation(PropagationTest, TestBase):
         # Wake-up request and wait for oboe_init
         with cls.tracer.start_as_current_span("wakeup_span"):
             r = requests.get(f"http://solarwinds.com")
-            logger.debug("Wake-up request with headers: {}".format(r.headers))
             time.sleep(2)
 
         # Set up test app
@@ -129,6 +115,8 @@ class TestHeaderPropagation(PropagationTest, TestBase):
     @classmethod
     def tearDownClass(cls):
         FlaskInstrumentor().uninstrument_app(cls.app)
+        cls.httpx_inst.uninstrument()
+        cls.requests_inst.uninstrument()
 
     def test_injection_new_decision(self):
         """Test that some traceparent and tracestate are injected

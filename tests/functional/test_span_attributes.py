@@ -1,6 +1,8 @@
 """
 Test span attributes calculation by SW sampler given different OTel
 contexts for root/child spans, extracted headers.
+
+Uses OTel TestBase to check spans with InMemorySpanExporter.
 """
 import hashlib
 import hmac
@@ -21,9 +23,6 @@ from opentelemetry.sdk.trace import export
 from opentelemetry.test.globals_test import reset_trace_globals
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace.span import TraceState
-
-from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.configurator import SolarWindsConfigurator
@@ -102,25 +101,12 @@ class TestSpanAttributes(TestBase):
         cls.tc_propagator = cls.composite_propagator._propagators[0]
         cls.sw_propagator = cls.composite_propagator._propagators[2]
 
-        # So we can make requests and check headers
-        # Real requests (at least for now) with OTel Python instrumentation libraries
-        cls.httpx_inst = HTTPXClientInstrumentor()
-        cls.httpx_inst.instrument()
-        cls.requests_inst = RequestsInstrumentor()
-        cls.requests_inst.instrument()
-
         # Wake-up request and wait for oboe_init
         with cls.tracer.start_as_current_span("wakeup_span"):
             r = requests.get(f"http://solarwinds.com")
             logger.debug("Wake-up request with headers: {}".format(r.headers))
             time.sleep(2)
         
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        cls.httpx_inst.uninstrument()
-        cls.requests_inst.uninstrument()
-
     def test_root_span_attrs(self):
         """Test attribute setting for a root span with no parent"""
         # liboboe mocked to guarantee return of "do_sample" and "start
@@ -269,7 +255,7 @@ class TestSpanAttributes(TestBase):
         assert root_span.attributes["sw.tracestate_parent_id"] == "e000baa4e000baa4"
         assert "SWKeys" in root_span.attributes
         assert root_span.attributes["SWKeys"] == "custom-sw-from:tammy,baz:qux"
-        # TODO these fail, please fix solarwinds-apm
+        # TODO Change solarwinds-apm in NH-24786 to make these pass
         # assert "custom-from" in root_span.attributes
         # assert root_span.attributes["custom-from"] == "lin"
         # assert "foo" in root_span.attributes
