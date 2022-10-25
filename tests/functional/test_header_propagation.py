@@ -128,6 +128,65 @@ class TestHeaderPropagation(PropagationTest, TestBase):
     def tearDownClass(cls):
         FlaskInstrumentor().uninstrument_app(cls.app)
 
+    def test_injection_new_decision(self):
+        """Test that some traceparent and tracestate are injected
+        when a new decision to do_sample is made"""
+        resp = None
+
+        # liboboe mocked to guarantee return of "do_sample" and "start
+        # decision" rate/capacity values in order to trace and set attrs
+        mock_decision = mock.Mock(
+            return_value=(1, 1, 3, 4, 5.0, 6.0, 7, 8, 9, 10, 11)
+        )
+        with patch(
+            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            new=mock_decision,
+        ):
+            # Request to instrumented app
+            resp = self.client.get("/test_trace")
+        resp_json = json.loads(resp.data)
+
+        # Verify Flask app's response data (trace context injected to its 
+        # outgoing postman echo call) includes:
+        #    - traceparent with a trace_id, span_id, and trace_flags for do_sample
+        #    - tracestate with same span_id and trace_flags for do_sample
+        assert "traceparent" in resp_json
+        _TRACEPARENT_HEADER_FORMAT = (
+            "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})"
+            + "(-.*)?[ \t]*$"
+        )
+        _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
+        traceparent_re_result = re.search(
+            _TRACEPARENT_HEADER_FORMAT_RE,
+            resp_json["traceparent"],
+        )
+        new_trace_id = traceparent_re_result.group(2)
+        assert new_trace_id in resp_json["traceparent"]
+        new_span_id = traceparent_re_result.group(3)
+        assert new_span_id in resp_json["traceparent"]
+        assert "01" == traceparent_re_result.group(4)
+
+        assert "tracestate" in resp_json
+        assert new_span_id in resp_json["tracestate"]
+        # In this test we know there is only `sw` in tracestate
+        # i.e. sw=e000baa4e000baa4-01
+        _TRACESTATE_HEADER_FORMAT = (
+            "^[ \t]*sw=([0-9a-f]{16})-([0-9a-f]{2})"
+            + "(-.*)?[ \t]*$"
+        )
+        _TRACESTATE_HEADER_FORMAT_RE = re.compile(_TRACESTATE_HEADER_FORMAT)
+        tracestate_re_result = re.search(
+            _TRACESTATE_HEADER_FORMAT_RE,
+            resp_json["tracestate"],
+        )
+        assert "01" == tracestate_re_result.group(2)
+
+        # Verify x-trace response header has same trace_id
+        # though it will have different span ID because of Flask
+        # app's outgoing request
+        assert "x-trace" in resp.headers
+        assert new_trace_id in resp.headers["x-trace"]
+
     def helper_existing_traceparent_tracestate(self, trace_flags, do_sample) -> None:
         """Helper for similar tests with different trace_flags, do_sample decision"""
         trace_id = "11112222333344445555666677778888"
@@ -196,11 +255,6 @@ class TestHeaderPropagation(PropagationTest, TestBase):
         # app's outgoing request
         assert "x-trace" in resp.headers
         assert trace_id in resp.headers["x-trace"]
-
-    def test_injection_new_decision(self):
-        """Test that some traceparent and tracestate are injected
-        when a new decision to do_sample is made"""
-        pass
 
     def test_injection_with_existing_traceparent_tracestate(self):
         """Test that the provided traceparent and tracestate are injected
