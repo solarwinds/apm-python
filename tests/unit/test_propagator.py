@@ -89,8 +89,20 @@ class TestSolarWindsPropagator():
     def test_inject_no_tracestate_invalid_span_id(self, mocker):
         self.mock_otel_and_other_sw(mocker, False)
         mock_carrier = dict()
-        result = SolarWindsPropagator().inject(mock_carrier)
-        assert result == None
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        mock_set.assert_not_called()
 
     def test_inject_no_tracestate_new_tracestate(self, mocker):
         self.mock_otel_and_other_sw(mocker, True)
