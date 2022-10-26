@@ -11,10 +11,61 @@ from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
 
 class TestSwTraceResponsePropagator():
     def test_inject_invalid_span_context(self, mocker):
+        # not assert_called_once_with
         pass
 
-    def test_inject_valid_span_context_with_xtraceoptions(self):
-        pass
+    def test_inject_valid_span_context_with_xtraceoptions(self, mocker):
+        mock_w3ctransformer_cls = mocker.patch(
+            "solarwinds_apm.response_propagator.W3CTransformer"
+        )
+        mock_w3ctransformer_cls.configure_mock(
+            **{
+                "traceparent_from_context": mocker.Mock()
+            }
+        )
+        mock_get_span_context = mocker.Mock()
+        mock_get_span_context.configure_mock(
+            **{
+                "trace_state": "my_trace_state"
+            }
+        )
+        mock_get_current_span = mocker.Mock()
+        mock_get_current_span.configure_mock(
+            **{
+                "get_span_context.return_value": mock_get_span_context
+            }
+        )
+        mock_trace = mocker.patch(
+            "solarwinds_apm.response_propagator.trace"
+        )
+        mock_trace.configure_mock(
+            **{
+                "get_current_span.return_value": mock_get_current_span,
+                "INVALID_SPAN_CONTEXT": "invalid!"
+            }
+        )
+        mock_carrier = dict()
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mocker.Mock()
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.response_propagator.SolarWindsTraceResponsePropagator.recover_response_from_tracestate",
+            return_value="my_recovered_response"
+        )
+
+        SolarWindsTraceResponsePropagator().inject(
+            mock_carrier,
+            mock_context,
+        )
+
+        SolarWindsTraceResponsePropagator.recover_response_from_tracestate.assert_called_once_with(
+            "my_trace_state",
+        )
+        # TODO add more asserts
 
     def test_recover_response_from_tracestate(self, mocker):
         mock_get_key = mocker.Mock()
