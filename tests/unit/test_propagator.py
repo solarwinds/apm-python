@@ -55,34 +55,17 @@ class TestSolarWindsPropagator():
             }
         )
 
-        # # Could mock OTel TraceState here
-        # mock_tracestate_cls = mocker.patch(
-        #     "solarwinds_apm.propagator.TraceState"
-        # )
-        # # but AttributeError: Attempting to set unsupported magic method '__init__'
-        # mock_tracestate_cls.configure_mock(
-        #     **{
-        #         "__init__": {
-        #             "sw": "2000200020002000-01"
-        #         },
-        #         "from_header.return_value": {
-        #             "sw": "2000200020002000-01"
-        #         },
-        #         "to_header.return_value": "sw=2000200020002000-01"
-        #     }
-        # )
+        # Could mock OTel TraceState here but using real instead
 
         # Mock OTel trace API and current span context
         mock_get_span_context = mocker.Mock()
         if valid_span_id:
-            print("valid_span_id TRUE")
             mock_get_span_context.configure_mock(
                 **{
                     "span_id": 0x1000100010001000
                 }
             )
         else:
-            print("valid_span_id FALSE")
             mock_get_span_context.configure_mock(
                 **{
                     "span_id": 0x0000000000000000
@@ -134,7 +117,53 @@ class TestSolarWindsPropagator():
         ])
 
     def test_inject_existing_tracestate_no_sw(self, mocker):
-        pass
+        self.mock_otel_and_other_sw(mocker, True)
+        mock_carrier = {
+            "tracestate": "foo=bar"
+        }
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "tracestate",
+                TraceState([("sw", "2000200020002000-01"), ("foo", "bar")]).to_header(),
+            ),
+        ])
 
     def test_inject_existing_tracestate_existing_sw(self, mocker):
-        pass
+        self.mock_otel_and_other_sw(mocker, True)
+        mock_carrier = {
+            "tracestate": "foo=bar,sw=some-existing-value",
+        }
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "tracestate",
+                TraceState([("sw", "2000200020002000-01"), ("foo", "bar")]).to_header(),
+            ),
+        ])
