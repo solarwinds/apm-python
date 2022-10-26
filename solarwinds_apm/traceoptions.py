@@ -74,7 +74,7 @@ class XTraceOptions():
                     self.ts = int(option_kv[1])
                 except ValueError as e:
                     logger.debug("ts must be base 10 int. Ignoring.")
-                    self.ignore.append(self._XTRACEOPTIONS_HEADER_KEY_TS)
+                    self.ignored.append(self._XTRACEOPTIONS_HEADER_KEY_TS)
             
             else:
                 logger.debug(
