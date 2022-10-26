@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import call
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_COMMA,
@@ -15,12 +16,14 @@ class TestSwTraceResponsePropagator():
         pass
 
     def test_inject_valid_span_context_with_xtraceoptions(self, mocker):
+        mock_traceparent = mocker.Mock()
+        mock_traceparent.configure_mock(return_value="my_x_trace")
         mock_w3ctransformer_cls = mocker.patch(
             "solarwinds_apm.response_propagator.W3CTransformer"
         )
         mock_w3ctransformer_cls.configure_mock(
             **{
-                "traceparent_from_context": mocker.Mock()
+                "traceparent_from_context": mock_traceparent
             }
         )
         mock_get_span_context = mocker.Mock()
@@ -47,9 +50,10 @@ class TestSwTraceResponsePropagator():
         mock_carrier = dict()
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
         mock_setter.configure_mock(
             **{
-                "set": mocker.Mock()
+                "set": mock_set
             }
         )
         mocker.patch(
@@ -60,12 +64,29 @@ class TestSwTraceResponsePropagator():
         SolarWindsTraceResponsePropagator().inject(
             mock_carrier,
             mock_context,
+            mock_setter,
         )
 
         SolarWindsTraceResponsePropagator.recover_response_from_tracestate.assert_called_once_with(
             "my_trace_state",
         )
-        # TODO add more asserts
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "x-trace",
+                "my_x_trace",
+            ),
+            call(
+                mock_carrier,
+                "x-trace-options-response",
+                "my_recovered_response",
+            ),
+            call(
+                mock_carrier,
+                "Access-Control-Expose-Headers",
+                "x-trace,x-trace-options-response"
+            ),
+        ])
 
     def test_recover_response_from_tracestate(self, mocker):
         mock_get_key = mocker.Mock()
