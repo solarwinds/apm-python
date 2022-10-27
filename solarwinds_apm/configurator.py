@@ -9,7 +9,6 @@ from pkg_resources import (
 import sys
 import time
 from typing import (
-    Any,
     TYPE_CHECKING
 )
 
@@ -255,7 +254,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         reporter: "Reporter",
         apm_config: SolarWindsApmConfig,
         layer: str = "Python",
-        keys: Any = None,
+        keys: dict = {},
     ) -> None:
         """Report the APM library's init message, when reporter ready.
         Note: We keep the original "brand" keynames with AppOptics, instead of SolarWinds"""
