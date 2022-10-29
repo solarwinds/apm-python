@@ -278,7 +278,8 @@ class _SwSampler(Sampler):
                 trace_state = trace_state.update(
                     INTL_SWO_TRACESTATE_KEY,
                     W3CTransformer.sw_from_span_and_decision(
-                        parent_span_context.span_id,
+                        parent_span_context.span_id,  # Hay this is a placeholder
+                        # 0x1234123412341234,
                         W3CTransformer.trace_flags_from_int(decision["do_sample"])
                     )
                 )

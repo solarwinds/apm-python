@@ -11,7 +11,10 @@ import time
 
 from opentelemetry import trace as trace_api
 from opentelemetry.propagate import get_global_textmap
-from opentelemetry.sdk.trace import export
+from opentelemetry.sdk.trace import TracerProvider, export
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+    InMemorySpanExporter,
+)
 from opentelemetry.test.globals_test import reset_trace_globals
 from opentelemetry.test.test_base import TestBase
 
@@ -61,12 +64,12 @@ class SolarWindsDistroTestBase(TestBase):
         # This is done because set_tracer_provider cannot override the
         # current tracer provider.
         reset_trace_globals()
-        configurator._configure_sampler(apm_config)
-        sampler = trace_api.get_tracer_provider().sampler
         # Set InMemorySpanExporter for testing
-        cls.tracer_provider, cls.memory_exporter = cls.create_tracer_provider(sampler=sampler)
+        cls.tracer_provider = TracerProvider()
+        cls.memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleSpanProcessor(cls.memory_exporter)
         cls.tracer_provider.add_span_processor(span_processor)
+        configurator._configure_sampler(apm_config)  # will this work with current src?
         trace_api.set_tracer_provider(cls.tracer_provider)
         cls.tracer = cls.tracer_provider.get_tracer(__name__)
 

@@ -266,7 +266,7 @@ class TestSpanAttributes(SolarWindsDistroTestBase):
 
         # verify trace_state calculated for span-01
         assert "sw" in child_span.get_span_context().trace_state
-        assert child_span.get_span_context().trace_state.get("sw") == "1000100010001000-01"
+        assert child_span.get_span_context().trace_state.get("sw") == "1000100010001000-01"  # !!!
 
         # verify span attrs of span-01:
         #   :present:
