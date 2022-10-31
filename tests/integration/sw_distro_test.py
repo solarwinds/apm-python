@@ -62,14 +62,15 @@ class SolarWindsDistroTestBase(TestBase):
         configurator._configure_propagator()
         configurator._configure_response_propagator()
         # This is done because set_tracer_provider cannot override the
-        # current tracer provider.
+        # current tracer provider. Has to be done here.
         reset_trace_globals()
         # Set InMemorySpanExporter for testing
+        # We do NOT use SolarWindsSpanExporter
         cls.tracer_provider = TracerProvider()
         cls.memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleSpanProcessor(cls.memory_exporter)
         cls.tracer_provider.add_span_processor(span_processor)
-        configurator._configure_sampler(apm_config)  # will this work with current src?
+        configurator._configure_sampler(apm_config)  
         trace_api.set_tracer_provider(cls.tracer_provider)
         cls.tracer = cls.tracer_provider.get_tracer(__name__)
 
