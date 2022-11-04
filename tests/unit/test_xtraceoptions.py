@@ -92,7 +92,6 @@ class TestXTraceOptions():
         assert xto.ts == 0
 
     def test_init_custom_key_match_stored_only_in_options_header(self):
-        # TODO is this correct?
         mock_otel_context = {
             INTL_SWO_X_OPTIONS_KEY: "custom-awesome-key=foo",
         }

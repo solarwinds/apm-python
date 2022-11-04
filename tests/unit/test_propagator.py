@@ -1,6 +1,7 @@
 import pytest  # pylint: disable=unused-import
 from unittest.mock import call
 
+from opentelemetry.context.context import Context
 from opentelemetry.trace.span import TraceState
 
 from solarwinds_apm.propagator import SolarWindsPropagator
@@ -11,7 +12,7 @@ class TestSolarWindsPropagator():
     def test_extract_new_context_no_xtraceoptions(self):
         mock_carrier = dict()
         result = SolarWindsPropagator().extract(mock_carrier)
-        assert result == dict()
+        assert isinstance(result, Context)
 
     def test_extract_new_context_xtraceoptions_and_signature(self):
         mock_carrier = {
