@@ -24,6 +24,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_PROPAGATOR,
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
+from solarwinds_apm.certs import ao_issuer_ca
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +117,7 @@ class SolarWindsApmConfig:
         self.update_with_env_var()
 
         self.metric_format = self._calculate_metric_format()
+        self.certificates = self._calculate_certificates()
 
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
@@ -267,6 +269,28 @@ class SolarWindsApmConfig:
                 logger.warning("AO collector detected. Only exporting TransactionResponseTime metrics")
                 metric_format = 1
         return metric_format
+
+    def _calculate_certificates(self) -> str:
+        """Return certificate contents from SW_APM_TRUSTEDPATH
+        or default AO public cert if using AO collector. Else, empty str."""
+        certs = ""
+        host = self.get("collector")
+        if host:
+            if len(host.split(":")) > 1:
+                host = host.split(":")[0]
+            if host in [INTL_SWO_AO_COLLECTOR, INTL_SWO_AO_STG_COLLECTOR]:
+                logger.warning("AO collector detected. Preparing public certificate.")
+
+                if self.get("trustedpath"):
+                    from pathlib import Path
+                    try:
+                        certs = Path(self.get("trustedpath")).read_text()
+                    except FileNotFoundError:
+                        logger.warning("No such file at specified trustedpath. Using default certificate.")
+                        certs = ao_issuer_ca.get_public_cert()
+                else:
+                    certs = ao_issuer_ca.get_public_cert()
+        return certs
 
     def mask_service_key(self) -> str:
         """Return masked service key except first 4 and last 4 chars"""
