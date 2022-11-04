@@ -219,6 +219,93 @@ class TestSolarWindsApmConfig:
         })
         assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 1
 
+    def test_calculate_certificates_no_collector(self):
+        # Save any collector in os for later
+        old_collector = os.environ.get("SW_APM_COLLECTOR", None)
+        if old_collector:
+            del os.environ["SW_APM_COLLECTOR"]
+        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == ""
+        # Restore old collector
+        if old_collector:
+            os.environ["SW_APM_COLLECTOR"] = old_collector
+
+    def test_calculate_certificates_not_ao(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": "foo-collector-not-ao"
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == ""
+
+    def test_calculate_certificates_ao_prod_no_trustedpath(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR
+        })
+        mock_get_public_cert = mocker.patch(
+            "solarwinds_apm.apm_config.get_public_cert"
+        )
+        mock_get_public_cert.configure_mock(return_value="foo")
+        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
+
+    def test_calculate_certificates_ao_staging_no_trustedpath(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR
+        })
+        mock_get_public_cert = mocker.patch(
+            "solarwinds_apm.apm_config.get_public_cert"
+        )
+        mock_get_public_cert.configure_mock(return_value="foo")
+        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
+
+    def test_calculate_certificates_ao_prod_with_port_no_trustedpath(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR)
+        })
+        mock_get_public_cert = mocker.patch(
+            "solarwinds_apm.apm_config.get_public_cert"
+        )
+        mock_get_public_cert.configure_mock(return_value="foo")
+        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
+
+    def test_calculate_certificates_ao_prod_trustedpath_file_missing(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR,
+            "SW_APM_TRUSTEDPATH": "/no/file/here"
+        })
+        mock_read_text = mocker.Mock()
+        mock_read_text.side_effect = FileNotFoundError("no file there")
+        mock_pathlib_path = mocker.Mock()
+        mock_pathlib_path.configure_mock(
+            **{
+                "read_text": mock_read_text
+            }
+        )
+        mocker.patch("solarwinds_apm.apm_config.Path").configure_mock(return_value=mock_pathlib_path)
+        mock_get_public_cert = mocker.patch(
+            "solarwinds_apm.apm_config.get_public_cert"
+        )
+        mock_get_public_cert.configure_mock(return_value="foo")
+        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
+
+    def test_calculate_certificates_ao_prod_trustedpath_file_present(self, mocker):
+        """Note: if file exists, same behaviour if file contains valid cert or not"""
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR,
+            "SW_APM_TRUSTEDPATH": "/there/is/a/file/here"
+        })
+        mock_read_text = mocker.Mock()
+        mock_read_text.configure_mock(return_value="bar")
+        mock_pathlib_path = mocker.Mock()
+        mock_pathlib_path.configure_mock(
+            **{
+                "read_text": mock_read_text
+            }
+        )
+        mocker.patch("solarwinds_apm.apm_config.Path").configure_mock(return_value=mock_pathlib_path)
+        mock_get_public_cert = mocker.patch(
+            "solarwinds_apm.apm_config.get_public_cert"
+        )
+        mock_get_public_cert.configure_mock(return_value="foo")
+        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "bar"
+
     def test_mask_service_key_no_key_empty_default(self, mocker):
         old_service_key = os.environ.get("SW_APM_SERVICE_KEY", None)
         if old_service_key:

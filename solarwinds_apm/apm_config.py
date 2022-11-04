@@ -3,6 +3,7 @@ from collections import defaultdict
 from functools import reduce
 import logging
 import os
+from pathlib import Path
 from pkg_resources import iter_entry_points
 import sys
 from typing import Any
@@ -24,7 +25,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_PROPAGATOR,
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
-from solarwinds_apm.certs import ao_issuer_ca
+from solarwinds_apm.certs.ao_issuer_ca import get_public_cert
 
 logger = logging.getLogger(__name__)
 
@@ -280,16 +281,15 @@ class SolarWindsApmConfig:
                 host = host.split(":")[0]
             if host in [INTL_SWO_AO_COLLECTOR, INTL_SWO_AO_STG_COLLECTOR]:
                 logger.warning("AO collector detected. Preparing public certificate.")
-
-                if self.get("trustedpath"):
-                    from pathlib import Path
+                if self.get("trustedpath"):  
                     try:
+                        # liboboe reporter has to determine if the cert is valid or not
                         certs = Path(self.get("trustedpath")).read_text()
                     except FileNotFoundError:
                         logger.warning("No such file at specified trustedpath. Using default certificate.")
-                        certs = ao_issuer_ca.get_public_cert()
+                        certs = get_public_cert()
                 else:
-                    certs = ao_issuer_ca.get_public_cert()
+                    certs = get_public_cert()
         return certs
 
     def mask_service_key(self) -> str:
