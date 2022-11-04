@@ -236,6 +236,10 @@ class TestSolarWindsApmConfig:
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == ""
 
     def test_calculate_certificates_ao_prod_no_trustedpath(self, mocker):
+        # Save any trustedpath in os for later
+        old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
+        if old_trustedpath:
+            del os.environ["SW_APM_TRUSTEDPATH"]
         mocker.patch.dict(os.environ, {
             "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR
         })
@@ -244,8 +248,15 @@ class TestSolarWindsApmConfig:
         )
         mock_get_public_cert.configure_mock(return_value="foo")
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
+        # Restore old trustedpath
+        if old_trustedpath:
+            os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
 
     def test_calculate_certificates_ao_staging_no_trustedpath(self, mocker):
+        # Save any trustedpath in os for later
+        old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
+        if old_trustedpath:
+            del os.environ["SW_APM_TRUSTEDPATH"]
         mocker.patch.dict(os.environ, {
             "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR
         })
@@ -254,8 +265,15 @@ class TestSolarWindsApmConfig:
         )
         mock_get_public_cert.configure_mock(return_value="foo")
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
+        # Restore old trustedpath
+        if old_trustedpath:
+            os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
 
     def test_calculate_certificates_ao_prod_with_port_no_trustedpath(self, mocker):
+        # Save any trustedpath in os for later
+        old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
+        if old_trustedpath:
+            del os.environ["SW_APM_TRUSTEDPATH"]
         mocker.patch.dict(os.environ, {
             "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR)
         })
@@ -264,6 +282,9 @@ class TestSolarWindsApmConfig:
         )
         mock_get_public_cert.configure_mock(return_value="foo")
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
+        # Restore old trustedpath
+        if old_trustedpath:
+            os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
 
     def test_calculate_certificates_ao_prod_trustedpath_file_missing(self, mocker):
         mocker.patch.dict(os.environ, {
