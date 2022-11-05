@@ -33,9 +33,8 @@ tracer = trace.get_tracer(__name__)
 class PropagationTest_v02_mixin:
 
     @staticmethod
-    def _test_trace_with_span_name(span_name):
-        with tracer.start_as_current_span(span_name):
-            resp = requests.get(f"http://postman-echo.com/headers")
+    def _test_trace():
+        resp = requests.get(f"http://postman-echo.com/headers")
 
         #  The return type must be a string, dict, tuple, Response instance, or WSGI callable
         # (not CaseInsensitiveDict)
@@ -46,6 +45,6 @@ class PropagationTest_v02_mixin:
     
     def _setup_endpoints(self):
         # pylint: disable=no-member
-        self.app.route("/test_trace_with_span_name/<span_name>")(self._test_trace_with_span_name)
+        self.app.route("/test_trace/")(self._test_trace)
         # pylint: disable=attribute-defined-outside-init
         self.client = Client(self.app, Response)
