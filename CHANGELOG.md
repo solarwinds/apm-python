@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/appoptics/solarwinds-apm-python/compare/v0.1.0...HEAD)
 
+## [0.2.0.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/v0.1.0) - 2022-11-07
+### Added
+- Added `solarwinds_ready` method ([#64](https://github.com/appoptics/solarwinds-apm-python/pull/64))
+- Added startup `__Init` with SWO ([#64](https://github.com/appoptics/solarwinds-apm-python/pull/64))
+- Added more unit tests ([#68](https://github.com/appoptics/solarwinds-apm-python/pull/68))
+
+### Changed
+- SolarWinds c-lib 11.0.0, for AppOptics certificate compatibility ([#70](https://github.com/appoptics/solarwinds-apm-python/pull/70))
+- Fixed logging vulnerabilities ([#63](https://github.com/appoptics/solarwinds-apm-python/pull/63))
+
 ## [0.1.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/v0.1.0) - 2022-10-13
 ### Added
 - Initial release for GA (alpha)
