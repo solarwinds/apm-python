@@ -220,20 +220,32 @@ class TestSolarWindsApmConfig:
         assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 1
 
     def test_calculate_certificates_no_collector(self):
-        # Save any collector in os for later
+        # Save any collector and trustedpath in os for later
         old_collector = os.environ.get("SW_APM_COLLECTOR", None)
         if old_collector:
             del os.environ["SW_APM_COLLECTOR"]
+        old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
+        if old_trustedpath:
+            del os.environ["SW_APM_TRUSTEDPATH"]
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == ""
-        # Restore old collector
+        # Restore old collector and trustedpath
         if old_collector:
             os.environ["SW_APM_COLLECTOR"] = old_collector
+        if old_trustedpath:
+            os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
 
     def test_calculate_certificates_not_ao(self, mocker):
+        # Save any trustedpath in os for later
+        old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
+        if old_trustedpath:
+            del os.environ["SW_APM_TRUSTEDPATH"]
         mocker.patch.dict(os.environ, {
             "SW_APM_COLLECTOR": "foo-collector-not-ao"
         })
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == ""
+        # Restore old trustedpath
+        if old_trustedpath:
+            os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
 
     def test_calculate_certificates_ao_prod_no_trustedpath(self, mocker):
         # Save any trustedpath in os for later
