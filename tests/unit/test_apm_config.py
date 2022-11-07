@@ -286,7 +286,29 @@ class TestSolarWindsApmConfig:
         if old_trustedpath:
             os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
 
+    def test_calculate_certificates_not_ao_trustedpath_file_missing(self, mocker):
+        """Non-AO collector, trustedpath set, but file missing --> use empty string"""
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": "foo-collector-not-ao",
+            "SW_APM_TRUSTEDPATH": "/no/file/here"
+        })
+        mock_read_text = mocker.Mock()
+        mock_read_text.side_effect = FileNotFoundError("no file there")
+        mock_pathlib_path = mocker.Mock()
+        mock_pathlib_path.configure_mock(
+            **{
+                "read_text": mock_read_text
+            }
+        )
+        mocker.patch("solarwinds_apm.apm_config.Path").configure_mock(return_value=mock_pathlib_path)
+        mock_get_public_cert = mocker.patch(
+            "solarwinds_apm.apm_config.get_public_cert"
+        )
+        mock_get_public_cert.configure_mock(return_value="foo")
+        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == ""
+
     def test_calculate_certificates_ao_prod_trustedpath_file_missing(self, mocker):
+        """AO collector, trustedpath set, but file missing --> use bundled cert"""
         mocker.patch.dict(os.environ, {
             "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR,
             "SW_APM_TRUSTEDPATH": "/no/file/here"
@@ -305,6 +327,27 @@ class TestSolarWindsApmConfig:
         )
         mock_get_public_cert.configure_mock(return_value="foo")
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
+
+    def test_calculate_certificates_not_ao_trustedpath_file_present(self, mocker):
+        """Note: if file exists, same behaviour if file contains valid cert or not"""
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": "foo-collector-not-ao",
+            "SW_APM_TRUSTEDPATH": "/there/is/a/file/here"
+        })
+        mock_read_text = mocker.Mock()
+        mock_read_text.configure_mock(return_value="bar")
+        mock_pathlib_path = mocker.Mock()
+        mock_pathlib_path.configure_mock(
+            **{
+                "read_text": mock_read_text
+            }
+        )
+        mocker.patch("solarwinds_apm.apm_config.Path").configure_mock(return_value=mock_pathlib_path)
+        mock_get_public_cert = mocker.patch(
+            "solarwinds_apm.apm_config.get_public_cert"
+        )
+        mock_get_public_cert.configure_mock(return_value="foo")
+        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "bar"
 
     def test_calculate_certificates_ao_prod_trustedpath_file_present(self, mocker):
         """Note: if file exists, same behaviour if file contains valid cert or not"""

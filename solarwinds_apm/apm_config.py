@@ -272,24 +272,23 @@ class SolarWindsApmConfig:
         return metric_format
 
     def _calculate_certificates(self) -> str:
-        """Return certificate contents from SW_APM_TRUSTEDPATH
-        or default AO public cert if using AO collector. Else, empty str."""
+        """Return certificate contents from SW_APM_TRUSTEDPATH.
+        If using AO collector and trustedpath not set, use bundled default.
+        Else use empty string as default."""
         certs = ""
         host = self.get("collector")
         if host:
             if len(host.split(":")) > 1:
                 host = host.split(":")[0]
             if host in [INTL_SWO_AO_COLLECTOR, INTL_SWO_AO_STG_COLLECTOR]:
-                logger.warning("AO collector detected. Preparing public certificate.")
-                if self.get("trustedpath"):  
-                    try:
-                        # liboboe reporter has to determine if the cert is valid or not
-                        certs = Path(self.get("trustedpath")).read_text()
-                    except FileNotFoundError:
-                        logger.warning("No such file at specified trustedpath. Using default certificate.")
-                        certs = get_public_cert()
-                else:
-                    certs = get_public_cert()
+                certs = get_public_cert()
+
+        if self.get("trustedpath"):
+            try:
+                # liboboe reporter has to determine if the cert contents are valid or not
+                certs = Path(self.get("trustedpath")).read_text()
+            except FileNotFoundError:
+                logger.warning("No such file at specified trustedpath. Using default certificate.")
         return certs
 
     def mask_service_key(self) -> str:
