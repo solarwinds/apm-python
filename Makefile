@@ -145,7 +145,7 @@ sdist: wrapper
 # Check local package source distribution archive contents, without install
 CURR_DIR := $(shell pwd)
 SOLARWINDS_APM_VERSION := $(shell grep "__version__" ./solarwinds_apm/version.py | sed "s/__version__ = //")
-check-sdist-local:
+check-sdist-local: sdist
 	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) SOLARWINDS_APM_VERSION=$(SOLARWINDS_APM_VERSION) ./_helper_check_sdist.sh
 	@cd $(CURR_DIR)
 
