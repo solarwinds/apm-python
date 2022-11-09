@@ -165,86 +165,6 @@ function check_agent_startup(){
     echo -e "Agent startup verified successfully.\n"
 }
 
-function get_sdist(){
-    sdist_dir="$PWD/tmp/sdist"
-    rm -rf sdist_dir
-
-    if [ "$MODE" == "local" ]
-    then
-        # docker-compose-set root of local solarwinds_apm package
-        agent_root='/code/python-solarwinds'
-        # optionally test a previous version on local for debugging
-        if [ -z "$SOLARWINDS_APM_VERSION" ]; then
-            # no SOLARWINDS_APM_VERSION provided, thus test version of current source code
-            version_file=$agent_root/solarwinds_apm/version.py
-            AGENT_VERSION="$(sed -n 's/__version__ = "\(.*\)"/\1/p' $version_file)"
-            echo "No SOLARWINDS_APM_VERSION provided, thus testing source code version ($AGENT_VERSION)"
-        fi
-
-        sdist_tar=$agent_root/dist/solarwinds_apm-${AGENT_VERSION}.tar.gz
-        if [ ! -f "$sdist_tar" ]; then
-            echo "FAILED: Did not find sdist for version $AGENT_VERSION. Please run 'make package' before running tests."
-            echo "Aborting tests."
-            exit 1
-        fi
-    else
-        pip_options=(--no-binary solarwinds-apm --dest "$sdist_dir")
-        if [ "$MODE" == "testpypi" ]
-        then
-            pip_options+=(--extra-index-url https://test.pypi.org/simple/)
-        elif [ "$MODE" == "packagecloud" ]
-        then
-            curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
-        fi
-
-        if [ -z "$AGENT_VERSION" ]
-        then
-            pip_options+=(solarwinds-apm)
-        else
-            pip_options+=(solarwinds-apm=="$AGENT_VERSION")
-        fi
-
-        # shellcheck disable=SC2048
-        # shellcheck disable=SC2086
-        pip download ${pip_options[*]}
-        sdist_tar=$(find "$sdist_dir"/* -name "solarwinds_apm-*.tar.gz")
-    fi
-}
-
-function check_sdist(){
-    unpack_directory="$PWD/unpack/sdist"
-    rm -rf "$unpack_directory"
-    mkdir -p "$unpack_directory"
-    expected_files="./VERSION
-./__init__.py
-./bson
-./bson/bson.h
-./bson/platform_hacks.h
-./liboboe-1.0-alpine-x86_64.so.0.0.0
-./liboboe-1.0-lambda-x86_64.so.0.0.0
-./liboboe-1.0-x86_64.so.0.0.0
-./oboe.h
-./oboe.py
-./oboe_api.cpp
-./oboe_api.h
-./oboe_debug.h
-./oboe_wrap.cxx"
-    tar xzf "$1" --directory "$unpack_directory"
-    unpack_agent=$(find "$unpack_directory"/* -type d -name "solarwinds_apm-*")
-    check_extension_files "$unpack_agent/solarwinds_apm/extension" "$expected_files"
-    echo "Installing Python agent from source"
-    pip install -I "$1"
-    check_installation
-    check_agent_startup
-    echo -e "Source distribution verified successfully.\n"
-}
-
-function get_and_check_sdist(){
-    echo "#### Verifying Python agent source distribution ####"
-    get_sdist
-    check_sdist "$sdist_tar"
-}
-
 function get_wheel(){
     wheel_dir="$PWD/tmp/wheel"
     rm -rf "$wheel_dir"
@@ -351,7 +271,7 @@ function run_instrumented_server_and_client(){
 # start testing
 AGENT_VERSION=$SOLARWINDS_APM_VERSION
 HOSTNAME=$(cat /etc/hostname)
-get_and_check_sdist
+source ./_helper_check_sdist.sh
 get_and_check_wheel
 install_test_app_dependencies
 run_instrumented_server_and_client "8001" "$SW_APM_SERVICE_KEY_STAGING-$HOSTNAME" "$SW_APM_COLLECTOR_STAGING" "NH Staging"
