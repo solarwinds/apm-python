@@ -160,8 +160,13 @@ manylinux-wheels: wrapper
 	@rm -rf ./tmp_dist
 	@echo -e "\nDone."
 
-# Build the full Python agent distribution (sdist and wheels)
-package: sdist check-sdist-local manylinux-wheels
+# Check local package wheel contents, without install
+check-wheel-local: manylinux-wheels
+	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) SOLARWINDS_APM_VERSION=$(SOLARWINDS_APM_VERSION) ./_helper_check_wheel.sh
+	@cd $(CURR_DIR)
+
+# Build and check the full Python agent distribution (sdist and wheels)
+package: sdist check-sdist-local manylinux-wheels check-wheel-local
 
 # Build the AWS lambda layer.
 # temporary target directory for AWS Lambda build artifacts
