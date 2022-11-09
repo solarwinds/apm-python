@@ -18,7 +18,7 @@ then
 fi
 if [[ ! " ${TEST_MODES[*]} " =~ ${MODE} ]]
 then
-  echo "FAILED: Did not provide valid MODE. Must be one of: testpypi (default), local, packagecloud, pypi."
+  echo "FAILED: Did not provide valid MODE for check_sdist test. Must be one of: testpypi (default), local, packagecloud, pypi."
   exit 1
 else
   echo "Using provided MODE=$MODE for check_sdist test."
@@ -26,12 +26,8 @@ fi
 
 if [ -z "$APM_ROOT" ]
 then
-  echo "WARNING: Did not provide APM_ROOT for check_sdist test."
-  echo "Defaulting APM_ROOT"
-  # docker-compose-set root of local solarwinds_apm package
-  APM_ROOT=/code/python-solarwinds
-else
-  echo "Using provided APM_ROOT for check_sdist test."
+  echo "FAILED: Did not provide valid APM_ROOT for check_sdist test."
+  exit 1
 fi
 
 function check_extension_files(){
@@ -132,11 +128,15 @@ function check_sdist(){
     tar xzf "$1" --directory "$unpack_directory"
     unpack_agent=$(find "$unpack_directory"/* -type d -name "solarwinds_apm-*")
     check_extension_files "$unpack_agent/solarwinds_apm/extension" "$expected_files"
-    echo "Installing Python agent from source"
-    pip install -I "$1"
-    check_installation
-    check_agent_startup
-    echo -e "Source distribution verified successfully.\n"
+
+    if [ -z "$PIP_INSTALL" ]; then
+        echo -e "PIP_INSTALL not specified."
+        echo -e "Source distribution verified successfully.\n"
+        exit 0
+    else
+        echo "Installing Python agent from source"
+        pip install -I "$1"
+    fi
 }
 
 # start testing

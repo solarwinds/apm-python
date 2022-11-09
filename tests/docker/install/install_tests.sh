@@ -105,7 +105,7 @@ function check_installation(){
     if [ "$MODE" == "local" ]
     then
         # verify that version of C-extension of installed agent is same as what we expect (i.e. as determined by VERSION)
-        expected_oboe_version=$(cat "$agent_root"/solarwinds_apm/extension/VERSION)
+        expected_oboe_version=$(cat "$APM_ROOT"/solarwinds_apm/extension/VERSION)
         export SW_APM_SERVICE_KEY=invalid-token-for-testing-1234567890:servicename
         result=$(python -c "from solarwinds_apm.extension.oboe import Config as l_config; r=l_config.getVersionString(); print(r)")
 
@@ -173,7 +173,7 @@ function get_wheel(){
         # we need to select the right wheel (there might be multiple wheel versions in the dist directory)
         pip download \
             --only-binary solarwinds_apm \
-            --find-links "$agent_root"/dist \
+            --find-links "$APM_ROOT"/dist \
             --no-index \
             --dest "$wheel_dir" \
             --no-deps \
@@ -268,11 +268,23 @@ function run_instrumented_server_and_client(){
     python client.py
 }
 
-# start testing
+
+# START TESTING ===========================================
 AGENT_VERSION=$SOLARWINDS_APM_VERSION
 HOSTNAME=$(cat /etc/hostname)
-source ./_helper_check_sdist.sh
+# docker-compose-set root of local solarwinds_apm package
+APM_ROOT='/code/python-solarwinds'
+
+# Check sdist
+PIP_INSTALL=1 source ./_helper_check_sdist.sh
+check_installation
+check_agent_startup
+echo -e "Source distribution verified successfully.\n"
+
+# Check wheel
 get_and_check_wheel
+
+# Check startup and instrumentation
 install_test_app_dependencies
 run_instrumented_server_and_client "8001" "$SW_APM_SERVICE_KEY_STAGING-$HOSTNAME" "$SW_APM_COLLECTOR_STAGING" "NH Staging"
 run_instrumented_server_and_client "8002" "$SW_APM_SERVICE_KEY_PROD-$HOSTNAME" "$SW_APM_COLLECTOR_PROD" "NH Prod"
