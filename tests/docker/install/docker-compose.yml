@@ -30,6 +30,7 @@ x-volumes-codebase: &volumes-codebase
   volumes:
     - ../../../:/code/python-solarwinds
     - ./_helper_run_install_tests.sh:/workspace/_helper_run_install_tests.sh
+    - ./_helper_check_extension_files.sh:/workspace/_helper_check_extension_files.sh
     - ./_helper_check_sdist.sh:/workspace/_helper_check_sdist.sh
     - ./_helper_check_wheel.sh:/workspace/_helper_check_wheel.sh
     - ./install_tests.sh:/workspace/install_tests.sh
