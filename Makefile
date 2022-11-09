@@ -142,12 +142,12 @@ sdist: wrapper
 	@python3.8 setup.py sdist
 	@echo -e "\nDone."
 
-# Check local package source distribution archive contents
+# Check local package source distribution archive contents, without install
 CURR_DIR := $(shell pwd)
 SOLARWINDS_APM_VERSION := $(shell grep "__version__" ./solarwinds_apm/version.py | sed "s/__version__ = //")
 check-sdist-local:
 	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) SOLARWINDS_APM_VERSION=$(SOLARWINDS_APM_VERSION) ./_helper_check_sdist.sh
-	@cd CURR_DIR
+	@cd $(CURR_DIR)
 
 # Build the Python agent package bdist (wheels) for 64 bit many linux systems (except Alpine).
 # The recipe builds the wheels for all Python versions available in the docker image EXCEPT py36, similarly to the example provided
@@ -161,7 +161,7 @@ manylinux-wheels: wrapper
 	@echo -e "\nDone."
 
 # Build the full Python agent distribution (sdist and wheels)
-package: sdist manylinux-wheels
+package: sdist check-sdist-local manylinux-wheels
 
 # Build the AWS lambda layer.
 # temporary target directory for AWS Lambda build artifacts
