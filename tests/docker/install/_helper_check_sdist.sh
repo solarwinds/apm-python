@@ -24,6 +24,16 @@ else
   echo "Using provided MODE=$MODE for check_sdist test."
 fi
 
+if [ -z "$APM_ROOT" ]
+then
+  echo "WARNING: Did not provide APM_ROOT for check_sdist test."
+  echo "Defaulting APM_ROOT"
+  # docker-compose-set root of local solarwinds_apm package
+  APM_ROOT=/code/python-solarwinds
+else
+  echo "Using provided APM_ROOT for check_sdist test."
+fi
+
 function check_extension_files(){
     # Verifies content in the extension directory solarwinds_apm/extension. The absolute path of the directory to be verified
     # needs to be passed in as the first argument of this function. As the second argument, a string containing the
@@ -63,17 +73,15 @@ function get_sdist(){
 
     if [ "$MODE" == "local" ]
     then
-        # docker-compose-set root of local solarwinds_apm package
-        agent_root='/code/python-solarwinds'
         # optionally test a previous version on local for debugging
         if [ -z "$SOLARWINDS_APM_VERSION" ]; then
             # no SOLARWINDS_APM_VERSION provided, thus test version of current source code
-            version_file=$agent_root/solarwinds_apm/version.py
+            version_file=$APM_ROOT/solarwinds_apm/version.py
             AGENT_VERSION="$(sed -n 's/__version__ = "\(.*\)"/\1/p' $version_file)"
             echo "No SOLARWINDS_APM_VERSION provided, thus testing source code version ($AGENT_VERSION)"
         fi
 
-        sdist_tar=$agent_root/dist/solarwinds_apm-${AGENT_VERSION}.tar.gz
+        sdist_tar=$APM_ROOT/dist/solarwinds_apm-${AGENT_VERSION}.tar.gz
         if [ ! -f "$sdist_tar" ]; then
             echo "FAILED: Did not find sdist for version $AGENT_VERSION. Please run 'make package' before running tests."
             echo "Aborting tests."
