@@ -142,6 +142,16 @@ sdist: wrapper
 	@python3.8 setup.py sdist
 	@echo -e "\nDone."
 
+# Check local package source distribution archive contents
+CURR_DIR := $(pwd)
+SOLARWINDS_APM_VERSION := $(shell grep "__version__" ./solarwinds_apm/version.py | sed "s/__version__ = //")
+check-sdist-local:
+	@mkdir -p /code/python-solarwinds/dist
+	@cp ./dist/solarwinds_apm-$(SOLARWINDS_APM_VERSION).tar.gz /code/python-solarwinds/dist/solarwinds_apm-$(SOLARWINDS_APM_VERSION).tar.gz
+	@cd ./tests/docker/install && MODE=local SOLARWINDS_APM_VERSION=$(SOLARWINDS_APM_VERSION) ./_helper_check_sdist.sh
+	@cd CURR_DIR
+	@rm -rf /code/python-solarwinds/dist/solarwinds_apm-$(SOLARWINDS_APM_VERSION).tar.gz
+
 # Build the Python agent package bdist (wheels) for 64 bit many linux systems (except Alpine).
 # The recipe builds the wheels for all Python versions available in the docker image EXCEPT py36, similarly to the example provided
 # in the corresponding repo of the Docker images: https://github.com/pypa/manylinux#example.
