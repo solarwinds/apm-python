@@ -142,48 +142,6 @@ sdist: wrapper
 	@python3.8 setup.py sdist
 	@echo -e "\nDone."
 
-# Check sdist extension files
-solarwinds_apm_version := $(shell grep "__version__" ./solarwinds_apm/version.py | sed "s/__version__ = //")
-sdist_filepath := "./dist/solarwinds_apm-$(solarwinds_apm_version).tar.gz"
-unpack_dir := "./unpack/sdist"
-unpacked_apm := "$(unpack_dir)/solarwinds_apm-$(solarwinds_apm_version)/solarwinds_apm/extension"
-define expected_files
-./VERSION
-./__init__.py
-./bson
-./bson/bson.h
-./bson/platform_hacks.h
-./liboboe-1.0-alpine-x86_64.so.0.0.0
-./liboboe-1.0-lambda-x86_64.so.0.0.0
-./liboboe-1.0-x86_64.so.0.0.0
-./oboe.h
-./oboe.py
-./oboe_api.cpp
-./oboe_api.h
-./oboe_debug.h
-./oboe_wrap.cxx
-endef
-check-sdist:
-# check-sdist: sdist
-	@echo -e "Checking python agent sdist package contents"
-	rm -rf $(unpack_dir)
-	mkdir -p $(unpack_dir)
-	tar xzf $(sdist_filepath) --directory $(unpack_dir)
-
-	{ \
-	set -e ;\
-	pushd './unpack/sdist/solarwinds_apm-$(solarwinds_apm_version)/solarwinds_apm/extension' >/dev/null ;\
-	found_swig_files=$(find . -not -path '.' | LC_ALL=C sort) ;\
-	popd >/dev/null ;\
-	}
-#	@pushd "$(unpacked_apm)" >/dev/null && export FOUND_SWIG_FILES=$(find . -not -path '.' | LC_ALL=C sort) && popd >/dev/null
-
-#	@if [[ ! "abc" =~ "$(expected_files)" ]]; then \
-#		echo -e "nope"; \
-#		exit 1; \
-#	fi
-
-
 # Build the Python agent package bdist (wheels) for 64 bit many linux systems (except Alpine).
 # The recipe builds the wheels for all Python versions available in the docker image EXCEPT py36, similarly to the example provided
 # in the corresponding repo of the Docker images: https://github.com/pypa/manylinux#example.
@@ -196,7 +154,7 @@ manylinux-wheels: wrapper
 	@echo -e "\nDone."
 
 # Build the full Python agent distribution (sdist and wheels)
-package: sdist check-sdist manylinux-wheels
+package: sdist manylinux-wheels
 
 # Build the AWS lambda layer.
 # temporary target directory for AWS Lambda build artifacts
