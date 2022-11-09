@@ -30,6 +30,7 @@ then
   exit 1
 fi
 
+
 function check_extension_files(){
     # Verifies content in the extension directory solarwinds_apm/extension. The absolute path of the directory to be verified
     # needs to be passed in as the first argument of this function. As the second argument, a string containing the
@@ -57,28 +58,34 @@ function check_extension_files(){
     echo -e "Content of extension directory checked successfully.\n"
 }
 
-function get_sdist(){
-    sdist_dir="$PWD/tmp/sdist"
-    rm -rf sdist_dir
-
+function get_wheel(){
+    wheel_dir="$PWD/tmp/wheel"
+    rm -rf "$wheel_dir"
     if [ "$MODE" == "local" ]
     then
-        # optionally test a previous version on local for debugging
-        if [ -z "$SOLARWINDS_APM_VERSION" ]; then
-            # no SOLARWINDS_APM_VERSION provided, thus test version of current source code
-            version_file=$APM_ROOT/solarwinds_apm/version.py
-            AGENT_VERSION="$(sed -n 's/__version__ = "\(.*\)"/\1/p' $version_file)"
-            echo "No SOLARWINDS_APM_VERSION provided, thus testing source code version ($AGENT_VERSION)"
+        if [ -z "$PIP_INSTALL" ]; then
+            echo -e "PIP_INSTALL not specified."
+            echo -e "Using APM_ROOT to use one existing cp38 x86_64 wheel"
+            tested_wheel=$(find "$APM_ROOT"/dist/* -name "solarwinds_apm-$AGENT_VERSION-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl")
+        else
+            # we need to select the right wheel (there might be multiple wheel versions in the dist directory)
+            pip download \
+                --only-binary solarwinds_apm \
+                --find-links "$APM_ROOT"/dist \
+                --no-index \
+                --dest "$wheel_dir" \
+                --no-deps \
+                solarwinds_apm=="$AGENT_VERSION"
+            tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-$AGENT_VERSION*.*.whl")
         fi
 
-        sdist_tar=$APM_ROOT/dist/solarwinds_apm-${AGENT_VERSION}.tar.gz
-        if [ ! -f "$sdist_tar" ]; then
-            echo "FAILED: Did not find sdist for version $AGENT_VERSION. Please run 'make package' before running tests."
+        if [ ! -f "$tested_wheel" ]; then
+            echo "FAILED: Did not find wheel for version $AGENT_VERSION. Please run 'make package' before running tests."
             echo "Aborting tests."
             exit 1
         fi
     else
-        pip_options=(--no-binary solarwinds-apm --dest "$sdist_dir")
+        pip_options=(--only-binary solarwinds-apm --dest "$wheel_dir")
         if [ "$MODE" == "testpypi" ]
         then
             pip_options+=(--extra-index-url https://test.pypi.org/simple/)
@@ -97,49 +104,47 @@ function get_sdist(){
         # shellcheck disable=SC2048
         # shellcheck disable=SC2086
         pip download ${pip_options[*]}
-        sdist_tar=$(find "$sdist_dir"/* -name "solarwinds_apm-*.tar.gz")
+        tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-*.*.whl")
     fi
 }
 
-function check_sdist(){
-    unpack_directory="$PWD/unpack/sdist"
+function check_wheel(){
+    unpack_directory="$PWD/unpack/wheel"
     rm -rf "$unpack_directory"
     mkdir -p "$unpack_directory"
     expected_files="./VERSION
 ./__init__.py
+./_oboe.*.so
 ./bson
 ./bson/bson.h
 ./bson/platform_hacks.h
-./liboboe-1.0-alpine-x86_64.so.0.0.0
-./liboboe-1.0-lambda-x86_64.so.0.0.0
-./liboboe-1.0-x86_64.so.0.0.0
-./oboe.h
-./oboe.py
-./oboe_api.cpp
-./oboe_api.h
-./oboe_debug.h
-./oboe_wrap.cxx"
-    tar xzf "$1" --directory "$unpack_directory"
-    unpack_agent=$(find "$unpack_directory"/* -type d -name "solarwinds_apm-*")
-    check_extension_files "$unpack_agent/solarwinds_apm/extension" "$expected_files"
+./liboboe-1.0.so.0
+./oboe.py"
+    unzip "$tested_wheel" -d "$unpack_directory"
+    check_extension_files "$unpack_directory/solarwinds_apm/extension" "$expected_files"
 
     if [ -z "$PIP_INSTALL" ]; then
         echo -e "PIP_INSTALL not specified."
-        echo -e "Source distribution verified successfully.\n"
+        echo -e "Python wheel verified successfully.\n"
         rm -rf "$unpack_directory"
         exit 0
     else
-        echo "Installing Python agent from source"
-        pip install -I "$1"
+        echo "Installing Python agent from wheel"
+        pip install -I "$tested_wheel"
     fi
 }
 
-function get_and_check_sdist(){
-    echo "#### Verifying Python agent source distribution ####"
-    get_sdist
-    check_sdist "$sdist_tar"
+function get_and_check_wheel(){
+    echo "#### Verifying Python agent wheel distribution ####"
+    # Python wheels are not available under Alpine Linux
+    if [[ -f /etc/os-release && "$(cat /etc/os-release)" =~ "Alpine" ]]; then
+        echo "Wheels are not available on Alpine Linux, skip wheel tests."
+    else
+        get_wheel
+        check_wheel "$tested_wheel"
+    fi
 }
 
 # start testing
 AGENT_VERSION=$SOLARWINDS_APM_VERSION
-get_and_check_sdist
+get_and_check_wheel
