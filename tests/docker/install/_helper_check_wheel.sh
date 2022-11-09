@@ -36,10 +36,18 @@ function get_wheel(){
     rm -rf "$wheel_dir"
     if [ "$MODE" == "local" ]
     then
+        # optionally test a previous version on local for debugging
+        if [ -z "$SOLARWINDS_APM_VERSION" ]; then
+            # no SOLARWINDS_APM_VERSION provided, thus test version of current source code
+            version_file=$APM_ROOT/solarwinds_apm/version.py
+            SOLARWINDS_APM_VERSION="$(sed -n 's/__version__ = "\(.*\)"/\1/p' $version_file)"
+            echo "No SOLARWINDS_APM_VERSION provided, thus testing source code version ($SOLARWINDS_APM_VERSION)"
+        fi
+
         if [ -z "$PIP_INSTALL" ]; then
             echo -e "PIP_INSTALL not specified."
             echo -e "Using APM_ROOT to use one existing cp38 x86_64 wheel"
-            tested_wheel=$(find "$APM_ROOT"/dist/* -name "solarwinds_apm-$AGENT_VERSION-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl")
+            tested_wheel=$(find "$APM_ROOT"/dist/* -name "solarwinds_apm-$SOLARWINDS_APM_VERSION-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl")
         else
             # we need to select the right wheel (there might be multiple wheel versions in the dist directory)
             pip download \
@@ -48,12 +56,12 @@ function get_wheel(){
                 --no-index \
                 --dest "$wheel_dir" \
                 --no-deps \
-                solarwinds_apm=="$AGENT_VERSION"
-            tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-$AGENT_VERSION*.*.whl")
+                solarwinds_apm=="$SOLARWINDS_APM_VERSION"
+            tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-$SOLARWINDS_APM_VERSION*.*.whl")
         fi
 
         if [ ! -f "$tested_wheel" ]; then
-            echo "FAILED: Did not find wheel for version $AGENT_VERSION. Please run 'make package' before running tests."
+            echo "FAILED: Did not find wheel for version $SOLARWINDS_APM_VERSION. Please run 'make package' before running tests."
             echo "Aborting tests."
             exit 1
         fi
@@ -67,11 +75,11 @@ function get_wheel(){
             curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
         fi
 
-        if [ -z "$AGENT_VERSION" ]
+        if [ -z "$SOLARWINDS_APM_VERSION" ]
         then
             pip_options+=(solarwinds-apm)
         else
-            pip_options+=(solarwinds-apm=="$AGENT_VERSION")
+            pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
         fi
 
         # shellcheck disable=SC2048
@@ -119,5 +127,4 @@ function get_and_check_wheel(){
 }
 
 # start testing
-AGENT_VERSION=$SOLARWINDS_APM_VERSION
 get_and_check_wheel

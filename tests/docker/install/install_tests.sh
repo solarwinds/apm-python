@@ -168,7 +168,6 @@ function run_instrumented_server_and_client(){
 
 
 # START TESTING ===========================================
-AGENT_VERSION=$SOLARWINDS_APM_VERSION
 HOSTNAME=$(cat /etc/hostname)
 # docker-compose-set root of local solarwinds_apm package
 APM_ROOT='/code/python-solarwinds'

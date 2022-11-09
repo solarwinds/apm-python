@@ -41,13 +41,13 @@ function get_sdist(){
         if [ -z "$SOLARWINDS_APM_VERSION" ]; then
             # no SOLARWINDS_APM_VERSION provided, thus test version of current source code
             version_file=$APM_ROOT/solarwinds_apm/version.py
-            AGENT_VERSION="$(sed -n 's/__version__ = "\(.*\)"/\1/p' $version_file)"
-            echo "No SOLARWINDS_APM_VERSION provided, thus testing source code version ($AGENT_VERSION)"
+            SOLARWINDS_APM_VERSION="$(sed -n 's/__version__ = "\(.*\)"/\1/p' $version_file)"
+            echo "No SOLARWINDS_APM_VERSION provided, thus testing source code version ($SOLARWINDS_APM_VERSION)"
         fi
 
-        sdist_tar=$APM_ROOT/dist/solarwinds_apm-${AGENT_VERSION}.tar.gz
+        sdist_tar=$APM_ROOT/dist/solarwinds_apm-${SOLARWINDS_APM_VERSION}.tar.gz
         if [ ! -f "$sdist_tar" ]; then
-            echo "FAILED: Did not find sdist for version $AGENT_VERSION. Please run 'make package' before running tests."
+            echo "FAILED: Did not find sdist for version $SOLARWINDS_APM_VERSION. Please run 'make package' before running tests."
             echo "Aborting tests."
             exit 1
         fi
@@ -61,11 +61,11 @@ function get_sdist(){
             curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
         fi
 
-        if [ -z "$AGENT_VERSION" ]
+        if [ -z "$SOLARWINDS_APM_VERSION" ]
         then
             pip_options+=(solarwinds-apm)
         else
-            pip_options+=(solarwinds-apm=="$AGENT_VERSION")
+            pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
         fi
 
         # shellcheck disable=SC2048
@@ -115,5 +115,4 @@ function get_and_check_sdist(){
 }
 
 # start testing
-AGENT_VERSION=$SOLARWINDS_APM_VERSION
 get_and_check_sdist

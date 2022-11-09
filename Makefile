@@ -144,9 +144,8 @@ sdist: wrapper
 
 # Check local package source distribution archive contents, without install
 CURR_DIR := $(shell pwd)
-SOLARWINDS_APM_VERSION := $(shell grep "__version__" ./solarwinds_apm/version.py | sed "s/__version__ = //")
 check-sdist-local: sdist
-	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) SOLARWINDS_APM_VERSION=$(SOLARWINDS_APM_VERSION) ./_helper_check_sdist.sh
+	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) ./_helper_check_sdist.sh
 	@cd $(CURR_DIR)
 
 # Build the Python agent package bdist (wheels) for 64 bit many linux systems (except Alpine).
@@ -162,7 +161,7 @@ manylinux-wheels: wrapper
 
 # Check local package wheel contents, without install
 check-wheel-local: manylinux-wheels
-	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) SOLARWINDS_APM_VERSION=$(SOLARWINDS_APM_VERSION) ./_helper_check_wheel.sh
+	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) ./_helper_check_wheel.sh
 	@cd $(CURR_DIR)
 
 # Build and check the full Python agent distribution (sdist and wheels)
