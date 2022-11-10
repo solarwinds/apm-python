@@ -10,10 +10,36 @@ on:
 env:
   RELEASE_NAME: rel-${{ github.event.inputs.version }}
 
-jobs: 
-  create_draft_release:
+jobs:
+  is_publishable:
+    name: Check if version valid
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check version
+      run: cd .github/scripts && ./is_publishable.sh ${{ github.event.inputs.version }}
+
+  build_publish_and_release:
+    name: Build and publish to PyPI
+    needs: is_publishable
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions/package_solarwinds_apm
+    - name: Install Twine
+      run: pip install --upgrade --no-cache-dir --prefer-binary twine
+    - name: Check distribution artifacts
+      run: twine check dist/*
+    - name: Publish to PyPi
+      env:
+        TWINE_NON_INTERACTIVE: 1
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.SW_APM_PYPI_UPLOAD_TOKEN }}
+      run: twine upload dist/*
+  
+  create_release:
     name: Create draft release
-    #needs: build_publish_and_release
+    needs: build_publish_and_release
     runs-on: ubuntu-latest
     steps:
     - name: Initialize git
