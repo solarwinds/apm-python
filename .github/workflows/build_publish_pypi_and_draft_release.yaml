@@ -42,12 +42,11 @@ jobs:
     needs: build_publish_and_release
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
     - name: Initialize git
       run: |
        git config user.name "GitHub Actions"
        git config user.email noreply@github.com
     - name: Create draft release
-      run: gh release create ${{ env.RELEASE_NAME }} --title "${{ env.RELEASE_NAME }}" --target release/${{ env.RELEASE_NAME }} --draft
+      run: gh release create ${{ env.RELEASE_NAME }} --repo appoptics/solarwinds-apm-python --title "${{ env.RELEASE_NAME }}" --target release/${{ env.RELEASE_NAME }} --draft
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
