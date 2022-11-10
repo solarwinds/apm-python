@@ -40,7 +40,7 @@ function get_wheel(){
         if [ -z "$SOLARWINDS_APM_VERSION" ]; then
             # no SOLARWINDS_APM_VERSION provided, thus test version of current source code
             version_file=$APM_ROOT/solarwinds_apm/version.py
-            SOLARWINDS_APM_VERSION="$(sed -n 's/__version__ = "\(.*\)"/\1/p' $version_file)"
+            SOLARWINDS_APM_VERSION="$(sed -n 's/__version__ = "\(.*\)"/\1/p' "$version_file")"
             echo "No SOLARWINDS_APM_VERSION provided, thus testing source code version ($SOLARWINDS_APM_VERSION)"
         fi
 
@@ -102,6 +102,7 @@ function check_wheel(){
 ./liboboe-1.0.so.0
 ./oboe.py"
     unzip "$tested_wheel" -d "$unpack_directory"
+    # shellcheck disable=SC1091
     source ./_helper_check_extension_files.sh "$unpack_directory/solarwinds_apm/extension" "$expected_files"
 
     if [ -z "$PIP_INSTALL" ]; then

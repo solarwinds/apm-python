@@ -173,12 +173,14 @@ HOSTNAME=$(cat /etc/hostname)
 APM_ROOT='/code/python-solarwinds'
 
 # Check sdist
+# shellcheck disable=SC1091
 PIP_INSTALL=1 source ./_helper_check_sdist.sh
 check_installation
 check_agent_startup
 echo -e "Source distribution verified successfully.\n"
 
 # Check wheel
+# shellcheck disable=SC1091
 PIP_INSTALL=1 source ./_helper_check_wheel.sh
 check_installation
 check_agent_startup

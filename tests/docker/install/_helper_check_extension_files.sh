@@ -11,9 +11,9 @@ fi
 
 expected_files="$2"
 
-pushd "$1" >/dev/null
+pushd "$1" >/dev/null || exit 1
 found_swig_files=$(find . -not -path '.' | LC_ALL=C sort)
-popd >/dev/null
+popd >/dev/null || exit 1
 
 if [[ ! "$found_swig_files" =~ $expected_files ]]; then
     echo "FAILED! expected these files under the extension directory:"
