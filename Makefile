@@ -144,7 +144,7 @@ sdist: wrapper
 
 # Check local package source distribution archive contents, without install
 CURR_DIR := $(shell pwd)
-check-sdist-local: sdist
+check-sdist-local:
 	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) ./_helper_check_sdist.sh
 	@cd $(CURR_DIR)
 
@@ -160,7 +160,7 @@ manylinux-wheels: wrapper
 	@echo -e "\nDone."
 
 # Check local package wheel contents, without install
-check-wheel-local: manylinux-wheels
+check-wheel-local:
 	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) ./_helper_check_wheel.sh
 	@cd $(CURR_DIR)
 
