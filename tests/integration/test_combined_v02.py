@@ -22,7 +22,6 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 )
 from opentelemetry.test.globals_test import reset_trace_globals
 from opentelemetry.test.test_base import TestBase
-from opentelemetry.test.wsgitestutil import WsgiTestBase
 
 from unittest import mock
 from unittest.mock import patch
@@ -34,13 +33,10 @@ from solarwinds_apm.propagator import SolarWindsPropagator
 from solarwinds_apm.sampler import ParentBasedSwSampler
 
 from .propagation_test_app_v02 import PropagationTest_v02_mixin
-# from .sw_distro_test import SolarWindsDistroTestBase
 
 class TestHeadersAndSpanAttributes(
     PropagationTest_v02_mixin,
-    # SolarWindsDistroTestBase,
     TestBase,
-    # WsgiTestBase
 ):
 
     SW_SETTINGS_KEYS = [
@@ -55,7 +51,6 @@ class TestHeadersAndSpanAttributes(
         # Instrument requests to/from test Flask app to check headers
         cls.requests_inst = RequestsInstrumentor()
         cls.flask_inst = FlaskInstrumentor()
-
         # Set up test app
         cls.app = flask.Flask(__name__)
         cls._setup_endpoints(cls)
@@ -64,13 +59,6 @@ class TestHeadersAndSpanAttributes(
     def tearDownClass(cls):
         cls.flask_inst.uninstrument()
         cls.requests_inst.uninstrument()
-
-    # @classmethod
-    # def wakeup_request(cls):
-    #     """Send wake-up request and wait for oboe_init to finish"""
-    #     with cls.tracer.start_as_current_span("wakeup_span"):
-    #         r = requests.get(f"http://solarwinds.com")
-    #         time.sleep(2)
 
     def test_scenario_1(self):
         """
@@ -238,10 +226,11 @@ class TestHeadersAndSpanAttributes(
         assert not "sw.tracestate_parent_id" in span_client.attributes
         assert not "SWKeys" in span_client.attributes
 
-
-        # Check span_id of the outgoing request span matches the span_id portion in the tracestate header
-
-        # ...
+        # Check span_id of the outgoing request span (client span) matches
+        # the span_id portion in the outgoing tracestate header, which
+        # is stored in the test app's response body (new_span_id).
+        # Note: context.span_id needs a 16-byte hex conversion first.
+        assert "{:016x}".format(span_client.context.span_id) == new_span_id
 
         # clean up for other tests
         self.memory_exporter.clear()
