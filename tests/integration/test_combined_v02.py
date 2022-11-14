@@ -5,8 +5,6 @@ from pkg_resources import (
 )
 import json
 import re
-import requests
-import time
 
 import flask
 from werkzeug.test import Client
@@ -46,28 +44,8 @@ class TestHeadersAndSpanAttributes(
         "SampleSource"
     ]
 
-    @classmethod
-    def setUpClass(cls):
-        # Instrument requests to/from test Flask app to check headers
-        cls.requests_inst = RequestsInstrumentor()
-        cls.flask_inst = FlaskInstrumentor()
-        # Set up test app
-        cls.app = flask.Flask(__name__)
-        cls._setup_endpoints(cls)
-        
-    @classmethod
-    def tearDownClass(cls):
-        cls.flask_inst.uninstrument()
-        cls.requests_inst.uninstrument()
-
-    def test_scenario_1(self):
-        """
-        Scenario #1:
-        1. Decision to sample is made at root/service entry span (mocked).
-        2. Some traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
-        3. Sampling-related attributes are set for the root/service entry span.
-        4. The span_id of the outgoing request span matches the span_id portion in the tracestate header.
-        """
+    def setUp(self):
+        """Set up called before each test scenario"""
         # Based on auto_instrumentation run() and sitecustomize.py
         # Load OTel env vars entry points
         argument_otel_environment_variable = {}
@@ -117,7 +95,7 @@ class TestHeadersAndSpanAttributes(
         assert isinstance(propagators[2], SolarWindsPropagator)
         assert isinstance(trace_api.get_tracer_provider().sampler, ParentBasedSwSampler)
 
-        # We need to do this for every test
+        # We need to instrument and create test app for every test
         self.requests_inst = RequestsInstrumentor()
         self.flask_inst = FlaskInstrumentor()
         self.flask_inst.uninstrument()
@@ -130,12 +108,21 @@ class TestHeadersAndSpanAttributes(
         )
         self.app = flask.Flask(__name__)
         self._setup_endpoints()
-        self.flask_inst.instrument_app(  # this doesn't seem to help
-            app=self.app,
-            tracer_provider=trace_api.get_tracer_provider(),
-        )
-        client = Client(self.app, Response)
+        self.client = Client(self.app, Response)
 
+    def tearDown(self):
+        """Teardown called after each test scenario"""
+        # clean up for other tests
+        self.memory_exporter.clear()
+
+    def test_scenario_1(self):
+        """
+        Scenario #1:
+        1. Decision to sample is made at root/service entry span (mocked).
+        2. Some traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
+        3. Sampling-related attributes are set for the root/service entry span.
+        4. The span_id of the outgoing request span matches the span_id portion in the tracestate header.
+        """
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
@@ -149,7 +136,7 @@ class TestHeadersAndSpanAttributes(
             new=mock_decision,
         ):
             # Request to instrumented app, no traceparent/tracestate
-            resp = client.get("/test_trace/")
+            resp = self.client.get("/test_trace/")
         resp_json = json.loads(resp.data)
 
         # Verify trace context injected into test app's outgoing postman-echo call
@@ -232,18 +219,38 @@ class TestHeadersAndSpanAttributes(
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
 
-        # clean up for other tests
-        self.memory_exporter.clear()
-
-
-    def test_scenario_4(self):
+    def test_scenario_4_sampled(self):
         """
-        Scenario #4:
+        Scenario #4, sampled: 
+        1. Decision to sample is continued at root/service entry span (mocked).
+        2. traceparent and tracestate headers in the request to the test app are
+        injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
+        3. The injected traceparent's trace_id is the trace_id of all spans.
+        4. Sampling-related attributes are set for the root/service entry span.
+        5. The span_id of the outgoing request span matches the span_id portion in the tracestate header.
+        """
+        pass
+
+    def test_scenario_4_not_sampled(self):
+        """
+        Scenario #4, NOT sampled:
+        1. Decision to NOT sample is continued at root/service entry span (mocked).
+        2. traceparent and tracestate headers in the request to the test app are
+        injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
+        3. The injected traceparent's trace_id is the trace_id of all spans.
+        4. Sampling-related attributes are set for the root/service entry span.
+        5. The span_id of the outgoing request span matches the span_id portion in the tracestate header.
         """
         pass
 
     def test_scenario_6(self):
         """
         Scenario #6:
+        1. Decision to sample with trigger trace flag is made at root/service entry span (mocked).
+        2. traceparent and tracestate headers in the request to the test app are
+        injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
+        3. The injected traceparent's trace_id is the trace_id of all spans.
+        4. Sampling-related attributes are set for the root/service entry span.
+        5. The span_id of the outgoing request span matches the span_id portion in the tracestate header.
         """
         pass
