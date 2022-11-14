@@ -1,8 +1,8 @@
 """
 Example usage:
 
-import solarwinds_apm
-solarwinds_apm.solarwinds_ready(wait_milliseconds=10000, integer_response=True)
+from solarwinds_apm.apm_ready import solarwinds_ready
+solarwinds_ready(wait_milliseconds=10000, integer_response=True)
 """
 
 import logging

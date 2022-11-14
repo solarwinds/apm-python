@@ -234,7 +234,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             reporter=apm_config.get("reporter"),
             host=apm_config.get("collector"),
             service_key=apm_config.get("service_key"),
-            trusted_path=apm_config.get("trustedpath"),
+            certificates=apm_config.certificates,
             buffer_size=apm_config.get("bufsize"),
             trace_metrics=apm_config.get("trace_metrics"),
             histogram_precision=apm_config.get("histogram_precision"),
@@ -244,8 +244,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             ec2_metadata_timeout=apm_config.get("ec2_metadata_timeout"),
             grpc_proxy=apm_config.get("proxy"),
             stdout_clear_nonblocking=0,
-            is_grpc_clean_hack_enabled=apm_config.get("is_grpc_clean_hack_enabled"),
-            w3c_trace_format=1,
             metric_format=apm_config.metric_format,
         )  # type: ignore
 
