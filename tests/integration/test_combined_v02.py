@@ -154,15 +154,16 @@ class TestHeadersAndSpanAttributes(
             resp_json["traceparent"],
         )
         new_trace_id = traceparent_re_result.group(2)
-        assert new_trace_id in resp_json["traceparent"]
+        assert new_trace_id
         new_span_id = traceparent_re_result.group(3)
-        assert new_span_id in resp_json["traceparent"]
-        assert "01" == traceparent_re_result.group(4)
+        assert new_span_id
+        new_trace_flags = traceparent_re_result.group(4)
+        assert new_trace_flags == "01"
 
         assert "tracestate" in resp_json
         assert new_span_id in resp_json["tracestate"]
         # In this test we know there is only `sw` in tracestate
-        # i.e. sw=e000baa4e000baa4-01
+        # e.g. sw=e000baa4e000baa4-01
         _TRACESTATE_HEADER_FORMAT = (
             "^[ \t]*sw=([0-9a-f]{16})-([0-9a-f]{2})"
             + "(-.*)?[ \t]*$"
@@ -172,7 +173,8 @@ class TestHeadersAndSpanAttributes(
             _TRACESTATE_HEADER_FORMAT_RE,
             resp_json["tracestate"],
         )
-        assert "01" == tracestate_re_result.group(2)
+        new_tracestate_flags = tracestate_re_result.group(2)
+        assert new_tracestate_flags == "01"
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
