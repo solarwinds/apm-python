@@ -1,5 +1,8 @@
 import os
-from pkg_resources import iter_entry_points
+from pkg_resources import (
+    iter_entry_points,
+    load_entry_point
+)
 import json
 import re
 import requests
@@ -39,6 +42,13 @@ class TestHeadersAndSpanAttributes(
     TestBase,
     # WsgiTestBase
 ):
+
+    SW_SETTINGS_KEYS = [
+        "BucketCapacity",
+        "BucketRate",
+        "SampleRate",
+        "SampleSource"
+    ]
 
     @classmethod
     def setUpClass(cls):
@@ -99,25 +109,25 @@ class TestHeadersAndSpanAttributes(
         # This is done because set_tracer_provider cannot override the
         # current tracer provider. Has to be done here.
         reset_trace_globals()
+        sampler = load_entry_point(
+            "solarwinds_apm",
+            "opentelemetry_traces_sampler",
+            configurator._DEFAULT_SW_TRACES_SAMPLER
+        )(apm_config)
+        self.tracer_provider = TracerProvider(sampler=sampler)
         # Set InMemorySpanExporter for testing
         # We do NOT use SolarWindsSpanExporter
-        self.tracer_provider = TracerProvider()
         self.memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleSpanProcessor(self.memory_exporter)
         self.tracer_provider.add_span_processor(span_processor)
-        configurator._configure_sampler(apm_config)  
         trace_api.set_tracer_provider(self.tracer_provider)
         self.tracer = self.tracer_provider.get_tracer(__name__)
 
         # Make sure SW SDK components were set
-        # !!! Need all of these to pass for custom SW span attr setting to work
         propagators = get_global_textmap()._propagators
         assert len(propagators) == 3
         assert isinstance(propagators[2], SolarWindsPropagator)
         assert isinstance(trace_api.get_tracer_provider().sampler, ParentBasedSwSampler)
-
-
-
 
         # We need to do this for every test
         self.requests_inst = RequestsInstrumentor()
@@ -211,28 +221,22 @@ class TestHeadersAndSpanAttributes(
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set without attributes at decision
         #     SWKeys, because no xtraceoptions in otel context
-        
-        # BoundedAttributes({'http.method': 'GET', 'http.server_name': 'localhost', 'http.scheme': 'http', 'net.host.port': 80, 'http.host': 'localhost', 'http.target': '/test_trace/', 'http.flavor': '1.1', 'http.route': '/test_trace/', 'http.status_code': 200}, maxlen=128)
-        print("span_server.attributes is: {}".format(span_server.attributes))
-
-
-        # assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        # assert span_server.attributes["BucketCapacity"] == "6.0"
-        # assert span_server.attributes["BucketRate"] == "5.0"
-        # assert span_server.attributes["SampleRate"] == 3
-        # assert span_server.attributes["SampleSource"] == 4
-        # assert not "sw.tracestate_parent_id" in span_server.attributes
-        # assert not "SWKeys" in span_server.attributes
-
-
-
+        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert span_server.attributes["BucketCapacity"] == "6.0"
+        assert span_server.attributes["BucketRate"] == "5.0"
+        assert span_server.attributes["SampleRate"] == 3
+        assert span_server.attributes["SampleSource"] == 4
+        assert not "sw.tracestate_parent_id" in span_server.attributes
+        assert not "SWKeys" in span_server.attributes
 
         # Check outgoing request span attributes
-
-        # BoundedAttributes({'http.method': 'GET', 'http.url': 'http://postman-echo.com/headers', 'http.status_code': 200}, maxlen=128)
-        print("span_client.attributes is: {}".format(span_client.attributes))
-
-        assert all(attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS)
+        #   :absent:
+        #     service entry internal KVs, which are only on entry spans
+        #     sw.tracestate_parent_id, because cannot be set without attributes at decision
+        #     SWKeys, because no xtraceoptions in otel context
+        assert not any(attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert not "sw.tracestate_parent_id" in span_client.attributes
+        assert not "SWKeys" in span_client.attributes
 
 
         # Check span_id of the outgoing request span matches the span_id portion in the tracestate header
