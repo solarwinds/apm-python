@@ -17,10 +17,11 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         1. Decision to sample is made at root/service entry span (mocked). There is no
            OTel context extracted from request headers, so this is the root and start
            of the trace.
-        2. Some traceparent and tracestate are injected into service's outgoing request
+        2. Headers in the original request are not altered by the SW propagator.
+        3. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. Sampling-related attributes are set for the root/service entry span.
-        4. The span_id of the outgoing request span matches the span_id portion in the
+        4. Sampling-related attributes are set for the root/service entry span.
+        5. The span_id of the outgoing request span matches the span_id portion in the
            tracestate header.
         """
         # Use in-process test app client and mock to propagate context
@@ -35,8 +36,19 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
             new=mock_decision,
         ):
             # Request to instrumented app, no traceparent/tracestate
-            resp = self.client.get("/test_trace/")
+            resp = self.client.get(
+                "/test_trace/",
+                headers={
+                    "some-header": "some-value"
+                }
+            )
         resp_json = json.loads(resp.data)
+
+        # Verify some-header was not altered by instrumentation
+        try:
+            assert resp_json["incoming-headers"]["some-header"] == "some-value"
+        except KeyError as e:
+            self.fail("KeyError was raised at incoming-headers check: {}".format(e))
 
         # Verify trace context injected into test app's outgoing postman-echo call
         # (added to Flask app's response data) includes:

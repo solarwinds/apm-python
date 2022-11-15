@@ -43,6 +43,11 @@ class TestBaseSwHeadersAndAttributes(TestBase):
 
     @staticmethod
     def _test_trace():
+        incoming_headers = {}
+        for k, v in flask.request.headers.items():
+            # WSGI capitalizes incoming HTTP headers
+            incoming_headers.update({k.lower(): v.lower()})
+
         resp = requests.get(f"http://postman-echo.com/headers")
 
         #  The return type must be a string, dict, tuple, Response instance, or WSGI callable
@@ -50,6 +55,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         return {
             "traceparent": resp.request.headers["traceparent"],
             "tracestate": resp.request.headers["tracestate"],
+            "incoming-headers": incoming_headers,
         }
     
     def _setup_endpoints(self):
@@ -126,5 +132,4 @@ class TestBaseSwHeadersAndAttributes(TestBase):
 
     def tearDown(self):
         """Teardown called after each test scenario"""
-        # clean up for other tests
         self.memory_exporter.clear()

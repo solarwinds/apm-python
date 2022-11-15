@@ -40,9 +40,16 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
                 "/test_trace/",
                 headers={
                     "x-trace-options": "trigger-trace",
+                    "some-header": "some-value"
                 }
             )
         resp_json = json.loads(resp.data)
+
+        # Verify some-header was not altered by instrumentation
+        try:
+            assert resp_json["incoming-headers"]["some-header"] == "some-value"
+        except KeyError as e:
+            self.fail("KeyError was raised at incoming-headers check: {}".format(e))
 
         # Verify trace context injected into test app's outgoing postman-echo call
         # (added to Flask app's response data) includes:
@@ -158,9 +165,16 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
                 "/test_trace/",
                 headers={
                     "x-trace-options": "trigger-trace",
+                    "some-header": "some-value"
                 }
             )
         resp_json = json.loads(resp.data)
+
+        # Verify some-header was not altered by instrumentation
+        try:
+            assert resp_json["incoming-headers"]["some-header"] == "some-value"
+        except KeyError as e:
+            self.fail("KeyError was raised at incoming-headers check: {}".format(e))
 
         # Verify trace context injected into test app's outgoing postman-echo call
         # (added to Flask app's response data) includes:
