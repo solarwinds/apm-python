@@ -34,7 +34,7 @@ from solarwinds_apm.propagator import SolarWindsPropagator
 from solarwinds_apm.sampler import ParentBasedSwSampler
 
 
-class TestHeadersAndSpanAttributes(TestBase):
+class TestBaseSwHeadersAndAttributes(TestBase):
 
     SW_SETTINGS_KEYS = [
         "BucketCapacity",
