@@ -10,6 +10,7 @@ import re
 import time
 
 import flask
+import requests
 from unittest import mock
 from unittest.mock import patch
 from werkzeug.test import Client
@@ -32,12 +33,8 @@ from solarwinds_apm.distro import SolarWindsDistro
 from solarwinds_apm.propagator import SolarWindsPropagator
 from solarwinds_apm.sampler import ParentBasedSwSampler
 
-from .propagation_test_app_v02 import PropagationTest_v02_mixin
 
-class TestHeadersAndSpanAttributes(
-    PropagationTest_v02_mixin,
-    TestBase,
-):
+class TestHeadersAndSpanAttributes(TestBase):
 
     SW_SETTINGS_KEYS = [
         "BucketCapacity",
@@ -45,6 +42,23 @@ class TestHeadersAndSpanAttributes(
         "SampleRate",
         "SampleSource"
     ]
+
+    @staticmethod
+    def _test_trace():
+        resp = requests.get(f"http://postman-echo.com/headers")
+
+        #  The return type must be a string, dict, tuple, Response instance, or WSGI callable
+        # (not CaseInsensitiveDict)
+        return {
+            "traceparent": resp.request.headers["traceparent"],
+            "tracestate": resp.request.headers["tracestate"],
+        }
+    
+    def _setup_endpoints(self):
+        # pylint: disable=no-member
+        self.app.route("/test_trace/")(self._test_trace)
+        # pylint: disable=attribute-defined-outside-init
+        self.client = Client(self.app, Response)
 
     def setUp(self):
         """Set up called before each test scenario"""
