@@ -16,11 +16,12 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
     def test_scenario_4_sampled(self):
         """
         Scenario #4, sampled: 
-        1. Decision to sample is continued at root/service entry span (mocked).
+        1. Decision to sample is continued at service entry span (mocked). This is
+           not the root span because it continues an existing OTel context.
         2. traceparent and tracestate headers in the request to the test app are
         injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
         3. The injected traceparent's trace_id is the trace_id of all spans.
-        4. Sampling-related attributes are set for the root/service entry span.
+        4. Sampling-related attributes are set for the service entry span.
         5. The span_id of the outgoing request span matches the span_id portion in the tracestate header.
         """
         trace_id = "11112222333344445555666677778888"
@@ -83,7 +84,7 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
 
-        # Verify spans exported: service entry (root) + outgoing request
+        # Verify spans exported: service entry + outgoing request
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
@@ -98,17 +99,17 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert "{:032x}".format(span_server.context.trace_id) == trace_id
         assert "{:032x}".format(span_client.context.trace_id) == trace_id
 
-        # Check root span tracestate has `sw` key
+        # Check service entry span tracestate has `sw` key
         # In this test it should be span_id, traceflags from extracted traceparent
         expected_trace_state = trace_api.TraceState([
             ("sw", "{}-{}".format(span_id, trace_flags))
         ])
         assert span_server.context.trace_state == expected_trace_state
 
-        # Check root span attributes
+        # Check service entry span attributes
         #   :present:
         #     service entry internal KVs, which are on all entry spans
-        #     sw.tracestate_parent_id, because only set if not root and no attributes
+        #     sw.tracestate_parent_id, because only set if not the root and no attributes
         #   :absent:
         #     SWKeys, because no xtraceoptions in otel context
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
@@ -145,7 +146,8 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
     def test_scenario_4_not_sampled(self):
         """
         Scenario #4, NOT sampled:
-        1. Decision to NOT sample is continued at root/service entry span (mocked).
+        1. Decision to NOT sample is continued at service entry span (mocked). This is
+           not the root span because it continues an existing OTel context.
         2. traceparent and tracestate headers in the request to the test app are
         injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
         3. No spans are exported.

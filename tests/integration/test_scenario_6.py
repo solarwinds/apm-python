@@ -15,7 +15,9 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
     def test_scenario_6_sampled(self):
         """
         Scenario #6, sampled:
-        1. Decision to sample with unsigned trigger trace flag is made at root/service entry span (mocked).
+        1. Decision to sample with unsigned trigger trace flag is made at root/service
+           entry span (mocked). There is no OTel context extracted from request headers,
+           so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
         3. The injected x-trace-options header is also propagated.
         4. Sampling-related and SWKeys attributes are set for the root/service entry span.
@@ -95,7 +97,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         #   :present:
         #     service entry internal KVs, which are on all entry spans
         #   :absent:
-        #     sw.tracestate_parent_id, because cannot be set without attributes at decision
+        #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     SWKeys, because no xtraceoptions in otel context
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert span_server.attributes["BucketCapacity"] == "6.0"
@@ -132,7 +134,9 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
     def test_scenario_6_not_sampled(self):
         """
         Scenario #6, not sampled:
-        1. Decision to NOT sample with unsigned trigger trace flag is made at root/service entry span (mocked).
+        1. Decision to NOT sample with unsigned trigger trace flag is made at root/service
+           entry span (mocked). There is no OTel context extracted from request headers,
+           so this is the root and start of the trace (though not exported).
         2. Some traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
         3. The injected x-trace-options header is also propagated.
         4. No spans are exported.

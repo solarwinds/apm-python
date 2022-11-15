@@ -13,11 +13,15 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
 
     def test_scenario_1_sampled(self):
         """
-        Scenario #1:
-        1. Decision to sample is made at root/service entry span (mocked).
-        2. Some traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
+        Scenario #1, sampled:
+        1. Decision to sample is made at root/service entry span (mocked). There is no
+           OTel context extracted from request headers, so this is the root and start
+           of the trace.
+        2. Some traceparent and tracestate are injected into service's outgoing request
+           (done by OTel TraceContextTextMapPropagator).
         3. Sampling-related attributes are set for the root/service entry span.
-        4. The span_id of the outgoing request span matches the span_id portion in the tracestate header.
+        4. The span_id of the outgoing request span matches the span_id portion in the
+           tracestate header.
         """
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
@@ -84,7 +88,7 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         #   :present:
         #     service entry internal KVs, which are on all entry spans
         #   :absent:
-        #     sw.tracestate_parent_id, because cannot be set without attributes at decision
+        #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     SWKeys, because no xtraceoptions in otel context
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert span_server.attributes["BucketCapacity"] == "6.0"
