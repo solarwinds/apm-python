@@ -1,8 +1,5 @@
-import hashlib
-import hmac
 import re
 import json
-import time
 
 from opentelemetry import trace as trace_api
 from unittest import mock
@@ -32,14 +29,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         traceparent = "00-{}-{}-{}".format(trace_id, span_id, trace_flags)
         tracestate_span = "e000baa4e000baa4"
         tracestate = "sw={}-{}".format(tracestate_span, trace_flags)
-
-        # Calculate current timestamp, signature, x-trace-options headers
-        xtraceoptions = "trigger-trace;custom-from=lin;foo=bar;sw-keys=custom-sw-from:tammy,baz:qux;ts={}".format(int(time.time()))
-        xtraceoptions_signature = hmac.new(
-            b'8mZ98ZnZhhggcsUmdMbS',
-            xtraceoptions.encode('ascii'),
-            hashlib.sha1
-        ).hexdigest()
+        xtraceoptions = "trigger-trace;custom-from=lin;foo=bar;sw-keys=custom-sw-from:tammy,baz:qux;ts={}".format(1234567890)
 
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
@@ -60,7 +50,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
                     "traceparent": traceparent,
                     "tracestate": tracestate,
                     "x-trace-options": xtraceoptions,
-                    "x-trace-options-signature": xtraceoptions_signature,
+                    "x-trace-options-signature": "foo",
                 }
             )
         resp_json = json.loads(resp.data)
