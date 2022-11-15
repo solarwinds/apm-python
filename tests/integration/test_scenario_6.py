@@ -144,6 +144,15 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         assert "{:032x}".format(span_server.context.trace_id) == trace_id
         assert "{:032x}".format(span_client.context.trace_id) == trace_id
 
+        # Check root span tracestate has `sw` key
+        # In this test it should be span_id, traceflags from extracted traceparent
+        expected_trace_state = trace_api.TraceState([
+            ("sw", "{}-{}".format(span_id, trace_flags)),
+            ("xtrace_options_response", "auth####ok;trigger-trace####ok;ignored####foo"),
+        ])
+        print("actual tracestate: {}".format(span_server.context.trace_state))
+        assert span_server.context.trace_state == expected_trace_state
+
         # Check root span attributes
         #   :present:
         #     service entry internal KVs, which are on all entry spans
@@ -159,6 +168,14 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         assert "SWKeys" in span_server.attributes
         # TODO Change solarwinds-apm in NH-24786 to include more
         assert span_server.attributes["SWKeys"] == "custom-sw-from:tammy,baz:qux"
+
+        # Check outgoing request tracestate has `sw` key
+        # In this test it should also be span_id, traceflags from extracted traceparent
+        expected_trace_state = trace_api.TraceState([
+            ("sw", "{}-{}".format(span_id, trace_flags)),
+            ("xtrace_options_response", "auth####ok;trigger-trace####ok;ignored####foo"),
+        ])
+        assert span_client.context.trace_state == expected_trace_state
 
         # Check outgoing request span attributes
         #   :absent:

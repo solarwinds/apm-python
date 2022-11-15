@@ -88,6 +88,11 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         assert span_client.name == "HTTP GET"
         assert span_client.kind == trace_api.SpanKind.CLIENT
 
+        # Check root span tracestate has `sw` key
+        # In this test we know its value will have invalid span_id
+        expected_trace_state = trace_api.TraceState([("sw", "0000000000000000-01")])
+        assert span_server.context.trace_state == expected_trace_state
+
         # Check root span attributes
         #   :present:
         #     service entry internal KVs, which are on all entry spans
@@ -101,6 +106,11 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         assert span_server.attributes["SampleSource"] == 4
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert not "SWKeys" in span_server.attributes
+
+        # Check outgoing request tracestate has `sw` key
+        # In this test we know its value will also have invalid span_id
+        expected_trace_state = trace_api.TraceState([("sw", "0000000000000000-01")])
+        assert span_client.context.trace_state == expected_trace_state
 
         # Check outgoing request span attributes
         #   :absent:

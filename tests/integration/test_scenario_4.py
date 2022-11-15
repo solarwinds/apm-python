@@ -116,6 +116,13 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert "{:032x}".format(span_server.context.trace_id) == trace_id
         assert "{:032x}".format(span_client.context.trace_id) == trace_id
 
+        # Check root span tracestate has `sw` key
+        # In this test it should be span_id, traceflags from extracted traceparent
+        expected_trace_state = trace_api.TraceState([
+            ("sw", "{}-{}".format(span_id, trace_flags))
+        ])
+        assert span_server.context.trace_state == expected_trace_state
+
         # Check root span attributes
         #   :present:
         #     service entry internal KVs, which are on all entry spans
@@ -130,6 +137,13 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert "sw.tracestate_parent_id" in span_server.attributes
         assert span_server.attributes["sw.tracestate_parent_id"] == tracestate_span
         assert not "SWKeys" in span_server.attributes
+
+        # Check outgoing request tracestate has `sw` key
+        # In this test it should also be span_id, traceflags from extracted traceparent
+        expected_trace_state = trace_api.TraceState([
+            ("sw", "{}-{}".format(span_id, trace_flags))
+        ])
+        assert span_client.context.trace_state == expected_trace_state
 
         # Check outgoing request span attributes
         #   :absent:
