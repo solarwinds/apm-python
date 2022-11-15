@@ -40,8 +40,7 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         #    - tracestate with same span_id and trace_flags for do_sample
         assert "traceparent" in resp_json
         _TRACEPARENT_HEADER_FORMAT = (
-            "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})"
-            + "(-.*)?[ \t]*$"
+            "^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$"
         )
         _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
         traceparent_re_result = re.search(
@@ -56,20 +55,9 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "01"
 
         assert "tracestate" in resp_json
-        assert new_span_id in resp_json["tracestate"]
         # In this test we know there is only `sw` in tracestate
-        # e.g. sw=e000baa4e000baa4-01
-        _TRACESTATE_HEADER_FORMAT = (
-            "^[ \t]*sw=([0-9a-f]{16})-([0-9a-f]{2})"
-            + "(-.*)?[ \t]*$"
-        )
-        _TRACESTATE_HEADER_FORMAT_RE = re.compile(_TRACESTATE_HEADER_FORMAT)
-        tracestate_re_result = re.search(
-            _TRACESTATE_HEADER_FORMAT_RE,
-            resp_json["tracestate"],
-        )
-        new_tracestate_flags = tracestate_re_result.group(2)
-        assert new_tracestate_flags == "01"
+        # and its value will be new_span_id and new_trace_flags
+        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask

@@ -72,8 +72,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         assert "traceparent" in resp_json
         assert trace_id in resp_json["traceparent"]
         _TRACEPARENT_HEADER_FORMAT = (
-            "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})"
-            + "(-.*)?[ \t]*$"
+            "^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$"
         )
         _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
         traceparent_re_result = re.search(
@@ -89,29 +88,14 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == trace_flags
 
         assert "tracestate" in resp_json
-        assert new_span_id in resp_json["tracestate"]
-        # In this test we know tracestate will have `sw`, `xtrace_options_response`,
-        # `trigger-trace`, and any `ignored` KVs
-        # i.e. sw=e000baa4e000baa4-01,xtrace_options_response=auth####ok;trigger-trace####ok;ignored####foo
-        _TRACESTATE_HEADER_FORMAT = (
-            "^[ \t]*sw=([0-9a-f]{16})-([0-9a-f]{2})"
+        # # In this test we know tracestate will have `sw`, `xtrace_options_response`,
+        # # `trigger-trace`, and any `ignored` KVs.
+        # `sw` in tracestate will have new_span_id and new_trace_flags.
+        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=auth####ok;trigger-trace####ok;ignored####foo".format(
+            new_span_id,
+            new_trace_flags,
         )
-        _TRACESTATE_HEADER_FORMAT_RE = re.compile(_TRACESTATE_HEADER_FORMAT)
-        tracestate_re_result = re.search(
-            _TRACESTATE_HEADER_FORMAT_RE,
-            resp_json["tracestate"],
-        )
-        new_tracestate_span = tracestate_re_result.group(1)
-        assert new_tracestate_span is not None
-        assert new_tracestate_span != tracestate_span
-        new_tracestate_flags = tracestate_re_result.group(2)
-        assert new_tracestate_flags is not None
-        assert new_tracestate_flags == trace_flags
-        assert "xtrace_options_response=auth####ok" in resp_json["tracestate"]
-        assert "trigger-trace####ok" in resp_json["tracestate"]
-        assert "ignored####foo" in resp_json["tracestate"]
-        # TODO Change solarwinds-apm in NH-24786 to make this pass instead of above
-        # assert "ignored" not in resp_json["tracestate"]
+        # TODO NH-24786 will not ignored foo
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -126,7 +110,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         assert "auth=ok" in resp.headers["x-trace-options-response"]
         assert "trigger-trace=ok" in resp.headers["x-trace-options-response"]
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
-        # TODO Change solarwinds-apm in NH-24786 to make this pass instead of above
+        # TODO NH-24786 will not ignored foo
         # assert "ignored" not in resp.headers["x-trace-options-response"]
 
         # Verify spans exported: service entry (root) + outgoing request
@@ -166,7 +150,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         assert "sw.tracestate_parent_id" in span_server.attributes
         assert span_server.attributes["sw.tracestate_parent_id"] == tracestate_span
         assert "SWKeys" in span_server.attributes
-        # TODO Change solarwinds-apm in NH-24786 to include more
+        # TODO NH-24786 will not ignored foo
         assert span_server.attributes["SWKeys"] == "custom-sw-from:tammy,baz:qux"
 
         # Check outgoing request tracestate has `sw` key
