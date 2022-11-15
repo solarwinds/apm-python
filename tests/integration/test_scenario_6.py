@@ -81,10 +81,10 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
             resp_json["traceparent"],
         )
         new_trace_id = traceparent_re_result.group(2)
-        assert new_trace_id
+        assert new_trace_id is not None
         assert new_trace_id == trace_id
         new_span_id = traceparent_re_result.group(3)
-        assert new_span_id
+        assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
         assert new_trace_flags == trace_flags
 
@@ -102,10 +102,10 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
             resp_json["tracestate"],
         )
         new_tracestate_span = tracestate_re_result.group(1)
-        assert new_tracestate_span
+        assert new_tracestate_span is not None
         assert new_tracestate_span != tracestate_span
         new_tracestate_flags = tracestate_re_result.group(2)
-        assert new_tracestate_flags
+        assert new_tracestate_flags is not None
         assert new_tracestate_flags == trace_flags
         assert "xtrace_options_response=auth####ok" in resp_json["tracestate"]
         assert "trigger-trace####ok" in resp_json["tracestate"]
