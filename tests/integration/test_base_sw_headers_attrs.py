@@ -72,7 +72,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
                     argument = re.sub(r"OTEL_(PYTHON_)?", "", attribute).lower()
                     argument_otel_environment_variable[argument] = attribute
 
-        # Set APM service key
+        # Set APM service key - not valid, but we mock liboboe anyway
         os.environ["SW_APM_SERVICE_KEY"] = "foo:bar"
 
         # Load Distro
