@@ -14,7 +14,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
 
     def test_scenario_6_sampled(self):
         """
-        Scenario #6:
+        Scenario #6, sampled:
         1. Decision to sample with unsigned trigger trace flag is made at root/service entry span (mocked).
         2. Some traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
         3. The injected x-trace-options header is also propagated.
@@ -131,7 +131,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
 
     def test_scenario_6_not_sampled(self):
         """
-        Scenario #6:
+        Scenario #6, not sampled:
         1. Decision to NOT sample with unsigned trigger trace flag is made at root/service entry span (mocked).
         2. Some traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
         3. The injected x-trace-options header is also propagated.
