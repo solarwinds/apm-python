@@ -97,6 +97,21 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         )
         # TODO NH-24786 will not ignored foo
 
+        # Verify the OTel context extracted from the original request are continued by
+        # the trace context injected into test app's outgoing postman-echo call
+        try:
+            assert resp_json["incoming-headers"]["traceparent"] == traceparent
+            assert new_trace_id in resp_json["incoming-headers"]["traceparent"]
+            assert new_span_id not in resp_json["incoming-headers"]["traceparent"]
+            assert new_trace_flags in resp_json["incoming-headers"]["traceparent"]
+
+            assert resp_json["incoming-headers"]["tracestate"] == tracestate
+            assert "sw=" in resp_json["incoming-headers"]["tracestate"]
+            assert new_span_id not in resp_json["incoming-headers"]["tracestate"]
+            assert new_trace_flags in resp_json["incoming-headers"]["tracestate"]
+        except KeyError as e:
+            self.fail("KeyError was raised at continue trace check: {}".format(e))
+
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
         # app's outgoing request
@@ -255,6 +270,21 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
             new_trace_flags,
         )
         # TODO NH-24786 will not ignored foo
+
+        # Verify the OTel context extracted from the original request are continued by
+        # the trace context injected into test app's outgoing postman-echo call
+        try:
+            assert resp_json["incoming-headers"]["traceparent"] == traceparent
+            assert new_trace_id in resp_json["incoming-headers"]["traceparent"]
+            assert new_span_id not in resp_json["incoming-headers"]["traceparent"]
+            assert new_trace_flags in resp_json["incoming-headers"]["traceparent"]
+
+            assert resp_json["incoming-headers"]["tracestate"] == tracestate
+            assert "sw=" in resp_json["incoming-headers"]["tracestate"]
+            assert new_span_id not in resp_json["incoming-headers"]["tracestate"]
+            assert new_trace_flags in resp_json["incoming-headers"]["tracestate"]
+        except KeyError as e:
+            self.fail("KeyError was raised at continue trace check: {}".format(e))
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
