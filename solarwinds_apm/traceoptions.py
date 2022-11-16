@@ -32,6 +32,7 @@ class XTraceOptions():
         self.ignored = []
         self.options_header = ""
         self.signature = None
+        self.custom_kvs = {}
         self.sw_keys = ""
         self.trigger_trace = 0
         self.ts = 0
@@ -63,11 +64,15 @@ class XTraceOptions():
                     self.trigger_trace = 1
         
             elif option_key == self._XTRACEOPTIONS_HEADER_KEY_SW_KEYS:
-                self.sw_keys = option_kv[1].strip()                    
+                self.sw_keys = option_kv[1].strip()
 
             elif re.match(self._XTRACEOPTIONS_CUSTOM_RE, option_key):
-                # custom keys are valid but do not need parsing
-                pass
+                # custom-* must have its value assigned by single equals sign
+                if len(option_kv) == 2:
+                    self.custom_kvs[option_key] = option_kv[1].strip()
+                else:
+                    logger.debug("custom-* must be assigned with a single equals sign. Ignoring.")
+                    self.ignored.append(option_key)
 
             elif option_key == self._XTRACEOPTIONS_HEADER_KEY_TS:
                 try:

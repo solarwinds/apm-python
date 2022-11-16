@@ -351,11 +351,17 @@ class _SwSampler(Sampler):
         
         new_attributes = {}
 
-        # Always (root or is_remote) set _INTERNAL_SW_KEYS if injected
+        # Always (root or is_remote) set _INTERNAL_SW_KEYS if extracted
         internal_sw_keys = xtraceoptions.sw_keys
         if internal_sw_keys:
             new_attributes[self._INTERNAL_SW_KEYS] = internal_sw_keys
     
+        # Always (root or is_remote) set custom KVs if extracted from x-trace-options
+        custom_kvs = xtraceoptions.custom_kvs
+        if custom_kvs:
+            for custom_key, custom_value in custom_kvs.items():
+                new_attributes[custom_key] = custom_value
+
         # Always (root or is_remote) set service entry internal KVs       
         new_attributes[self._INTERNAL_BUCKET_CAPACITY] = "{}".format(decision["bucket_cap"])
         new_attributes[self._INTERNAL_BUCKET_RATE] = "{}".format(decision["bucket_rate"])
