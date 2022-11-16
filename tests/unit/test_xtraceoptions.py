@@ -13,6 +13,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == ""
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.ts == 0
@@ -26,6 +27,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == ""
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.ts == 0
@@ -38,6 +40,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "="
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.ts == 0
@@ -51,6 +54,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "=oops"
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.ts == 0
@@ -63,6 +67,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "trigger-trace"
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 1
         assert xto.ts == 0
@@ -75,6 +80,7 @@ class TestXTraceOptions():
         assert xto.ignored == ["trigger-trace"]
         assert xto.options_header == "trigger-trace=1"
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.ts == 0
@@ -87,11 +93,12 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "sw-keys=   foo:key   "
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == "foo:key"
         assert xto.trigger_trace == 0
         assert xto.ts == 0
 
-    def test_init_custom_key_match_stored_only_in_options_header(self):
+    def test_init_custom_key_match_stored_in_options_header_and_custom_kvs(self):
         mock_otel_context = {
             INTL_SWO_X_OPTIONS_KEY: "custom-awesome-key=foo",
         }
@@ -99,6 +106,46 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "custom-awesome-key=foo"
         assert xto.signature == None
+        assert xto.custom_kvs == {"custom-awesome-key": "foo"}
+        assert xto.sw_keys == ""
+        assert xto.trigger_trace == 0
+        assert xto.ts == 0
+
+    def test_init_custom_key_match_stored_in_options_header_and_custom_kvs_strip(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "custom-awesome-key=   foo  ",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == []
+        assert xto.options_header == "custom-awesome-key=   foo  "
+        assert xto.signature == None
+        assert xto.custom_kvs == {"custom-awesome-key": "foo"}
+        assert xto.sw_keys == ""
+        assert xto.trigger_trace == 0
+        assert xto.ts == 0
+
+    def test_init_custom_key_match_but_no_value_ignored(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "custom-no-value",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == ["custom-no-value"]
+        assert xto.options_header == "custom-no-value"
+        assert xto.signature == None
+        assert xto.custom_kvs == {}
+        assert xto.sw_keys == ""
+        assert xto.trigger_trace == 0
+        assert xto.ts == 0
+
+    def test_init_custom_key_match_but_multiple_values_ignored(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "custom-but=too-many=values-nuoo",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == ["custom-but"]
+        assert xto.options_header == "custom-but=too-many=values-nuoo"
+        assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.ts == 0
@@ -111,6 +158,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "ts=12345"
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.ts == 12345
@@ -123,6 +171,7 @@ class TestXTraceOptions():
         assert xto.ignored == ["ts"]
         assert xto.options_header == "ts=incorrect"
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.ts == 0
@@ -135,6 +184,7 @@ class TestXTraceOptions():
         assert xto.ignored == ["customer-key"]
         assert xto.options_header == "customer-key=foo"
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.ts == 0
@@ -148,6 +198,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "trigger-trace"
         assert xto.signature == "my-foo-signature"
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 1
         assert xto.ts == 0
@@ -160,6 +211,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == ""
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.ts == 0
