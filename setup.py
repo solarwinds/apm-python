@@ -116,6 +116,7 @@ ext_modules = [
                   'solarwinds_apm/extension/oboe_api.hpp',
               ],
               include_dirs=[
+                  'solarwinds_apm/certs',
                   'solarwinds_apm/extension',
                   'solarwinds_apm'
               ],

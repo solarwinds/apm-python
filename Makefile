@@ -142,6 +142,12 @@ sdist: wrapper
 	@python3.8 setup.py sdist
 	@echo -e "\nDone."
 
+# Check local package source distribution archive contents, without install
+CURR_DIR := $(shell pwd)
+check-sdist-local:
+	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) ./_helper_check_sdist.sh
+	@cd $(CURR_DIR)
+
 # Build the Python agent package bdist (wheels) for 64 bit many linux systems (except Alpine).
 # The recipe builds the wheels for all Python versions available in the docker image EXCEPT py36, similarly to the example provided
 # in the corresponding repo of the Docker images: https://github.com/pypa/manylinux#example.
@@ -153,8 +159,13 @@ manylinux-wheels: wrapper
 	@rm -rf ./tmp_dist
 	@echo -e "\nDone."
 
-# Build the full Python agent distribution (sdist and wheels)
-package: sdist manylinux-wheels
+# Check local package wheel contents, without install
+check-wheel-local:
+	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) ./_helper_check_wheel.sh
+	@cd $(CURR_DIR)
+
+# Build and check the full Python agent distribution (sdist and wheels)
+package: sdist check-sdist-local manylinux-wheels check-wheel-local
 
 # Build the AWS lambda layer.
 # temporary target directory for AWS Lambda build artifacts
