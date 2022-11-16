@@ -127,7 +127,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # TODO NH-24786 will not ignored foo
         # assert "ignored" not in resp.headers["x-trace-options-response"]
 
-        # Verify spans exported: service entry + outgoing request
+        # Verify spans exported: service entry + outgoing request (child with local parent)
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
