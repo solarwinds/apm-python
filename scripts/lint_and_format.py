@@ -15,7 +15,10 @@ def lint_and_format(args):
         black_args += ("--diff", "--check")
     subprocess.run(black_args)
 
-    # TODO call isort subprocess
+    isort_args = ("isort", "--settings-path", ".isort.cfg", ".")
+    if args.check_only:
+        isort_args += ("--diff", "--check")
+    subprocess.run(isort_args)
 
     # TODO call flake8 subprocess
 
