@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import subprocess
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Lint and format everything, autofixing if possible.")
@@ -9,7 +10,10 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 def lint_and_format(args):
-    # TODO call black subprocess
+    black_args = ("black", "--config", "pyproject.toml", ".")
+    if args.check_only:
+        black_args += ("--diff", "--check")
+    subprocess.run(black_args)
 
     # TODO call isort subprocess
 
@@ -17,8 +21,7 @@ def lint_and_format(args):
 
     # TODO call pylint subprocess
 
-    print("Done lint_and_format.")
-    return
+    print("Done.")
 
 
 def main():
