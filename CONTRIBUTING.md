@@ -154,6 +154,8 @@ MODE=testpypi docker-compose up
 
 TODO
 
-1. Create and run the Docker build container as described above.
-2. `make format`
-3. `make lint`
+Create and run the Docker build container as described above. Then:
+```
+./run_docker_dev.sh
+make tox OPTIONS="-e lint"
+```
