@@ -2,6 +2,7 @@
 import argparse
 import subprocess
 
+
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Lint and format everything, autofixing if possible.")
     parser.add_argument("--check-only", action="store_true")
@@ -9,18 +10,19 @@ def parse_args(args=None):
     parser.set_defaults(func=lint_and_format)
     return parser.parse_args(args)
 
+
 def lint_and_format(args):
-    black_args = ("black", "--config", "pyproject.toml", ".")
+    black_args = ("black", "--config", "pyproject.toml", "solarwinds_apm")
     if args.check_only:
         black_args += ("--diff", "--check")
     subprocess.run(black_args)
 
-    isort_args = ("isort", "--settings-path", ".isort.cfg", ".")
+    isort_args = ("isort", "--settings-path", ".isort.cfg", "solarwinds_apm")
     if args.check_only:
         isort_args += ("--diff", "--check")
     subprocess.run(isort_args)
 
-    subprocess.run(("flake8", "--config", ".flake8", "."))
+    subprocess.run(("flake8", "--config", ".flake8", "solarwinds_apm"))
 
     subprocess.run(("pylint", "--ignore", "solarwinds_apm/extension", "solarwinds_apm"))
 
