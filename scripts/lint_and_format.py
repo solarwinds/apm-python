@@ -22,7 +22,7 @@ def lint_and_format(args):
 
     subprocess.run(("flake8", "--config", ".flake8", "."))
 
-    # TODO call pylint subprocess
+    subprocess.run(("pylint", "--ignore", "solarwinds_apm/extension", "solarwinds_apm"))
 
     print("Done.")
 
