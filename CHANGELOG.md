@@ -12,11 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OpenTelemetry API/SDK 1.14.0 ([#76](https://github.com/appoptics/solarwinds-apm-python/pull/76))
 - OpenTelemetry Instrumentation 0.35b0 ([#76](https://github.com/appoptics/solarwinds-apm-python/pull/76))
 
-## [0.2.1](https://github.com/appoptics/solarwinds-apm-python/releases/tag/v0.2.1) - 2022-11-08
+## [0.2.1](https://github.com/appoptics/solarwinds-apm-python/releases/tag/rel-0.2.1) - 2022-11-08
 ### Changed
 - Version bump for rebuild of 0.2.0 ([#73](https://github.com/appoptics/solarwinds-apm-python/pull/73))
 
-## [0.2.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/v0.2.0) - 2022-11-07
+## [0.2.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/rel-0.2.0) - 2022-11-07
 ### Added
 - Added `solarwinds_ready` method ([#64](https://github.com/appoptics/solarwinds-apm-python/pull/64))
 - Added startup `__Init` with SWO ([#64](https://github.com/appoptics/solarwinds-apm-python/pull/64))
@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed logging vulnerabilities ([#63](https://github.com/appoptics/solarwinds-apm-python/pull/63))
 - Update packaging and install tests ([#71](https://github.com/appoptics/solarwinds-apm-python/pull/71))
 
-## [0.1.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/v0.1.0) - 2022-10-13
+## [0.1.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/rel-0.1.0) - 2022-10-13
 ### Added
 - Initial release for GA (alpha)
 - OpenTelemetry API/SDK 1.13.0, for trace generation
