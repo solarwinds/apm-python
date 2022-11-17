@@ -20,7 +20,7 @@ def lint_and_format(args):
         isort_args += ("--diff", "--check")
     subprocess.run(isort_args)
 
-    # TODO call flake8 subprocess
+    subprocess.run(("flake8", "--config", ".flake8", "."))
 
     # TODO call pylint subprocess
 
