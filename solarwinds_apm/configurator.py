@@ -4,7 +4,6 @@ import logging
 import os
 import sys
 import time
-from typing import TYPE_CHECKING
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
@@ -28,8 +27,10 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_SUPPORT_EMAIL,
 )
+from solarwinds_apm.apm_noop import Reporter as NoopReporter
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
+from solarwinds_apm.extension.oboe import Config, Context, Metadata, Reporter
 from solarwinds_apm.inbound_metrics_processor import (
     SolarWindsInboundMetricsSpanProcessor,
 )
@@ -37,9 +38,6 @@ from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
 from solarwinds_apm.version import __version__
-
-if TYPE_CHECKING:
-    from solarwinds_apm.extension.oboe import Reporter
 
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
@@ -228,34 +226,34 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
     ) -> "Reporter":
         """Initialize SolarWinds reporter used by sampler and exporter, using SolarWindsApmConfig. This establishes collector and sampling settings in a background thread."""
-        if apm_config.agent_enabled:
-            from solarwinds_apm.extension.oboe import Reporter
-        else:
-            from solarwinds_apm.apm_noop import Reporter
+        reporter_kwargs = {
+            "hostname_alias": apm_config.get("hostname_alias"),
+            "log_level": apm_config.get("debug_level"),
+            "log_file_path": apm_config.get("logname"),
+            "max_transactions": apm_config.get("max_transactions"),
+            "max_flush_wait_time": apm_config.get("max_flush_wait_time"),
+            "events_flush_interval": apm_config.get("events_flush_interval"),
+            "max_request_size_bytes": apm_config.get("max_request_size_bytes"),
+            "reporter": apm_config.get("reporter"),
+            "host": apm_config.get("collector"),
+            "service_key": apm_config.get("service_key"),
+            "certificates": apm_config.certificates,
+            "buffer_size": apm_config.get("bufsize"),
+            "trace_metrics": apm_config.get("trace_metrics"),
+            "histogram_precision": apm_config.get("histogram_precision"),
+            "token_bucket_capacity": apm_config.get("token_bucket_capacity"),
+            "token_bucket_rate": apm_config.get("token_bucket_rate"),
+            "file_single": apm_config.get("reporter_file_single"),
+            "ec2_metadata_timeout": apm_config.get("ec2_metadata_timeout"),
+            "grpc_proxy": apm_config.get("proxy"),
+            "stdout_clear_nonblocking": 0,
+            "metric_format": apm_config.metric_format,
+        }
 
-        return Reporter(
-            hostname_alias=apm_config.get("hostname_alias"),
-            log_level=apm_config.get("debug_level"),
-            log_file_path=apm_config.get("logname"),
-            max_transactions=apm_config.get("max_transactions"),
-            max_flush_wait_time=apm_config.get("max_flush_wait_time"),
-            events_flush_interval=apm_config.get("events_flush_interval"),
-            max_request_size_bytes=apm_config.get("max_request_size_bytes"),
-            reporter=apm_config.get("reporter"),
-            host=apm_config.get("collector"),
-            service_key=apm_config.get("service_key"),
-            certificates=apm_config.certificates,
-            buffer_size=apm_config.get("bufsize"),
-            trace_metrics=apm_config.get("trace_metrics"),
-            histogram_precision=apm_config.get("histogram_precision"),
-            token_bucket_capacity=apm_config.get("token_bucket_capacity"),
-            token_bucket_rate=apm_config.get("token_bucket_rate"),
-            file_single=apm_config.get("reporter_file_single"),
-            ec2_metadata_timeout=apm_config.get("ec2_metadata_timeout"),
-            grpc_proxy=apm_config.get("proxy"),
-            stdout_clear_nonblocking=0,
-            metric_format=apm_config.metric_format,
-        )  # type: ignore
+        if apm_config.agent_enabled:
+            return Reporter(**reporter_kwargs)
+        else:
+            return NoopReporter(**reporter_kwargs)
 
     def _report_init_event(
         self,
@@ -283,9 +281,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             else:
                 logger.warning("Agent disabled. Not sending init message.")
             return
-
-        # solarwinds_ready only if agent_enabled
-        from solarwinds_apm.extension.oboe import Config, Context, Metadata
 
         version_keys = dict()
 

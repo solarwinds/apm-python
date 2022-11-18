@@ -5,6 +5,9 @@ from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import SpanKind, StatusCode, TraceFlags
 
+from solarwinds_apm.apm_noop import Span as NoopSpan
+from solarwinds_apm.extension.oboe import Span
+
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
@@ -30,13 +33,9 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     ) -> None:
         self._apm_txname_manager = apm_txname_manager
         if agent_enabled:
-            from solarwinds_apm.extension.oboe import Span
-
             self._span = Span
         else:
-            from solarwinds_apm.apm_noop import Span
-
-            self._span = Span
+            self._span = NoopSpan
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics,

@@ -24,7 +24,9 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_SUPPORT_EMAIL,
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
+from solarwinds_apm.apm_noop import Context as NoopContext
 from solarwinds_apm.certs.ao_issuer_ca import get_public_cert
+from solarwinds_apm.extension.oboe import Context
 
 logger = logging.getLogger(__name__)
 
@@ -106,13 +108,9 @@ class SolarWindsApmConfig:
         self.agent_enabled = self._calculate_agent_enabled()
 
         if self.agent_enabled:
-            from solarwinds_apm.extension.oboe import Context
-
             self.context = Context
         else:
-            from solarwinds_apm.apm_noop import Context
-
-            self.context = Context
+            self.context = NoopContext
 
         # TODO Implement config with cnf_file after alpha
         # cnf_file = os.environ.get('SW_APM_APM_CONFIG_PYTHON', os.environ.get('SW_APM_PYCONF', None))

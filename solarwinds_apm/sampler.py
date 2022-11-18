@@ -24,12 +24,13 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_EQUALS_W3C_SANITIZED,
     INTL_SWO_TRACESTATE_KEY,
 )
+from solarwinds_apm.apm_noop import Context as NoopContext
+from solarwinds_apm.extension.oboe import Context
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
-    from solarwinds_apm.extension.oboe import Context
 
 logger = logging.getLogger(__name__)
 
@@ -56,13 +57,9 @@ class _SwSampler(Sampler):
         self.apm_config = apm_config
         self.context = None
         if self.apm_config.agent_enabled:
-            from solarwinds_apm.extension.oboe import Context
-
             self.context = Context
         else:
-            from solarwinds_apm.apm_noop import Context
-
-            self.context = Context
+            self.context = NoopContext
 
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
