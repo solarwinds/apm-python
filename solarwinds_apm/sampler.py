@@ -427,8 +427,8 @@ class _SwSampler(Sampler):
         else:
             # Copy existing MappingProxyType KV into new_attributes for modification.
             # attributes may have other vendor info etc
-            for k, v in attributes.items():
-                new_attributes[k] = v
+            for attr_k, attr_v in attributes.items():
+                new_attributes[attr_k] = attr_v
 
         new_attributes = self.add_tracestate_capture_to_attributes_dict(
             new_attributes,

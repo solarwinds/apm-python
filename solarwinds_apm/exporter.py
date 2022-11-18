@@ -73,8 +73,8 @@ class SolarWindsSpanExporter(SpanExporter):
             evt.addInfo("Layer", span.name)
             evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
             evt.addInfo("Language", "Python")
-            for k, v in span.attributes.items():
-                evt.addInfo(k, v)
+            for attr_k, attr_v in span.attributes.items():
+                evt.addInfo(attr_k, attr_v)
             self.reporter.sendReport(evt, False)
 
             for event in span.events:
@@ -117,13 +117,13 @@ class SolarWindsSpanExporter(SpanExporter):
             "Backtrace", event.attributes.get("exception.stacktrace", None)
         )
         # add remaining attributes, if any
-        for k, v in event.attributes.items():
-            if k not in (
+        for attr_k, attr_v in event.attributes.items():
+            if attr_k not in (
                 "exception.type",
                 "exception.message",
                 "exception.stacktrace",
             ):
-                evt.addInfo(k, v)
+                evt.addInfo(attr_k, attr_v)
         self.reporter.sendReport(evt, False)
 
     def _report_info_event(self, event) -> None:
@@ -132,8 +132,8 @@ class SolarWindsSpanExporter(SpanExporter):
         print(event)
         evt = self.context.createEvent(int(event.timestamp / 1000))
         evt.addInfo("Label", "info")
-        for k, v in event.attributes.items():
-            evt.addInfo(k, v)
+        for attr_k, attr_v in event.attributes.items():
+            evt.addInfo(attr_k, attr_v)
         self.reporter.sendReport(evt, False)
 
     @staticmethod

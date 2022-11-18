@@ -80,10 +80,10 @@ class ApmLoggingLevel:
 def _create_stream_handler():
     """Creates stream handler reporting to stderr."""
     sh = logging.StreamHandler()  # get stream handler to custom logging prefix
-    f = logging.Formatter(
+    fm = logging.Formatter(
         "%(asctime)s [ %(name)s %(levelname)-8s p#%(process)d.%(thread)d] %(message)s"
     )
-    sh.setFormatter(f)
+    sh.setFormatter(fm)
     return sh
 
 

@@ -37,7 +37,7 @@ class OboeReporterCode:
     @classmethod
     def get_text_code(cls, num):
         """Returns the textual representation of the numerical status code."""
-        for k, v in cls.__dict__.items():
-            if v == num:
-                return k
+        for init_status, init_code in cls.__dict__.items():
+            if init_code == num:
+                return init_status
         return None

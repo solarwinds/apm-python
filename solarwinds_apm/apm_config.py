@@ -255,7 +255,7 @@ class SolarWindsApmConfig:
                     agent_enabled = False
                     raise ImportError
 
-        except ImportError as e:
+        except ImportError as ex:
             try:
                 if agent_enabled:
                     # only log the following messages if agent wasn't explicitly disabled
@@ -268,7 +268,7 @@ class SolarWindsApmConfig:
                             Error: {}
                             See: {}""".format(
                                 INTL_SWO_SUPPORT_EMAIL,
-                                e,
+                                ex,
                                 INTL_SWO_DOC_TRACING_PYTHON,
                             )
                         )
@@ -364,10 +364,10 @@ class SolarWindsApmConfig:
     def _config_mask_service_key(self) -> dict:
         """Return new config with service key masked"""
         config_masked = {}
-        for k, v in self.__config.items():
-            if k == "service_key":
-                v = self.mask_service_key()
-            config_masked[k] = v
+        for cnf_k, cnf_v in self.__config.items():
+            if cnf_k == "service_key":
+                cnf_v = self.mask_service_key()
+            config_masked[cnf_k] = cnf_v
         return config_masked
 
     def __str__(self) -> str:

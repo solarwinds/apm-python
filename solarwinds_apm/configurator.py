@@ -104,8 +104,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "opentelemetry_traces_sampler",
                 self._DEFAULT_SW_TRACES_SAMPLER,
             )(apm_config)
-        except Exception as e:
-            logger.exception("A exception was raised: {}".format(e))
+        except Exception as ex:
+            logger.exception("A exception was raised: {}".format(ex))
             logger.exception(
                 "Failed to load configured sampler {}. "
                 "Please reinstall or contact {}.".format(
@@ -164,8 +164,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                             "opentelemetry_traces_exporter", exporter_name
                         )
                     ).load()()
-            except Exception as e:
-                logger.exception("A exception was raised: {}".format(e))
+            except Exception as ex:
+                logger.exception("A exception was raised: {}".format(ex))
                 # At this point any non-default OTEL_TRACES_EXPORTER has
                 # been checked by ApmConfig so exception here means
                 # something quite wrong
@@ -297,8 +297,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 minor=sys.version_info[1],
                 patch=sys.version_info[2],
             )
-        except Exception as e:
-            logger.warning("Could not retrieve Python version {}".format(e))
+        except Exception as ex:
+            logger.warning("Could not retrieve Python version {}".format(ex))
 
         version_keys["Python.AppOptics.Version"] = __version__
         version_keys[
@@ -330,6 +330,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         evt = md.createEvent()
         evt.addInfo("Label", "single")
         evt.addInfo("Layer", layer)
-        for k, v in version_keys.items():
-            evt.addInfo(k, v)
+        for ver_k, ver_v in version_keys.items():
+            evt.addInfo(ver_k, ver_v)
         reporter.sendStatus(evt)
