@@ -10,6 +10,9 @@ from typing import Any
 from opentelemetry.sdk.trace.export import SpanExporter
 
 from solarwinds_apm.apm_constants import INTL_SWO_SUPPORT_EMAIL
+from solarwinds_apm.apm_noop import Context as NoopContext
+from solarwinds_apm.apm_noop import Metadata as NoopMetadata
+from solarwinds_apm.extension.oboe import Context, Metadata
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
@@ -35,15 +38,11 @@ class SolarWindsSpanExporter(SpanExporter):
         self.reporter = reporter
         self.apm_txname_manager = apm_txname_manager
         if agent_enabled:
-            from solarwinds_apm.extension.oboe import Context, Metadata
-
             self.context = Context
             self.metadata = Metadata
         else:
-            from solarwinds_apm.apm_noop import Context, Metadata
-
-            self.context = Context
-            self.metadata = Metadata
+            self.context = NoopContext
+            self.metadata = NoopMetadata
 
     def export(self, spans) -> None:
         """Export to AO events and report via liboboe.
