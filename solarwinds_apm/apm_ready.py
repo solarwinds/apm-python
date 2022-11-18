@@ -39,7 +39,7 @@ def solarwinds_ready(
         Logger.info("SolarWinds not ready after 10 seconds, no metrics will be sent")
     """
     rc = Context.isReady(wait_milliseconds)
-    if not isinstance(rc, int) or not rc in OboeReadyCode.code_values():
+    if not isinstance(rc, int) or rc not in OboeReadyCode.code_values():
         logger.warning("Unrecognized return code:{rc}".format(rc=rc))
         return (
             OboeReadyCode.OBOE_SERVER_RESPONSE_UNKNOWN
