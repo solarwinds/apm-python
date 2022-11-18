@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/appoptics/solarwinds-apm-python/compare/rel-0.2.1...HEAD)
 ### Added
 - Added sdist and wheel extension file checks as part of library packaging ([#75](https://github.com/appoptics/solarwinds-apm-python/pull/75))
+- Added linting and code formatting ([#80](https://github.com/appoptics/solarwinds-apm-python/pull/80))
 
 ### Changed
 - OpenTelemetry API/SDK 1.14.0 ([#76](https://github.com/appoptics/solarwinds-apm-python/pull/76))
