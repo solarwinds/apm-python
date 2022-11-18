@@ -104,7 +104,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "opentelemetry_traces_sampler",
                 self._DEFAULT_SW_TRACES_SAMPLER,
             )(apm_config)
-        except:
+        except Exception as e:
+            logger.exception("A exception was raised: {}".format(e))
             logger.exception(
                 "Failed to load configured sampler {}. "
                 "Please reinstall or contact {}.".format(
@@ -163,7 +164,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                             "opentelemetry_traces_exporter", exporter_name
                         )
                     ).load()()
-            except:
+            except Exception as e:
+                logger.exception("A exception was raised: {}".format(e))
                 # At this point any non-default OTEL_TRACES_EXPORTER has
                 # been checked by ApmConfig so exception here means
                 # something quite wrong
