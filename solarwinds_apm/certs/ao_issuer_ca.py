@@ -25,5 +25,6 @@ ftgwcxyEq5SkiR+6BCwdzAMqADV37TzXDHLjwSrMIrgLV5xZM20Kk6chxI5QAr/f
 -----END CERTIFICATE-----
 """
 
+
 def get_public_cert() -> str:
     return public_cert

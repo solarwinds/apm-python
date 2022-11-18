@@ -2,11 +2,13 @@
 """
 
 import logging
+
 from opentelemetry.sdk.trace import SpanContext
 
 logger = logging.getLogger(__name__)
 
-class W3CTransformer():
+
+class W3CTransformer:
     """Transforms inputs to W3C-compliant data for SolarWinds context propagation"""
 
     _DECISION = "{}"
@@ -34,25 +36,29 @@ class W3CTransformer():
     def traceparent_from_context(cls, span_context: SpanContext) -> str:
         """Generates a liboboe W3C compatible trace_context from
         provided OTel span context."""
-        template = "-".join([
-            cls._VERSION,
-            cls._TRACE_ID_HEX,
-            cls._SPAN_ID_HEX,
-            cls._TRACE_FLAGS_HEX
-        ])
+        template = "-".join(
+            [
+                cls._VERSION,
+                cls._TRACE_ID_HEX,
+                cls._SPAN_ID_HEX,
+                cls._TRACE_FLAGS_HEX,
+            ]
+        )
         xtr = template.format(
             span_context.trace_id,
             span_context.span_id,
-            span_context.trace_flags
+            span_context.trace_flags,
         )
-        logger.debug("Generated traceparent {} from {}".format(xtr, span_context))
+        logger.debug(
+            "Generated traceparent {} from {}".format(xtr, span_context)
+        )
         return xtr
 
     @classmethod
     def sw_from_context(cls, span_context: SpanContext) -> str:
         """Formats tracestate sw value from SpanContext as 16-byte span_id
         with 8-bit trace_flags.
-        
+
         Example: 1a2b3c4d5e6f7g8h-01"""
         sw = "-".join([cls._SPAN_ID_HEX, cls._TRACE_FLAGS_HEX])
         return sw.format(span_context.span_id, span_context.trace_flags)
@@ -61,7 +67,7 @@ class W3CTransformer():
     def sw_from_span_and_decision(cls, span_id: int, decision: str) -> str:
         """Formats tracestate sw value from span_id and liboboe decision
         as 16-byte span_id with 8-bit trace_flags.
-        
+
         Example: 1a2b3c4d5e6f7g8h-01"""
         sw = "-".join([cls._SPAN_ID_HEX, cls._DECISION])
         return sw.format(span_id, decision)

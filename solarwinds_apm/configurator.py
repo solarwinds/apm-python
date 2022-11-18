@@ -2,39 +2,40 @@
 
 import logging
 import os
-from pkg_resources import (
-    iter_entry_points,
-    load_entry_point
-)
 import sys
 import time
-from typing import (
-    TYPE_CHECKING
-)
+from typing import TYPE_CHECKING
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
-    OTEL_TRACES_EXPORTER
+    OTEL_TRACES_EXPORTER,
 )
-from opentelemetry.instrumentation.propagators import set_global_response_propagator
+from opentelemetry.instrumentation.propagators import (
+    set_global_response_propagator,
+)
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from pkg_resources import iter_entry_points, load_entry_point
 
+from solarwinds_apm import apm_logging
+from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_SUPPORT_EMAIL,
 )
-from solarwinds_apm import apm_logging
-from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
-from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
-from solarwinds_apm.inbound_metrics_processor import SolarWindsInboundMetricsSpanProcessor
+from solarwinds_apm.inbound_metrics_processor import (
+    SolarWindsInboundMetricsSpanProcessor,
+)
+from solarwinds_apm.response_propagator import (
+    SolarWindsTraceResponsePropagator,
+)
 from solarwinds_apm.version import __version__
 
 if TYPE_CHECKING:
@@ -58,7 +59,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager = SolarWindsTxnNameManager()
         apm_config = SolarWindsApmConfig()
         reporter = self._initialize_solarwinds_reporter(apm_config)
-        self._configure_otel_components(apm_txname_manager, apm_config, reporter)
+        self._configure_otel_components(
+            apm_txname_manager, apm_config, reporter
+        )
         # Report an status event after everything is done.
         self._report_init_event(reporter, apm_config)
 
@@ -93,15 +96,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Always configure SolarWinds OTel sampler, or none if disabled"""
         if not apm_config.agent_enabled:
             logger.error("Tracing disabled. Using OTel no-op tracer provider.")
-            trace.set_tracer_provider(
-                trace.NoOpTracerProvider()
-            )
+            trace.set_tracer_provider(trace.NoOpTracerProvider())
             return
         try:
             sampler = load_entry_point(
                 "solarwinds_apm",
                 "opentelemetry_traces_sampler",
-                self._DEFAULT_SW_TRACES_SAMPLER
+                self._DEFAULT_SW_TRACES_SAMPLER,
             )(apm_config)
         except:
             logger.exception(
@@ -112,9 +113,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
             )
             raise
-        trace.set_tracer_provider(
-            TracerProvider(sampler=sampler)
-        )
+        trace.set_tracer_provider(TracerProvider(sampler=sampler))
 
     def _configure_metrics_span_processor(
         self,
@@ -156,18 +155,17 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     exporter = load_entry_point(
                         "solarwinds_apm",
                         "opentelemetry_traces_exporter",
-                        exporter_name
+                        exporter_name,
                     )(reporter, apm_txname_manager, agent_enabled)
                 else:
                     exporter = next(
                         iter_entry_points(
-                            "opentelemetry_traces_exporter",
-                            exporter_name
+                            "opentelemetry_traces_exporter", exporter_name
                         )
                     ).load()()
             except:
-                # At this point any non-default OTEL_TRACES_EXPORTER has 
-                # been checked by ApmConfig so exception here means 
+                # At this point any non-default OTEL_TRACES_EXPORTER has
+                # been checked by ApmConfig so exception here means
                 # something quite wrong
                 logger.exception(
                     "Failed to load configured exporter {}. "
@@ -177,7 +175,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     )
                 )
                 raise
-            logger.debug("Setting trace with BatchSpanProcessor using {}".format(exporter_name))
+            logger.debug(
+                "Setting trace with BatchSpanProcessor using {}".format(
+                    exporter_name
+                )
+            )
             span_processor = BatchSpanProcessor(exporter)
             trace.get_tracer_provider().add_span_processor(span_processor)
 
@@ -196,7 +198,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             try:
                 propagators.append(
                     next(
-                        iter_entry_points("opentelemetry_propagator", propagator_name)
+                        iter_entry_points(
+                            "opentelemetry_propagator", propagator_name
+                        )
                     ).load()()
                 )
             except Exception:
@@ -206,7 +210,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     )
                 )
                 raise
-        logger.debug("Setting CompositePropagator with {}".format(environ_propagators_names))
+        logger.debug(
+            "Setting CompositePropagator with {}".format(
+                environ_propagators_names
+            )
+        )
         set_global_textmap(CompositePropagator(propagators))
 
     def _configure_response_propagator(self) -> None:
@@ -259,7 +267,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         reporter_ready = False
         if reporter.init_status in (
             OboeReporterCode.OBOE_INIT_OK,
-            OboeReporterCode.OBOE_INIT_ALREADY_INIT
+            OboeReporterCode.OBOE_INIT_ALREADY_INIT,
         ):
             reporter_ready = apm_config.agent_enabled
         if not reporter_ready:
@@ -282,30 +290,39 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         version_keys["__Init"] = "True"
         # liboboe adds key Hostname for us
         try:
-            version_keys['Python.Version'] = "{major}.{minor}.{patch}".format(
-                major=sys.version_info[0], minor=sys.version_info[1], patch=sys.version_info[2])
+            version_keys["Python.Version"] = "{major}.{minor}.{patch}".format(
+                major=sys.version_info[0],
+                minor=sys.version_info[1],
+                patch=sys.version_info[2],
+            )
         except Exception as e:
             logger.warning("Could not retrieve Python version {}".format(e))
 
-        version_keys['Python.AppOptics.Version'] = __version__
-        version_keys['Python.AppOpticsExtension.Version'] = Config.getVersionString()
+        version_keys["Python.AppOptics.Version"] = __version__
+        version_keys[
+            "Python.AppOpticsExtension.Version"
+        ] = Config.getVersionString()
 
         # Attempt to get the following info if we are in a regular file.
         # Else the path operations fail, for example when the agent is running
         # in an application zip archive.
         if os.path.isfile(__file__):
-            version_keys['Python.InstallDirectory'] = os.path.dirname(__file__)
-            version_keys['Python.InstallTimestamp'] = os.path.getmtime(__file__)  # in sec since epoch
+            version_keys["Python.InstallDirectory"] = os.path.dirname(__file__)
+            version_keys["Python.InstallTimestamp"] = os.path.getmtime(
+                __file__
+            )  # in sec since epoch
         else:
-            version_keys['Python.InstallDirectory'] = "Unknown"
-            version_keys['Python.InstallTimestamp'] = 0
-        version_keys['Python.LastRestart'] = self._AGENT_START_TIME  # in usec
+            version_keys["Python.InstallDirectory"] = "Unknown"
+            version_keys["Python.InstallTimestamp"] = 0
+        version_keys["Python.LastRestart"] = self._AGENT_START_TIME  # in usec
 
         version_keys.update(keys)
 
         md = Metadata.makeRandom(True)
         if not md.isValid():
-            logger.warning("Warning: Could not generate Metadata for reporter init. Skipping init message.")
+            logger.warning(
+                "Warning: Could not generate Metadata for reporter init. Skipping init message."
+            )
             return
         Context.set(md)
         evt = md.createEvent()

@@ -5,21 +5,25 @@ The custom sampler will fetch sampling configurations for the SolarWinds backend
 
 import logging
 from types import MappingProxyType
-from typing import Optional, Sequence, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Optional, Sequence
 
 from opentelemetry.context.context import Context as OtelContext
-from opentelemetry.sdk.trace.sampling import (Decision, ParentBased, Sampler,
-                                              SamplingResult)
+from opentelemetry.sdk.trace.sampling import (
+    Decision,
+    ParentBased,
+    Sampler,
+    SamplingResult,
+)
 from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import SpanContext, TraceState
 from opentelemetry.util.types import Attributes
 
+from solarwinds_apm.apm_config import OboeTracingMode
 from solarwinds_apm.apm_constants import (
     INTL_SWO_COMMA_W3C_SANITIZED,
     INTL_SWO_EQUALS_W3C_SANITIZED,
-    INTL_SWO_TRACESTATE_KEY
+    INTL_SWO_TRACESTATE_KEY,
 )
-from solarwinds_apm.apm_config import OboeTracingMode
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
@@ -53,9 +57,11 @@ class _SwSampler(Sampler):
         self.context = None
         if self.apm_config.agent_enabled:
             from solarwinds_apm.extension.oboe import Context
+
             self.context = Context
         else:
             from solarwinds_apm.apm_noop import Context
+
             self.context = Context
 
     def get_description(self) -> str:
@@ -72,7 +78,9 @@ class _SwSampler(Sampler):
             tracestring = W3CTransformer.traceparent_from_context(
                 parent_span_context
             )
-        sw_member_value = parent_span_context.trace_state.get(INTL_SWO_TRACESTATE_KEY)
+        sw_member_value = parent_span_context.trace_state.get(
+            INTL_SWO_TRACESTATE_KEY
+        )
 
         # 'tracing_mode' is not supported in NH Python, so give as unset
         tracing_mode = self._UNSET
@@ -104,19 +112,6 @@ class _SwSampler(Sampler):
             "options: {}, "
             "signature: {}, "
             "timestamp: {}".format(
-            tracestring,
-            sw_member_value,
-            tracing_mode,
-            sample_rate,
-            trigger_trace_request,
-            trigger_trace_mode,
-            options,
-            signature,
-            timestamp
-        ))
-        do_metrics, do_sample, \
-            rate, source, bucket_rate, bucket_cap, decision_type, \
-            auth, status_msg, auth_msg, status = self.context.getDecisions(
                 tracestring,
                 sw_member_value,
                 tracing_mode,
@@ -125,8 +120,32 @@ class _SwSampler(Sampler):
                 trigger_trace_mode,
                 options,
                 signature,
-                timestamp
+                timestamp,
             )
+        )
+        (
+            do_metrics,
+            do_sample,
+            rate,
+            source,
+            bucket_rate,
+            bucket_cap,
+            decision_type,
+            auth,
+            status_msg,
+            auth_msg,
+            status,
+        ) = self.context.getDecisions(
+            tracestring,
+            sw_member_value,
+            tracing_mode,
+            sample_rate,
+            trigger_trace_request,
+            trigger_trace_mode,
+            options,
+            signature,
+            timestamp,
+        )
         decision = {
             "do_metrics": do_metrics,
             "do_sample": do_sample,
@@ -143,25 +162,19 @@ class _SwSampler(Sampler):
         logger.debug("Got liboboe decision outputs: {}".format(decision))
         return decision
 
-    def is_decision_continued(
-        self,
-        liboboe_decision: Dict
-    ) -> bool:
+    def is_decision_continued(self, liboboe_decision: Dict) -> bool:
         """Returns True if liboboe decision is a continued one, else False"""
         for val in [
             liboboe_decision["rate"],
             liboboe_decision["source"],
             liboboe_decision["bucket_rate"],
-            liboboe_decision["bucket_cap"]
+            liboboe_decision["bucket_cap"],
         ]:
             if val != self._LIBOBOE_CONTINUED:
                 return False
         return True
 
-    def otel_decision_from_liboboe(
-        self,
-        liboboe_decision: Dict
-    ) -> Decision:
+    def otel_decision_from_liboboe(self, liboboe_decision: Dict) -> Decision:
         """Formats OTel decision from liboboe decision"""
         decision = Decision.DROP
         if liboboe_decision["do_sample"]:
@@ -175,7 +188,7 @@ class _SwSampler(Sampler):
         self,
         decision: Dict,
         parent_span_context: SpanContext,
-        xtraceoptions: XTraceOptions
+        xtraceoptions: XTraceOptions,
     ) -> str:
         """Use decision and xtraceoptions to create sanitized xtraceoptions
         response kv with W3C tracestate-allowed delimiters:
@@ -185,17 +198,21 @@ class _SwSampler(Sampler):
         response = []
 
         if xtraceoptions.signature and decision["auth_msg"]:
-            response.append(INTL_SWO_EQUALS_W3C_SANITIZED.join([
-                self._XTRACEOPTIONS_RESP_AUTH,
-                decision["auth_msg"]
-            ]))
+            response.append(
+                INTL_SWO_EQUALS_W3C_SANITIZED.join(
+                    [self._XTRACEOPTIONS_RESP_AUTH, decision["auth_msg"]]
+                )
+            )
 
         if not decision["auth"] or decision["auth"] < 1:
             trigger_msg = ""
             if xtraceoptions.trigger_trace:
                 # If a traceparent header was provided then oboe does not generate the message
                 tracestring = None
-                if parent_span_context.is_valid and parent_span_context.is_remote:
+                if (
+                    parent_span_context.is_valid
+                    and parent_span_context.is_remote
+                ):
                     tracestring = W3CTransformer.traceparent_from_context(
                         parent_span_context
                     )
@@ -206,17 +223,24 @@ class _SwSampler(Sampler):
                     trigger_msg = decision["status_msg"]
             else:
                 trigger_msg = self._XTRACEOPTIONS_RESP_TRIGGER_NOT_REQUESTED
-            response.append(INTL_SWO_EQUALS_W3C_SANITIZED.join([
-                self._XTRACEOPTIONS_RESP_TRIGGER_TRACE,
-                trigger_msg
-            ]))
+            response.append(
+                INTL_SWO_EQUALS_W3C_SANITIZED.join(
+                    [self._XTRACEOPTIONS_RESP_TRIGGER_TRACE, trigger_msg]
+                )
+            )
 
         if xtraceoptions.ignored:
             response.append(
-                INTL_SWO_EQUALS_W3C_SANITIZED.join([
-                    self._XTRACEOPTIONS_RESP_IGNORED,
-                    (INTL_SWO_COMMA_W3C_SANITIZED.join(xtraceoptions.ignored))
-                ])
+                INTL_SWO_EQUALS_W3C_SANITIZED.join(
+                    [
+                        self._XTRACEOPTIONS_RESP_IGNORED,
+                        (
+                            INTL_SWO_COMMA_W3C_SANITIZED.join(
+                                xtraceoptions.ignored
+                            )
+                        ),
+                    ]
+                )
             )
 
         return ";".join(response)
@@ -229,21 +253,25 @@ class _SwSampler(Sampler):
     ) -> TraceState:
         """Creates new TraceState based on trace decision, parent span id,
         and x-trace-options if provided"""
-        trace_state = TraceState([(
-            INTL_SWO_TRACESTATE_KEY,
-            W3CTransformer.sw_from_span_and_decision(
-                parent_span_context.span_id,
-                W3CTransformer.trace_flags_from_int(decision["do_sample"])
-            )
-        )])
+        trace_state = TraceState(
+            [
+                (
+                    INTL_SWO_TRACESTATE_KEY,
+                    W3CTransformer.sw_from_span_and_decision(
+                        parent_span_context.span_id,
+                        W3CTransformer.trace_flags_from_int(
+                            decision["do_sample"]
+                        ),
+                    ),
+                )
+            ]
+        )
         if xtraceoptions and xtraceoptions.trigger_trace:
             trace_state = trace_state.add(
                 XTraceOptions.get_sw_xtraceoptions_response_key(),
                 self.create_xtraceoptions_response_value(
-                    decision,
-                    parent_span_context,
-                    xtraceoptions
-                )
+                    decision, parent_span_context, xtraceoptions
+                ),
             )
         logger.debug("Created new trace_state: {}".format(trace_state))
         return trace_state
@@ -260,18 +288,14 @@ class _SwSampler(Sampler):
         # No valid parent i.e. root span, or parent is remote
         if not parent_span_context.is_valid:
             trace_state = self.create_new_trace_state(
-                decision,
-                parent_span_context,
-                xtraceoptions
+                decision, parent_span_context, xtraceoptions
             )
         else:
             trace_state = parent_span_context.trace_state
             if not trace_state:
                 # tracestate nonexistent/non-parsable
                 trace_state = self.create_new_trace_state(
-                    decision,
-                    parent_span_context,
-                    xtraceoptions
+                    decision, parent_span_context, xtraceoptions
                 )
             else:
                 # Update trace_state with span_id and sw trace_flags
@@ -279,8 +303,10 @@ class _SwSampler(Sampler):
                     INTL_SWO_TRACESTATE_KEY,
                     W3CTransformer.sw_from_span_and_decision(
                         parent_span_context.span_id,
-                        W3CTransformer.trace_flags_from_int(decision["do_sample"])
-                    )
+                        W3CTransformer.trace_flags_from_int(
+                            decision["do_sample"]
+                        ),
+                    ),
                 )
                 # Update trace_state with x-trace-options-response
                 # Not a propagated header, so always an add
@@ -288,20 +314,17 @@ class _SwSampler(Sampler):
                     trace_state = trace_state.add(
                         XTraceOptions.get_sw_xtraceoptions_response_key(),
                         self.create_xtraceoptions_response_value(
-                            decision,
-                            parent_span_context,
-                            xtraceoptions
-                        )
+                            decision, parent_span_context, xtraceoptions
+                        ),
                     )
                 logger.debug("Updated trace_state: {}".format(trace_state))
         return trace_state
 
-    def remove_response_from_sw(
-        self,
-        trace_state: TraceState
-    ) -> TraceState:
+    def remove_response_from_sw(self, trace_state: TraceState) -> TraceState:
         """Remove xtraceoptions response from tracestate"""
-        return trace_state.delete(XTraceOptions.get_sw_xtraceoptions_response_key())
+        return trace_state.delete(
+            XTraceOptions.get_sw_xtraceoptions_response_key()
+        )
 
     def add_tracestate_capture_to_attributes_dict(
         self,
@@ -312,23 +335,27 @@ class _SwSampler(Sampler):
     ) -> dict:
         """Calculate and add SW tracestate capture to attributes_dict,
         which is a dict not an Attributes/MappingProxy object"""
-        tracestate_capture = attributes_dict.get(self._SW_TRACESTATE_CAPTURE_KEY, None)
+        tracestate_capture = attributes_dict.get(
+            self._SW_TRACESTATE_CAPTURE_KEY, None
+        )
         if not tracestate_capture:
             trace_state_no_response = self.remove_response_from_sw(trace_state)
         else:
             # Must retain all potential tracestate pairs for attributes
-            attr_trace_state = TraceState.from_header([
-                tracestate_capture
-            ])
+            attr_trace_state = TraceState.from_header([tracestate_capture])
             new_attr_trace_state = attr_trace_state.update(
                 INTL_SWO_TRACESTATE_KEY,
                 W3CTransformer.sw_from_span_and_decision(
                     parent_span_context.span_id,
-                    W3CTransformer.trace_flags_from_int(decision["do_sample"])
-                )
+                    W3CTransformer.trace_flags_from_int(decision["do_sample"]),
+                ),
             )
-            trace_state_no_response = self.remove_response_from_sw(new_attr_trace_state)
-        attributes_dict[self._SW_TRACESTATE_CAPTURE_KEY] = trace_state_no_response.to_header()
+            trace_state_no_response = self.remove_response_from_sw(
+                new_attr_trace_state
+            )
+        attributes_dict[
+            self._SW_TRACESTATE_CAPTURE_KEY
+        ] = trace_state_no_response.to_header()
         return attributes_dict
 
     def calculate_attributes(
@@ -338,7 +365,7 @@ class _SwSampler(Sampler):
         decision: Dict,
         trace_state: TraceState,
         parent_span_context: SpanContext,
-        xtraceoptions: XTraceOptions
+        xtraceoptions: XTraceOptions,
     ) -> Attributes or None:
         """Calculates Attributes or None based on trace decision, trace state,
         parent span context, xtraceoptions, and existing attributes."""
@@ -346,31 +373,40 @@ class _SwSampler(Sampler):
         # Don't set attributes if not tracing
         otel_decision = self.otel_decision_from_liboboe(decision)
         if not Decision.is_sampled(otel_decision):
-            logger.debug("Trace decision not is_sampled - not setting attributes")
+            logger.debug(
+                "Trace decision not is_sampled - not setting attributes"
+            )
             return None
-        
+
         new_attributes = {}
 
         # Always (root or is_remote) set _INTERNAL_SW_KEYS if injected
         internal_sw_keys = xtraceoptions.sw_keys
         if internal_sw_keys:
             new_attributes[self._INTERNAL_SW_KEYS] = internal_sw_keys
-    
-        # Always (root or is_remote) set service entry internal KVs       
-        new_attributes[self._INTERNAL_BUCKET_CAPACITY] = "{}".format(decision["bucket_cap"])
-        new_attributes[self._INTERNAL_BUCKET_RATE] = "{}".format(decision["bucket_rate"])
+
+        # Always (root or is_remote) set service entry internal KVs
+        new_attributes[self._INTERNAL_BUCKET_CAPACITY] = "{}".format(
+            decision["bucket_cap"]
+        )
+        new_attributes[self._INTERNAL_BUCKET_RATE] = "{}".format(
+            decision["bucket_rate"]
+        )
         new_attributes[self._INTERNAL_SAMPLE_RATE] = decision["rate"]
         new_attributes[self._INTERNAL_SAMPLE_SOURCE] = decision["source"]
         logger.debug(
-            "Set attributes with service entry internal KVs: {}".format(new_attributes)
+            "Set attributes with service entry internal KVs: {}".format(
+                new_attributes
+            )
         )
 
         # Trace's root span has no valid traceparent nor tracestate
         # so we can't calculate remaining attributes
         if not parent_span_context.is_valid or not trace_state:
             logger.debug(
-                "No valid traceparent or no tracestate - returning attributes: {}"
-                .format(new_attributes)
+                "No valid traceparent or no tracestate - returning attributes: {}".format(
+                    new_attributes
+                )
             )
 
             if new_attributes:
@@ -381,13 +417,17 @@ class _SwSampler(Sampler):
 
         if not attributes:
             # _SW_TRACESTATE_ROOT_KEY is set once per trace, if possible
-            sw_value = parent_span_context.trace_state.get(INTL_SWO_TRACESTATE_KEY, None)
+            sw_value = parent_span_context.trace_state.get(
+                INTL_SWO_TRACESTATE_KEY, None
+            )
             if sw_value:
-                new_attributes[self._SW_TRACESTATE_ROOT_KEY]= W3CTransformer.span_id_from_sw(sw_value)
+                new_attributes[
+                    self._SW_TRACESTATE_ROOT_KEY
+                ] = W3CTransformer.span_id_from_sw(sw_value)
         else:
             # Copy existing MappingProxyType KV into new_attributes for modification.
             # attributes may have other vendor info etc
-            for k,v in attributes.items():
+            for k, v in attributes.items():
                 new_attributes[k] = v
 
         new_attributes = self.add_tracestate_capture_to_attributes_dict(
@@ -422,15 +462,12 @@ class _SwSampler(Sampler):
         xtraceoptions = XTraceOptions(parent_context)
 
         liboboe_decision = self.calculate_liboboe_decision(
-            parent_span_context,
-            xtraceoptions
+            parent_span_context, xtraceoptions
         )
 
         # Always calculate trace_state for propagation
         new_trace_state = self.calculate_trace_state(
-            liboboe_decision,
-            parent_span_context,
-            xtraceoptions
+            liboboe_decision, parent_span_context, xtraceoptions
         )
         new_attributes = self.calculate_attributes(
             name,
@@ -438,7 +475,7 @@ class _SwSampler(Sampler):
             liboboe_decision,
             new_trace_state,
             parent_span_context,
-            xtraceoptions
+            xtraceoptions,
         )
         otel_decision = self.otel_decision_from_liboboe(liboboe_decision)
 
@@ -456,6 +493,7 @@ class ParentBasedSwSampler(ParentBased):
 
     Requires "SolarWindsApmConfig".
     """
+
     def __init__(self, apm_config: "SolarWindsApmConfig"):
         """
         Uses _SwSampler/liboboe if no parent span.
@@ -465,7 +503,7 @@ class ParentBasedSwSampler(ParentBased):
         super().__init__(
             root=_SwSampler(apm_config),
             remote_parent_sampled=_SwSampler(apm_config),
-            remote_parent_not_sampled=_SwSampler(apm_config)
+            remote_parent_not_sampled=_SwSampler(apm_config),
         )
 
     def should_sample(
@@ -476,7 +514,7 @@ class ParentBasedSwSampler(ParentBased):
         kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None
+        trace_state: "TraceState" = None,
     ) -> "SamplingResult":
 
         return super().should_sample(
@@ -486,5 +524,5 @@ class ParentBasedSwSampler(ParentBased):
             kind,
             attributes,
             links,
-            trace_state
+            trace_state,
         )

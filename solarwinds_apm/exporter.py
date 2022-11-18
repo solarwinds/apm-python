@@ -36,10 +36,12 @@ class SolarWindsSpanExporter(SpanExporter):
         self.apm_txname_manager = apm_txname_manager
         if agent_enabled:
             from solarwinds_apm.extension.oboe import Context, Metadata
+
             self.context = Context
             self.metadata = Metadata
         else:
             from solarwinds_apm.apm_noop import Context, Metadata
+
             self.context = Context
             self.metadata = Metadata
 
@@ -55,8 +57,9 @@ class SolarWindsSpanExporter(SpanExporter):
                 # If there is a parent, we need to add an edge to this parent to this entry event
                 logger.debug("Continue trace from {}".format(md.toString()))
                 parent_md = self._build_metadata(self.metadata, span.parent)
-                evt = self.context.createEntry(md, int(span.start_time / 1000),
-                                         parent_md)
+                evt = self.context.createEntry(
+                    md, int(span.start_time / 1000), parent_md
+                )
                 if span.parent.is_remote:
                     self._add_info_transaction_name(span, evt)
             else:
@@ -67,27 +70,29 @@ class SolarWindsSpanExporter(SpanExporter):
                 evt = self.context.createEntry(md, int(span.start_time / 1000))
                 self._add_info_transaction_name(span, evt)
 
-            evt.addInfo('Layer', span.name)
+            evt.addInfo("Layer", span.name)
             evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
-            evt.addInfo('Language', 'Python')
+            evt.addInfo("Language", "Python")
             for k, v in span.attributes.items():
                 evt.addInfo(k, v)
             self.reporter.sendReport(evt, False)
 
             for event in span.events:
-                if event.name == 'exception':
+                if event.name == "exception":
                     self._report_exception_event(event)
                 else:
                     self._report_info_event(event)
 
             evt = self.context.createExit(int(span.end_time / 1000))
-            evt.addInfo('Layer', span.name)
+            evt.addInfo("Layer", span.name)
             self.reporter.sendReport(evt, False)
 
     def _add_info_transaction_name(self, span, evt) -> None:
         """Add transaction name from cache to root span
         then removes from cache"""
-        trace_span_id = "{}-{}".format(span.context.trace_id, span.context.span_id)
+        trace_span_id = "{}-{}".format(
+            span.context.trace_id, span.context.span_id
+        )
         txname = self.apm_txname_manager.get(trace_span_id)
         if txname:
             evt.addInfo(self._INTERNAL_TRANSACTION_NAME, txname)
@@ -95,22 +100,29 @@ class SolarWindsSpanExporter(SpanExporter):
         else:
             logger.warning(
                 "There was an issue setting trace TransactionName. "
-                "Please contact {} with this issue".format(INTL_SWO_SUPPORT_EMAIL)
+                "Please contact {} with this issue".format(
+                    INTL_SWO_SUPPORT_EMAIL
+                )
             )
 
     def _report_exception_event(self, event) -> None:
         evt = self.context.createEvent(int(event.timestamp / 1000))
-        evt.addInfo('Label', 'error')
-        evt.addInfo('Spec', 'error')
-        evt.addInfo('ErrorClass', event.attributes.get('exception.type', None))
-        evt.addInfo('ErrorMsg', event.attributes.get('exception.message',
-                                                     None))
-        evt.addInfo('Backtrace',
-                    event.attributes.get('exception.stacktrace', None))
+        evt.addInfo("Label", "error")
+        evt.addInfo("Spec", "error")
+        evt.addInfo("ErrorClass", event.attributes.get("exception.type", None))
+        evt.addInfo(
+            "ErrorMsg", event.attributes.get("exception.message", None)
+        )
+        evt.addInfo(
+            "Backtrace", event.attributes.get("exception.stacktrace", None)
+        )
         # add remaining attributes, if any
         for k, v in event.attributes.items():
-            if k not in ('exception.type', 'exception.message',
-                         'exception.stacktrace'):
+            if k not in (
+                "exception.type",
+                "exception.message",
+                "exception.stacktrace",
+            ):
                 evt.addInfo(k, v)
         self.reporter.sendReport(evt, False)
 
@@ -119,7 +131,7 @@ class SolarWindsSpanExporter(SpanExporter):
         print(dir(event))
         print(event)
         evt = self.context.createEvent(int(event.timestamp / 1000))
-        evt.addInfo('Label', 'info')
+        evt.addInfo("Label", "info")
         for k, v in event.attributes.items():
             evt.addInfo(k, v)
         self.reporter.sendReport(evt, False)

@@ -39,32 +39,32 @@ class ApmLoggingLevel:
 
     # maps string representation of solarwinds_apm.sw_logging levels to their integer counterpart
     debug_levels = {
-        'OBOE_DEBUG_DISABLE': -1,
-        'OBOE_DEBUG_FATAL': 0,
-        'OBOE_DEBUG_ERROR': 1,
-        'OBOE_DEBUG_WARNING': 2,
-        'OBOE_DEBUG_INFO': 3,
-        'OBOE_DEBUG_LOW': 4,
-        'OBOE_DEBUG_MEDIUM': 5,
-        'OBOE_DEBUG_HIGH': 6,
+        "OBOE_DEBUG_DISABLE": -1,
+        "OBOE_DEBUG_FATAL": 0,
+        "OBOE_DEBUG_ERROR": 1,
+        "OBOE_DEBUG_WARNING": 2,
+        "OBOE_DEBUG_INFO": 3,
+        "OBOE_DEBUG_LOW": 4,
+        "OBOE_DEBUG_MEDIUM": 5,
+        "OBOE_DEBUG_HIGH": 6,
     }
 
     # maps solarwinds_apm log levels to python logging module log levels
     logging_map = {
-        debug_levels['OBOE_DEBUG_DISABLE']: logging.CRITICAL,
-        debug_levels['OBOE_DEBUG_FATAL']: logging.CRITICAL,
-        debug_levels['OBOE_DEBUG_ERROR']: logging.ERROR,
-        debug_levels['OBOE_DEBUG_WARNING']: logging.WARNING,
-        debug_levels['OBOE_DEBUG_INFO']: logging.INFO,
-        debug_levels['OBOE_DEBUG_LOW']: logging.DEBUG,
-        debug_levels['OBOE_DEBUG_MEDIUM']: logging.DEBUG,
-        debug_levels['OBOE_DEBUG_HIGH']: logging.DEBUG,
+        debug_levels["OBOE_DEBUG_DISABLE"]: logging.CRITICAL,
+        debug_levels["OBOE_DEBUG_FATAL"]: logging.CRITICAL,
+        debug_levels["OBOE_DEBUG_ERROR"]: logging.ERROR,
+        debug_levels["OBOE_DEBUG_WARNING"]: logging.WARNING,
+        debug_levels["OBOE_DEBUG_INFO"]: logging.INFO,
+        debug_levels["OBOE_DEBUG_LOW"]: logging.DEBUG,
+        debug_levels["OBOE_DEBUG_MEDIUM"]: logging.DEBUG,
+        debug_levels["OBOE_DEBUG_HIGH"]: logging.DEBUG,
     }
 
     @classmethod
     def default_level(cls):
         """Returns integer representation of default debugging level"""
-        return cls.debug_levels['OBOE_DEBUG_WARNING']
+        return cls.debug_levels["OBOE_DEBUG_WARNING"]
 
     @classmethod
     def is_valid_level(cls, level):
@@ -80,7 +80,9 @@ class ApmLoggingLevel:
 def _create_stream_handler():
     """Creates stream handler reporting to stderr."""
     sh = logging.StreamHandler()  # get stream handler to custom logging prefix
-    f = logging.Formatter('%(asctime)s [ %(name)s %(levelname)-8s p#%(process)d.%(thread)d] %(message)s')
+    f = logging.Formatter(
+        "%(asctime)s [ %(name)s %(levelname)-8s p#%(process)d.%(thread)d] %(message)s"
+    )
     sh.setFormatter(f)
     return sh
 
@@ -100,22 +102,25 @@ def _get_logger():
     """
 
     # create base logger for solarwinds_apm package
-    _logger = logging.getLogger('solarwinds_apm')
+    _logger = logging.getLogger("solarwinds_apm")
 
     # configure logging level of solarwinds_apm logger
     log_level = ApmLoggingLevel.default_level()
     # check if SW_APM_DEBUG_LEVEL has been set and configure newly created logger accordingly
-    envv_val = os.getenv('SW_APM_DEBUG_LEVEL', None)
+    envv_val = os.getenv("SW_APM_DEBUG_LEVEL", None)
     if envv_val is not None:
         if not ApmLoggingLevel.is_valid_level(envv_val):
-            _logger.warning("Misconfigured SW_APM_DEBUG_LEVEL ignored. Defaulted to debug_level %s", log_level)
+            _logger.warning(
+                "Misconfigured SW_APM_DEBUG_LEVEL ignored. Defaulted to debug_level %s",
+                log_level,
+            )
             _logger.warning("")
         else:
             log_level = int(envv_val)
 
     _logger.setLevel(ApmLoggingLevel.logging_map[log_level])
 
-    if log_level != ApmLoggingLevel.debug_levels['OBOE_DEBUG_DISABLE']:
+    if log_level != ApmLoggingLevel.debug_levels["OBOE_DEBUG_DISABLE"]:
         _logger.addHandler(_stream_handler)
     else:
         _logger.propagate = False
@@ -150,7 +155,9 @@ def set_sw_log_level(level):
     """
     if ApmLoggingLevel.is_valid_level(level):
         logger.setLevel(ApmLoggingLevel.logging_map[level])
-        if level == ApmLoggingLevel.debug_levels['OBOE_DEBUG_DISABLE']:
+        if level == ApmLoggingLevel.debug_levels["OBOE_DEBUG_DISABLE"]:
             disable_logger()
     else:
-        logger.warning("set_sw_log_level: Ignore attempt to set solarwinds_apm logger to invalid logging level.")
+        logger.warning(
+            "set_sw_log_level: Ignore attempt to set solarwinds_apm logger to invalid logging level."
+        )

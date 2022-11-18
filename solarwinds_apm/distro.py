@@ -4,14 +4,14 @@ from os import environ
 
 from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
-    OTEL_TRACES_EXPORTER
+    OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.instrumentation.distro import BaseDistro
 
 from solarwinds_apm.apm_constants import (
+    INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
-    INTL_SWO_DEFAULT_PROPAGATORS
-) 
+)
 
 
 class SolarWindsDistro(BaseDistro):
@@ -19,5 +19,9 @@ class SolarWindsDistro(BaseDistro):
 
     def _configure(self, **kwargs):
         """Configure default OTel exporter and propagators"""
-        environ.setdefault(OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER)
-        environ.setdefault(OTEL_PROPAGATORS, ",".join(INTL_SWO_DEFAULT_PROPAGATORS))
+        environ.setdefault(
+            OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER
+        )
+        environ.setdefault(
+            OTEL_PROPAGATORS, ",".join(INTL_SWO_DEFAULT_PROPAGATORS)
+        )
