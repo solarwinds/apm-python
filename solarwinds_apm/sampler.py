@@ -160,16 +160,17 @@ class _SwSampler(Sampler):
         return decision
 
     def is_decision_continued(self, liboboe_decision: Dict) -> bool:
-        """Returns True if liboboe decision is a continued one, else False"""
-        for val in [
-            liboboe_decision["rate"],
-            liboboe_decision["source"],
-            liboboe_decision["bucket_rate"],
-            liboboe_decision["bucket_cap"],
-        ]:
-            if val != self._LIBOBOE_CONTINUED:
-                return False
-        return True
+        """Returns True if liboboe decision is a continued one (due to all
+        internals being 'continued'), else False"""
+        return all(
+            val == self._LIBOBOE_CONTINUED
+            for val in [
+                liboboe_decision["rate"],
+                liboboe_decision["source"],
+                liboboe_decision["bucket_rate"],
+                liboboe_decision["bucket_cap"],
+            ]
+        )
 
     def otel_decision_from_liboboe(self, liboboe_decision: Dict) -> Decision:
         """Formats OTel decision from liboboe decision"""
