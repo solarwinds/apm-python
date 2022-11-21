@@ -71,7 +71,7 @@ class SolarWindsApmConfig:
     _KEY_MASK_BAD_FORMAT_SHORT = "{}<invalid_format>"
 
     def __init__(self, **kwargs: int) -> None:
-        self.__config = dict()
+        self.__config = {}
         # Update the config with default values
         self.__config = {
             # 'tracing_mode' is unset by default and not supported in NH Python

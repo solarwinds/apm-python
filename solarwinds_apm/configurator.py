@@ -282,8 +282,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 logger.warning("Agent disabled. Not sending init message.")
             return
 
-        version_keys = dict()
-
+        version_keys = {}
         version_keys["__Init"] = "True"
         # liboboe adds key Hostname for us
         try:
