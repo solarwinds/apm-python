@@ -18,10 +18,13 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         1. Decision to sample with unsigned trigger trace flag is made at root/service
            entry span (mocked). There is no OTel context extracted from request headers,
            so this is the root and start of the trace.
-        2. Some traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
-        3. The injected x-trace-options header is also propagated.
+        2. Some traceparent and tracestate are injected into service's outgoing request
+           (done by OTel TraceContextTextMapPropagator).
+        3. A x-trace-options-response header is calculated using the extracted x-trace-options
+           and injected into the HTTP response.
         4. Sampling-related and SWKeys attributes are set for the root/service entry span.
-        5. The span_id of the outgoing request span matches the span_id portion in the tracestate header.
+        5. The span_id of the outgoing request span matches the span_id portion in the
+           tracestate header.
         """
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
