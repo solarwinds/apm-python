@@ -117,9 +117,10 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert not "SWKeys" in span_server.attributes
 
-        # Check outgoing request tracestate has `sw` key
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
-        # In this test we know `sw` value will also have invalid span_id
+        # In this test we know `sw` value will also have invalid span_id.
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok"),
