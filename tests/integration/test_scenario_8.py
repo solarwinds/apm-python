@@ -95,7 +95,6 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
             new_span_id,
             new_trace_flags,
         )
-        # TODO NH-24786 will not ignored foo
 
         # Verify the OTel context extracted from the original request are continued by
         # the trace context injected into test app's outgoing postman-echo call
@@ -124,8 +123,6 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "x-trace-options-response" in resp.headers
         assert "trigger-trace=ignored" in resp.headers["x-trace-options-response"]
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
-        # TODO NH-24786 will not ignored foo
-        # assert "ignored" not in resp.headers["x-trace-options-response"]
 
         # Verify spans exported: service entry + outgoing request (child with local parent)
         spans = self.memory_exporter.get_finished_spans()
@@ -163,7 +160,6 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "sw.tracestate_parent_id" in span_server.attributes
         assert span_server.attributes["sw.tracestate_parent_id"] == tracestate_span
         assert "SWKeys" in span_server.attributes
-        # TODO NH-24786 will not ignored foo
         assert span_server.attributes["SWKeys"] == "custom-sw-from:tammy,baz:qux"
 
         # Check outgoing request tracestate has `sw` key
@@ -269,7 +265,6 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
             new_span_id,
             new_trace_flags,
         )
-        # TODO NH-24786 will not ignored foo
 
         # Verify the OTel context extracted from the original request are continued by
         # the trace context injected into test app's outgoing postman-echo call
@@ -298,8 +293,6 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "x-trace-options-response" in resp.headers
         assert "trigger-trace=ignored" in resp.headers["x-trace-options-response"]
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
-        # TODO NH-24786 will not ignored foo
-        # assert "ignored" not in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
