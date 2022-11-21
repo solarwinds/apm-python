@@ -260,7 +260,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         reporter: "Reporter",
         apm_config: SolarWindsApmConfig,
         layer: str = "Python",
-        keys: dict = {},
+        keys: dict = None,
     ) -> None:
         """Report the APM library's init message, when reporter ready.
         Note: We keep the original "brand" keynames with AppOptics, instead of SolarWinds"""
@@ -313,7 +313,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             version_keys["Python.InstallTimestamp"] = 0
         version_keys["Python.LastRestart"] = self._AGENT_START_TIME  # in usec
 
-        version_keys.update(keys)
+        if keys:
+            version_keys.update(keys)
 
         md = Metadata.makeRandom(True)
         if not md.isValid():
