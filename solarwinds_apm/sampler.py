@@ -164,12 +164,12 @@ class _SwSampler(Sampler):
         internals being 'continued'), else False"""
         return all(
             val == self._LIBOBOE_CONTINUED
-            for val in [
+            for val in (
                 liboboe_decision["rate"],
                 liboboe_decision["source"],
                 liboboe_decision["bucket_rate"],
                 liboboe_decision["bucket_cap"],
-            ]
+            )
         )
 
     def otel_decision_from_liboboe(self, liboboe_decision: dict) -> Decision:
