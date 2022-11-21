@@ -66,15 +66,14 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             request_method = span.attributes.get(self._HTTP_METHOD, None)
 
             logger.debug(
-                "createHttpSpan with trans_name: {}, url_tran: {}, domain: {}, span_time: {} status_code: {}, request_method: {}, has_error: {}".format(
-                    trans_name,
-                    url_tran,
-                    domain,
-                    span_time,
-                    status_code,
-                    request_method,
-                    has_error,
-                )
+                "createHttpSpan with trans_name: %s, url_tran: %s, domain: %s, span_time: %s status_code: %s, request_method: %s, has_error: %s",
+                trans_name,
+                url_tran,
+                domain,
+                span_time,
+                status_code,
+                request_method,
+                has_error,
             )
             liboboe_txn_name = self._span.createHttpSpan(
                 trans_name,
@@ -87,12 +86,11 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             )
         else:
             logger.debug(
-                "createSpan with trans_name: {}, domain: {}, span_time: {}, has_error: {}".format(
-                    trans_name,
-                    domain,
-                    span_time,
-                    has_error,
-                )
+                "createSpan with trans_name: %s, domain: %s, span_time: %s, has_error: %s",
+                trans_name,
+                domain,
+                span_time,
+                has_error,
             )
             liboboe_txn_name = self._span.createSpan(
                 trans_name,

@@ -50,7 +50,9 @@ class W3CTransformer:
             span_context.trace_flags,
         )
         logger.debug(
-            "Generated traceparent {} from {}".format(xtr, span_context)
+            "Generated traceparent %s from %s",
+            xtr,
+            span_context,
         )
         return xtr
 

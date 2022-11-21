@@ -103,13 +103,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 self._DEFAULT_SW_TRACES_SAMPLER,
             )(apm_config)
         except Exception as ex:
-            logger.exception("A exception was raised: {}".format(ex))
+            logger.exception("A exception was raised: %s", ex)
             logger.exception(
-                "Failed to load configured sampler {}. "
-                "Please reinstall or contact {}.".format(
-                    self._DEFAULT_SW_TRACES_SAMPLER,
-                    INTL_SWO_SUPPORT_EMAIL,
-                )
+                "Failed to load configured sampler %s. "
+                "Please reinstall or contact %s.",
+                self._DEFAULT_SW_TRACES_SAMPLER,
+                INTL_SWO_SUPPORT_EMAIL,
             )
             raise
         trace.set_tracer_provider(TracerProvider(sampler=sampler))
@@ -163,22 +162,20 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                         )
                     ).load()()
             except Exception as ex:
-                logger.exception("A exception was raised: {}".format(ex))
+                logger.exception("A exception was raised: %s", ex)
                 # At this point any non-default OTEL_TRACES_EXPORTER has
                 # been checked by ApmConfig so exception here means
                 # something quite wrong
                 logger.exception(
-                    "Failed to load configured exporter {}. "
-                    "Please reinstall or contact {}.".format(
-                        exporter_name,
-                        INTL_SWO_SUPPORT_EMAIL,
-                    )
+                    "Failed to load configured exporter %s. "
+                    "Please reinstall or contact %s.",
+                    exporter_name,
+                    INTL_SWO_SUPPORT_EMAIL,
                 )
                 raise
             logger.debug(
-                "Setting trace with BatchSpanProcessor using {}".format(
-                    exporter_name
-                )
+                "Setting trace with BatchSpanProcessor using %s",
+                exporter_name,
             )
             span_processor = BatchSpanProcessor(exporter)
             trace.get_tracer_provider().add_span_processor(span_processor)
@@ -205,15 +202,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
             except Exception:
                 logger.exception(
-                    "Failed to load configured propagator {}".format(
-                        propagator_name
-                    )
+                    "Failed to load configured propagator %s",
+                    propagator_name,
                 )
                 raise
         logger.debug(
-            "Setting CompositePropagator with {}".format(
-                environ_propagators_names
-            )
+            "Setting CompositePropagator with %s",
+            environ_propagators_names,
         )
         set_global_textmap(CompositePropagator(propagators))
 
@@ -273,10 +268,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         if not reporter_ready:
             if apm_config.agent_enabled:
                 logger.error(
-                    "Failed to initialize the reporter, error code={} ({}). Not sending init message.".format(
-                        reporter.init_status,
-                        OboeReporterCode.get_text_code(reporter.init_status),
-                    )
+                    "Failed to initialize the reporter, error code=%s (%s). Not sending init message.",
+                    reporter.init_status,
+                    OboeReporterCode.get_text_code(reporter.init_status),
                 )
             else:
                 logger.warning("Agent disabled. Not sending init message.")
@@ -292,7 +286,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 patch=sys.version_info[2],
             )
         except Exception as ex:
-            logger.warning("Could not retrieve Python version {}".format(ex))
+            logger.warning("Could not retrieve Python version %s", ex)
 
         version_keys["Python.AppOptics.Version"] = __version__
         version_keys[

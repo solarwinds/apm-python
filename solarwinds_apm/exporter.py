@@ -54,7 +54,7 @@ class SolarWindsSpanExporter(SpanExporter):
             md = self._build_metadata(self.metadata, span.get_span_context())
             if span.parent and span.parent.is_valid:
                 # If there is a parent, we need to add an edge to this parent to this entry event
-                logger.debug("Continue trace from {}".format(md.toString()))
+                logger.debug("Continue trace from %s", md.toString())
                 parent_md = self._build_metadata(self.metadata, span.parent)
                 evt = self.context.createEntry(
                     md, int(span.start_time / 1000), parent_md
@@ -65,7 +65,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 # In OpenTelemrtry, there are no events with individual IDs, but only a span ID
                 # and trace ID. Thus, the entry event needs to be generated such that it has the
                 # same op ID as the span ID of the OTel span.
-                logger.debug("Start a new trace {}".format(md.toString()))
+                logger.debug("Start a new trace %s", md.toString())
                 evt = self.context.createEntry(md, int(span.start_time / 1000))
                 self._add_info_transaction_name(span, evt)
 
@@ -99,9 +99,8 @@ class SolarWindsSpanExporter(SpanExporter):
         else:
             logger.warning(
                 "There was an issue setting trace TransactionName. "
-                "Please contact {} with this issue".format(
-                    INTL_SWO_SUPPORT_EMAIL
-                )
+                "Please contact %s with this issue",
+                INTL_SWO_SUPPORT_EMAIL,
             )
 
     def _report_exception_event(self, event) -> None:

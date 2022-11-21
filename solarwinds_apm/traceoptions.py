@@ -82,17 +82,15 @@ class XTraceOptions:
 
             else:
                 logger.debug(
-                    "{} is not a recognized trace option. Ignoring".format(
-                        option_key
-                    )
+                    "%s is not a recognized trace option. Ignoring",
+                    option_key,
                 )
                 self.ignored.append(option_key)
 
             if self.ignored:
                 logger.debug(
-                    "Some x-trace-options were ignored: {}".format(
-                        ", ".join(self.ignored)
-                    )
+                    "Some x-trace-options were ignored: %s",
+                    ", ".join(self.ignored),
                 )
 
         options_signature = context.get(INTL_SWO_SIGNATURE_KEY, None)

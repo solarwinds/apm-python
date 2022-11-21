@@ -125,7 +125,7 @@ class SolarWindsApmConfig:
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
 
-        logger.debug("Set ApmConfig as: {}".format(self))
+        logger.debug("Set ApmConfig as: %s", self)
 
     def _is_lambda(self) -> bool:
         """Checks if agent is running in an AWS Lambda environment."""
@@ -262,39 +262,36 @@ class SolarWindsApmConfig:
                         logger.warning(
                             """Missing extension library.
                             Tracing is disabled and will go into no-op mode.
-                            Contact {} if this is unexpected.
-                            Error: {}
-                            See: {}""".format(
-                                INTL_SWO_SUPPORT_EMAIL,
-                                ex,
-                                INTL_SWO_DOC_TRACING_PYTHON,
-                            )
+                            Contact %s if this is unexpected.
+                            Error: %s
+                            See: %s""",
+                            INTL_SWO_SUPPORT_EMAIL,
+                            ex,
+                            INTL_SWO_DOC_TRACING_PYTHON,
                         )
                     else:
                         logger.warning(
-                            """Platform {} not yet supported.
-                            See: {}
+                            """Platform %s not yet supported.
+                            See: %s
                             Tracing is disabled and will go into no-op mode.
-                            Contact {} if this is unexpected.""".format(
-                                sys.platform,
-                                INTL_SWO_DOC_SUPPORTED_PLATFORMS,
-                                INTL_SWO_SUPPORT_EMAIL,
-                            )
+                            Contact %s if this is unexpected.""",
+                            sys.platform,
+                            INTL_SWO_DOC_SUPPORTED_PLATFORMS,
+                            INTL_SWO_SUPPORT_EMAIL,
                         )
             except ImportError as err:
                 logger.error(
-                    """Unexpected error: {}.
-                    Please reinstall or contact {}.""".format(
-                        err,
-                        INTL_SWO_SUPPORT_EMAIL,
-                    )
+                    """Unexpected error: %s.
+                    Please reinstall or contact %s.""",
+                    err,
+                    INTL_SWO_SUPPORT_EMAIL,
                 )
             finally:
                 # regardless of how we got into this (outer) exception block, the agent will not be able to trace (and thus be
                 # disabled)
                 agent_enabled = False
 
-        logger.debug("agent_enabled: {}".format(agent_enabled))
+        logger.debug("agent_enabled: %s", agent_enabled)
         return agent_enabled
 
     def _calculate_metric_format(self) -> int:
@@ -391,7 +388,8 @@ class SolarWindsApmConfig:
             self._set_config_value(key, value)
         else:
             logger.warning(
-                "Unsupported SolarWinds APM config key: {key}".format(key=key)
+                "Unsupported SolarWinds APM config key: %s",
+                key,
             )
 
     def __getitem__(self, key: str) -> Any:
@@ -541,9 +539,8 @@ class SolarWindsApmConfig:
                 sub_dict[keys[-1]] = val
             else:
                 logger.warning(
-                    "Ignore invalid configuration key: {}".format(
-                        ".".join(keys)
-                    )
+                    "Ignore invalid configuration key: %s",
+                    ".".join(keys),
                 )
         except (ValueError, TypeError):
             logger.warning(

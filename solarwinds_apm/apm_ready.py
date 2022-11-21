@@ -40,7 +40,7 @@ def solarwinds_ready(
     """
     rc = Context.isReady(wait_milliseconds)
     if not isinstance(rc, int) or rc not in OboeReadyCode.code_values():
-        logger.warning("Unrecognized return code:{rc}".format(rc=rc))
+        logger.warning("Unrecognized return code: %s", rc)
         return (
             OboeReadyCode.OBOE_SERVER_RESPONSE_UNKNOWN
             if integer_response

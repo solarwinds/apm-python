@@ -46,11 +46,10 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
 
         context.update({INTL_SWO_X_OPTIONS_KEY: xtraceoptions_header[0]})
         logger.debug(
-            "Extracted {} as {}: {}".format(
-                self._XTRACEOPTIONS_HEADER_NAME,
-                INTL_SWO_X_OPTIONS_KEY,
-                xtraceoptions_header[0],
-            )
+            "Extracted %s as %s: %s",
+            self._XTRACEOPTIONS_HEADER_NAME,
+            INTL_SWO_X_OPTIONS_KEY,
+            xtraceoptions_header[0],
         )
 
         signature_header = getter.get(
@@ -59,11 +58,10 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         if signature_header:
             context.update({INTL_SWO_SIGNATURE_KEY: signature_header[0]})
             logger.debug(
-                "Extracted {} as {}: {}".format(
-                    self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME,
-                    INTL_SWO_SIGNATURE_KEY,
-                    xtraceoptions_header[0],
-                )
+                "Extracted %s as %s: %s",
+                self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME,
+                INTL_SWO_SIGNATURE_KEY,
+                xtraceoptions_header[0],
             )
         return context
 
@@ -88,9 +86,8 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
                 return
             else:
                 logger.debug(
-                    "Creating new trace state for injection with {}".format(
-                        sw_value
-                    )
+                    "Creating new trace state for injection with %s",
+                    sw_value,
                 )
                 trace_state = TraceState([(INTL_SWO_TRACESTATE_KEY, sw_value)])
         else:
@@ -99,9 +96,8 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             if INTL_SWO_TRACESTATE_KEY in trace_state.keys():
                 # If so, modify current span_id and trace_flags, and move to beginning of list
                 logger.debug(
-                    "Updating trace state for injection with {}".format(
-                        sw_value
-                    )
+                    "Updating trace state for injection with %s",
+                    sw_value,
                 )
                 trace_state = trace_state.update(
                     INTL_SWO_TRACESTATE_KEY, sw_value
@@ -110,9 +106,8 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             else:
                 # If not, add sw KV to beginning of list
                 logger.debug(
-                    "Adding KV to trace state for injection with {}".format(
-                        sw_value
-                    )
+                    "Adding KV to trace state for injection with %s",
+                    sw_value,
                 )
                 trace_state = trace_state.add(
                     INTL_SWO_TRACESTATE_KEY, sw_value

@@ -100,25 +100,24 @@ class _SwSampler(Sampler):
 
         logger.debug(
             "Creating new oboe decision with "
-            "tracestring: {}, "
-            "sw_member_value: {}, "
-            "tracing_mode: {}, "
-            "sample_rate: {}, "
-            "trigger_trace_request: {}, "
-            "trigger_trace_mode: {}, "
-            "options: {}, "
-            "signature: {}, "
-            "timestamp: {}".format(
-                tracestring,
-                sw_member_value,
-                tracing_mode,
-                sample_rate,
-                trigger_trace_request,
-                trigger_trace_mode,
-                options,
-                signature,
-                timestamp,
-            )
+            "tracestring: %s, "
+            "sw_member_value: %s, "
+            "tracing_mode: %s, "
+            "sample_rate: %s, "
+            "trigger_trace_request: %s, "
+            "trigger_trace_mode: %s, "
+            "options: %s, "
+            "signature: %s, "
+            "timestamp: %s",
+            tracestring,
+            sw_member_value,
+            tracing_mode,
+            sample_rate,
+            trigger_trace_request,
+            trigger_trace_mode,
+            options,
+            signature,
+            timestamp,
         )
         (
             do_metrics,
@@ -156,7 +155,7 @@ class _SwSampler(Sampler):
             "auth_msg": auth_msg,
             "status": status,
         }
-        logger.debug("Got liboboe decision outputs: {}".format(decision))
+        logger.debug("Got liboboe decision outputs: %s", decision)
         return decision
 
     def is_decision_continued(self, liboboe_decision: dict) -> bool:
@@ -179,7 +178,7 @@ class _SwSampler(Sampler):
             decision = Decision.RECORD_AND_SAMPLE  # even if not do_metrics
         elif liboboe_decision["do_metrics"]:
             decision = Decision.RECORD_ONLY
-        logger.debug("OTel decision created: {}".format(decision))
+        logger.debug("OTel decision created: %s", decision)
         return decision
 
     def create_xtraceoptions_response_value(
@@ -271,7 +270,7 @@ class _SwSampler(Sampler):
                     decision, parent_span_context, xtraceoptions
                 ),
             )
-        logger.debug("Created new trace_state: {}".format(trace_state))
+        logger.debug("Created new trace_state: %s", trace_state)
         return trace_state
 
     def calculate_trace_state(
@@ -315,7 +314,7 @@ class _SwSampler(Sampler):
                             decision, parent_span_context, xtraceoptions
                         ),
                     )
-                logger.debug("Updated trace_state: {}".format(trace_state))
+                logger.debug("Updated trace_state: %s", trace_state)
         return trace_state
 
     def remove_response_from_sw(self, trace_state: TraceState) -> TraceState:
@@ -367,7 +366,7 @@ class _SwSampler(Sampler):
     ) -> Attributes or None:
         """Calculates Attributes or None based on trace decision, trace state,
         parent span context, xtraceoptions, and existing attributes."""
-        logger.debug("Received attributes: {}".format(attributes))
+        logger.debug("Received attributes: %s", attributes)
         # Don't set attributes if not tracing
         otel_decision = self.otel_decision_from_liboboe(decision)
         if not Decision.is_sampled(otel_decision):
@@ -393,18 +392,16 @@ class _SwSampler(Sampler):
         new_attributes[self._INTERNAL_SAMPLE_RATE] = decision["rate"]
         new_attributes[self._INTERNAL_SAMPLE_SOURCE] = decision["source"]
         logger.debug(
-            "Set attributes with service entry internal KVs: {}".format(
-                new_attributes
-            )
+            "Set attributes with service entry internal KVs: %s",
+            new_attributes,
         )
 
         # Trace's root span has no valid traceparent nor tracestate
         # so we can't calculate remaining attributes
         if not parent_span_context.is_valid or not trace_state:
             logger.debug(
-                "No valid traceparent or no tracestate - returning attributes: {}".format(
-                    new_attributes
-                )
+                "No valid traceparent or no tracestate - returning attributes: %s",
+                new_attributes,
             )
 
             if new_attributes:
@@ -435,7 +432,7 @@ class _SwSampler(Sampler):
             parent_span_context,
         )
 
-        logger.debug("Setting attributes: {}".format(new_attributes))
+        logger.debug("Setting attributes: %s", new_attributes)
 
         # attributes must be immutable for SamplingResult
         return MappingProxyType(new_attributes)
