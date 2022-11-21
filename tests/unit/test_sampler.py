@@ -119,6 +119,28 @@ def fixture_decision_drop():
         "do_sample": 0,
     }
 
+@pytest.fixture(name="decision_record_only")
+def fixture_decision_record_only():
+    return {
+        "do_metrics": 1,
+        "do_sample": 0,
+        "rate": 1,
+        "source": 1,
+        "bucket_rate": 1,
+        "bucket_cap": 1,
+    }
+
+@pytest.fixture(name="decision_record_and_sample")
+def fixture_decision_record_and_sample():
+    return {
+        "do_metrics": 1,
+        "do_sample": 1,
+        "rate": 1,
+        "source": 1,
+        "bucket_rate": 1,
+        "bucket_cap": 1,
+    }
+
 @pytest.fixture(name="decision_continued")
 def fixture_decision_continued():
     return {
@@ -581,7 +603,7 @@ class Test_SwSampler():
         ts = TraceState([["bar", "456"],["xtrace_options_response", "123"]])
         assert sw_sampler.remove_response_from_sw(ts) == TraceState([["bar", "456"]])
 
-    def test_calculate_attributes_dont_trace(
+    def test_calculate_attributes_decision_drop(
         self,
         mocker,
         sw_sampler,
@@ -595,6 +617,62 @@ class Test_SwSampler():
             parent_span_context=mocker.Mock(),
             xtraceoptions=mocker.Mock(),
         ) == None
+
+    def test_calculate_attributes_decision_drop_with_custom_and_sw_keys(
+        self,
+        mocker,
+        sw_sampler,
+        decision_drop,
+        mock_xtraceoptions_sw_keys_and_custom_keys,
+    ):
+        assert sw_sampler.calculate_attributes(
+            span_name="foo",
+            attributes=mocker.Mock(),
+            decision=decision_drop,
+            trace_state=mocker.Mock(),
+            parent_span_context=mocker.Mock(),
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys,
+        ) == None
+
+    def test_calculate_attributes_decision_record_only_with_custom_and_sw_keys(
+        self,
+        mocker,
+        sw_sampler,
+        decision_record_only,
+        mock_xtraceoptions_sw_keys_and_custom_keys,
+    ):
+        assert sw_sampler.calculate_attributes(
+            span_name="foo",
+            attributes=mocker.Mock(),
+            decision=decision_record_only,
+            trace_state=mocker.Mock(),
+            parent_span_context=mocker.Mock(),
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys,
+        ) == None
+
+    def test_calculate_attributes_decision_record_and_sample_with_custom_and_sw_keys(
+        self,
+        sw_sampler,
+        decision_record_and_sample,
+        parent_span_context_invalid,
+        mock_xtraceoptions_sw_keys_and_custom_keys,
+    ):
+        assert sw_sampler.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_record_and_sample,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys,
+        ) == MappingProxyType({
+            "BucketCapacity": "1",
+            "BucketRate": "1",
+            "SampleRate": 1,
+            "SampleSource": 1,
+            "TriggeredTrace": True,
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+        })
 
     def test_calculate_attributes_contd_decision_sw_keys(
         self,
@@ -615,11 +693,12 @@ class Test_SwSampler():
             "BucketRate": "-1",
             "SampleRate": -1,
             "SampleSource": -1,
+            "TriggeredTrace": True,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
         })
 
-    def test_calculate_attributes_contd_decision_no_sw_keys(
+    def test_calculate_attributes_contd_decision_with_tt_but_no_sw_keys(
         self,
         sw_sampler,
         decision_continued,
@@ -638,9 +717,10 @@ class Test_SwSampler():
             "BucketRate": "-1",
             "SampleRate": -1,
             "SampleSource": -1,
+            "TriggeredTrace": True,
         })
 
-    def test_calculate_attributes_not_contd_decision_sw_keys(
+    def test_calculate_attributes_not_contd_decision_with_tt_and_sw_keys(
         self,
         sw_sampler,
         decision_not_continued,
@@ -659,11 +739,12 @@ class Test_SwSampler():
             "BucketRate": "1",
             "SampleRate": 1,
             "SampleSource": 1,
+            "TriggeredTrace": True,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
         })
 
-    def test_calculate_attributes_not_contd_decision_no_sw_keys(
+    def test_calculate_attributes_not_contd_decision_with_tt_no_sw_keys(
         self,
         sw_sampler,
         decision_not_continued,
@@ -682,6 +763,7 @@ class Test_SwSampler():
             "BucketRate": "1",
             "SampleRate": 1,
             "SampleSource": 1,
+            "TriggeredTrace": True,
         })
 
     def test_calculate_attributes_valid_parent_create_new_attrs(
@@ -704,6 +786,7 @@ class Test_SwSampler():
             "BucketRate": "-1",
             "SampleRate": -1,
             "SampleSource": -1,
+            "TriggeredTrace": True,
             "sw.tracestate_parent_id": "1111222233334444",
             "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
             "SWKeys": "foo",
@@ -731,6 +814,7 @@ class Test_SwSampler():
             "BucketRate": "-1",
             "SampleRate": -1,
             "SampleSource": -1,
+            "TriggeredTrace": True,
             "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
@@ -759,6 +843,7 @@ class Test_SwSampler():
             "BucketRate": "-1",
             "SampleRate": -1,
             "SampleSource": -1,
+            "TriggeredTrace": True,
             "sw.w3c.tracestate": "sw=1111222233334444-01,some=other",
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",

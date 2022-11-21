@@ -38,6 +38,7 @@ class _SwSampler(Sampler):
     _INTERNAL_SAMPLE_RATE = "SampleRate"
     _INTERNAL_SAMPLE_SOURCE = "SampleSource"
     _INTERNAL_SW_KEYS = "SWKeys"
+    _INTERNAL_TRIGGERED_TRACE = "TriggeredTrace"
     _LIBOBOE_CONTINUED = -1
     _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
     _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
@@ -370,6 +371,10 @@ class _SwSampler(Sampler):
         logger.debug(
             "Set attributes with service entry internal KVs: {}".format(new_attributes)
         )
+
+        # If unsigned or signed TT (root or is_remote), set TriggeredTrace
+        if xtraceoptions.trigger_trace:
+            new_attributes[self._INTERNAL_TRIGGERED_TRACE] = True
 
         # Trace's root span has no valid traceparent nor tracestate
         # so we can't calculate remaining attributes
