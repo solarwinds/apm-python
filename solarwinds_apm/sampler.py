@@ -5,7 +5,7 @@ The custom sampler will fetch sampling configurations for the SolarWinds backend
 
 import logging
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Dict, Optional, Sequence
+from typing import TYPE_CHECKING, Optional, Sequence
 
 from opentelemetry.context.context import Context as OtelContext
 from opentelemetry.sdk.trace.sampling import (
@@ -68,7 +68,7 @@ class _SwSampler(Sampler):
         self,
         parent_span_context: SpanContext,
         xtraceoptions: Optional[XTraceOptions] = None,
-    ) -> Dict:
+    ) -> dict:
         """Calculates oboe trace decision based on parent span context and APM config."""
         tracestring = None
         if parent_span_context.is_valid and parent_span_context.is_remote:
@@ -159,7 +159,7 @@ class _SwSampler(Sampler):
         logger.debug("Got liboboe decision outputs: {}".format(decision))
         return decision
 
-    def is_decision_continued(self, liboboe_decision: Dict) -> bool:
+    def is_decision_continued(self, liboboe_decision: dict) -> bool:
         """Returns True if liboboe decision is a continued one (due to all
         internals being 'continued'), else False"""
         return all(
@@ -172,7 +172,7 @@ class _SwSampler(Sampler):
             ]
         )
 
-    def otel_decision_from_liboboe(self, liboboe_decision: Dict) -> Decision:
+    def otel_decision_from_liboboe(self, liboboe_decision: dict) -> Decision:
         """Formats OTel decision from liboboe decision"""
         decision = Decision.DROP
         if liboboe_decision["do_sample"]:
@@ -184,7 +184,7 @@ class _SwSampler(Sampler):
 
     def create_xtraceoptions_response_value(
         self,
-        decision: Dict,
+        decision: dict,
         parent_span_context: SpanContext,
         xtraceoptions: XTraceOptions,
     ) -> str:
@@ -245,7 +245,7 @@ class _SwSampler(Sampler):
 
     def create_new_trace_state(
         self,
-        decision: Dict,
+        decision: dict,
         parent_span_context: SpanContext,
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> TraceState:
@@ -276,7 +276,7 @@ class _SwSampler(Sampler):
 
     def calculate_trace_state(
         self,
-        decision: Dict,
+        decision: dict,
         parent_span_context: SpanContext,
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> TraceState:
@@ -327,7 +327,7 @@ class _SwSampler(Sampler):
     def add_tracestate_capture_to_attributes_dict(
         self,
         attributes_dict: dict,
-        decision: Dict,
+        decision: dict,
         trace_state: TraceState,
         parent_span_context: SpanContext,
     ) -> dict:
@@ -360,7 +360,7 @@ class _SwSampler(Sampler):
         self,
         span_name: str,
         attributes: Attributes,
-        decision: Dict,
+        decision: dict,
         trace_state: TraceState,
         parent_span_context: SpanContext,
         xtraceoptions: XTraceOptions,
@@ -440,6 +440,8 @@ class _SwSampler(Sampler):
         # attributes must be immutable for SamplingResult
         return MappingProxyType(new_attributes)
 
+    # Note: this inherits deprecated `typing` use by OTel,
+    #       I think for compatibility with Python3.7 else TypeError
     def should_sample(
         self,
         parent_context: Optional[OtelContext],
@@ -447,7 +449,9 @@ class _SwSampler(Sampler):
         name: str,
         kind: SpanKind = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
+        links: Sequence[  # pylint: disable=deprecated-typing-alias
+            "Link"
+        ] = None,
         trace_state: "TraceState" = None,
     ) -> "SamplingResult":
         """
@@ -504,6 +508,8 @@ class ParentBasedSwSampler(ParentBased):
             remote_parent_not_sampled=_SwSampler(apm_config),
         )
 
+    # Note: this inherits deprecated `typing` use by OTel,
+    #       I think for compatibility with Python3.7 else TypeError
     def should_sample(
         self,
         parent_context: Optional["Context"],
@@ -511,7 +517,9 @@ class ParentBasedSwSampler(ParentBased):
         name: str,
         kind: SpanKind = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
+        links: Sequence[  # pylint: disable=deprecated-typing-alias
+            "Link"
+        ] = None,
         trace_state: "TraceState" = None,
     ) -> "SamplingResult":
 

@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Any, Tuple
 
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
@@ -130,9 +130,10 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             status_code = self._LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE
         return status_code
 
+    # Disable pylint for compatibility with Python3.7 else TypeError
     def calculate_transaction_names(
         self, span: "ReadableSpan"
-    ) -> Tuple[str, str]:
+    ) -> Tuple[Any, Any]:  # pylint: disable=deprecated-typing-alias
         """Get trans_name and url_tran of this span instance."""
         url_tran = span.attributes.get(self._HTTP_URL, None)
         http_route = span.attributes.get(self._HTTP_ROUTE, None)

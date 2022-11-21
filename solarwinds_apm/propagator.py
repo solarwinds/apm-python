@@ -122,7 +122,11 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()
         )
 
+    # Note: this inherits deprecated `typing` use by OTel,
+    #       I think for compatibility with Python3.7 else TypeError
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(
+        self,
+    ) -> typing.Set[str]:  # pylint: disable=deprecated-typing-alias
         """Returns a set with the fields set in `inject`"""
         return {self._TRACESTATE_HEADER_NAME}
