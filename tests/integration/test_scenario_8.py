@@ -118,8 +118,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify x-trace-options-response response header present
-        # and has same values as tracestate but different delimiters
-        # i.e. trigger-trace=ignored;ignored=foo
+        # and has same values as internally cached in TraceState
+        # but different delimiters, e.g. trigger-trace=ignored;ignored=foo
         assert "x-trace-options-response" in resp.headers
         assert "trigger-trace=ignored" in resp.headers["x-trace-options-response"]
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
