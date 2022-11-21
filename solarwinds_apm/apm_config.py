@@ -373,7 +373,7 @@ class SolarWindsApmConfig:
             "agent_enabled": self.agent_enabled,
             "context": self.context,
         }
-        return "{}".format(apm_config)
+        return f"{apm_config}"
 
     def __setitem__(self, key: str, value: str) -> None:
         """Refresh the configurations in liboboe global struct while user changes settings."""

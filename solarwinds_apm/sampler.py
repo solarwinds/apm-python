@@ -383,12 +383,12 @@ class _SwSampler(Sampler):
             new_attributes[self._INTERNAL_SW_KEYS] = internal_sw_keys
 
         # Always (root or is_remote) set service entry internal KVs
-        new_attributes[self._INTERNAL_BUCKET_CAPACITY] = "{}".format(
-            decision["bucket_cap"]
-        )
-        new_attributes[self._INTERNAL_BUCKET_RATE] = "{}".format(
-            decision["bucket_rate"]
-        )
+        new_attributes[
+            self._INTERNAL_BUCKET_CAPACITY
+        ] = f"{decision['bucket_cap']}"
+        new_attributes[
+            self._INTERNAL_BUCKET_RATE
+        ] = f"{decision['bucket_rate']}"
         new_attributes[self._INTERNAL_SAMPLE_RATE] = decision["rate"]
         new_attributes[self._INTERNAL_SAMPLE_SOURCE] = decision["source"]
         logger.debug(

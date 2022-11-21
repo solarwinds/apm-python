@@ -102,8 +102,8 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         if span.context.trace_flags == TraceFlags.SAMPLED:
             # Cache txn_name for span export
             self._apm_txname_manager[
-                "{}-{}".format(span.context.trace_id, span.context.span_id)
-            ] = liboboe_txn_name
+                f"{span.context.trace_id}-{span.context.span_id}"
+            ] = liboboe_txn_name  # type: ignore
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
         """This span from inbound HTTP request if from a SERVER by some http.method"""

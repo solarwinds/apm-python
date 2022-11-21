@@ -280,11 +280,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         version_keys["__Init"] = "True"
         # liboboe adds key Hostname for us
         try:
-            version_keys["Python.Version"] = "{major}.{minor}.{patch}".format(
-                major=sys.version_info[0],
-                minor=sys.version_info[1],
-                patch=sys.version_info[2],
-            )
+            version_keys[
+                "Python.Version"
+            ] = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
         except Exception as ex:
             logger.warning("Could not retrieve Python version %s", ex)
 
