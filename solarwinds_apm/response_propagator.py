@@ -76,7 +76,7 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
             XTraceOptions.get_sw_xtraceoptions_response_key(), None
         )
         if not sanitized:
-            return
+            return ""
         return sanitized.replace(
             INTL_SWO_EQUALS_W3C_SANITIZED, INTL_SWO_EQUALS
         ).replace(INTL_SWO_COMMA_W3C_SANITIZED, INTL_SWO_COMMA)
