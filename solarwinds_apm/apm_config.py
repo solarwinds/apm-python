@@ -237,21 +237,16 @@ class SolarWindsApmConfig:
                 agent_enabled = False
                 raise ImportError
 
-            else:
-                # Key must be at least one char + ":" + at least one other char
-                key_parts = [
-                    p
-                    for p in os.environ.get("SW_APM_SERVICE_KEY", "").split(
-                        ":"
-                    )
-                    if len(p) > 0
-                ]
-                if len(key_parts) != 2:
-                    logger.error(
-                        "Incorrect service key format. Tracing disabled."
-                    )
-                    agent_enabled = False
-                    raise ImportError
+            # Key must be at least one char + ":" + at least one other char
+            key_parts = [
+                p
+                for p in os.environ.get("SW_APM_SERVICE_KEY", "").split(":")
+                if len(p) > 0
+            ]
+            if len(key_parts) != 2:
+                logger.error("Incorrect service key format. Tracing disabled.")
+                agent_enabled = False
+                raise ImportError
 
         except ImportError as ex:
             try:
