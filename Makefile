@@ -260,6 +260,7 @@ wrapper-from-local: check-swig copy-all
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Example: make tox OPTIONS="-e py37-nh-staging"
+# Example: make tox OPTIONS="-e lint -- --check-only"
 tox:
 	@python3.8 -m tox $(OPTIONS)
 
