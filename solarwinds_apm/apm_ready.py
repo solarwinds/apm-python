@@ -46,7 +46,7 @@ def solarwinds_ready(
             if integer_response
             else False
         )
-    elif rc != OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]:
+    if rc != OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]:
         logger.warning(OboeReadyCode.code_values()[rc])
 
     return (

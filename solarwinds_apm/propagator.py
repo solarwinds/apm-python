@@ -84,12 +84,11 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             # Only create new trace state if valid span_id
             if span_context.span_id == self._INVALID_SPAN_ID:
                 return
-            else:
-                logger.debug(
-                    "Creating new trace state for injection with %s",
-                    sw_value,
-                )
-                trace_state = TraceState([(INTL_SWO_TRACESTATE_KEY, sw_value)])
+            logger.debug(
+                "Creating new trace state for injection with %s",
+                sw_value,
+            )
+            trace_state = TraceState([(INTL_SWO_TRACESTATE_KEY, sw_value)])
         else:
             trace_state = TraceState.from_header([trace_state_header])
             # Check if trace_state already contains sw KV

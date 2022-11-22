@@ -247,8 +247,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         if apm_config.agent_enabled:
             return Reporter(**reporter_kwargs)
-        else:
-            return NoopReporter(**reporter_kwargs)
+
+        return NoopReporter(**reporter_kwargs)
 
     def _report_init_event(
         self,

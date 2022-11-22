@@ -407,8 +407,7 @@ class _SwSampler(Sampler):
             if new_attributes:
                 # attributes must be immutable for SamplingResult
                 return MappingProxyType(new_attributes)
-            else:
-                return None
+            return None
 
         if not attributes:
             # _SW_TRACESTATE_ROOT_KEY is set once per trace, if possible
