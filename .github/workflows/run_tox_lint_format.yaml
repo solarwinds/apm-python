@@ -24,4 +24,4 @@ jobs:
     - name: Build extension
       run: make wrapper
     - name: Run tox lint
-      run: tox -e lint --check-only
+      run: tox -e lint -- --check-only
