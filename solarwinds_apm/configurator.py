@@ -283,8 +283,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             version_keys[
                 "Python.Version"
             ] = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
-        except Exception as ex:
-            logger.warning("Could not retrieve Python version %s", ex)
+        except (AttributeError, IndexError) as ex:
+            logger.warning("Could not retrieve Python version: %s", ex)
 
         version_keys["Python.AppOptics.Version"] = __version__
         version_keys[
