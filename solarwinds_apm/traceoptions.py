@@ -36,7 +36,7 @@ class XTraceOptions:
         self.signature = None
         self.sw_keys = ""
         self.trigger_trace = 0
-        self.ts = 0
+        self.timestamp = 0
 
         if not context:
             return
@@ -75,7 +75,7 @@ class XTraceOptions:
 
             elif option_key == self._XTRACEOPTIONS_HEADER_KEY_TS:
                 try:
-                    self.ts = int(option_kv[1])
+                    self.timestamp = int(option_kv[1])
                 except ValueError:
                     logger.debug("ts must be base 10 int. Ignoring.")
                     self.ignored.append(self._XTRACEOPTIONS_HEADER_KEY_TS)

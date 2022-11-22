@@ -96,7 +96,7 @@ class _SwSampler(Sampler):
             options = xtraceoptions.options_header
             trigger_trace_request = xtraceoptions.trigger_trace
             signature = xtraceoptions.signature
-            timestamp = xtraceoptions.ts
+            timestamp = xtraceoptions.timestamp
 
         logger.debug(
             "Creating new oboe decision with "

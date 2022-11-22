@@ -59,7 +59,7 @@ def fixture_xtraceoptions_signed_tt(mocker):
     options.trigger_trace = 1
     options.options_header = "foo-bar"
     options.signature = 123456
-    options.ts = 123456
+    options.timestamp = 123456
     options.ignored = ["baz", "qux"]
     return options
 
@@ -69,7 +69,7 @@ def fixture_xtraceoptions_signed_not_tt(mocker):
     options.trigger_trace = 0
     options.options_header = "foo-bar"
     options.signature = 123456
-    options.ts = 123456
+    options.timestamp = 123456
     options.ignored = ["baz", "qux"]
     return options
 
@@ -291,7 +291,7 @@ class Test_SwSampler():
             -1,
             mock_xtraceoptions_signed_tt.options_header,
             mock_xtraceoptions_signed_tt.signature,
-            mock_xtraceoptions_signed_tt.ts
+            mock_xtraceoptions_signed_tt.timestamp
         )
 
     # pylint:disable=unused-argument

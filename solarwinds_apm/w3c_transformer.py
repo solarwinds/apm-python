@@ -23,9 +23,9 @@ class W3CTransformer:
         return cls._SPAN_ID_HEX.format(span_id)
 
     @classmethod
-    def span_id_from_sw(cls, sw: str) -> str:
+    def span_id_from_sw(cls, sw_val: str) -> str:
         """Formats span ID from sw tracestate value"""
-        return sw.split("-")[0]
+        return sw_val.split("-")[0]
 
     @classmethod
     def trace_flags_from_int(cls, trace_flags: int) -> str:
