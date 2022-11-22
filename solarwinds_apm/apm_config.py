@@ -407,7 +407,6 @@ class SolarWindsApmConfig:
     def update_with_cnf_file(self, cnf_path: str) -> None:
         """Update the settings with the config file, if any."""
         # TODO Implement config with cnf_file after alpha
-        pass
 
     def update_with_env_var(self) -> None:
         """Update the settings with environment variables."""
@@ -428,7 +427,6 @@ class SolarWindsApmConfig:
     def update_with_kwargs(self, kwargs):
         """Update the configuration settings with (in-code) keyword arguments"""
         # TODO Implement in-code config with kwargs after alpha
-        pass
 
     def _set_config_value(self, keys: str, val: Any) -> Any:
         """Sets the value of the config option indexed by 'keys' to 'val', where 'keys' is a nested key (separated by
