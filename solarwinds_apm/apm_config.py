@@ -138,6 +138,7 @@ class SolarWindsApmConfig:
             return True
         return False
 
+    # pylint: disable=too-many-branches,too-many-statements
     def _calculate_agent_enabled(self) -> bool:
         """Checks if agent is enabled/disabled based on config:
         - SW_APM_SERVICE_KEY   (required)
@@ -430,6 +431,7 @@ class SolarWindsApmConfig:
         """Update the configuration settings with (in-code) keyword arguments"""
         # TODO Implement in-code config with kwargs after alpha
 
+    # pylint: disable=too-many-branches,too-many-statements
     def _set_config_value(self, keys: str, val: Any) -> Any:
         """Sets the value of the config option indexed by 'keys' to 'val', where 'keys' is a nested key (separated by
         self.delimiter, i.e., the position of the element to be changed in the nested dictionary)"""
