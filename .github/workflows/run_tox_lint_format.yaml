@@ -1,0 +1,27 @@
+name: Run tox lint and format
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    type: [opened, reopened]
+
+jobs:
+  run_tox_lint_format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+        cache: 'pip' # caching pip dependencies
+        cache-dependency-path: '**/dev-requirements.txt'
+    - name: Install tox
+      run: pip install tox
+    - name: Build extension
+      run: make wrapper
+    - name: Run tox lint
+      run: tox -e lint --check-only
