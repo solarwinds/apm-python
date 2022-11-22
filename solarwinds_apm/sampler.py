@@ -504,27 +504,4 @@ class ParentBasedSwSampler(ParentBased):
             remote_parent_not_sampled=_SwSampler(apm_config),
         )
 
-    # Note: this inherits deprecated `typing` use by OTel,
-    #       I think for compatibility with Python3.7 else TypeError
-    def should_sample(
-        self,
-        parent_context: Optional["Context"],
-        trace_id: int,
-        name: str,
-        kind: SpanKind = None,
-        attributes: Attributes = None,
-        links: Sequence[  # pylint: disable=deprecated-typing-alias
-            "Link"
-        ] = None,
-        trace_state: "TraceState" = None,
-    ) -> "SamplingResult":
-
-        return super().should_sample(
-            parent_context,
-            trace_id,
-            name,
-            kind,
-            attributes,
-            links,
-            trace_state,
-        )
+    # should_sample defined by ParentBased
