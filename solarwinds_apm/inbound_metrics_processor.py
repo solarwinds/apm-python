@@ -1,20 +1,16 @@
-
 import logging
-from typing import (
-    TYPE_CHECKING,
-    Tuple,
-)
+from typing import TYPE_CHECKING, Any, Tuple
 
-from opentelemetry.trace import (
-    SpanKind,
-    StatusCode,
-    TraceFlags,
-)
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
+from opentelemetry.trace import SpanKind, StatusCode, TraceFlags
+
+from solarwinds_apm.apm_noop import Span as NoopSpan
+from solarwinds_apm.extension.oboe import Span
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
+
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 
 
@@ -23,10 +19,10 @@ logger = logging.getLogger(__name__)
 
 class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
-    _HTTP_METHOD = SpanAttributes.HTTP_METHOD            # "http.method"
-    _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE              # "http.route"
+    _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
+    _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
     _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
-    _HTTP_URL = SpanAttributes.HTTP_URL                  # "http.url"
+    _HTTP_URL = SpanAttributes.HTTP_URL  # "http.url"
 
     _LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE = 0
 
@@ -37,19 +33,20 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     ) -> None:
         self._apm_txname_manager = apm_txname_manager
         if agent_enabled:
-            from solarwinds_apm.extension.oboe import Span
             self._span = Span
         else:
-            from solarwinds_apm.apm_noop import Span
-            self._span = Span
+            self._span = NoopSpan
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics,
         and caches liboboe transaction name"""
         # Only calculate inbound metrics for service root spans
         parent_span_context = span.parent
-        if parent_span_context and parent_span_context.is_valid \
-            and not parent_span_context.is_remote:
+        if (
+            parent_span_context
+            and parent_span_context.is_valid
+            and not parent_span_context.is_remote
+        ):
             return
 
         is_span_http = self.is_span_http(span)
@@ -69,9 +66,14 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             request_method = span.attributes.get(self._HTTP_METHOD, None)
 
             logger.debug(
-                "createHttpSpan with trans_name: {}, url_tran: {}, domain: {}, span_time: {} status_code: {}, request_method: {}, has_error: {}".format(
-                    trans_name, url_tran, domain, span_time, status_code, request_method, has_error,
-                )
+                "createHttpSpan with trans_name: %s, url_tran: %s, domain: %s, span_time: %s status_code: %s, request_method: %s, has_error: %s",
+                trans_name,
+                url_tran,
+                domain,
+                span_time,
+                status_code,
+                request_method,
+                has_error,
             )
             liboboe_txn_name = self._span.createHttpSpan(
                 trans_name,
@@ -81,12 +83,14 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
                 status_code,
                 request_method,
                 has_error,
-            )  
+            )
         else:
             logger.debug(
-                "createSpan with trans_name: {}, domain: {}, span_time: {}, has_error: {}".format(
-                    trans_name, domain, span_time, has_error,
-                )
+                "createSpan with trans_name: %s, domain: %s, span_time: %s, has_error: %s",
+                trans_name,
+                domain,
+                span_time,
+                has_error,
             )
             liboboe_txn_name = self._span.createSpan(
                 trans_name,
@@ -98,12 +102,14 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         if span.context.trace_flags == TraceFlags.SAMPLED:
             # Cache txn_name for span export
             self._apm_txname_manager[
-                "{}-{}".format(span.context.trace_id, span.context.span_id)
-            ] = liboboe_txn_name
+                f"{span.context.trace_id}-{span.context.span_id}"
+            ] = liboboe_txn_name  # type: ignore
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
         """This span from inbound HTTP request if from a SERVER by some http.method"""
-        if span.kind == SpanKind.SERVER and span.attributes.get(self._HTTP_METHOD, None):
+        if span.kind == SpanKind.SERVER and span.attributes.get(
+            self._HTTP_METHOD, None
+        ):
             return True
         return False
 
@@ -122,7 +128,10 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             status_code = self._LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE
         return status_code
 
-    def calculate_transaction_names(self, span: "ReadableSpan") -> Tuple[str, str]:
+    # Disable pylint for compatibility with Python3.7 else TypeError
+    def calculate_transaction_names(
+        self, span: "ReadableSpan"
+    ) -> Tuple[Any, Any]:  # pylint: disable=deprecated-typing-alias
         """Get trans_name and url_tran of this span instance."""
         url_tran = span.attributes.get(self._HTTP_URL, None)
         http_route = span.attributes.get(self._HTTP_ROUTE, None)

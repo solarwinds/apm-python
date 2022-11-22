@@ -1,8 +1,8 @@
-
 import logging
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
 
 class SolarWindsTxnNameManager:
     """SolarWinds Transaction Name Manager
@@ -21,7 +21,7 @@ class SolarWindsTxnNameManager:
         self.__cache[key] = value
 
     def __str__(self) -> str:
-        return "{}".format(self.__cache)
+        return f"{self.__cache}"
 
     def get(self, key: str, default: Any = None) -> Any:
         return self.__cache.get(key, default)

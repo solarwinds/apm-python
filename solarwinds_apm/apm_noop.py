@@ -46,7 +46,7 @@ class Metadata:
         return False
 
     def toString(self):
-        return ''
+        return ""
 
 
 class Context:
@@ -105,7 +105,7 @@ class Context:
 
     @staticmethod
     def toString():
-        return ''
+        return ""
 
     @staticmethod
     def createEvent():
@@ -138,7 +138,7 @@ class Event:
         return Metadata()
 
     def metadataString(self):
-        return ''
+        return ""
 
     def is_valid(self):
         return False

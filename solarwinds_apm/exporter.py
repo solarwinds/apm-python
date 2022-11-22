@@ -10,6 +10,9 @@ from typing import Any
 from opentelemetry.sdk.trace.export import SpanExporter
 
 from solarwinds_apm.apm_constants import INTL_SWO_SUPPORT_EMAIL
+from solarwinds_apm.apm_noop import Context as NoopContext
+from solarwinds_apm.apm_noop import Metadata as NoopMetadata
+from solarwinds_apm.extension.oboe import Context, Metadata
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
@@ -35,13 +38,11 @@ class SolarWindsSpanExporter(SpanExporter):
         self.reporter = reporter
         self.apm_txname_manager = apm_txname_manager
         if agent_enabled:
-            from solarwinds_apm.extension.oboe import Context, Metadata
             self.context = Context
             self.metadata = Metadata
         else:
-            from solarwinds_apm.apm_noop import Context, Metadata
-            self.context = Context
-            self.metadata = Metadata
+            self.context = NoopContext
+            self.metadata = NoopMetadata
 
     def export(self, spans) -> None:
         """Export to AO events and report via liboboe.
@@ -53,41 +54,42 @@ class SolarWindsSpanExporter(SpanExporter):
             md = self._build_metadata(self.metadata, span.get_span_context())
             if span.parent and span.parent.is_valid:
                 # If there is a parent, we need to add an edge to this parent to this entry event
-                logger.debug("Continue trace from {}".format(md.toString()))
+                logger.debug("Continue trace from %s", md.toString())
                 parent_md = self._build_metadata(self.metadata, span.parent)
-                evt = self.context.createEntry(md, int(span.start_time / 1000),
-                                         parent_md)
+                evt = self.context.createEntry(
+                    md, int(span.start_time / 1000), parent_md
+                )
                 if span.parent.is_remote:
                     self._add_info_transaction_name(span, evt)
             else:
                 # In OpenTelemrtry, there are no events with individual IDs, but only a span ID
                 # and trace ID. Thus, the entry event needs to be generated such that it has the
                 # same op ID as the span ID of the OTel span.
-                logger.debug("Start a new trace {}".format(md.toString()))
+                logger.debug("Start a new trace %s", md.toString())
                 evt = self.context.createEntry(md, int(span.start_time / 1000))
                 self._add_info_transaction_name(span, evt)
 
-            evt.addInfo('Layer', span.name)
+            evt.addInfo("Layer", span.name)
             evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
-            evt.addInfo('Language', 'Python')
-            for k, v in span.attributes.items():
-                evt.addInfo(k, v)
+            evt.addInfo("Language", "Python")
+            for attr_k, attr_v in span.attributes.items():
+                evt.addInfo(attr_k, attr_v)
             self.reporter.sendReport(evt, False)
 
             for event in span.events:
-                if event.name == 'exception':
+                if event.name == "exception":
                     self._report_exception_event(event)
                 else:
                     self._report_info_event(event)
 
             evt = self.context.createExit(int(span.end_time / 1000))
-            evt.addInfo('Layer', span.name)
+            evt.addInfo("Layer", span.name)
             self.reporter.sendReport(evt, False)
 
     def _add_info_transaction_name(self, span, evt) -> None:
         """Add transaction name from cache to root span
         then removes from cache"""
-        trace_span_id = "{}-{}".format(span.context.trace_id, span.context.span_id)
+        trace_span_id = f"{span.context.trace_id}-{span.context.span_id}"
         txname = self.apm_txname_manager.get(trace_span_id)
         if txname:
             evt.addInfo(self._INTERNAL_TRANSACTION_NAME, txname)
@@ -95,23 +97,29 @@ class SolarWindsSpanExporter(SpanExporter):
         else:
             logger.warning(
                 "There was an issue setting trace TransactionName. "
-                "Please contact {} with this issue".format(INTL_SWO_SUPPORT_EMAIL)
+                "Please contact %s with this issue",
+                INTL_SWO_SUPPORT_EMAIL,
             )
 
     def _report_exception_event(self, event) -> None:
         evt = self.context.createEvent(int(event.timestamp / 1000))
-        evt.addInfo('Label', 'error')
-        evt.addInfo('Spec', 'error')
-        evt.addInfo('ErrorClass', event.attributes.get('exception.type', None))
-        evt.addInfo('ErrorMsg', event.attributes.get('exception.message',
-                                                     None))
-        evt.addInfo('Backtrace',
-                    event.attributes.get('exception.stacktrace', None))
+        evt.addInfo("Label", "error")
+        evt.addInfo("Spec", "error")
+        evt.addInfo("ErrorClass", event.attributes.get("exception.type", None))
+        evt.addInfo(
+            "ErrorMsg", event.attributes.get("exception.message", None)
+        )
+        evt.addInfo(
+            "Backtrace", event.attributes.get("exception.stacktrace", None)
+        )
         # add remaining attributes, if any
-        for k, v in event.attributes.items():
-            if k not in ('exception.type', 'exception.message',
-                         'exception.stacktrace'):
-                evt.addInfo(k, v)
+        for attr_k, attr_v in event.attributes.items():
+            if attr_k not in (
+                "exception.type",
+                "exception.message",
+                "exception.stacktrace",
+            ):
+                evt.addInfo(attr_k, attr_v)
         self.reporter.sendReport(evt, False)
 
     def _report_info_event(self, event) -> None:
@@ -119,9 +127,9 @@ class SolarWindsSpanExporter(SpanExporter):
         print(dir(event))
         print(event)
         evt = self.context.createEvent(int(event.timestamp / 1000))
-        evt.addInfo('Label', 'info')
-        for k, v in event.attributes.items():
-            evt.addInfo(k, v)
+        evt.addInfo("Label", "info")
+        for attr_k, attr_v in event.attributes.items():
+            evt.addInfo(attr_k, attr_v)
         self.reporter.sendReport(evt, False)
 
     @staticmethod
