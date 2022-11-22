@@ -379,7 +379,7 @@ class SolarWindsApmConfig:
         elif key == "log_trace_id":
             self._set_config_value(key, value)
 
-        elif key in ("enable_sanitize_sql", "warn_deprecated"):
+        elif key in {"enable_sanitize_sql", "warn_deprecated"}:
             self._set_config_value(key, value)
         else:
             logger.warning(
@@ -417,7 +417,7 @@ class SolarWindsApmConfig:
         available_envvs = set(self.__config.keys())
         # TODO after alpha: is_lambda
         for key in available_envvs:
-            if key in ("inst_enabled", "transaction", "inst"):
+            if key in {"inst_enabled", "transaction", "inst"}:
                 # we do not allow complex config options to be set via environment variables
                 continue
             env = "SW_APM_" + key.upper()
@@ -439,7 +439,7 @@ class SolarWindsApmConfig:
             val = val.lower() if isinstance(val, str) else val
             return (
                 val == "true"
-                if isinstance(val, str) and val in ("true", "false")
+                if isinstance(val, str) and val in {"true", "false"}
                 else bool(int(val))
             )
 
@@ -478,7 +478,7 @@ class SolarWindsApmConfig:
                 if not isinstance(val, str):
                     raise ValueError
                 val = val.lower()
-                if val in ["always", "never"]:
+                if val in {"always", "never"}:
                     val = "enabled" if val == "always" else "disabled"
                 if val not in ["enabled", "disabled"]:
                     raise ValueError
@@ -490,7 +490,7 @@ class SolarWindsApmConfig:
                 if not isinstance(val, str):
                     raise ValueError
                 val = val.lower()
-                if val in ["always", "never"]:
+                if val in {"always", "never"}:
                     val = "enabled" if val == "always" else "disabled"
                 if val not in ["enabled", "disabled"]:
                     raise ValueError
