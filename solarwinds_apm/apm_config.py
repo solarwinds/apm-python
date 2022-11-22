@@ -539,10 +539,10 @@ class SolarWindsApmConfig:
                 )
         except (ValueError, TypeError):
             logger.warning(
-                "Ignore config option with invalid (non-convertible or out-of-range) type: "
-                + ".".join(
+                "Ignore config option with invalid (non-convertible or out-of-range) type: %s",
+                ".".join(
                     keys
                     if keys[0] not in ["inst", "transaction"]
                     else keys[1:]
-                )
+                ),
             )
