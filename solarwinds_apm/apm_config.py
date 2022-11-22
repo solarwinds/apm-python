@@ -318,7 +318,9 @@ class SolarWindsApmConfig:
         if self.get("trustedpath"):
             try:
                 # liboboe reporter has to determine if the cert contents are valid or not
-                certs = Path(self.get("trustedpath")).read_text()
+                certs = Path(self.get("trustedpath")).read_text(
+                    encoding="utf-8"
+                )
             except FileNotFoundError:
                 logger.warning(
                     "No such file at specified trustedpath. Using default certificate."
