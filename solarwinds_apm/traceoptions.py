@@ -23,6 +23,7 @@ class XTraceOptions:
     _XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE = "trigger-trace"
     _XTRACEOPTIONS_HEADER_KEY_TS = "ts"
 
+    # pylint: disable=too-many-branches
     def __init__(
         self,
         context: typing.Optional[Context] = None,
