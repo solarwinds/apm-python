@@ -65,6 +65,7 @@ class _SwSampler(Sampler):
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
 
+    # pylint: disable=too-many-locals
     def calculate_liboboe_decision(
         self,
         parent_span_context: SpanContext,
