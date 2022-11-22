@@ -237,10 +237,10 @@ class Test_SolarWindsSpanExporter():
         mock_reporter = mocker.Mock()
         mock_apm_txname_manager = mocker.Mock()
         mock_ext_context = mocker.patch(
-            "solarwinds_apm.extension.oboe.Context",      
+            "solarwinds_apm.exporter.Context",      
         )
         mock_ext_metadata = mocker.patch(
-            "solarwinds_apm.extension.oboe.Metadata",
+            "solarwinds_apm.exporter.Metadata",
         )
         exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
             mock_reporter,
@@ -255,10 +255,10 @@ class Test_SolarWindsSpanExporter():
         mock_reporter = mocker.Mock()
         mock_apm_txname_manager = mocker.Mock()
         mock_noop_context = mocker.patch(
-            "solarwinds_apm.apm_noop.Context",      
+            "solarwinds_apm.exporter.NoopContext",      
         )
         mock_noop_metadata = mocker.patch(
-            "solarwinds_apm.apm_noop.Metadata",
+            "solarwinds_apm.exporter.NoopMetadata",
         )
         exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
             mock_reporter,

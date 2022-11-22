@@ -16,7 +16,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_no_options_header_defaults(self, mocker):
         mock_otel_context = {
@@ -30,7 +30,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_skip_option_no_key_no_value(self):
         mock_otel_context = {
@@ -43,7 +43,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_skip_option_no_key(self):
         """Equals sign with no left hand side"""
@@ -57,7 +57,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_tt_key_valid(self):
         mock_otel_context = {
@@ -70,7 +70,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 1
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_tt_key_ignored(self):
         mock_otel_context = {
@@ -83,7 +83,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_swkeys_key_value_strip(self):
         mock_otel_context = {
@@ -96,7 +96,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == "foo:key"
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_custom_key_match_stored_in_options_header_and_custom_kvs(self):
         mock_otel_context = {
@@ -148,7 +148,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_ts_valid(self):
         mock_otel_context = {
@@ -161,7 +161,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 12345
+        assert xto.timestamp == 12345
 
     def test_init_ts_ignored(self):
         mock_otel_context = {
@@ -174,7 +174,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_other_key_ignored(self):
         mock_otel_context = {
@@ -187,7 +187,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_signature_stored_if_options(self):
         mock_otel_context = {
@@ -201,7 +201,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 1
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_signature_not_stored_without_options(self):
         mock_otel_context = {
@@ -214,4 +214,4 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
