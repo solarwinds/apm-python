@@ -3,6 +3,7 @@
 The custom sampler will fetch sampling configurations for the SolarWinds backend.
 """
 
+import enum
 import logging
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Optional, Sequence
@@ -171,12 +172,15 @@ class _SwSampler(Sampler):
             )
         )
 
-    def otel_decision_from_liboboe(self, liboboe_decision: dict) -> Decision:
+    def otel_decision_from_liboboe(self, liboboe_decision: dict) -> enum.Enum:
         """Formats OTel decision from liboboe decision"""
         decision = Decision.DROP
         if liboboe_decision["do_sample"]:
-            decision = Decision.RECORD_AND_SAMPLE  # even if not do_metrics
+            # even if not do_metrics
+            # pylint:disable=redefined-variable-type
+            decision = Decision.RECORD_AND_SAMPLE
         elif liboboe_decision["do_metrics"]:
+            # pylint:disable=redefined-variable-type
             decision = Decision.RECORD_ONLY
         logger.debug("OTel decision created: %s", decision)
         return decision
