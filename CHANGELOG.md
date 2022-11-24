@@ -4,10 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/appoptics/solarwinds-apm-python/compare/rel-0.2.2...HEAD)
+## [Unreleased](https://github.com/appoptics/solarwinds-apm-python/compare/rel-0.3.0...HEAD)
 - ...
 
-## [0.2.2.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/rel-0.2.2) - 2022-11-24
+## [0.3.0.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/rel-0.3.0) - 2022-11-24
+- Version bump for rebuild of 0.2.2.0 (test-released only) ([#73](https://github.com/appoptics/solarwinds-apm-python/pull/73))
+
+## [0.2.2](https://github.com/appoptics/solarwinds-apm-python/releases/tag/rel-0.2.2) - 2022-11-24
 ### Added
 - Added integration tests ([#67](https://github.com/appoptics/solarwinds-apm-python/pull/67))
 - Added sdist and wheel extension file checks as part of library packaging ([#75](https://github.com/appoptics/solarwinds-apm-python/pull/75))
