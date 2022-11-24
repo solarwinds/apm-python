@@ -109,7 +109,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {"custom-awesome-key": "foo"}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_custom_key_match_stored_in_options_header_and_custom_kvs_strip(self):
         mock_otel_context = {
@@ -122,7 +122,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {"custom-awesome-key": "foo"}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_custom_key_match_but_no_value_ignored(self):
         mock_otel_context = {
@@ -135,7 +135,7 @@ class TestXTraceOptions():
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
-        assert xto.ts == 0
+        assert xto.timestamp == 0
 
     def test_init_custom_key_match_but_multiple_values_ignored(self):
         mock_otel_context = {
