@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/appoptics/solarwinds-apm-python/compare/rel-0.3.0...HEAD)
 - ...
 
-## [0.3.0.2](https://github.com/appoptics/solarwinds-apm-python/releases/tag/rel-0.3.0) - 2022-11-24
+## [0.3.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/rel-0.3.0) - 2022-11-24
 - Fix flake8 and installation tests ([#83](https://github.com/appoptics/solarwinds-apm-python/pull/83))
 
 ## [0.2.2](https://github.com/appoptics/solarwinds-apm-python/releases/tag/rel-0.2.2) - 2022-11-24
