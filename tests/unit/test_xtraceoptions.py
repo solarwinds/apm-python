@@ -98,6 +98,19 @@ class TestXTraceOptions():
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
 
+    def test_init_swkeys_containing_semicolon_ignore_after(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "sw-keys=check-id:check-1013,website-id;booking-demo",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == ["booking-demo"]
+        assert xto.options_header == "sw-keys=check-id:check-1013,website-id;booking-demo"
+        assert xto.signature == None
+        assert xto.custom_kvs == {}
+        assert xto.sw_keys == "check-id:check-1013,website-id"
+        assert xto.trigger_trace == 0
+        assert xto.timestamp == 0
+
     def test_init_custom_key_match_stored_in_options_header_and_custom_kvs(self):
         mock_otel_context = {
             INTL_SWO_X_OPTIONS_KEY: "custom-awesome-key=foo",
