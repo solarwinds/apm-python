@@ -59,15 +59,36 @@ def fixture_decision_record_only():
         "bucket_cap": 1,
     }
 
-@pytest.fixture(name="decision_record_and_sample")
-def fixture_decision_record_and_sample():
+@pytest.fixture(name="decision_record_and_sample_regular")
+def fixture_decision_record_and_sample_regular():
     return {
         "do_metrics": 1,
         "do_sample": 1,
-        "rate": 1,
-        "source": 1,
-        "bucket_rate": 1,
-        "bucket_cap": 1,
+        "rate": 1000000,
+        "source": 6,
+        "bucket_rate": 14.7,
+        "bucket_cap": 267.0,
+        "decision_type": 0,
+        "auth": -1,
+        "status_msg": "ok",
+        "auth_msg": "",
+        "status": 0,
+    }
+
+@pytest.fixture(name="decision_record_and_sample_unsigned_tt")
+def fixture_decision_record_and_sample_unsigned_tt():
+    return {
+        "do_metrics": 1,
+        "do_sample": 1,
+        "rate": -1,
+        "source": -1,
+        "bucket_rate": 0.1,
+        "bucket_cap": 6.0,
+        "decision_type": 1,
+        "auth": -1,
+        "status_msg": "ok",
+        "auth_msg": "",
+        "status": 0,
     }
 
 @pytest.fixture(name="decision_not_continued")
@@ -188,22 +209,22 @@ class Test_SwSampler_calculate_attributes():
     def test_decision_record_and_sample_with_sw_keys_and_custom_keys_no_tt_unsigned(
         self,
         sw_sampler,
-        decision_record_and_sample,
+        decision_record_and_sample_unsigned_tt,
         parent_span_context_invalid,
         mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_record_and_sample,
+            decision=decision_record_and_sample_unsigned_tt,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
         ) == MappingProxyType({
-            "BucketCapacity": "1",
-            "BucketRate": "1",
-            "SampleRate": 1,
-            "SampleSource": 1,
+            "BucketCapacity": "6.0",
+            "BucketRate": "0.1",
+            "SampleRate": -1,
+            "SampleSource": -1,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
         })
