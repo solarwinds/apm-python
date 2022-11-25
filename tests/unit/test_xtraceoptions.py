@@ -228,3 +228,43 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+
+    def test_init_xtraceoptions_documented_example_1(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == []
+        assert xto.options_header == "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo"
+        assert xto.signature == None
+        assert xto.custom_kvs == {}
+        assert xto.sw_keys == "check-id:check-1013,website-id:booking-demo"
+        assert xto.trigger_trace == 1
+        assert xto.timestamp == 0
+
+    def test_init_xtraceoptions_documented_example_2(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "trigger-trace;custom-key1=value1",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == []
+        assert xto.options_header == "trigger-trace;custom-key1=value1"
+        assert xto.signature == None
+        assert xto.custom_kvs == {"custom-key1": "value1"}
+        assert xto.sw_keys == ""
+        assert xto.trigger_trace == 1
+        assert xto.timestamp == 0
+
+    def test_init_xtraceoptions_documented_example_3(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;ts=1564432370",
+            INTL_SWO_SIGNATURE_KEY: "5c7c733c727e5038d2cd537630206d072bbfc07c",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == []
+        assert xto.options_header == "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;ts=1564432370"
+        assert xto.signature == "5c7c733c727e5038d2cd537630206d072bbfc07c"
+        assert xto.custom_kvs == {}
+        assert xto.sw_keys == "check-id:check-1013,website-id:booking-demo"
+        assert xto.trigger_trace == 1
+        assert xto.timestamp == 1564432370
