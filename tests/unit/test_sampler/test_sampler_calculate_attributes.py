@@ -10,25 +10,11 @@ from .fixtures.parent_span_context import (
     fixture_parent_span_context_invalid,
     fixture_parent_span_context_valid_remote,
 )
+from .fixtures.sampler import fixture_swsampler
 from .fixtures.span_id_from_sw import fixture_mock_span_id_from_sw
 from .fixtures.sw_from_span_and_decision import fixture_mock_sw_from_span_and_decision
 
-# Fixtures Manual =====================================
-
-@pytest.fixture(name="sw_sampler")
-def fixture_swsampler(mocker):
-    mock_apm_config = mocker.Mock()
-    mock_get = mocker.Mock(
-        return_value=1  # enabled
-    )
-    mock_apm_config.configure_mock(
-        **{
-            "agent_enabled": True,
-            "get": mock_get,
-            "tracing_mode": None,  # mapped to -1
-        }
-    )
-    return _SwSampler(mock_apm_config)
+# Otel Fixtures =========================================
 
 @pytest.fixture(name="tracestate_with_sw_and_others")
 def fixture_tracestate_with_sw_and_others():
@@ -52,6 +38,8 @@ def fixture_attributes_with_tracestate():
         "sw.w3c.tracestate": "some=other,sw=before",
         "baz": "qux"
     })
+
+# Decision Fixtures =====================================
 
 @pytest.fixture(name="decision_drop")
 def fixture_decision_drop():
@@ -104,30 +92,32 @@ def fixture_decision_continued():
         "bucket_cap": -1,
     }
 
-@pytest.fixture(name="mock_xtraceoptions_sw_keys_and_custom_keys_no_tt")
-def fixture_xtraceoptions_sw_keys_and_custom_keys_no_tt(mocker):
+# XTraceOptions Fixtures ================================
+
+@pytest.fixture(name="mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned")
+def fixture_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned(mocker):
     options = mocker.Mock()
     options.sw_keys = "foo"
     options.custom_kvs = {"custom-foo": "awesome-bar"}
     return options
 
-@pytest.fixture(name="mock_xtraceoptions_sw_keys_and_custom_keys_and_tt")
-def fixture_xtraceoptions_sw_keys_and_custom_keys_and_tt(mocker):
+@pytest.fixture(name="mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt")
+def fixture_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt(mocker):
     options = mocker.Mock()
     options.sw_keys = "foo"
     options.custom_kvs = {"custom-foo": "awesome-bar"}
     options.trigger_trace = 1
     return options
 
-@pytest.fixture(name="mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt")
-def fixture_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt(mocker):
+@pytest.fixture(name="mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned")
+def fixture_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned(mocker):
     options = mocker.Mock()
     options.sw_keys = ""
     options.custom_kvs = {}
     return options
 
-@pytest.fixture(name="mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_tt")
-def fixture_xtraceoptions_no_sw_keys_nor_custom_keys_with_tt(mocker):
+@pytest.fixture(name="mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt")
+def fixture_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt(mocker):
     options = mocker.Mock()
     options.sw_keys = ""
     options.custom_kvs = {}
@@ -139,14 +129,15 @@ def fixture_xtraceoptions_no_sw_keys_nor_custom_keys_with_tt(mocker):
 
 class Test_SwSampler_calculate_attributes():
     """
-    Separate calculate_attributes tests for so many possible x-trace-options cases
+    Separate _SwSampler.calculate_attributes tests for so many 
+    possible x-trace-options, x-trace-options-signature, decision cases
     """
     def test_init(self, mocker):
         mock_apm_config = mocker.Mock()
         sampler = _SwSampler(mock_apm_config)
         assert sampler.apm_config == mock_apm_config
 
-    def test_calculate_attributes_decision_drop(
+    def test_decision_drop(
         self,
         mocker,
         sw_sampler,
@@ -161,12 +152,12 @@ class Test_SwSampler_calculate_attributes():
             xtraceoptions=mocker.Mock(),
         ) == None
 
-    def test_calculate_attributes_decision_drop_with_custom_and_sw_keys_no_tt(
+    def test_decision_drop_with_sw_keys_and_custom_keys_no_tt_unsigned(
         self,
         mocker,
         sw_sampler,
         decision_drop,
-        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt,
+        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -174,15 +165,15 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_drop,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
-            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
         ) == None
 
-    def test_calculate_attributes_decision_record_only_with_custom_and_sw_keys_no_tt(
+    def test_decision_record_only_with_custom_and_sw_keys_no_tt_unsigned(
         self,
         mocker,
         sw_sampler,
         decision_record_only,
-        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt,
+        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -190,15 +181,15 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_record_only,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
-            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
         ) == None
 
-    def test_calculate_attributes_decision_record_and_sample_with_custom_and_sw_keys_no_tt(
+    def test_decision_record_and_sample_with_sw_keys_and_custom_keys_no_tt_unsigned(
         self,
         sw_sampler,
         decision_record_and_sample,
         parent_span_context_invalid,
-        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt,
+        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -206,7 +197,7 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_record_and_sample,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
-            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
         ) == MappingProxyType({
             "BucketCapacity": "1",
             "BucketRate": "1",
@@ -216,12 +207,12 @@ class Test_SwSampler_calculate_attributes():
             "custom-foo": "awesome-bar",
         })
 
-    def test_calculate_attributes_contd_decision_sw_keys(
+    def test_contd_decision_sw_keys_and_custom_keys_and_unsigned_tt(
         self,
         sw_sampler,
         decision_continued,
         parent_span_context_invalid,
-        mock_xtraceoptions_sw_keys_and_custom_keys_and_tt
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -229,7 +220,7 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_continued,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
-            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_tt,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
         ) == MappingProxyType({
             "BucketCapacity": "-1",
             "BucketRate": "-1",
@@ -240,12 +231,12 @@ class Test_SwSampler_calculate_attributes():
             "custom-foo": "awesome-bar",
         })
 
-    def test_calculate_attributes_contd_decision_no_tt_and_no_sw_keys(
+    def test_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
         self,
         sw_sampler,
         decision_continued,
         parent_span_context_invalid,
-        mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -253,7 +244,7 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_continued,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
-            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt,
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
         ) == MappingProxyType({
             "BucketCapacity": "-1",
             "BucketRate": "-1",
@@ -261,12 +252,12 @@ class Test_SwSampler_calculate_attributes():
             "SampleSource": -1,
         })
 
-    def test_calculate_attributes_contd_decision_with_tt_but_no_sw_keys(
+    def test_contd_decision_with_no_sw_keys_nor_custom_keys_with_unsigned_tt(
         self,
         sw_sampler,
         decision_continued,
         parent_span_context_invalid,
-        mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_tt
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -274,7 +265,7 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_continued,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
-            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_tt,
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt,
         ) == MappingProxyType({
             "BucketCapacity": "-1",
             "BucketRate": "-1",
@@ -283,12 +274,12 @@ class Test_SwSampler_calculate_attributes():
             "TriggeredTrace": True,
         })
 
-    def test_calculate_attributes_not_contd_decision_with_tt_and_sw_keys(
+    def test_not_contd_decision_with_sw_keys_and_custom_keys_and_unsigned_tt(
         self,
         sw_sampler,
         decision_not_continued,
         parent_span_context_invalid,
-        mock_xtraceoptions_sw_keys_and_custom_keys_and_tt
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -296,7 +287,7 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_not_continued,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
-            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_tt,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
         ) == MappingProxyType({
             "BucketCapacity": "1",
             "BucketRate": "1",
@@ -307,12 +298,12 @@ class Test_SwSampler_calculate_attributes():
             "custom-foo": "awesome-bar",
         })
 
-    def test_calculate_attributes_not_contd_decision_with_tt_no_sw_keys(
+    def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_with_unsigned_tt(
         self,
         sw_sampler,
         decision_not_continued,
         parent_span_context_invalid,
-        mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_tt
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -320,7 +311,7 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_not_continued,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
-            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_tt
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt
         ) == MappingProxyType({
             "BucketCapacity": "1",
             "BucketRate": "1",
@@ -329,12 +320,12 @@ class Test_SwSampler_calculate_attributes():
             "TriggeredTrace": True,
         })
 
-    def test_calculate_attributes_not_contd_decision_no_tt_no_sw_keys(
+    def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
         self,
         sw_sampler,
         decision_not_continued,
         parent_span_context_invalid,
-        mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -342,7 +333,7 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_not_continued,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
-            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned
         ) == MappingProxyType({
             "BucketCapacity": "1",
             "BucketRate": "1",
@@ -350,13 +341,13 @@ class Test_SwSampler_calculate_attributes():
             "SampleSource": 1,
         })
 
-    def test_calculate_attributes_valid_parent_create_new_attrs(
+    def test_valid_parent_create_new_attrs_with_sw_keys_and_custom_keys_and_unsigned_tt(
         self,
         sw_sampler,
         decision_continued,
         tracestate_with_sw_and_others,
         parent_span_context_valid_remote,
-        mock_xtraceoptions_sw_keys_and_custom_keys_and_tt
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -364,7 +355,7 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_continued,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
-            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_tt,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
         ) == MappingProxyType({
             "BucketCapacity": "-1",
             "BucketRate": "-1",
@@ -377,14 +368,14 @@ class Test_SwSampler_calculate_attributes():
             "custom-foo": "awesome-bar",
         })
 
-    def test_calculate_attributes_valid_parent_update_attrs_no_tracestate_capture(
+    def test_valid_parent_update_attrs_no_tracestate_capture_with_sw_keys_and_custom_keys_and_unsigned_tt(
         self,
         sw_sampler,
         attributes_no_tracestate,
         decision_continued,
         tracestate_with_sw_and_others,
         parent_span_context_valid_remote,
-        mock_xtraceoptions_sw_keys_and_custom_keys_and_tt
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -392,7 +383,7 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_continued,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
-            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_tt,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
         ) == MappingProxyType({
             "BucketCapacity": "-1",
             "BucketRate": "-1",
@@ -406,14 +397,14 @@ class Test_SwSampler_calculate_attributes():
             "baz": "qux",
         })
 
-    def test_calculate_attributes_valid_parent_update_attrs_tracestate_capture(
+    def test_valid_parent_update_attrs_tracestate_capture_with_sw_keys_and_custom_keys_and_unsigned_tt(
         self,
         sw_sampler,
         attributes_with_tracestate,
         decision_continued,
         tracestate_with_sw_and_others,
         parent_span_context_valid_remote,
-        mock_xtraceoptions_sw_keys_and_custom_keys_and_tt
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -421,7 +412,7 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_continued,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
-            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_tt,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
         ) == MappingProxyType({
             "BucketCapacity": "-1",
             "BucketRate": "-1",
