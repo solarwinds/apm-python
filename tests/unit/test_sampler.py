@@ -952,16 +952,16 @@ class Test_SwSampler():
             attributes={"foo": "bar"}
         )
 
-        solarwinds_apm.sampler._SwSampler.calculate_liboboe_decision.assert_called_once_with(
+        _SwSampler.calculate_liboboe_decision.assert_called_once_with(
             "my_span_context",
             mock_xtraceoptions
         )
-        solarwinds_apm.sampler._SwSampler.calculate_trace_state.assert_called_once_with(
+        _SwSampler.calculate_trace_state.assert_called_once_with(
             "my_decision",
             "my_span_context",
             mock_xtraceoptions
         )
-        solarwinds_apm.sampler._SwSampler.calculate_attributes.assert_called_once_with(
+        _SwSampler.calculate_attributes.assert_called_once_with(
             "foo",
             {"foo": "bar"},
             "my_decision",
@@ -969,7 +969,7 @@ class Test_SwSampler():
             "my_span_context",
             mock_xtraceoptions
         )
-        solarwinds_apm.sampler._SwSampler.otel_decision_from_liboboe.assert_called_once_with(
+        _SwSampler.otel_decision_from_liboboe.assert_called_once_with(
             "my_decision"
         )
         assert sampling_result.attributes == "my_attributes"
