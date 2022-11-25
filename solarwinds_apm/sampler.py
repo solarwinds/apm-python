@@ -387,14 +387,14 @@ class _SwSampler(Sampler):
         internal_sw_keys = xtraceoptions.sw_keys
         if internal_sw_keys:
             new_attributes[self._INTERNAL_SW_KEYS] = internal_sw_keys
-    
+
         # Always (root or is_remote) set custom KVs if extracted from x-trace-options
         custom_kvs = xtraceoptions.custom_kvs
         if custom_kvs:
             for custom_key, custom_value in custom_kvs.items():
                 new_attributes[custom_key] = custom_value
 
-        # Always (root or is_remote) set service entry internal KVs       
+        # Always (root or is_remote) set service entry internal KVs
         new_attributes[
             self._INTERNAL_BUCKET_CAPACITY
         ] = f"{decision['bucket_cap']}"
@@ -410,7 +410,7 @@ class _SwSampler(Sampler):
         )
 
         # If unsigned or signed TT (root or is_remote), set TriggeredTrace
-        if xtraceoptions.trigger_trace:
+        if xtraceoptions.trigger_trace == 1:
             new_attributes[self._INTERNAL_TRIGGERED_TRACE] = True
 
         # Trace's root span has no valid traceparent nor tracestate
