@@ -13,6 +13,7 @@ from .fixtures.parent_span_context import (
     fixture_parent_span_context_invalid,
     fixture_parent_span_context_valid_remote,
 )
+from .fixtures.sampler import fixture_swsampler
 from .fixtures.span_id_from_sw import fixture_mock_span_id_from_sw
 from .fixtures.sw_from_span_and_decision import fixture_mock_sw_from_span_and_decision
 
@@ -74,21 +75,6 @@ def fixture_xtraceoptions_unsigned_tt(mocker):
     return options
 
 # Other Fixtures, manually used =====================================
-
-@pytest.fixture(name="sw_sampler")
-def fixture_swsampler(mocker):
-    mock_apm_config = mocker.Mock()
-    mock_get = mocker.Mock(
-        return_value=1  # enabled
-    )
-    mock_apm_config.configure_mock(
-        **{
-            "agent_enabled": True,
-            "get": mock_get,
-            "tracing_mode": None,  # mapped to -1
-        }
-    )
-    return _SwSampler(mock_apm_config)
 
 @pytest.fixture(name="decision_auth")
 def fixture_decision_auth():
