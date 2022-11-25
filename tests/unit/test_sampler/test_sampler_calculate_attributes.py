@@ -137,11 +137,12 @@ class Test_SwSampler_calculate_attributes():
         sampler = _SwSampler(mock_apm_config)
         assert sampler.apm_config == mock_apm_config
 
-    def test_decision_drop(
+    def test_decision_drop_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
         self,
         mocker,
         sw_sampler,
-        decision_drop
+        decision_drop,
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
     ):
         assert sw_sampler.calculate_attributes(
             span_name="foo",
@@ -149,7 +150,7 @@ class Test_SwSampler_calculate_attributes():
             decision=decision_drop,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
-            xtraceoptions=mocker.Mock(),
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
         ) == None
 
     def test_decision_drop_with_sw_keys_and_custom_keys_no_tt_unsigned(
