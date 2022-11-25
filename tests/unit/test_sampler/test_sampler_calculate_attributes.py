@@ -1,52 +1,17 @@
 import pytest
 from types import MappingProxyType
 
-from opentelemetry.trace.span import SpanContext, TraceState
+from opentelemetry.trace.span import TraceState
 
 from solarwinds_apm.sampler import _SwSampler
 
-
-# Common / Duplicate Fixtures, autoused ===========================================
-# See also test_sampler.py
-
-@pytest.fixture(autouse=True)
-def fixture_mock_sw_from_span_and_decision(mocker):
-    mocker.patch(
-        "solarwinds_apm.w3c_transformer.W3CTransformer.sw_from_span_and_decision",
-        return_value="1111222233334444-01"
-    )
-
-@pytest.fixture(autouse=True)
-def fixture_mock_span_id_from_sw(mocker):
-    mocker.patch(
-        "solarwinds_apm.w3c_transformer.W3CTransformer.span_id_from_sw",
-        return_value="1111222233334444"
-    )
-
-# Common / Duplicate Manual Fixtures =================
-# See also test_sampler.py
-
-@pytest.fixture(name="parent_span_context_invalid")
-def fixture_parent_span_context_invalid():
-    return SpanContext(
-        trace_id=00000000000000000000000000000000,
-        span_id=0000000000000000,
-        is_remote=False,
-        trace_flags=0,
-        trace_state=None,
-    )
-
-@pytest.fixture(name="parent_span_context_valid_remote")
-def fixture_parent_span_context_valid_remote():
-    return SpanContext(
-        trace_id=11112222333344445555666677778888,
-        span_id=1111222233334444,
-        is_remote=True,
-        trace_flags=1,
-        trace_state=TraceState([
-            ["sw", "123"]
-        ]),
-    )
+# pylint: disable=unused-import
+from .fixtures.parent_span_context import (
+    fixture_parent_span_context_invalid,
+    fixture_parent_span_context_valid_remote,
+)
+from .fixtures.span_id_from_sw import fixture_mock_span_id_from_sw
+from .fixtures.sw_from_span_and_decision import fixture_mock_sw_from_span_and_decision
 
 # Fixtures Manual =====================================
 

@@ -8,6 +8,13 @@ from opentelemetry.trace.span import SpanContext, TraceState
 import solarwinds_apm.extension.oboe
 from solarwinds_apm.sampler import _SwSampler, ParentBasedSwSampler
 
+# pylint: disable=unused-import
+from .fixtures.parent_span_context import (
+    fixture_parent_span_context_invalid,
+    fixture_parent_span_context_valid_remote,
+)
+from .fixtures.span_id_from_sw import fixture_mock_span_id_from_sw
+from .fixtures.sw_from_span_and_decision import fixture_mock_sw_from_span_and_decision
 
 # Mock Fixtures, autoused ===========================================
 
@@ -19,24 +26,10 @@ def fixture_mock_context_getdecisions(mocker, mock_liboboe_decision):
     )
 
 @pytest.fixture(autouse=True)
-def fixture_mock_sw_from_span_and_decision(mocker):
-    mocker.patch(
-        "solarwinds_apm.w3c_transformer.W3CTransformer.sw_from_span_and_decision",
-        return_value="1111222233334444-01"
-    )
-
-@pytest.fixture(autouse=True)
 def fixture_mock_trace_flags_from_int(mocker):
     mocker.patch(
         "solarwinds_apm.w3c_transformer.W3CTransformer.trace_flags_from_int",
         return_value="01"
-    )
-
-@pytest.fixture(autouse=True)
-def fixture_mock_span_id_from_sw(mocker):
-    mocker.patch(
-        "solarwinds_apm.w3c_transformer.W3CTransformer.span_id_from_sw",
-        return_value="1111222233334444"
     )
 
 # Mock Fixtures, manually used ======================================
@@ -163,28 +156,6 @@ def fixture_decision_unsigned_tt_not_traced(mocker):
         "status": -3,
         "status_msg": "trigger-tracing-disabled",
     }
-
-@pytest.fixture(name="parent_span_context_invalid")
-def fixture_parent_span_context_invalid():
-    return SpanContext(
-        trace_id=00000000000000000000000000000000,
-        span_id=0000000000000000,
-        is_remote=False,
-        trace_flags=0,
-        trace_state=None,
-    )
-
-@pytest.fixture(name="parent_span_context_valid_remote")
-def fixture_parent_span_context_valid_remote():
-    return SpanContext(
-        trace_id=11112222333344445555666677778888,
-        span_id=1111222233334444,
-        is_remote=True,
-        trace_flags=1,
-        trace_state=TraceState([
-            ["sw", "123"]
-        ]),
-    )
 
 @pytest.fixture(name="parent_span_context_valid_remote_no_tracestate")
 def fixture_parent_span_context_valid_remote_no_tracestate():
