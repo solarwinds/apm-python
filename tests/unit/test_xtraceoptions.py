@@ -150,15 +150,15 @@ class TestXTraceOptions():
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
 
-    def test_init_custom_key_match_but_multiple_values_ignored(self):
+    def test_init_custom_key_match_equals_in_value_ok(self):
         mock_otel_context = {
-            INTL_SWO_X_OPTIONS_KEY: "custom-but=too-many=values-nuoo",
+            INTL_SWO_X_OPTIONS_KEY: "custom-and=a-value=12345containing_equals=signs",
         }
         xto = XTraceOptions(mock_otel_context)
-        assert xto.ignored == ["custom-but"]
-        assert xto.options_header == "custom-but=too-many=values-nuoo"
+        assert xto.ignored == []
+        assert xto.options_header == "custom-and=a-value=12345containing_equals=signs"
         assert xto.signature == None
-        assert xto.custom_kvs == {}
+        assert xto.custom_kvs == {"custom-and": "a-value=12345containing_equals=signs"}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0

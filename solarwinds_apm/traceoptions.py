@@ -72,11 +72,12 @@ class XTraceOptions:
                 self.sw_keys = option_kv[1].strip()
 
             elif re.match(self._XTRACEOPTIONS_CUSTOM_RE, option_key):
-                # custom-* must have its value assigned by single equals sign
-                if len(option_kv) == 2:
-                    self.custom_kvs[option_key] = option_kv[1].strip()
+                # custom-* value is assigned with an equals sign (=)
+                # while value can contain more equals signs
+                if len(option_kv) > 1:
+                    self.custom_kvs[option_key] = "=".join(okv.strip() for okv in option_kv[1:])
                 else:
-                    logger.debug("custom-* must be assigned with a single equals sign. Ignoring.")
+                    logger.debug("Each custom-* value needs to be assigned with an equals sign. Ignoring.")
                     self.ignored.append(option_key)
 
             elif option_key == self._XTRACEOPTIONS_HEADER_KEY_TS:
