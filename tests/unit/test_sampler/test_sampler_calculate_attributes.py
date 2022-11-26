@@ -386,6 +386,46 @@ class Test_SwSampler_calculate_attributes():
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
         ) == None
 
+    def test_decision_auth_ok_with_sw_keys_and_custom_keys_and_signed_tt(
+        self,
+        sw_sampler,
+        decision_record_and_sample_signed_tt_auth_ok,
+        parent_span_context_invalid,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+    ):
+        assert sw_sampler.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_record_and_sample_signed_tt_auth_ok,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+        ) == MappingProxyType({
+            "BucketCapacity": "6.0",
+            "BucketRate": "0.1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "TriggeredTrace": True,
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+        })
+
+    def test_decision_auth_failed_with_sw_keys_and_custom_keys_and_signed_tt(
+        self,
+        sw_sampler,
+        decision_record_only_signed_tt_auth_failed,
+        parent_span_context_invalid,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+    ):
+        assert sw_sampler.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_record_only_signed_tt_auth_failed,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+        ) == None
+
     def test_contd_decision_sw_keys_and_custom_keys_and_unsigned_tt(
         self,
         sw_sampler,
