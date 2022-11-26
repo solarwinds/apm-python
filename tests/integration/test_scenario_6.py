@@ -12,7 +12,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
     Test class for trigger tracing-based decision without other input headers.
     """
 
-    def test_scenario_6_sampled(self):
+    def test_scenario_6_sampled_unsigned_with_tt(self):
         """
         Scenario #6, sampled:
         1. Decision to sample with unsigned trigger trace flag is made at root/service
@@ -22,7 +22,8 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
            (done by OTel TraceContextTextMapPropagator).
         3. A x-trace-options-response header is calculated using the extracted x-trace-options
            and injected into the HTTP response.
-        4. Sampling-related and SWKeys attributes are set for the root/service entry span.
+        4. Sampling-related, SWKeys, custom-*, and TriggeredTrace attributes are set
+           for the root/service entry span, but not what's ignored.
         5. The span_id of the outgoing request span matches the span_id portion in the
            tracestate header.
         """
@@ -42,7 +43,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
             resp = self.client.get(
                 "/test_trace/",
                 headers={
-                    "x-trace-options": "trigger-trace",
+                    "x-trace-options": "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
                     "some-header": "some-value"
                 }
             )
@@ -77,7 +78,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         assert "tracestate" in resp_json
         # In this test we know there is `sw` and `xtrace_options_response` in tracestate
         # where value of former will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####ok".format(new_span_id, new_trace_flags)
+        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####ok;ignored####this-will-be-ignored".format(new_span_id, new_trace_flags)
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -99,23 +100,32 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         # In this test we know `sw` value will have invalid span_id
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
-            ("xtrace_options_response", "trigger-trace####ok"),
+            ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
         ])
         assert span_server.context.trace_state == expected_trace_state
 
         # Check root span attributes
         #   :present:
         #     service entry internal KVs, which are on all entry spans
+        #     SWKeys, because included in xtraceoptions in otel context
+        #     custom-*, because included in xtraceoptions in otel context
+        #     TriggeredTrace, because trigger-trace in otel context
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
-        #     SWKeys, because no xtraceoptions in otel context
+        #     the ignored value in the x-trace-options-header
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert span_server.attributes["BucketCapacity"] == "6.0"
         assert span_server.attributes["BucketRate"] == "5.0"
         assert span_server.attributes["SampleRate"] == 3
         assert span_server.attributes["SampleSource"] == 4
         assert not "sw.tracestate_parent_id" in span_server.attributes
-        assert not "SWKeys" in span_server.attributes
+        assert "SWKeys" in span_server.attributes
+        assert span_server.attributes["SWKeys"] == "check-id:check-1013,website-id:booking-demo"
+        assert "custom-awesome-key" in span_server.attributes
+        assert span_server.attributes["custom-awesome-key"] == "foo"
+        assert "TriggeredTrace" in span_server.attributes
+        assert span_server.attributes["TriggeredTrace"] == True
+        assert "this-will-be-ignored" not in span_server.attributes
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will also have invalid span_id.
@@ -123,7 +133,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
-            ("xtrace_options_response", "trigger-trace####ok"),
+            ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
         ])
         assert span_client.context.trace_state == expected_trace_state
 
@@ -131,10 +141,16 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         #   :absent:
         #     service entry internal KVs, which are only on entry spans
         #     sw.tracestate_parent_id, because cannot be set without attributes at decision
-        #     SWKeys, because no xtraceoptions in otel context
+        #     SWKeys, because only written for service entry spans
+        #     custom-*, because only written for service entry spans
+        #     TriggeredTrace, because only written for service entry spans
+        #     the ignored value in the x-trace-options-header
         assert not any(attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert not "sw.tracestate_parent_id" in span_client.attributes
         assert not "SWKeys" in span_client.attributes
+        assert not "custom-awesome-key" in span_client.attributes
+        assert not "TriggeredTrace" in span_client.attributes
+        assert "this-will-be-ignored" not in span_client.attributes
 
         # Check span_id of the outgoing request span (client span) matches
         # the span_id portion in the outgoing tracestate header, which
@@ -142,7 +158,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
 
-    def test_scenario_6_not_sampled(self):
+    def test_scenario_6_not_sampled_unsigned_with_tt(self):
         """
         Scenario #6, not sampled:
         1. Decision to NOT sample with unsigned trigger trace flag is made at root/service
@@ -168,7 +184,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
             resp = self.client.get(
                 "/test_trace/",
                 headers={
-                    "x-trace-options": "trigger-trace",
+                    "x-trace-options": "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
                     "some-header": "some-value"
                 }
             )
@@ -203,7 +219,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         assert "tracestate" in resp_json
         # In this test we know there is `sw` and `xtrace_options_response` in tracestate
         # where value of former will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####rate-exceeded".format(new_span_id, new_trace_flags)
+        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####rate-exceeded;ignored####this-will-be-ignored".format(new_span_id, new_trace_flags)
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
