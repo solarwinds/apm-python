@@ -334,9 +334,9 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         #     service entry internal KVs, which are on all entry spans
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
-        #     TriggeredTrace, because trigger-trace in otel context
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
+        #     TriggeredTrace, because trigger-trace not in otel context
         #     the ignored value in the x-trace-options-header
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert span_server.attributes["BucketCapacity"] == "6.0"
