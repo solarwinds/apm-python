@@ -389,7 +389,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        4. No spans are exported.
+        3. No spans are exported.
         """
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
