@@ -14,7 +14,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
 
     def test_scenario_6_sampled_unsigned_with_tt(self):
         """
-        Scenario #6, sampled:
+        Scenario #6, sampled with unsigned tt:
         1. Decision to sample with unsigned trigger trace flag is made at root/service
            entry span (mocked). There is no OTel context extracted from request headers,
            so this is the root and start of the trace.
@@ -33,7 +33,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         # liboboe mocked to guarantee return of "do_sample" (2nd arg),
         # plus status_msg (the first "ok" string)
         mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
+            return_value=(1, 1, -1, -1, 5.0, 6.0, 1, -1, "ok", "ok", 0)
         )
         with mock.patch(
             target="solarwinds_apm.extension.oboe.Context.getDecisions",
@@ -116,8 +116,8 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert span_server.attributes["BucketCapacity"] == "6.0"
         assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == 3
-        assert span_server.attributes["SampleSource"] == 4
+        assert span_server.attributes["SampleRate"] == -1
+        assert span_server.attributes["SampleSource"] == -1
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert "SWKeys" in span_server.attributes
         assert span_server.attributes["SWKeys"] == "check-id:check-1013,website-id:booking-demo"
@@ -160,7 +160,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
 
     def test_scenario_6_not_sampled_unsigned_with_tt(self):
         """
-        Scenario #6, not sampled:
+        Scenario #6, not sampled with unsigned tt:
         1. Decision to NOT sample with unsigned trigger trace flag is made at root/service
            entry span (mocked). There is no OTel context extracted from request headers,
            so this is the root and start of the trace (though not exported).
@@ -174,7 +174,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         # liboboe mocked to guarantee return of "do_sample" (2nd arg),
         # plus status_msg (the "rate-exceeded" string)
         mock_decision = mock.Mock(
-            return_value=(1, 0, 3, 4, 5.0, 6.0, 1, 0, "rate-exceeded", "ok", 0)
+            return_value=(1, 0, -1, -1, 5.0, 6.0, 1, -1, "rate-exceeded", "ok", -4)
         )
         with mock.patch(
             target="solarwinds_apm.extension.oboe.Context.getDecisions",
