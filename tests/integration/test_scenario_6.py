@@ -455,19 +455,3 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 0
-
-    def test_scenario_6_sampled_signed_with_tt(self):
-        # TODO
-        pass
-
-    def test_scenario_6_not_sampled_signed_with_tt(self):
-        # TODO
-        pass
-
-    def test_scenario_6_sampled_signed_without_tt(self):
-        # TODO
-        pass
-
-    def test_scenario_6_not_sampled_signed_without_tt(self):
-        # TODO
-        pass
