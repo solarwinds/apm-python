@@ -216,14 +216,14 @@ class TestXTraceOptions():
         assert xto.trigger_trace == 1
         assert xto.timestamp == 0
 
-    def test_init_signature_not_stored_without_options(self):
+    def test_init_signature_still_stored_without_options(self):
         mock_otel_context = {
             INTL_SWO_SIGNATURE_KEY: "my-foo-signature",
         }
         xto = XTraceOptions(mock_otel_context)
         assert xto.ignored == []
         assert xto.options_header == ""
-        assert xto.signature == None
+        assert xto.signature == "my-foo-signature"
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
