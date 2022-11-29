@@ -306,6 +306,77 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
 
+    def test_signed_with_tt_rate_exceeded(self):
+        """
+        Signed request with trigger-trace, rate exceeded:
+        1. Decision to NOT sample with is made at root/service entry span (mocked).
+           There is no OTel context extracted from request headers,
+           so this is the root and start of the trace.
+        2. Some traceparent and tracestate are injected into service's outgoing request
+           (done by OTel TraceContextTextMapPropagator).
+        3. No spans are exported.
+        """
+        # liboboe mocked to guarantee return of "do_sample" (2nd arg),
+        # plus status_msg (the "rate-exceeded" string)
+        mock_decision = mock.Mock(
+            return_value=(1, 0, -1, -1, 5.0, 6.0, 0, -1, "rate-exceeded", "ok", -4)
+        )
+        with mock.patch(
+            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            new=mock_decision,
+        ):
+            # Request to instrumented app with headers
+            resp = self.client.get(
+                "/test_trace/",
+                headers={
+                    "x-trace-options": "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
+                    "x-trace-options-signature": "foo-sig",
+                    "some-header": "some-value"
+                }
+            )
+        resp_json = json.loads(resp.data)
+
+        # Verify some-header was not altered by instrumentation
+        try:
+            assert resp_json["incoming-headers"]["some-header"] == "some-value"
+        except KeyError as e:
+            self.fail("KeyError was raised at incoming-headers check: {}".format(e))
+
+        # Verify trace context injected into test app's outgoing postman-echo call
+        # (added to Flask app's response data) includes:
+        #    - traceparent with a trace_id, span_id, and trace_flags for do_sample
+        #    - tracestate with same span_id and trace_flags for do_sample
+        assert "traceparent" in resp_json
+        _TRACEPARENT_HEADER_FORMAT = (
+            "^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$"
+        )
+        _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
+        traceparent_re_result = re.search(
+            _TRACEPARENT_HEADER_FORMAT_RE,
+            resp_json["traceparent"],
+        )
+        new_trace_id = traceparent_re_result.group(2)
+        assert new_trace_id is not None
+        new_span_id = traceparent_re_result.group(3)
+        assert new_span_id is not None
+        new_trace_flags = traceparent_re_result.group(4)
+        assert new_trace_flags == "00"
+
+        assert "tracestate" in resp_json
+        # In this test we know there is `sw` and `xtrace_options_response` in tracestate
+        # where value of former will be new_span_id and new_trace_flags
+        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=auth####ok;trigger-trace####rate-exceeded;ignored####this-will-be-ignored".format(new_span_id, new_trace_flags)
+
+        # Verify x-trace response header has same trace_id
+        # though it will have different span ID because of Flask
+        # app's outgoing request
+        assert "x-trace" in resp.headers
+        assert new_trace_id in resp.headers["x-trace"]
+
+        # Verify no spans exported
+        spans = self.memory_exporter.get_finished_spans()
+        assert len(spans) == 0
+
     def test_signed_auth_fail(self):
         """
         Signed request with trigger-trace, auth fail:
@@ -314,7 +385,7 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        4. No spans are exported.
+        3. No spans are exported.
         """
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
