@@ -41,16 +41,14 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         xtraceoptions_header = getter.get(
             carrier, self._XTRACEOPTIONS_HEADER_NAME
         )
-        if not xtraceoptions_header:
-            return context
-
-        context.update({INTL_SWO_X_OPTIONS_KEY: xtraceoptions_header[0]})
-        logger.debug(
-            "Extracted %s as %s: %s",
-            self._XTRACEOPTIONS_HEADER_NAME,
-            INTL_SWO_X_OPTIONS_KEY,
-            xtraceoptions_header[0],
-        )
+        if xtraceoptions_header:
+            context.update({INTL_SWO_X_OPTIONS_KEY: xtraceoptions_header[0]})
+            logger.debug(
+                "Extracted %s as %s: %s",
+                self._XTRACEOPTIONS_HEADER_NAME,
+                INTL_SWO_X_OPTIONS_KEY,
+                xtraceoptions_header[0],
+            )
 
         signature_header = getter.get(
             carrier, self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME
@@ -61,7 +59,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
                 "Extracted %s as %s: %s",
                 self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME,
                 INTL_SWO_SIGNATURE_KEY,
-                xtraceoptions_header[0],
+                signature_header[0],
             )
         return context
 

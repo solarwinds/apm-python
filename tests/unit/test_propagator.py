@@ -25,6 +25,15 @@ class TestSolarWindsPropagator():
             "sw_signature": "bar"
         }
 
+    def test_extract_new_context_no_xtraceoptions_yes_signature(self):
+        mock_carrier = {
+            "x-trace-options-signature": "bar"
+        }
+        result = SolarWindsPropagator().extract(mock_carrier)
+        assert result == {
+            "sw_signature": "bar"
+        }
+
     def test_extract_existing_context(self):
         mock_carrier = {
             "x-trace-options": "foo",
