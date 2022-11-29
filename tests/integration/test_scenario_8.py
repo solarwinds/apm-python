@@ -24,7 +24,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         3. The injected x-trace-options header is still also propagated.
         4. The injected traceparent's trace_id is the trace_id of all spans.
         5. Sampling-related attributes are set for the service entry span.
-        6. The span_id of the outgoing request span matches the span_id portion in the
+        6. custom-* and sw-keys from x-trace-options are set for service entry span.
+        7. The span_id of the outgoing request span matches the span_id portion in the
            tracestate header.
         """
         trace_id = "11112222333344445555666677778888"
@@ -151,7 +152,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         #   :present:
         #     service entry internal KVs, which are on all entry spans
         #     sw.tracestate_parent_id, because only set if not root and no attributes
-        #     SWKeys, because no xtraceoptions in otel context
+        #     custom-*, because included in xtraceoptions in otel context
+        #     SWKeys, because included in xtraceoptions in otel context
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert span_server.attributes["BucketCapacity"] == "6.0"
         assert span_server.attributes["BucketRate"] == "5.0"
@@ -159,6 +161,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert span_server.attributes["SampleSource"] == 4
         assert "sw.tracestate_parent_id" in span_server.attributes
         assert span_server.attributes["sw.tracestate_parent_id"] == tracestate_span
+        assert "custom-from" in span_server.attributes
+        assert span_server.attributes["custom-from"] == "lin"
         assert "SWKeys" in span_server.attributes
         assert span_server.attributes["SWKeys"] == "custom-sw-from:tammy,baz:qux"
 
@@ -174,9 +178,11 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         #   :absent:
         #     service entry internal KVs, which are only on entry spans
         #     sw.tracestate_parent_id, because cannot be set without attributes at decision
+        #     custom-*, because only on entry spans
         #     SWKeys, because only on entry spans
         assert not any(attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert not "sw.tracestate_parent_id" in span_client.attributes
+        assert not "custom-from" in span_client.attributes
         assert not "SWKeys" in span_client.attributes
 
         # Check span_id of the outgoing request span (client span) matches
