@@ -381,6 +381,15 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 0
 
-    def test_signed_no_xtraceoptions_header(self):
+    def test_signed_missing_xtraceoptions_header(self):
+        """
+        Signed request missing x-trace-options header:
+        1. Decision to sample with failed signed trigger trace flag is made at root/service
+           entry span (mocked). There is no OTel context extracted from request headers,
+           so this is the root and start of the trace.
+        2. Some traceparent and tracestate are injected into service's outgoing request
+           (done by OTel TraceContextTextMapPropagator).
+        4. No spans are exported.
+        """
         # TODO
         pass
