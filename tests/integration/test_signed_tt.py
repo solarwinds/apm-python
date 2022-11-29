@@ -8,6 +8,11 @@ from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
 
 
 class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
+    """
+    Test class for signed requests, with or without trigger tracing,
+    without traceparent nor tracestate headers.
+    """
+
     def test_signed_with_tt_auth_ok(self):
         """
         Signed request with trigger-trace, auth ok:

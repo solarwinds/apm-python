@@ -7,12 +7,14 @@ from unittest import mock
 from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
 
 
-class TestScenario6(TestBaseSwHeadersAndAttributes):
+class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
     """
-    Test class for trigger tracing-based decision without other input headers.
+    Test class for unsigned requests, with or without trigger tracing,
+    without traceparent nor tracestate headers.
+    Also tests acceptance criteria Scenario #6.
     """
 
-    def test_scenario_6_sampled_unsigned_with_tt(self):
+    def test_unsigned_with_tt_sampled(self):
         """
         Scenario #6, sampled with unsigned tt:
         1. Decision to sample with unsigned trigger trace flag is made at root/service
@@ -158,7 +160,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
 
-    def test_scenario_6_not_sampled_unsigned_with_tt(self):
+    def test_unsigned_with_tt_not_sampled_rate_exceeded(self):
         """
         Scenario #6, not sampled with unsigned tt:
         1. Decision to NOT sample with unsigned trigger trace flag is made at root/service
@@ -231,7 +233,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 0
 
-    def test_scenario_6_sampled_unsigned_without_tt(self):
+    def test_unsigned_without_tt_sampled(self):
         """
         Scenario #6, sampled, unsigned without tt:
         1. Decision to sample with is made at root/service entry span (mocked).
@@ -381,7 +383,7 @@ class TestScenario6(TestBaseSwHeadersAndAttributes):
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
 
-    def test_scenario_6_not_sampled_unsigned_without_tt(self):
+    def test_unsigned_without_tt_not_sampled_rate_exceeded(self):
         """
         Scenario #6, not sampled, unsigned without tt:
         1. Decision to NOT sample with is made at root/service entry span (mocked).
