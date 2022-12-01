@@ -9,19 +9,18 @@ from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
 
 class TestScenario8(TestBaseSwHeadersAndAttributes):
     """
-    Test class for continuing tracing decision (not trigger tracing) with input headers
+    Test class for continuing tracing decision OR trigger tracing with input headers
     for traceparent, tracestate, and trigger tracing.
     """
 
-    def test_scenario_8_sampled(self):
+    def test_sampled_both_trace_context_and_xtraceoptions_valid(self):
         """
-        Scenario #8, sampled:
-        1. Decision to sample is continued using extracted tracestate at service
+        1. Decision to sample is continued using valid extracted tracestate at service
            entry span (mocked). Unsigned trigger trace header is ignored. This is
            not the root span because it continues an existing OTel context.
         2. traceparent and tracestate headers in the request to the test app are
         injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
-        3. The injected x-trace-options header is still also propagated.
+        3. The valid injected x-trace-options header is still also propagated.
         4. The injected traceparent's trace_id is the trace_id of all spans.
         5. Sampling-related attributes are set for the service entry span.
         6. custom-* and sw-keys from x-trace-options are set for service entry span.
@@ -191,16 +190,14 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
 
-    def test_scenario_8_not_sampled(self):
+    def test_not_sampled_both_trace_context_and_xtraceoptions_valid(self):
         """
-        Scenario #8, not sampled:
-
-        1. Decision to NOT sample is continued using extracted tracestate at service
+        1. Decision to NOT sample is continued using valid extracted tracestate at service
            entry span (mocked). Unsigned trigger trace header is ignored. This is
            not the root span because it continues an existing OTel context
         2. traceparent and tracestate headers in the request to the test app are
         injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
-        3. The injected x-trace-options header is still also propagated.
+        3. The valid injected x-trace-options header is still also propagated.
         4. No spans are exported.
         """
         trace_id = "11112222333344445555666677778888"
