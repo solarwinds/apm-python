@@ -67,15 +67,19 @@ class XTraceOptions:
                         self.trigger_trace = 1
 
                 elif option_key == self._XTRACEOPTIONS_HEADER_KEY_SW_KEYS:
-                    self.sw_keys = option_kv[1].strip()
+                    # use only the first sw-keys value if multiple in header
+                    if not self.sw_keys:
+                        self.sw_keys = option_kv[1].strip()
 
                 elif re.match(self._XTRACEOPTIONS_CUSTOM_RE, option_key):
                     # custom-* value is assigned with an equals sign (=)
                     # while value can contain more equals signs
                     if len(option_kv) > 1:
-                        self.custom_kvs[option_key] = "=".join(
-                            okv.strip() for okv in option_kv[1:]
-                        )
+                        # use only the first custom-* value if multiple in header
+                        if option_key not in self.custom_kvs:
+                            self.custom_kvs[option_key] = "=".join(
+                                okv.strip() for okv in option_kv[1:]
+                            )
                     else:
                         logger.debug(
                             "Each custom-* value needs to be assigned with an equals sign. Ignoring."
