@@ -315,3 +315,19 @@ class TestXTraceOptions():
         assert xto.sw_keys == "keep_this"
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+
+    def test_init_keep_values_containing_equals_char(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "trigger-trace;custom-something=value_thing=4;custom-OtherThing=other val;sw-keys=g049sj345=0spd",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == []
+        assert xto.options_header == "trigger-trace;custom-something=value_thing=4;custom-OtherThing=other val;sw-keys=g049sj345=0spd"
+        assert xto.signature == None
+        assert xto.custom_kvs == {
+            "custom-something": "value_thing=4",
+            "custom-OtherThing": "other val",
+        }
+        assert xto.sw_keys == "g049sj345=0spd"
+        assert xto.trigger_trace == 1
+        assert xto.timestamp == 0

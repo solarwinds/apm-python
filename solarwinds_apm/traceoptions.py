@@ -23,7 +23,7 @@ class XTraceOptions:
     _XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE = "trigger-trace"
     _XTRACEOPTIONS_HEADER_KEY_TS = "ts"
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-statements
     def __init__(
         self,
         context: typing.Optional[Context] = None,
@@ -67,9 +67,19 @@ class XTraceOptions:
                         self.trigger_trace = 1
 
                 elif option_key == self._XTRACEOPTIONS_HEADER_KEY_SW_KEYS:
-                    # use only the first sw-keys value if multiple in header
-                    if not self.sw_keys:
-                        self.sw_keys = option_kv[1].strip()
+                    # sw-keys value is assigned with an equals sign (=)
+                    # while value can contain more equals signs
+                    if len(option_kv) > 1:
+                        # use only the first sw-keys value if multiple in header
+                        if not self.sw_keys:
+                            self.sw_keys = "=".join(
+                                okv.strip() for okv in option_kv[1:]
+                            )
+                    else:
+                        logger.debug(
+                            "sw-keys value needs to be assigned with an equals sign. Ignoring."
+                        )
+                        self.ignored.append(option_key)
 
                 elif re.match(self._XTRACEOPTIONS_CUSTOM_RE, option_key):
                     # custom-* value is assigned with an equals sign (=)
