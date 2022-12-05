@@ -316,18 +316,18 @@ class TestXTraceOptions():
 
     def test_init_keep_first_repeated_key_value(self):
         mock_otel_context = {
-            INTL_SWO_X_OPTIONS_KEY: "custom-something=keep_this_0;sw-keys=keep_this;sw-keys=029734wrqj21,0d9;custom-something=otherval",
+            INTL_SWO_X_OPTIONS_KEY: "ts=123;custom-something=keep_this_0;sw-keys=keep_this;sw-keys=029734wrqj21,0d9;custom-something=otherval;ts=456",
         }
         xto = XTraceOptions(mock_otel_context)
         assert xto.ignored == []
-        assert xto.options_header == "custom-something=keep_this_0;sw-keys=keep_this;sw-keys=029734wrqj21,0d9;custom-something=otherval"
+        assert xto.options_header == "ts=123;custom-something=keep_this_0;sw-keys=keep_this;sw-keys=029734wrqj21,0d9;custom-something=otherval;ts=456"
         assert xto.signature == None
         assert xto.custom_kvs == {
             "custom-something": "keep_this_0",
         }
         assert xto.sw_keys == "keep_this"
         assert xto.trigger_trace == 0
-        assert xto.timestamp == 0
+        assert xto.timestamp == 123
 
     def test_init_keep_values_containing_equals_char(self):
         mock_otel_context = {
