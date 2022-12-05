@@ -44,6 +44,7 @@ class _SwSampler(Sampler):
     _INTERNAL_SAMPLE_RATE = "SampleRate"
     _INTERNAL_SAMPLE_SOURCE = "SampleSource"
     _INTERNAL_SW_KEYS = "SWKeys"
+    _INTERNAL_TRIGGERED_TRACE = "TriggeredTrace"
     _LIBOBOE_CONTINUED = -1
     _SW_TRACESTATE_CAPTURE_KEY = "sw.w3c.tracestate"
     _SW_TRACESTATE_ROOT_KEY = "sw.tracestate_parent_id"
@@ -382,10 +383,16 @@ class _SwSampler(Sampler):
 
         new_attributes = {}
 
-        # Always (root or is_remote) set _INTERNAL_SW_KEYS if injected
+        # Always (root or is_remote) set _INTERNAL_SW_KEYS if extracted
         internal_sw_keys = xtraceoptions.sw_keys
         if internal_sw_keys:
             new_attributes[self._INTERNAL_SW_KEYS] = internal_sw_keys
+
+        # Always (root or is_remote) set custom KVs if extracted from x-trace-options
+        custom_kvs = xtraceoptions.custom_kvs
+        if custom_kvs:
+            for custom_key, custom_value in custom_kvs.items():
+                new_attributes[custom_key] = custom_value
 
         # Always (root or is_remote) set service entry internal KVs
         new_attributes[
@@ -394,12 +401,17 @@ class _SwSampler(Sampler):
         new_attributes[
             self._INTERNAL_BUCKET_RATE
         ] = f"{decision['bucket_rate']}"
+
         new_attributes[self._INTERNAL_SAMPLE_RATE] = decision["rate"]
         new_attributes[self._INTERNAL_SAMPLE_SOURCE] = decision["source"]
         logger.debug(
             "Set attributes with service entry internal KVs: %s",
             new_attributes,
         )
+
+        # If unsigned or signed TT (root or is_remote), set TriggeredTrace
+        if xtraceoptions.trigger_trace == 1:
+            new_attributes[self._INTERNAL_TRIGGERED_TRACE] = True
 
         # Trace's root span has no valid traceparent nor tracestate
         # so we can't calculate remaining attributes

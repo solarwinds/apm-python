@@ -1,5 +1,4 @@
 import pytest
-from types import MappingProxyType
 
 from opentelemetry.sdk.trace.sampling import (
     Decision, StaticSampler
@@ -9,6 +8,14 @@ from opentelemetry.trace.span import SpanContext, TraceState
 import solarwinds_apm.extension.oboe
 from solarwinds_apm.sampler import _SwSampler, ParentBasedSwSampler
 
+# pylint: disable=unused-import
+from .fixtures.parent_span_context import (
+    fixture_parent_span_context_invalid,
+    fixture_parent_span_context_valid_remote,
+)
+from .fixtures.sampler import fixture_swsampler
+from .fixtures.span_id_from_sw import fixture_mock_span_id_from_sw
+from .fixtures.sw_from_span_and_decision import fixture_mock_sw_from_span_and_decision
 
 # Mock Fixtures, autoused ===========================================
 
@@ -20,24 +27,10 @@ def fixture_mock_context_getdecisions(mocker, mock_liboboe_decision):
     )
 
 @pytest.fixture(autouse=True)
-def fixture_mock_sw_from_span_and_decision(mocker):
-    mocker.patch(
-        "solarwinds_apm.w3c_transformer.W3CTransformer.sw_from_span_and_decision",
-        return_value="1111222233334444-01"
-    )
-
-@pytest.fixture(autouse=True)
 def fixture_mock_trace_flags_from_int(mocker):
     mocker.patch(
         "solarwinds_apm.w3c_transformer.W3CTransformer.trace_flags_from_int",
         return_value="01"
-    )
-
-@pytest.fixture(autouse=True)
-def fixture_mock_span_id_from_sw(mocker):
-    mocker.patch(
-        "solarwinds_apm.w3c_transformer.W3CTransformer.span_id_from_sw",
-        return_value="1111222233334444"
     )
 
 # Mock Fixtures, manually used ======================================
@@ -81,65 +74,7 @@ def fixture_xtraceoptions_unsigned_tt(mocker):
     options.ignored = ["baz", "qux"]
     return options
 
-@pytest.fixture(name="mock_xtraceoptions_sw_keys")
-def fixture_xtraceoptions_sw_keys(mocker):
-    options = mocker.Mock()
-    options.sw_keys = "foo"
-    return options
-
-@pytest.fixture(name="mock_xtraceoptions_no_sw_keys")
-def fixture_xtraceoptions_no_sw_keys(mocker):
-    options = mocker.Mock()
-    options.sw_keys = ""
-    return options
-
-
 # Other Fixtures, manually used =====================================
-
-@pytest.fixture(name="sw_sampler")
-def fixture_swsampler(mocker):
-    mock_apm_config = mocker.Mock()
-    mock_get = mocker.Mock(
-        return_value=1  # enabled
-    )
-    mock_apm_config.configure_mock(
-        **{
-            "agent_enabled": True,
-            "get": mock_get,
-            "tracing_mode": None,  # mapped to -1
-        }
-    )
-    return _SwSampler(mock_apm_config)
-
-@pytest.fixture(name="decision_drop")
-def fixture_decision_drop():
-    return {
-        "do_metrics": 0,
-        "do_sample": 0,
-    }
-
-@pytest.fixture(name="decision_continued")
-def fixture_decision_continued():
-    return {
-        "do_metrics": 1,
-        "do_sample": 1,
-        "rate": -1,
-        "source": -1,
-        "bucket_rate": -1,
-        "bucket_cap": -1,
-    }
-
-
-@pytest.fixture(name="decision_not_continued")
-def fixture_decision_not_continued():
-    return {
-        "do_metrics": 1,
-        "do_sample": 1,
-        "rate": 1,
-        "source": 1,
-        "bucket_rate": 1,
-        "bucket_cap": 1,
-    }
 
 @pytest.fixture(name="decision_auth")
 def fixture_decision_auth():
@@ -208,28 +143,6 @@ def fixture_decision_unsigned_tt_not_traced(mocker):
         "status_msg": "trigger-tracing-disabled",
     }
 
-@pytest.fixture(name="parent_span_context_invalid")
-def fixture_parent_span_context_invalid():
-    return SpanContext(
-        trace_id=00000000000000000000000000000000,
-        span_id=0000000000000000,
-        is_remote=False,
-        trace_flags=0,
-        trace_state=None,
-    )
-
-@pytest.fixture(name="parent_span_context_valid_remote")
-def fixture_parent_span_context_valid_remote():
-    return SpanContext(
-        trace_id=11112222333344445555666677778888,
-        span_id=1111222233334444,
-        is_remote=True,
-        trace_flags=1,
-        trace_state=TraceState([
-            ["sw", "123"]
-        ]),
-    )
-
 @pytest.fixture(name="parent_span_context_valid_remote_no_tracestate")
 def fixture_parent_span_context_valid_remote_no_tracestate():
     return SpanContext(
@@ -239,30 +152,6 @@ def fixture_parent_span_context_valid_remote_no_tracestate():
         trace_flags=1,
         trace_state=None,
     )
-
-@pytest.fixture(name="tracestate_with_sw_and_others")
-def fixture_tracestate_with_sw_and_others():
-    return TraceState([
-        ["foo", "bar"],
-        ["sw", "123"],
-        ["baz", "qux"]
-    ])
-
-@pytest.fixture(name="attributes_no_tracestate")
-def fixture_attributes_no_tracestate():
-    return MappingProxyType({
-        "foo": "bar",
-        "baz": "qux"
-    })
-
-@pytest.fixture(name="attributes_with_tracestate")
-def fixture_attributes_with_tracestate():
-    return MappingProxyType({
-        "foo": "bar",
-        "sw.w3c.tracestate": "some=other,sw=before",
-        "baz": "qux"
-    })
-
 
 # The Tests =========================================================
 
@@ -580,186 +469,6 @@ class Test_SwSampler():
         ts = TraceState([["bar", "456"],["xtrace_options_response", "123"]])
         assert sw_sampler.remove_response_from_sw(ts) == TraceState([["bar", "456"]])
 
-    def test_calculate_attributes_dont_trace(
-        self,
-        mocker,
-        sw_sampler,
-        decision_drop
-    ):
-        assert sw_sampler.calculate_attributes(
-            span_name="foo",
-            attributes=mocker.Mock(),
-            decision=decision_drop,
-            trace_state=mocker.Mock(),
-            parent_span_context=mocker.Mock(),
-            xtraceoptions=mocker.Mock(),
-        ) == None
-
-    def test_calculate_attributes_contd_decision_sw_keys(
-        self,
-        sw_sampler,
-        decision_continued,
-        parent_span_context_invalid,
-        mock_xtraceoptions_sw_keys
-    ):
-        assert sw_sampler.calculate_attributes(
-            span_name="foo",
-            attributes=None,
-            decision=decision_continued,
-            trace_state=None,
-            parent_span_context=parent_span_context_invalid,
-            xtraceoptions=mock_xtraceoptions_sw_keys,
-        ) == MappingProxyType({
-            "BucketCapacity": "-1",
-            "BucketRate": "-1",
-            "SampleRate": -1,
-            "SampleSource": -1,
-            "SWKeys": "foo",
-        })
-
-    def test_calculate_attributes_contd_decision_no_sw_keys(
-        self,
-        sw_sampler,
-        decision_continued,
-        parent_span_context_invalid,
-        mock_xtraceoptions_no_sw_keys
-    ):
-        assert sw_sampler.calculate_attributes(
-            span_name="foo",
-            attributes=None,
-            decision=decision_continued,
-            trace_state=None,
-            parent_span_context=parent_span_context_invalid,
-            xtraceoptions=mock_xtraceoptions_no_sw_keys,
-        ) == MappingProxyType({
-            "BucketCapacity": "-1",
-            "BucketRate": "-1",
-            "SampleRate": -1,
-            "SampleSource": -1,
-        })
-
-    def test_calculate_attributes_not_contd_decision_sw_keys(
-        self,
-        sw_sampler,
-        decision_not_continued,
-        parent_span_context_invalid,
-        mock_xtraceoptions_sw_keys
-    ):
-        assert sw_sampler.calculate_attributes(
-            span_name="foo",
-            attributes=None,
-            decision=decision_not_continued,
-            trace_state=None,
-            parent_span_context=parent_span_context_invalid,
-            xtraceoptions=mock_xtraceoptions_sw_keys,
-        ) == MappingProxyType({
-            "BucketCapacity": "1",
-            "BucketRate": "1",
-            "SampleRate": 1,
-            "SampleSource": 1,
-            "SWKeys": "foo",
-        })
-
-    def test_calculate_attributes_not_contd_decision_no_sw_keys(
-        self,
-        sw_sampler,
-        decision_not_continued,
-        parent_span_context_invalid,
-        mock_xtraceoptions_no_sw_keys
-    ):
-        assert sw_sampler.calculate_attributes(
-            span_name="foo",
-            attributes=None,
-            decision=decision_not_continued,
-            trace_state=None,
-            parent_span_context=parent_span_context_invalid,
-            xtraceoptions=mock_xtraceoptions_no_sw_keys
-        ) == MappingProxyType({
-            "BucketCapacity": "1",
-            "BucketRate": "1",
-            "SampleRate": 1,
-            "SampleSource": 1,
-        })
-
-    def test_calculate_attributes_valid_parent_create_new_attrs(
-        self,
-        sw_sampler,
-        decision_continued,
-        tracestate_with_sw_and_others,
-        parent_span_context_valid_remote,
-        mock_xtraceoptions_sw_keys
-    ):
-        assert sw_sampler.calculate_attributes(
-            span_name="foo",
-            attributes=None,
-            decision=decision_continued,
-            trace_state=tracestate_with_sw_and_others,
-            parent_span_context=parent_span_context_valid_remote,
-            xtraceoptions=mock_xtraceoptions_sw_keys,
-        ) == MappingProxyType({
-            "BucketCapacity": "-1",
-            "BucketRate": "-1",
-            "SampleRate": -1,
-            "SampleSource": -1,
-            "sw.tracestate_parent_id": "1111222233334444",
-            "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
-            'SWKeys': 'foo',
-        })
-
-    def test_calculate_attributes_valid_parent_update_attrs_no_tracestate_capture(
-        self,
-        sw_sampler,
-        attributes_no_tracestate,
-        decision_continued,
-        tracestate_with_sw_and_others,
-        parent_span_context_valid_remote,
-        mock_xtraceoptions_sw_keys
-    ):
-        assert sw_sampler.calculate_attributes(
-            span_name="foo",
-            attributes=attributes_no_tracestate,
-            decision=decision_continued,
-            trace_state=tracestate_with_sw_and_others,
-            parent_span_context=parent_span_context_valid_remote,
-            xtraceoptions=mock_xtraceoptions_sw_keys,
-        ) == MappingProxyType({
-            "BucketCapacity": "-1",
-            "BucketRate": "-1",
-            "SampleRate": -1,
-            "SampleSource": -1,
-            "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
-            'SWKeys': 'foo',
-            "foo": "bar",
-            "baz": "qux",
-        })
-
-    def test_calculate_attributes_valid_parent_update_attrs_tracestate_capture(
-        self,
-        sw_sampler,
-        attributes_with_tracestate,
-        decision_continued,
-        tracestate_with_sw_and_others,
-        parent_span_context_valid_remote,
-        mock_xtraceoptions_sw_keys
-    ):
-        assert sw_sampler.calculate_attributes(
-            span_name="foo",
-            attributes=attributes_with_tracestate,
-            decision=decision_continued,
-            trace_state=tracestate_with_sw_and_others,
-            parent_span_context=parent_span_context_valid_remote,
-            xtraceoptions=mock_xtraceoptions_sw_keys,
-        ) == MappingProxyType({
-            "BucketCapacity": "-1",
-            "BucketRate": "-1",
-            "SampleRate": -1,
-            "SampleSource": -1,
-            "sw.w3c.tracestate": "sw=1111222233334444-01,some=other",
-            'SWKeys': 'foo',
-            "foo": "bar",
-            "baz": "qux",
-        })
-
     def test_should_sample(
         self,
         mocker,
@@ -804,16 +513,16 @@ class Test_SwSampler():
             attributes={"foo": "bar"}
         )
 
-        solarwinds_apm.sampler._SwSampler.calculate_liboboe_decision.assert_called_once_with(
+        _SwSampler.calculate_liboboe_decision.assert_called_once_with(
             "my_span_context",
             mock_xtraceoptions
         )
-        solarwinds_apm.sampler._SwSampler.calculate_trace_state.assert_called_once_with(
+        _SwSampler.calculate_trace_state.assert_called_once_with(
             "my_decision",
             "my_span_context",
             mock_xtraceoptions
         )
-        solarwinds_apm.sampler._SwSampler.calculate_attributes.assert_called_once_with(
+        _SwSampler.calculate_attributes.assert_called_once_with(
             "foo",
             {"foo": "bar"},
             "my_decision",
@@ -821,7 +530,7 @@ class Test_SwSampler():
             "my_span_context",
             mock_xtraceoptions
         )
-        solarwinds_apm.sampler._SwSampler.otel_decision_from_liboboe.assert_called_once_with(
+        _SwSampler.otel_decision_from_liboboe.assert_called_once_with(
             "my_decision"
         )
         assert sampling_result.attributes == "my_attributes"

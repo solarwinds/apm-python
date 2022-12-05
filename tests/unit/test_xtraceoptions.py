@@ -13,6 +13,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == ""
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
@@ -26,6 +27,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == ""
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
@@ -38,6 +40,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "="
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
@@ -51,6 +54,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "=oops"
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
@@ -63,6 +67,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "trigger-trace"
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 1
         assert xto.timestamp == 0
@@ -75,6 +80,7 @@ class TestXTraceOptions():
         assert xto.ignored == ["trigger-trace"]
         assert xto.options_header == "trigger-trace=1"
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
@@ -87,11 +93,25 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "sw-keys=   foo:key   "
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == "foo:key"
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
 
-    def test_init_custom_key_match_stored_only_in_options_header(self):
+    def test_init_swkeys_containing_semicolon_ignore_after(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "sw-keys=check-id:check-1013,website-id;booking-demo",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == ["booking-demo"]
+        assert xto.options_header == "sw-keys=check-id:check-1013,website-id;booking-demo"
+        assert xto.signature == None
+        assert xto.custom_kvs == {}
+        assert xto.sw_keys == "check-id:check-1013,website-id"
+        assert xto.trigger_trace == 0
+        assert xto.timestamp == 0
+
+    def test_init_custom_key_match_stored_in_options_header_and_custom_kvs(self):
         mock_otel_context = {
             INTL_SWO_X_OPTIONS_KEY: "custom-awesome-key=foo",
         }
@@ -99,6 +119,46 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "custom-awesome-key=foo"
         assert xto.signature == None
+        assert xto.custom_kvs == {"custom-awesome-key": "foo"}
+        assert xto.sw_keys == ""
+        assert xto.trigger_trace == 0
+        assert xto.timestamp == 0
+
+    def test_init_custom_key_match_stored_in_options_header_and_custom_kvs_strip(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "custom-awesome-key=   foo  ",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == []
+        assert xto.options_header == "custom-awesome-key=   foo  "
+        assert xto.signature == None
+        assert xto.custom_kvs == {"custom-awesome-key": "foo"}
+        assert xto.sw_keys == ""
+        assert xto.trigger_trace == 0
+        assert xto.timestamp == 0
+
+    def test_init_custom_key_match_but_no_value_ignored(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "custom-no-value",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == ["custom-no-value"]
+        assert xto.options_header == "custom-no-value"
+        assert xto.signature == None
+        assert xto.custom_kvs == {}
+        assert xto.sw_keys == ""
+        assert xto.trigger_trace == 0
+        assert xto.timestamp == 0
+
+    def test_init_custom_key_match_equals_in_value_ok(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "custom-and=a-value=12345containing_equals=signs",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == []
+        assert xto.options_header == "custom-and=a-value=12345containing_equals=signs"
+        assert xto.signature == None
+        assert xto.custom_kvs == {"custom-and": "a-value=12345containing_equals=signs"}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
@@ -111,6 +171,7 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "ts=12345"
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 12345
@@ -123,6 +184,7 @@ class TestXTraceOptions():
         assert xto.ignored == ["ts"]
         assert xto.options_header == "ts=incorrect"
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
@@ -135,6 +197,7 @@ class TestXTraceOptions():
         assert xto.ignored == ["customer-key"]
         assert xto.options_header == "customer-key=foo"
         assert xto.signature == None
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
@@ -148,18 +211,60 @@ class TestXTraceOptions():
         assert xto.ignored == []
         assert xto.options_header == "trigger-trace"
         assert xto.signature == "my-foo-signature"
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 1
         assert xto.timestamp == 0
 
-    def test_init_signature_not_stored_without_options(self):
+    def test_init_signature_still_stored_without_options(self):
         mock_otel_context = {
             INTL_SWO_SIGNATURE_KEY: "my-foo-signature",
         }
         xto = XTraceOptions(mock_otel_context)
         assert xto.ignored == []
         assert xto.options_header == ""
-        assert xto.signature == None
+        assert xto.signature == "my-foo-signature"
+        assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+
+    def test_init_xtraceoptions_documented_example_1(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == []
+        assert xto.options_header == "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo"
+        assert xto.signature == None
+        assert xto.custom_kvs == {}
+        assert xto.sw_keys == "check-id:check-1013,website-id:booking-demo"
+        assert xto.trigger_trace == 1
+        assert xto.timestamp == 0
+
+    def test_init_xtraceoptions_documented_example_2(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "trigger-trace;custom-key1=value1",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == []
+        assert xto.options_header == "trigger-trace;custom-key1=value1"
+        assert xto.signature == None
+        assert xto.custom_kvs == {"custom-key1": "value1"}
+        assert xto.sw_keys == ""
+        assert xto.trigger_trace == 1
+        assert xto.timestamp == 0
+
+    def test_init_xtraceoptions_documented_example_3(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;ts=1564432370",
+            INTL_SWO_SIGNATURE_KEY: "5c7c733c727e5038d2cd537630206d072bbfc07c",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == []
+        assert xto.options_header == "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;ts=1564432370"
+        assert xto.signature == "5c7c733c727e5038d2cd537630206d072bbfc07c"
+        assert xto.custom_kvs == {}
+        assert xto.sw_keys == "check-id:check-1013,website-id:booking-demo"
+        assert xto.trigger_trace == 1
+        assert xto.timestamp == 1564432370
