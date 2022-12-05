@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - x-trace-options header `custom-*` KVs written to entry span attributes ([#85](https://github.com/appoptics/solarwinds-apm-python/pull/85))
 - Fix `x-trace-options-signature` extraction ([#85](https://github.com/appoptics/solarwinds-apm-python/pull/85))
+- Fix validation of `x-trace-options` header ([#87](https://github.com/appoptics/solarwinds-apm-python/pull/87))
 
 ## [0.3.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/rel-0.3.0) - 2022-11-24
 ### Changed
