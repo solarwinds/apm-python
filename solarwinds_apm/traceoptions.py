@@ -50,7 +50,7 @@ class XTraceOptions:
             traceoptions = re.split(r";+", options_header)
             for option in traceoptions:
                 # KVs (e.g. sw-keys or custom-key1) are assigned by equals
-                option_kv = option.split("=", 2)
+                option_kv = option.split("=", 1)
                 if not option_kv[0]:
                     continue
 
@@ -72,9 +72,7 @@ class XTraceOptions:
                     if len(option_kv) > 1:
                         # use only the first sw-keys value if multiple in header
                         if not self.sw_keys:
-                            self.sw_keys = "=".join(
-                                okv.strip() for okv in option_kv[1:]
-                            )
+                            self.sw_keys = option_kv[1].strip()
                     else:
                         logger.debug(
                             "sw-keys value needs to be assigned with an equals sign. Ignoring."
@@ -87,9 +85,7 @@ class XTraceOptions:
                     if len(option_kv) > 1:
                         # use only the first custom-* value if multiple in header
                         if option_key not in self.custom_kvs:
-                            self.custom_kvs[option_key] = "=".join(
-                                okv.strip() for okv in option_kv[1:]
-                            )
+                            self.custom_kvs[option_key] = option_kv[1].strip()
                     else:
                         logger.debug(
                             "Each custom-* value needs to be assigned with an equals sign. Ignoring."
