@@ -145,7 +145,86 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert "foo" not in span_client.attributes
 
     def test_handle_sequential_semicolons(self):
-        pass
+        resp_json = self.get_response(
+            {
+                "x-trace-options": ";foo=bar;;;custom-something=value_thing;;sw-keys=02973r70:1b2a3;;;;custom-key=val;ts=12345;;;;;;;trigger-trace;;;",
+                "some-header": "some-value"
+            }
+        )
+        self.check_some_header_ok(resp_json)
+
+        # In this test we know there is `sw` and `xtrace_options_response`
+        # in tracestate where value of former will be new_span_id and new_trace_flags
+        assert "tracestate" in resp_json
+        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok;ignored####foo".format(
+            "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
+        )
+
+        # Verify spans exported: service entry (root) + outgoing request
+        # (child with local parent)
+        spans = self.memory_exporter.get_finished_spans()
+        assert len(spans) == 2
+        span_server = spans[1]
+        span_client = spans[0]
+
+        # Check root span tracestate has `sw` and `xtrace_options_response` keys
+        # In this test we know `sw` value will have invalid span_id
+        expected_trace_state = trace_api.TraceState([
+            ("sw", "0000000000000000-01"),
+            ("xtrace_options_response", "trigger-trace####ok;ignored####foo"),
+        ])
+        assert span_server.context.trace_state == expected_trace_state
+
+        # Check root span attributes
+        #   :present:
+        #     service entry internal KVs, which are on all entry spans
+        #     SWKeys, because included in xtraceoptions in otel context
+        #     custom-*, because included in xtraceoptions in otel context
+        #     TriggeredTrace, because trigger-trace in otel context
+        #   :absent:
+        #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
+        #     the ignored value in the x-trace-options-header
+        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert span_server.attributes["BucketCapacity"] == "6.0"
+        assert span_server.attributes["BucketRate"] == "5.0"
+        assert span_server.attributes["SampleRate"] == -1
+        assert span_server.attributes["SampleSource"] == -1
+        assert not "sw.tracestate_parent_id" in span_server.attributes
+        assert "SWKeys" in span_server.attributes
+        assert span_server.attributes["SWKeys"] == "02973r70:1b2a3"
+        assert "custom-something" in span_server.attributes
+        assert span_server.attributes["custom-something"] == "value_thing"
+        assert "custom-key" in span_server.attributes
+        assert span_server.attributes["custom-key"] == "val"
+        assert "TriggeredTrace" in span_server.attributes
+        assert span_server.attributes["TriggeredTrace"] == True
+        assert "foo" not in span_server.attributes
+
+        # Check root span tracestate has `sw` and `xtrace_options_response` keys
+        # In this test we know `sw` value will also have invalid span_id.
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
+        expected_trace_state = trace_api.TraceState([
+            ("sw", "0000000000000000-01"),
+            ("xtrace_options_response", "trigger-trace####ok;ignored####foo"),
+        ])
+        assert span_client.context.trace_state == expected_trace_state
+
+        # Check outgoing request span attributes
+        #   :absent:
+        #     service entry internal KVs, which are only on entry spans
+        #     sw.tracestate_parent_id, because cannot be set without attributes at decision
+        #     SWKeys, because only written for service entry spans
+        #     custom-*, because only written for service entry spans
+        #     TriggeredTrace, because only written for service entry spans
+        #     the ignored value in the x-trace-options-header
+        assert not any(attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert not "sw.tracestate_parent_id" in span_client.attributes
+        assert not "SWKeys" in span_client.attributes
+        assert not "custom-something" in span_client.attributes
+        assert not "custom-key" in span_client.attributes
+        assert not "TriggeredTrace" in span_client.attributes
+        assert "foo" not in span_client.attributes
 
     def test_keep_first_of_repeated_key(self):
         pass
