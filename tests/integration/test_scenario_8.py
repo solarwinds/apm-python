@@ -88,10 +88,10 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == trace_flags
 
         assert "tracestate" in resp_json
-        # In this test we know tracestate will have `sw`, `xtrace_options_response`,
-        # `trigger-trace`, and any `ignored` KVs.
-        # `sw` in tracestate will have new_span_id and new_trace_flags.
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####ignored;ignored####foo".format(
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(
             new_span_id,
             new_trace_flags,
         )
@@ -141,6 +141,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check service entry span tracestate has `sw` key
         # In this test it should be span_id, traceflags from extracted traceparent
+        # `xtrace_options_response` is present for any response header calculation
         expected_trace_state = trace_api.TraceState([
             ("sw", "{}-{}".format(span_id, trace_flags)),
             ("xtrace_options_response", "trigger-trace####ignored;ignored####foo"),
@@ -167,6 +168,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check outgoing request tracestate has `sw` key
         # In this test it should also be span_id, traceflags from extracted traceparent
+        # `xtrace_options_response` is present for any response header calculation
         expected_trace_state = trace_api.TraceState([
             ("sw", "{}-{}".format(span_id, trace_flags)),
             ("xtrace_options_response", "trigger-trace####ignored;ignored####foo"),
@@ -261,10 +263,10 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == trace_flags
 
         assert "tracestate" in resp_json
-        # In this test we know tracestate will have `sw`, `xtrace_options_response`,
-        # `trigger-trace`, and any `ignored` KVs.
-        # `sw` in tracestate will have new_span_id and new_trace_flags.
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####ignored;ignored####foo".format(
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(
             new_span_id,
             new_trace_flags,
         )
@@ -648,9 +650,13 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "01"
 
         assert "tracestate" in resp_json
-        # In this test we know there is `sw` and `xtrace_options_response` in tracestate
-        # where value of former will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####ok;ignored####this-will-be-ignored".format(new_span_id, new_trace_flags)
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(
+            new_span_id,
+            new_trace_flags,
+        )
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -670,6 +676,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id
+        # `xtrace_options_response` is present for any response header calculation
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
@@ -791,9 +798,10 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "00"
 
         assert "tracestate" in resp_json
-        # In this test we know there is `sw` and `xtrace_options_response` in tracestate
-        # where value of former will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####rate-exceeded;ignored####this-will-be-ignored".format(new_span_id, new_trace_flags)
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask

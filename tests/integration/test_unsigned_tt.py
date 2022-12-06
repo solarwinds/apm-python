@@ -78,9 +78,10 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "01"
 
         assert "tracestate" in resp_json
-        # In this test we know there is `sw` and `xtrace_options_response` in tracestate
-        # where value of former will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####ok;ignored####this-will-be-ignored".format(new_span_id, new_trace_flags)
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -219,9 +220,10 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "00"
 
         assert "tracestate" in resp_json
-        # In this test we know there is `sw` and `xtrace_options_response` in tracestate
-        # where value of former will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####rate-exceeded;ignored####this-will-be-ignored".format(new_span_id, new_trace_flags)
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -292,9 +294,10 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "00"
 
         assert "tracestate" in resp_json
-        # In this test we know there is `sw` and `xtrace_options_response` in tracestate
-        # where value of former will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####trigger-tracing-disabled;ignored####this-will-be-ignored".format(new_span_id, new_trace_flags)
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -370,8 +373,10 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "01"
 
         assert "tracestate" in resp_json
-        # Check tracestate has `sw` and `xtrace_options_response` keys
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####not-requested;ignored####this-will-be-ignored".format(
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(
             new_span_id,
             new_trace_flags,
         )
@@ -512,8 +517,10 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "00"
 
         assert "tracestate" in resp_json
-        # Check tracestate has `sw` and `xtrace_options_response` keys
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####not-requested;ignored####this-will-be-ignored".format(new_span_id, new_trace_flags)
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask

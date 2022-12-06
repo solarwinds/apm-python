@@ -71,10 +71,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok;ignored####foo".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -153,10 +154,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok;ignored####foo".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -235,10 +237,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -314,10 +317,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -396,10 +400,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response` in
-        # tracestate where value of former will be new_span_id and new_trace_flags.
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####not-requested;ignored####trigger-trace".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -473,10 +478,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok;ignored####bar'".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -554,10 +560,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok;ignored####1....2....3....4....5".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -643,10 +650,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok;ignored####custom- key....custom-key 7".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 

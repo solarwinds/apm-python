@@ -56,12 +56,19 @@ class TestSolarWindsPropagator():
         # Mock sw parts external to propagator inject
         mock_sw = mocker.Mock()
         mock_sw.configure_mock(return_value="2000200020002000-01")
+        mock_tracestate_xtr_removed = mocker.Mock()
+        mock_tracestate_xtr_removed.configure_mock(
+            return_value=TraceState([
+                ("sw", "2000200020002000-01"),
+                ("foo-bar", "xtr-removed"),
+            ]))
         mock_w3ctransformer_cls = mocker.patch(
             "solarwinds_apm.propagator.W3CTransformer"
         )
         mock_w3ctransformer_cls.configure_mock(
             **{
-                "sw_from_context": mock_sw
+                "sw_from_context": mock_sw,
+                "remove_response_from_sw": mock_tracestate_xtr_removed,
             }
         )
 
@@ -134,7 +141,7 @@ class TestSolarWindsPropagator():
             call(
                 mock_carrier,
                 "tracestate",
-                TraceState([("sw", "2000200020002000-01")]).to_header(),
+                TraceState([("sw", "2000200020002000-01"), ("foo-bar", "xtr-removed")]).to_header(),
             ),
         ])
 
@@ -160,7 +167,7 @@ class TestSolarWindsPropagator():
             call(
                 mock_carrier,
                 "tracestate",
-                TraceState([("sw", "2000200020002000-01"), ("foo", "bar")]).to_header(),
+                TraceState([("sw", "2000200020002000-01"), ("foo-bar", "xtr-removed")]).to_header(),
             ),
         ])
 
@@ -186,6 +193,6 @@ class TestSolarWindsPropagator():
             call(
                 mock_carrier,
                 "tracestate",
-                TraceState([("sw", "2000200020002000-01"), ("foo", "bar")]).to_header(),
+                TraceState([("sw", "2000200020002000-01"), ("foo-bar", "xtr-removed")]).to_header(),
             ),
         ])
