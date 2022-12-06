@@ -584,11 +584,12 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "00"
 
         assert "tracestate" in resp_json
-        # In this test we know there is `sw` in tracestate
-        # where value will be new_span_id and new_trace_flags.
-        # There should be no `xtrace_options_response` key because there is
-        # no trigger-trace in the extracted x-trace-options header.
-        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+        # In this test we know there is `sw` and `xtrace_options_response` in tracestate
+        # where value of former will be new_span_id and new_trace_flags.
+        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=auth####bad-signature;ignored####this-will-be-ignored".format(
+            new_span_id,
+            new_trace_flags,
+        )
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -735,11 +736,12 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "00"
 
         assert "tracestate" in resp_json
-        # In this test we know there is `sw` in tracestate
-        # where value will be new_span_id and new_trace_flags.
-        # There should be no `xtrace_options_response` key because there is
-        # no trigger-trace in the extracted x-trace-options header.
-        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+        # In this test we know there is `sw` and `xtrace_options_response` in tracestate
+        # where value of former will be new_span_id and new_trace_flags.
+        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=auth####bad-timestamp;ignored####this-will-be-ignored".format(
+            new_span_id,
+            new_trace_flags,
+        )
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
