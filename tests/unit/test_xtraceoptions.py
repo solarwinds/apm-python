@@ -163,6 +163,19 @@ class TestXTraceOptions():
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
 
+    def test_init_custom_key_spaces_in_key_not_allowed(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "custom- key=this_is_bad;custom-key 7=this_is_bad_too",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == ["custom- key", "custom-key 7"]
+        assert xto.options_header == "custom- key=this_is_bad;custom-key 7=this_is_bad_too"
+        assert xto.signature == None
+        assert xto.custom_kvs == {}
+        assert xto.sw_keys == ""
+        assert xto.trigger_trace == 0
+        assert xto.timestamp == 0
+
     def test_init_ts_valid(self):
         mock_otel_context = {
             INTL_SWO_X_OPTIONS_KEY: "ts=12345",
@@ -268,3 +281,97 @@ class TestXTraceOptions():
         assert xto.sw_keys == "check-id:check-1013,website-id:booking-demo"
         assert xto.trigger_trace == 1
         assert xto.timestamp == 1564432370
+
+    def test_init_all_options_strip(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: " trigger-trace ;  custom-something=value; custom-OtherThing = other val ;  sw-keys = 029734wr70:9wqj21,0d9j1   ; ts = 12345 ; foo = bar ",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == ["foo"]
+        assert xto.options_header == " trigger-trace ;  custom-something=value; custom-OtherThing = other val ;  sw-keys = 029734wr70:9wqj21,0d9j1   ; ts = 12345 ; foo = bar "
+        assert xto.signature == None
+        assert xto.custom_kvs == {
+            "custom-something": "value",
+            "custom-OtherThing": "other val",
+        }
+        assert xto.sw_keys == "029734wr70:9wqj21,0d9j1"
+        assert xto.trigger_trace == 1
+        assert xto.timestamp == 12345
+
+    def test_init_all_options_handle_sequential_semis(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: ";foo=bar;;;custom-something=value_thing;;sw-keys=02973r70:1b2a3;;;;custom-key=val;ts=12345;;;;;;;trigger-trace;;;",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == ["foo"]
+        assert xto.options_header == ";foo=bar;;;custom-something=value_thing;;sw-keys=02973r70:1b2a3;;;;custom-key=val;ts=12345;;;;;;;trigger-trace;;;"
+        assert xto.signature == None
+        assert xto.custom_kvs == {
+            "custom-something": "value_thing",
+            "custom-key": "val",
+        }
+        assert xto.sw_keys == "02973r70:1b2a3"
+        assert xto.trigger_trace == 1
+        assert xto.timestamp == 12345
+
+    def test_init_keep_first_repeated_key_value(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "ts=123;custom-something=keep_this_0;sw-keys=keep_this;sw-keys=029734wrqj21,0d9;custom-something=otherval;ts=456",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == []
+        assert xto.options_header == "ts=123;custom-something=keep_this_0;sw-keys=keep_this;sw-keys=029734wrqj21,0d9;custom-something=otherval;ts=456"
+        assert xto.signature == None
+        assert xto.custom_kvs == {
+            "custom-something": "keep_this_0",
+        }
+        assert xto.sw_keys == "keep_this"
+        assert xto.trigger_trace == 0
+        assert xto.timestamp == 123
+
+    def test_init_keep_values_containing_equals_char(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "trigger-trace;custom-something=value_thing=4;custom-OtherThing=other val;sw-keys=g049sj345=0spd",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == []
+        assert xto.options_header == "trigger-trace;custom-something=value_thing=4;custom-OtherThing=other val;sw-keys=g049sj345=0spd"
+        assert xto.signature == None
+        assert xto.custom_kvs == {
+            "custom-something": "value_thing=4",
+            "custom-OtherThing": "other val",
+        }
+        assert xto.sw_keys == "g049sj345=0spd"
+        assert xto.trigger_trace == 1
+        assert xto.timestamp == 0
+
+    def test_init_single_quotes_are_ok(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: "trigger-trace;custom-foo='bar;bar';custom-bar=foo",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == ["bar'"]
+        assert xto.options_header == "trigger-trace;custom-foo='bar;bar';custom-bar=foo"
+        assert xto.signature == None
+        assert xto.custom_kvs == {
+            "custom-foo": "'bar",
+            "custom-bar": "foo",
+        }
+        assert xto.sw_keys == ""
+        assert xto.trigger_trace == 1
+        assert xto.timestamp == 0
+
+    def test_init_multiple_missing_values_and_semis(self):
+        mock_otel_context = {
+            INTL_SWO_X_OPTIONS_KEY: ";trigger-trace;custom-something=value_thing;sw-keys=02973r70:9wqj21,0d9j1;1;2;3;4;5;=custom-key=val?;=",
+        }
+        xto = XTraceOptions(mock_otel_context)
+        assert xto.ignored == ["1", "2", "3", "4", "5"]
+        assert xto.options_header == ";trigger-trace;custom-something=value_thing;sw-keys=02973r70:9wqj21,0d9j1;1;2;3;4;5;=custom-key=val?;="
+        assert xto.signature == None
+        assert xto.custom_kvs == {
+            "custom-something": "value_thing",
+        }
+        assert xto.sw_keys == "02973r70:9wqj21,0d9j1"
+        assert xto.trigger_trace == 1
+        assert xto.timestamp == 0

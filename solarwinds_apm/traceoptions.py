@@ -23,7 +23,7 @@ class XTraceOptions:
     _XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE = "trigger-trace"
     _XTRACEOPTIONS_HEADER_KEY_TS = "ts"
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-statements
     def __init__(
         self,
         context: typing.Optional[Context] = None,
@@ -50,7 +50,7 @@ class XTraceOptions:
             traceoptions = re.split(r";+", options_header)
             for option in traceoptions:
                 # KVs (e.g. sw-keys or custom-key1) are assigned by equals
-                option_kv = option.split("=", 2)
+                option_kv = option.split("=", 1)
                 if not option_kv[0]:
                     continue
 
@@ -67,15 +67,25 @@ class XTraceOptions:
                         self.trigger_trace = 1
 
                 elif option_key == self._XTRACEOPTIONS_HEADER_KEY_SW_KEYS:
-                    self.sw_keys = option_kv[1].strip()
+                    # sw-keys value is assigned with an equals sign (=)
+                    # while value can contain more equals signs
+                    if len(option_kv) > 1:
+                        # use only the first sw-keys value if multiple in header
+                        if not self.sw_keys:
+                            self.sw_keys = option_kv[1].strip()
+                    else:
+                        logger.debug(
+                            "sw-keys value needs to be assigned with an equals sign. Ignoring."
+                        )
+                        self.ignored.append(option_key)
 
                 elif re.match(self._XTRACEOPTIONS_CUSTOM_RE, option_key):
                     # custom-* value is assigned with an equals sign (=)
                     # while value can contain more equals signs
                     if len(option_kv) > 1:
-                        self.custom_kvs[option_key] = "=".join(
-                            okv.strip() for okv in option_kv[1:]
-                        )
+                        # use only the first custom-* value if multiple in header
+                        if option_key not in self.custom_kvs:
+                            self.custom_kvs[option_key] = option_kv[1].strip()
                     else:
                         logger.debug(
                             "Each custom-* value needs to be assigned with an equals sign. Ignoring."
@@ -84,7 +94,8 @@ class XTraceOptions:
 
                 elif option_key == self._XTRACEOPTIONS_HEADER_KEY_TS:
                     try:
-                        self.timestamp = int(option_kv[1])
+                        if not self.timestamp:
+                            self.timestamp = int(option_kv[1])
                     except ValueError:
                         logger.debug("ts must be base 10 int. Ignoring.")
                         self.ignored.append(self._XTRACEOPTIONS_HEADER_KEY_TS)
