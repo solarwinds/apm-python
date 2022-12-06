@@ -19,8 +19,9 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
            entry span (mocked). Unsigned trigger trace header is ignored. This is
            not the root span because it continues an existing OTel context.
         2. traceparent and tracestate headers in the request to the test app are
-        injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
-        3. The valid injected x-trace-options header is still also propagated.
+           injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
+        3. The valid x-trace-options is still handled and an x-trace-options-response
+           header is injected into the response
         4. The injected traceparent's trace_id is the trace_id of all spans.
         5. Sampling-related attributes are set for the service entry span.
         6. custom-* and sw-keys from x-trace-options are set for service entry span.
@@ -199,7 +200,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
            not the root span because it continues an existing OTel context
         2. traceparent and tracestate headers in the request to the test app are
         injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
-        3. The valid injected x-trace-options header is still also propagated.
+        3. The valid x-trace-options is still handled and an x-trace-options-response
+           header is injected into the response
         4. No spans are exported.
         """
         trace_id = "11112222333344445555666677778888"
@@ -310,12 +312,12 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
            not the root span because it continues an existing OTel context.
         2. traceparent and tracestate headers in the request to the test app are
         injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
-        3. The valid injected x-trace-options header is not propagated because not TT.
-        4. No xtraceoptions response header because not TT.
-        5. The injected traceparent's trace_id is the trace_id of all spans.
-        6. Sampling-related attributes are set for the service entry span.
-        7. custom-* and sw-keys from x-trace-options are still set for service entry span.
-        8. The span_id of the outgoing request span matches the span_id portion in the
+        3. The valid x-trace-options is not handled nor is x-trace-options-response
+           header injected into the response because not TT.
+        4. The injected traceparent's trace_id is the trace_id of all spans.
+        5. Sampling-related attributes are set for the service entry span.
+        6. custom-* and sw-keys from x-trace-options are still set for service entry span.
+        7. The span_id of the outgoing request span matches the span_id portion in the
            tracestate header.
         """
         trace_id = "11112222333344445555666677778888"
