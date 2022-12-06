@@ -396,11 +396,10 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is only `sw` in tracestate
-        # where value will be new_span_id and new_trace_flags.
-        # No `xtrace_options_response`.
+        # In this test we know there is `sw` and `xtrace_options_response` in
+        # tracestate where value of former will be new_span_id and new_trace_flags.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={}".format(
+        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####not-requested;ignored####trigger-trace".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -411,9 +410,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         span_server = spans[1]
         span_client = spans[0]
 
-        # Check root span tracestate has `sw` key only
+        # Check root span tracestate has `sw` and `xtrace_options_response` keys
+        # In this test we know `sw` value will have invalid span_id
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
+            ("xtrace_options_response", "trigger-trace####not-requested;ignored####trigger-trace"),
         ])
         assert span_server.context.trace_state == expected_trace_state
 
@@ -439,11 +440,12 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert "custom-OtherThing" in span_server.attributes
         assert span_server.attributes["custom-OtherThing"] == "other val"
         assert "TriggeredTrace" not in span_server.attributes
-        assert "foo" not in span_server.attributes
 
-        # Check root span tracestate has `sw` key only
+        # Check client span tracestate has `sw` and `xtrace_options_response` keys
+        # In this test we know `sw` value will have invalid span_id
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
+            ("xtrace_options_response", "trigger-trace####not-requested;ignored####trigger-trace"),
         ])
         assert span_client.context.trace_state == expected_trace_state
 
@@ -461,7 +463,6 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert not "custom-something" in span_client.attributes
         assert not "custom-OtherThing" in span_client.attributes
         assert not "TriggeredTrace" in span_client.attributes
-        assert "foo" not in span_client.attributes
 
     def test_single_quotes_ok(self):
         resp_json = self.get_response(

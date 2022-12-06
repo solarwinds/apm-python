@@ -269,7 +269,7 @@ class _SwSampler(Sampler):
                 )
             ]
         )
-        if xtraceoptions and xtraceoptions.trigger_trace:
+        if xtraceoptions and xtraceoptions.options_header:
             trace_state = trace_state.add(
                 XTraceOptions.get_sw_xtraceoptions_response_key(),
                 self.create_xtraceoptions_response_value(

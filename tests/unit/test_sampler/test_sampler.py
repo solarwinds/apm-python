@@ -56,6 +56,16 @@ def fixture_xtraceoptions_signed_tt(mocker):
     options.ignored = ["baz", "qux"]
     return options
 
+@pytest.fixture(name="mock_xtraceoptions_signed_without_tt")
+def fixture_xtraceoptions_signed_without_tt(mocker):
+    options = mocker.Mock()
+    options.trigger_trace = 0
+    options.options_header = "foo-bar"
+    options.signature = 123456
+    options.timestamp = 123456
+    options.ignored = ["baz", "qux"]
+    return options
+
 @pytest.fixture(name="mock_xtraceoptions_signed_not_tt")
 def fixture_xtraceoptions_signed_not_tt(mocker):
     options = mocker.Mock()
@@ -400,6 +410,28 @@ class Test_SwSampler():
             decision_auth,
             parent_span_context_valid_remote,
             mock_xtraceoptions_signed_tt
+        )
+        assert trace_state == TraceState([
+            ["sw", "1111222233334444-01"],
+            ["xtrace_options_response", "bar"]
+        ])
+
+    def test_create_new_trace_state_without_tt(
+        self,
+        mocker,
+        sw_sampler,
+        decision_auth,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_signed_without_tt
+    ):
+        mocker.patch(
+            "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
+            return_value="bar"
+        )
+        trace_state = sw_sampler.create_new_trace_state(
+            decision_auth,
+            parent_span_context_valid_remote,
+            mock_xtraceoptions_signed_without_tt
         )
         assert trace_state == TraceState([
             ["sw", "1111222233334444-01"],
