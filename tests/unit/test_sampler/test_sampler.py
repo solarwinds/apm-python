@@ -497,10 +497,6 @@ class Test_SwSampler():
             ["xtrace_options_response", "bar"]
         ])
 
-    def test_remove_response_from_sw(self, sw_sampler):
-        ts = TraceState([["bar", "456"],["xtrace_options_response", "123"]])
-        assert sw_sampler.remove_response_from_sw(ts) == TraceState([["bar", "456"]])
-
     def test_should_sample(
         self,
         mocker,

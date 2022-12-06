@@ -323,12 +323,6 @@ class _SwSampler(Sampler):
                 logger.debug("Updated trace_state: %s", trace_state)
         return trace_state
 
-    def remove_response_from_sw(self, trace_state: TraceState) -> TraceState:
-        """Remove xtraceoptions response from tracestate"""
-        return trace_state.delete(
-            XTraceOptions.get_sw_xtraceoptions_response_key()
-        )
-
     def add_tracestate_capture_to_attributes_dict(
         self,
         attributes_dict: dict,
@@ -342,7 +336,7 @@ class _SwSampler(Sampler):
             self._SW_TRACESTATE_CAPTURE_KEY, None
         )
         if not tracestate_capture:
-            trace_state_no_response = self.remove_response_from_sw(trace_state)
+            trace_state_no_response = W3CTransformer.remove_response_from_sw(trace_state)
         else:
             # Must retain all potential tracestate pairs for attributes
             attr_trace_state = TraceState.from_header([tracestate_capture])
@@ -353,7 +347,7 @@ class _SwSampler(Sampler):
                     W3CTransformer.trace_flags_from_int(decision["do_sample"]),
                 ),
             )
-            trace_state_no_response = self.remove_response_from_sw(
+            trace_state_no_response = W3CTransformer.remove_response_from_sw(
                 new_attr_trace_state
             )
         attributes_dict[

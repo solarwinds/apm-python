@@ -1,5 +1,7 @@
 import pytest
 
+from opentelemetry.trace.span import TraceState
+
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 
@@ -44,3 +46,7 @@ class TestW3CTransformer():
     def test_sw_from_span_and_decision(self):
         assert W3CTransformer.sw_from_span_and_decision(1234, "01") \
             == "{:016x}-{}".format(1234, "01")
+
+    def test_remove_response_from_sw(self):
+        ts = TraceState([["bar", "456"],["xtrace_options_response", "123"]])
+        assert W3CTransformer.remove_response_from_sw(ts) == TraceState([["bar", "456"]])
