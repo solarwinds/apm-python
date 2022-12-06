@@ -24,6 +24,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_COMMA_W3C_SANITIZED,
     INTL_SWO_EQUALS_W3C_SANITIZED,
     INTL_SWO_TRACESTATE_KEY,
+    INTL_SWO_X_OPTIONS_RESPONSE_KEY,
 )
 from solarwinds_apm.apm_noop import Context as NoopContext
 from solarwinds_apm.extension.oboe import Context
@@ -271,7 +272,7 @@ class _SwSampler(Sampler):
         )
         if xtraceoptions and xtraceoptions.options_header:
             trace_state = trace_state.add(
-                XTraceOptions.get_sw_xtraceoptions_response_key(),
+                INTL_SWO_X_OPTIONS_RESPONSE_KEY,
                 self.create_xtraceoptions_response_value(
                     decision, parent_span_context, xtraceoptions
                 ),
@@ -315,7 +316,7 @@ class _SwSampler(Sampler):
                 # Not a propagated header, so always an add
                 if xtraceoptions and xtraceoptions.trigger_trace:
                     trace_state = trace_state.add(
-                        XTraceOptions.get_sw_xtraceoptions_response_key(),
+                        INTL_SWO_X_OPTIONS_RESPONSE_KEY,
                         self.create_xtraceoptions_response_value(
                             decision, parent_span_context, xtraceoptions
                         ),
@@ -336,7 +337,9 @@ class _SwSampler(Sampler):
             self._SW_TRACESTATE_CAPTURE_KEY, None
         )
         if not tracestate_capture:
-            trace_state_no_response = W3CTransformer.remove_response_from_sw(trace_state)
+            trace_state_no_response = W3CTransformer.remove_response_from_sw(
+                trace_state
+            )
         else:
             # Must retain all potential tracestate pairs for attributes
             attr_trace_state = TraceState.from_header([tracestate_capture])

@@ -6,7 +6,7 @@ import logging
 from opentelemetry.sdk.trace import SpanContext
 from opentelemetry.trace.span import TraceState
 
-from solarwinds_apm.traceoptions import XTraceOptions
+from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_RESPONSE_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +80,4 @@ class W3CTransformer:
     @classmethod
     def remove_response_from_sw(cls, trace_state: TraceState) -> TraceState:
         """Remove xtraceoptions response from tracestate"""
-        return trace_state.delete(
-            XTraceOptions.get_sw_xtraceoptions_response_key()
-        )
+        return trace_state.delete(INTL_SWO_X_OPTIONS_RESPONSE_KEY)
