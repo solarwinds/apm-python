@@ -129,7 +129,7 @@ check-swig:
 # recipes for building the package distribution
 #----------------------------------------------------------------------------------------------------------------------#
 
-wheel_tag := 'manylinux2014_x86_64'
+wheel_tag := 'manylinux_2_28_x86_64'
 
 # Build the Python wrapper from liboboe headers inside build container
 wrapper: check-swig download-all

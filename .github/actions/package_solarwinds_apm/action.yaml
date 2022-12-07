@@ -4,7 +4,7 @@ description: Package solarwinds_apm
 
 runs:
   using: 'docker'
-  image: quay.io/pypa/manylinux2014_x86_64:latest
+  image: quay.io/pypa/manylinux_2_28_x86_64:latest
   entrypoint: 'make'
   args:
     - 'package'
