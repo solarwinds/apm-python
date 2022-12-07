@@ -53,7 +53,7 @@ If you are making local changes to oboe for the custom-distro to use:
 1. Go to `solarwinds-apm-liboboe/liboboe` repo, save your changes.
 2. Run this container: `docker run -it --rm -v "$PWD"/../:/solarwinds-apm-oboe tracetools/clib-amazonlinux-build bash`
 3. Inside the container: `INSTALL_DEPS=aws solarwinds-apm-liboboe/liboboe/build-scripts/c-lib.sh`
-4. In another Terminal at `solarwinds-apm-liboboe/liboboe` while container is still running, after `c-lib.sh` is done: `docker cp <container_id>:/liboboe-1.0-x86_64.so.0.0.0 .`
+4. In another Terminal at `solarwinds-apm-liboboe/liboboe` while container is still running, after `c-lib.sh` is done: `docker cp <container_id>:/liboboe-1.0-x86_64.so .`
 5. Return to this repo.
 6. Inside the build container: `make wrapper-from-local`. This copies the local C-extension artifacts and builds the SWIG bindings.
 7. Install the agent in your application (Linux environment only) in development mode by running
