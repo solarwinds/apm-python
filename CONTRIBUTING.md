@@ -31,7 +31,7 @@ docker build -t dev-container .
 ./run_docker_dev.sh
 ```
 
-The successfully-built build container is based on the [PyPA image](https://github.com/pypa/manylinux) `manylinux2014_x86_64`. It can use [SWIG](https://www.swig.org/Doc1.3/Python.html), a tool to connect C/C++ libraries with other languages via compiling a C-extension. This can be done with this repo's `Makefile` as described next.
+The successfully-built build container is based on the [PyPA image](https://github.com/pypa/manylinux) `manylinux_2_28_x86_64`. It can use [SWIG](https://www.swig.org/Doc1.3/Python.html), a tool to connect C/C++ libraries with other languages via compiling a C-extension. This can be done with this repo's `Makefile` as described next.
 
 #### Install Agent in Development Mode
 
