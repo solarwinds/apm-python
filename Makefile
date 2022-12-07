@@ -40,9 +40,9 @@ nothing:
 #----------------------------------------------------------------------------------------------------------------------#
 
 # LIBOBOE is the name of the liboboe shared library
-LIBOBOEALPINE := "liboboe-1.0-alpine-x86_64.so"
-LIBOBOEORG := "liboboe-1.0-x86_64.so"
-LIBOBOESERVERLESS := "liboboe-1.0-lambda-x86_64.so"
+LIBOBOEALPINE := "liboboe-1.0-alpine-x86_64.so.0.0.0"
+LIBOBOEORG := "liboboe-1.0-x86_64.so.0.0.0"
+LIBOBOESERVERLESS := "liboboe-1.0-lambda-x86_64.so.0.0.0"
 # Version of the C-library extension is stored under /solarwinds_apm/extension/VERSION (Otel export compatible as of 10.3.4)
 OBOEVERSION := $(shell cat ./solarwinds_apm/extension/VERSION)
 
