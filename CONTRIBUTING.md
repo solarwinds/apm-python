@@ -36,7 +36,7 @@ docker build -t dev-container .
 ./run_docker_dev.sh
 ```
 
-The build container is based on the [PyPA image](https://github.com/pypa/manylinux) `manylinux2014_x86_64`. It uses [SWIG](https://www.swig.org/Doc1.3/Python.html) to compile required C/C++ libraries into a C-extension dependency.
+The build container is based on the [PyPA image](https://github.com/pypa/manylinux) `manylinux_2_28_x86_64`. It uses [SWIG](https://www.swig.org/Doc1.3/Python.html) to compile required C/C++ libraries into a C-extension dependency.
 
 ### Regression Tests
 

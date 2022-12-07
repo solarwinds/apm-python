@@ -133,16 +133,6 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.8-install-centos7:
-    hostname: "py3.8-centos7"
-    image: "centos/python-38-centos7"
-    user: root
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
   py3.8-install-amazon2018.03:
     hostname: "py3.8-amazon2018.03"
     image: "amazonlinux:2018.03"

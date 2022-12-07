@@ -156,20 +156,6 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
-  py38_install_centos7:
-    runs-on: ubuntu-latest
-    container:
-      image: centos/python-38-centos7
-      options: --hostname py3.8-centos7
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
-
   py38_install_amazon201803:
     runs-on: ubuntu-latest
     container:
