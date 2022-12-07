@@ -314,7 +314,7 @@ class _SwSampler(Sampler):
                 )
                 # Update trace_state with x-trace-options-response
                 # Not a propagated header, so always an add
-                if xtraceoptions and xtraceoptions.trigger_trace:
+                if xtraceoptions and xtraceoptions.options_header:
                     trace_state = trace_state.add(
                         INTL_SWO_X_OPTIONS_RESPONSE_KEY,
                         self.create_xtraceoptions_response_value(

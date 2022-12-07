@@ -119,8 +119,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify x-trace-options-response response header present
-        # and has same values as internally cached in TraceState
-        # but different delimiters, e.g. trigger-trace=ignored;ignored=foo
+        # with values calculated from decision and input validation
         assert "x-trace-options-response" in resp.headers
         assert "trigger-trace=ignored" in resp.headers["x-trace-options-response"]
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
@@ -140,9 +139,10 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "{:032x}".format(span_server.context.trace_id) == trace_id
         assert "{:032x}".format(span_client.context.trace_id) == trace_id
 
-        # Check service entry span tracestate has `sw` key
-        # In this test it should be span_id, traceflags from extracted traceparent
-        # `xtrace_options_response` is present for any response header calculation
+        # Check service entry span tracestate has `sw` key.
+        # In this test it should be span_id, traceflags from extracted traceparent.
+        # `xtrace_options_response` is stored and has same values as
+        # x-trace-options-response header but different delimiters
         expected_trace_state = trace_api.TraceState([
             ("sw", "{}-{}".format(span_id, trace_flags)),
             ("xtrace_options_response", "trigger-trace####ignored;ignored####foo"),
@@ -169,7 +169,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check outgoing request tracestate has `sw` key
         # In this test it should also be span_id, traceflags from extracted traceparent
-        # `xtrace_options_response` is present for any response header calculation
+        # `xtrace_options_response` is stored and has same values as
+        # x-trace-options-response header but different delimiters
         expected_trace_state = trace_api.TraceState([
             ("sw", "{}-{}".format(span_id, trace_flags)),
             ("xtrace_options_response", "trigger-trace####ignored;ignored####foo"),
@@ -195,13 +196,14 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
     def test_not_sampled_both_trace_context_and_xtraceoptions_valid(self):
         """
-        1. Decision to NOT sample is continued using valid extracted tracestate at service
-           entry span (mocked). Unsigned trigger trace header is ignored. This is
-           not the root span because it continues an existing OTel context
+        1. Decision to NOT sample is continued using valid extracted
+           tracestate at service entry span (mocked). Unsigned trigger trace
+           header is ignored. This is not the root span because it continues
+           an existing OTel context.
         2. traceparent and tracestate headers in the request to the test app are
-        injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
+           injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
         3. The valid x-trace-options is still handled and an x-trace-options-response
-           header is injected into the response
+           header is injected into the response.
         4. No spans are exported.
         """
         trace_id = "11112222333344445555666677778888"
@@ -295,8 +297,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify x-trace-options-response response header present
-        # and has same values as tracestate but different delimiters
-        # i.e. trigger-trace=ignored;ignored=foo
+        # with values calculated from decision and input validation
         assert "x-trace-options-response" in resp.headers
         assert "trigger-trace=ignored" in resp.headers["x-trace-options-response"]
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
@@ -311,9 +312,9 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
            entry span (mocked). Unsigned trigger trace header is ignored. This is
            not the root span because it continues an existing OTel context.
         2. traceparent and tracestate headers in the request to the test app are
-        injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
-        3. The valid x-trace-options is not handled nor is x-trace-options-response
-           header injected into the response because not TT.
+           injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
+        3. The valid x-trace-options is still handled and an x-trace-options-response
+           header is injected into the response
         4. The injected traceparent's trace_id is the trace_id of all spans.
         5. Sampling-related attributes are set for the service entry span.
         6. custom-* and sw-keys from x-trace-options are still set for service entry span.
@@ -411,8 +412,11 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
 
-        # Verify x-trace-options-response response header absent
-        assert "x-trace-options-response" not in resp.headers
+        # Verify x-trace-options-response response header present
+        # with values calculated from decision and input validation
+        assert "x-trace-options-response" in resp.headers
+        assert "trigger-trace=not-requested" in resp.headers["x-trace-options-response"]
+        assert "ignored=foo" in resp.headers["x-trace-options-response"]
 
         # Verify spans exported: service entry + outgoing request (child with local parent)
         spans = self.memory_exporter.get_finished_spans()
@@ -429,10 +433,13 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "{:032x}".format(span_server.context.trace_id) == trace_id
         assert "{:032x}".format(span_client.context.trace_id) == trace_id
 
-        # Check service entry span tracestate has `sw` key
-        # In this test it should be span_id, traceflags from extracted traceparent
+        # Check service entry span tracestate has `sw` key.
+        # In this test it should be span_id, traceflags from extracted traceparent.
+        # `xtrace_options_response` is stored and has same values as
+        # x-trace-options-response header but different delimiters
         expected_trace_state = trace_api.TraceState([
             ("sw", "{}-{}".format(span_id, trace_flags)),
+            ("xtrace_options_response", "trigger-trace####not-requested;ignored####foo"),
         ])
         assert span_server.context.trace_state == expected_trace_state
 
@@ -456,8 +463,11 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check outgoing request tracestate has `sw` key
         # In this test it should also be span_id, traceflags from extracted traceparent
+        # `xtrace_options_response` is stored and has same values as
+        # x-trace-options-response header but different delimiters
         expected_trace_state = trace_api.TraceState([
             ("sw", "{}-{}".format(span_id, trace_flags)),
+            ("xtrace_options_response", "trigger-trace####not-requested;ignored####foo"),
         ])
         assert span_client.context.trace_state == expected_trace_state
 
@@ -485,9 +495,9 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
            not the root span because it continues an existing OTel context
         2. traceparent and tracestate headers in the request to the test app are
         injected into the outgoing request (done by OTel TraceContextTextMapPropagator).
-        3. The valid injected x-trace-options header is not propagated because not TT.
-        4. No xtraceoptions response header because not TT.
-        5. No spans are exported.
+        3. The valid x-trace-options is still handled and an x-trace-options-response
+           header is injected into the response
+        4. No spans are exported.
         """
         trace_id = "11112222333344445555666677778888"
         span_id = "1000100010001000"
@@ -580,8 +590,11 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
 
-        # Verify x-trace-options-response response header absent
-        assert "x-trace-options-response" not in resp.headers
+        # Verify x-trace-options-response response header present
+        # with values calculated from decision and input validation
+        assert "x-trace-options-response" in resp.headers
+        assert "trigger-trace=not-requested" in resp.headers["x-trace-options-response"]
+        assert "ignored=foo" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
@@ -594,8 +607,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
            but it is not valid. So this is the root and start of the trace.
         2. Some new, valid traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. A x-trace-options-response header is calculated using the extracted x-trace-options
-           and injected into the HTTP response.
+        3. The valid x-trace-options is still handled and an x-trace-options-response
+           header is injected into the response.
         4. Sampling-related, SWKeys, custom-*, and TriggeredTrace attributes are set
            for the root/service entry span, but not what's ignored.
         5. The span_id of the outgoing request span matches the span_id portion in the
@@ -667,6 +680,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify x-trace-options-response response header present
+        # with values calculated from decision and input validation
         assert "x-trace-options-response" in resp.headers
         assert "trigger-trace=ok" in resp.headers["x-trace-options-response"]
         assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
@@ -683,7 +697,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id
-        # `xtrace_options_response` is present for any response header calculation
+        # `xtrace_options_response` is stored and has same values as
+        # x-trace-options-response header but different delimiters
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
@@ -715,8 +730,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will also have invalid span_id.
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
-        # at the time of custom injecting the x-trace-options-response header.
+        # `xtrace_options_response` is stored and has same values as
+        # x-trace-options-response header but different delimiters
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
@@ -751,7 +766,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
            entry span (mocked). There IS an OTel context extracted from request headers,
            but it is not valid. So this is the root and start of the trace.
         2. Some new, valid traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
-        3. The injected x-trace-options header is also propagated.
+        3. The valid x-trace-options is still handled and an x-trace-options-response
+           header is injected into the response.
         4. No spans are exported.
         """
         # Use in-process test app client and mock to propagate context
@@ -817,6 +833,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify x-trace-options-response response header present
+        # with values calculated from decision and input validation
         assert "x-trace-options-response" in resp.headers
         assert "trigger-trace=rate-exceeded" in resp.headers["x-trace-options-response"]
         assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
