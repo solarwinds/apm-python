@@ -666,6 +666,11 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
 
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "trigger-trace=ok" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 2
@@ -810,6 +815,11 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # app's outgoing request
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
+
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "trigger-trace=rate-exceeded" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()

@@ -89,6 +89,11 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
 
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "trigger-trace=ok" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 2
@@ -242,6 +247,11 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
 
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "trigger-trace=not-requested" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 2
@@ -381,6 +391,12 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
 
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "auth=ok" in resp.headers["x-trace-options-response"]
+        assert "trigger-trace=rate-exceeded" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 0
@@ -452,6 +468,12 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # app's outgoing request
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
+
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "auth=ok" in resp.headers["x-trace-options-response"]
+        assert "trigger-trace=tracing-disabled" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
@@ -527,6 +549,11 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # app's outgoing request
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
+
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "auth=bad-signature" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
@@ -606,6 +633,11 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
 
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "auth=bad-signature" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 0
@@ -680,6 +712,11 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # app's outgoing request
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
+
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "auth=bad-timestamp" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
@@ -759,6 +796,11 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
 
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "auth=bad-timestamp" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 0
@@ -835,6 +877,10 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # app's outgoing request
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
+
+        # Verify x-trace-options-response response header not present
+        # because no x-trace-options-header
+        assert "x-trace-options-response" not in resp.headers
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
