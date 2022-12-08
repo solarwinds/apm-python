@@ -266,20 +266,26 @@ format:
 lint:
 	@echo -e "Not implemented."
 
-# clean up everything.
+# clean up extension and intermediate build/dist files.
 clean:
-	@echo -e "Cleaning intermediate files."
-	@cd solarwinds_apm/extension; rm -f oboe.py _oboe.so liboboe-1.0*so*
+	@echo -e "Cleaning up extension and intermediate build/dist files."
+	@cd solarwinds_apm/extension; rm -f oboe* liboboe-1.0*so* liboboe.so; rm -rf bson
 	@cd ..
 	@find . -type f -name '*.pyc' -delete
 	@find . -type d -name '__pycache__' | xargs rm -rf
 	@find . -type d -name '*.ropeproject' | xargs rm -rf
 	@rm -rf build/
 	@rm -rf dist/
-	@rm -f src/*.egg*
+	@rm -rf *.egg*
 	@rm -f MANIFEST
 	@rm -rf docs/build/
 	@rm -f .coverage.*
+	@echo -e "Done."
+
+# clean up tox files
+clean-tox:
+	@echo -e "Cleaning up tox files."
+	@rm -rf .tox/
 	@echo -e "Done."
 
 .PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all check-swig wrapper sdist manylinux-wheels package aws-lambda publish-lambda-layer-rc copy-liboboe copy-headers copy-bson-headers copy-all wrapper-from-local tox format lint clean
