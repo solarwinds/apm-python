@@ -30,20 +30,6 @@ jobs:
   # Python 3.7
   #--------------------------------------------------------------------
 
-  py37_install_debian9:
-    runs-on: ubuntu-latest
-    container:
-      image: python:3.7-stretch
-      options: --hostname py3.7-debian9
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
-
   py37_install_debian10:
     runs-on: ubuntu-latest
     container:
@@ -64,24 +50,6 @@ jobs:
       image: ubuntu:18.04
       options: --hostname py3.7-ubuntu18.04
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
-
-  py37_install_amazon2:
-    runs-on: ubuntu-latest
-    container:
-      image: amazonlinux:2
-      options: --hostname py3.7-install-amazon2
-    steps:
-    - name: Install latest git and tar
-      run: |
-        yum update -y
-        yum install -y git tar
     - uses: actions/checkout@v2
     - name: Setup and run install test
       working-directory: ./tests/docker/install
@@ -141,20 +109,6 @@ jobs:
     container:
       image: ubuntu:20.04
       options: --hostname py3.8-ubuntu20.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup and run install test
-      working-directory: ./tests/docker/install
-      run: ./_helper_run_install_tests.sh
-      shell: sh
-      env:
-        MODE: ${{ github.event.inputs.install-registry }}
-
-  py38_install_amazon201803:
-    runs-on: ubuntu-latest
-    container:
-      image: amazonlinux:2018.03
-      options: --hostname py3.8-amazon2018.03
     steps:
     - uses: actions/checkout@v2
     - name: Setup and run install test

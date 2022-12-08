@@ -51,15 +51,6 @@ services:
   # Python 3.7
   #--------------------------------------------------------------------
 
-  py3.7-install-debian9:
-    hostname: "py3.7-debian9"
-    image: "python:3.7-stretch"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
   py3.7-install-debian10:
     hostname: "py3.7-debian10"
     image: "python:3.7-buster"
@@ -72,15 +63,6 @@ services:
   py3.7-install-ubuntu18.04:
     hostname: "py3.7-ubuntu18.04"
     image: "ubuntu:18.04"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.7-install-amazon2:
-    hostname: "py3.7-amazon2"
-    image: "amazonlinux:2"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
@@ -121,15 +103,6 @@ services:
   py3.8-install-ubuntu20.04:
     hostname: "py3.8-ubuntu20.04"
     image: "ubuntu:20.04"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
-
-  py3.8-install-amazon2018.03:
-    hostname: "py3.8-amazon2018.03"
-    image: "amazonlinux:2018.03"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
