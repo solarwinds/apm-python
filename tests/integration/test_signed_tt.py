@@ -21,8 +21,8 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. A x-trace-options-response header is calculated using the extracted x-trace-options
-           and injected into the HTTP response.
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
         4. Sampling-related, SWKeys, custom-*, and TriggeredTrace attributes are set
            for the root/service entry span, but not what's ignored.
         5. The span_id of the outgoing request span matches the span_id portion in the
@@ -106,7 +106,8 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id
-        # `xtrace_options_response` is present for any response header calculation
+        # `xtrace_options_response` is stored and has same values as
+        # x-trace-options-response header but different delimiters
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "auth####ok;trigger-trace####ok;ignored####this-will-be-ignored"),
@@ -140,7 +141,8 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # In this test we know `sw` value will also have invalid span_id.
         # SWO APM uses TraceState to stash the trigger trace response so it's available 
         # at the time of custom injecting the x-trace-options-response header.
-        # `xtrace_options_response` is present for any response header calculation
+        # `xtrace_options_response` is stored and has same values as
+        # x-trace-options-response header but different delimiters
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "auth####ok;trigger-trace####ok;ignored####this-will-be-ignored"),
@@ -176,8 +178,8 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. x-trace-options-response header is calculated because there is an extracted
-           x-trace-options header
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
         4. Sampling-related, SWKeys, and custom-*, and attributes are set
            for the root/service entry span, but not what's ignored nor TriggeredTrace.
         5. The span_id of the outgoing request span matches the span_id portion in the
@@ -264,7 +266,8 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id.
-        # `xtrace_options_response` is present for any response header calculation
+        # `xtrace_options_response` is stored and has same values as
+        # x-trace-options-response header but different delimiters
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "auth####ok;trigger-trace####not-requested;ignored####this-will-be-ignored"),
@@ -295,7 +298,8 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
 
         # Check client span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id.
-        # `xtrace_options_response` is present for any response header calculation
+        # `xtrace_options_response` is stored and has same values as
+        # x-trace-options-response header but different delimiters
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "auth####ok;trigger-trace####not-requested;ignored####this-will-be-ignored"),
@@ -331,7 +335,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. No spans are exported.
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
+        4. No spans are exported.
         """
         # liboboe mocked to guarantee return of "do_sample" (2nd arg),
         # plus status_msg (the "rate-exceeded" string)
@@ -409,7 +415,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. No spans are exported.
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
+        4. No spans are exported.
         """
         # liboboe mocked to guarantee return of "do_sample" (2nd arg),
         # plus status_msg (the "rate-exceeded" string)
@@ -487,7 +495,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. No spans are exported.
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
+        4. No spans are exported.
         """
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
@@ -567,7 +577,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. No spans are exported.
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
+        4. No spans are exported.
         """
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
@@ -650,7 +662,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. No spans are exported.
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
+        4. No spans are exported.
         """
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
@@ -730,7 +744,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. No spans are exported.
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
+        4. No spans are exported.
         """
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
@@ -813,6 +829,8 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
+        3. No valid x-trace-options is handled so no x-trace-options-response
+           header is injected into the response.
         4. No spans are exported.
         """
         # Use in-process test app client and mock to propagate context
