@@ -106,8 +106,8 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id
-        # `xtrace_options_response` is stored and has same values as
-        # x-trace-options-response header but different delimiters
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
@@ -139,8 +139,8 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will also have invalid span_id.
-        # `xtrace_options_response` is stored and has same values as
-        # x-trace-options-response header but different delimiters
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
@@ -423,8 +423,8 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id.
-        # `xtrace_options_response` is stored and has same values as
-        # x-trace-options-response header but different delimiters
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####not-requested;ignored####this-will-be-ignored"),
@@ -455,8 +455,8 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
 
         # Check client span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id.
-        # `xtrace_options_response` is stored and has same values as
-        # x-trace-options-response header but different delimiters
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####not-requested;ignored####this-will-be-ignored"),
