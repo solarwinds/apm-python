@@ -182,7 +182,7 @@ aws-lambda: wrapper
 	@echo -e "Building AWS Lambda version of C-extensions for all supported Python versions in target directory."
 	@set -e; for PYBIN in cp37-cp37m cp38-cp38; do /opt/python/$${PYBIN}/bin/python setup.py build_ext_lambda -b ${target_dir}; done
 	@echo -e "Copying AWS Lambda specific Oboe library liboboe-1.0-lambda-x86_64.so.0.0.0 into target directory."
-	@cp solarwinds_apm/extension/liboboe-1.0-lambda-x86_64.so.0.0.0 ${target_dir}/solarwinds_apm/extension/liboboe-1.0.so.0
+	@cp solarwinds_apm/extension/liboboe-1.0-lambda-x86_64.so.0.0.0 ${target_dir}/solarwinds_apm/extension/liboboe.so
 	@rm -rf ${target_dir}/*-info
 	@find ${target_dir} -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi

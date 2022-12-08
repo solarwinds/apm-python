@@ -56,26 +56,25 @@ def os_supported():
 def link_oboe_lib(src_lib):
     """Set up the C-extension libraries.
 
-    Create two .so library symlinks, namely 'liboboe-1.0.so' and 'liboboe-1.0.so.0 which are needed when the
-    solarwinds_apm package is built from source. This step is needed since Oboe library is platform specific.
+    Create .so library symlink needed when the solarwinds_apm package is built from source.
+    This step is needed since Oboe library is platform specific.
 
     The src_lib parameter is the name of the library file under solarwinds_apm/extension the above mentioned symlinks will
     point to. If a file with the provided name does not exist, no symlinks will be created."""
 
     logger.info("Create links to platform specific liboboe library file")
-    link_dst = ('liboboe-1.0.so', 'liboboe-1.0.so.0')
+    link_dst = 'liboboe.so'
     cwd = os.getcwd()
     try:
         os.chdir('./solarwinds_apm/extension/')
         if not os.path.exists(src_lib):
             raise Exception("C-extension library file {} does not exist.".format(src_lib))
-        for dst in link_dst:
-            if os.path.exists(dst):
-                # if the destination library files exist already, they need to be deleted, otherwise linking will fail
-                os.remove(dst)
-                logger.info("Removed %s" % dst)
-            os.symlink(src_lib, dst)
-            logger.info("Created new link at {} to {}".format(dst, src_lib))
+        if os.path.exists(link_dst):
+            # if the destination library files exist already, they need to be deleted, otherwise linking will fail
+            os.remove(link_dst)
+            logger.info("Removed %s" % link_dst)
+        os.symlink(src_lib, link_dst)
+        logger.info("Created new link at {} to {}".format(link_dst, src_lib))
     except Exception as ecp:
         logger.info("[SETUP] failed to set up links to C-extension library: {e}".format(e=ecp))
     finally:
@@ -120,7 +119,7 @@ ext_modules = [
                   'solarwinds_apm/extension',
                   'solarwinds_apm'
               ],
-              libraries=['oboe-1.0', 'rt'],
+              libraries=['oboe', 'rt'],
               library_dirs=['solarwinds_apm/extension'],
               extra_compile_args=["-std=c++11"],
               runtime_library_dirs=['$ORIGIN']),
