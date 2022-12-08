@@ -47,7 +47,11 @@ LIBOBOESERVERLESS := "liboboe-1.0-lambda-x86_64.so.0.0.0"
 OBOEVERSION := $(shell cat ./solarwinds_apm/extension/VERSION)
 
 # specification of source of header and library files
-OBOEREPO := "https://agent-binaries.global.st-ssp.solarwinds.com/apm/c-lib/${OBOEVERSION}"
+ifdef STAGING_OBOE
+    OBOEREPO := "https://agent-binaries.global.st-ssp.solarwinds.com/apm/c-lib/${OBOEVERSION}"
+else
+    OBOEREPO := "https://agent-binaries.cloud.solarwinds.com/apm/c-lib/${OBOEVERSION}"
+endif
 
 verify-oboe-version:
 	@echo -e "Downloading Oboe VERSION file from ${OBOEREPO}"
