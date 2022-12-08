@@ -320,7 +320,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             return
         Context.set(md)
         evt = md.createEvent()
-        evt.addInfo("Label", "single")
         evt.addInfo("Layer", layer)
         for ver_k, ver_v in version_keys.items():
             evt.addInfo(ver_k, ver_v)
