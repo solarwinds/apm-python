@@ -300,10 +300,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         # Else the path operations fail, for example when the agent is running
         # in an application zip archive.
         if os.path.isfile(__file__):
-            version_keys["Python.InstallDirectory"] = os.path.dirname(__file__)
-            version_keys["Python.InstallTimestamp"] = os.path.getmtime(
+            dirname = os.path.dirname(__file__)
+            version_keys["Python.InstallDirectory"] = dirname
+            version_keys["APM.InstallDirectory"] = dirname
+            mtime = os.path.getmtime(
                 __file__
             )  # in sec since epoch
+            version_keys["Python.InstallTimestamp"] = mtime
+            version_keys["APM.InstallTimestamp"] = mtime
         else:
             version_keys["Python.InstallDirectory"] = "Unknown"
             version_keys["Python.InstallTimestamp"] = 0
