@@ -2,6 +2,7 @@
 
 import logging
 import os
+import pkg_resources
 import sys
 import time
 
@@ -279,6 +280,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         version_keys = {}
         version_keys["__Init"] = "True"
+        version_keys["telemetry.sdk.language"] = "python"
+        version_keys["telemetry.sdk.name"] = "opentelemetry"
+        version_keys["telemetry.sdk.version"] = pkg_resources.get_distribution("opentelemetry-sdk").version
         # liboboe adds key Hostname for us
         try:
             python_version = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
