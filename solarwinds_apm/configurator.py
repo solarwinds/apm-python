@@ -290,6 +290,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             version_keys["process.runtime.version"] = python_version
         except (AttributeError, IndexError) as ex:
             logger.warning("Could not retrieve Python version: %s", ex)
+        try:
+            version_keys["process.runtime.name"] = sys.implementation.name
+        except (AttributeError, IndexError) as ex:
+            logger.warning("Could not retrieve Python implementation: %s", ex)     
 
         version_keys["Python.AppOptics.Version"] = __version__
         version_keys["APM.Version"] = __version__
