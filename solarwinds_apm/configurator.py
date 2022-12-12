@@ -2,7 +2,7 @@
 
 import logging
 import os
-import pkg_resources
+from pkg_resources import iter_entry_points, load_entry_point
 import sys
 import time
 
@@ -17,9 +17,9 @@ from opentelemetry.instrumentation.propagators import (
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from pkg_resources import iter_entry_points, load_entry_point
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
@@ -88,6 +88,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             # Warning: This may still set OTEL_PROPAGATORS if set because OTel API
             logger.error("Tracing disabled. Not setting propagators.")
 
+    def _configure_resource(
+        self,
+    ) -> Resource:
+        """Configure OTel Resource for setting attributes. Any attributes from
+        OTEL_RESOURCE_ATTRIBUTES are merged with lower priority.
+        
+        See also OTel SDK env vars:
+        https://github.com/open-telemetry/opentelemetry-python/blob/8a0ce154ae27a699598cbf3ccc6396eb012902d6/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L15-L39"""
+        return Resource.create({})
+
     def _configure_sampler(
         self,
         apm_config: SolarWindsApmConfig,
@@ -112,7 +122,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 INTL_SWO_SUPPORT_EMAIL,
             )
             raise
-        trace.set_tracer_provider(TracerProvider(sampler=sampler))
+        trace.set_tracer_provider(
+            TracerProvider(
+                sampler=sampler,
+                resource=self._configure_resource(),
+            ),
+        )
 
     def _configure_metrics_span_processor(
         self,
@@ -280,9 +295,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         version_keys = {}
         version_keys["__Init"] = "True"
-        version_keys["telemetry.sdk.language"] = "python"
-        version_keys["telemetry.sdk.name"] = "opentelemetry"
-        version_keys["telemetry.sdk.version"] = pkg_resources.get_distribution("opentelemetry-sdk").version
+
+        # Use configured Resource attributes to set (default) telemetry.sdk.*
+        resource_attributes = trace.get_tracer_provider().get_tracer(__name__).resource.attributes
+        for ra_k, ra_v in resource_attributes.items():
+            version_keys[ra_k] = ra_v
+
         # liboboe adds key Hostname for us
         try:
             python_version = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
