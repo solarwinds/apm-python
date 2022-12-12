@@ -2,7 +2,6 @@
 
 import logging
 import os
-from pkg_resources import iter_entry_points, load_entry_point
 import sys
 import time
 
@@ -20,6 +19,7 @@ from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from pkg_resources import iter_entry_points, load_entry_point
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
@@ -93,7 +93,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     ) -> Resource:
         """Configure OTel Resource for setting attributes. Any attributes from
         OTEL_RESOURCE_ATTRIBUTES are merged with lower priority.
-        
+
         See also OTel SDK env vars:
         https://github.com/open-telemetry/opentelemetry-python/blob/8a0ce154ae27a699598cbf3ccc6396eb012902d6/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L15-L39"""
         return Resource.create({})
@@ -266,6 +266,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         return NoopReporter(**reporter_kwargs)
 
+    # pylint: disable=too-many-locals
     def _report_init_event(
         self,
         reporter: "Reporter",
@@ -294,10 +295,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             return
 
         version_keys = {}
-        version_keys["__Init"] = "True"
+        version_keys["__Init"] = True
 
         # Use configured Resource attributes to set (default) telemetry.sdk.*
-        resource_attributes = trace.get_tracer_provider().get_tracer(__name__).resource.attributes
+        resource_attributes = (
+            trace.get_tracer_provider()
+            .get_tracer(__name__)
+            .resource.attributes
+        )
         for ra_k, ra_v in resource_attributes.items():
             version_keys[ra_k] = ra_v
 
@@ -316,9 +321,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         version_keys[
             "Python.AppOpticsExtension.Version"
         ] = Config.getVersionString()
-        version_keys[
-            "APM.Extension.Version"
-        ] = Config.getVersionString()
+        version_keys["APM.Extension.Version"] = Config.getVersionString()
 
         # Attempt to get the following info if we are in a regular file.
         # Else the path operations fail, for example when the agent is running
@@ -327,9 +330,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             dirname = os.path.dirname(__file__)
             version_keys["Python.InstallDirectory"] = dirname
             version_keys["APM.InstallDirectory"] = dirname
-            mtime = os.path.getmtime(
-                __file__
-            )  # in sec since epoch
+            mtime = os.path.getmtime(__file__)  # in sec since epoch
             version_keys["Python.InstallTimestamp"] = mtime
             version_keys["APM.InstallTimestamp"] = mtime
         else:
