@@ -297,7 +297,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         version_keys = {}
         version_keys["__Init"] = True
 
-        # Use configured Resource attributes to set (default) telemetry.sdk.*
+        # Use configured Resource attributes to set telemetry.sdk.* and service.name
         resource_attributes = (
             trace.get_tracer_provider()
             .get_tracer(__name__)
@@ -322,21 +322,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             "Python.AppOpticsExtension.Version"
         ] = Config.getVersionString()
         version_keys["APM.Extension.Version"] = Config.getVersionString()
-
-        # Attempt to get the following info if we are in a regular file.
-        # Else the path operations fail, for example when the agent is running
-        # in an application zip archive.
-        if os.path.isfile(__file__):
-            dirname = os.path.dirname(__file__)
-            version_keys["Python.InstallDirectory"] = dirname
-            version_keys["APM.InstallDirectory"] = dirname
-            mtime = os.path.getmtime(__file__)  # in sec since epoch
-            version_keys["Python.InstallTimestamp"] = mtime
-            version_keys["APM.InstallTimestamp"] = mtime
-        else:
-            version_keys["Python.InstallDirectory"] = "Unknown"
-            version_keys["Python.InstallTimestamp"] = 0
-        version_keys["Python.LastRestart"] = self._AGENT_START_TIME  # in usec
 
         if keys:
             version_keys.update(keys)
