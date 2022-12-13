@@ -208,6 +208,7 @@ class _SwSampler(Sampler):
                 )
             )
 
+        # Include other trace options if valid signature or no signature
         if not decision["auth"] or decision["auth"] < 1:
             trigger_msg = ""
             if xtraceoptions.trigger_trace:
@@ -233,19 +234,19 @@ class _SwSampler(Sampler):
                 )
             )
 
-        if xtraceoptions.ignored:
-            response.append(
-                INTL_SWO_EQUALS_W3C_SANITIZED.join(
-                    [
-                        self._XTRACEOPTIONS_RESP_IGNORED,
-                        (
-                            INTL_SWO_COMMA_W3C_SANITIZED.join(
-                                xtraceoptions.ignored
-                            )
-                        ),
-                    ]
+            if xtraceoptions.ignored:
+                response.append(
+                    INTL_SWO_EQUALS_W3C_SANITIZED.join(
+                        [
+                            self._XTRACEOPTIONS_RESP_IGNORED,
+                            (
+                                INTL_SWO_COMMA_W3C_SANITIZED.join(
+                                    xtraceoptions.ignored
+                                )
+                            ),
+                        ]
+                    )
                 )
-            )
 
         return ";".join(response)
 

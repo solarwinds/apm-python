@@ -559,9 +559,10 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify x-trace-options-response response header present
+        # but only with 'auth' KV
         assert "x-trace-options-response" in resp.headers
         assert "auth=bad-signature" in resp.headers["x-trace-options-response"]
-        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+        assert "ignored" not in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
@@ -644,9 +645,10 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify x-trace-options-response response header present
+        # but only with 'auth' KV
         assert "x-trace-options-response" in resp.headers
         assert "auth=bad-signature" in resp.headers["x-trace-options-response"]
-        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+        assert "ignored" not in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
@@ -726,9 +728,10 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify x-trace-options-response response header present
+        # but only with 'auth' KV
         assert "x-trace-options-response" in resp.headers
         assert "auth=bad-timestamp" in resp.headers["x-trace-options-response"]
-        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+        assert "ignored" not in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
@@ -811,9 +814,10 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify x-trace-options-response response header present
+        # but only with 'auth' KV
         assert "x-trace-options-response" in resp.headers
         assert "auth=bad-timestamp" in resp.headers["x-trace-options-response"]
-        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+        assert "ignored" not in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
