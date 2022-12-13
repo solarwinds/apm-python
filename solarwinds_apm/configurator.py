@@ -315,6 +315,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             logger.warning("Could not retrieve Python version: %s", ex)
         version_keys["process.runtime.name"] = sys.implementation.name
         version_keys["process.runtime.description"] = sys.version
+        version_keys["process.executable.path"] = sys.executable
 
         version_keys["Python.AppOptics.Version"] = __version__
         version_keys["APM.Version"] = __version__
