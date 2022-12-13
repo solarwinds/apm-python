@@ -5,10 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/appoptics/solarwinds-apm-python/compare/rel-0.3.0...HEAD)
+### Added
+- Add support for OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES environment variables ([#90](https://github.com/appoptics/solarwinds-apm-python/pull/90))
+
 ### Changed
 - x-trace-options header `custom-*` KVs written to entry span attributes ([#85](https://github.com/appoptics/solarwinds-apm-python/pull/85))
 - Fix `x-trace-options-signature` extraction ([#85](https://github.com/appoptics/solarwinds-apm-python/pull/85))
 - Fix validation of `x-trace-options` header ([#87](https://github.com/appoptics/solarwinds-apm-python/pull/87))
+- Update Init message with HostID ([#90](https://github.com/appoptics/solarwinds-apm-python/pull/90))
+
+### Removed
+- Drop CentOS 7 and glibc < 2.27 support ([#90](https://github.com/appoptics/solarwinds-apm-python/pull/90))
 
 ## [0.3.0](https://github.com/appoptics/solarwinds-apm-python/releases/tag/rel-0.3.0) - 2022-11-24
 ### Changed
