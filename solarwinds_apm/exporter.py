@@ -107,8 +107,11 @@ class SolarWindsSpanExporter(SpanExporter):
     def _add_info_instrumentation_scope(self, span, evt) -> None:
         """Add instrumentation scope from span, if present"""
         instr_scope_name = span.instrumentation_scope.name
-        if instr_scope_name and "opentelemetry.instrumentation" in instr_scope_name:
-            framework = instr_scope_name.split('.')[2]
+        if (
+            instr_scope_name
+            and "opentelemetry.instrumentation" in instr_scope_name
+        ):
+            framework = instr_scope_name.split(".")[2]
             instr_key = f"Python.{framework.capitalize()}.Version"
             try:
                 importlib.import_module(framework)
