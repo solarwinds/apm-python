@@ -112,7 +112,7 @@ class SolarWindsSpanExporter(SpanExporter):
             if framework == 'tornado':
                 try:
                     import tornado  # pylint: disable-msg=W0611
-                    instr_key = f"Python.{framework}.Version"
+                    instr_key = f"Python.{framework.capitalize()}.Version"
                     evt.addInfo(instr_key, sys.modules['tornado'].version)
                 except ImportError as e:
                     logger.warning('Failed to addInfo for Tornado: {e}'.format(e=e))
@@ -121,7 +121,7 @@ class SolarWindsSpanExporter(SpanExporter):
             if framework == 'django':
                 try:
                     import django
-                    instr_key = f"Python.{framework}.Version"
+                    instr_key = f"Python.{framework.capitalize()}.Version"
                     evt.addInfo(instr_key, django.get_version())
                 except ImportError as e:
                     logger.warning('Failed to addInfo for Django: {e}'.format(e=e))
