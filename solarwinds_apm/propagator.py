@@ -70,7 +70,8 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         setter: textmap.Setter = textmap.default_setter,
     ) -> None:
         """Injects valid sw tracestate from carrier into carrier for HTTP request, to get
-        tracestate injected by previous propagators"""
+        tracestate injected by previous propagators. Excludes any xtraceoptions_response
+        if in tracestate."""
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
         sw_value = W3CTransformer.sw_from_context(span_context)
@@ -109,6 +110,9 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
                 trace_state = trace_state.add(
                     INTL_SWO_TRACESTATE_KEY, sw_value
                 )
+
+        # Remove any xtrace_options_response stored for ResponsePropagator
+        trace_state = W3CTransformer.remove_response_from_sw(trace_state)
 
         setter.set(
             carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()

@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 class XTraceOptions:
     """Formats X-Trace-Options and signature for trigger tracing"""
 
-    _SW_XTRACEOPTIONS_RESPONSE_KEY = "xtrace_options_response"
     _XTRACEOPTIONS_CUSTOM = r"^custom-[^\s]*$"
     _XTRACEOPTIONS_CUSTOM_RE = re.compile(_XTRACEOPTIONS_CUSTOM)
 
@@ -116,7 +115,3 @@ class XTraceOptions:
         options_signature = context.get(INTL_SWO_SIGNATURE_KEY, None)
         if options_signature:
             self.signature = options_signature
-
-    @classmethod
-    def get_sw_xtraceoptions_response_key(cls) -> str:
-        return cls._SW_XTRACEOPTIONS_RESPONSE_KEY
