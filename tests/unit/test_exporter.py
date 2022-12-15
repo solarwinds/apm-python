@@ -80,6 +80,30 @@ def fixture_mock_spans_root(mocker):
 def fixture_mock_spans_parent_valid(mocker):
     return get_mock_spans(mocker, True)
 
+@pytest.fixture(name="mock_span_instr_scope_otel")
+def fixture_mock_span_instr_scope_otel(mocker):
+    mock_instrumentation_scope = mocker.Mock()
+    mock_instrumentation_scope.configure_mock(
+        **{
+            "name": "opentelemetry.instrumentation.foo",
+        }
+    )
+    mock_span = mocker.Mock()
+    span_config = {
+        "get_span_context.return_value": "my_span_context",
+        "start_time": 1000,
+        "end_time": 2000,
+        "name": "foo",
+        "kind": FooNum.FOO,
+        "attributes": {"foo": "bar"},
+        "events": [],
+        "instrumentation_scope": mock_instrumentation_scope,
+    }
+    mock_span.configure_mock(
+        **span_config
+    )
+    return mock_span
+
 @pytest.fixture(name="mock_md")
 def fixture_mock_md(mocker):
     mock_md = mocker.Mock()
@@ -385,6 +409,73 @@ class Test_SolarWindsSpanExporter():
             mock_add_info,
             mock_add_info_instr_scope,
             exporter
+        )
+
+    def test__add_info_instrumentation_scope_no_scope(self):
+        pass
+
+    def test__add_info_instrumentation_scope_name_not_otel(self):
+        pass
+
+    def test__add_info_instrumentation_scope_attributeerror(self):
+        pass
+
+    def test__add_info_instrumentation_scope_importerror(self):
+        pass
+
+    def test__add_info_instrumentation_scope_ok(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+        mock_span_instr_scope_otel,
+    ):
+        # patch importlib so foo "importable"
+        mock_importlib = mocker.Mock()
+        mock_importlib.configure_mock(
+            **{
+                "import_module": mocker.Mock()
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.exporter.importlib",
+            return_value=mock_importlib
+        )
+        # mock foo and sys.modules
+        mock_foo = mocker.Mock()
+        mock_foo.configure_mock(
+            **{
+                "__version__": "1.2.3"
+            }
+        )
+        mock_sys = mocker.patch(
+            "solarwinds_apm.exporter.sys",
+        )
+        mock_sys.configure_mock(
+            **{
+                "modules": {
+                    "foo": mock_foo
+                }
+            }
+        )
+        # mock liboboe event
+        mock_event, mock_add_info, mock_create_event \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+
+        exporter._add_info_instrumentation_scope(
+            mock_span_instr_scope_otel,
+            mock_event,
+        )
+        assert not mock_create_event.called
+        mock_add_info.assert_called_once_with(
+            "Python.Foo.Version",
+            "1.2.3",
         )
 
     def test__report_exception_event(
