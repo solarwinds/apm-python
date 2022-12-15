@@ -118,12 +118,12 @@ class SolarWindsSpanExporter(SpanExporter):
             try:
                 importlib.import_module(framework)
                 evt.addInfo(instr_key, sys.modules[framework].__version__)
-            except (AttributeError, ImportError) as e:
+            except (AttributeError, ImportError) as ex:
                 # could not import package for whatever reason
                 logger.warning(
                     "Failed to add %s instrumentation scope, so skipping: %s",
                     framework,
-                    e,
+                    ex,
                 )
                 return
 
