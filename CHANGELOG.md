@@ -6,8 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/appoptics/solarwinds-apm-python/compare/rel-0.3.0...HEAD)
 ### Changed
-- OpenTelemetry API/SDK 1.15.0 ([#91](https://github.com/appoptics/solarwinds-apm-python/pull/76))
-- OpenTelemetry Instrumentation 0.36b0 ([#91](https://github.com/appoptics/solarwinds-apm-python/pull/76))
+- OpenTelemetry API/SDK 1.15.0 ([#91](https://github.com/appoptics/solarwinds-apm-python/pull/91))
+- OpenTelemetry Instrumentation 0.36b0 ([#91](https://github.com/appoptics/solarwinds-apm-python/pull/91))
 - x-trace-options header `custom-*` KVs written to entry span attributes ([#85](https://github.com/appoptics/solarwinds-apm-python/pull/85))
 - Fix `x-trace-options-signature` extraction ([#85](https://github.com/appoptics/solarwinds-apm-python/pull/85))
 - Fix validation of `x-trace-options` header ([#87](https://github.com/appoptics/solarwinds-apm-python/pull/87))
