@@ -22,8 +22,8 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. A x-trace-options-response header is calculated using the extracted x-trace-options
-           and injected into the HTTP response.
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
         4. Sampling-related, SWKeys, custom-*, and TriggeredTrace attributes are set
            for the root/service entry span, but not what's ignored.
         5. The span_id of the outgoing request span matches the span_id portion in the
@@ -78,15 +78,21 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "01"
 
         assert "tracestate" in resp_json
-        # In this test we know there is `sw` and `xtrace_options_response` in tracestate
-        # where value of former will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####ok;ignored####this-will-be-ignored".format(new_span_id, new_trace_flags)
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
         # app's outgoing request
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
+
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "trigger-trace=ok" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
         spans = self.memory_exporter.get_finished_spans()
@@ -100,6 +106,8 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
@@ -167,7 +175,8 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            entry span (mocked). There is no OTel context extracted from request headers,
            so this is the root and start of the trace (though not exported).
         2. Some traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
-        3. The injected x-trace-options header is also propagated.
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
         4. No spans are exported.
         """
         # Use in-process test app client and mock to propagate context
@@ -219,15 +228,21 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "00"
 
         assert "tracestate" in resp_json
-        # In this test we know there is `sw` and `xtrace_options_response` in tracestate
-        # where value of former will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####rate-exceeded;ignored####this-will-be-ignored".format(new_span_id, new_trace_flags)
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
         # app's outgoing request
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
+
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "trigger-trace=rate-exceeded" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
@@ -240,7 +255,8 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            entry span (mocked). There is no OTel context extracted from request headers,
            so this is the root and start of the trace (though not exported).
         2. Some traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
-        3. The injected x-trace-options header is also propagated.
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
         4. No spans are exported.
         """
         # Use in-process test app client and mock to propagate context
@@ -292,15 +308,21 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "00"
 
         assert "tracestate" in resp_json
-        # In this test we know there is `sw` and `xtrace_options_response` in tracestate
-        # where value of former will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{},xtrace_options_response=trigger-trace####trigger-tracing-disabled;ignored####this-will-be-ignored".format(new_span_id, new_trace_flags)
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
         # app's outgoing request
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
+
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "trigger-trace=trigger-tracing-disabled" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
@@ -314,8 +336,8 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. No x-trace-options-response header is calculated because the extracted
-           x-trace-options does not include trigger-trace.
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
         4. Sampling-related, SWKeys, and custom-*, and attributes are set
            for the root/service entry span, but not what's ignored nor TriggeredTrace.
         5. The span_id of the outgoing request span matches the span_id portion in the
@@ -370,10 +392,9 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "01"
 
         assert "tracestate" in resp_json
-        # In this test we know there is `sw` in tracestate
-        # where value will be new_span_id and new_trace_flags.
-        # There should be no `xtrace_options_response` key because there is
-        # no trigger-trace in the extracted x-trace-options header.
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert resp_json["tracestate"] == "sw={}-{}".format(
             new_span_id,
             new_trace_flags,
@@ -385,6 +406,11 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
 
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "trigger-trace=not-requested" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 2
@@ -395,12 +421,13 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert span_client.name == "HTTP GET"
         assert span_client.kind == trace_api.SpanKind.CLIENT
 
-        # Check root span tracestate has `sw` key.
+        # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id.
-        # There should be no `xtrace_options_response` key because there is
-        # no trigger-trace in the extracted x-trace-options header.
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
+            ("xtrace_options_response", "trigger-trace####not-requested;ignored####this-will-be-ignored"),
         ])
         assert span_server.context.trace_state == expected_trace_state
 
@@ -426,12 +453,13 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "TriggeredTrace" not in span_server.attributes
         assert "this-will-be-ignored" not in span_server.attributes
 
-        # Check root span tracestate has `sw` key/
-        # In this test we know `sw` value will also have invalid span_id.
-        # There should be no `xtrace_options_response` key because there is
-        # no trigger-trace in the extracted x-trace-options header.
+        # Check client span tracestate has `sw` and `xtrace_options_response` keys
+        # In this test we know `sw` value will have invalid span_id.
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
+            ("xtrace_options_response", "trigger-trace####not-requested;ignored####this-will-be-ignored"),
         ])
         assert span_client.context.trace_state == expected_trace_state
 
@@ -464,7 +492,9 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
            so this is the root and start of the trace.
         2. Some traceparent and tracestate are injected into service's outgoing request
            (done by OTel TraceContextTextMapPropagator).
-        3. No spans are exported.
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
+        4. No spans are exported.
         """
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
@@ -515,10 +545,9 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert new_trace_flags == "00"
 
         assert "tracestate" in resp_json
-        # In this test we know there is `sw` in tracestate
-        # where value will be new_span_id and new_trace_flags.
-        # There should be no `xtrace_options_response` key because there is
-        # no trigger-trace in the extracted x-trace-options header.
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
 
         # Verify x-trace response header has same trace_id
@@ -526,6 +555,11 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # app's outgoing request
         assert "x-trace" in resp.headers
         assert new_trace_id in resp.headers["x-trace"]
+
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "trigger-trace=not-requested" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()

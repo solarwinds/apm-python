@@ -9,9 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add support for OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES environment variables ([#90](https://github.com/appoptics/solarwinds-apm-python/pull/90))
 
 ### Changed
+- OpenTelemetry API/SDK 1.15.0 ([#91](https://github.com/appoptics/solarwinds-apm-python/pull/76))
+- OpenTelemetry Instrumentation 0.36b0 ([#91](https://github.com/appoptics/solarwinds-apm-python/pull/76))
 - x-trace-options header `custom-*` KVs written to entry span attributes ([#85](https://github.com/appoptics/solarwinds-apm-python/pull/85))
 - Fix `x-trace-options-signature` extraction ([#85](https://github.com/appoptics/solarwinds-apm-python/pull/85))
 - Fix validation of `x-trace-options` header ([#87](https://github.com/appoptics/solarwinds-apm-python/pull/87))
+- Fix calculation of `x-trace-options-response` header ([#88](https://github.com/appoptics/solarwinds-apm-python/pull/88))
 - Update Init message with HostID ([#90](https://github.com/appoptics/solarwinds-apm-python/pull/90))
 
 ### Removed

@@ -56,6 +56,16 @@ def fixture_xtraceoptions_signed_tt(mocker):
     options.ignored = ["baz", "qux"]
     return options
 
+@pytest.fixture(name="mock_xtraceoptions_signed_without_tt")
+def fixture_xtraceoptions_signed_without_tt(mocker):
+    options = mocker.Mock()
+    options.trigger_trace = 0
+    options.options_header = "foo-bar"
+    options.signature = 123456
+    options.timestamp = 123456
+    options.ignored = ["baz", "qux"]
+    return options
+
 @pytest.fixture(name="mock_xtraceoptions_signed_not_tt")
 def fixture_xtraceoptions_signed_not_tt(mocker):
     options = mocker.Mock()
@@ -76,11 +86,22 @@ def fixture_xtraceoptions_unsigned_tt(mocker):
 
 # Other Fixtures, manually used =====================================
 
-@pytest.fixture(name="decision_auth")
-def fixture_decision_auth():
+@pytest.fixture(name="decision_auth_valid_sig")
+def fixture_decision_auth_valid_sig():
     return {
         "do_metrics": 1,
         "do_sample": 1,
+        "auth": 0,
+        "auth_msg": "foo-bar",
+        "decision_type": 1,
+        "status_msg": "baz-qux",
+    }
+
+@pytest.fixture(name="decision_auth_invalid_sig")
+def fixture_decision_auth_invalid_sig():
+    return {
+        "do_metrics": 0,
+        "do_sample": 0,
         "auth": 1,
         "auth_msg": "foo-bar",
     }
@@ -258,19 +279,33 @@ class Test_SwSampler():
             "do_sample": 1,
         }) == Decision.RECORD_AND_SAMPLE
 
-    def test_create_xtraceoptions_response_value_auth(
+    def test_create_xtraceoptions_response_value_auth_valid_sig(
         self,
         sw_sampler,
-        decision_auth,
+        decision_auth_valid_sig,
         parent_span_context_valid_remote,
         mock_xtraceoptions_signed_tt,
     ):
         response_val = sw_sampler.create_xtraceoptions_response_value(
-            decision_auth,
+            decision_auth_valid_sig,
             parent_span_context_valid_remote,
             mock_xtraceoptions_signed_tt,
         )
-        assert response_val == "auth####foo-bar;ignored####baz....qux"
+        assert response_val == "auth####foo-bar;trigger-trace####baz-qux;ignored####baz....qux"
+
+    def test_create_xtraceoptions_response_value_auth_invalid_sig(
+        self,
+        sw_sampler,
+        decision_auth_invalid_sig,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_signed_tt,
+    ):
+        response_val = sw_sampler.create_xtraceoptions_response_value(
+            decision_auth_invalid_sig,
+            parent_span_context_valid_remote,
+            mock_xtraceoptions_signed_tt,
+        )
+        assert response_val == "auth####foo-bar"
 
     def test_create_xtraceoptions_response_value_tt_unauth_type_nonzero_root_span(
         self,
@@ -388,7 +423,7 @@ class Test_SwSampler():
         self,
         mocker,
         sw_sampler,
-        decision_auth,
+        decision_auth_valid_sig,
         parent_span_context_valid_remote,
         mock_xtraceoptions_signed_tt
     ):
@@ -397,9 +432,31 @@ class Test_SwSampler():
             return_value="bar"
         )
         trace_state = sw_sampler.create_new_trace_state(
-            decision_auth,
+            decision_auth_valid_sig,
             parent_span_context_valid_remote,
             mock_xtraceoptions_signed_tt
+        )
+        assert trace_state == TraceState([
+            ["sw", "1111222233334444-01"],
+            ["xtrace_options_response", "bar"]
+        ])
+
+    def test_create_new_trace_state_without_tt(
+        self,
+        mocker,
+        sw_sampler,
+        decision_auth_valid_sig,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_signed_without_tt
+    ):
+        mocker.patch(
+            "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
+            return_value="bar"
+        )
+        trace_state = sw_sampler.create_new_trace_state(
+            decision_auth_valid_sig,
+            parent_span_context_valid_remote,
+            mock_xtraceoptions_signed_without_tt
         )
         assert trace_state == TraceState([
             ["sw", "1111222233334444-01"],
@@ -410,7 +467,7 @@ class Test_SwSampler():
         self,
         mocker,
         sw_sampler,
-        decision_auth,
+        decision_auth_valid_sig,
         parent_span_context_invalid
     ):
         mocker.patch(
@@ -418,7 +475,7 @@ class Test_SwSampler():
             return_value="bar"
         )
         trace_state = sw_sampler.calculate_trace_state(
-            decision_auth,
+            decision_auth_valid_sig,
             parent_span_context_invalid
         )
         assert trace_state == "bar"
@@ -427,7 +484,7 @@ class Test_SwSampler():
         self,
         mocker,
         sw_sampler,
-        decision_auth,
+        decision_auth_valid_sig,
         parent_span_context_valid_remote_no_tracestate
     ):
         mocker.patch(
@@ -435,7 +492,7 @@ class Test_SwSampler():
             return_value="bar"
         )
         trace_state = sw_sampler.calculate_trace_state(
-            decision_auth,
+            decision_auth_valid_sig,
             parent_span_context_valid_remote_no_tracestate
         )
         assert trace_state == "bar"
@@ -444,7 +501,7 @@ class Test_SwSampler():
         self,
         mocker,
         sw_sampler,
-        decision_auth,
+        decision_auth_valid_sig,
         parent_span_context_valid_remote,
         mock_xtraceoptions_signed_tt,
     ):
@@ -456,7 +513,7 @@ class Test_SwSampler():
             ["sw", "123"]
         ])
         trace_state = sw_sampler.calculate_trace_state(
-            decision_auth,
+            decision_auth_valid_sig,
             parent_span_context_valid_remote,
             mock_xtraceoptions_signed_tt,
         )
@@ -464,10 +521,6 @@ class Test_SwSampler():
             ["sw", "1111222233334444-01"],
             ["xtrace_options_response", "bar"]
         ])
-
-    def test_remove_response_from_sw(self, sw_sampler):
-        ts = TraceState([["bar", "456"],["xtrace_options_response", "123"]])
-        assert sw_sampler.remove_response_from_sw(ts) == TraceState([["bar", "456"]])
 
     def test_should_sample(
         self,
