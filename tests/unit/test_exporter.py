@@ -80,30 +80,6 @@ def fixture_mock_spans_root(mocker):
 def fixture_mock_spans_parent_valid(mocker):
     return get_mock_spans(mocker, True)
 
-@pytest.fixture(name="mock_span_instr_scope_otel")
-def fixture_mock_span_instr_scope_otel(mocker):
-    mock_instrumentation_scope = mocker.Mock()
-    mock_instrumentation_scope.configure_mock(
-        **{
-            "name": "opentelemetry.instrumentation.foo",
-        }
-    )
-    mock_span = mocker.Mock()
-    span_config = {
-        "get_span_context.return_value": "my_span_context",
-        "start_time": 1000,
-        "end_time": 2000,
-        "name": "foo",
-        "kind": FooNum.FOO,
-        "attributes": {"foo": "bar"},
-        "events": [],
-        "instrumentation_scope": mock_instrumentation_scope,
-    }
-    mock_span.configure_mock(
-        **span_config
-    )
-    return mock_span
-
 @pytest.fixture(name="mock_md")
 def fixture_mock_md(mocker):
     mock_md = mocker.Mock()
@@ -429,7 +405,6 @@ class Test_SolarWindsSpanExporter():
         exporter,
         mock_event,
         mock_create_event,
-        mock_span_instr_scope_otel,
     ):
         # patch importlib so foo "importable"
         mock_importlib = mocker.Mock()
@@ -468,8 +443,22 @@ class Test_SolarWindsSpanExporter():
                 True,
              )
 
+        # mock span with InstrumentationScope of foo
+        mock_instrumentation_scope = mocker.Mock()
+        mock_instrumentation_scope.configure_mock(
+            **{
+                "name": "opentelemetry.instrumentation.foo",
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "instrumentation_scope": mock_instrumentation_scope,
+            }
+        )
+
         exporter._add_info_instrumentation_scope(
-            mock_span_instr_scope_otel,
+            test_span,
             mock_event,
         )
         assert not mock_create_event.called
