@@ -105,7 +105,9 @@ class SolarWindsSpanExporter(SpanExporter):
             )
 
     def _add_info_instrumentation_scope(self, span, evt) -> None:
-        """Add instrumentation scope from span, if present"""
+        """Add instrumentation scope from span, if present.
+        Assumes all valid instrumentation_scope names must
+        be `opentelemetry.instrumentation.*`"""
         instr_scope_name = span.instrumentation_scope.name
         if (
             instr_scope_name

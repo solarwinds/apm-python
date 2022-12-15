@@ -387,17 +387,239 @@ class Test_SolarWindsSpanExporter():
             exporter
         )
 
-    def test__add_info_instrumentation_scope_no_scope(self):
-        pass
+    def test__add_info_instrumentation_scope_no_scope_name(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # patch importlib so foo "importable"
+        mock_importlib = mocker.Mock()
+        mock_importlib.configure_mock(
+            **{
+                "import_module": mocker.Mock()
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.exporter.importlib",
+            return_value=mock_importlib
+        )
+        # mock foo and sys.modules
+        mock_foo = mocker.Mock()
+        mock_foo.configure_mock(
+            **{
+                "__version__": "1.2.3"
+            }
+        )
+        mock_sys = mocker.patch(
+            "solarwinds_apm.exporter.sys",
+        )
+        mock_sys.configure_mock(
+            **{
+                "modules": {
+                    "foo": mock_foo
+                }
+            }
+        )
+        # mock liboboe event
+        mock_event, mock_add_info, mock_create_event \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
 
-    def test__add_info_instrumentation_scope_name_not_otel(self):
-        pass
+        # mock span without InstrumentationScope.name
+        mock_instrumentation_scope = mocker.Mock()
+        mock_instrumentation_scope.configure_mock(
+            **{
+                "name": None,
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "instrumentation_scope": mock_instrumentation_scope,
+            }
+        )
 
-    def test__add_info_instrumentation_scope_attributeerror(self):
-        pass
+        exporter._add_info_instrumentation_scope(
+            test_span,
+            mock_event,
+        )
+        assert not mock_create_event.called
+        assert not mock_add_info.called
 
-    def test__add_info_instrumentation_scope_importerror(self):
-        pass
+    def test__add_info_instrumentation_scope_name_not_otel(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # patch importlib so foo "importable"
+        mock_importlib = mocker.Mock()
+        mock_importlib.configure_mock(
+            **{
+                "import_module": mocker.Mock()
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.exporter.importlib",
+            return_value=mock_importlib
+        )
+        # mock foo and sys.modules
+        mock_foo = mocker.Mock()
+        mock_foo.configure_mock(
+            **{
+                "__version__": "1.2.3"
+            }
+        )
+        mock_sys = mocker.patch(
+            "solarwinds_apm.exporter.sys",
+        )
+        mock_sys.configure_mock(
+            **{
+                "modules": {
+                    "foo": mock_foo
+                }
+            }
+        )
+        # mock liboboe event
+        mock_event, mock_add_info, mock_create_event \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+
+        # mock span with InstrumentationScope but not otel
+        mock_instrumentation_scope = mocker.Mock()
+        mock_instrumentation_scope.configure_mock(
+            **{
+                "name": "foo",
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "instrumentation_scope": mock_instrumentation_scope,
+            }
+        )
+
+        exporter._add_info_instrumentation_scope(
+            test_span,
+            mock_event,
+        )
+        assert not mock_create_event.called
+        assert not mock_add_info.called
+
+    def test__add_info_instrumentation_scope_attributeerror(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # patch importlib so foo "importable"
+        mock_importlib = mocker.Mock()
+        mock_importlib.configure_mock(
+            **{
+                "import_module": mocker.Mock()
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.exporter.importlib",
+            return_value=mock_importlib
+        )
+        # mock foo and sys.modules, but foo has no __version__
+        mock_foo = mocker.Mock()
+        mock_foo.configure_mock(
+            **{
+                "foo": "bar"
+            }
+        )
+        mock_sys = mocker.patch(
+            "solarwinds_apm.exporter.sys",
+        )
+        mock_sys.configure_mock(
+            **{
+                "modules": {
+                    "foo": mock_foo
+                }
+            }
+        )
+        # mock liboboe event
+        mock_event, mock_add_info, mock_create_event \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+
+        # mock span with InstrumentationScope of foo
+        mock_instrumentation_scope = mocker.Mock()
+        mock_instrumentation_scope.configure_mock(
+            **{
+                "name": "opentelemetry.instrumentation.foo",
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "instrumentation_scope": mock_instrumentation_scope,
+            }
+        )
+
+        exporter._add_info_instrumentation_scope(
+            test_span,
+            mock_event,
+        )
+        assert not mock_create_event.called
+        assert not mock_add_info.called
+
+    def test__add_info_instrumentation_scope_importerror(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # do not patch importlib, so cannot "import" foo
+
+        # mock liboboe event
+        mock_event, mock_add_info, mock_create_event \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+
+        # mock span with InstrumentationScope of foo
+        mock_instrumentation_scope = mocker.Mock()
+        mock_instrumentation_scope.configure_mock(
+            **{
+                "name": "opentelemetry.instrumentation.foo",
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "instrumentation_scope": mock_instrumentation_scope,
+            }
+        )
+
+        exporter._add_info_instrumentation_scope(
+            test_span,
+            mock_event,
+        )
+        assert not mock_create_event.called
+        assert not mock_add_info.called
 
     def test__add_info_instrumentation_scope_ok(
         self,
