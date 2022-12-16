@@ -116,8 +116,19 @@ class SolarWindsSpanExporter(SpanExporter):
             framework = instr_scope_name.split(".")[2]
             instr_key = f"Python.{framework.capitalize()}.Version"
             try:
-                importlib.import_module(framework)
-                evt.addInfo(instr_key, sys.modules[framework].__version__)
+                # urllib has a rich complex history
+                if framework == "urllib":  
+                    importlib.import_module(f"{framework}.request")
+                else:
+                    importlib.import_module(framework)
+
+                # some Python frameworks just don't have __version__
+                if framework == "urllib":
+                    evt.addInfo(instr_key, sys.modules[f"{framework}.request"].__version__)
+                elif framework == "sqlite3":
+                    evt.addInfo(instr_key, sys.modules[framework].sqlite_version)
+                else:
+                    evt.addInfo(instr_key, sys.modules[framework].__version__)
             except (AttributeError, ImportError) as ex:
                 # could not import package for whatever reason
                 logger.warning(
