@@ -11,7 +11,9 @@ from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
 )
-from opentelemetry.instrumentation.dependencies import get_dist_dependency_conflicts
+from opentelemetry.instrumentation.dependencies import (
+    get_dist_dependency_conflicts,
+)
 from opentelemetry.instrumentation.environment_variables import (
     OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
 )
@@ -278,7 +280,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Updates version_keys with versions of Python frameworks that have been
         instrumented with installed (bootstrapped) OTel instrumentation libraries.
         Borrowed from opentelemetry-instrumentation sitecustomize.
-        
+
         Example output:
         {
             "Python.Urllib.Version": "3.9",
@@ -289,7 +291,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             "Python.Logging.Version": "0.5.1.2",
         }
         """
-        package_to_exclude = os.environ.get(OTEL_PYTHON_DISABLED_INSTRUMENTATIONS, [])
+        package_to_exclude = os.environ.get(
+            OTEL_PYTHON_DISABLED_INSTRUMENTATIONS, []
+        )
         if isinstance(package_to_exclude, str):
             package_to_exclude = package_to_exclude.split(",")
             package_to_exclude = [x.strip() for x in package_to_exclude]
@@ -297,7 +301,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         for entry_point in iter_entry_points("opentelemetry_instrumentor"):
             if entry_point.name in package_to_exclude:
                 logger.debug(
-                    "Skipping version lookup for library %s because excluded", entry_point.name
+                    "Skipping version lookup for library %s because excluded",
+                    entry_point.name,
                 )
                 continue
 
@@ -317,22 +322,28 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     ex,
                 )
                 continue
-            
+
             instr_key = f"Python.{entry_point.name.capitalize()}.Version"
             try:
                 # urllib has a rich complex history
-                if entry_point.name == "urllib":  
+                if entry_point.name == "urllib":
                     importlib.import_module(f"{entry_point.name}.request")
                 else:
                     importlib.import_module(entry_point.name)
 
                 # some Python frameworks just don't have __version__
                 if entry_point.name == "urllib":
-                    version_keys[instr_key] = sys.modules[f"{entry_point.name}.request"].__version__
+                    version_keys[instr_key] = sys.modules[
+                        f"{entry_point.name}.request"
+                    ].__version__
                 elif entry_point.name == "sqlite3":
-                    version_keys[instr_key] = sys.modules[entry_point.name].sqlite_version
+                    version_keys[instr_key] = sys.modules[
+                        entry_point.name
+                    ].sqlite_version
                 else:
-                    version_keys[instr_key] = sys.modules[entry_point.name].__version__
+                    version_keys[instr_key] = sys.modules[
+                        entry_point.name
+                    ].__version__
             except (AttributeError, ImportError) as ex:
                 # could not import package for whatever reason
                 logger.warning(
@@ -401,7 +412,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         ] = Config.getVersionString()
         version_keys["APM.Extension.Version"] = Config.getVersionString()
 
-        version_keys = self._add_all_instrumented_python_framework_versions(version_keys)
+        version_keys = self._add_all_instrumented_python_framework_versions(
+            version_keys
+        )
 
         if keys:
             version_keys.update(keys)
