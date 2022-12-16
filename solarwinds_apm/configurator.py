@@ -1,5 +1,6 @@
 """Module to initialize OpenTelemetry SDK components and liboboe to work with SolarWinds backend"""
 
+import importlib
 import logging
 import os
 import sys
@@ -9,6 +10,10 @@ from opentelemetry import trace
 from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
+)
+from opentelemetry.instrumentation.dependencies import get_dist_dependency_conflicts
+from opentelemetry.instrumentation.environment_variables import (
+    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
 )
 from opentelemetry.instrumentation.propagators import (
     set_global_response_propagator,
@@ -266,6 +271,64 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         return NoopReporter(**reporter_kwargs)
 
+    def _add_all_instrumented_python_framework_versions(
+        self,
+        version_keys,
+    ) -> dict:
+        """Updates version_keys with versions of Python frameworks that have been
+        instrumented with installed (bootstrapped) OTel instrumentation libraries.
+        Borrowed from opentelemetry-instrumentation sitecustomize.
+        
+        Example output:
+        {
+            "Python.Requests.Version": "2.28.1",
+            "Python.Django.Version": "4.1.4",
+            "Python.Logging.Version": "0.5.1.2",
+        }
+        """
+        package_to_exclude = os.environ.get(OTEL_PYTHON_DISABLED_INSTRUMENTATIONS, [])
+        if isinstance(package_to_exclude, str):
+            package_to_exclude = package_to_exclude.split(",")
+            package_to_exclude = [x.strip() for x in package_to_exclude]
+
+        for entry_point in iter_entry_points("opentelemetry_instrumentor"):
+            if entry_point.name in package_to_exclude:
+                logger.debug(
+                    "Skipping version lookup for library %s because excluded", entry_point.name
+                )
+                continue
+
+            try:
+                conflict = get_dist_dependency_conflicts(entry_point.dist)
+                if conflict:
+                    logger.warning(
+                        "Version lookup for library %s skipped due to conflict: %s",
+                        entry_point.name,
+                        conflict,
+                    )
+                    continue
+            except Exception as ex:  # pylint: disable=broad-except
+                logger.warning(
+                    "Version conflict check of %s failed, so skipping: %s",
+                    entry_point.name,
+                    ex,
+                )
+                continue
+            
+            instr_key = f"Python.{entry_point.name.capitalize()}.Version"
+            try:
+                importlib.import_module(entry_point.name)
+                version_keys[instr_key] = sys.modules[entry_point.name].__version__
+            except (AttributeError, ImportError) as ex:
+                # could not import package for whatever reason
+                logger.warning(
+                    "Version lookup of %s failed, so skipping: %s",
+                    entry_point.name,
+                    ex,
+                )
+
+        return version_keys
+
     # pylint: disable=too-many-locals
     def _report_init_event(
         self,
@@ -323,6 +386,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             "Python.AppOpticsExtension.Version"
         ] = Config.getVersionString()
         version_keys["APM.Extension.Version"] = Config.getVersionString()
+
+        version_keys = self._add_all_instrumented_python_framework_versions(version_keys)
 
         if keys:
             version_keys.update(keys)
