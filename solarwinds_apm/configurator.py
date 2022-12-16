@@ -281,8 +281,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         
         Example output:
         {
+            "Python.Urllib.Version": "3.9",
             "Python.Requests.Version": "2.28.1",
             "Python.Django.Version": "4.1.4",
+            "Python.Psycopg2.Version": "2.9.5 (dt dec pq3 ext lo64)",
+            "Python.Sqlite3.Version": "3.34.1",
             "Python.Logging.Version": "0.5.1.2",
         }
         """
@@ -317,8 +320,19 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             
             instr_key = f"Python.{entry_point.name.capitalize()}.Version"
             try:
-                importlib.import_module(entry_point.name)
-                version_keys[instr_key] = sys.modules[entry_point.name].__version__
+                # urllib has a rich complex history
+                if entry_point.name == "urllib":  
+                    importlib.import_module(f"{entry_point.name}.request")
+                else:
+                    importlib.import_module(entry_point.name)
+
+                # some Python frameworks just don't have __version__
+                if entry_point.name == "urllib":
+                    version_keys[instr_key] = sys.modules[f"{entry_point.name}.request"].__version__
+                elif entry_point.name == "sqlite3":
+                    version_keys[instr_key] = sys.modules[entry_point.name].sqlite_version
+                else:
+                    version_keys[instr_key] = sys.modules[entry_point.name].__version__
             except (AttributeError, ImportError) as ex:
                 # could not import package for whatever reason
                 logger.warning(
