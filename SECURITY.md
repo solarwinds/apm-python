@@ -23,4 +23,4 @@ Our security strategy covers all aspects of our business, including:
 [SolarWinds Vulnerability Disclosure Policy](https://www.solarwinds.com/information-security/vulnerability-disclosure-policy)
 
 ## Want to report a security concern?
-SolarWinds reviews all reports of security vulnerabilities submitted to it affecting SolarWinds products and services. To report a vulnerability in one of our products or solutions or a vulnerability in one of our corporate websites, please contact our Product Security Incident Response Team (PSIRT) at [psirt@solarwinds.com](psirt@solarwinds.com).
+SolarWinds reviews all reports of security vulnerabilities submitted to it affecting SolarWinds products and services. To report a vulnerability in one of our products or solutions or a vulnerability in one of our corporate websites, please contact our Product Security Incident Response Team (PSIRT) at [psirt@solarwinds.com](mailto:psirt@solarwinds.com).
