@@ -11,7 +11,7 @@
 
 The following is highly recommended for development work on SolarWinds APM.
 
-This repo can be used to auto-instrument [testbed apps](https://github.com/solarwindscloud/solarwinds-apm-python-testbed) for manual testing and exploring. The code in this repository uses code in [solarwinds-apm-liboboe](https://github.com/librato/solarwinds-apm-liboboe) via C-extension with SWIG (see further below). Setup of the oboe extension is done by downloading oboe from SolarWinds Cloud OR with local oboe code.
+This repo can be used to auto-instrument [testbed apps](https://github.com/appoptics/solarwinds-apm-python-testbed) for manual testing and exploring. The code in this repository uses code in [solarwinds-apm-liboboe](https://github.com/librato/solarwinds-apm-liboboe) via C-extension with SWIG (see further below). Setup of the oboe extension is done by downloading oboe from SolarWinds Cloud OR with local oboe code.
 
 To accommodate these dependencies locally, clone the following repositories into the same root directory. For example, if your development directory is `~/gitrepos/`, please clone `solarwinds-apm-liboboe`, `solarwinds-apm-python-testbed`, and `solarwinds-apm-python` repositories under `~/gitrepos`, so that your directory structure looks as shown below:
 ```
