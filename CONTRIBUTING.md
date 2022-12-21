@@ -1,6 +1,17 @@
 # Contributing to solarwinds_apm
 ----
 
+## Issues
+
+### Security issues
+
+Please report any security issues privately to the SolarWinds Product Security Incident Response Team (PSIRT) at [psirt@solarwinds.com](mailto:psirt@solarwinds.com).
+
+### All other issues
+
+For non-security issues, please log your questions or problems as [GitHub issues](https://github.com/solarwindscloud/solarwinds-apm-python/issues). Please add as much information as you can, such as: Python version, platform, installed dependencies and their version numbers, hosting, code examples or gists, steps to reproduce, stack traces, and logs. SolarWinds project maintainers may ask for clarification or more context after submission.
+
+----
 ## Development
 
 ### Prerequisites
