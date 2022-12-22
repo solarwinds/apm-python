@@ -9,7 +9,15 @@ Please report any security issues privately to the SolarWinds Product Security I
 
 ### All other issues
 
-For non-security issues, please log your questions or problems as [GitHub issues](https://github.com/solarwindscloud/solarwinds-apm-python/issues). Please add as much information as you can, such as: Python version, platform, installed dependencies and their version numbers, hosting, code examples or gists, steps to reproduce, stack traces, and logs. SolarWinds project maintainers may ask for clarification or more context after submission.
+For non-security issues, please submit your ideas, questions, or problems as [GitHub issues](https://github.com/solarwindscloud/solarwinds-apm-python/issues). Please add as much information as you can, such as: Python version, platform, installed dependencies and their version numbers, hosting, code examples or gists, steps to reproduce, stack traces, and logs. SolarWinds project maintainers may ask for clarification or more context after submission.
+
+----
+## Contributing
+### Submitting Pull Requests
+TODO
+
+### Merging PRs
+TODO
 
 ----
 ## Development
@@ -18,83 +26,24 @@ For non-security issues, please log your questions or problems as [GitHub issues
 
 * Docker
 
-### Git Repos and Directory Structure
-
-The following is highly recommended for development work on SolarWinds APM.
-
-This repo can be used to auto-instrument [testbed apps](https://github.com/appoptics/solarwinds-apm-python-testbed) for manual testing and exploring. The code in this repository uses code in [solarwinds-apm-liboboe](https://github.com/librato/solarwinds-apm-liboboe) via C-extension with SWIG (see further below). Setup of the oboe extension is done by downloading oboe from SolarWinds Cloud OR with local oboe code.
-
-To accommodate these dependencies locally, clone the following repositories into the same root directory. For example, if your development directory is `~/gitrepos/`, please clone `solarwinds-apm-liboboe`, `solarwinds-apm-python-testbed`, and `solarwinds-apm-python` repositories under `~/gitrepos`, so that your directory structure looks as shown below:
-```
-~/gitrepos/
-|
-|----solarwinds-apm-liboboe/
-|
-|----solarwinds-apm-python-testbed/
-|
-|----solarwinds-apm-python/
-```
 ### Build Container
 
-To create and run the Docker container which provides all necessary build tools, run the following command:
+To create and run a Docker container for testing and builds, run the following:
 ```bash
 docker build -t dev-container .
 ./run_docker_dev.sh
 ```
 
-The successfully-built build container is based on the [PyPA image](https://github.com/pypa/manylinux) `manylinux2014_x86_64`. It can use [SWIG](https://www.swig.org/Doc1.3/Python.html), a tool to connect C/C++ libraries with other languages via compiling a C-extension. This can be done with this repo's `Makefile` as described next.
-
-#### Install Agent in Development Mode
-
-##### (A) oboe SolarWinds Cloud download
-
-If you don't need to make changes to oboe:
-
-1. Inside the build container: `make wrapper`. This downloads the version of oboe defined in `extension/VERSION` from SolarWinds Cloud and builds the SWIG bindings.
-2. Install the agent in your application (Linux environment only) in development mode by running
-   ```python
-   pip install -Ie ~/gitrepos/solarwinds-apm-python/
-   ```
-When installing the agent in development mode, every change in the Python source code will be reflected in the Python environment directly without re-installation.
-
-##### (B) local oboe build
-
-If you are making local changes to oboe for the custom-distro to use:
-
-1. Go to `solarwinds-apm-liboboe/liboboe` repo, save your changes.
-2. Run this container: `docker run -it --rm -v "$PWD"/../:/solarwinds-apm-oboe tracetools/clib-amazonlinux-build bash`
-3. Inside the container: `INSTALL_DEPS=aws solarwinds-apm-liboboe/liboboe/build-scripts/c-lib.sh`
-4. In another Terminal at `solarwinds-apm-liboboe/liboboe` while container is still running, after `c-lib.sh` is done: `docker cp <container_id>:/liboboe-1.0-x86_64.so.0.0.0 .`
-5. Return to this repo.
-6. Inside the build container: `make wrapper-from-local`. This copies the local C-extension artifacts and builds the SWIG bindings.
-7. Install the agent in your application (Linux environment only) in development mode by running
-   ```python
-   pip install -Ie ~/gitrepos/solarwinds-apm-python/
-   ```
-Like (A) above, when installing the agent in development mode, every change in the Python source code will be reflected in the Python environment directly without re-installation. _However_, if changes have been made to the C-extension files, you need to reinstall the agent to reflect these changes in the Python environment.
-
-#### Build Agent Source Distribution Archive
-
-The `manylinux` build container can be used to generate a zipped archive source distribution (sdist), a wheel / build distribution (bdist), or both (package distribution). For prereleases, the container can be used to upload a package to SolarWinds PackageCloud.
-
-For more information, run `make` inside the build container.
+The build container is based on the [PyPA image](https://github.com/pypa/manylinux) `manylinux2014_x86_64`. It uses [SWIG](https://www.swig.org/Doc1.3/Python.html) to compile required C/C++ libraries into a C-extension dependency.
 
 ### Regression Tests
 
-#### Unit tests
-
-Automated unit testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.7, 3.8, 3.9, and/or 3.10 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Tests for each Python version can be run against AO prod or NH staging. The unit tests are defined in `tests/unit/`.
-
-Both unit tests an integration tests are run together. See next section for how to run.
-
-#### Integration tests
-
-The integration tests are defined in `tests/integration/`. They require a compiled C-extension and should be run inside the build container. They are also run under tox as per the unit tests. Here is how to run tests locally:
+Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.7, 3.8, 3.9, and/or 3.10 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Testing can be run inside the build container which provides all dependencies and a compiled C-extension. Here is how to set up then run unit and integration tests locally:
 
 1. Create and run the Docker build container as described above.
 2. Inside the build container: `make wrapper`. This downloads the version of oboe defined in `extension/VERSION` from SolarWinds Cloud and builds the SWIG bindings.
 3. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.7 against AO prod: `make tox OPTIONS="-e py37-nh-staging"`.
-4. (WARNING: slow!) To run all tests for all supported Python environments: `make tox`
+4. (WARNING: slow!) To run all tests for all supported Python environments, as well as linting and formatting: `make tox`
 5. Other regular `tox` arguments can be included in `OPTIONS`. Some examples:
 
 ```
@@ -108,17 +57,25 @@ make tox OPTIONS="-- tests/integration/test_scenario_1.py"
 The unit and integration tests are also run on GitHub with the [Run tox tests](https://github.com/solarwindscloud/solarwinds-apm-python/actions/workflows/run_tox_tests.yaml) workflow.
 
 
+### Install Agent in Development Mode
+
+TODO
+
+### Build Agent Source Distribution Archive
+
+The `manylinux` build container can be used to generate a zipped archive source distribution (sdist), a wheel / build distribution (bdist), or both (package distribution). For prereleases, the container can be used to upload a package to SolarWinds PackageCloud.
+
+For more information, run `make` inside the build container.
+
 ### Install tests
 
-#### GitHub Action
+`tests/docker/install` can be used to test agent installation from sdist and wheel (if applicable, i.e. no wheels on Alpine). Part of this test workflow is the launch of minimal, instrumented Flask apps and submitting requests to them. This checks that the installed agent can connect to the collector.
 
-Agent installation tests are run using the GitHub workflow [Verify Installation](https://github.com/solarwindscloud/solarwinds-apm-python/actions/workflows/verify_install.yaml). Select one of PyPI, PackageCloud, or TestPyPI from which the tests will download and install. Input Solarwinds APM version is optional (defaults to latest published).
 
-Part of this test workflow is the launch of minimal, instrumented Flask apps and submitting requests to them. This checks that the installed agent can connect to the collector, and traces can be generated and exported to SolarWinds. Installation test-dedicated services on SolarWinds staging (org: Staging), SolarWinds production (org: SWI), and AppOptics production (org: Agent Testing) are named `apm-python-install-testing-<python_version>-<linux_distro>` (e.g. `apm-python-install-testing-py3.7-debian10`). Traces exported there can be inspected manually after GH workflow trigger.
 
-#### Locally
+#### Checking exported traces
 
-During development, `tests/docker/install` can be used to test agent installation from sdist and wheel (if applicable, i.e. no wheels on Alpine).
+If you have access to  traces can be generated and exported to SolarWinds. Installation test-dedicated services exist on SWO and are named `apm-python-install-testing-<python_version>-<linux_distro>` (e.g. `apm-python-install-testing-py3.7-debian10`). Traces exported there can be inspected manually after GH workflow trigger.
 
 To set up, you'll need the API tokens named `apm-python-install-testing` for each of:
 * SolarWinds staging (org: Staging)
@@ -168,9 +125,11 @@ cd tests/docker/install
 MODE=testpypi docker-compose up
 ```
 
+Agent installation tests are also run using the GitHub workflow [Verify Installation](https://github.com/solarwindscloud/solarwinds-apm-python/actions/workflows/verify_install.yaml). These run by installing `solarwinds-apm` published on PyPI, PackageCloud, or TestPyPI.
+
 ### Formatting and Linting
 
-Local code formatting and linting are run using `black`, `isort`, `flake8`, and `pylint` via [tox](https://tox.readthedocs.io). First, create and run the Docker build container as described above. Then use the container to run formatting and linting in one of these ways:
+Code formatting and linting are run using `black`, `isort`, `flake8`, and `pylint` via [tox](https://tox.readthedocs.io). First, create and run the Docker build container as described above. Then use the container to run formatting and linting in one of these ways:
 
 ```
 # Run formatting and linting tools,
@@ -185,3 +144,4 @@ make tox OPTIONS="-e lint"
 ```
 
 Remotely, CodeQL can be run on GitHub with the [CodeQL Analysis](https://github.com/solarwindscloud/solarwinds-apm-python/actions/workflows/codeql_analysis.yaml) workflow.
+
