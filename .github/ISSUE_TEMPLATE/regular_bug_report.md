@@ -5,7 +5,7 @@ labels: bug
 ---
 
 **Environment**
-Describe the environment where the issue was encountered, such as: Python version, platform, installed dependencies and their version numbers, hosting.
+Please add as much information as you can, such as: Python version, platform, installed dependencies and their version numbers, hosting, code examples or gists, steps to reproduce, stack traces, and logs. SolarWinds project maintainers may ask for clarification or more context after submission.
 
 **Steps to reproduce**
 Describe how to reproduce the error, with a code sample if possible.
