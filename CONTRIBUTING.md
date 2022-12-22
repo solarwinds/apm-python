@@ -105,14 +105,14 @@ make tox OPTIONS="--recreate -e py38-ao-prod"
 make tox OPTIONS="-- tests/integration/test_scenario_1.py"
 ```
 
-The unit and integration tests are also run on GitHub with the [Run tox tests](https://github.com/appoptics/solarwinds-apm-python/actions/workflows/run_tox_tests.yaml) workflow.
+The unit and integration tests are also run on GitHub with the [Run tox tests](https://github.com/solarwindscloud/solarwinds-apm-python/actions/workflows/run_tox_tests.yaml) workflow.
 
 
 ### Install tests
 
 #### GitHub Action
 
-Agent installation tests are run using the GitHub workflow [Verify Installation](https://github.com/appoptics/solarwinds-apm-python/actions/workflows/verify_install.yaml). Select one of PyPI, PackageCloud, or TestPyPI from which the tests will download and install. Input Solarwinds APM version is optional (defaults to latest published).
+Agent installation tests are run using the GitHub workflow [Verify Installation](https://github.com/solarwindscloud/solarwinds-apm-python/actions/workflows/verify_install.yaml). Select one of PyPI, PackageCloud, or TestPyPI from which the tests will download and install. Input Solarwinds APM version is optional (defaults to latest published).
 
 Part of this test workflow is the launch of minimal, instrumented Flask apps and submitting requests to them. This checks that the installed agent can connect to the collector, and traces can be generated and exported to SolarWinds. Installation test-dedicated services on SolarWinds staging (org: Staging), SolarWinds production (org: SWI), and AppOptics production (org: Agent Testing) are named `apm-python-install-testing-<python_version>-<linux_distro>` (e.g. `apm-python-install-testing-py3.7-debian10`). Traces exported there can be inspected manually after GH workflow trigger.
 
@@ -184,4 +184,4 @@ make tox OPTIONS="-e lint -- --check-only"
 make tox OPTIONS="-e lint"
 ```
 
-Remotely, CodeQL can be run on GitHub with the [CodeQL Analysis](https://github.com/appoptics/solarwinds-apm-python/actions/workflows/codeql_analysis.yaml) workflow.
+Remotely, CodeQL can be run on GitHub with the [CodeQL Analysis](https://github.com/solarwindscloud/solarwinds-apm-python/actions/workflows/codeql_analysis.yaml) workflow.
