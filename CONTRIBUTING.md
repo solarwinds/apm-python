@@ -79,4 +79,13 @@ Remotely, CodeQL can be run on GitHub with the [CodeQL Analysis](https://github.
 
 ### Install locally and instrument a test app
 
-TODO
+`solarwinds-apm-python` can be installed and used to instrument a Python app running on your local:
+
+1. Create and run the Docker build container as described above.
+2. Inside the build container: `make wrapper`. This downloads the version of a C/C++ dependency defined in `extension/VERSION` from SolarWinds Cloud and builds SWIG bindings.
+3. In your Python app's environment/container, install your local `solarwinds-apm`. For example, if you've saved it to `~/gitrepos` then you could do:
+  ```pip install -Ie ~/gitrepos/solarwinds-apm-python/```
+4. Install all relevant Opentelemetry Python instrumentation libraries:
+  ```opentelemetry-bootstrap --action=install```
+5. Run your application with the prefix `opentelemetry-instrument` to wrap all common Python frameworks:
+    ```opentelemetry-instrument <command_to_run_your_service>```
