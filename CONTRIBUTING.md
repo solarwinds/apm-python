@@ -16,11 +16,10 @@ For non-security issues, please submit your ideas, questions, or problems as [Gi
 
 ----
 ## Contributing
-### Submitting Pull Requests
-TODO
 
-### Merging PRs
-TODO
+Any changes to this project must be made through a pull request to `main`. Major changes should be linked to an existing [GitHub issue](https://github.com/solarwindscloud/solarwinds-apm-python/issues). Smaller contributions like typo corrections don't require an issue.
+
+A PR is ready to merge when all tests pass, any major feedback has been resolved, and at least one SolarWinds maintainer has approved. Once ready, a PR can be merged by a SolarWinds maintainer.
 
 ----
 ## Development
