@@ -7,7 +7,7 @@ jobs:
   build_publish:
     runs-on: ubuntu-latest
     container:
-      image: quay.io/pypa/manylinux_2_28_x86_64:latest
+      image: quay.io/pypa/manylinux2014_x86_64:latest
     steps:
     - uses: actions/checkout@v2
     - name: Install Ruby
