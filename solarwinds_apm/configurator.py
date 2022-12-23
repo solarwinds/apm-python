@@ -23,7 +23,7 @@ from opentelemetry.instrumentation.propagators import (
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from pkg_resources import iter_entry_points, load_entry_point
@@ -385,14 +385,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         version_keys = {}
         version_keys["__Init"] = True
 
-        # Use configured Resource attributes to set telemetry.sdk.* and service.name
+        # Use configured Resource attributes to set telemetry.sdk.*
         resource_attributes = (
             trace.get_tracer_provider()
             .get_tracer(__name__)
             .resource.attributes
         )
         for ra_k, ra_v in resource_attributes.items():
-            version_keys[ra_k] = ra_v
+            # Do not include OTEL SERVICE_NAME in __Init message
+            if ra_k != SERVICE_NAME:
+                version_keys[ra_k] = ra_v
 
         # liboboe adds key Hostname for us
         try:
