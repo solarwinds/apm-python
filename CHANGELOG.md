@@ -6,13 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.4.0...HEAD)
 ### Added
-- Add support for OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES environment variables ([#90](https://github.com/appoptics/solarwinds-apm-python/pull/90))
+- Add support for OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES environment variables ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
 
 ### Changed
-- Update Init message with HostID ([#90](https://github.com/appoptics/solarwinds-apm-python/pull/90))
-
-### Removed
-- Drop CentOS 7 and glibc < 2.27 support ([#90](https://github.com/appoptics/solarwinds-apm-python/pull/90))
+- Update Init message with HostID ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
+- SolarWinds c-lib 11.1.0, for Init message updates ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
 
 ## [0.4.0.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.4.0) - 2022-12-15
 ### Changed
