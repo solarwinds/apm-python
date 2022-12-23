@@ -26,7 +26,7 @@ from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from pkg_resources import iter_entry_points, load_entry_point, get_distribution
+from pkg_resources import get_distribution, iter_entry_points, load_entry_point
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
@@ -273,6 +273,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         return NoopReporter(**reporter_kwargs)
 
+    # pylint: disable=too-many-branches
     def _add_all_instrumented_python_framework_versions(
         self,
         version_keys,
@@ -354,7 +355,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                         f"{entry_point_name}.connector"
                     ].__version__
                 elif entry_point_name == "pyramid":
-                    version_keys[instr_key] = get_distribution(entry_point_name).version
+                    version_keys[instr_key] = get_distribution(
+                        entry_point_name
+                    ).version
                 elif entry_point_name == "sqlite3":
                     version_keys[instr_key] = sys.modules[
                         entry_point_name
