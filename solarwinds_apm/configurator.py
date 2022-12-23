@@ -26,7 +26,7 @@ from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from pkg_resources import iter_entry_points, load_entry_point
+from pkg_resources import iter_entry_points, load_entry_point, get_distribution
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
@@ -323,32 +323,60 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
                 continue
 
-            instr_key = f"Python.{entry_point.name.capitalize()}.Version"
+            # Set up Instrumented Library Versions KVs with several special cases
+            entry_point_name = entry_point.name
+            instr_key = f"Python.{entry_point_name.capitalize()}.Version"
             try:
-                # urllib has a rich complex history
-                if entry_point.name == "urllib":
-                    importlib.import_module(f"{entry_point.name}.request")
-                else:
-                    importlib.import_module(entry_point.name)
+                # Some OTel instrumentation libraries are named not exactly
+                # the same as the instrumented libraries!
+                # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
+                if entry_point_name == "aiohttp-client":
+                    entry_point_name = "aiohttp"
+                elif "grpc_" in entry_point_name:
+                    entry_point_name = "grpc"
+                elif entry_point_name == "system_metrics":
+                    entry_point_name = "psutil"
+                elif entry_point_name == "tortoiseorm":
+                    entry_point_name = "tortoise"
 
-                # some Python frameworks just don't have __version__
-                if entry_point.name == "urllib":
+                # There is no mysql version, but mysql.connector version
+                if entry_point_name == "mysql":
+                    importlib.import_module(f"{entry_point_name}.connector")
+                # urllib has a rich complex history
+                elif entry_point_name == "urllib":
+                    importlib.import_module(f"{entry_point_name}.request")
+                else:
+                    importlib.import_module(entry_point_name)
+
+                # some Python frameworks don't have top-level __version__
+                if entry_point_name == "mysql":
                     version_keys[instr_key] = sys.modules[
-                        f"{entry_point.name}.request"
+                        f"{entry_point_name}.connector"
                     ].__version__
-                elif entry_point.name == "sqlite3":
+                elif entry_point_name == "pyramid":
+                    version_keys[instr_key] = get_distribution(entry_point_name).version
+                elif entry_point_name == "sqlite3":
                     version_keys[instr_key] = sys.modules[
-                        entry_point.name
+                        entry_point_name
                     ].sqlite_version
+                elif entry_point_name == "tornado":
+                    version_keys[instr_key] = sys.modules[
+                        entry_point_name
+                    ].version
+                elif entry_point_name == "urllib":
+                    version_keys[instr_key] = sys.modules[
+                        f"{entry_point_name}.request"
+                    ].__version__
                 else:
                     version_keys[instr_key] = sys.modules[
-                        entry_point.name
+                        entry_point_name
                     ].__version__
+
             except (AttributeError, ImportError) as ex:
                 # could not import package for whatever reason
                 logger.warning(
                     "Version lookup of %s failed, so skipping: %s",
-                    entry_point.name,
+                    entry_point_name,
                     ex,
                 )
 
