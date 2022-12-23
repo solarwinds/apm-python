@@ -12,8 +12,8 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_COMMA_W3C_SANITIZED,
     INTL_SWO_EQUALS,
     INTL_SWO_EQUALS_W3C_SANITIZED,
+    INTL_SWO_X_OPTIONS_RESPONSE_KEY,
 )
-from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
@@ -72,9 +72,7 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
         EQUALS_W3C_SANITIZED becomes EQUALS
         COMMA_W3C_SANITIZED becomes COMMA
         """
-        sanitized = tracestate.get(
-            XTraceOptions.get_sw_xtraceoptions_response_key(), None
-        )
+        sanitized = tracestate.get(INTL_SWO_X_OPTIONS_RESPONSE_KEY, None)
         if not sanitized:
             return ""
         return sanitized.replace(

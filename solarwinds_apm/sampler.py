@@ -24,6 +24,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_COMMA_W3C_SANITIZED,
     INTL_SWO_EQUALS_W3C_SANITIZED,
     INTL_SWO_TRACESTATE_KEY,
+    INTL_SWO_X_OPTIONS_RESPONSE_KEY,
 )
 from solarwinds_apm.apm_noop import Context as NoopContext
 from solarwinds_apm.extension.oboe import Context
@@ -207,6 +208,7 @@ class _SwSampler(Sampler):
                 )
             )
 
+        # Include other trace options if valid signature or no signature
         if not decision["auth"] or decision["auth"] < 1:
             trigger_msg = ""
             if xtraceoptions.trigger_trace:
@@ -232,19 +234,19 @@ class _SwSampler(Sampler):
                 )
             )
 
-        if xtraceoptions.ignored:
-            response.append(
-                INTL_SWO_EQUALS_W3C_SANITIZED.join(
-                    [
-                        self._XTRACEOPTIONS_RESP_IGNORED,
-                        (
-                            INTL_SWO_COMMA_W3C_SANITIZED.join(
-                                xtraceoptions.ignored
-                            )
-                        ),
-                    ]
+            if xtraceoptions.ignored:
+                response.append(
+                    INTL_SWO_EQUALS_W3C_SANITIZED.join(
+                        [
+                            self._XTRACEOPTIONS_RESP_IGNORED,
+                            (
+                                INTL_SWO_COMMA_W3C_SANITIZED.join(
+                                    xtraceoptions.ignored
+                                )
+                            ),
+                        ]
+                    )
                 )
-            )
 
         return ";".join(response)
 
@@ -269,9 +271,9 @@ class _SwSampler(Sampler):
                 )
             ]
         )
-        if xtraceoptions and xtraceoptions.trigger_trace:
+        if xtraceoptions and xtraceoptions.options_header:
             trace_state = trace_state.add(
-                XTraceOptions.get_sw_xtraceoptions_response_key(),
+                INTL_SWO_X_OPTIONS_RESPONSE_KEY,
                 self.create_xtraceoptions_response_value(
                     decision, parent_span_context, xtraceoptions
                 ),
@@ -313,21 +315,15 @@ class _SwSampler(Sampler):
                 )
                 # Update trace_state with x-trace-options-response
                 # Not a propagated header, so always an add
-                if xtraceoptions and xtraceoptions.trigger_trace:
+                if xtraceoptions and xtraceoptions.options_header:
                     trace_state = trace_state.add(
-                        XTraceOptions.get_sw_xtraceoptions_response_key(),
+                        INTL_SWO_X_OPTIONS_RESPONSE_KEY,
                         self.create_xtraceoptions_response_value(
                             decision, parent_span_context, xtraceoptions
                         ),
                     )
                 logger.debug("Updated trace_state: %s", trace_state)
         return trace_state
-
-    def remove_response_from_sw(self, trace_state: TraceState) -> TraceState:
-        """Remove xtraceoptions response from tracestate"""
-        return trace_state.delete(
-            XTraceOptions.get_sw_xtraceoptions_response_key()
-        )
 
     def add_tracestate_capture_to_attributes_dict(
         self,
@@ -342,7 +338,9 @@ class _SwSampler(Sampler):
             self._SW_TRACESTATE_CAPTURE_KEY, None
         )
         if not tracestate_capture:
-            trace_state_no_response = self.remove_response_from_sw(trace_state)
+            trace_state_no_response = W3CTransformer.remove_response_from_sw(
+                trace_state
+            )
         else:
             # Must retain all potential tracestate pairs for attributes
             attr_trace_state = TraceState.from_header([tracestate_capture])
@@ -353,7 +351,7 @@ class _SwSampler(Sampler):
                     W3CTransformer.trace_flags_from_int(decision["do_sample"]),
                 ),
             )
-            trace_state_no_response = self.remove_response_from_sw(
+            trace_state_no_response = W3CTransformer.remove_response_from_sw(
                 new_attr_trace_state
             )
         attributes_dict[

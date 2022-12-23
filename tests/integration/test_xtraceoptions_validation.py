@@ -11,7 +11,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
     """
     Test class for x-trace-options header validation as part of unsigned requests.
 
-    These tests focus mainly on xtraceoptions propagation through tracestate and
+    These tests focus mainly on xtraceoptions handling through tracestate and
     service xtraceoptions responses, and successful span export. There is less
     focus on w3c trace context propagation, which is covered in other integration
     tests.
@@ -71,10 +71,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok;ignored####foo".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -87,6 +88,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok;ignored####foo"),
@@ -153,10 +156,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok;ignored####foo".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -169,6 +173,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok;ignored####foo"),
@@ -235,10 +241,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -251,6 +258,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok"),
@@ -314,10 +323,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -330,6 +340,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok"),
@@ -396,9 +408,9 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is only `sw` in tracestate
-        # where value will be new_span_id and new_trace_flags.
-        # No `xtrace_options_response`.
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
         assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
@@ -411,9 +423,13 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         span_server = spans[1]
         span_client = spans[0]
 
-        # Check root span tracestate has `sw` key only
+        # Check root span tracestate has `sw` and `xtrace_options_response` keys
+        # In this test we know `sw` value will have invalid span_id
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
+            ("xtrace_options_response", "trigger-trace####not-requested;ignored####trigger-trace"),
         ])
         assert span_server.context.trace_state == expected_trace_state
 
@@ -439,11 +455,14 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert "custom-OtherThing" in span_server.attributes
         assert span_server.attributes["custom-OtherThing"] == "other val"
         assert "TriggeredTrace" not in span_server.attributes
-        assert "foo" not in span_server.attributes
 
-        # Check root span tracestate has `sw` key only
+        # Check client span tracestate has `sw` and `xtrace_options_response` keys
+        # In this test we know `sw` value will have invalid span_id
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
+            ("xtrace_options_response", "trigger-trace####not-requested;ignored####trigger-trace"),
         ])
         assert span_client.context.trace_state == expected_trace_state
 
@@ -461,7 +480,6 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert not "custom-something" in span_client.attributes
         assert not "custom-OtherThing" in span_client.attributes
         assert not "TriggeredTrace" in span_client.attributes
-        assert "foo" not in span_client.attributes
 
     def test_single_quotes_ok(self):
         resp_json = self.get_response(
@@ -472,10 +490,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok;ignored####bar'".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -488,6 +507,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok;ignored####bar'"),
@@ -553,10 +574,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok;ignored####1....2....3....4....5".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -569,6 +591,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok;ignored####1....2....3....4....5"),
@@ -642,10 +666,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         )
         self.check_some_header_ok(resp_json)
 
-        # In this test we know there is `sw` and `xtrace_options_response`
-        # in tracestate where value of former will be new_span_id and new_trace_flags
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
         assert "tracestate" in resp_json
-        assert resp_json["tracestate"] == "sw={},xtrace_options_response=trigger-trace####ok;ignored####custom- key....custom-key 7".format(
+        assert resp_json["tracestate"] == "sw={}".format(
             "-".join(self.get_new_span_id_and_trace_flags(resp_json)),
         )
 
@@ -658,6 +683,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `sw` and `xtrace_options_response` keys
         # In this test we know `sw` value will have invalid span_id
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "0000000000000000-01"),
             ("xtrace_options_response", "trigger-trace####ok;ignored####custom- key....custom-key 7"),

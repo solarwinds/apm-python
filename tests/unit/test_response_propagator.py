@@ -112,19 +112,9 @@ class TestSwTraceResponsePropagator():
         ])
 
     def test_recover_response_from_tracestate(self, mocker):
-        mock_get_key = mocker.Mock()
-        mock_get_key.configure_mock(return_value="foo")
-        mock_xtraceoptions_cls = mocker.patch(
-            "solarwinds_apm.response_propagator.XTraceOptions"
-        )
-        mock_xtraceoptions_cls.configure_mock(
-            **{
-                "get_sw_xtraceoptions_response_key": mock_get_key
-            }
-        )
         result = SolarWindsTraceResponsePropagator().recover_response_from_tracestate(
             {
-                "foo": "bar####baz....qux####quux"
+                "xtrace_options_response": "bar####baz....qux####quux"
             }
         )
         assert result == "bar=baz,qux=quux"
