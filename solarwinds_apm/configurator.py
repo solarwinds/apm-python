@@ -350,7 +350,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     importlib.import_module(entry_point_name)
 
                 # some Python frameworks don't have top-level __version__
-                if entry_point_name == "mysql":
+                # and elasticsearch gives a version as (8, 5, 3) not 8.5.3
+                if entry_point_name == "elasticsearch":
+                    version_tuple = sys.modules[entry_point_name].__version__
+                    version_keys[instr_key] = ".".join(
+                        [str(d) for d in version_tuple]
+                    )
+                elif entry_point_name == "mysql":
                     version_keys[instr_key] = sys.modules[
                         f"{entry_point_name}.connector"
                     ].__version__
