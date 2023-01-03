@@ -117,7 +117,7 @@ def fixture_mock_event(mocker):
 @pytest.fixture(name="mock_add_info_instr_scope")
 def fixture_mock_add_info_instr_scope(mocker):
     return mocker.patch(
-        "solarwinds_apm.exporter.SolarWindsSpanExporter._add_info_instrumentation_scope",
+        "solarwinds_apm.exporter.SolarWindsSpanExporter._add_info_instrumented_framework",
     )
 
 @pytest.fixture(name="mock_report_exception")
@@ -242,7 +242,7 @@ class Test_SolarWindsSpanExporter():
             mocker.call("Layer", "foo"),
         ])
 
-        # _add_info_instrumentation_scope call
+        # _add_info_instrumented_framework call
         mock_add_info_instr_scope.assert_called_once_with(
             mock_spans[0],
             mock_event,
@@ -387,7 +387,7 @@ class Test_SolarWindsSpanExporter():
             exporter
         )
 
-    def test__add_info_instrumentation_scope_no_scope_name(
+    def test__add_info_instrumented_framework_no_scope_name(
         self,
         mocker,
         exporter,
@@ -445,14 +445,14 @@ class Test_SolarWindsSpanExporter():
             }
         )
 
-        exporter._add_info_instrumentation_scope(
+        exporter._add_info_instrumented_framework(
             test_span,
             mock_event,
         )
         assert not mock_create_event.called
         assert not mock_add_info.called
 
-    def test__add_info_instrumentation_scope_name_not_otel(
+    def test__add_info_instrumented_framework_name_not_otel(
         self,
         mocker,
         exporter,
@@ -510,14 +510,14 @@ class Test_SolarWindsSpanExporter():
             }
         )
 
-        exporter._add_info_instrumentation_scope(
+        exporter._add_info_instrumented_framework(
             test_span,
             mock_event,
         )
         assert not mock_create_event.called
         assert not mock_add_info.called
 
-    def test__add_info_instrumentation_scope_attributeerror(
+    def test__add_info_instrumented_framework_attributeerror(
         self,
         mocker,
         exporter,
@@ -575,14 +575,14 @@ class Test_SolarWindsSpanExporter():
             }
         )
 
-        exporter._add_info_instrumentation_scope(
+        exporter._add_info_instrumented_framework(
             test_span,
             mock_event,
         )
         assert not mock_create_event.called
         assert not mock_add_info.called
 
-    def test__add_info_instrumentation_scope_importerror(
+    def test__add_info_instrumented_framework_importerror(
         self,
         mocker,
         exporter,
@@ -614,14 +614,14 @@ class Test_SolarWindsSpanExporter():
             }
         )
 
-        exporter._add_info_instrumentation_scope(
+        exporter._add_info_instrumented_framework(
             test_span,
             mock_event,
         )
         assert not mock_create_event.called
         assert not mock_add_info.called
 
-    def test__add_info_instrumentation_scope_ok(
+    def test__add_info_instrumented_framework_ok(
         self,
         mocker,
         exporter,
@@ -679,7 +679,7 @@ class Test_SolarWindsSpanExporter():
             }
         )
 
-        exporter._add_info_instrumentation_scope(
+        exporter._add_info_instrumented_framework(
             test_span,
             mock_event,
         )
@@ -689,7 +689,7 @@ class Test_SolarWindsSpanExporter():
             "1.2.3",
         )
 
-    def test__add_info_instrumentation_scope_urllib(
+    def test__add_info_instrumented_framework_urllib(
         self,
         mocker,
         exporter,
@@ -747,7 +747,7 @@ class Test_SolarWindsSpanExporter():
             }
         )
 
-        exporter._add_info_instrumentation_scope(
+        exporter._add_info_instrumented_framework(
             test_span,
             mock_event,
         )
@@ -757,7 +757,7 @@ class Test_SolarWindsSpanExporter():
             "4.5.6",
         )
 
-    def test__add_info_instrumentation_scope_sqlite3(
+    def test__add_info_instrumented_framework_sqlite3(
         self,
         mocker,
         exporter,
@@ -815,7 +815,7 @@ class Test_SolarWindsSpanExporter():
             }
         )
 
-        exporter._add_info_instrumentation_scope(
+        exporter._add_info_instrumented_framework(
             test_span,
             mock_event,
         )

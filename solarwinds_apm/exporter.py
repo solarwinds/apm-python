@@ -74,7 +74,7 @@ class SolarWindsSpanExporter(SpanExporter):
             evt.addInfo("Layer", span.name)
             evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
             evt.addInfo("Language", "Python")
-            self._add_info_instrumentation_scope(span, evt)
+            self._add_info_instrumented_framework(span, evt)
             for attr_k, attr_v in span.attributes.items():
                 evt.addInfo(attr_k, attr_v)
             self.reporter.sendReport(evt, False)
@@ -104,10 +104,11 @@ class SolarWindsSpanExporter(SpanExporter):
                 INTL_SWO_SUPPORT_EMAIL,
             )
 
-    def _add_info_instrumentation_scope(self, span, evt) -> None:
-        """Add instrumentation scope from span, if present.
-        Assumes all valid instrumentation_scope names must
-        be `opentelemetry.instrumentation.*`"""
+    def _add_info_instrumented_framework(self, span, evt) -> None:
+        """Add info to span for which Python framework has been instrumented
+        with OTel. Based on instrumentation scope of the span, if present.
+        Assumes all valid instrumentation_scope names must be
+        `opentelemetry.instrumentation.*`"""
         instr_scope_name = span.instrumentation_scope.name
         if (
             instr_scope_name
