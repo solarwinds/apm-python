@@ -274,9 +274,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         layer: str = "Python",
         keys: dict = None,
     ) -> None:
-        """Report the APM library's init message, when reporter ready.
-        Note: We keep the original "brand" keynames with AppOptics, in addition
-        to standardized SolarWinds keynames."""
+        """Report the APM library's init message, when reporter ready."""
         reporter_ready = False
         if reporter.init_status in (
             OboeReporterCode.OBOE_INIT_OK,
@@ -310,20 +308,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         # liboboe adds key Hostname for us
         try:
-            python_version = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
-            version_keys["Python.Version"] = python_version
-            version_keys["process.runtime.version"] = python_version
+            version_keys[
+                "process.runtime.version"
+            ] = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
         except (AttributeError, IndexError) as ex:
             logger.warning("Could not retrieve Python version: %s", ex)
         version_keys["process.runtime.name"] = sys.implementation.name
         version_keys["process.runtime.description"] = sys.version
         version_keys["process.executable.path"] = sys.executable
 
-        version_keys["Python.AppOptics.Version"] = __version__
         version_keys["APM.Version"] = __version__
-        version_keys[
-            "Python.AppOpticsExtension.Version"
-        ] = Config.getVersionString()
         version_keys["APM.Extension.Version"] = Config.getVersionString()
 
         if keys:
