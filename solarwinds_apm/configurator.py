@@ -16,6 +16,7 @@ from opentelemetry.instrumentation.propagators import (
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from pkg_resources import iter_entry_points, load_entry_point
@@ -87,6 +88,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             # Warning: This may still set OTEL_PROPAGATORS if set because OTel API
             logger.error("Tracing disabled. Not setting propagators.")
 
+    def _configure_resource(
+        self,
+    ) -> Resource:
+        """Configure OTel Resource for setting attributes. Any attributes from
+        OTEL_RESOURCE_ATTRIBUTES are merged with lower priority.
+
+        See also OTel SDK env vars:
+        https://github.com/open-telemetry/opentelemetry-python/blob/8a0ce154ae27a699598cbf3ccc6396eb012902d6/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L15-L39"""
+        return Resource.create({})
+
     def _configure_sampler(
         self,
         apm_config: SolarWindsApmConfig,
@@ -111,7 +122,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 INTL_SWO_SUPPORT_EMAIL,
             )
             raise
-        trace.set_tracer_provider(TracerProvider(sampler=sampler))
+        trace.set_tracer_provider(
+            TracerProvider(
+                sampler=sampler,
+                resource=self._configure_resource(),
+            ),
+        )
 
     def _configure_metrics_span_processor(
         self,
@@ -250,6 +266,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         return NoopReporter(**reporter_kwargs)
 
+    # pylint: disable=too-many-locals
     def _report_init_event(
         self,
         reporter: "Reporter",
@@ -257,8 +274,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         layer: str = "Python",
         keys: dict = None,
     ) -> None:
-        """Report the APM library's init message, when reporter ready.
-        Note: We keep the original "brand" keynames with AppOptics, instead of SolarWinds"""
+        """Report the APM library's init message, when reporter ready."""
         reporter_ready = False
         if reporter.init_status in (
             OboeReporterCode.OBOE_INIT_OK,
@@ -277,32 +293,32 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             return
 
         version_keys = {}
-        version_keys["__Init"] = "True"
+        version_keys["__Init"] = True
+
+        # Use configured Resource attributes to set telemetry.sdk.*
+        resource_attributes = (
+            trace.get_tracer_provider()
+            .get_tracer(__name__)
+            .resource.attributes
+        )
+        for ra_k, ra_v in resource_attributes.items():
+            # Do not include OTEL SERVICE_NAME in __Init message
+            if ra_k != SERVICE_NAME:
+                version_keys[ra_k] = ra_v
+
         # liboboe adds key Hostname for us
         try:
             version_keys[
-                "Python.Version"
+                "process.runtime.version"
             ] = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
         except (AttributeError, IndexError) as ex:
             logger.warning("Could not retrieve Python version: %s", ex)
+        version_keys["process.runtime.name"] = sys.implementation.name
+        version_keys["process.runtime.description"] = sys.version
+        version_keys["process.executable.path"] = sys.executable
 
-        version_keys["Python.AppOptics.Version"] = __version__
-        version_keys[
-            "Python.AppOpticsExtension.Version"
-        ] = Config.getVersionString()
-
-        # Attempt to get the following info if we are in a regular file.
-        # Else the path operations fail, for example when the agent is running
-        # in an application zip archive.
-        if os.path.isfile(__file__):
-            version_keys["Python.InstallDirectory"] = os.path.dirname(__file__)
-            version_keys["Python.InstallTimestamp"] = os.path.getmtime(
-                __file__
-            )  # in sec since epoch
-        else:
-            version_keys["Python.InstallDirectory"] = "Unknown"
-            version_keys["Python.InstallTimestamp"] = 0
-        version_keys["Python.LastRestart"] = self._AGENT_START_TIME  # in usec
+        version_keys["APM.Version"] = __version__
+        version_keys["APM.Extension.Version"] = Config.getVersionString()
 
         if keys:
             version_keys.update(keys)
@@ -315,7 +331,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             return
         Context.set(md)
         evt = md.createEvent()
-        evt.addInfo("Label", "single")
         evt.addInfo("Layer", layer)
         for ver_k, ver_v in version_keys.items():
             evt.addInfo(ver_k, ver_v)

@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.4.0...HEAD)
+### Added
+- Add support for OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES environment variables ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
+
+### Changed
+- Update Init message with HostID ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
+- SolarWinds c-lib 11.1.0, for Init message updates ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
 
 ## [0.4.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.4.0) - 2023-01-03
 ### Added
