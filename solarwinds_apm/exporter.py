@@ -9,7 +9,11 @@ from typing import Any
 
 from opentelemetry.sdk.trace.export import SpanExporter
 
-from solarwinds_apm.apm_constants import INTL_SWO_SUPPORT_EMAIL
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_OTEL_SCOPE_NAME,
+    INTL_SWO_OTEL_SCOPE_VERSION,
+    INTL_SWO_SUPPORT_EMAIL,
+)
 from solarwinds_apm.apm_noop import Context as NoopContext
 from solarwinds_apm.apm_noop import Metadata as NoopMetadata
 from solarwinds_apm.extension.oboe import Context, Metadata
@@ -72,6 +76,7 @@ class SolarWindsSpanExporter(SpanExporter):
             evt.addInfo("Layer", span.name)
             evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
             evt.addInfo("Language", "Python")
+            self._add_info_instrumentation_scope(span, evt)
             for attr_k, attr_v in span.attributes.items():
                 evt.addInfo(attr_k, attr_v)
             self.reporter.sendReport(evt, False)
@@ -100,6 +105,13 @@ class SolarWindsSpanExporter(SpanExporter):
                 "Please contact %s with this issue",
                 INTL_SWO_SUPPORT_EMAIL,
             )
+
+    def _add_info_instrumentation_scope(self, span, evt) -> None:
+        """Add instrumentation scope from span"""
+        evt.addInfo(INTL_SWO_OTEL_SCOPE_NAME, span.instrumentation_scope.name)
+        evt.addInfo(
+            INTL_SWO_OTEL_SCOPE_VERSION, span.instrumentation_scope.version
+        )
 
     def _report_exception_event(self, event) -> None:
         evt = self.context.createEvent(int(event.timestamp / 1000))
