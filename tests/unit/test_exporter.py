@@ -114,8 +114,8 @@ def fixture_mock_event(mocker):
         "solarwinds_apm.extension.oboe.Event"
     )
 
-@pytest.fixture(name="mock_add_info_instr_scope")
-def fixture_mock_add_info_instr_scope(mocker):
+@pytest.fixture(name="mock_add_info_instr_fwork")
+def fixture_mock_add_info_instr_fwork(mocker):
     return mocker.patch(
         "solarwinds_apm.exporter.SolarWindsSpanExporter._add_info_instrumented_framework",
     )
@@ -222,7 +222,7 @@ class Test_SolarWindsSpanExporter():
         mock_report_info,
         mock_report_exception,
         mock_add_info,
-        mock_add_info_instr_scope,
+        mock_add_info_instr_fwork,
         exporter
     ):
         # mock_spans has one info event, one exception event
@@ -243,7 +243,7 @@ class Test_SolarWindsSpanExporter():
         ])
 
         # _add_info_instrumented_framework call
-        mock_add_info_instr_scope.assert_called_once_with(
+        mock_add_info_instr_fwork.assert_called_once_with(
             mock_spans[0],
             mock_event,
         )
@@ -299,7 +299,7 @@ class Test_SolarWindsSpanExporter():
         mock_create_exit,
         mock_report_info,
         mock_report_exception,
-        mock_add_info_instr_scope,
+        mock_add_info_instr_fwork,
         mock_md,
         mock_spans_root
     ):
@@ -333,7 +333,7 @@ class Test_SolarWindsSpanExporter():
             mock_report_info,
             mock_report_exception,
             mock_add_info,
-            mock_add_info_instr_scope,
+            mock_add_info_instr_fwork,
             exporter
         )
 
@@ -346,7 +346,7 @@ class Test_SolarWindsSpanExporter():
         mock_create_exit,
         mock_report_info,
         mock_report_exception,
-        mock_add_info_instr_scope,
+        mock_add_info_instr_fwork,
         mock_md,
         mock_spans_parent_valid
     ):
@@ -383,7 +383,7 @@ class Test_SolarWindsSpanExporter():
             mock_report_info,
             mock_report_exception,
             mock_add_info,
-            mock_add_info_instr_scope,
+            mock_add_info_instr_fwork,
             exporter
         )
 
