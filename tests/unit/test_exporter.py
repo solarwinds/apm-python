@@ -35,6 +35,13 @@ def get_mock_spans(mocker, valid_parent=False):
         }
     )
 
+    mock_instrumentation_scope = mocker.Mock()
+    mock_instrumentation_scope.configure_mock(
+        **{
+            "name": "foo-bar",
+            "version": "foo.bar.baz",
+        }
+    )
     mock_span = mocker.Mock()
     span_config = {
         "get_span_context.return_value": "my_span_context",
@@ -47,6 +54,7 @@ def get_mock_spans(mocker, valid_parent=False):
             mock_info_event,
             mock_exception_event,
         ],
+        "instrumentation_scope": mock_instrumentation_scope,
     }
     mock_parent = None
     if valid_parent:
@@ -104,6 +112,12 @@ def fixture_mock_create_event(mocker):
 def fixture_mock_event(mocker):
     return mocker.patch(
         "solarwinds_apm.extension.oboe.Event"
+    )
+
+@pytest.fixture(name="mock_add_info_instr_scope")
+def fixture_mock_add_info_instr_scope(mocker):
+    return mocker.patch(
+        "solarwinds_apm.exporter.SolarWindsSpanExporter._add_info_instrumentation_scope",
     )
 
 @pytest.fixture(name="mock_report_exception")
@@ -208,6 +222,7 @@ class Test_SolarWindsSpanExporter():
         mock_report_info,
         mock_report_exception,
         mock_add_info,
+        mock_add_info_instr_scope,
         exporter
     ):
         # mock_spans has one info event, one exception event
@@ -226,6 +241,12 @@ class Test_SolarWindsSpanExporter():
             mocker.call("foo", "bar"),
             mocker.call("Layer", "foo"),
         ])
+
+        # _add_info_instrumented_framework call
+        mock_add_info_instr_scope.assert_called_once_with(
+            mock_spans[0],
+            mock_event,
+        )
 
         # sendReport for entry and exit events
         exporter.reporter.sendReport.assert_has_calls([
@@ -278,6 +299,7 @@ class Test_SolarWindsSpanExporter():
         mock_create_exit,
         mock_report_info,
         mock_report_exception,
+        mock_add_info_instr_scope,
         mock_md,
         mock_spans_root
     ):
@@ -311,6 +333,7 @@ class Test_SolarWindsSpanExporter():
             mock_report_info,
             mock_report_exception,
             mock_add_info,
+            mock_add_info_instr_scope,
             exporter
         )
 
@@ -323,6 +346,7 @@ class Test_SolarWindsSpanExporter():
         mock_create_exit,
         mock_report_info,
         mock_report_exception,
+        mock_add_info_instr_scope,
         mock_md,
         mock_spans_parent_valid
     ):
@@ -359,8 +383,120 @@ class Test_SolarWindsSpanExporter():
             mock_report_info,
             mock_report_exception,
             mock_add_info,
+            mock_add_info_instr_scope,
             exporter
         )
+
+    def test__add_info_instrumentation_scope_none(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock span without InstrumentationScope
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "instrumentation_scope": None,
+            }
+        )
+
+        exporter._add_info_instrumentation_scope(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_has_calls([
+            mocker.call("otel.scope.name", ""),
+            mocker.call("otel.scope.version", ""),
+        ])
+
+    def test__add_info_instrumentation_scope_name_only(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        pass
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock span with InstrumentationScope
+        mock_instrumentation_scope = mocker.Mock()
+        mock_instrumentation_scope.configure_mock(
+            **{
+                "name": "foo",
+                "version": None,
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "instrumentation_scope": mock_instrumentation_scope,
+            }
+        )
+
+        exporter._add_info_instrumentation_scope(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_has_calls([
+            mocker.call("otel.scope.name", "foo"),
+            mocker.call("otel.scope.version", ""),
+        ])
+
+    def test__add_info_instrumentation_scope_name_and_version(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock span with InstrumentationScope
+        mock_instrumentation_scope = mocker.Mock()
+        mock_instrumentation_scope.configure_mock(
+            **{
+                "name": "foo",
+                "version": "bar",
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "instrumentation_scope": mock_instrumentation_scope,
+            }
+        )
+
+        exporter._add_info_instrumentation_scope(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_has_calls([
+            mocker.call("otel.scope.name", "foo"),
+            mocker.call("otel.scope.version", "bar"),
+        ])
 
     def test__report_exception_event(
         self,
