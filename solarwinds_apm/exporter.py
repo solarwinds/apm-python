@@ -109,7 +109,7 @@ class SolarWindsSpanExporter(SpanExporter):
     def _add_info_instrumentation_scope(self, span, evt) -> None:
         """Add info from InstrumentationScope of span, if exists"""
         if span.instrumentation_scope is None:
-            logger.warning(
+            logger.debug(
                 "OTel instrumentation scope is None, so setting empty values."
             )
             evt.addInfo(INTL_SWO_OTEL_SCOPE_NAME, "")
