@@ -107,11 +107,24 @@ class SolarWindsSpanExporter(SpanExporter):
             )
 
     def _add_info_instrumentation_scope(self, span, evt) -> None:
-        """Add instrumentation scope from span"""
+        """Add info from InstrumentationScope of span, if exists"""
+        if span.instrumentation_scope is None:
+            logger.warning(
+                "OTel instrumentation scope is None, so setting empty values."
+            )
+            evt.addInfo(INTL_SWO_OTEL_SCOPE_NAME, "")
+            evt.addInfo(INTL_SWO_OTEL_SCOPE_VERSION, "")
+            return
+
+        # name is always string in Otel Python
         evt.addInfo(INTL_SWO_OTEL_SCOPE_NAME, span.instrumentation_scope.name)
-        evt.addInfo(
-            INTL_SWO_OTEL_SCOPE_VERSION, span.instrumentation_scope.version
-        )
+        # version may be None
+        if span.instrumentation_scope.version is None:
+            evt.addInfo(INTL_SWO_OTEL_SCOPE_VERSION, "")
+        else:
+            evt.addInfo(
+                INTL_SWO_OTEL_SCOPE_VERSION, span.instrumentation_scope.version
+            )
 
     def _report_exception_event(self, event) -> None:
         evt = self.context.createEvent(int(event.timestamp / 1000))
