@@ -273,7 +273,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         return NoopReporter(**reporter_kwargs)
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-statements
     def _add_all_instrumented_python_framework_versions(
         self,
         version_keys,
@@ -326,7 +326,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
             # Set up Instrumented Library Versions KVs with several special cases
             entry_point_name = entry_point.name
-            instr_key = f"Python.{entry_point_name.capitalize()}.Version"
+            instr_key = ""
+            if "_" in entry_point_name:
+                instr_key = f"Python.{'_'.join([epn.capitalize() for epn in entry_point_name.split('_')])}.Version"
+            elif "-" in entry_point_name:
+                instr_key = f"Python.{'-'.join([epn.capitalize() for epn in entry_point_name.split('-')])}.Version"
+            else:
+                instr_key = f"Python.{entry_point_name.capitalize()}.Version"
+
             try:
                 # Some OTel instrumentation libraries are named not exactly
                 # the same as the instrumented libraries!
