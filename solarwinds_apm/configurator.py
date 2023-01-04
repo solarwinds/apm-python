@@ -326,7 +326,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
             # Set up Instrumented Library Versions KVs with several special cases
             entry_point_name = entry_point.name
-            instr_key = f"Python.{entry_point_name.capitalize()}.Version"
+            instr_key = f"Python.{entry_point_name}.Version"
             try:
                 # Some OTel instrumentation libraries are named not exactly
                 # the same as the instrumented libraries!
