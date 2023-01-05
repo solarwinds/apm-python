@@ -142,7 +142,7 @@ class SolarWindsSpanExporter(SpanExporter):
             and "opentelemetry.instrumentation" in instr_scope_name
         ):
             framework = instr_scope_name.split(".")[2]
-            instr_key = f"Python.{framework.capitalize()}.Version"
+            instr_key = f"Python.{framework}.Version"
             try:
                 # Some OTel instrumentation libraries are named not exactly
                 # the same as the instrumented libraries!

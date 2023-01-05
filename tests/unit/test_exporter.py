@@ -812,7 +812,7 @@ class Test_SolarWindsSpanExporter():
         )
         assert not mock_create_event.called
         mock_add_info.assert_called_once_with(
-            "Python.Foo.Version",
+            "Python.foo.Version",
             "1.2.3",
         )
 
@@ -985,7 +985,7 @@ class Test_SolarWindsSpanExporter():
             mock_create_event,
             mock_sys_modules,
             "opentelemetry.instrumentation.urllib",
-            "Python.Urllib.Version",
+            "Python.urllib.Version",
             "4.5.6",
         )
 
@@ -1014,7 +1014,7 @@ class Test_SolarWindsSpanExporter():
             mock_create_event,
             mock_sys_modules,
             "opentelemetry.instrumentation.sqlite3",
-            "Python.Sqlite3.Version",
+            "Python.sqlite3.Version",
             "4.5.6",
         )
 
