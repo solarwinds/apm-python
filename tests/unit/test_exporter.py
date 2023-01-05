@@ -260,7 +260,6 @@ class Test_SolarWindsSpanExporter():
             mock_event,
         )
 
-
         # sendReport for entry and exit events
         exporter.reporter.sendReport.assert_has_calls([
             mocker.call(mock_event, False),
@@ -817,6 +816,70 @@ class Test_SolarWindsSpanExporter():
             "1.2.3",
         )
 
+    def mock_and_assert_addinfo_for_instrumented_framework(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+        mock_sys_modules,
+        instrumentation_scope_name,
+        expected_k,
+        expected_v,
+    ):
+        """Shared logic for testing individual cases of _add_info_instrumented_framework"""
+        # patch importlib so mock sys modules "importable"
+        mock_importlib = mocker.Mock()
+        mock_importlib.configure_mock(
+            **{
+                "import_module": mocker.Mock()
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.exporter.importlib",
+            return_value=mock_importlib
+        )
+        # mock sys modules as provided
+        mock_sys = mocker.patch(
+            "solarwinds_apm.exporter.sys",
+        )
+        mock_sys.configure_mock(
+            **{
+                "modules": mock_sys_modules
+            }
+        )
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock span with instrumentation_scope_name as provided
+        mock_instrumentation_scope = mocker.Mock()
+        mock_instrumentation_scope.configure_mock(
+            **{
+                "name": instrumentation_scope_name,
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "instrumentation_scope": mock_instrumentation_scope,
+            }
+        )
+
+        # Test _add_info_instrumented_framework
+        exporter._add_info_instrumented_framework(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_called_once_with(
+            expected_k,
+            expected_v,
+        )
+
     def test__add_info_instrumented_framework_aiohttp(
         self,
         mocker,
@@ -904,17 +967,6 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        # patch importlib so urllib "importable"
-        mock_importlib = mocker.Mock()
-        mock_importlib.configure_mock(
-            **{
-                "import_module": mocker.Mock()
-            }
-        )
-        mocker.patch(
-            "solarwinds_apm.exporter.importlib",
-            return_value=mock_importlib
-        )
         # mock urllib.request and sys.modules
         mock_request = mocker.Mock()
         mock_request.configure_mock(
@@ -922,45 +974,17 @@ class Test_SolarWindsSpanExporter():
                 "__version__": "4.5.6"
             }
         )
-        mock_sys = mocker.patch(
-            "solarwinds_apm.exporter.sys",
-        )
-        mock_sys.configure_mock(
-            **{
-                "modules": {
-                    "urllib.request": mock_request
-                }
-            }
-        )
-        # mock liboboe event
-        mock_event, mock_add_info, mock_create_event \
-             = configure_event_mocks(
-                mocker,
-                mock_event,
-                mock_create_event,
-                True,
-             )
+        mock_sys_modules = {
+            "urllib.request": mock_request
+        }
 
-        # mock span with InstrumentationScope of urllib
-        mock_instrumentation_scope = mocker.Mock()
-        mock_instrumentation_scope.configure_mock(
-            **{
-                "name": "opentelemetry.instrumentation.urllib",
-            }
-        )
-        test_span = mocker.Mock()
-        test_span.configure_mock(
-            **{
-                "instrumentation_scope": mock_instrumentation_scope,
-            }
-        )
-
-        exporter._add_info_instrumented_framework(
-            test_span,
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            exporter,
             mock_event,
-        )
-        assert not mock_create_event.called
-        mock_add_info.assert_called_once_with(
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.urllib",
             "Python.Urllib.Version",
             "4.5.6",
         )
@@ -972,17 +996,6 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        # patch importlib so sqlite3 "importable"
-        mock_importlib = mocker.Mock()
-        mock_importlib.configure_mock(
-            **{
-                "import_module": mocker.Mock()
-            }
-        )
-        mocker.patch(
-            "solarwinds_apm.exporter.importlib",
-            return_value=mock_importlib
-        )
         # mock sqlite3 and sys.modules
         mock_sqlite3 = mocker.Mock()
         mock_sqlite3.configure_mock(
@@ -990,45 +1003,17 @@ class Test_SolarWindsSpanExporter():
                 "sqlite_version": "4.5.6"
             }
         )
-        mock_sys = mocker.patch(
-            "solarwinds_apm.exporter.sys",
-        )
-        mock_sys.configure_mock(
-            **{
-                "modules": {
-                    "sqlite3": mock_sqlite3
-                }
-            }
-        )
-        # mock liboboe event
-        mock_event, mock_add_info, mock_create_event \
-             = configure_event_mocks(
-                mocker,
-                mock_event,
-                mock_create_event,
-                True,
-             )
+        mock_sys_modules = {
+            "sqlite3": mock_sqlite3
+        }
 
-        # mock span with InstrumentationScope of sqlite3
-        mock_instrumentation_scope = mocker.Mock()
-        mock_instrumentation_scope.configure_mock(
-            **{
-                "name": "opentelemetry.instrumentation.sqlite3",
-            }
-        )
-        test_span = mocker.Mock()
-        test_span.configure_mock(
-            **{
-                "instrumentation_scope": mock_instrumentation_scope,
-            }
-        )
-
-        exporter._add_info_instrumented_framework(
-            test_span,
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            exporter,
             mock_event,
-        )
-        assert not mock_create_event.called
-        mock_add_info.assert_called_once_with(
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.sqlite3",
             "Python.Sqlite3.Version",
             "4.5.6",
         )
