@@ -817,6 +817,86 @@ class Test_SolarWindsSpanExporter():
             "1.2.3",
         )
 
+    def test__add_info_instrumented_framework_aiohttp(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # TODO
+        pass
+
+    def test__add_info_instrumented_framework_grpc(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # TODO
+        pass
+
+    def test__add_info_instrumented_framework_psutil(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # TODO
+        pass
+
+    def test__add_info_instrumented_framework_tortoise(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # TODO
+        pass
+
+    def test__add_info_instrumented_framework_mysql(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # TODO
+        pass
+
+    def test__add_info_instrumented_framework_elasticsearch(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # TODO
+        pass
+
+    def test__add_info_instrumented_framework_pyramid(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # TODO
+        pass
+
+    def test__add_info_instrumented_framework_tornado(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # TODO
+        pass
+
     def test__add_info_instrumented_framework_urllib(
         self,
         mocker,

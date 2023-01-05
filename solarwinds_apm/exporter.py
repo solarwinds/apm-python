@@ -10,6 +10,7 @@ import sys
 from typing import Any
 
 from opentelemetry.sdk.trace.export import SpanExporter
+from pkg_resources import get_distribution
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_OTEL_SCOPE_NAME,
@@ -129,6 +130,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 INTL_SWO_OTEL_SCOPE_VERSION, span.instrumentation_scope.version
             )
 
+    # pylint: disable=too-many-branches
     def _add_info_instrumented_framework(self, span, evt) -> None:
         """Add info to span for which Python framework has been instrumented
         with OTel. Based on instrumentation scope of the span, if present.
@@ -142,32 +144,71 @@ class SolarWindsSpanExporter(SpanExporter):
             framework = instr_scope_name.split(".")[2]
             instr_key = f"Python.{framework.capitalize()}.Version"
             try:
+                # Some OTel instrumentation libraries are named not exactly
+                # the same as the instrumented libraries!
+                # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
+                if framework == "aiohttp-client":
+                    framework = "aiohttp"
+                elif "grpc_" in framework:
+                    framework = "grpc"
+                elif framework == "system_metrics":
+                    framework = "psutil"
+                elif framework == "tortoiseorm":
+                    framework = "tortoise"
+
+                # There is no mysql version, but mysql.connector version
+                if framework == "mysql":
+                    importlib.import_module(f"{framework}.connector")
                 # urllib has a rich complex history
-                if framework == "urllib":
+                elif framework == "urllib":
                     importlib.import_module(f"{framework}.request")
                 else:
                     importlib.import_module(framework)
 
-                # some Python frameworks just don't have __version__
-                if framework == "urllib":
+                # some Python frameworks don't have top-level __version__
+                # and elasticsearch gives a version as (8, 5, 3) not 8.5.3
+                if framework == "elasticsearch":
+                    version_tuple = sys.modules[framework].__version__
                     evt.addInfo(
                         instr_key,
-                        sys.modules[f"{framework}.request"].__version__,
+                        ".".join([str(d) for d in version_tuple]),
+                    )
+                elif framework == "mysql":
+                    evt.addInfo(
+                        instr_key,
+                        sys.modules[f"{framework}.connector"].__version__,
+                    )
+                elif framework == "pyramid":
+                    evt.addInfo(
+                        instr_key,
+                        get_distribution(framework).version,
                     )
                 elif framework == "sqlite3":
                     evt.addInfo(
                         instr_key, sys.modules[framework].sqlite_version
                     )
+                elif framework == "tornado":
+                    evt.addInfo(
+                        instr_key,
+                        sys.modules[framework].version,
+                    )
+                elif framework == "urllib":
+                    evt.addInfo(
+                        instr_key,
+                        sys.modules[f"{framework}.request"].__version__,
+                    )
                 else:
-                    evt.addInfo(instr_key, sys.modules[framework].__version__)
+                    evt.addInfo(
+                        instr_key,
+                        sys.modules[framework].__version__,
+                    )
             except (AttributeError, ImportError) as ex:
                 # could not import package for whatever reason
                 logger.warning(
-                    "Failed to add %s instrumentation scope, so skipping: %s",
+                    "Version lookup of %s failed, so skipping: %s",
                     framework,
                     ex,
                 )
-                return
 
     def _report_exception_event(self, event) -> None:
         evt = self.context.createEvent(int(event.timestamp / 1000))
