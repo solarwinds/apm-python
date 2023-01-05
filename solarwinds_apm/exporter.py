@@ -177,51 +177,36 @@ class SolarWindsSpanExporter(SpanExporter):
                 else:
                     importlib.import_module(framework)
 
+                version_str = ""
                 # some Python frameworks don't have top-level __version__
                 # and elasticsearch gives a version as (8, 5, 3) not 8.5.3
                 if framework == "elasticsearch":
                     version_tuple = sys.modules[framework].__version__
-                    evt.addInfo(
-                        instr_key,
-                        ".".join([str(d) for d in version_tuple]),
-                    )
+                    version_str = ".".join([str(d) for d in version_tuple])
                 elif framework == "mysql":
-                    evt.addInfo(
-                        instr_key,
-                        sys.modules[f"{framework}.connector"].__version__,
-                    )
+                    version_str = sys.modules[
+                        f"{framework}.connector"
+                    ].__version__
                 elif framework == "pyramid":
-                    evt.addInfo(
-                        instr_key,
-                        get_distribution(framework).version,
-                    )
+                    version_str = get_distribution(framework).version
                 elif framework == "sqlite3":
-                    evt.addInfo(
-                        instr_key, sys.modules[framework].sqlite_version
-                    )
+                    version_str = sys.modules[framework].sqlite_version
                 elif framework == "tornado":
-                    evt.addInfo(
-                        instr_key,
-                        sys.modules[framework].version,
-                    )
+                    version_str = sys.modules[framework].version
                 elif framework == "urllib":
-                    evt.addInfo(
-                        instr_key,
-                        sys.modules[f"{framework}.request"].__version__,
-                    )
-                elif "grpc_" in framework:
-                    # There are multiple grpc_* components of the same
-                    # version of grpc, e.g. grpc_aio_client, and
-                    # we only get one from the span
-                    evt.addInfo(
-                        instr_key,
-                        sys.modules[framework].__version__,
-                    )
+                    version_str = sys.modules[
+                        f"{framework}.request"
+                    ].__version__
                 else:
-                    evt.addInfo(
-                        instr_key,
-                        sys.modules[framework].__version__,
-                    )
+                    version_str = sys.modules[framework].__version__
+
+                evt.addInfo(
+                    instr_key,
+                    version_str,
+                )
+                # cache for future similar spans
+                self.apm_fwkv_manager[instr_key] = version_str
+
             except (AttributeError, ImportError) as ex:
                 # could not import package for whatever reason
                 logger.warning(

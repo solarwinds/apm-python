@@ -11,8 +11,8 @@ class SolarWindsFrameworkKvManager:
     def __init__(self, **kwargs: int) -> None:
         self.__cache = {}
 
-    # def __delitem__(self, key: str) -> None:
-    #     del self.__cache[key]
+    def __delitem__(self, key: str) -> None:
+        del self.__cache[key]
 
     def __getitem__(self, key: str) -> Any:
         return self.__cache[key]

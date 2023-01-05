@@ -194,19 +194,10 @@ def fixture_exporter(mocker):
             "__delitem__": mocker.Mock()
         }
     )
-    mock_apm_fkwv_manager = mocker.patch(
+    mock_apm_fwkv_manager = mocker.patch(
         "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager",
         return_value=mocker.Mock()
     )
-    # mocks empty cache for framework KVs
-    mock_get = mocker.Mock()
-    mock_get.configure_mock(return_value=None)
-    mock_apm_fkwv_manager.configure_mock(
-        **{
-            "get": mock_get
-        }
-    )
-
     mock_reporter.configure_mock(
         **{
             "sendReport": mocker.Mock()
@@ -224,7 +215,7 @@ def fixture_exporter(mocker):
     return solarwinds_apm.exporter.SolarWindsSpanExporter(
         mock_reporter,
         mock_apm_txname_manager,
-        mock_apm_fkwv_manager,
+        mock_apm_fwkv_manager,
         True
     )
 
@@ -282,7 +273,7 @@ class Test_SolarWindsSpanExporter():
     def test_init_agent_enabled_true(self, mocker):
         mock_reporter = mocker.Mock()
         mock_apm_txname_manager = mocker.Mock()
-        mock_apm_fkwv_manager = mocker.Mock()
+        mock_apm_fwkv_manager = mocker.Mock()
         mock_ext_context = mocker.patch(
             "solarwinds_apm.exporter.Context",      
         )
@@ -292,7 +283,7 @@ class Test_SolarWindsSpanExporter():
         exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
             mock_reporter,
             mock_apm_txname_manager,
-            mock_apm_fkwv_manager,
+            mock_apm_fwkv_manager,
             True,
         )
         assert exporter.reporter == mock_reporter
@@ -302,7 +293,7 @@ class Test_SolarWindsSpanExporter():
     def test_init_agent_enabled_false(self, mocker):
         mock_reporter = mocker.Mock()
         mock_apm_txname_manager = mocker.Mock()
-        mock_apm_fkwv_manager = mocker.Mock()
+        mock_apm_fwkv_manager = mocker.Mock()
         mock_noop_context = mocker.patch(
             "solarwinds_apm.exporter.NoopContext",      
         )
@@ -312,7 +303,7 @@ class Test_SolarWindsSpanExporter():
         exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
             mock_reporter,
             mock_apm_txname_manager,
-            mock_apm_fkwv_manager,
+            mock_apm_fwkv_manager,
             False,
         )
         assert exporter.reporter == mock_reporter
@@ -531,403 +522,68 @@ class Test_SolarWindsSpanExporter():
             mocker.call("otel.scope.version", "bar"),
         ])
 
-    def test__add_info_instrumented_framework_no_scope_name(
-        self,
-        mocker,
-        exporter,
-        mock_event,
-        mock_create_event,
-    ):
-        # patch importlib so foo "importable"
-        mock_importlib = mocker.Mock()
-        mock_importlib.configure_mock(
-            **{
-                "import_module": mocker.Mock()
-            }
-        )
-        mocker.patch(
-            "solarwinds_apm.exporter.importlib",
-            return_value=mock_importlib
-        )
-        # mock foo and sys.modules
-        mock_foo = mocker.Mock()
-        mock_foo.configure_mock(
-            **{
-                "__version__": "1.2.3"
-            }
-        )
-        mock_sys = mocker.patch(
-            "solarwinds_apm.exporter.sys",
-        )
-        mock_sys.configure_mock(
-            **{
-                "modules": {
-                    "foo": mock_foo
-                }
-            }
-        )
-        # mock liboboe event
-        mock_event, mock_add_info, mock_create_event \
-             = configure_event_mocks(
-                mocker,
-                mock_event,
-                mock_create_event,
-                True,
-             )
-
-        # mock span without InstrumentationScope.name
-        mock_instrumentation_scope = mocker.Mock()
-        mock_instrumentation_scope.configure_mock(
-            **{
-                "name": None,
-            }
-        )
-        test_span = mocker.Mock()
-        test_span.configure_mock(
-            **{
-                "instrumentation_scope": mock_instrumentation_scope,
-            }
-        )
-
-        exporter._add_info_instrumented_framework(
-            test_span,
-            mock_event,
-        )
-        assert not mock_create_event.called
-        assert not mock_add_info.called
-
-    def test__add_info_instrumented_framework_name_not_otel(
-        self,
-        mocker,
-        exporter,
-        mock_event,
-        mock_create_event,
-    ):
-        # patch importlib so foo "importable"
-        mock_importlib = mocker.Mock()
-        mock_importlib.configure_mock(
-            **{
-                "import_module": mocker.Mock()
-            }
-        )
-        mocker.patch(
-            "solarwinds_apm.exporter.importlib",
-            return_value=mock_importlib
-        )
-        # mock foo and sys.modules
-        mock_foo = mocker.Mock()
-        mock_foo.configure_mock(
-            **{
-                "__version__": "1.2.3"
-            }
-        )
-        mock_sys = mocker.patch(
-            "solarwinds_apm.exporter.sys",
-        )
-        mock_sys.configure_mock(
-            **{
-                "modules": {
-                    "foo": mock_foo
-                }
-            }
-        )
-        # mock liboboe event
-        mock_event, mock_add_info, mock_create_event \
-             = configure_event_mocks(
-                mocker,
-                mock_event,
-                mock_create_event,
-                True,
-             )
-
-        # mock span with InstrumentationScope but not otel
-        mock_instrumentation_scope = mocker.Mock()
-        mock_instrumentation_scope.configure_mock(
-            **{
-                "name": "foo",
-            }
-        )
-        test_span = mocker.Mock()
-        test_span.configure_mock(
-            **{
-                "instrumentation_scope": mock_instrumentation_scope,
-            }
-        )
-
-        exporter._add_info_instrumented_framework(
-            test_span,
-            mock_event,
-        )
-        assert not mock_create_event.called
-        assert not mock_add_info.called
-
-    def test__add_info_instrumented_framework_cached_version(
-        self,
-        mocker,
-        mock_event,
-        mock_create_event,
-    ):
-        mock_reporter = mocker.Mock()
-        mock_apm_txname_manager = mocker.patch(
-            "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager",
-            return_value=mocker.Mock()
-        )
-        mock_apm_fkwv_manager = mocker.patch(
-            "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager",
-            return_value=mocker.Mock()
-        )
-        # mocks cache with existing framework KV
-        mock_get = mocker.Mock()
-        mock_get.configure_mock(return_value="foo.bar")
-        mock_apm_fkwv_manager.configure_mock(
-            **{
-                "get": mock_get
-            }
-        )
-
-        exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
-            mock_reporter,
-            mock_apm_txname_manager,
-            mock_apm_fkwv_manager,
-            True
-        )
-
-        # mock liboboe event
-        mock_event, mock_add_info, mock_create_event \
-             = configure_event_mocks(
-                mocker,
-                mock_event,
-                mock_create_event,
-                True,
-             )
-
-        # mock span with InstrumentationScope of foo
-        mock_instrumentation_scope = mocker.Mock()
-        mock_instrumentation_scope.configure_mock(
-            **{
-                "name": "opentelemetry.instrumentation.foo",
-            }
-        )
-        test_span = mocker.Mock()
-        test_span.configure_mock(
-            **{
-                "instrumentation_scope": mock_instrumentation_scope,
-            }
-        )
-
-        exporter._add_info_instrumented_framework(
-            test_span,
-            mock_event,
-        )
-        mock_add_info.assert_called_once_with(
-            "Python.foo.Version",
-            "foo.bar",
-        )
-
-    def test__add_info_instrumented_framework_attributeerror(
-        self,
-        mocker,
-        exporter,
-        mock_event,
-        mock_create_event,
-    ):
-        # patch importlib so foo "importable"
-        mock_importlib = mocker.Mock()
-        mock_importlib.configure_mock(
-            **{
-                "import_module": mocker.Mock()
-            }
-        )
-        mocker.patch(
-            "solarwinds_apm.exporter.importlib",
-            return_value=mock_importlib
-        )
-        # mock foo and sys.modules, but foo has no __version__
-        mock_foo = mocker.Mock()
-        mock_foo.configure_mock(
-            **{
-                "foo": "bar"
-            }
-        )
-        mock_sys = mocker.patch(
-            "solarwinds_apm.exporter.sys",
-        )
-        mock_sys.configure_mock(
-            **{
-                "modules": {
-                    "foo": mock_foo
-                }
-            }
-        )
-        # mock liboboe event
-        mock_event, mock_add_info, mock_create_event \
-             = configure_event_mocks(
-                mocker,
-                mock_event,
-                mock_create_event,
-                True,
-             )
-
-        # mock span with InstrumentationScope of foo
-        mock_instrumentation_scope = mocker.Mock()
-        mock_instrumentation_scope.configure_mock(
-            **{
-                "name": "opentelemetry.instrumentation.foo",
-            }
-        )
-        test_span = mocker.Mock()
-        test_span.configure_mock(
-            **{
-                "instrumentation_scope": mock_instrumentation_scope,
-            }
-        )
-
-        exporter._add_info_instrumented_framework(
-            test_span,
-            mock_event,
-        )
-        assert not mock_create_event.called
-        assert not mock_add_info.called
-
-    def test__add_info_instrumented_framework_importerror(
-        self,
-        mocker,
-        exporter,
-        mock_event,
-        mock_create_event,
-    ):
-        # do not patch importlib, so cannot "import" foo
-
-        # mock liboboe event
-        mock_event, mock_add_info, mock_create_event \
-             = configure_event_mocks(
-                mocker,
-                mock_event,
-                mock_create_event,
-                True,
-             )
-
-        # mock span with InstrumentationScope of foo
-        mock_instrumentation_scope = mocker.Mock()
-        mock_instrumentation_scope.configure_mock(
-            **{
-                "name": "opentelemetry.instrumentation.foo",
-            }
-        )
-        test_span = mocker.Mock()
-        test_span.configure_mock(
-            **{
-                "instrumentation_scope": mock_instrumentation_scope,
-            }
-        )
-
-        exporter._add_info_instrumented_framework(
-            test_span,
-            mock_event,
-        )
-        assert not mock_create_event.called
-        assert not mock_add_info.called
-
-    def test__add_info_instrumented_framework_ok(
-        self,
-        mocker,
-        exporter,
-        mock_event,
-        mock_create_event,
-    ):
-        # patch importlib so foo "importable"
-        mock_importlib = mocker.Mock()
-        mock_importlib.configure_mock(
-            **{
-                "import_module": mocker.Mock()
-            }
-        )
-        mocker.patch(
-            "solarwinds_apm.exporter.importlib",
-            return_value=mock_importlib
-        )
-        # mock foo and sys.modules
-        mock_foo = mocker.Mock()
-        mock_foo.configure_mock(
-            **{
-                "__version__": "1.2.3"
-            }
-        )
-        mock_sys = mocker.patch(
-            "solarwinds_apm.exporter.sys",
-        )
-        mock_sys.configure_mock(
-            **{
-                "modules": {
-                    "foo": mock_foo
-                }
-            }
-        )
-        # mock liboboe event
-        mock_event, mock_add_info, mock_create_event \
-             = configure_event_mocks(
-                mocker,
-                mock_event,
-                mock_create_event,
-                True,
-             )
-
-        # mock span with InstrumentationScope of foo
-        mock_instrumentation_scope = mocker.Mock()
-        mock_instrumentation_scope.configure_mock(
-            **{
-                "name": "opentelemetry.instrumentation.foo",
-            }
-        )
-        test_span = mocker.Mock()
-        test_span.configure_mock(
-            **{
-                "instrumentation_scope": mock_instrumentation_scope,
-            }
-        )
-
-        exporter._add_info_instrumented_framework(
-            test_span,
-            mock_event,
-        )
-        assert not mock_create_event.called
-        mock_add_info.assert_called_once_with(
-            "Python.foo.Version",
-            "1.2.3",
-        )
-
     def mock_and_assert_addinfo_for_instrumented_framework(
         self,
         mocker,
-        exporter,
         mock_event,
         mock_create_event,
         mock_sys_modules,
         instrumentation_scope_name,
         expected_k,
         expected_v,
+        cached_version=None,
+        raises_exception=False,
+        patch_sys=True,
     ):
         """Shared logic for testing individual cases of _add_info_instrumented_framework"""
+        # set up exporter with mocks for fwkv manager
+        mock_reporter = mocker.Mock()
+        mock_apm_txname_manager = mocker.patch(
+            "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager",
+            return_value=mocker.Mock()
+        )
+        mock_apm_fwkv_manager = mocker.patch(
+            "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager",
+            return_value=mocker.Mock()
+        )
+        # mocks cache with existing framework KV, if provided
+        mock_set = mocker.Mock()
+        mock_get = mocker.Mock()
+        mock_get.configure_mock(return_value=cached_version)
+        mock_apm_fwkv_manager.configure_mock(
+            **{
+                "__setitem__": mock_set,
+                "get": mock_get
+            }
+        )
+        exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
+            mock_reporter,
+            mock_apm_txname_manager,
+            mock_apm_fwkv_manager,
+            True
+        )
+
         # patch importlib so mock sys modules "importable"
-        mock_importlib = mocker.Mock()
-        mock_importlib.configure_mock(
-            **{
-                "import_module": mocker.Mock()
-            }
-        )
-        mocker.patch(
-            "solarwinds_apm.exporter.importlib",
-            return_value=mock_importlib
-        )
-        # mock sys modules as provided
-        mock_sys = mocker.patch(
-            "solarwinds_apm.exporter.sys",
-        )
-        mock_sys.configure_mock(
-            **{
-                "modules": mock_sys_modules
-            }
-        )
+        if patch_sys:
+            mock_importlib = mocker.Mock()
+            mock_importlib.configure_mock(
+                **{
+                    "import_module": mocker.Mock()
+                }
+            )
+            mocker.patch(
+                "solarwinds_apm.exporter.importlib",
+                return_value=mock_importlib
+            )
+            # mock sys modules as provided
+            mock_sys = mocker.patch(
+                "solarwinds_apm.exporter.sys",
+            )
+            mock_sys.configure_mock(
+                **{
+                    "modules": mock_sys_modules
+                }
+            )
         # mock liboboe event
         mock_event, mock_add_info, _ \
              = configure_event_mocks(
@@ -955,15 +611,169 @@ class Test_SolarWindsSpanExporter():
             test_span,
             mock_event,
         )
-        mock_add_info.assert_called_once_with(
-            expected_k,
-            expected_v,
+
+        # assertions
+        if instrumentation_scope_name and "opentelemetry.instrumentation" in instrumentation_scope_name and not raises_exception:
+            mock_add_info.assert_called_once_with(
+                expected_k,
+                expected_v,
+            )
+            assert mock_get.called
+            if cached_version:
+                assert not mock_set.called
+            else:
+                assert mock_set.called
+        else:
+            # instrumentation_scope_name is not otel, or exception raised
+            assert not mock_add_info.called
+            assert not mock_set.called
+
+    def test__add_info_instrumented_framework_no_scope_name(
+        self,
+        mocker,
+        mock_event,
+        mock_create_event,
+    ):
+        # mock foo and sys.modules
+        mock_foo = mocker.Mock()
+        mock_foo.configure_mock(
+            **{
+                "__version__": "1.2.3"
+            }
+        )
+        mock_sys_modules = {
+            "foo": mock_foo
+        }
+
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            None,
+            "wont.be.used",
+            "wont.be.used",
+        )
+
+    def test__add_info_instrumented_framework_name_not_otel(
+        self,
+        mocker,
+        mock_event,
+        mock_create_event,
+    ):
+        # mock foo and sys.modules
+        mock_foo = mocker.Mock()
+        mock_foo.configure_mock(
+            **{
+                "__version__": "1.2.3"
+            }
+        )
+        mock_sys_modules = {
+            "foo": mock_foo
+        }
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "foo",
+            "wont.be.used",
+            "wont.be.used",
+        )
+
+    def test__add_info_instrumented_framework_attributeerror(
+        self,
+        mocker,
+        mock_event,
+        mock_create_event,
+    ):
+        # mock foo and sys.modules, but foo has no __version__
+        mock_foo = mocker.Mock()
+        mock_foo.configure_mock(
+            **{
+                "foo": "bar"
+            }
+        )
+        mock_sys_modules = {
+            "foo": mock_foo
+        }
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.foo",
+            "wont.be.used",
+            "wont.be.used",
+            raises_exception=True,
+        )
+
+    def test__add_info_instrumented_framework_importerror(
+        self,
+        mocker,
+        mock_event,
+        mock_create_event,
+    ):
+        # do not patch importlib nor sys, so cannot "import" foo
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            mock_event,
+            mock_create_event,
+            "wont.be.used",
+            "wont.be.used",
+            "wont.be.used",
+            "wont.be.used",
+            raises_exception=True,
+            patch_sys=False,
+        )
+
+    def test__add_info_instrumented_framework_ok_not_cached(
+        self,
+        mocker,
+        mock_event,
+        mock_create_event,
+    ):
+        # mock foo and sys.modules
+        mock_foo = mocker.Mock()
+        mock_foo.configure_mock(
+            **{
+                "__version__": "1.2.3"
+            }
+        )
+        mock_sys_modules= {
+            "foo": mock_foo
+        }
+
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.foo",
+            "Python.foo.Version",
+            "1.2.3",
+        )
+
+    def test__add_info_instrumented_framework_ok_with_cached_version(
+        self,
+        mocker,
+        mock_event,
+        mock_create_event,
+    ):
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            mock_event,
+            mock_create_event,
+            "wont.be.called.by.this.test",
+            "opentelemetry.instrumentation.foo",
+            "Python.foo.Version",
+            "foo.bar",
+            cached_version="foo.bar",
         )
 
     def test__add_info_instrumented_framework_aiohttp(
         self,
         mocker,
-        exporter,
         mock_event,
         mock_create_event,
     ):
@@ -980,7 +790,6 @@ class Test_SolarWindsSpanExporter():
 
         self.mock_and_assert_addinfo_for_instrumented_framework(
             mocker,
-            exporter,
             mock_event,
             mock_create_event,
             mock_sys_modules,
@@ -992,7 +801,6 @@ class Test_SolarWindsSpanExporter():
     def test__add_info_instrumented_framework_grpc(
         self,
         mocker,
-        exporter,
         mock_event,
         mock_create_event,
     ):
@@ -1009,7 +817,6 @@ class Test_SolarWindsSpanExporter():
 
         self.mock_and_assert_addinfo_for_instrumented_framework(
             mocker,
-            exporter,
             mock_event,
             mock_create_event,
             mock_sys_modules,
@@ -1021,7 +828,6 @@ class Test_SolarWindsSpanExporter():
     def test__add_info_instrumented_framework_psutil(
         self,
         mocker,
-        exporter,
         mock_event,
         mock_create_event,
     ):
@@ -1038,7 +844,6 @@ class Test_SolarWindsSpanExporter():
 
         self.mock_and_assert_addinfo_for_instrumented_framework(
             mocker,
-            exporter,
             mock_event,
             mock_create_event,
             mock_sys_modules,
@@ -1050,7 +855,6 @@ class Test_SolarWindsSpanExporter():
     def test__add_info_instrumented_framework_tortoise(
         self,
         mocker,
-        exporter,
         mock_event,
         mock_create_event,
     ):
@@ -1067,7 +871,6 @@ class Test_SolarWindsSpanExporter():
 
         self.mock_and_assert_addinfo_for_instrumented_framework(
             mocker,
-            exporter,
             mock_event,
             mock_create_event,
             mock_sys_modules,
@@ -1079,7 +882,6 @@ class Test_SolarWindsSpanExporter():
     def test__add_info_instrumented_framework_mysql(
         self,
         mocker,
-        exporter,
         mock_event,
         mock_create_event,
     ):
@@ -1096,7 +898,6 @@ class Test_SolarWindsSpanExporter():
 
         self.mock_and_assert_addinfo_for_instrumented_framework(
             mocker,
-            exporter,
             mock_event,
             mock_create_event,
             mock_sys_modules,
@@ -1108,7 +909,6 @@ class Test_SolarWindsSpanExporter():
     def test__add_info_instrumented_framework_elasticsearch(
         self,
         mocker,
-        exporter,
         mock_event,
         mock_create_event,
     ):
@@ -1125,7 +925,6 @@ class Test_SolarWindsSpanExporter():
 
         self.mock_and_assert_addinfo_for_instrumented_framework(
             mocker,
-            exporter,
             mock_event,
             mock_create_event,
             mock_sys_modules,
@@ -1137,7 +936,6 @@ class Test_SolarWindsSpanExporter():
     def test__add_info_instrumented_framework_tornado(
         self,
         mocker,
-        exporter,
         mock_event,
         mock_create_event,
     ):
@@ -1154,7 +952,6 @@ class Test_SolarWindsSpanExporter():
 
         self.mock_and_assert_addinfo_for_instrumented_framework(
             mocker,
-            exporter,
             mock_event,
             mock_create_event,
             mock_sys_modules,
@@ -1166,7 +963,6 @@ class Test_SolarWindsSpanExporter():
     def test__add_info_instrumented_framework_urllib(
         self,
         mocker,
-        exporter,
         mock_event,
         mock_create_event,
     ):
@@ -1183,7 +979,6 @@ class Test_SolarWindsSpanExporter():
 
         self.mock_and_assert_addinfo_for_instrumented_framework(
             mocker,
-            exporter,
             mock_event,
             mock_create_event,
             mock_sys_modules,
@@ -1195,7 +990,6 @@ class Test_SolarWindsSpanExporter():
     def test__add_info_instrumented_framework_sqlite3(
         self,
         mocker,
-        exporter,
         mock_event,
         mock_create_event,
     ):
@@ -1212,7 +1006,6 @@ class Test_SolarWindsSpanExporter():
 
         self.mock_and_assert_addinfo_for_instrumented_framework(
             mocker,
-            exporter,
             mock_event,
             mock_create_event,
             mock_sys_modules,
@@ -1224,34 +1017,13 @@ class Test_SolarWindsSpanExporter():
     def test__add_info_instrumented_framework_pyramid(
         self,
         mocker,
-        exporter,
         mock_event,
         mock_create_event,
     ):
-        # patch importlib so mock sys modules "importable"
-        mock_importlib = mocker.Mock()
-        mock_importlib.configure_mock(
-            **{
-                "import_module": mocker.Mock()
-            }
-        )
-        mocker.patch(
-            "solarwinds_apm.exporter.importlib",
-            return_value=mock_importlib
-        )
-        # mock sys modules
         mock_sys_modules = {
             "pyramid": mocker.Mock()
         }
-        mock_sys = mocker.patch(
-            "solarwinds_apm.exporter.sys",
-        )
-        mock_sys.configure_mock(
-            **{
-                "modules": mock_sys_modules
-            }
-        )
-        # mock get_distribution for pyramid for actual version check
+        # also mock get_distribution for pyramid for actual version check
         mock_dist = mocker.Mock()
         mock_dist.configure_mock(
             **{
@@ -1262,34 +1034,12 @@ class Test_SolarWindsSpanExporter():
             "solarwinds_apm.exporter.get_distribution",
             return_value=mock_dist
         )
-
-        # mock liboboe event
-        mock_event, mock_add_info, _ \
-             = configure_event_mocks(
-                mocker,
-                mock_event,
-                mock_create_event,
-                True,
-             )
-        # mock span with instrumentation_scope_name as provided
-        mock_instrumentation_scope = mocker.Mock()
-        mock_instrumentation_scope.configure_mock(
-            **{
-                "name": "opentelemetry.instrumentation.pyramid",
-            }
-        )
-        test_span = mocker.Mock()
-        test_span.configure_mock(
-            **{
-                "instrumentation_scope": mock_instrumentation_scope,
-            }
-        )
-        # Test _add_info_instrumented_framework
-        exporter._add_info_instrumented_framework(
-            test_span,
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
             mock_event,
-        )
-        mock_add_info.assert_called_once_with(
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.pyramid",
             "Python.pyramid.Version",
             "4.5.6",
         )
