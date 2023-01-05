@@ -12,7 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update Init message with HostID ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
 - SolarWinds c-lib 11.1.0, for Init message updates ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
 
-## [0.4.0.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.4.0) - 2022-12-15
+## [0.4.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.4.0) - 2023-01-03
+### Added
+- Add security policy ([#95](https://github.com/solarwindscloud/solarwinds-apm-python/pull/95))
+- Add issue templates ([#96](https://github.com/solarwindscloud/solarwinds-apm-python/pull/96/files))
+
 ### Changed
 - OpenTelemetry API/SDK 1.15.0 ([#91](https://github.com/solarwindscloud/solarwinds-apm-python/pull/91))
 - OpenTelemetry Instrumentation 0.36b0 ([#91](https://github.com/solarwindscloud/solarwinds-apm-python/pull/91))
@@ -20,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix `x-trace-options-signature` extraction ([#85](https://github.com/solarwindscloud/solarwinds-apm-python/pull/85))
 - Fix validation of `x-trace-options` header ([#87](https://github.com/solarwindscloud/solarwinds-apm-python/pull/87))
 - Fix calculation of `x-trace-options-response` header ([#88](https://github.com/solarwindscloud/solarwinds-apm-python/pull/88))
+- Update GH organization ([#96](https://github.com/solarwindscloud/solarwinds-apm-python/pull/96/files))
 
 ## [0.3.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.3.0) - 2022-11-24
 ### Changed

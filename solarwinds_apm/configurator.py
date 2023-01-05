@@ -1,5 +1,6 @@
 """Module to initialize OpenTelemetry SDK components and liboboe to work with SolarWinds backend"""
 
+import importlib
 import logging
 import os
 import sys
@@ -10,6 +11,12 @@ from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
 )
+from opentelemetry.instrumentation.dependencies import (
+    get_dist_dependency_conflicts,
+)
+from opentelemetry.instrumentation.environment_variables import (
+    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
+)
 from opentelemetry.instrumentation.propagators import (
     set_global_response_propagator,
 )
@@ -19,7 +26,7 @@ from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from pkg_resources import iter_entry_points, load_entry_point
+from pkg_resources import get_distribution, iter_entry_points, load_entry_point
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
@@ -266,6 +273,124 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         return NoopReporter(**reporter_kwargs)
 
+    # pylint: disable=too-many-branches
+    def _add_all_instrumented_python_framework_versions(
+        self,
+        version_keys,
+    ) -> dict:
+        """Updates version_keys with versions of Python frameworks that have been
+        instrumented with installed (bootstrapped) OTel instrumentation libraries.
+        Borrowed from opentelemetry-instrumentation sitecustomize.
+
+        Example output:
+        {
+            "Python.Urllib.Version": "3.9",
+            "Python.Requests.Version": "2.28.1",
+            "Python.Django.Version": "4.1.4",
+            "Python.Psycopg2.Version": "2.9.5 (dt dec pq3 ext lo64)",
+            "Python.Sqlite3.Version": "3.34.1",
+            "Python.Logging.Version": "0.5.1.2",
+        }
+        """
+        package_to_exclude = os.environ.get(
+            OTEL_PYTHON_DISABLED_INSTRUMENTATIONS, []
+        )
+        if isinstance(package_to_exclude, str):
+            package_to_exclude = package_to_exclude.split(",")
+            package_to_exclude = [x.strip() for x in package_to_exclude]
+
+        for entry_point in iter_entry_points("opentelemetry_instrumentor"):
+            if entry_point.name in package_to_exclude:
+                logger.debug(
+                    "Skipping version lookup for library %s because excluded",
+                    entry_point.name,
+                )
+                continue
+
+            try:
+                conflict = get_dist_dependency_conflicts(entry_point.dist)
+                if conflict:
+                    logger.warning(
+                        "Version lookup for library %s skipped due to conflict: %s",
+                        entry_point.name,
+                        conflict,
+                    )
+                    continue
+            except Exception as ex:  # pylint: disable=broad-except
+                logger.warning(
+                    "Version conflict check of %s failed, so skipping: %s",
+                    entry_point.name,
+                    ex,
+                )
+                continue
+
+            # Set up Instrumented Library Versions KVs with several special cases
+            entry_point_name = entry_point.name
+            instr_key = f"Python.{entry_point_name}.Version"
+            try:
+                # Some OTel instrumentation libraries are named not exactly
+                # the same as the instrumented libraries!
+                # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
+                if entry_point_name == "aiohttp-client":
+                    entry_point_name = "aiohttp"
+                elif "grpc_" in entry_point_name:
+                    entry_point_name = "grpc"
+                elif entry_point_name == "system_metrics":
+                    entry_point_name = "psutil"
+                elif entry_point_name == "tortoiseorm":
+                    entry_point_name = "tortoise"
+
+                # There is no mysql version, but mysql.connector version
+                if entry_point_name == "mysql":
+                    importlib.import_module(f"{entry_point_name}.connector")
+                # urllib has a rich complex history
+                elif entry_point_name == "urllib":
+                    importlib.import_module(f"{entry_point_name}.request")
+                else:
+                    importlib.import_module(entry_point_name)
+
+                # some Python frameworks don't have top-level __version__
+                # and elasticsearch gives a version as (8, 5, 3) not 8.5.3
+                if entry_point_name == "elasticsearch":
+                    version_tuple = sys.modules[entry_point_name].__version__
+                    version_keys[instr_key] = ".".join(
+                        [str(d) for d in version_tuple]
+                    )
+                elif entry_point_name == "mysql":
+                    version_keys[instr_key] = sys.modules[
+                        f"{entry_point_name}.connector"
+                    ].__version__
+                elif entry_point_name == "pyramid":
+                    version_keys[instr_key] = get_distribution(
+                        entry_point_name
+                    ).version
+                elif entry_point_name == "sqlite3":
+                    version_keys[instr_key] = sys.modules[
+                        entry_point_name
+                    ].sqlite_version
+                elif entry_point_name == "tornado":
+                    version_keys[instr_key] = sys.modules[
+                        entry_point_name
+                    ].version
+                elif entry_point_name == "urllib":
+                    version_keys[instr_key] = sys.modules[
+                        f"{entry_point_name}.request"
+                    ].__version__
+                else:
+                    version_keys[instr_key] = sys.modules[
+                        entry_point_name
+                    ].__version__
+
+            except (AttributeError, ImportError) as ex:
+                # could not import package for whatever reason
+                logger.warning(
+                    "Version lookup of %s failed, so skipping: %s",
+                    entry_point_name,
+                    ex,
+                )
+
+        return version_keys
+
     # pylint: disable=too-many-locals
     def _report_init_event(
         self,
@@ -274,9 +399,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         layer: str = "Python",
         keys: dict = None,
     ) -> None:
-        """Report the APM library's init message, when reporter ready.
-        Note: We keep the original "brand" keynames with AppOptics, in addition
-        to standardized SolarWinds keynames."""
+        """Report the APM library's init message, when reporter ready."""
         reporter_ready = False
         if reporter.init_status in (
             OboeReporterCode.OBOE_INIT_OK,
@@ -310,21 +433,21 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         # liboboe adds key Hostname for us
         try:
-            python_version = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
-            version_keys["Python.Version"] = python_version
-            version_keys["process.runtime.version"] = python_version
+            version_keys[
+                "process.runtime.version"
+            ] = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
         except (AttributeError, IndexError) as ex:
             logger.warning("Could not retrieve Python version: %s", ex)
         version_keys["process.runtime.name"] = sys.implementation.name
         version_keys["process.runtime.description"] = sys.version
         version_keys["process.executable.path"] = sys.executable
 
-        version_keys["Python.AppOptics.Version"] = __version__
         version_keys["APM.Version"] = __version__
-        version_keys[
-            "Python.AppOpticsExtension.Version"
-        ] = Config.getVersionString()
         version_keys["APM.Extension.Version"] = Config.getVersionString()
+
+        version_keys = self._add_all_instrumented_python_framework_versions(
+            version_keys
+        )
 
         if keys:
             version_keys.update(keys)

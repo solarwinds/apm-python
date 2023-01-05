@@ -11,7 +11,11 @@ from typing import Any
 
 from opentelemetry.sdk.trace.export import SpanExporter
 
-from solarwinds_apm.apm_constants import INTL_SWO_SUPPORT_EMAIL
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_OTEL_SCOPE_NAME,
+    INTL_SWO_OTEL_SCOPE_VERSION,
+    INTL_SWO_SUPPORT_EMAIL,
+)
 from solarwinds_apm.apm_noop import Context as NoopContext
 from solarwinds_apm.apm_noop import Metadata as NoopMetadata
 from solarwinds_apm.extension.oboe import Context, Metadata
@@ -74,6 +78,7 @@ class SolarWindsSpanExporter(SpanExporter):
             evt.addInfo("Layer", span.name)
             evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
             evt.addInfo("Language", "Python")
+            self._add_info_instrumentation_scope(span, evt)
             self._add_info_instrumented_framework(span, evt)
             for attr_k, attr_v in span.attributes.items():
                 evt.addInfo(attr_k, attr_v)
@@ -102,6 +107,26 @@ class SolarWindsSpanExporter(SpanExporter):
                 "There was an issue setting trace TransactionName. "
                 "Please contact %s with this issue",
                 INTL_SWO_SUPPORT_EMAIL,
+            )
+
+    def _add_info_instrumentation_scope(self, span, evt) -> None:
+        """Add info from InstrumentationScope of span, if exists"""
+        if span.instrumentation_scope is None:
+            logger.debug(
+                "OTel instrumentation scope is None, so setting empty values."
+            )
+            evt.addInfo(INTL_SWO_OTEL_SCOPE_NAME, "")
+            evt.addInfo(INTL_SWO_OTEL_SCOPE_VERSION, "")
+            return
+
+        # name is always string in Otel Python
+        evt.addInfo(INTL_SWO_OTEL_SCOPE_NAME, span.instrumentation_scope.name)
+        # version may be None
+        if span.instrumentation_scope.version is None:
+            evt.addInfo(INTL_SWO_OTEL_SCOPE_VERSION, "")
+        else:
+            evt.addInfo(
+                INTL_SWO_OTEL_SCOPE_VERSION, span.instrumentation_scope.version
             )
 
     def _add_info_instrumented_framework(self, span, evt) -> None:
