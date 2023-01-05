@@ -198,6 +198,14 @@ def fixture_exporter(mocker):
         "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager",
         return_value=mocker.Mock()
     )
+    # mocks empty cache for framework KVs
+    mock_get = mocker.Mock()
+    mock_get.configure_mock(return_value=None)
+    mock_apm_fkwv_manager.configure_mock(
+        **{
+            "get": mock_get
+        }
+    )
 
     mock_reporter.configure_mock(
         **{
@@ -652,6 +660,69 @@ class Test_SolarWindsSpanExporter():
         )
         assert not mock_create_event.called
         assert not mock_add_info.called
+
+    def test__add_info_instrumented_framework_cached_version(
+        self,
+        mocker,
+        mock_event,
+        mock_create_event,
+    ):
+        mock_reporter = mocker.Mock()
+        mock_apm_txname_manager = mocker.patch(
+            "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager",
+            return_value=mocker.Mock()
+        )
+        mock_apm_fkwv_manager = mocker.patch(
+            "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager",
+            return_value=mocker.Mock()
+        )
+        # mocks cache with existing framework KV
+        mock_get = mocker.Mock()
+        mock_get.configure_mock(return_value="foo.bar")
+        mock_apm_fkwv_manager.configure_mock(
+            **{
+                "get": mock_get
+            }
+        )
+
+        exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
+            mock_reporter,
+            mock_apm_txname_manager,
+            mock_apm_fkwv_manager,
+            True
+        )
+
+        # mock liboboe event
+        mock_event, mock_add_info, mock_create_event \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+
+        # mock span with InstrumentationScope of foo
+        mock_instrumentation_scope = mocker.Mock()
+        mock_instrumentation_scope.configure_mock(
+            **{
+                "name": "opentelemetry.instrumentation.foo",
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "instrumentation_scope": mock_instrumentation_scope,
+            }
+        )
+
+        exporter._add_info_instrumented_framework(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_called_once_with(
+            "Python.foo.Version",
+            "foo.bar",
+        )
 
     def test__add_info_instrumented_framework_attributeerror(
         self,

@@ -158,6 +158,15 @@ class SolarWindsSpanExporter(SpanExporter):
             if "grpc_" in framework:
                 instr_key = "Python.grpc.Version"
 
+            # Use cached version if available
+            cached_version = self.apm_fwkv_manager.get(instr_key)
+            if cached_version:
+                evt.addInfo(
+                    instr_key,
+                    cached_version,
+                )
+                return
+
             try:
                 # There is no mysql version, but mysql.connector version
                 if framework == "mysql":
