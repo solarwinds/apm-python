@@ -142,20 +142,18 @@ class SolarWindsSpanExporter(SpanExporter):
             and "opentelemetry.instrumentation" in instr_scope_name
         ):
             framework = instr_scope_name.split(".")[2]
+            # Some OTel instrumentation libraries are named not exactly
+            # the same as the instrumented libraries!
+            # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
+            if framework == "aiohttp-client":
+                framework = "aiohttp"
+            elif framework == "system_metrics":
+                framework = "psutil"
+            elif framework == "tortoiseorm":
+                framework = "tortoise"
+
             instr_key = f"Python.{framework}.Version"
             try:
-                # Some OTel instrumentation libraries are named not exactly
-                # the same as the instrumented libraries!
-                # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
-                if framework == "aiohttp-client":
-                    framework = "aiohttp"
-                elif "grpc_" in framework:
-                    framework = "grpc"
-                elif framework == "system_metrics":
-                    framework = "psutil"
-                elif framework == "tortoiseorm":
-                    framework = "tortoise"
-
                 # There is no mysql version, but mysql.connector version
                 if framework == "mysql":
                     importlib.import_module(f"{framework}.connector")
@@ -196,6 +194,14 @@ class SolarWindsSpanExporter(SpanExporter):
                     evt.addInfo(
                         instr_key,
                         sys.modules[f"{framework}.request"].__version__,
+                    )
+                elif "grpc_" in framework:
+                    # There are multiple grpc_* components of the same
+                    # version of grpcio, e.g. grpc_aio_client, and
+                    # we only get one from the span
+                    evt.addInfo(
+                        "Python.grpcio.Version",
+                        sys.modules[framework].__version__,
                     )
                 else:
                     evt.addInfo(

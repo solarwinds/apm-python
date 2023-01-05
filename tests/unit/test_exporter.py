@@ -887,8 +887,27 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        # TODO
-        pass
+        # mock module and sys.modules
+        mock_module = mocker.Mock()
+        mock_module.configure_mock(
+            **{
+                "__version__": "4.5.6"
+            }
+        )
+        mock_sys_modules = {
+            "aiohttp": mock_module
+        }
+
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            exporter,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.aiohttp-client",
+            "Python.aiohttp.Version",
+            "4.5.6",
+        )
 
     def test__add_info_instrumented_framework_grpc(
         self,
@@ -897,8 +916,27 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        # TODO
-        pass
+        # mock module and sys.modules
+        mock_module = mocker.Mock()
+        mock_module.configure_mock(
+            **{
+                "__version__": "4.5.6"
+            }
+        )
+        mock_sys_modules = {
+            "grpc_aio_client": mock_module
+        }
+
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            exporter,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.grpc_aio_client",
+            "Python.grpcio.Version",
+            "4.5.6",
+        )
 
     def test__add_info_instrumented_framework_psutil(
         self,
@@ -907,8 +945,27 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        # TODO
-        pass
+        # mock module and sys.modules
+        mock_module = mocker.Mock()
+        mock_module.configure_mock(
+            **{
+                "__version__": "4.5.6"
+            }
+        )
+        mock_sys_modules = {
+            "psutil": mock_module
+        }
+
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            exporter,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.system_metrics",
+            "Python.psutil.Version",
+            "4.5.6",
+        )
 
     def test__add_info_instrumented_framework_tortoise(
         self,
@@ -917,8 +974,27 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        # TODO
-        pass
+        # mock module and sys.modules
+        mock_module = mocker.Mock()
+        mock_module.configure_mock(
+            **{
+                "__version__": "4.5.6"
+            }
+        )
+        mock_sys_modules = {
+            "tortoise": mock_module
+        }
+
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            exporter,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.tortoiseorm",
+            "Python.tortoise.Version",
+            "4.5.6",
+        )
 
     def test__add_info_instrumented_framework_mysql(
         self,
@@ -927,8 +1003,27 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        # TODO
-        pass
+        # mock module and sys.modules
+        mock_module = mocker.Mock()
+        mock_module.configure_mock(
+            **{
+                "__version__": "4.5.6"
+            }
+        )
+        mock_sys_modules = {
+            "mysql.connector": mock_module
+        }
+
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            exporter,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.mysql",
+            "Python.mysql.Version",
+            "4.5.6",
+        )
 
     def test__add_info_instrumented_framework_elasticsearch(
         self,
@@ -937,18 +1032,27 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        # TODO
-        pass
+        # mock module and sys.modules
+        mock_module = mocker.Mock()
+        mock_module.configure_mock(
+            **{
+                "__version__": (4, 5, 6)
+            }
+        )
+        mock_sys_modules = {
+            "elasticsearch": mock_module
+        }
 
-    def test__add_info_instrumented_framework_pyramid(
-        self,
-        mocker,
-        exporter,
-        mock_event,
-        mock_create_event,
-    ):
-        # TODO
-        pass
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            exporter,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.elasticsearch",
+            "Python.elasticsearch.Version",
+            "4.5.6",
+        )
 
     def test__add_info_instrumented_framework_tornado(
         self,
@@ -957,8 +1061,27 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        # TODO
-        pass
+        # mock module and sys.modules
+        mock_module = mocker.Mock()
+        mock_module.configure_mock(
+            **{
+                "version": "4.5.6"
+            }
+        )
+        mock_sys_modules = {
+            "tornado": mock_module
+        }
+
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            exporter,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.tornado",
+            "Python.tornado.Version",
+            "4.5.6",
+        )
 
     def test__add_info_instrumented_framework_urllib(
         self,
@@ -1015,6 +1138,79 @@ class Test_SolarWindsSpanExporter():
             mock_sys_modules,
             "opentelemetry.instrumentation.sqlite3",
             "Python.sqlite3.Version",
+            "4.5.6",
+        )
+
+    def test__add_info_instrumented_framework_pyramid(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        # patch importlib so mock sys modules "importable"
+        mock_importlib = mocker.Mock()
+        mock_importlib.configure_mock(
+            **{
+                "import_module": mocker.Mock()
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.exporter.importlib",
+            return_value=mock_importlib
+        )
+        # mock sys modules
+        mock_sys_modules = {
+            "pyramid": mocker.Mock()
+        }
+        mock_sys = mocker.patch(
+            "solarwinds_apm.exporter.sys",
+        )
+        mock_sys.configure_mock(
+            **{
+                "modules": mock_sys_modules
+            }
+        )
+        # mock get_distribution for pyramid for actual version check
+        mock_dist = mocker.Mock()
+        mock_dist.configure_mock(
+            **{
+                "version": "4.5.6"
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.exporter.get_distribution",
+            return_value=mock_dist
+        )
+
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock span with instrumentation_scope_name as provided
+        mock_instrumentation_scope = mocker.Mock()
+        mock_instrumentation_scope.configure_mock(
+            **{
+                "name": "opentelemetry.instrumentation.pyramid",
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "instrumentation_scope": mock_instrumentation_scope,
+            }
+        )
+        # Test _add_info_instrumented_framework
+        exporter._add_info_instrumented_framework(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_called_once_with(
+            "Python.pyramid.Version",
             "4.5.6",
         )
 
