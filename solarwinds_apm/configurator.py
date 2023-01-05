@@ -283,7 +283,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         return NoopReporter(**reporter_kwargs)
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-statements
     def _add_all_instrumented_python_framework_versions(
         self,
         version_keys,
@@ -336,20 +336,20 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
             # Set up Instrumented Library Versions KVs with several special cases
             entry_point_name = entry_point.name
+            # Some OTel instrumentation libraries are named not exactly
+            # the same as the instrumented libraries!
+            # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
+            if entry_point_name == "aiohttp-client":
+                entry_point_name = "aiohttp"
+            elif "grpc_" in entry_point_name:
+                entry_point_name = "grpc"
+            elif entry_point_name == "system_metrics":
+                entry_point_name = "psutil"
+            elif entry_point_name == "tortoiseorm":
+                entry_point_name = "tortoise"
+
             instr_key = f"Python.{entry_point_name}.Version"
             try:
-                # Some OTel instrumentation libraries are named not exactly
-                # the same as the instrumented libraries!
-                # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
-                if entry_point_name == "aiohttp-client":
-                    entry_point_name = "aiohttp"
-                elif "grpc_" in entry_point_name:
-                    entry_point_name = "grpc"
-                elif entry_point_name == "system_metrics":
-                    entry_point_name = "psutil"
-                elif entry_point_name == "tortoiseorm":
-                    entry_point_name = "tortoise"
-
                 # There is no mysql version, but mysql.connector version
                 if entry_point_name == "mysql":
                     importlib.import_module(f"{entry_point_name}.connector")
