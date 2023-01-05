@@ -155,6 +155,9 @@ class SolarWindsSpanExporter(SpanExporter):
                 framework = "tortoise"
 
             instr_key = f"Python.{framework}.Version"
+            if "grpc_" in framework:
+                instr_key = "Python.grpc.Version"
+
             try:
                 # There is no mysql version, but mysql.connector version
                 if framework == "mysql":
@@ -202,7 +205,7 @@ class SolarWindsSpanExporter(SpanExporter):
                     # version of grpc, e.g. grpc_aio_client, and
                     # we only get one from the span
                     evt.addInfo(
-                        "Python.grpc.Version",
+                        instr_key,
                         sys.modules[framework].__version__,
                     )
                 else:
