@@ -934,7 +934,7 @@ class Test_SolarWindsSpanExporter():
             mock_create_event,
             mock_sys_modules,
             "opentelemetry.instrumentation.grpc_aio_client",
-            "Python.grpcio.Version",
+            "Python.grpc.Version",
             "4.5.6",
         )
 

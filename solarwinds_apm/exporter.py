@@ -197,10 +197,10 @@ class SolarWindsSpanExporter(SpanExporter):
                     )
                 elif "grpc_" in framework:
                     # There are multiple grpc_* components of the same
-                    # version of grpcio, e.g. grpc_aio_client, and
+                    # version of grpc, e.g. grpc_aio_client, and
                     # we only get one from the span
                     evt.addInfo(
-                        "Python.grpcio.Version",
+                        "Python.grpc.Version",
                         sys.modules[framework].__version__,
                     )
                 else:
