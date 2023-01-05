@@ -37,6 +37,7 @@ class SolarWindsSpanExporter(SpanExporter):
         self,
         reporter,
         apm_txname_manager,
+        apm_fwkv_manager,
         agent_enabled,
         *args,
         **kw_args,
@@ -44,6 +45,7 @@ class SolarWindsSpanExporter(SpanExporter):
         super().__init__(*args, **kw_args)
         self.reporter = reporter
         self.apm_txname_manager = apm_txname_manager
+        self.apm_fwkv_manager = apm_fwkv_manager
         if agent_enabled:
             self.context = Context
             self.metadata = Metadata

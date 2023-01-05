@@ -194,6 +194,10 @@ def fixture_exporter(mocker):
             "__delitem__": mocker.Mock()
         }
     )
+    mock_apm_fkwv_manager = mocker.patch(
+        "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager",
+        return_value=mocker.Mock()
+    )
 
     mock_reporter.configure_mock(
         **{
@@ -212,6 +216,7 @@ def fixture_exporter(mocker):
     return solarwinds_apm.exporter.SolarWindsSpanExporter(
         mock_reporter,
         mock_apm_txname_manager,
+        mock_apm_fkwv_manager,
         True
     )
 
@@ -269,6 +274,7 @@ class Test_SolarWindsSpanExporter():
     def test_init_agent_enabled_true(self, mocker):
         mock_reporter = mocker.Mock()
         mock_apm_txname_manager = mocker.Mock()
+        mock_apm_fkwv_manager = mocker.Mock()
         mock_ext_context = mocker.patch(
             "solarwinds_apm.exporter.Context",      
         )
@@ -278,6 +284,7 @@ class Test_SolarWindsSpanExporter():
         exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
             mock_reporter,
             mock_apm_txname_manager,
+            mock_apm_fkwv_manager,
             True,
         )
         assert exporter.reporter == mock_reporter
@@ -287,6 +294,7 @@ class Test_SolarWindsSpanExporter():
     def test_init_agent_enabled_false(self, mocker):
         mock_reporter = mocker.Mock()
         mock_apm_txname_manager = mocker.Mock()
+        mock_apm_fkwv_manager = mocker.Mock()
         mock_noop_context = mocker.patch(
             "solarwinds_apm.exporter.NoopContext",      
         )
@@ -296,6 +304,7 @@ class Test_SolarWindsSpanExporter():
         exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
             mock_reporter,
             mock_apm_txname_manager,
+            mock_apm_fkwv_manager,
             False,
         )
         assert exporter.reporter == mock_reporter

@@ -35,6 +35,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_SUPPORT_EMAIL,
 )
+from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
 from solarwinds_apm.apm_noop import Reporter as NoopReporter
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
@@ -63,10 +64,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
         apm_txname_manager = SolarWindsTxnNameManager()
+        apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
-            apm_txname_manager, apm_config, reporter
+            apm_txname_manager, apm_fwkv_manager, apm_config, reporter
         )
         # Report an status event after everything is done.
         self._report_init_event(reporter, apm_config)
@@ -74,6 +76,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_otel_components(
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
+        apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
         reporter: "Reporter",
     ) -> None:
@@ -87,6 +90,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             self._configure_exporter(
                 reporter,
                 apm_txname_manager,
+                apm_fwkv_manager,
                 apm_config.agent_enabled,
             )
             self._configure_propagator()
@@ -153,6 +157,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         reporter: "Reporter",
         apm_txname_manager: SolarWindsTxnNameManager,
+        apm_fwkv_manager: SolarWindsFrameworkKvManager,
         agent_enabled: bool = True,
     ) -> None:
         """Configure SolarWinds OTel span exporters, defaults or environment
@@ -177,7 +182,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                         "solarwinds_apm",
                         "opentelemetry_traces_exporter",
                         exporter_name,
-                    )(reporter, apm_txname_manager, agent_enabled)
+                    )(
+                        reporter,
+                        apm_txname_manager,
+                        apm_fwkv_manager,
+                        agent_enabled,
+                    )
                 else:
                     exporter = next(
                         iter_entry_points(
