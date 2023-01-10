@@ -101,13 +101,18 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _configure_resource(
         self,
+        apm_config: SolarWindsApmConfig,
     ) -> Resource:
         """Configure OTel Resource for setting attributes. Any attributes from
-        OTEL_RESOURCE_ATTRIBUTES are merged with lower priority.
+        OTEL_RESOURCE_ATTRIBUTES are merged with lower priority than what's given
+        to Resource.create.
+
+        For SWO, users cannot set `service.name` attribute here. Instead it is set
+        using configured SW_APM_SERVICE_KEY.
 
         See also OTel SDK env vars:
         https://github.com/open-telemetry/opentelemetry-python/blob/8a0ce154ae27a699598cbf3ccc6396eb012902d6/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L15-L39"""
-        return Resource.create({})
+        return Resource.create({"service.name": apm_config.service_name})
 
     def _configure_sampler(
         self,
@@ -136,7 +141,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         trace.set_tracer_provider(
             TracerProvider(
                 sampler=sampler,
-                resource=self._configure_resource(),
+                resource=self._configure_resource(apm_config),
             ),
         )
 
