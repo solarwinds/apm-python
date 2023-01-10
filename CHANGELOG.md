@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Update Init message with HostID ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
+- Update Init message with Python framework versions ([#94](https://github.com/solarwindscloud/solarwinds-apm-python/pull/94), [#100](https://github.com/solarwindscloud/solarwinds-apm-python/pull/100))
 - SolarWinds c-lib 11.1.0, for Init message updates ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
+- Updated exported spans with Python framework versions ([#92](https://github.com/solarwindscloud/solarwinds-apm-python/pull/92))
 
 ## [0.4.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.4.0) - 2023-01-03
 ### Added
