@@ -109,8 +109,13 @@ class SolarWindsApmConfig:
 
         if self.agent_enabled:
             self.context = Context
+            # We know service_key exists and is formatted correctly
+            self.service_name = os.environ.get(
+                "SW_APM_SERVICE_KEY", ":"
+            ).split(":")[1]
         else:
             self.context = NoopContext
+            self.service_name = ""
 
         # TODO Implement config with cnf_file after alpha
         # cnf_file = os.environ.get('SW_APM_APM_CONFIG_PYTHON', os.environ.get('SW_APM_PYCONF', None))
