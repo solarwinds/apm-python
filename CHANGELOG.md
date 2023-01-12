@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.4.0...HEAD)
 ### Added
 - Add support for OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES environment variables ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
+- Add prioritization of OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES, SW_APM_SERVICE_KEY for setting service.name ([#103](https://github.com/solarwindscloud/solarwinds-apm-python/pull/103))
 
 ### Changed
 - Update Init message with HostID ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
