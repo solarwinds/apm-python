@@ -424,6 +424,7 @@ class SolarWindsApmConfig:
             "__config": self._config_mask_service_key(),
             "agent_enabled": self.agent_enabled,
             "context": self.context,
+            "service_name": self.service_name,
         }
         return f"{apm_config}"
 
