@@ -8,6 +8,8 @@ import json
 import os
 import pytest
 
+from opentelemetry.sdk.resources import Resource
+
 from solarwinds_apm import apm_config
 from solarwinds_apm.apm_constants import (
     INTL_SWO_AO_COLLECTOR,
@@ -568,3 +570,54 @@ class TestSolarWindsApmConfig:
         test_config._set_config_value("log_trace_id", "not-valid-mode")
         assert test_config.get("log_trace_id") == "never"
         assert "Ignore config option" in caplog.text
+
+    def test__calculate_service_name_agent_disabled(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._calculate_service_name(
+            False,
+            {}
+        )
+        assert result == ""
+
+    def test__calculate_service_name_no_otel_service_name(
+        self,
+        mocker,
+    ):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
+        })
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._calculate_service_name(
+            True,
+            Resource.create({"service.name": None})
+        )
+        assert result == "sw_service_name"
+
+    def test__calculate_service_name_default_unknown_otel_service_name(
+        self,
+        mocker,
+    ):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
+        })
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._calculate_service_name(
+            True,
+            # default is unknown_service
+            Resource.create()
+        )
+        assert result == "sw_service_name"
+
+    def test__calculate_service_name_use_otel_service_name(
+        self,
+        mocker,
+    ):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
+        })
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._calculate_service_name(
+            True,
+            Resource.create({"service.name": "foobar"})
+        )
+        assert result == "foobar"

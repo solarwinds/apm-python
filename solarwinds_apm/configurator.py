@@ -105,16 +105,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             # Warning: This may still set OTEL_PROPAGATORS if set because OTel API
             logger.error("Tracing disabled. Not setting propagators.")
 
-    def _configure_resource(
-        self,
-    ) -> Resource:
-        """Configure OTel Resource for setting attributes. Any attributes from
-        OTEL_RESOURCE_ATTRIBUTES are merged with lower priority.
-
-        See also OTel SDK env vars:
-        https://github.com/open-telemetry/opentelemetry-python/blob/8a0ce154ae27a699598cbf3ccc6396eb012902d6/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L15-L39"""
-        return Resource.create({})
-
     def _configure_sampler(
         self,
         apm_config: SolarWindsApmConfig,
@@ -142,7 +132,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         trace.set_tracer_provider(
             TracerProvider(
                 sampler=sampler,
-                resource=self._configure_resource(),
+                resource=Resource.create(
+                    {"service.name": apm_config.service_name}
+                ),
             ),
         )
 
