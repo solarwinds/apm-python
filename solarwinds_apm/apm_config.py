@@ -121,11 +121,6 @@ class SolarWindsApmConfig:
             self.agent_enabled,
             otel_resource,
         )
-        self.__config["service_key"] = self._update_service_key_name(
-            self.agent_enabled,
-            self.__config["service_key"],
-            self.service_name,
-        )
 
         if self.agent_enabled:
             self.context = Context
@@ -139,6 +134,11 @@ class SolarWindsApmConfig:
 
         self.update_with_env_var()
 
+        self.__config["service_key"] = self._update_service_key_name(
+            self.agent_enabled,
+            self.__config["service_key"],
+            self.service_name,
+        )
         self.metric_format = self._calculate_metric_format()
         self.certificates = self._calculate_certificates()
 
@@ -356,9 +356,9 @@ class SolarWindsApmConfig:
         service_name: str,
     ) -> str:
         """Update service key with service name"""
-        if agent_enabled and service_name:
-            # When agent_enabled, assume service_key exists and is formatted correctly.
-            # Only update if service_name exists, which should be the case if agent_enabled.
+        if agent_enabled and service_key and service_name:
+            # Only update if service_name and service_key exist and non-empty.
+            # When agent_enabled, assume service_key is formatted correctly.
             return ":".join([service_key.split(":")[0], service_name])
 
         # Else no need to update service_key when not reporting
