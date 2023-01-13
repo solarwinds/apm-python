@@ -392,15 +392,6 @@ class _SwSampler(Sampler):
             # These attributes may have customer-set KVs from manual SDK calls
             for attr_k, attr_v in attributes.items():
                 new_attributes[attr_k] = attr_v
-        else:
-            # _SW_TRACESTATE_ROOT_KEY is set once per trace, if possible
-            sw_value = parent_span_context.trace_state.get(
-                INTL_SWO_TRACESTATE_KEY, None
-            )
-            if sw_value and self._SW_TRACESTATE_ROOT_KEY not in new_attributes:
-                new_attributes[
-                    self._SW_TRACESTATE_ROOT_KEY
-                ] = W3CTransformer.span_id_from_sw(sw_value)
 
         # Always (root or is_remote) set _INTERNAL_SW_KEYS if extracted
         internal_sw_keys = xtraceoptions.sw_keys
@@ -420,6 +411,16 @@ class _SwSampler(Sampler):
         new_attributes[
             self._INTERNAL_BUCKET_RATE
         ] = f"{decision['bucket_rate']}"
+
+        # _SW_TRACESTATE_ROOT_KEY is set once per trace, parent span context
+        # contains `sw` and it's not already in the attributes (???)
+        sw_value = parent_span_context.trace_state.get(
+            INTL_SWO_TRACESTATE_KEY, None
+        )
+        if sw_value and self._SW_TRACESTATE_ROOT_KEY not in new_attributes:
+            new_attributes[
+                self._SW_TRACESTATE_ROOT_KEY
+            ] = W3CTransformer.span_id_from_sw(sw_value)
 
         new_attributes[self._INTERNAL_SAMPLE_RATE] = decision["rate"]
         new_attributes[self._INTERNAL_SAMPLE_SOURCE] = decision["source"]
@@ -452,7 +453,7 @@ class _SwSampler(Sampler):
             parent_span_context,
         )
 
-        logger.debug("Setting attributes: %s", new_attributes)
+        logger.warning("Setting attributes: %s", new_attributes)
 
         # attributes must be immutable for SamplingResult
         return MappingProxyType(new_attributes)
