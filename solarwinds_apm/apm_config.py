@@ -121,6 +121,11 @@ class SolarWindsApmConfig:
             self.agent_enabled,
             otel_resource,
         )
+        self.__config["service_key"] = self._update_service_key_name(
+            self.agent_enabled,
+            self.__config["service_key"],
+            self.service_name,
+        )
 
         if self.agent_enabled:
             self.context = Context
@@ -336,13 +341,28 @@ class SolarWindsApmConfig:
                 "service.name", None
             )
             if otel_service_name and otel_service_name == "unknown_service":
-                # When agent_enabled, assume service_key exists and is formatted correctly
+                # When agent_enabled, assume service_key exists and is formatted correctly.
                 service_name = os.environ.get("SW_APM_SERVICE_KEY", ":").split(
                     ":"
                 )[1]
             else:
                 service_name = otel_service_name
         return service_name
+
+    def _update_service_key_name(
+        self,
+        agent_enabled: bool,
+        service_key: str,
+        service_name: str,
+    ) -> str:
+        """Update service key with service name"""
+        if agent_enabled and service_name:
+            # When agent_enabled, assume service_key exists and is formatted correctly.
+            # Only update if service_name exists, which should be the case if agent_enabled.
+            return ":".join([service_key.split(":")[0], service_name])
+
+        # Else no need to update service_key when not reporting
+        return service_key
 
     def _calculate_metric_format(self) -> int:
         """Return one of 0 (both) or 1 (TransactionResponseTime only). Future: return 2 (ResponseTime only) instead of 0. Based on collector URL which may have a port e.g. foo-collector.com:443"""

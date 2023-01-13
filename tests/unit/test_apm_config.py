@@ -621,3 +621,39 @@ class TestSolarWindsApmConfig:
             Resource.create({"service.name": "foobar"})
         )
         assert result == "foobar"
+
+    def test__update_service_key_name_not_agent_enabled(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._update_service_key_name(
+            False,
+            "foo",
+            "bar"
+        )
+        assert result == "foo"
+
+    def test__update_service_key_name_empty_service_name(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._update_service_key_name(
+            True,
+            "foo",
+            ""
+        )
+        assert result == "foo"
+
+    def test__update_service_key_name_not_agent_enabled_and_empty_service_name(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._update_service_key_name(
+            False,
+            "foo",
+            ""
+        )
+        assert result == "foo"
+
+    def test__update_service_key_name_agent_enabled_and_service_name_ok(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._update_service_key_name(
+            True,
+            "valid_key_with:foo-service",
+            "bar-service"
+        )
+        assert result == "valid_key_with:bar-service"
