@@ -389,8 +389,7 @@ class _SwSampler(Sampler):
 
         if attributes:
             # Copy existing MappingProxyType KV into new_attributes for modification.
-            # These attributes may have other vendor info, customer-entered
-            # info from manual SDK calls, etc
+            # These attributes may have customer-set KVs from manual SDK calls
             for attr_k, attr_v in attributes.items():
                 new_attributes[attr_k] = attr_v
         else:
