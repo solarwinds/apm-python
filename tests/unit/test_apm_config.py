@@ -56,6 +56,17 @@ class TestSolarWindsApmConfig:
         assert test_config.service_name == ""
         assert test_config.get("service_key") == "incorrect_format"
 
+    def test__init_invalid_service_key_format_otel_service_name_and_resource_attrs(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "incorrect_format",
+            "OTEL_SERVICE_NAME": "wont_be_used",
+            "OTEL_RESOURCE_ATTRIBUTES": "service.name=also_unused"
+        })
+        test_config = apm_config.SolarWindsApmConfig()
+        assert not test_config.agent_enabled
+        assert test_config.service_name == ""
+        assert test_config.get("service_key") == "incorrect_format"
+
     def test__init_valid_service_key_format_agent_enabled_false(self, mocker):
         mocker.patch.dict(os.environ, {
             "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
@@ -118,6 +129,40 @@ class TestSolarWindsApmConfig:
         assert test_config.agent_enabled
         assert test_config.service_name == "also_from_otel_env_used_this_time"
         assert test_config.get("service_key") == "service_key_with:also_from_otel_env_used_this_time"
+
+    def test__init_valid_service_key_format_empty_otel_service_name(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
+            "OTEL_SERVICE_NAME": "",
+        })
+        # Otel picks up os mock if Resource.create here (same as default arg)
+        test_config = apm_config.SolarWindsApmConfig(Resource.create())
+        assert test_config.agent_enabled
+        assert test_config.service_name == "sw_service_name"
+        assert test_config.get("service_key") == "service_key_with:sw_service_name"
+
+    def test__init_valid_service_key_format_empty_otel_service_name_and_resource_attrs(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
+            "OTEL_SERVICE_NAME": "",
+            "OTEL_RESOURCE_ATTRIBUTES": "",
+        })
+        # Otel picks up os mock if Resource.create here (same as default arg)
+        test_config = apm_config.SolarWindsApmConfig(Resource.create())
+        assert test_config.agent_enabled
+        assert test_config.service_name == "sw_service_name"
+        assert test_config.get("service_key") == "service_key_with:sw_service_name"
+
+    def test__init_valid_service_key_format_otel_resource_attrs_without_name(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
+            "OTEL_RESOURCE_ATTRIBUTES": "foo=bar,telemetry.sdk.version=whatever-i-want-baby",
+        })
+        # Otel picks up os mock if Resource.create here (same as default arg)
+        test_config = apm_config.SolarWindsApmConfig(Resource.create())
+        assert test_config.agent_enabled
+        assert test_config.service_name == "sw_service_name"
+        assert test_config.get("service_key") == "service_key_with:sw_service_name"
 
     def test_calculate_agent_enabled_ok_defaults(self, mocker):
         mocker.patch.dict(os.environ, {
