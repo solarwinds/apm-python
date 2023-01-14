@@ -412,12 +412,14 @@ class _SwSampler(Sampler):
             self._INTERNAL_BUCKET_RATE
         ] = f"{decision['bucket_rate']}"
 
-        # _SW_TRACESTATE_ROOT_KEY is set once per trace, parent span context
-        # contains `sw` and it's not already in the attributes (???)
+        # sw.w3c.tracestate is set if:
+        #  1. the future span is the entry span of a service
+        #  2. there exists a (remote) parent span
+        #  3. that parent's trace state contains `sw` for SWO vendor
         sw_value = parent_span_context.trace_state.get(
             INTL_SWO_TRACESTATE_KEY, None
         )
-        if sw_value and self._SW_TRACESTATE_ROOT_KEY not in new_attributes:
+        if sw_value and parent_span_context.is_remote:
             new_attributes[
                 self._SW_TRACESTATE_ROOT_KEY
             ] = W3CTransformer.span_id_from_sw(sw_value)
