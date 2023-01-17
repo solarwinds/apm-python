@@ -16,6 +16,7 @@ from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
 )
+from opentelemetry.sdk.resources import Resource
 from pkg_resources import iter_entry_points
 
 from solarwinds_apm import apm_logging
@@ -76,7 +77,11 @@ class SolarWindsApmConfig:
     _KEY_MASK_BAD_FORMAT = "{}...<invalid_format>"
     _KEY_MASK_BAD_FORMAT_SHORT = "{}<invalid_format>"
 
-    def __init__(self, **kwargs: int) -> None:
+    def __init__(
+        self,
+        otel_resource: "Resource" = Resource.create(),
+        **kwargs: int,
+    ) -> None:
         self.__config = {}
         # Update the config with default values
         self.__config = {
@@ -112,6 +117,10 @@ class SolarWindsApmConfig:
         }
         self.__config["transaction"]["prepend_domain_name"] = False
         self.agent_enabled = self._calculate_agent_enabled()
+        self.service_name = self._calculate_service_name(
+            self.agent_enabled,
+            otel_resource,
+        )
 
         if self.agent_enabled:
             self.context = Context
@@ -125,6 +134,11 @@ class SolarWindsApmConfig:
 
         self.update_with_env_var()
 
+        self.__config["service_key"] = self._update_service_key_name(
+            self.agent_enabled,
+            self.__config["service_key"],
+            self.service_name,
+        )
         self.metric_format = self._calculate_metric_format()
         self.certificates = self._calculate_certificates()
 
@@ -296,6 +310,60 @@ class SolarWindsApmConfig:
         logger.debug("agent_enabled: %s", agent_enabled)
         return agent_enabled
 
+    def _calculate_service_name(
+        self,
+        agent_enabled: bool,
+        otel_resource: "Resource",
+    ) -> str:
+        """Calculate `service.name` by priority system (decreasing):
+        1. OTEL_SERVICE_NAME
+        2. service.name in OTEL_RESOURCE_ATTRIBUTES
+        3. service name component of SW_APM_SERVICE_KEY
+        4. empty string
+
+        Note: 1-3 require that SW_APM_SERVICE_KEY exists and is in the correct
+        format of "<api_token>:<service_name>". Otherwise agent_enabled: False
+        and service.name is empty string.
+
+        The passed in OTel Resource likely has a `service.name` already calculated
+        by merging OTEL_SERVICE_NAME / OTEL_RESOURCE_ATTRIBUTES with defaults.
+        Resource may also have other telemetry/arbitrary attributes that the
+        user can overwrite/add.
+
+        See also OTel SDK Resource.create and env vars:
+        * https://github.com/open-telemetry/opentelemetry-python/blob/f5fb6b1353929cf8039b1d38f97450866357d901/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py#L156-L184
+        * https://github.com/open-telemetry/opentelemetry-python/blob/8a0ce154ae27a699598cbf3ccc6396eb012902d6/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L15-L39"""
+        service_name = ""
+        if agent_enabled:
+            # OTel SDK default service.name is "unknown_service" in-code:
+            # https://github.com/open-telemetry/opentelemetry-python/blob/f5fb6b1353929cf8039b1d38f97450866357d901/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py#L175
+            otel_service_name = otel_resource.attributes.get(
+                "service.name", None
+            )
+            if otel_service_name and otel_service_name == "unknown_service":
+                # When agent_enabled, assume service_key exists and is formatted correctly.
+                service_name = os.environ.get("SW_APM_SERVICE_KEY", ":").split(
+                    ":"
+                )[1]
+            else:
+                service_name = otel_service_name
+        return service_name
+
+    def _update_service_key_name(
+        self,
+        agent_enabled: bool,
+        service_key: str,
+        service_name: str,
+    ) -> str:
+        """Update service key with service name"""
+        if agent_enabled and service_key and service_name:
+            # Only update if service_name and service_key exist and non-empty.
+            # When agent_enabled, assume service_key is formatted correctly.
+            return ":".join([service_key.split(":")[0], service_name])
+
+        # Else no need to update service_key when not reporting
+        return service_key
+
     def _calculate_metric_format(self) -> int:
         """Return one of 0 (both) or 1 (TransactionResponseTime only). Future: return 2 (ResponseTime only) instead of 0. Based on collector URL which may have a port e.g. foo-collector.com:443"""
         metric_format = 0
@@ -376,6 +444,7 @@ class SolarWindsApmConfig:
             "__config": self._config_mask_service_key(),
             "agent_enabled": self.agent_enabled,
             "context": self.context,
+            "service_name": self.service_name,
         }
         return f"{apm_config}"
 
