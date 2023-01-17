@@ -387,6 +387,12 @@ class _SwSampler(Sampler):
 
         new_attributes = {}
 
+        if attributes:
+            # Copy existing MappingProxyType KV into new_attributes for modification.
+            # These attributes may have customer-set KVs from manual SDK calls
+            for attr_k, attr_v in attributes.items():
+                new_attributes[attr_k] = attr_v
+
         # Always (root or is_remote) set _INTERNAL_SW_KEYS if extracted
         internal_sw_keys = xtraceoptions.sw_keys
         if internal_sw_keys:
@@ -405,6 +411,18 @@ class _SwSampler(Sampler):
         new_attributes[
             self._INTERNAL_BUCKET_RATE
         ] = f"{decision['bucket_rate']}"
+
+        # sw.tracestate_parent_id is set if:
+        #  1. the future span is the entry span of a service
+        #  2. there exists a (remote) parent span
+        #  3. that parent's trace state contains `sw` for SWO vendor
+        sw_value = parent_span_context.trace_state.get(
+            INTL_SWO_TRACESTATE_KEY, None
+        )
+        if sw_value and parent_span_context.is_remote:
+            new_attributes[
+                self._SW_TRACESTATE_ROOT_KEY
+            ] = W3CTransformer.span_id_from_sw(sw_value)
 
         new_attributes[self._INTERNAL_SAMPLE_RATE] = decision["rate"]
         new_attributes[self._INTERNAL_SAMPLE_SOURCE] = decision["source"]
@@ -429,21 +447,6 @@ class _SwSampler(Sampler):
                 # attributes must be immutable for SamplingResult
                 return MappingProxyType(new_attributes)
             return None
-
-        if not attributes:
-            # _SW_TRACESTATE_ROOT_KEY is set once per trace, if possible
-            sw_value = parent_span_context.trace_state.get(
-                INTL_SWO_TRACESTATE_KEY, None
-            )
-            if sw_value:
-                new_attributes[
-                    self._SW_TRACESTATE_ROOT_KEY
-                ] = W3CTransformer.span_id_from_sw(sw_value)
-        else:
-            # Copy existing MappingProxyType KV into new_attributes for modification.
-            # attributes may have other vendor info etc
-            for attr_k, attr_v in attributes.items():
-                new_attributes[attr_k] = attr_v
 
         new_attributes = self.add_tracestate_capture_to_attributes_dict(
             new_attributes,
