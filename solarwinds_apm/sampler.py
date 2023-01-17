@@ -455,7 +455,7 @@ class _SwSampler(Sampler):
             parent_span_context,
         )
 
-        logger.warning("Setting attributes: %s", new_attributes)
+        logger.debug("Setting attributes: %s", new_attributes)
 
         # attributes must be immutable for SamplingResult
         return MappingProxyType(new_attributes)
