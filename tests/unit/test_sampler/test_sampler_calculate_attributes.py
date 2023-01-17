@@ -790,6 +790,7 @@ class Test_SwSampler_calculate_attributes():
             "SampleRate": -1,
             "SampleSource": -1,
             "TriggeredTrace": True,
+            "sw.tracestate_parent_id": "1111222233334444",
             "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
@@ -822,6 +823,7 @@ class Test_SwSampler_calculate_attributes():
             "SampleRate": -1,
             "SampleSource": -1,
             "TriggeredTrace": True,
+            "sw.tracestate_parent_id": "1111222233334444",
             "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
@@ -854,6 +856,7 @@ class Test_SwSampler_calculate_attributes():
             "SampleRate": -1,
             "SampleSource": -1,
             "TriggeredTrace": True,
+            "sw.tracestate_parent_id": "1111222233334444",
             "sw.w3c.tracestate": "sw=1111222233334444-01,some=other",
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
@@ -888,6 +891,7 @@ class Test_SwSampler_calculate_attributes():
             "SampleRate": -1,
             "SampleSource": -1,
             "TriggeredTrace": True,
+            "sw.tracestate_parent_id": "1111222233334444",
             "sw.w3c.tracestate": "sw=1111222233334444-01,some=other",
         })
         for e_key, e_val in expected.items():
