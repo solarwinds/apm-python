@@ -412,7 +412,7 @@ class _SwSampler(Sampler):
             self._INTERNAL_BUCKET_RATE
         ] = f"{decision['bucket_rate']}"
 
-        # sw.w3c.tracestate is set if:
+        # sw.tracestate_parent_id is set if:
         #  1. the future span is the entry span of a service
         #  2. there exists a (remote) parent span
         #  3. that parent's trace state contains `sw` for SWO vendor
