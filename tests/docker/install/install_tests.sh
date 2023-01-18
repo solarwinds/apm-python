@@ -151,8 +151,12 @@ function install_test_app_dependencies(){
     if grep Ubuntu /etc/os-release; then
         ubuntu_version=$(grep VERSION_ID /etc/os-release | sed 's/VERSION_ID="//' | sed 's/"//')
         if [ "$ubuntu_version" = "18.04" ] || [ "$ubuntu_version" = "20.04" ]; then
-            pip uninstall -y setuptools
-            pip install setuptools==65.7.0
+            # get Python version from container hostname, e.g. "3.7", "3.10"
+            python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')
+            if [ "$python_version" = "3.10" ] || [ "$python_version" = "3.11" ]; then
+                pip uninstall -y setuptools
+                pip install setuptools==65.7.0
+            fi
         fi
     fi
     opentelemetry-bootstrap --action=install
