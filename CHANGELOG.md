@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated exported spans with Python framework versions ([#92](https://github.com/solarwindscloud/solarwinds-apm-python/pull/92))
 - Bugfix: existing attributes without parent context now write to spans ([#102](https://github.com/solarwindscloud/solarwinds-apm-python/pull/102))
 - Bugfix: setting sw.tracestate_parent_id is based on existence of remote parent span ([#102](https://github.com/solarwindscloud/solarwinds-apm-python/pull/102))
+- Fix install tests on Ubuntu with Python 3.10/3.11 using older setuptools version ([#104](https://github.com/solarwindscloud/solarwinds-apm-python/pull/104))
 
 ## [0.4.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.4.0) - 2023-01-03
 ### Added
