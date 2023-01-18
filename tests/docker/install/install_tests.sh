@@ -147,6 +147,9 @@ function check_agent_startup(){
 
 function install_test_app_dependencies(){
     pip install flask requests
+    # setuptools 66.0.0 breaks opentelemetry-bootstrap
+    pip uninstall -y setuptools
+    pip install setuptools==65.7.0
     opentelemetry-bootstrap --action=install
 }
 
