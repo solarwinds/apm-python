@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.4.0...HEAD)
+## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.5.0...HEAD)
+
+## [0.5.0.2](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.5.0) - 2023-01-18
 ### Added
 - Add support for OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES environment variables ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))
 - Add prioritization of OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES, SW_APM_SERVICE_KEY for setting service.name ([#103](https://github.com/solarwindscloud/solarwinds-apm-python/pull/103))
@@ -16,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated exported spans with Python framework versions ([#92](https://github.com/solarwindscloud/solarwinds-apm-python/pull/92))
 - Bugfix: existing attributes without parent context now write to spans ([#102](https://github.com/solarwindscloud/solarwinds-apm-python/pull/102))
 - Bugfix: setting sw.tracestate_parent_id is based on existence of remote parent span ([#102](https://github.com/solarwindscloud/solarwinds-apm-python/pull/102))
+- Fix install tests on Ubuntu with Python 3.10/3.11 using older setuptools version ([#104](https://github.com/solarwindscloud/solarwinds-apm-python/pull/104))
 
 ## [0.4.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.4.0) - 2023-01-03
 ### Added
