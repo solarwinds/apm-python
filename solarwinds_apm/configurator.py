@@ -144,10 +144,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
     ) -> None:
         """Configure SolarWindsInboundMetricsSpanProcessor"""
+        custom_transaction_naming = os.environ.get("SW_APM_TRANSACTION_NAMING")
         trace.get_tracer_provider().add_span_processor(
             SolarWindsInboundMetricsSpanProcessor(
                 apm_txname_manager,
                 apm_config.agent_enabled,
+                custom_transaction_naming,
             )
         )
 

@@ -36,12 +36,19 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         self,
         apm_txname_manager: "SolarWindsTxnNameManager",
         agent_enabled: bool,
+        custom_transaction_naming: Any = None,
     ) -> None:
         self._apm_txname_manager = apm_txname_manager
         if agent_enabled:
             self._span = Span
         else:
             self._span = NoopSpan
+        self.custom_transaction_naming = self._calculate_custom_transaction_naming(custom_transaction_naming)
+
+    def _calculate_custom_transaction_naming(self, naming) -> str:
+        """Calculates custom transaction name"""
+        # TODO: return a mapping instead?
+        return naming
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics,
@@ -142,7 +149,13 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         url_tran = span.attributes.get(self._HTTP_URL, None)
         http_route = span.attributes.get(self._HTTP_ROUTE, None)
         trans_name = None
-        if http_route:
+
+        # TODO
+        # Base case: always use single custom name if set
+        if self.custom_transaction_naming:
+            trans_name = self.custom_transaction_naming
+
+        elif http_route:
             trans_name = http_route
         elif span.name:
             trans_name = span.name
