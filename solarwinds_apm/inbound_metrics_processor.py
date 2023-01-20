@@ -151,11 +151,31 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         trans_name = None
 
         # TODO
-        # Base case: always use single custom name if set
+        # TODO What about SpanKind.INTERNAL?
+        # Base case: use single custom name, if set, for manual SDK-started spans
+        # Recall: this only called for service entry spans
         if self.custom_transaction_naming:
-            trans_name = self.custom_transaction_naming
+            if span.instrumentation_scope is not None:
+                logger.warning("Got this scope name: %s", span.instrumentation_scope.name)  # temp higher priority to avoid noise
 
-        elif http_route:
+                # If instrumentation scope of span is opentelemetry.instrumentation.*
+                # then the span was(?) created by an OTel instrumentation library automatically.
+                # name is always string in Otel Python
+                if "opentelemetry.instrumentation." not in span.instrumentation_scope.name:
+                    logger.warning(  # temp higher priority to avoid noise
+                        "Span instrumentation scope is not Otel instrumentation; using custom transaction naming."
+                    )
+                    trans_name = self.custom_transaction_naming
+                    return trans_name, url_tran
+            else:
+                # Not sure when scope would be None - non-Otel? broken Otel?
+                logger.warning(  # temp higher priority to avoid noise
+                    "Span instrumentation scope is None; using custom transaction naming."
+                )
+                trans_name = self.custom_transaction_naming
+                return trans_name, url_tran
+
+        if http_route:
             trans_name = http_route
         elif span.name:
             trans_name = span.name
