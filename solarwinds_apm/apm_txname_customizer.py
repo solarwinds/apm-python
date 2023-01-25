@@ -10,9 +10,11 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
-class SolarWindsTxnNameManager:
-    """SolarWinds Transaction Name Manager
-    Stores "<trace_id>-<span_id>" with associated transaction name"""
+class SolarWindsTxnNameCustomizer:
+    """SolarWinds Transaction Name Customizer
+    Stores "<trace_id>" with customized transaction name
+    
+    TODO: consolidate this with SolarWindsTxnNameManager"""
 
     def __init__(self, **kwargs: int) -> None:
         self.__cache = {}
