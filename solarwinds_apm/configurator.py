@@ -44,6 +44,7 @@ from solarwinds_apm.apm_constants import (
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
 from solarwinds_apm.apm_noop import Reporter as NoopReporter
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
+from solarwinds_apm.apm_txname_customizer import SolarWindsTxnNameCustomizer
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.extension.oboe import Config, Context, Metadata, Reporter
 from solarwinds_apm.inbound_metrics_processor import (
@@ -70,11 +71,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
         apm_txname_manager = SolarWindsTxnNameManager()
+        apm_txname_customizer = SolarWindsTxnNameCustomizer()
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
-            apm_txname_manager, apm_fwkv_manager, apm_config, reporter
+            apm_txname_manager, apm_txname_customizer, apm_fwkv_manager, apm_config, reporter
         )
         # Report an status event after everything is done.
         self._report_init_event(reporter, apm_config)
@@ -82,6 +84,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_otel_components(
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
+        apm_txname_customizer: SolarWindsTxnNameCustomizer,
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
         reporter: "Reporter",
@@ -91,6 +94,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         if apm_config.agent_enabled:
             self._configure_metrics_span_processor(
                 apm_txname_manager,
+                apm_txname_customizer,
                 apm_config,
             )
             self._configure_exporter(
@@ -141,12 +145,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_metrics_span_processor(
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
+        apm_txname_customizer: SolarWindsTxnNameCustomizer,
         apm_config: SolarWindsApmConfig,
     ) -> None:
         """Configure SolarWindsInboundMetricsSpanProcessor"""
         trace.get_tracer_provider().add_span_processor(
             SolarWindsInboundMetricsSpanProcessor(
                 apm_txname_manager,
+                apm_txname_customizer,
                 apm_config.agent_enabled,
             )
         )

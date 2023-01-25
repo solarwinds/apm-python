@@ -17,6 +17,7 @@ from solarwinds_apm.extension.oboe import Span
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
+    from solarwinds_apm.apm_txname_customizer import SolarWindsTxnNameCustomizer
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 
 
@@ -35,9 +36,11 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     def __init__(
         self,
         apm_txname_manager: "SolarWindsTxnNameManager",
+        apm_txname_customizer: "SolarWindsTxnNameCustomizer",
         agent_enabled: bool,
     ) -> None:
         self._apm_txname_manager = apm_txname_manager
+        self._apm_txname_customizer = apm_txname_customizer
         if agent_enabled:
             self._span = Span
         else:
@@ -46,7 +49,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics,
         and caches liboboe transaction name"""
-        # Only calculate inbound metrics for service root spans
+        # Only calculate inbound metrics for service entry spans
         parent_span_context = span.parent
         if (
             parent_span_context
@@ -142,11 +145,28 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         url_tran = span.attributes.get(self._HTTP_URL, None)
         http_route = span.attributes.get(self._HTTP_ROUTE, None)
         trans_name = None
-        if http_route:
+        custom_trans_name = self.calculate_custom_transaction_name(span)
+
+        if custom_trans_name:
+            trans_name = custom_trans_name
+        elif http_route:
             trans_name = http_route
         elif span.name:
             trans_name = span.name
         return trans_name, url_tran
+
+    def calculate_custom_transaction_name(
+        self, span: "ReadableSpan"
+    ) -> Any:
+        """Get custom transaction name for trace, if any"""
+        trans_name = None
+        custom_name = self._apm_txname_customizer.get(span.context.trace_id)
+        if custom_name:
+            trans_name = self._apm_txname_customizer[span.context.trace_id]
+            # Clean up customizer if at root span
+            if not span.parent or not span.parent.is_valid:
+                del self._apm_txname_customizer[span.context.trace_id]
+        return trans_name
 
     def calculate_span_time(
         self,
