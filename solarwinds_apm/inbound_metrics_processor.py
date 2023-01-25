@@ -158,12 +158,14 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     def calculate_custom_transaction_name(
         self, span: "ReadableSpan"
     ) -> Any:
-        """Get custom transaction name for trace, if any"""
+        """Get custom transaction name for trace by trace_id, if any"""
         trans_name = None
         custom_name = self._apm_txname_customizer.get(span.context.trace_id)
         if custom_name:
             trans_name = self._apm_txname_customizer[span.context.trace_id]
-            # Clean up customizer if at root span
+            # Clean up customizer if at root span.
+            # Assumes OTel root span is ended last.
+            # Exporter will receive custom name through txname manager.
             if not span.parent or not span.parent.is_valid:
                 del self._apm_txname_customizer[span.context.trace_id]
         return trans_name
