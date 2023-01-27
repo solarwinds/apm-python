@@ -90,9 +90,9 @@ function check_sdist(){
 ./bson
 ./bson/bson.h
 ./bson/platform_hacks.h
-./liboboe-1.0-alpine-x86_64.so.0.0.0
-./liboboe-1.0-lambda-x86_64.so.0.0.0
-./liboboe-1.0-x86_64.so.0.0.0
+./liboboe-1.0-aarch64.so.0.0.0
+./liboboe-1.0-alpine-aarch64.so.0.0.0
+./liboboe-1.0-lambda-aarch64.so.0.0.0
 ./oboe.h
 ./oboe.py
 ./oboe_api.cpp

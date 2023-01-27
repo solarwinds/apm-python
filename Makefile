@@ -33,9 +33,9 @@ nothing:
 #----------------------------------------------------------------------------------------------------------------------#
 
 # LIBOBOE is the name of the liboboe shared library
-LIBOBOEALPINE := "liboboe-1.0-alpine-x86_64.so.0.0.0"
-LIBOBOEORG := "liboboe-1.0-x86_64.so.0.0.0"
-LIBOBOESERVERLESS := "liboboe-1.0-lambda-x86_64.so.0.0.0"
+LIBOBOEALPINE := "liboboe-1.0-alpine-aarch64.so.0.0.0"
+LIBOBOEORG := "liboboe-1.0-aarch64.so.0.0.0"
+LIBOBOESERVERLESS := "liboboe-1.0-lambda-aarch64.so.0.0.0"
 # Version of the C-library extension is stored under /solarwinds_apm/extension/VERSION (Otel export compatible as of 10.3.4)
 OBOEVERSION := $(shell cat ./solarwinds_apm/extension/VERSION)
 
@@ -122,7 +122,7 @@ check-swig:
 # recipes for building the package distribution
 #----------------------------------------------------------------------------------------------------------------------#
 
-wheel_tag := 'manylinux2014_x86_64'
+wheel_tag := 'linux_aarch64'
 
 # Build the Python wrapper from liboboe headers inside build container
 wrapper: check-swig download-all
@@ -178,8 +178,8 @@ aws-lambda: wrapper
 	@rm ${target_dir}/solarwinds_apm/extension/*.so*
 	@echo -e "Building AWS Lambda version of C-extensions for all supported Python versions in target directory."
 	@set -e; for PYBIN in cp37-cp37m cp38-cp38; do /opt/python/$${PYBIN}/bin/python setup.py build_ext_lambda -b ${target_dir}; done
-	@echo -e "Copying AWS Lambda specific Oboe library liboboe-1.0-lambda-x86_64.so.0.0.0 into target directory."
-	@cp solarwinds_apm/extension/liboboe-1.0-lambda-x86_64.so.0.0.0 ${target_dir}/solarwinds_apm/extension/liboboe-1.0.so.0
+	@echo -e "Copying AWS Lambda specific Oboe library liboboe-1.0-lambda-aarch64.so.0.0.0 into target directory."
+	@cp solarwinds_apm/extension/liboboe-1.0-lambda-aarch64.so.0.0.0 ${target_dir}/solarwinds_apm/extension/liboboe-1.0.so.0
 	@rm -rf ${target_dir}/*-info
 	@find ${target_dir} -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi
@@ -207,7 +207,7 @@ OTELOBOEREPO := /code/solarwinds-apm-liboboe/liboboe
 copy-liboboe:
 	@echo -e "Copying shared library.\n"
 	@cd solarwinds_apm/extension; \
-		cp "${OTELOBOEREPO}/liboboe-1.0-x86_64.so.0.0.0" .; \
+		cp "${OTELOBOEREPO}/liboboe-1.0-aarch64.so.0.0.0" .; \
 		if [ $$? -ne 0 ]; then echo " **** failed to copy shared library ****" ; exit 1; fi;
 
 # Copy liboboe header files (Python wrapper for Oboe c-lib) from source specified in OTELOBOEREPO
