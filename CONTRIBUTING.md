@@ -27,16 +27,20 @@ A PR is ready to merge when all tests pass, any major feedback has been resolved
 ### Prerequisites
 
 * docker
+* docker-compose
 
-### Build Container
+### Build Containers
 
-To create and run a Docker container for testing and builds, run the following:
+The build containers are based on the [PyPA image](https://github.com/pypa/manylinux) for `manylinux2014_x86_64` or `manylinux2014_aarch64`. Each uses [SWIG](https://www.swig.org/Doc1.3/Python.html) to compile required C/C++ libraries into a C-extension dependency.
+
+To create and run a Docker container for testing and builds, run one of the following:
 ```bash
-docker build -t dev-container .
-./run_docker_dev.sh
+docker-compose run x86
 ```
 
-The build container is based on the [PyPA image](https://github.com/pypa/manylinux) `manylinux2014_x86_64`. It uses [SWIG](https://www.swig.org/Doc1.3/Python.html) to compile required C/C++ libraries into a C-extension dependency.
+```bash
+docker-compose run aarch
+```
 
 ### Regression Tests
 
