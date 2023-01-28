@@ -18,21 +18,21 @@ TEST_MODES=(
 )
 if [ -z "$MODE" ]
 then
-  echo "WARNING: Did not provide MODE for check_sdist test."
+  echo "WARNING: Did not provide MODE for check_wheel test."
   echo "Defaulting to MODE=local"
   MODE=local
 fi
 if [[ ! " ${TEST_MODES[*]} " =~ ${MODE} ]]
 then
-  echo "FAILED: Did not provide valid MODE for check_sdist test. Must be one of: testpypi (default), local, packagecloud, pypi."
+  echo "FAILED: Did not provide valid MODE for check_wheel test. Must be one of: testpypi (default), local, packagecloud, pypi."
   exit 1
 else
-  echo "Using provided MODE=$MODE for check_sdist test."
+  echo "Using provided MODE=$MODE for check_wheel test."
 fi
 
 if [ -z "$APM_ROOT" ]
 then
-  echo "FAILED: Did not provide valid APM_ROOT for check_sdist test."
+  echo "FAILED: Did not provide valid APM_ROOT for check_wheel test."
   exit 1
 fi
 
