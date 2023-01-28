@@ -136,7 +136,7 @@ sdist: wrapper
 	@echo -e "\nDone."
 
 # Check local package source distribution archive contents, without install
-CURR_DIR := $(pwd)
+CURR_DIR := $(shell pwd)
 check-sdist-local:
 	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) ./_helper_check_sdist.sh
 	@cd $(CURR_DIR)
