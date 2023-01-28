@@ -22,6 +22,10 @@ services:
        # tox for automated tests
        python3.8 -m pip install boto3 twine tox
        /bin/bash
+    environment:
+      - PLATFORM=x86_64
+      - WHEEL_TAG=manylinux2014_x86_64
+      - CP38_WHEEL=cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 
   aarch:
     image: quay.io/pypa/manylinux2014_aarch64
@@ -42,3 +46,7 @@ services:
        # tox for automated tests
        python3.8 -m pip install boto3 twine tox
        /bin/bash
+    environment:
+      - PLATFORM=aarch64
+      - WHEEL_TAG=linux_aarch64
+      - CP38_WHEEL=cp38-cp38-manylinux_2_24_aarch64.linux_aarch64.whl
