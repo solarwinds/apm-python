@@ -33,6 +33,7 @@ nothing:
 #----------------------------------------------------------------------------------------------------------------------#
 
 # LIBOBOE is the name of the liboboe shared library
+platform := ${PLATFORM}
 LIBOBOEALPINE := "liboboe-1.0-alpine-${platform}.so.0.0.0"
 LIBOBOEORG := "liboboe-1.0-${platform}.so.0.0.0"
 LIBOBOESERVERLESS := "liboboe-1.0-lambda-${platform}.so.0.0.0"
@@ -122,7 +123,6 @@ check-swig:
 # recipes for building the package distribution
 #----------------------------------------------------------------------------------------------------------------------#
 
-platform := ${PLATFORM}
 wheel_tag := ${WHEEL_TAG}
 
 # Build the Python wrapper from liboboe headers inside build container
