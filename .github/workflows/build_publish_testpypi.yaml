@@ -10,8 +10,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_publish:
-    name: Build and publish sdist and wheels
+  build_publish_x86_64:
+    name: Build and publish x86_64
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -21,6 +21,19 @@ jobs:
       run: pip install --upgrade --no-cache-dir --prefer-binary twine
     - name: Check distribution artifacts
       run: twine check dist/*
+    - name: Publish to TestPyPi
+      env:
+        TWINE_NON_INTERACTIVE: 1
+        TWINE_REPOSITORY: testpypi
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
+      run: twine upload dist/*
+
+  build_publish_aarch64:
+    name: Build and publish aarch64
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
     - name: Build aarch64
       uses: uraimo/run-on-arch-action@v2
       with:
