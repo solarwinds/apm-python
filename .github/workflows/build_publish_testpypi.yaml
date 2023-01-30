@@ -14,7 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: ./.github/actions/package_solarwinds_apm
+    - uses: ./.github/actions/package_solarwinds_apm_x86_64
+    - uses: ./.github/actions/package_solarwinds_apm_aarch64
     - name: Install Twine
       run: pip install --upgrade --no-cache-dir --prefer-binary twine
     - name: Check distribution artifacts

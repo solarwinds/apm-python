@@ -23,7 +23,8 @@ jobs:
         /usr/local/rvm/bin/rvm install 2.5.1 --disable-binary
     - name: Install PackageCloud CLI
       run: /usr/local/rvm/bin/rvm 2.5.1 do gem install package_cloud
-    - uses: ./.github/actions/package_solarwinds_apm
+    - uses: ./.github/actions/package_solarwinds_apm_x86_64
+    - uses: ./.github/actions/package_solarwinds_apm_aarch64
     - name: Upload to PackageCloud
       env:
         PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
