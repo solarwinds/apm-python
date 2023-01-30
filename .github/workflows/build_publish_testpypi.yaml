@@ -10,27 +10,19 @@ on:
   workflow_dispatch:
 
 jobs:
-  checkout:
-    name: Checkout
+  build_publish:
+    name: Build and publish sdist and wheels
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-  build_x86_64:
-    name: Build x86_64 sdist and wheels
-    needs: checkout
-    runs-on: ubuntu-latest
-    steps:
-    - uses: ./.github/actions/package_solarwinds_apm_x86_64
+    - name: Build x86_64
+      uses: ./.github/actions/package_solarwinds_apm_x86_64
     - name: Install Twine
       run: pip install --upgrade --no-cache-dir --prefer-binary twine
     - name: Check distribution artifacts
       run: twine check dist/*
-  build_aarch64:
-    name: Build aarch64 sdist and wheels
-    needs: checkout
-    runs-on: ubuntu-latest
-    steps:
-    - uses: uraimo/run-on-arch-action@v2
+    - name: Build aarch64
+      uses: uraimo/run-on-arch-action@v2
       with:
         arch: none
         distro: none
@@ -43,11 +35,6 @@ jobs:
           make package
           pip install --upgrade --no-cache-dir --prefer-binary twine
           twine check dist/*
-  publish_testpypi:
-    name: Publish to TestPyPI
-    needs: [build_x86_64, build_aarch64]
-    runs-on: ubuntu-latest
-    steps:
     - name: Publish to TestPyPi
       env:
         TWINE_NON_INTERACTIVE: 1
