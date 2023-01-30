@@ -53,7 +53,7 @@ function get_wheel(){
         if [ -z "$PIP_INSTALL" ]; then
             echo -e "PIP_INSTALL not specified."
             echo -e "Only testing the cp38 ${PLATFORM} wheel under ${APM_ROOT}/dist"
-            tested_wheel=$(find "$APM_ROOT"/dist/* -name "solarwinds_apm-$SOLARWINDS_APM_VERSION-$CP38_WHEEL")
+            tested_wheel=$(find "$APM_ROOT"/dist/* -name "solarwinds_apm-$SOLARWINDS_APM_VERSION-cp38-cp38-$WHEEL_FILENAME")
         else
             # we need to select the right wheel (there might be multiple wheel versions in the dist directory)
             pip download \
