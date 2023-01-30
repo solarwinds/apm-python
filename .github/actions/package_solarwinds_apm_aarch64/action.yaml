@@ -11,6 +11,10 @@ description: Package solarwinds_apm for aarch64
 runs:
   using: 'docker'
   image: quay.io/pypa/manylinux2014_aarch64:latest
+  env:
+    PLATFORM: aarch64
+    WHEEL_TAG: linux_aarch64
+    WHEEL_FILENAME: manylinux_2_24_aarch64.linux_aarch64.whl
   entrypoint: 'make'
   args:
     - 'package'
