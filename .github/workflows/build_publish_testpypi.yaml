@@ -37,8 +37,9 @@ jobs:
     - name: Build aarch64
       uses: uraimo/run-on-arch-action@v2
       with:
-        arch: aarch64
-        distro: ubuntu20.04
+        arch: none
+        distro: none
+        base_image: quay.io/pypa/manylinux2014_aarch64:latest
         env: |
           PLATFORM: aarch64
           WHEEL_TAG: linux_aarch64
@@ -48,8 +49,8 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
         run: |
-          apt-get update -y
-          apt-get install -y python3-pip
+          dnf -y update
+          dnf install -y python3-pip
           pip install --upgrade --no-cache-dir --prefer-binary twine
           make package        
           twine check dist/*
