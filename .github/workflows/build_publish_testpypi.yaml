@@ -51,7 +51,7 @@ jobs:
         run: |
           yum update -y 
           yum install -y python3-pip
-          pip install --upgrade --no-cache-dir --prefer-binary twine
+          python3-pip install --upgrade --no-cache-dir --prefer-binary twine
           make package        
           twine check dist/*
           twine upload dist/*
