@@ -37,9 +37,8 @@ jobs:
     - name: Build aarch64
       uses: uraimo/run-on-arch-action@v2
       with:
-        arch: none
-        distro: none
-        base_image: quay.io/pypa/manylinux2014_aarch64:latest
+        arch: aarch64
+        distro: ubuntu20.04
         env: |
           PLATFORM: aarch64
           WHEEL_TAG: linux_aarch64
