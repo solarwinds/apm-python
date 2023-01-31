@@ -44,14 +44,14 @@ jobs:
           PLATFORM: aarch64
           WHEEL_TAG: linux_aarch64
           WHEEL_FILENAME: manylinux_2_24_aarch64.linux_aarch64.whl
+          TWINE_NON_INTERACTIVE: 1
+          TWINE_REPOSITORY: testpypi
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
         run: |
-          make package
+          sudo apt update
+          sudo apt install python3-pip
           pip install --upgrade --no-cache-dir --prefer-binary twine
+          make package        
           twine check dist/*
-    - name: Publish to TestPyPi
-      env:
-        TWINE_NON_INTERACTIVE: 1
-        TWINE_REPOSITORY: testpypi
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
-      run: twine upload dist/*
+          twine upload dist/*
