@@ -93,6 +93,15 @@ services:
     environment:
       << : *envvars-install-test
 
+  py3.7-install-alpine3.12:
+    hostname: "py3.7-alpine3.12"
+    image: "python:3.7-alpine3.12"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
   py3.7-install-alpine3.13:
     hostname: "py3.7-alpine3.13"
     image: "python:3.7-alpine3.13"
@@ -142,6 +151,15 @@ services:
     environment:
       << : *envvars-install-test
 
+  py3.8-install-alpine3.12:
+    hostname: "py3.8-alpine3.12"
+    image: "python:3.8-alpine3.12"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
   py3.8-install-alpine3.13:
     hostname: "py3.8-alpine3.13"
     image: "python:3.8-alpine3.13"
@@ -182,6 +200,15 @@ services:
     environment:
       << : *envvars-install-test
 
+  py3.9-install-alpine3.12:
+    hostname: "py3.9-alpine3.12"
+    image: "python:3.9-alpine3.12"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
   py3.9-install-alpine3.13:
     hostname: "py3.9-alpine3.13"
     image: "python:3.9-alpine3.13"
@@ -216,6 +243,15 @@ services:
   py3.10-install-ubuntu20.04:
     hostname: "py3.10-ubuntu20.04"
     image: "ubuntu:20.04"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.10-install-alpine3.12:
+    hostname: "py3.10-alpine3.12"
+    image: "python:3.10-alpine3.12"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase

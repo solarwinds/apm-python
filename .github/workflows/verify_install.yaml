@@ -96,6 +96,20 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
+  py37_install_alpine312:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.7-alpine3.12
+      options: --hostname py3.7-alpine3.12
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup and run install test
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
+      shell: sh
+      env:
+        MODE: ${{ github.event.inputs.install-registry }}
+
   py37_install_alpine313:
     runs-on: ubuntu-latest
     container:
@@ -170,6 +184,20 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
+  py38_install_alpine312:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.8-alpine3.12
+      options: --hostname py3.8-alpine3.12
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup and run install test
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
+      shell: sh
+      env:
+        MODE: ${{ github.event.inputs.install-registry }}
+
   py38_install_alpine313:
     runs-on: ubuntu-latest
     container:
@@ -230,6 +258,20 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
+  py39_install_alpine312:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.9-alpine3.12
+      options: --hostname py3.9-alpine3.12
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup and run install test
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
+      shell: sh
+      env:
+        MODE: ${{ github.event.inputs.install-registry }}
+
   py39_install_alpine313:
     runs-on: ubuntu-latest
     container:
@@ -281,6 +323,20 @@ jobs:
     container:
       image: ubuntu:20.04
       options: --hostname py3.10-ubuntu20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup and run install test
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
+      shell: sh
+      env:
+        MODE: ${{ github.event.inputs.install-registry }}
+
+  py310_install_alpine312:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.10-alpine3.12
+      options: --hostname py3.10-alpine3.12
     steps:
     - uses: actions/checkout@v2
     - name: Setup and run install test
