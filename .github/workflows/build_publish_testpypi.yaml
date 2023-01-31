@@ -49,8 +49,8 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
         run: |
-          sudo apt update
-          sudo apt install python3-pip
+          apt update
+          apt install python3-pip
           pip install --upgrade --no-cache-dir --prefer-binary twine
           make package        
           twine check dist/*
