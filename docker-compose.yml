@@ -54,5 +54,5 @@ services:
        /bin/bash
     environment:
       - PLATFORM=aarch64
-      - WHEEL_TAG=linux_aarch64
-      - WHEEL_FILENAME=manylinux_2_24_aarch64.linux_aarch64.whl
+      - WHEEL_TAG=manylinux2014_aarch64
+      - WHEEL_FILENAME=manylinux_2_24_aarch64.manylinux2014_aarch64.whl
