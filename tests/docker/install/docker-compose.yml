@@ -251,7 +251,7 @@ services:
 
   py3.10-install-alpine3.12:
     hostname: "py3.10-alpine3.12"
-    image: "python:3.10-alpine3.12"
+    image: "python:3.10-rc-alpine3.12"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
