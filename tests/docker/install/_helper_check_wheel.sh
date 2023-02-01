@@ -127,6 +127,9 @@ function get_and_check_wheel(){
     # Python wheels are not available under Alpine Linux
     if [[ -f /etc/os-release && "$(cat /etc/os-release)" =~ "Alpine" ]]; then
         echo "Wheels are not available on Alpine Linux, skip wheel tests."
+    # Amazon Linux 2's glibc version is too old to use wheels built by manylinux_2_28
+    elif [[ -f /etc/os-release && "$(cat /etc/os-release)" =~ "Amazon" ]]; then
+        echo "Wheels are not available on Amazon Linux, skip wheel tests."
     else
         get_wheel
         check_wheel "$tested_wheel"
