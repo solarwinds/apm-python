@@ -114,7 +114,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
     fi
 } >/dev/null
 
-# need at least pip 19.3 to find manylinux2014 wheels
+# need at least pip 19.3 to find manylinux wheels
 pip install --upgrade pip >/dev/null
 
 # run tests using bash so we can use pipefail
