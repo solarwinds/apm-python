@@ -335,7 +335,7 @@ jobs:
   py310_install_alpine312:
     runs-on: ubuntu-latest
     container:
-      image: python:3.10-alpine3.12
+      image: python:3.10-rc-alpine3.12
       options: --hostname py3.10-alpine3.12
     steps:
     - uses: actions/checkout@v2
