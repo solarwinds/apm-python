@@ -105,7 +105,7 @@ function check_wheel(){
 ./bson
 ./bson/bson.h
 ./bson/platform_hacks.h
-./liboboe-1.0.so.0
+./liboboe.so
 ./oboe.py"
     unzip "$tested_wheel" -d "$unpack_directory"
     # shellcheck disable=SC1091
