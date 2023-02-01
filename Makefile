@@ -266,7 +266,7 @@ lint:
 # clean up extension and intermediate build/dist files.
 clean:
 	@echo -e "Cleaning up extension and intermediate build/dist files."
-	@cd solarwinds_apm/extension; rm -f oboe* liboboe-1.0*so* liboboe.so; rm -rf bson
+	@cd solarwinds_apm/extension; rm -f _oboe* oboe* liboboe*so*; rm -rf bson
 	@cd ..
 	@find . -type f -name '*.pyc' -delete
 	@find . -type d -name '__pycache__' | xargs rm -rf
