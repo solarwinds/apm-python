@@ -110,6 +110,20 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
+  py37_install_alpine317:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.7-alpine3.17
+      options: --hostname py3.7-alpine3.17
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup and run install test
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
+      shell: sh
+      env:
+        MODE: ${{ github.event.inputs.install-registry }}
+
   #--------------------------------------------------------------------
   # Python 3.8
   #--------------------------------------------------------------------
@@ -272,6 +286,20 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
+  py39_install_alpine317:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.9-alpine3.17
+      options: --hostname py3.9-alpine3.17
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup and run install test
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
+      shell: sh
+      env:
+        MODE: ${{ github.event.inputs.install-registry }}
+
   #--------------------------------------------------------------------
   # Python 3.10
   #--------------------------------------------------------------------
@@ -332,6 +360,20 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
+  py310_install_alpine317:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.10-alpine3.17
+      options: --hostname py3.10-alpine3.17
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup and run install test
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
+      shell: sh
+      env:
+        MODE: ${{ github.event.inputs.install-registry }}
+
   #--------------------------------------------------------------------
   # Python 3.11
   #--------------------------------------------------------------------
@@ -367,8 +409,22 @@ jobs:
   py311_install_alpine316:
     runs-on: ubuntu-latest
     container:
-      image: python:3.11-rc-alpine3.16
+      image: python:3.11-alpine3.16
       options: --hostname py3.11-alpine3.16
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup and run install test
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
+      shell: sh
+      env:
+        MODE: ${{ github.event.inputs.install-registry }}
+
+  py311_install_alpine317:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.11-alpine3.17
+      options: --hostname py3.11-alpine3.17
     steps:
     - uses: actions/checkout@v2
     - name: Setup and run install test

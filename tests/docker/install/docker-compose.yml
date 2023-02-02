@@ -111,6 +111,15 @@ services:
     environment:
       << : *envvars-install-test
 
+  py3.7-install-alpine3.17:
+    hostname: "py3.7-alpine3.17"
+    image: "python:3.7-alpine3.17"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
   #--------------------------------------------------------------------
   # Python 3.8
   #--------------------------------------------------------------------
@@ -227,6 +236,15 @@ services:
     environment:
       << : *envvars-install-test
 
+  py3.9-install-alpine3.17:
+    hostname: "py3.9-alpine3.17"
+    image: "python:3.9-alpine3.17"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
   #--------------------------------------------------------------------
   # Python 3.10
   #--------------------------------------------------------------------
@@ -267,6 +285,15 @@ services:
     environment:
       << : *envvars-install-test
 
+  py3.10-install-alpine3.17:
+    hostname: "py3.10-alpine3.17"
+    image: "python:3.10-alpine3.17"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
   #--------------------------------------------------------------------
   # Python 3.11
   #--------------------------------------------------------------------
@@ -291,7 +318,16 @@ services:
 
   py3.11-install-alpine3.16:
     hostname: "py3.11-alpine3.16"
-    image: "python:3.11-rc-alpine3.16"
+    image: "python:3.11-alpine3.16"
+    << : *command-install-test
+    << : *workdir
+    << : *volumes-codebase
+    environment:
+      << : *envvars-install-test
+
+  py3.11-install-alpine3.17:
+    hostname: "py3.11-alpine3.17"
+    image: "python:3.11-alpine3.17"
     << : *command-install-test
     << : *workdir
     << : *volumes-codebase
