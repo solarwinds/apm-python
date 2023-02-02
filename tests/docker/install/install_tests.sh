@@ -156,7 +156,7 @@ function install_test_app_dependencies(){
             python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')
             if [ "$python_version" = "3.10" ] || [ "$python_version" = "3.11" ]; then
                 echo "Re-installing setuptools for Python $python_version"
-                apt-get remove python-setuptools
+                apt-get remove -y python3-setuptools
                 pip install --ignore-installed setuptools==65.7.0
             fi
         fi

@@ -74,6 +74,7 @@ function get_sdist(){
             pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
         fi
 
+        echo "pip download ${pip_options[*]}"
         # shellcheck disable=SC2048
         # shellcheck disable=SC2086
         pip download ${pip_options[*]}
