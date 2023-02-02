@@ -66,15 +66,15 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 add-apt-repository ppa:deadsnakes/ppa -y
             fi
             apt-get install -y \
-                "python$python_version" \
-                "python$python_version-distutils" \
-                "python$python_version-dev" \
+                "python3" \
+                "python3-distutils" \
+                "python3-dev" \
                 python3-setuptools \
                 build-essential \
                 unzip \
                 wget \
                 curl
-            update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
+            update-alternatives --install /usr/bin/python python "/usr/bin/python3" 1
             
             # Make sure we don't install py3.6's pip
             # Official get-pip documentation:
@@ -119,16 +119,6 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
 
 # need at least pip 19.3 to find manylinux wheels
 pip install --upgrade pip >/dev/null
-
-# WIP test
-if grep Ubuntu /etc/os-release; then
-    ubuntu_version=$(grep VERSION_ID /etc/os-release | sed 's/VERSION_ID="//' | sed 's/"//')
-    if [ "$ubuntu_version" = "18.04" ] || [ "$ubuntu_version" = "20.04" ]; then
-        pip install --upgrade setuptools
-        apt-get remove python3-setuptools
-        pip install --ignore-installed setuptools==65.7.0
-    fi
-fi
 
 # run tests using bash so we can use pipefail
 bash -c "set -o pipefail && ./install_tests.sh 2>&1"
