@@ -64,16 +64,27 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 # py3.10,3.11 not currently on main apt repo so use deadsnakes
                 apt-get install -y software-properties-common
                 add-apt-repository ppa:deadsnakes/ppa -y
+                apt-get install -y \
+                    python3 \
+                    python3-distutils \
+                    python3-dev \
+                    python3-setuptools \
+                    build-essential \
+                    unzip \
+                    wget \
+                    curl
+            else
+                apt-get install -y \
+                    "python$python_version" \
+                    "python$python_version-distutils" \
+                    "python$python_version-dev" \
+                    python3-setuptools \
+                    build-essential \
+                    unzip \
+                    wget \
+                    curl
             fi
-            apt-get install -y \
-                "python3" \
-                "python3-distutils" \
-                "python3-dev" \
-                python3-setuptools \
-                build-essential \
-                unzip \
-                wget \
-                curl
+
             update-alternatives --install /usr/bin/python python "/usr/bin/python3" 1
             
             # Make sure we don't install py3.6's pip
