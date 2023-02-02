@@ -73,6 +73,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                     unzip \
                     wget \
                     curl
+                update-alternatives --install /usr/bin/python python "/usr/bin/python3" 1
             else
                 apt-get install -y \
                     "python$python_version" \
@@ -83,9 +84,8 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                     unzip \
                     wget \
                     curl
+                update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
             fi
-
-            update-alternatives --install /usr/bin/python python "/usr/bin/python3" 1
             
             # Make sure we don't install py3.6's pip
             # Official get-pip documentation:
