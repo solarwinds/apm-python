@@ -62,16 +62,28 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 # py3.10,3.11 not currently on main apt repo so use deadsnakes
                 apt-get install -y software-properties-common
                 add-apt-repository ppa:deadsnakes/ppa -y
+                apt-get install -y \
+                    python3 \
+                    python3-distutils \
+                    python3-dev \
+                    python3-setuptools \
+                    build-essential \
+                    unzip \
+                    wget \
+                    curl
+                update-alternatives --install /usr/bin/python python "/usr/bin/python3" 1
+            else
+                apt-get install -y \
+                    "python$python_version" \
+                    "python$python_version-distutils" \
+                    "python$python_version-dev" \
+                    python3-setuptools \
+                    build-essential \
+                    unzip \
+                    wget \
+                    curl
+                update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
             fi
-            apt-get install -y \
-                "python$python_version" \
-                "python$python_version-distutils" \
-                "python$python_version-dev" \
-                build-essential \
-                unzip \
-                wget \
-                curl
-            update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
             
             # Make sure we don't install py3.6's pip
             # Official get-pip documentation:
@@ -114,7 +126,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
     fi
 } >/dev/null
 
-# need at least pip 19.3 to find manylinux2014 wheels
+# need at least pip 19.3 to find manylinux wheels
 pip install --upgrade pip >/dev/null
 
 # run tests using bash so we can use pipefail

@@ -53,7 +53,7 @@ function get_wheel(){
         if [ -z "$PIP_INSTALL" ]; then
             echo -e "PIP_INSTALL not specified."
             echo -e "Only testing the cp38 x86_64 wheel under ${APM_ROOT}"
-            tested_wheel=$(find "$APM_ROOT"/dist/* -name "solarwinds_apm-$SOLARWINDS_APM_VERSION-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl")
+            tested_wheel=$(find "$APM_ROOT"/dist/* -name "solarwinds_apm-$SOLARWINDS_APM_VERSION-cp38-cp38-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl")
         else
             # we need to select the right wheel (there might be multiple wheel versions in the dist directory)
             pip download \
@@ -105,7 +105,7 @@ function check_wheel(){
 ./bson
 ./bson/bson.h
 ./bson/platform_hacks.h
-./liboboe-1.0.so.0
+./liboboe.so
 ./oboe.py"
     unzip "$tested_wheel" -d "$unpack_directory"
     # shellcheck disable=SC1091
@@ -127,6 +127,9 @@ function get_and_check_wheel(){
     # Python wheels are not available under Alpine Linux
     if [[ -f /etc/os-release && "$(cat /etc/os-release)" =~ "Alpine" ]]; then
         echo "Wheels are not available on Alpine Linux, skip wheel tests."
+    # Amazon Linux 2's glibc version is too old to use wheels built by manylinux_2_28
+    elif [[ -f /etc/os-release && "$(cat /etc/os-release)" =~ "Amazon" ]]; then
+        echo "Wheels are not available on Amazon Linux, skip wheel tests."
     else
         get_wheel
         check_wheel "$tested_wheel"

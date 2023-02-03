@@ -39,7 +39,7 @@ fi
 
 function get_sdist(){
     sdist_dir="$PWD/tmp/sdist"
-    rm -rf sdist_dir
+    rm -rf "$sdist_dir"
 
     if [ "$MODE" == "local" ]
     then
@@ -90,9 +90,9 @@ function check_sdist(){
 ./bson
 ./bson/bson.h
 ./bson/platform_hacks.h
-./liboboe-1.0-alpine-x86_64.so.0.0.0
-./liboboe-1.0-lambda-x86_64.so.0.0.0
-./liboboe-1.0-x86_64.so.0.0.0
+./liboboe-1.0-alpine-x86_64.so
+./liboboe-1.0-lambda-x86_64.so
+./liboboe-1.0-x86_64.so
 ./oboe.h
 ./oboe.py
 ./oboe_api.cpp
