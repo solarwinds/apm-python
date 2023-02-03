@@ -41,7 +41,8 @@ import os
 class ApmLoggingLevel:
     """Abstract mapping class providing a conversion between solarwinds_apm agent logging level and Python logging module
     logging levels.
-    The solarwinds_apm package has seven different log levels, which are defined in the debug_levels dictionary."""
+    The solarwinds_apm package has seven different log levels, which are defined in the debug_levels dictionary.
+    """
 
     # maps string representation of solarwinds_apm.sw_logging levels to their integer counterpart
     debug_levels = {
