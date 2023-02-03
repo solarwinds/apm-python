@@ -39,7 +39,7 @@ fi
 
 function get_sdist(){
     sdist_dir="$PWD/tmp/sdist"
-    rm -rf sdist_dir
+    rm -rf "$sdist_dir"
 
     if [ "$MODE" == "local" ]
     then

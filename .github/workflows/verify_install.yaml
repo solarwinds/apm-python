@@ -300,6 +300,20 @@ jobs:
       env:
         MODE: ${{ github.event.inputs.install-registry }}
 
+  py39_install_rhel8:
+    runs-on: ubuntu-latest
+    container:
+      image: registry.fedoraproject.org/f33/python3
+      options: --hostname py3.9-rhel8
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup and run install test
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
+      shell: sh
+      env:
+        MODE: ${{ github.event.inputs.install-registry }}
+
   #--------------------------------------------------------------------
   # Python 3.10
   #--------------------------------------------------------------------
