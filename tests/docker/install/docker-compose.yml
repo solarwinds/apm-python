@@ -7,8 +7,11 @@
 # compose the regression tests
 #
 # environment variables:
-# * SOLARWINDS_APM_VERSION: the agent version being tested, it must already be built
-#   under the project dist/ directory
+# * PLATFORM: Must be x86_64 or aarch64
+# * MODE: (optional) Where to install from, one of: "local" (default),
+#     testpypi, pypi, packagecloud
+# * SOLARWINDS_APM_VERSION: (optional) the agent version being tested. If
+#     MODE=local, must already be built under the project dist/ directory
 #
 # use the `run` command to get an interactive container for debugging:
 # (debian|centos|amazon|fedora) $ docker-compose run --rm <service name> /bin/bash
@@ -23,8 +26,9 @@ x-command-install-test: &command-install-test
   command: sh _helper_run_install_tests.sh
 
 x-envvars-install-test: &envvars-install-test
-  SOLARWINDS_APM_VERSION: ${SOLARWINDS_APM_VERSION:-}
+  PLATFORM: ${PLATFORM}
   MODE: ${MODE}
+  SOLARWINDS_APM_VERSION: ${SOLARWINDS_APM_VERSION:-}
   SW_APM_COLLECTOR_AO_PROD: ${SW_APM_COLLECTOR_AO_PROD}
   SW_APM_COLLECTOR_PROD: ${SW_APM_COLLECTOR_PROD}
   SW_APM_COLLECTOR_STAGING: ${SW_APM_COLLECTOR_STAGING}
