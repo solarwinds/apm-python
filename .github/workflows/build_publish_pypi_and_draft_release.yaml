@@ -21,7 +21,7 @@ jobs:
     name: Check if version valid
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Check version
       run: cd .github/scripts && ./is_publishable.sh ${{ github.event.inputs.version }}
 
@@ -30,7 +30,7 @@ jobs:
     needs: is_publishable
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: ./.github/actions/package_solarwinds_apm
     - name: Install Twine
       run: pip install --upgrade --no-cache-dir --prefer-binary twine
@@ -48,7 +48,7 @@ jobs:
     needs: build_publish_and_release
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Initialize git
       run: |
        git config user.name "GitHub Actions"
