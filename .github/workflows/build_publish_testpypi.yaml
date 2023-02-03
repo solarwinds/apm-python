@@ -14,7 +14,7 @@ jobs:
     name: Build and publish x86_64
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Build x86_64
       uses: ./.github/actions/package_solarwinds_apm_x86_64
     - name: Install Twine
@@ -33,7 +33,7 @@ jobs:
     name: Build and publish aarch64
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Build aarch64
       uses: uraimo/run-on-arch-action@v2
       with:
