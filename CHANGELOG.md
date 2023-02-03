@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add ARM support (TBD)
 
+### Changed
+- SolarWinds c-lib 12.0.0, for gRPC upgrade ([#107](https://github.com/solarwindscloud/solarwinds-apm-python/pull/107))
+
+### Removed
+- Drop centos7 support ([#107](https://github.com/solarwindscloud/solarwinds-apm-python/pull/107))
+- Drop Debian 9 support ([#107](https://github.com/solarwindscloud/solarwinds-apm-python/pull/107))
+- Drop Amazon Linux 2018.03 support ([#107](https://github.com/solarwindscloud/solarwinds-apm-python/pull/107))
+
 ## [0.5.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.5.0) - 2023-01-18
 ### Added
 - Add support for OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES environment variables ([#90](https://github.com/solarwindscloud/solarwinds-apm-python/pull/90))

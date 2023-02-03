@@ -10,7 +10,7 @@ description: Package solarwinds_apm for aarch64
 
 runs:
   using: 'docker'
-  image: quay.io/pypa/manylinux2014_aarch64:latest
+  image: quay.io/pypa/manylinux_2_28_aarch64:latest
   env:
     PLATFORM: aarch64
     WHEEL_TAG: linux_aarch64

@@ -34,9 +34,9 @@ nothing:
 
 # LIBOBOE is the name of the liboboe shared library
 platform := ${PLATFORM}
-LIBOBOEALPINE := "liboboe-1.0-alpine-${platform}.so.0.0.0"
-LIBOBOEORG := "liboboe-1.0-${platform}.so.0.0.0"
-LIBOBOESERVERLESS := "liboboe-1.0-lambda-${platform}.so.0.0.0"
+LIBOBOEALPINE := "liboboe-1.0-alpine-${platform}.so"
+LIBOBOEORG := "liboboe-1.0-${platform}.so"
+LIBOBOESERVERLESS := "liboboe-1.0-lambda-${platform}.so"
 # Version of the C-library extension is stored under /solarwinds_apm/extension/VERSION (Otel export compatible as of 10.3.4)
 OBOEVERSION := $(shell cat ./solarwinds_apm/extension/VERSION)
 
@@ -179,8 +179,8 @@ aws-lambda: wrapper
 	@rm ${target_dir}/solarwinds_apm/extension/*.so*
 	@echo -e "Building AWS Lambda version of C-extensions for all supported Python versions in target directory."
 	@set -e; for PYBIN in cp37-cp37m cp38-cp38; do /opt/python/$${PYBIN}/bin/python setup.py build_ext_lambda -b ${target_dir}; done
-	@echo -e "Copying AWS Lambda specific Oboe library liboboe-1.0-lambda-${platform}.so.0.0.0 into target directory."
-	@cp solarwinds_apm/extension/liboboe-1.0-lambda-${platform}.so.0.0.0 ${target_dir}/solarwinds_apm/extension/liboboe-1.0.so.0
+	@echo -e "Copying AWS Lambda specific Oboe library liboboe-1.0-lambda-${platform}.so into target directory."
+	@cp solarwinds_apm/extension/liboboe-1.0-lambda-${platform}.so ${target_dir}/solarwinds_apm/extension/liboboe.so
 	@rm -rf ${target_dir}/*-info
 	@find ${target_dir} -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi
@@ -208,7 +208,7 @@ OTELOBOEREPO := /code/solarwinds-apm-liboboe/liboboe
 copy-liboboe:
 	@echo -e "Copying shared library.\n"
 	@cd solarwinds_apm/extension; \
-		cp "${OTELOBOEREPO}/liboboe-1.0-${platform}.so.0.0.0" .; \
+		cp "${OTELOBOEREPO}/liboboe-1.0-${platform}.so" .; \
 		if [ $$? -ne 0 ]; then echo " **** failed to copy shared library ****" ; exit 1; fi;
 
 # Copy liboboe header files (Python wrapper for Oboe c-lib) from source specified in OTELOBOEREPO
@@ -267,7 +267,7 @@ lint:
 # clean up extension and intermediate build/dist files.
 clean:
 	@echo -e "Cleaning up extension and intermediate build/dist files."
-	@cd solarwinds_apm/extension; rm -f oboe* liboboe-1.0*so* liboboe.so; rm -rf bson
+	@cd solarwinds_apm/extension; rm -f _oboe* oboe* liboboe*so*; rm -rf bson
 	@cd ..
 	@find . -type f -name '*.pyc' -delete
 	@find . -type d -name '__pycache__' | xargs rm -rf

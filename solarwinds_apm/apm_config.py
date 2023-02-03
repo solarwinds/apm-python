@@ -332,7 +332,8 @@ class SolarWindsApmConfig:
 
         See also OTel SDK Resource.create and env vars:
         * https://github.com/open-telemetry/opentelemetry-python/blob/f5fb6b1353929cf8039b1d38f97450866357d901/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py#L156-L184
-        * https://github.com/open-telemetry/opentelemetry-python/blob/8a0ce154ae27a699598cbf3ccc6396eb012902d6/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L15-L39"""
+        * https://github.com/open-telemetry/opentelemetry-python/blob/8a0ce154ae27a699598cbf3ccc6396eb012902d6/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L15-L39
+        """
         service_name = ""
         if agent_enabled:
             # OTel SDK default service.name is "unknown_service" in-code:
@@ -509,7 +510,8 @@ class SolarWindsApmConfig:
     # pylint: disable=too-many-branches,too-many-statements
     def _set_config_value(self, keys: str, val: Any) -> Any:
         """Sets the value of the config option indexed by 'keys' to 'val', where 'keys' is a nested key (separated by
-        self.delimiter, i.e., the position of the element to be changed in the nested dictionary)"""
+        self.delimiter, i.e., the position of the element to be changed in the nested dictionary)
+        """
 
         def _convert_to_bool(val):
             """Converts given value to boolean value"""

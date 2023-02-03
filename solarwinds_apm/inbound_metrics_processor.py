@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)
 
 
 class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
-
     _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
     _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
     _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"

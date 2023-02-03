@@ -31,7 +31,7 @@ A PR is ready to merge when all tests pass, any major feedback has been resolved
 
 ### Build Containers
 
-The build containers are based on the [PyPA image](https://github.com/pypa/manylinux) for `manylinux2014_x86_64` or `manylinux2014_aarch64`. Each uses [SWIG](https://www.swig.org/Doc1.3/Python.html) to compile required C/C++ libraries into a C-extension dependency.
+The build containers are based on the [PyPA image](https://github.com/pypa/manylinux) for `manylinux_2_28_x86_64` or `manylinux_2_28_aarch64`. Each uses [SWIG](https://www.swig.org/Doc1.3/Python.html) to compile required C/C++ libraries into a C-extension dependency.
 
 To create and run a Docker container for testing and builds, run one of the following:
 ```bash

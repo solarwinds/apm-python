@@ -10,11 +10,11 @@ description: Package solarwinds_apm for x86_64
 
 runs:
   using: 'docker'
-  image: quay.io/pypa/manylinux2014_x86_64:latest
+  image: quay.io/pypa/manylinux_2_28_x86_64:latest
   env:
     PLATFORM: x86_64
-    WHEEL_TAG: manylinux2014_x86_64
-    WHEEL_FILENAME: manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+    WHEEL_TAG: manylinux_2_28_x86_64
+    WHEEL_FILENAME: manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
   entrypoint: 'make'
   args:
     - 'package'

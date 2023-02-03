@@ -48,14 +48,14 @@ def os_supported():
 def link_oboe_lib(src_lib):
     """Set up the C-extension libraries.
 
-    Create two .so library symlinks, namely 'liboboe-1.0.so' and 'liboboe-1.0.so.0 which are needed when the
+    Create two .so library symlinks, namely 'liboboe.so' and 'liboboe.so.0 which are needed when the
     solarwinds_apm package is built from source. This step is needed since Oboe library is platform specific.
 
     The src_lib parameter is the name of the library file under solarwinds_apm/extension the above mentioned symlinks will
     point to. If a file with the provided name does not exist, no symlinks will be created."""
 
     logger.info("Create links to platform specific liboboe library file")
-    link_dst = ('liboboe-1.0.so', 'liboboe-1.0.so.0')
+    link_dst = ('liboboe.so', 'liboboe.so.0')
     cwd = os.getcwd()
     try:
         os.chdir('./solarwinds_apm/extension/')
@@ -84,14 +84,14 @@ class CustomBuildExt(build_ext):
             return
 
         platform = os.environ.get("PLATFORM")
-        oboe_lib = f"liboboe-1.0-alpine-{platform}.so.0.0.0" if is_alpine_distro() else f"liboboe-1.0-{platform}.so.0.0.0"
+        oboe_lib = f"liboboe-1.0-alpine-{platform}.so" if is_alpine_distro() else f"liboboe-1.0-{platform}.so"
         link_oboe_lib(oboe_lib)
         build_ext.run(self)
 
 class CustomBuildExtLambda(build_ext):
     def run(self):
         platform = os.environ.get("PLATFORM")
-        link_oboe_lib(f"liboboe-1.0-lambda-{platform}.so.0.0.0")
+        link_oboe_lib(f"liboboe-1.0-lambda-{platform}.so")
         build_ext.run(self)
 
 
@@ -114,7 +114,7 @@ ext_modules = [
                   'solarwinds_apm/extension',
                   'solarwinds_apm'
               ],
-              libraries=['oboe-1.0', 'rt'],
+              libraries=['oboe', 'rt'],
               library_dirs=['solarwinds_apm/extension'],
               extra_compile_args=["-std=c++11"],
               runtime_library_dirs=['$ORIGIN']),

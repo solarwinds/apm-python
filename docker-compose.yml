@@ -10,7 +10,7 @@ version: '2.4'
 
 services:
   x86_64:
-    image: quay.io/pypa/manylinux2014_x86_64
+    image: quay.io/pypa/manylinux_2_28_x86_64
     stdin_open: true
     tty: true
     network_mode: host
@@ -30,11 +30,11 @@ services:
        /bin/bash
     environment:
       - PLATFORM=x86_64
-      - WHEEL_TAG=manylinux2014_x86_64
-      - WHEEL_FILENAME=manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+      - WHEEL_TAG=manylinux_2_28_x86_64
+      - WHEEL_FILENAME=manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
 
   aarch64:
-    image: quay.io/pypa/manylinux2014_aarch64
+    image: quay.io/pypa/manylinux_2_28_aarch64
     stdin_open: true
     tty: true
     network_mode: host
