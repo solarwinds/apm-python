@@ -35,26 +35,16 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build aarch64
-      uses: uraimo/run-on-arch-action@v2
-      with:
-        arch: none
-        distro: none
-        base_image: quay.io/pypa/manylinux_2_28_aarch64:latest
-        env: |
-          PLATFORM: aarch64
-          WHEEL_TAG: manylinux_2_28_aarch64
-          WHEEL_FILENAME: manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl
-          TWINE_NON_INTERACTIVE: 1
-          TWINE_REPOSITORY: testpypi
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
-        run: |
-          yum update -y 
-          yum install -y python3-pip
-          update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
-          pip install --upgrade pip
-          pip install --upgrade twine
-          make package        
-          twine check dist/*
-          # Only upload wheels; assume x86_64 uploaded sdist/tar.gz
-          twine upload dist/*.whl
+      uses: ./.github/actions/package_solarwinds_apm_aarch64
+    - name: Install Twine
+      run: pip install --upgrade --no-cache-dir --prefer-binary twine
+    - name: Check distribution artifacts
+      run: twine check dist/*
+    - name: Publish to TestPyPi
+      env:
+        TWINE_NON_INTERACTIVE: 1
+        TWINE_REPOSITORY: testpypi
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
+      # Only uploads wheels; assume x86_64 uploaded sdist/tar.gz
+      run: twine upload dist/*.whl
