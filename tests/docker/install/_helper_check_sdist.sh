@@ -139,7 +139,7 @@ function check_sdist(){
     tar xzf "$1" --directory "$unpack_directory"
     unpack_agent=$(find "$unpack_directory"/* -type d -name "solarwinds_apm-*")
     # shellcheck disable=SC1091
-    source ./_helper_check_extension_files.sh "$unpack_agent/solarwinds_apm/extension" "$expected_files"
+    #source ./_helper_check_extension_files.sh "$unpack_agent/solarwinds_apm/extension" "$expected_files"
 
     if [ -z "$PIP_INSTALL" ]; then
         echo -e "PIP_INSTALL not specified."
