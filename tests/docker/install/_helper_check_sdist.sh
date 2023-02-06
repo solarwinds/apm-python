@@ -155,7 +155,7 @@ function check_sdist(){
 function get_and_check_sdist(){
     echo "#### Verifying Python agent source distribution ####"
     get_sdist
-    #check_sdist "$sdist_tar"
+    check_sdist "$sdist_tar"
 }
 
 # start testing
