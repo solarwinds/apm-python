@@ -56,4 +56,5 @@ jobs:
           pip install --upgrade twine
           make package        
           twine check dist/*
-          twine upload dist/*
+          # Only upload wheels; assume x86_64 uploaded sdist/tar.gz
+          twine upload dist/*.whl
