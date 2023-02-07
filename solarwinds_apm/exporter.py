@@ -36,6 +36,18 @@ class SolarWindsSpanExporter(SpanExporter):
     Initialization requires a liboboe reporter.
     """
 
+    _ASGI_IMPLEMENTATIONS = [
+        "fastapi",
+        "starlette",
+        "uvicorn",
+        "daphne",
+        "hypercorn",
+        "channels",
+        "quart",
+        "sanic",
+        "rpc.py",
+        "a2wsgi",
+    ]
     _INTERNAL_TRANSACTION_NAME = "TransactionName"
     _SW_SPAN_KIND = "sw.span_kind"
 
@@ -138,7 +150,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 INTL_SWO_OTEL_SCOPE_VERSION, span.instrumentation_scope.version
             )
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-statements
     def _add_info_instrumented_framework(self, span, evt) -> None:
         """Add info to span for which Python framework has been instrumented
         with OTel. Based on instrumentation scope of the span, if present.
@@ -159,6 +171,22 @@ class SolarWindsSpanExporter(SpanExporter):
                 framework = "psutil"
             elif framework == "tortoiseorm":
                 framework = "tortoise"
+            # asgi is implemented over multiple frameworks
+            # https://asgi.readthedocs.io/en/latest/implementations.html
+            # Use the framework for name and version
+            elif framework == "asgi":
+                for asgi_impl in self._ASGI_IMPLEMENTATIONS:
+                    try:
+                        importlib.import_module(asgi_impl)
+                    except (AttributeError, ImportError):
+                        continue
+                    else:
+                        logger.debug(
+                            "Setting %s as instrumented ASGI framework span KV",
+                            asgi_impl,
+                        )
+                        framework = asgi_impl
+                        break
 
             instr_key = f"Python.{framework}.Version"
             if "grpc_" in framework:
