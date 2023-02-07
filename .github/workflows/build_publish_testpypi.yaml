@@ -10,8 +10,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_publish_x86_64:
-    name: Build and publish x86_64
+  build_publish_sdist_and_x86_64:
+    name: Build and publish sdist and x86_64
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
