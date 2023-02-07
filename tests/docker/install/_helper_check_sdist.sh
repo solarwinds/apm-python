@@ -102,14 +102,15 @@ function check_sdist(){
     rm -rf "$unpack_directory"
     mkdir -p "$unpack_directory"
 
-    if [ "$PLATFORM" == "x86_64" ]
-    then
-        expected_files="./VERSION
+    expected_files="./VERSION
 ./__init__.py
 ./bson
 ./bson/bson.h
 ./bson/platform_hacks.h
+./liboboe-1.0-aarch64.so
+./liboboe-1.0-alpine-aarch64.so
 ./liboboe-1.0-alpine-x86_64.so
+./liboboe-1.0-lambda-aarch64.so
 ./liboboe-1.0-lambda-x86_64.so
 ./liboboe-1.0-x86_64.so
 ./oboe.h
@@ -118,23 +119,6 @@ function check_sdist(){
 ./oboe_api.h
 ./oboe_debug.h
 ./oboe_wrap.cxx"
-    elif [ "$PLATFORM" == "aarch64" ]
-    then
-        expected_files="./VERSION
-./__init__.py
-./bson
-./bson/bson.h
-./bson/platform_hacks.h
-./liboboe-1.0-aarch64.so
-./liboboe-1.0-alpine-aarch64.so
-./liboboe-1.0-lambda-aarch64.so
-./oboe.h
-./oboe.py
-./oboe_api.cpp
-./oboe_api.h
-./oboe_debug.h
-./oboe_wrap.cxx"
-    fi
 
     tar xzf "$1" --directory "$unpack_directory"
     unpack_agent=$(find "$unpack_directory"/* -type d -name "solarwinds_apm-*")
