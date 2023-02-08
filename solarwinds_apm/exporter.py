@@ -16,6 +16,7 @@ import sys
 from typing import Any
 
 from opentelemetry.sdk.trace.export import SpanExporter
+from opentelemetry.trace import SpanKind
 from pkg_resources import get_distribution
 
 from solarwinds_apm.apm_constants import (
@@ -36,17 +37,19 @@ class SolarWindsSpanExporter(SpanExporter):
     Initialization requires a liboboe reporter.
     """
 
-    _ASGI_IMPLEMENTATIONS = [
-        "fastapi",
+    _ASGI_APP_IMPLEMENTATIONS = [
+        "fastapi",  # based on starlette, so higher up
         "starlette",
-        "uvicorn",
-        "daphne",
-        "hypercorn",
         "channels",
         "quart",
         "sanic",
         "rpc.py",
         "a2wsgi",
+    ]
+    _ASGI_SERVER_IMPLEMENTATIONS = [
+        "uvicorn",
+        "hypercorn",
+        "daphne",
     ]
     _INTERNAL_TRANSACTION_NAME = "TransactionName"
     _SW_SPAN_KIND = "sw.span_kind"
@@ -173,20 +176,36 @@ class SolarWindsSpanExporter(SpanExporter):
                 framework = "tortoise"
             # asgi is implemented over multiple frameworks
             # https://asgi.readthedocs.io/en/latest/implementations.html
-            # Use the framework for name and version
+            # Use the first best guess framework for name and version
+            # TODO Increase precision
             elif framework == "asgi":
-                for asgi_impl in self._ASGI_IMPLEMENTATIONS:
-                    try:
-                        importlib.import_module(asgi_impl)
-                    except (AttributeError, ImportError):
-                        continue
-                    else:
-                        logger.debug(
-                            "Setting %s as instrumented ASGI framework span KV",
-                            asgi_impl,
-                        )
-                        framework = asgi_impl
-                        break
+                if span.kind == SpanKind.SERVER:
+                    for asgi_impl in self._ASGI_SERVER_IMPLEMENTATIONS:
+                        try:
+                            importlib.import_module(asgi_impl)
+                        except (AttributeError, ImportError):
+                            continue
+                        else:
+                            logger.debug(
+                                "Setting %s as instrumented ASGI server framework span KV",
+                                asgi_impl,
+                            )
+                            framework = asgi_impl
+                            break
+                else:
+                    # SpanKind.INTERNAL might be common for async
+                    for asgi_impl in self._ASGI_APP_IMPLEMENTATIONS:
+                        try:
+                            importlib.import_module(asgi_impl)
+                        except (AttributeError, ImportError):
+                            continue
+                        else:
+                            logger.debug(
+                                "Setting %s as instrumented ASGI application framework span KV",
+                                asgi_impl,
+                            )
+                            framework = asgi_impl
+                            break
 
             instr_key = f"Python.{framework}.Version"
             if "grpc_" in framework:
