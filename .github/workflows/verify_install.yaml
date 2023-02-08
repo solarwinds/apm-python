@@ -48,10 +48,10 @@ jobs:
         --platform linux/arm64 \
         -e PLATFORM=aarch64 \
         -e MODE=${{ github.event.inputs.install-registry }} \
+        -h py3.9-ubuntu20.04 \
         -v $(pwd):/home \
         -w /home/tests/docker/install \
         --rm ubuntu:20.04 \
-        --hostname py3.9-ubuntu20.04 \
         /bin/sh -c "./_helper_run_install_tests.sh"
 
   #--------------------------------------------------------------------
