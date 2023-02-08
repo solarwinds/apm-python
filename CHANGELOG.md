@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - SolarWinds c-lib 12.0.0, for gRPC upgrade ([#107](https://github.com/solarwindscloud/solarwinds-apm-python/pull/107))
+- Bugfix: fix version lookup failures for instrumented ASGI libraries ([#108](https://github.com/solarwindscloud/solarwinds-apm-python/pull/108))
 
 ### Removed
 - Drop centos7 support ([#107](https://github.com/solarwindscloud/solarwinds-apm-python/pull/107))
