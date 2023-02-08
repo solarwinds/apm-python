@@ -37,6 +37,8 @@ jobs:
   #--------------------------------------------------------------------
 
   py37_install_amazon2_aarch64:
+    runs-on: ubuntu-latest
+    steps:
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - uses: actions/checkout@v3
