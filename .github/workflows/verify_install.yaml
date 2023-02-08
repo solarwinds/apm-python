@@ -46,6 +46,7 @@ jobs:
       run: |
         sudo docker run \
         --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
         -e MODE=${{ github.event.inputs.install-registry }} \
         -v $(pwd):/home \
         -w /home/tests/docker/install \
@@ -69,6 +70,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py37_install_ubuntu1804:
@@ -83,6 +85,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py37_install_amazon2:
@@ -101,6 +104,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py37_install_alpine312:
@@ -115,6 +119,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py37_install_alpine313:
@@ -129,6 +134,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py37_install_alpine317:
@@ -143,6 +149,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
@@ -161,6 +168,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py38_install_ubuntu1804:
@@ -175,6 +183,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py38_install_ubuntu2004:
@@ -189,6 +198,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py38_install_alpine312:
@@ -203,6 +213,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py38_install_alpine313:
@@ -217,6 +228,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
@@ -235,6 +247,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_ubuntu2004:
@@ -249,6 +262,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_centos8:
@@ -263,6 +277,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_alpine312:
@@ -277,6 +292,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_alpine313:
@@ -291,6 +307,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_alpine316:
@@ -305,6 +322,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_alpine317:
@@ -319,6 +337,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_rhel8:
@@ -333,6 +352,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
@@ -351,6 +371,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py310_install_ubuntu2004:
@@ -365,6 +386,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py310_install_alpine313:
@@ -379,6 +401,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py310_install_alpine316:
@@ -393,6 +416,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py310_install_alpine317:
@@ -407,6 +431,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
@@ -425,6 +450,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py311_install_ubuntu2004:
@@ -439,6 +465,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py311_install_alpine316:
@@ -453,6 +480,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py311_install_alpine317:
@@ -467,4 +495,5 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
