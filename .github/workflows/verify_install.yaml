@@ -33,7 +33,28 @@ env:
 
 jobs:
   #--------------------------------------------------------------------
-  # Python 3.7
+  # AARCH64
+  #--------------------------------------------------------------------
+
+  py39_install_ubuntu2004_aarch64:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm ubuntu:20.04 \
+        --hostname py3.9-ubuntu20.04 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  #--------------------------------------------------------------------
+  # x86_64 Python 3.7
   #--------------------------------------------------------------------
 
   py37_install_debian10:
@@ -125,7 +146,7 @@ jobs:
         MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
-  # Python 3.8
+  # x86_64 Python 3.8
   #--------------------------------------------------------------------
 
   py38_install_debian10:
@@ -199,7 +220,7 @@ jobs:
         MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
-  # Python 3.9
+  # x86_64 Python 3.9
   #--------------------------------------------------------------------
 
   py39_install_debian10:
@@ -315,7 +336,7 @@ jobs:
         MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
-  # Python 3.10
+  # x86_64 Python 3.10
   #--------------------------------------------------------------------
 
   py310_install_debian10:
@@ -389,7 +410,7 @@ jobs:
         MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
-  # Python 3.11
+  # x86_64 Python 3.11
   #--------------------------------------------------------------------
 
   py311_install_debian10:
