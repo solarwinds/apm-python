@@ -36,7 +36,57 @@ jobs:
   # AARCH64
   #--------------------------------------------------------------------
 
-  py37_install_amazon2_aarch64:
+  aarch64_py37_install_ubuntu1804:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.7-ubuntu18.04 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm ubuntu:18.04 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py37_install_alpine312:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.7-alpine3.12 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm python:3.7-alpine3.12 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py37_install_amazon2:
     runs-on: ubuntu-latest
     steps:
     - name: Set up QEMU
@@ -61,7 +111,32 @@ jobs:
         --rm amazonlinux:2 \
         /bin/sh -c "./_helper_run_install_tests.sh"
 
-  py39_install_ubuntu2004_aarch64:
+  aarch64_py38_install_debian10:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.8-debian10 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm python:3.8-buster \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py39_install_ubuntu2004:
     runs-on: ubuntu-latest
     steps:
     - name: Set up QEMU
@@ -81,6 +156,156 @@ jobs:
         -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
         -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
         -h py3.9-ubuntu20.04 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm ubuntu:20.04 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py39_install_centos8:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.9-centos8 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm centos:8 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py39_install_rhel8:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.9-rhel8 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm registry.fedoraproject.org/f33/python3 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py310_install_ubuntu2004:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.10-ubuntu20.04 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm ubuntu:20.04 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py310_install_alpine316:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.10-alpine3.16 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm python:3.10-alpine3.16 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py310_install_alpine317:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.10-alpine3.17 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm python:3.10-alpine3.17 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py311_install_ubuntu2004:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.11-ubuntu20.04 \
         -v $(pwd):/home \
         -w /home/tests/docker/install \
         --rm ubuntu:20.04 \
