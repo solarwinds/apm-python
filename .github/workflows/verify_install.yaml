@@ -48,6 +48,13 @@ jobs:
         --platform linux/arm64 \
         -e PLATFORM=aarch64 \
         -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
         -h py3.9-ubuntu20.04 \
         -v $(pwd):/home \
         -w /home/tests/docker/install \
