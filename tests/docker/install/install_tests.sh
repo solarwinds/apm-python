@@ -182,7 +182,7 @@ function run_instrumented_server_and_client(){
         export SW_APM_TRUSTEDPATH="$PWD/ao_issuer_ca_public_cert.crt"
     fi
     echo "Testing trace export from Flask to $4..."
-    opentelemetry-instrument flask
+    nohup opentelemetry-instrument flask run > log.txt 2>&1 &
     python client.py
 }
 
