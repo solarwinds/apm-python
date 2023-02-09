@@ -21,18 +21,17 @@ jobs:
         gpg --keyserver hkp://pgp.mit.edu --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB && \
         curl -sSL https://get.rvm.io | bash -s stable && \
         source /home/runner/.rvm/scripts/rvm && \
-        rvm install 3.1.1 --disable-binary && \
-        which rvm
+        /home/runner/.rvm/bin/rvm install 3.1.1 --disable-binary
     - name: Install PackageCloud CLI
-      run: rvm 3.1.1 do gem install package_cloud
+      run: /home/runner/.rvm/bin/rvm 3.1.1 do gem install package_cloud
     - uses: ./.github/actions/package_solarwinds_apm_x86_64
     - name: Upload sdist, x86_64 to PackageCloud
       env:
         PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
       run: |
-        rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
+        /home/runner/.rvm/bin/rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
         dist/solarwinds_apm-$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "').tar.gz
-        rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
+        /home/runner/.rvm/bin/rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
         dist/solarwinds_apm-$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')*.whl
     - name: Remove sdist, x86_64
       run: sudo rm -rf dist/*
@@ -56,5 +55,5 @@ jobs:
       env:
         PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
       run: |
-        rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
+        /home/runner/.rvm/bin/rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
         dist/solarwinds_apm-$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')*.whl
