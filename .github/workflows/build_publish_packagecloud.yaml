@@ -21,7 +21,7 @@ jobs:
         source /home/runner/.rvm/scripts/rvm && \
         rvm install 3.1.1 --disable-binary --with-openssl-dir=/usr/bin/openssl
     - name: Install PackageCloud CLI
-      run: rvm 3.1.1 do gem install package_cloud
+      run: /usr/local/rvm/bin/rvm 3.1.1 do gem install package_cloud
     - uses: ./.github/actions/package_solarwinds_apm_x86_64
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
@@ -43,7 +43,7 @@ jobs:
       env:
         PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
       run: |
-        rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
+        /usr/local/rvm/bin/rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
         dist/solarwinds_apm-$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "').tar.gz
-        rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
+        /usr/local/rvm/bin/rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
         dist/solarwinds_apm-$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')*.whl
