@@ -5,13 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.6.0...HEAD)
-
-## [0.6.0.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.6.0) - 2023-01-30
 ### Added
 - Add ARM support (TBD)
 
+## [0.6.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.6.0) - 2023-02-08
 ### Changed
 - SolarWinds c-lib 12.0.0, for gRPC upgrade ([#107](https://github.com/solarwindscloud/solarwinds-apm-python/pull/107))
+- Bugfix: fix version lookup failures for instrumented ASGI libraries ([#108](https://github.com/solarwindscloud/solarwinds-apm-python/pull/108))
 
 ### Removed
 - Drop centos7 support ([#107](https://github.com/solarwindscloud/solarwinds-apm-python/pull/107))
