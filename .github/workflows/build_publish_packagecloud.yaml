@@ -24,7 +24,8 @@ jobs:
         /home/runner/.rvm/bin/rvm install 3.1.1 --disable-binary
     - name: Install PackageCloud CLI
       run: /home/runner/.rvm/bin/rvm 3.1.1 do gem install package_cloud
-    - uses: ./.github/actions/package_solarwinds_apm_x86_64
+    - name: Build sdist and x86_64
+      uses: ./.github/actions/package_solarwinds_apm_x86_64
     - name: Upload sdist, x86_64 to PackageCloud
       env:
         PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
@@ -33,8 +34,8 @@ jobs:
         dist/solarwinds_apm-$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "').tar.gz
         /home/runner/.rvm/bin/rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
         dist/solarwinds_apm-$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')*.whl
-    - name: Remove sdist, x86_64
-      run: sudo rm -rf dist/*
+    - name: Remove sdist, x86_64 builds and intermediates
+      run: ./.github/actions/clean_builds_intermediates
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Build aarch64 in container with QEMU
