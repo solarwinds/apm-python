@@ -35,7 +35,7 @@ jobs:
         /home/runner/.rvm/bin/rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
         dist/solarwinds_apm-$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')*.whl
     - name: Remove sdist, x86_64 builds and intermediates
-      run: ./.github/actions/clean_builds_intermediates
+      uses: ./.github/actions/clean_builds_intermediates
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Build aarch64 in container with QEMU
