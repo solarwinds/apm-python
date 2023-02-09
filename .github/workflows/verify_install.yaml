@@ -36,30 +36,30 @@ jobs:
   # AARCH64
   #--------------------------------------------------------------------
 
-  # aarch64_py37_install_ubuntu1804:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Set up QEMU
-  #     uses: docker/setup-qemu-action@v2
-  #   - uses: actions/checkout@v3
-  #   - name: Run install test container with QEMU
-  #     run: |
-  #       sudo docker run \
-  #       --platform linux/arm64 \
-  #       -e PLATFORM=aarch64 \
-  #       -e MODE=${{ github.event.inputs.install-registry }} \
-  #       -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
-  #       -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
-  #       -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
-  #       -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
-  #       -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
-  #       -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
-  #       -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
-  #       -h py3.7-ubuntu18.04 \
-  #       -v $(pwd):/home \
-  #       -w /home/tests/docker/install \
-  #       --rm ubuntu:18.04 \
-  #       /bin/sh -c "./_helper_run_install_tests.sh"
+  aarch64_py37_install_ubuntu1804:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.7-ubuntu18.04 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm ubuntu:18.04 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
 
   # aarch64_py37_install_alpine312:
   #   runs-on: ubuntu-latest
