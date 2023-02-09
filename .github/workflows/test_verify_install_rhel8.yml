@@ -16,6 +16,7 @@ on:
         required: false
         description: 'Optional solarwinds-apm version, e.g. 0.0.3.2'
 
+jobs:
   aarch64_py39_install_rhel8:
     runs-on: ubuntu-latest
     steps:
