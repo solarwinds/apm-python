@@ -14,14 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Install Ruby
-      run: |
-        gpg --keyserver hkp://pgp.mit.edu --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB && \
-        curl -sSL https://get.rvm.io | bash -s stable && \
-        source /home/runner/.rvm/scripts/rvm && \
-        rvm install 3.1.1 --disable-binary --with-openssl-dir=/usr/bin/openssl
-    - name: Install PackageCloud CLI
-      run: /usr/local/rvm/bin/rvm 3.1.1 do gem install package_cloud
     - uses: ./.github/actions/package_solarwinds_apm_x86_64
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
@@ -39,11 +31,16 @@ jobs:
           -w /home \
           --rm quay.io/pypa/manylinux_2_28_aarch64:latest \
           /bin/bash -c "yum update -y; yum install -y python3-pip; update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1; pip install --upgrade pip; make package"
-    - name: Upload to PackageCloud
+    - name: Install Ruby, PackageCloud and upload
       env:
         PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
       run: |
-        /usr/local/rvm/bin/rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
-        dist/solarwinds_apm-$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "').tar.gz
-        /usr/local/rvm/bin/rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
+        gpg --keyserver hkp://pgp.mit.edu --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB && \
+        curl -sSL https://get.rvm.io | bash -s stable && \
+        source /home/runner/.rvm/scripts/rvm && \
+        rvm install 3.1.1 --disable-binary --with-openssl-dir=/usr/bin/openssl && \
+        rvm 3.1.1 do gem install package_cloud && \
+        rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
+        dist/solarwinds_apm-$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "').tar.gz && \
+        rvm 3.1.1 do package_cloud push solarwinds/solarwinds-apm-python/python \
         dist/solarwinds_apm-$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')*.whl
