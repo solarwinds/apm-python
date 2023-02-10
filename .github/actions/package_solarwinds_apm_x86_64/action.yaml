@@ -14,7 +14,6 @@ runs:
   env:
     PLATFORM: x86_64
     WHEEL_TAG: manylinux_2_28_x86_64
-    WHEEL_FILENAME: manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
   entrypoint: 'make'
   args:
     - 'package'

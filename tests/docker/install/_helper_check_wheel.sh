@@ -54,6 +54,18 @@ else
   echo "Using provided PLATFORM=$PLATFORM for check_wheel test."
 fi
 
+if [ "$PLATFORM" == "x86_64" ]
+then
+  WHEEL_FILENAME=manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+elif [ "$PLATFORM" == "aarch64" ]
+then
+  WHEEL_FILENAME=manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl
+else
+  echo "FAILED: Could not set WHEEL_FILENAME based on PLATFORM."
+  exit 1
+fi
+echo "Set WHEEL_FILENAME=$WHEEL_FILENAME based on PLATFORM for check_wheel test."
+
 function get_wheel(){
     wheel_dir="$PWD/tmp/wheel"
     rm -rf "$wheel_dir"
