@@ -34,6 +34,11 @@ nothing:
 
 # Platform for builds and install testing: x86_64 or aarch64
 platform := ${PLATFORM}
+ifeq (${platform},aarch64)
+    wheel_tag := manylinux_2_28_aarch64
+else
+    wheel_tag := manylinux_2_28_x86_64
+endif
 
 # LIBOBOE is the name of the liboboe shared library
 LIBOBOEALPINEAARCH := "liboboe-1.0-alpine-aarch64.so"
@@ -133,8 +138,6 @@ check-swig:
 #----------------------------------------------------------------------------------------------------------------------#
 # recipes for building the package distribution
 #----------------------------------------------------------------------------------------------------------------------#
-
-wheel_tag := ${WHEEL_TAG}
 
 # Build the Python wrapper from liboboe headers inside build container
 wrapper: check-swig download-all
