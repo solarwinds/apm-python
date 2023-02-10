@@ -4,22 +4,6 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-# compose the regression tests
-#
-# environment variables:
-# * PLATFORM: Must be x86_64 (default) or aarch64
-# * MODE: (optional) Where to install from, one of: "local" (default),
-#     testpypi, pypi, packagecloud
-# * SOLARWINDS_APM_VERSION: (optional) the agent version being tested. If
-#     MODE=local, must already be built under the project dist/ directory
-#
-# use the `run` command to get an interactive container for debugging:
-# (debian|centos|amazon|fedora) $ docker-compose run --rm <service name> /bin/bash
-# (alpine) $ docker-compose run --rm <service name> /bin/sh
-#
-# See Confluence for more info:
-# https://swicloud.atlassian.net/wiki/spaces/NIT/pages/3218014998/NH+Python+agent+install+testing#Using-official-Docker-images
-
 version: '2.4'
 
 x-command-install-test: &command-install-test
