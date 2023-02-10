@@ -50,7 +50,8 @@ jobs:
           --rm quay.io/pypa/manylinux_2_28_aarch64:latest \
           /bin/bash -c "yum update -y; yum install -y python3-pip; \
           update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1; \
-          pip install --upgrade pip twine; \
+          pip install --upgrade pip; \
+          pip install --upgrade twine; \
           make package; \
           twine check dist/*; \
           twine upload dist/*.whl"
