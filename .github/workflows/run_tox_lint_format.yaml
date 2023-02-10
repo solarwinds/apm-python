@@ -31,3 +31,5 @@ jobs:
       run: make wrapper
     - name: Run tox lint
       run: tox -e lint -- --check-only
+      env:
+        PLATFORM: x86_64
