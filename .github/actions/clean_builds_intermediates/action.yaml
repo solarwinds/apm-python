@@ -11,10 +11,6 @@ description: Clean up builds and intermediate files
 runs:
   using: 'docker'
   image: quay.io/pypa/manylinux_2_28_x86_64:latest
-  env:
-    PLATFORM: x86_64
-    WHEEL_TAG: manylinux_2_28_x86_64
-    WHEEL_FILENAME: manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
   entrypoint: 'make'
   args:
     - 'clean'
