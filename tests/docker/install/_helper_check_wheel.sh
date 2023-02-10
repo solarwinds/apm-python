@@ -36,6 +36,23 @@ then
   exit 1
 fi
 
+VALID_PLATFORMS=(
+    "x86_64"
+    "aarch64"
+)
+if [ -z "$PLATFORM" ]
+then
+  echo "WARNING: Did not provide PLATFORM for check_wheel test."
+  echo "Defaulting to PLATFORM=x86_64"
+  PLATFORM=x86_64
+fi
+if [[ ! " ${VALID_PLATFORMS[*]} " =~ ${PLATFORM} ]]
+then
+  echo "FAILED: Did not provide valid PLATFORM for check_wheel test. Must be one of: x86_64, aarch64."
+  exit 1
+else
+  echo "Using provided PLATFORM=$PLATFORM for check_wheel test."
+fi
 
 function get_wheel(){
     wheel_dir="$PWD/tmp/wheel"

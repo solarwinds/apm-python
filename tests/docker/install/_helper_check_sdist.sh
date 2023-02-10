@@ -42,8 +42,9 @@ VALID_PLATFORMS=(
 )
 if [ -z "$PLATFORM" ]
 then
-  echo "FAILED: Did not provide valid PLATFORM for check_sdist test."
-  exit 1
+  echo "WARNING: Did not provide PLATFORM for check_sdist test."
+  echo "Defaulting to PLATFORM=x86_64"
+  PLATFORM=x86_64
 fi
 if [[ ! " ${VALID_PLATFORMS[*]} " =~ ${PLATFORM} ]]
 then

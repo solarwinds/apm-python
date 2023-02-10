@@ -7,7 +7,7 @@
 # compose the regression tests
 #
 # environment variables:
-# * PLATFORM: Must be x86_64 or aarch64
+# * PLATFORM: Must be x86_64 (default) or aarch64
 # * MODE: (optional) Where to install from, one of: "local" (default),
 #     testpypi, pypi, packagecloud
 # * SOLARWINDS_APM_VERSION: (optional) the agent version being tested. If
