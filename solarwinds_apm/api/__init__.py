@@ -7,7 +7,7 @@
 """
 Example usage:
 
-from solarwinds_apm.apm_ready import solarwinds_ready
+from solarwinds_apm.api import solarwinds_ready
 solarwinds_ready(wait_milliseconds=10000, integer_response=True)
 """
 
