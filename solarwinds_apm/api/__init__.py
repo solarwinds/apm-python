@@ -17,6 +17,20 @@ logger = logging.getLogger(__name__)
 
 
 def set_transaction_name(name: str) -> None:
+    """
+    Assign a custom transaction name to a current request. If multiple 
+    transaction names are set on the same trace, then the last one is used.
+    Overrides default, out-of-the-box naming based on URL/controller/action.
+
+    :param name:str, custom transaction name to apply
+
+    :return:
+    None
+
+    :Example:
+     from solarwinds_apm.api import set_transaction_name
+     set_transaction_name("my-foo-name")
+    """
     # Assumes TracerProvider's active span processor is SynchronousMultiSpanProcessor
     # or ConcurrentMultiSpanProcessor
     span_processors = get_tracer_provider()._active_span_processor._span_processors
@@ -53,7 +67,7 @@ def solarwinds_ready(
 
     :return:
     if integer_response:int code 1 for ready; 0,2,3,4,5 for not ready
-    else:bool True for ready, False not ready,
+    else:bool True for ready, False not ready
 
     :Example:
      from solarwinds_apm.api import solarwinds_ready
