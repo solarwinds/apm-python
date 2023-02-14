@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class SolarWindsTxnNameManager:
     """SolarWinds Transaction Name Manager
-    Stores trace_id with associate transaction name"""
+    Stores "<trace_id>-<span_id>" with associated transaction name"""
 
     def __init__(self, **kwargs: int) -> None:
         self.__cache = {}

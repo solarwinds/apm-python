@@ -45,7 +45,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics,
         and caches liboboe transaction name"""
-        # Only calculate inbound metrics for service root spans
+        # Only calculate inbound metrics for service entry spans
         parent_span_context = span.parent
         if (
             parent_span_context
