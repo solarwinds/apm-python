@@ -16,7 +16,7 @@ from solarwinds_apm.inbound_metrics_processor import SolarWindsInboundMetricsSpa
 logger = logging.getLogger(__name__)
 
 
-def set_transaction_name(name: str) -> None:
+def set_transaction_name(custom_name: str) -> None:
     """
     Assign a custom transaction name to a current request. If multiple 
     transaction names are set on the same trace, then the last one is used.
@@ -44,10 +44,9 @@ def set_transaction_name(name: str) -> None:
         return
 
     current_span = get_current_span()
-    trace_id = current_span.get_span_context().trace_id
-    logger.debug("TODO: Implement me!")
-    # inbound_processor._apm_txname_customizer[trace_id] = name
-    # logger.debug("Cached custom transaction name as %s", name)
+    trace_span_id = f"{current_span.context.trace_id}-{current_span.context.span_id}"
+    inbound_processor._apm_txname_manager[trace_span_id] = custom_name
+    logger.warning("Cached custom transaction name as %s", custom_name)
 
 
 def solarwinds_ready(

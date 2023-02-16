@@ -14,6 +14,7 @@ import logging
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Optional, Sequence
 
+from opentelemetry import baggage
 from opentelemetry.context.context import Context as OtelContext
 from opentelemetry.sdk.trace.sampling import (
     Decision,
@@ -478,6 +479,11 @@ class _SwSampler(Sampler):
         Calculates SamplingResult based on calculation of new/continued trace
         decision, new/updated trace state, and new/updated attributes.
         """
+
+        logger.warning("At should_sample. Doing get_all baggage for current Context")
+        current_baggage = baggage.get_all()
+        logger.warning("current_baggage is %s", current_baggage)
+
         parent_span_context = get_current_span(
             parent_context
         ).get_span_context()
@@ -500,6 +506,13 @@ class _SwSampler(Sampler):
             xtraceoptions,
         )
         otel_decision = self.otel_decision_from_liboboe(liboboe_decision)
+
+        logger.warning("At end of should_sample. Doing set_baggage with future span name")
+        # returns a new Context...
+        new_context = baggage.set_baggage("foo-name", name)
+        logger.warning("new_context is %s", new_context)
+        current_baggage = baggage.get_all()
+        logger.warning("current_baggage is %s", current_baggage)        
 
         return SamplingResult(
             otel_decision,
