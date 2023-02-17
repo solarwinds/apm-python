@@ -83,13 +83,15 @@ class CustomBuildExt(build_ext):
         if sys.platform == 'darwin':
             return
 
-        oboe_lib = "liboboe-1.0-alpine-x86_64.so" if is_alpine_distro() else "liboboe-1.0-x86_64.so"
+        platform = os.environ.get("PLATFORM")
+        oboe_lib = f"liboboe-1.0-alpine-{platform}.so" if is_alpine_distro() else f"liboboe-1.0-{platform}.so"
         link_oboe_lib(oboe_lib)
         build_ext.run(self)
 
 class CustomBuildExtLambda(build_ext):
     def run(self):
-        link_oboe_lib("liboboe-1.0-lambda-x86_64.so")
+        platform = os.environ.get("PLATFORM")
+        link_oboe_lib(f"liboboe-1.0-lambda-{platform}.so")
         build_ext.run(self)
 
 

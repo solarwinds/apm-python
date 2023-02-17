@@ -10,11 +10,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_publish:
+  build_publish_sdist_and_x86_64:
+    name: Build and publish sdist and x86_64
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: ./.github/actions/package_solarwinds_apm
+    - name: Build x86_64
+      uses: ./.github/actions/package_solarwinds_apm_x86_64
     - name: Install Twine
       run: pip install --upgrade --no-cache-dir --prefer-binary twine
     - name: Check distribution artifacts
@@ -26,3 +28,30 @@ jobs:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
       run: twine upload dist/*
+
+  build_publish_aarch64:
+    name: Build and publish aarch64
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Build aarch64 in container with QEMU
+      run: |
+        sudo docker run \
+          --platform linux/arm64 \
+          -e PLATFORM=aarch64 \
+          -e TWINE_NON_INTERACTIVE=1 \
+          -e TWINE_REPOSITORY=testpypi \
+          -e TWINE_USERNAME=__token__ \
+          -e TWINE_PASSWORD=${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }} \
+          -v $(pwd):/home \
+          -w /home \
+          --rm quay.io/pypa/manylinux_2_28_aarch64:latest \
+          /bin/bash -c "yum update -y; yum install -y python3-pip; \
+          update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1; \
+          pip install --upgrade pip; \
+          pip install --upgrade twine; \
+          make package; \
+          twine check dist/*; \
+          twine upload dist/*.whl"

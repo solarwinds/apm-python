@@ -33,7 +33,261 @@ env:
 
 jobs:
   #--------------------------------------------------------------------
-  # Python 3.7
+  # AARCH64
+  #--------------------------------------------------------------------
+
+  aarch64_py37_install_ubuntu1804:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.7-ubuntu18.04 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm ubuntu:18.04 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py37_install_alpine312:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.7-alpine3.12 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm python:3.7-alpine3.12 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py37_install_amazon2:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.7-install-amazon2 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm amazonlinux:2 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py38_install_debian10:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.8-debian10 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm python:3.8-buster \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py39_install_ubuntu2004:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.9-ubuntu20.04 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm ubuntu:20.04 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py39_install_centos8:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.9-centos8 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm centos:8 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py310_install_ubuntu2004:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.10-ubuntu20.04 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm ubuntu:20.04 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py310_install_alpine316:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.10-alpine3.16 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm python:3.10-alpine3.16 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py310_install_alpine317:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.10-alpine3.17 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm python:3.10-alpine3.17 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  aarch64_py311_install_ubuntu2004:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - uses: actions/checkout@v3
+    - name: Run install test container with QEMU
+      run: |
+        sudo docker run \
+        --platform linux/arm64 \
+        -e PLATFORM=aarch64 \
+        -e MODE=${{ github.event.inputs.install-registry }} \
+        -e SOLARWINDS_APM_VERSION=${{ github.event.inputs.solarwinds-version }} \
+        -e SW_APM_COLLECTOR_AO_PROD=${{ secrets.SW_APM_COLLECTOR_AO_PROD }} \
+        -e SW_APM_COLLECTOR_PROD=${{ secrets.SW_APM_COLLECTOR_PROD }} \
+        -e SW_APM_COLLECTOR_STAGING=${{ secrets.SW_APM_COLLECTOR_STAGING }} \
+        -e SW_APM_SERVICE_KEY_AO_PROD=${{ secrets.SW_APM_SERVICE_KEY_AO_PROD }} \
+        -e SW_APM_SERVICE_KEY_PROD=${{ secrets.SW_APM_SERVICE_KEY_PROD }} \
+        -e SW_APM_SERVICE_KEY_STAGING=${{ secrets.SW_APM_SERVICE_KEY_STAGING }} \
+        -h py3.11-ubuntu20.04 \
+        -v $(pwd):/home \
+        -w /home/tests/docker/install \
+        --rm ubuntu:20.04 \
+        /bin/sh -c "./_helper_run_install_tests.sh"
+
+  #--------------------------------------------------------------------
+  # x86_64 Python 3.7
   #--------------------------------------------------------------------
 
   py37_install_debian10:
@@ -48,6 +302,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py37_install_ubuntu1804:
@@ -62,6 +317,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py37_install_amazon2:
@@ -80,6 +336,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py37_install_alpine312:
@@ -94,6 +351,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py37_install_alpine313:
@@ -108,6 +366,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py37_install_alpine317:
@@ -122,10 +381,11 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
-  # Python 3.8
+  # x86_64 Python 3.8
   #--------------------------------------------------------------------
 
   py38_install_debian10:
@@ -140,6 +400,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py38_install_ubuntu1804:
@@ -154,6 +415,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py38_install_ubuntu2004:
@@ -168,6 +430,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py38_install_alpine312:
@@ -182,6 +445,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py38_install_alpine313:
@@ -196,10 +460,11 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
-  # Python 3.9
+  # x86_64 Python 3.9
   #--------------------------------------------------------------------
 
   py39_install_debian10:
@@ -214,6 +479,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_ubuntu2004:
@@ -228,6 +494,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_centos8:
@@ -242,6 +509,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_alpine312:
@@ -256,6 +524,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_alpine313:
@@ -270,6 +539,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_alpine316:
@@ -284,6 +554,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_alpine317:
@@ -298,6 +569,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py39_install_rhel8:
@@ -312,10 +584,11 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
-  # Python 3.10
+  # x86_64 Python 3.10
   #--------------------------------------------------------------------
 
   py310_install_debian10:
@@ -330,6 +603,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py310_install_ubuntu2004:
@@ -344,6 +618,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py310_install_alpine313:
@@ -358,6 +633,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py310_install_alpine316:
@@ -372,6 +648,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py310_install_alpine317:
@@ -386,10 +663,11 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   #--------------------------------------------------------------------
-  # Python 3.11
+  # x86_64 Python 3.11
   #--------------------------------------------------------------------
 
   py311_install_debian10:
@@ -404,6 +682,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py311_install_ubuntu2004:
@@ -418,6 +697,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py311_install_alpine316:
@@ -432,6 +712,7 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}
 
   py311_install_alpine317:
@@ -446,4 +727,5 @@ jobs:
       run: ./_helper_run_install_tests.sh
       shell: sh
       env:
+        PLATFORM: x86_64
         MODE: ${{ github.event.inputs.install-registry }}

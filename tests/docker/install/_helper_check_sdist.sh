@@ -36,6 +36,23 @@ then
   exit 1
 fi
 
+VALID_PLATFORMS=(
+    "x86_64"
+    "aarch64"
+)
+if [ -z "$PLATFORM" ]
+then
+  echo "WARNING: Did not provide PLATFORM for check_sdist test."
+  echo "Defaulting to PLATFORM=x86_64"
+  PLATFORM=x86_64
+fi
+if [[ ! " ${VALID_PLATFORMS[*]} " =~ ${PLATFORM} ]]
+then
+  echo "FAILED: Did not provide valid PLATFORM for check_sdist test. Must be one of: x86_64, aarch64."
+  exit 1
+else
+  echo "Using provided PLATFORM=$PLATFORM for check_sdist test."
+fi
 
 function get_sdist(){
     sdist_dir="$PWD/tmp/sdist"
@@ -85,12 +102,16 @@ function check_sdist(){
     unpack_directory="$PWD/unpack/sdist"
     rm -rf "$unpack_directory"
     mkdir -p "$unpack_directory"
+
     expected_files="./VERSION
 ./__init__.py
 ./bson
 ./bson/bson.h
 ./bson/platform_hacks.h
+./liboboe-1.0-aarch64.so
+./liboboe-1.0-alpine-aarch64.so
 ./liboboe-1.0-alpine-x86_64.so
+./liboboe-1.0-lambda-aarch64.so
 ./liboboe-1.0-lambda-x86_64.so
 ./liboboe-1.0-x86_64.so
 ./oboe.h
@@ -99,6 +120,7 @@ function check_sdist(){
 ./oboe_api.h
 ./oboe_debug.h
 ./oboe_wrap.cxx"
+
     tar xzf "$1" --directory "$unpack_directory"
     unpack_agent=$(find "$unpack_directory"/* -type d -name "solarwinds_apm-*")
     # shellcheck disable=SC1091
