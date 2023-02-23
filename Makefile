@@ -32,10 +32,21 @@ nothing:
 # variable definitions and recipes for downloading of required header and library files
 #----------------------------------------------------------------------------------------------------------------------#
 
+# Platform for builds and install testing: x86_64 or aarch64
+platform := ${PLATFORM}
+ifeq (${platform},aarch64)
+    wheel_tag := manylinux_2_28_aarch64
+else
+    wheel_tag := manylinux_2_28_x86_64
+endif
+
 # LIBOBOE is the name of the liboboe shared library
-LIBOBOEALPINE := "liboboe-1.0-alpine-x86_64.so"
-LIBOBOEORG := "liboboe-1.0-x86_64.so"
-LIBOBOESERVERLESS := "liboboe-1.0-lambda-x86_64.so"
+LIBOBOEALPINEAARCH := "liboboe-1.0-alpine-aarch64.so"
+LIBOBOEALPINEX86 := "liboboe-1.0-alpine-x86_64.so"
+LIBOBOEORGAARCH := "liboboe-1.0-aarch64.so"
+LIBOBOEORGX86 := "liboboe-1.0-x86_64.so"
+LIBOBOESERVERLESSAARCH := "liboboe-1.0-lambda-aarch64.so"
+LIBOBOESERVERLESSX86 := "liboboe-1.0-lambda-x86_64.so"
 # Version of the C-library extension is stored under /solarwinds_apm/extension/VERSION (Otel export compatible as of 10.3.4)
 OBOEVERSION := $(shell cat ./solarwinds_apm/extension/VERSION)
 
@@ -66,18 +77,24 @@ verify-oboe-version:
 
 # Download the pre-compiled liboboe shared library from source specified in OBOEREPO
 download-liboboe: verify-oboe-version
-	@echo -e "Downloading ${LIBOBOEORG} and ${LIBOBOEALPINE} shared libraries.\n"
+	@echo -e "Downloading ${LIBOBOEORGAARCH}, ${LIBOBOEORGX86}, ${LIBOBOEALPINEAARCH} and ${LIBOBOEALPINEX86} shared libraries.\n"
 	@cd solarwinds_apm/extension; \
-		curl -o ${LIBOBOEORG}  "${OBOEREPO}/${LIBOBOEORG}"; \
-		if [ $$? -ne 0 ]; then echo " **** fail to download ${LIBOBOEORG} ****" ; exit 1; fi; \
-		curl -o ${LIBOBOEALPINE}  "${OBOEREPO}/${LIBOBOEALPINE}"; \
-		if [ $$? -ne 0 ]; then echo " **** fail to download ${LIBOBOEALPINE} ****" ; exit 1; fi; \
+		curl -o ${LIBOBOEORGAARCH}  "${OBOEREPO}/${LIBOBOEORGAARCH}"; \
+		if [ $$? -ne 0 ]; then echo " **** fail to download ${LIBOBOEORGAARCH} ****" ; exit 1; fi; \
+		curl -o ${LIBOBOEORGX86}  "${OBOEREPO}/${LIBOBOEORGX86}"; \
+		if [ $$? -ne 0 ]; then echo " **** fail to download ${LIBOBOEORGX86} ****" ; exit 1; fi; \
+		curl -o ${LIBOBOEALPINEAARCH}  "${OBOEREPO}/${LIBOBOEALPINEAARCH}"; \
+		if [ $$? -ne 0 ]; then echo " **** fail to download ${LIBOBOEALPINEAARCH} ****" ; exit 1; fi; \
+		curl -o ${LIBOBOEALPINEX86}  "${OBOEREPO}/${LIBOBOEALPINEX86}"; \
+		if [ $$? -ne 0 ]; then echo " **** fail to download ${LIBOBOEALPINEX86} ****" ; exit 1; fi; \
 		curl -f -O "${OBOEREPO}/VERSION"; \
 		if [ $$? -ne 0 ]; then echo " **** fail to download VERSION  ****" ; exit 1; fi
-	@echo -e "Downloading ${LIBOBOESERVERLESS} shared library.\n"
+	@echo -e "Downloading ${LIBOBOESERVERLESSAARCH} and ${LIBOBOESERVERLESSX86} shared libraries.\n"
 	@cd solarwinds_apm/extension; \
-		curl -o $(LIBOBOESERVERLESS)  "${OBOEREPO}/${LIBOBOESERVERLESS}"; \
-		if [ $$? -ne 0 ]; then echo " **** failed to download ${LIBOBOESERVERLESS} ****" ; exit 1; fi;
+		curl -o $(LIBOBOESERVERLESSAARCH)  "${OBOEREPO}/${LIBOBOESERVERLESSAARCH}"; \
+		if [ $$? -ne 0 ]; then echo " **** failed to download ${LIBOBOESERVERLESSAARCH} ****" ; exit 1; fi; \
+		curl -o $(LIBOBOESERVERLESSX86)  "${OBOEREPO}/${LIBOBOESERVERLESSX86}"; \
+		if [ $$? -ne 0 ]; then echo " **** failed to download ${LIBOBOESERVERLESSX86} ****" ; exit 1; fi;
 
 # Download liboboe header files (Python wrapper for Oboe c-lib) from source specified in OBOEREPO
 download-headers: verify-oboe-version download-bson-headers
@@ -121,8 +138,6 @@ check-swig:
 #----------------------------------------------------------------------------------------------------------------------#
 # recipes for building the package distribution
 #----------------------------------------------------------------------------------------------------------------------#
-
-wheel_tag := 'manylinux_2_28_x86_64'
 
 # Build the Python wrapper from liboboe headers inside build container
 wrapper: check-swig download-all
@@ -178,8 +193,8 @@ aws-lambda: wrapper
 	@rm ${target_dir}/solarwinds_apm/extension/*.so*
 	@echo -e "Building AWS Lambda version of C-extensions for all supported Python versions in target directory."
 	@set -e; for PYBIN in cp37-cp37m cp38-cp38; do /opt/python/$${PYBIN}/bin/python setup.py build_ext_lambda -b ${target_dir}; done
-	@echo -e "Copying AWS Lambda specific Oboe library liboboe-1.0-lambda-x86_64.so into target directory."
-	@cp solarwinds_apm/extension/liboboe-1.0-lambda-x86_64.so ${target_dir}/solarwinds_apm/extension/liboboe.so
+	@echo -e "Copying AWS Lambda specific Oboe library liboboe-1.0-lambda-${platform}.so into target directory."
+	@cp solarwinds_apm/extension/liboboe-1.0-lambda-${platform}.so ${target_dir}/solarwinds_apm/extension/liboboe.so
 	@rm -rf ${target_dir}/*-info
 	@find ${target_dir} -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi
@@ -207,7 +222,7 @@ OTELOBOEREPO := /code/solarwinds-apm-liboboe/liboboe
 copy-liboboe:
 	@echo -e "Copying shared library.\n"
 	@cd solarwinds_apm/extension; \
-		cp "${OTELOBOEREPO}/liboboe-1.0-x86_64.so" .; \
+		cp "${OTELOBOEREPO}/liboboe-1.0-${platform}.so" .; \
 		if [ $$? -ne 0 ]; then echo " **** failed to copy shared library ****" ; exit 1; fi;
 
 # Copy liboboe header files (Python wrapper for Oboe c-lib) from source specified in OTELOBOEREPO

@@ -18,24 +18,53 @@ TEST_MODES=(
 )
 if [ -z "$MODE" ]
 then
-  echo "WARNING: Did not provide MODE for check_sdist test."
+  echo "WARNING: Did not provide MODE for check_wheel test."
   echo "Defaulting to MODE=local"
   MODE=local
 fi
 if [[ ! " ${TEST_MODES[*]} " =~ ${MODE} ]]
 then
-  echo "FAILED: Did not provide valid MODE for check_sdist test. Must be one of: testpypi (default), local, packagecloud, pypi."
+  echo "FAILED: Did not provide valid MODE for check_wheel test. Must be one of: testpypi (default), local, packagecloud, pypi."
   exit 1
 else
-  echo "Using provided MODE=$MODE for check_sdist test."
+  echo "Using provided MODE=$MODE for check_wheel test."
 fi
 
 if [ -z "$APM_ROOT" ]
 then
-  echo "FAILED: Did not provide valid APM_ROOT for check_sdist test."
+  echo "FAILED: Did not provide valid APM_ROOT for check_wheel test."
   exit 1
 fi
 
+VALID_PLATFORMS=(
+    "x86_64"
+    "aarch64"
+)
+if [ -z "$PLATFORM" ]
+then
+  echo "WARNING: Did not provide PLATFORM for check_wheel test."
+  echo "Defaulting to PLATFORM=x86_64"
+  PLATFORM=x86_64
+fi
+if [[ ! " ${VALID_PLATFORMS[*]} " =~ ${PLATFORM} ]]
+then
+  echo "FAILED: Did not provide valid PLATFORM for check_wheel test. Must be one of: x86_64, aarch64."
+  exit 1
+else
+  echo "Using provided PLATFORM=$PLATFORM for check_wheel test."
+fi
+
+if [ "$PLATFORM" == "x86_64" ]
+then
+  WHEEL_FILENAME=manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+elif [ "$PLATFORM" == "aarch64" ]
+then
+  WHEEL_FILENAME=manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl
+else
+  echo "FAILED: Could not set WHEEL_FILENAME based on PLATFORM."
+  exit 1
+fi
+echo "Set WHEEL_FILENAME=$WHEEL_FILENAME based on PLATFORM for check_wheel test."
 
 function get_wheel(){
     wheel_dir="$PWD/tmp/wheel"
@@ -52,8 +81,8 @@ function get_wheel(){
 
         if [ -z "$PIP_INSTALL" ]; then
             echo -e "PIP_INSTALL not specified."
-            echo -e "Only testing the cp38 x86_64 wheel under ${APM_ROOT}"
-            tested_wheel=$(find "$APM_ROOT"/dist/* -name "solarwinds_apm-$SOLARWINDS_APM_VERSION-cp38-cp38-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl")
+            echo -e "Only testing the cp38 ${PLATFORM} wheel under ${APM_ROOT}/dist"
+            tested_wheel=$(find "$APM_ROOT"/dist/* -name "solarwinds_apm-$SOLARWINDS_APM_VERSION-cp38-cp38-$WHEEL_FILENAME")
         else
             # we need to select the right wheel (there might be multiple wheel versions in the dist directory)
             pip download \

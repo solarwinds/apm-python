@@ -4,27 +4,15 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-# compose the regression tests
-#
-# environment variables:
-# * SOLARWINDS_APM_VERSION: the agent version being tested, it must already be built
-#   under the project dist/ directory
-#
-# use the `run` command to get an interactive container for debugging:
-# (debian|centos|amazon|fedora) $ docker-compose run --rm <service name> /bin/bash
-# (alpine) $ docker-compose run --rm <service name> /bin/sh
-#
-# See Confluence for more info:
-# https://swicloud.atlassian.net/wiki/spaces/NIT/pages/3218014998/NH+Python+agent+install+testing#Using-official-Docker-images
-
 version: '2.4'
 
 x-command-install-test: &command-install-test
   command: sh _helper_run_install_tests.sh
 
 x-envvars-install-test: &envvars-install-test
-  SOLARWINDS_APM_VERSION: ${SOLARWINDS_APM_VERSION:-}
+  PLATFORM: ${PLATFORM}
   MODE: ${MODE}
+  SOLARWINDS_APM_VERSION: ${SOLARWINDS_APM_VERSION:-}
   SW_APM_COLLECTOR_AO_PROD: ${SW_APM_COLLECTOR_AO_PROD}
   SW_APM_COLLECTOR_PROD: ${SW_APM_COLLECTOR_PROD}
   SW_APM_COLLECTOR_STAGING: ${SW_APM_COLLECTOR_STAGING}
@@ -57,15 +45,6 @@ services:
   #--------------------------------------------------------------------
   # Python 3.7
   #--------------------------------------------------------------------
-
-  py3.7-install-debian9:
-    hostname: "py3.7-debian9"
-    image: "python:3.7-stretch"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
-    environment:
-      << : *envvars-install-test
 
   py3.7-install-debian10:
     hostname: "py3.7-debian10"
