@@ -13,6 +13,10 @@ from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import SpanKind, StatusCode, TraceFlags
 
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_CURRENT_SPAN_ID,
+    INTL_SWO_CURRENT_TRACE_ID,
+)
 from solarwinds_apm.apm_noop import Span as NoopSpan
 from solarwinds_apm.extension.oboe import Span
 
@@ -59,12 +63,8 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         ):
             return
 
-        context.attach(baggage.set_baggage("sw-current-trace-id", span.context.trace_id))
-        context.attach(baggage.set_baggage("sw-current-entry-span-id", span.context.span_id))
-        
-        # debug
-        current_context = context.get_current()
-        logger.warning("current_context at on_start of span %s is %s", span.name, current_context)
+        context.attach(baggage.set_baggage(INTL_SWO_CURRENT_TRACE_ID, span.context.trace_id))
+        context.attach(baggage.set_baggage(INTL_SWO_CURRENT_SPAN_ID, span.context.span_id))
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics,
@@ -168,10 +168,8 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         custom_trans_name = self.calculate_custom_transaction_name(span)
 
         if custom_trans_name:
-            logger.warning("Setting trans_name as %s", custom_trans_name)
             trans_name = custom_trans_name
         elif http_route:
-            logger.warning("Setting trans_name as %s", http_route)
             trans_name = http_route
         elif span.name:
             trans_name = span.name
@@ -186,9 +184,6 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         custom_name = self._apm_txname_manager.get(trace_span_id)
         if custom_name:
             trans_name = self._apm_txname_manager[trace_span_id]
-            logger.warning("Using cached custom_name %s for trace_span_id %s", trans_name, trace_span_id)
-        else:
-            logger.warning("No custom_name cached for trace_span_id %s", trace_span_id)
         return trans_name
 
     def calculate_span_time(
