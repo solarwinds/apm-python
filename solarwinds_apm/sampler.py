@@ -500,7 +500,7 @@ class _SwSampler(Sampler):
             xtraceoptions,
         )
         otel_decision = self.otel_decision_from_liboboe(liboboe_decision)
-    
+
         return SamplingResult(
             otel_decision,
             new_attributes if Decision.is_sampled(otel_decision) else None,
