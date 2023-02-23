@@ -8,8 +8,7 @@ import logging
 from typing import Any
 
 from opentelemetry import baggage
-from opentelemetry import context
-from opentelemetry.trace import get_current_span, get_tracer_provider
+from opentelemetry.trace import get_tracer_provider
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_CURRENT_SPAN_ID,
@@ -17,21 +16,20 @@ from solarwinds_apm.apm_constants import (
 )
 from solarwinds_apm.apm_oboe_codes import OboeReadyCode
 from solarwinds_apm.extension.oboe import Context
-from solarwinds_apm.inbound_metrics_processor import SolarWindsInboundMetricsSpanProcessor
+from solarwinds_apm.inbound_metrics_processor import (
+    SolarWindsInboundMetricsSpanProcessor,
+)
 
 logger = logging.getLogger(__name__)
 
 
 def set_transaction_name(custom_name: str) -> None:
     """
-    Assign a custom transaction name to a current request. If multiple 
+    Assign a custom transaction name to a current request. If multiple
     transaction names are set on the same trace, then the last one is used.
     Overrides default, out-of-the-box naming based on URL/controller/action.
 
-    :param name:str, custom transaction name to apply
-
-    :return:
-    None
+    :custom_name:str, custom transaction name to apply
 
     :Example:
      from solarwinds_apm.api import set_transaction_name
@@ -39,10 +37,13 @@ def set_transaction_name(custom_name: str) -> None:
     """
     # Assumes TracerProvider's active span processor is SynchronousMultiSpanProcessor
     # or ConcurrentMultiSpanProcessor
-    span_processors = get_tracer_provider()._active_span_processor._span_processors
+    span_processors = (
+        # pylint: disable=protected-access
+        get_tracer_provider()._active_span_processor._span_processors
+    )
     inbound_processor = None
     for spr in span_processors:
-        if type(spr) == SolarWindsInboundMetricsSpanProcessor:
+        if isinstance(spr) == SolarWindsInboundMetricsSpanProcessor:
             inbound_processor = spr
 
     if not inbound_processor:
@@ -52,11 +53,18 @@ def set_transaction_name(custom_name: str) -> None:
     entry_trace_id = baggage.get_baggage(INTL_SWO_CURRENT_TRACE_ID)
     entry_span_id = baggage.get_baggage(INTL_SWO_CURRENT_SPAN_ID)
     if not entry_trace_id or not entry_span_id:
-        logger.debug("Cannot cache custom transaction name %s because OTel service entry span not started; ignoring", custom_name)
+        logger.debug(
+            "Cannot cache custom transaction name %s because OTel service entry span not started; ignoring",
+            custom_name,
+        )
         return
     trace_span_id = f"{entry_trace_id}-{entry_span_id}"
-    inbound_processor._apm_txname_manager[trace_span_id] = custom_name
-    logger.debug("Cached custom transaction name for %s as %s", trace_span_id, custom_name)
+    inbound_processor.apm_txname_manager[trace_span_id] = custom_name
+    logger.debug(
+        "Cached custom transaction name for %s as %s",
+        trace_span_id,
+        custom_name,
+    )
 
 
 def solarwinds_ready(

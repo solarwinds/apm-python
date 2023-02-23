@@ -5,10 +5,9 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
-from typing import TYPE_CHECKING, Any, Tuple, Optional
+from typing import TYPE_CHECKING, Any, Optional, Tuple
 
-from opentelemetry import baggage
-from opentelemetry import context
+from opentelemetry import baggage, context
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import SpanKind, StatusCode, TraceFlags
@@ -42,7 +41,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         apm_txname_manager: "SolarWindsTxnNameManager",
         agent_enabled: bool,
     ) -> None:
-        self._apm_txname_manager = apm_txname_manager
+        self.apm_txname_manager = apm_txname_manager
         if agent_enabled:
             self._span = Span
         else:
@@ -63,8 +62,14 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         ):
             return
 
-        context.attach(baggage.set_baggage(INTL_SWO_CURRENT_TRACE_ID, span.context.trace_id))
-        context.attach(baggage.set_baggage(INTL_SWO_CURRENT_SPAN_ID, span.context.span_id))
+        context.attach(
+            baggage.set_baggage(
+                INTL_SWO_CURRENT_TRACE_ID, span.context.trace_id
+            )
+        )
+        context.attach(
+            baggage.set_baggage(INTL_SWO_CURRENT_SPAN_ID, span.context.span_id)
+        )
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics,
@@ -130,7 +135,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
         if span.context.trace_flags == TraceFlags.SAMPLED:
             # Cache txn_name for span export
-            self._apm_txname_manager[
+            self.apm_txname_manager[
                 f"{span.context.trace_id}-{span.context.span_id}"
             ] = liboboe_txn_name  # type: ignore
 
@@ -175,15 +180,13 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             trans_name = span.name
         return trans_name, url_tran
 
-    def calculate_custom_transaction_name(
-        self, span: "ReadableSpan"
-    ) -> Any:
+    def calculate_custom_transaction_name(self, span: "ReadableSpan") -> Any:
         """Get custom transaction name for trace by trace_id, if any"""
         trans_name = None
         trace_span_id = f"{span.context.trace_id}-{span.context.span_id}"
-        custom_name = self._apm_txname_manager.get(trace_span_id)
+        custom_name = self.apm_txname_manager.get(trace_span_id)
         if custom_name:
-            trans_name = self._apm_txname_manager[trace_span_id]
+            trans_name = self.apm_txname_manager[trace_span_id]
         return trans_name
 
     def calculate_span_time(
