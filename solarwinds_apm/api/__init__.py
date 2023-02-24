@@ -46,7 +46,7 @@ def set_transaction_name(custom_name: str) -> bool:
     )
     inbound_processor = None
     for spr in span_processors:
-        if isinstance(spr) == SolarWindsInboundMetricsSpanProcessor:
+        if isinstance(spr, SolarWindsInboundMetricsSpanProcessor):
             inbound_processor = spr
 
     if not inbound_processor:
