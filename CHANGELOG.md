@@ -6,7 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.7.0...HEAD)
 
-## [0.7.0.5](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.7.0) - 2023-02-22
+## Added
+- Add `set_transaction_name` API method ([#115](https://github.com/solarwindscloud/solarwinds-apm-python/pull/115))
+
+## [0.7.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.7.0) - 2023-02-22
 ### Added
 - Add ARM support ([#111](https://github.com/solarwindscloud/solarwinds-apm-python/pull/111))
 
