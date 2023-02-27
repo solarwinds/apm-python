@@ -29,6 +29,9 @@ def set_transaction_name(custom_name: str) -> bool:
     transaction names are set on the same trace, then the last one is used.
     Overrides default, out-of-the-box naming based on URL/controller/action.
 
+    Any uppercase to lowercase conversions or special character replacements
+    are done by the platform. Any truncations are done by the core extension.
+
     :custom_name:str, custom transaction name to apply
 
     :return:
