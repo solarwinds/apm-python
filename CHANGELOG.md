@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.7.0...HEAD)
 
+### Changed
+- OpenTelemetry API/SDK 1.16.0 ([#116](https://github.com/solarwindscloud/solarwinds-apm-python/pull/116))
+- OpenTelemetry Instrumentation 0.37b0 ([#116](https://github.com/solarwindscloud/solarwinds-apm-python/pull/116))
+
 ## [0.7.0.5](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.7.0) - 2023-02-22
 ### Added
 - Add ARM support ([#111](https://github.com/solarwindscloud/solarwinds-apm-python/pull/111))
