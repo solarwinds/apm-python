@@ -5,12 +5,17 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
-from typing import TYPE_CHECKING, Any, Tuple
+from typing import TYPE_CHECKING, Any, Optional, Tuple
 
+from opentelemetry import baggage, context
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import SpanKind, StatusCode, TraceFlags
 
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_CURRENT_SPAN_ID,
+    INTL_SWO_CURRENT_TRACE_ID,
+)
 from solarwinds_apm.apm_noop import Span as NoopSpan
 from solarwinds_apm.extension.oboe import Span
 
@@ -36,16 +41,40 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         apm_txname_manager: "SolarWindsTxnNameManager",
         agent_enabled: bool,
     ) -> None:
-        self._apm_txname_manager = apm_txname_manager
+        self.apm_txname_manager = apm_txname_manager
         if agent_enabled:
             self._span = Span
         else:
             self._span = NoopSpan
 
+    def on_start(
+        self,
+        span: "ReadableSpan",
+        parent_context: Optional[context.Context] = None,
+    ) -> None:
+        """Caches current entry span ID in span context baggage"""
+        # Only cache current entry span ID for service entry spans
+        parent_span_context = span.parent
+        if (
+            parent_span_context
+            and parent_span_context.is_valid
+            and not parent_span_context.is_remote
+        ):
+            return
+
+        context.attach(
+            baggage.set_baggage(
+                INTL_SWO_CURRENT_TRACE_ID, span.context.trace_id
+            )
+        )
+        context.attach(
+            baggage.set_baggage(INTL_SWO_CURRENT_SPAN_ID, span.context.span_id)
+        )
+
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics,
         and caches liboboe transaction name"""
-        # Only calculate inbound metrics for service root spans
+        # Only calculate inbound metrics for service entry spans
         parent_span_context = span.parent
         if (
             parent_span_context
@@ -106,7 +135,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
         if span.context.trace_flags == TraceFlags.SAMPLED:
             # Cache txn_name for span export
-            self._apm_txname_manager[
+            self.apm_txname_manager[
                 f"{span.context.trace_id}-{span.context.span_id}"
             ] = liboboe_txn_name  # type: ignore
 
@@ -141,11 +170,24 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         url_tran = span.attributes.get(self._HTTP_URL, None)
         http_route = span.attributes.get(self._HTTP_ROUTE, None)
         trans_name = None
-        if http_route:
+        custom_trans_name = self.calculate_custom_transaction_name(span)
+
+        if custom_trans_name:
+            trans_name = custom_trans_name
+        elif http_route:
             trans_name = http_route
         elif span.name:
             trans_name = span.name
         return trans_name, url_tran
+
+    def calculate_custom_transaction_name(self, span: "ReadableSpan") -> Any:
+        """Get custom transaction name for trace by trace_id, if any"""
+        trans_name = None
+        trace_span_id = f"{span.context.trace_id}-{span.context.span_id}"
+        custom_name = self.apm_txname_manager.get(trace_span_id)
+        if custom_name:
+            trans_name = custom_name
+        return trans_name
 
     def calculate_span_time(
         self,
