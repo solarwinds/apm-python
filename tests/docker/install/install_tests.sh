@@ -106,7 +106,7 @@ function check_agent_startup(){
     export SW_APM_DEBUG_LEVEL=6
     export SW_APM_SERVICE_KEY=invalid-token-for-testing-1234567890:servicename
     
-    # return value we expect form solarwinds_apm.solarwinds_ready().
+    # return value we expect form solarwinds_apm.api.solarwinds_ready().
     # This should normally be 1 (ready), because the collector does not send
     # "invalid api token" response; it sends "ok" with soft disable settings.
     expected_agent_return=1
@@ -119,7 +119,7 @@ function check_agent_startup(){
     # unset stop on error so we can catch debug messages in case of failures
     set +e
 
-    result=$(opentelemetry-instrument python -c 'from solarwinds_apm.apm_ready import solarwinds_ready; r=solarwinds_ready(wait_milliseconds=10000, integer_response=True); print(r)' 2>startup.log)
+    result=$(opentelemetry-instrument python -c 'from solarwinds_apm.api import solarwinds_ready; r=solarwinds_ready(wait_milliseconds=10000, integer_response=True); print(r)' 2>startup.log)
 
     if [ "$result" != "$expected_agent_return" ]; then
         echo "FAILED! Expected solarwinds_ready to return $expected_agent_return, but got: $result"
