@@ -186,7 +186,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         trace_span_id = f"{span.context.trace_id}-{span.context.span_id}"
         custom_name = self.apm_txname_manager.get(trace_span_id)
         if custom_name:
-            trans_name = self.apm_txname_manager[trace_span_id]
+            trans_name = custom_name
         return trans_name
 
     def calculate_span_time(
