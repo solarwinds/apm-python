@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.7.0...HEAD)
+## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.8.0...HEAD)
+
+## [0.8.0.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.8.0) - 2023-02-28
 
 ### Added
 - Add `set_transaction_name` API method ([#115](https://github.com/solarwindscloud/solarwinds-apm-python/pull/115))
