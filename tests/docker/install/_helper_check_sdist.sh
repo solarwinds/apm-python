@@ -57,7 +57,7 @@ function get_sdist(){
             exit 1
         fi
     else
-        pip_options=(--no-binary solarwinds-apm --dest "$sdist_dir")
+        pip_options=(--no-binary solarwinds-apm --dest "$sdist_dir" solarwinds-apm)
         if [ "$MODE" == "testpypi" ]
         then
             pip_options+=(--extra-index-url https://test.pypi.org/simple/)
