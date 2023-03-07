@@ -48,9 +48,6 @@ def os_supported():
     is_x86_64_or_aarch64 = platform.machine() in ["x86_64", "aarch64"]
     return is_linux and is_x86_64_or_aarch64
 
-def get_platform():
-    return platform.machine()
-
 def link_oboe_lib(src_lib):
     """Set up the C-extension libraries.
 
@@ -89,15 +86,15 @@ class CustomBuildExt(build_ext):
         if sys.platform == 'darwin':
             return
 
-        platform = get_platform()
-        oboe_lib = f"liboboe-1.0-alpine-{platform}.so" if is_alpine_distro() else f"liboboe-1.0-{platform}.so"
+        platform_m = platform.machine()
+        oboe_lib = f"liboboe-1.0-alpine-{platform_m}.so" if is_alpine_distro() else f"liboboe-1.0-{platform_m}.so"
         link_oboe_lib(oboe_lib)
         build_ext.run(self)
 
 class CustomBuildExtLambda(build_ext):
     def run(self):
-        platform = get_platform()
-        link_oboe_lib(f"liboboe-1.0-lambda-{platform}.so")
+        platform_m = platform.machine()
+        link_oboe_lib(f"liboboe-1.0-lambda-{platform_m}.so")
         build_ext.run(self)
 
 

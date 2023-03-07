@@ -37,7 +37,7 @@ platform := ${PLATFORM}
 ifeq (${platform},aarch64)
     wheel_tag := manylinux_2_28_aarch64
 else
-	platform := x86_64
+    platform := x86_64
     wheel_tag := manylinux_2_28_x86_64
 endif
 
