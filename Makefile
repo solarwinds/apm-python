@@ -32,9 +32,11 @@ nothing:
 # variable definitions and recipes for downloading of required header and library files
 #----------------------------------------------------------------------------------------------------------------------#
 
-# Platform for builds and install testing: x86_64 or aarch64
-platform := ${uname -m}
-ifeq (${platform},aarch64)
+# Platform for wheel tagging: x86_64 or aarch64
+# PLATFORM can be optionally provided at make command to override,
+# e.g. aarch64 builds on QEMU
+PLATFORM := ${uname -m}
+ifeq (${PLATFORM},aarch64)
     wheel_tag := manylinux_2_28_aarch64
 else
     wheel_tag := manylinux_2_28_x86_64
@@ -193,8 +195,8 @@ aws-lambda: wrapper
 	@rm ${target_dir}/solarwinds_apm/extension/*.so*
 	@echo -e "Building AWS Lambda version of C-extensions for all supported Python versions in target directory."
 	@set -e; for PYBIN in cp37-cp37m cp38-cp38; do /opt/python/$${PYBIN}/bin/python setup.py build_ext_lambda -b ${target_dir}; done
-	@echo -e "Copying AWS Lambda specific Oboe library liboboe-1.0-lambda-${platform}.so into target directory."
-	@cp solarwinds_apm/extension/liboboe-1.0-lambda-${platform}.so ${target_dir}/solarwinds_apm/extension/liboboe.so
+	@echo -e "Copying AWS Lambda specific Oboe library liboboe-1.0-lambda-${PLATFORM}.so into target directory."
+	@cp solarwinds_apm/extension/liboboe-1.0-lambda-${PLATFORM}.so ${target_dir}/solarwinds_apm/extension/liboboe.so
 	@rm -rf ${target_dir}/*-info
 	@find ${target_dir} -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi
@@ -222,7 +224,7 @@ OTELOBOEREPO := /code/solarwinds-apm-liboboe/liboboe
 copy-liboboe:
 	@echo -e "Copying shared library.\n"
 	@cd solarwinds_apm/extension; \
-		cp "${OTELOBOEREPO}/liboboe-1.0-${platform}.so" .; \
+		cp "${OTELOBOEREPO}/liboboe-1.0-${PLATFORM}.so" .; \
 		if [ $$? -ne 0 ]; then echo " **** failed to copy shared library ****" ; exit 1; fi;
 
 # Copy liboboe header files (Python wrapper for Oboe c-lib) from source specified in OTELOBOEREPO

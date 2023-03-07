@@ -40,6 +40,7 @@ jobs:
       run: |
         sudo docker run \
           --platform linux/arm64 \
+          -e PLATFORM=aarch64 \
           -e TWINE_NON_INTERACTIVE=1 \
           -e TWINE_REPOSITORY=testpypi \
           -e TWINE_USERNAME=__token__ \
