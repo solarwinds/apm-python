@@ -10,7 +10,6 @@ x-command-install-test: &command-install-test
   command: sh _helper_run_install_tests.sh
 
 x-envvars-install-test: &envvars-install-test
-  PLATFORM: ${PLATFORM}
   MODE: ${MODE}
   SOLARWINDS_APM_VERSION: ${SOLARWINDS_APM_VERSION:-}
   SW_APM_COLLECTOR_AO_PROD: ${SW_APM_COLLECTOR_AO_PROD}

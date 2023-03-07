@@ -33,7 +33,7 @@ nothing:
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Platform for builds and install testing: x86_64 or aarch64
-platform := ${PLATFORM}
+platform := ${uname -m}
 ifeq (${platform},aarch64)
     wheel_tag := manylinux_2_28_aarch64
 else

@@ -28,8 +28,6 @@ services:
        # tox for automated tests
        python3.8 -m pip install boto3 twine tox
        /bin/bash
-    environment:
-      - PLATFORM=x86_64
 
   aarch64:
     image: quay.io/pypa/manylinux_2_28_aarch64
@@ -50,5 +48,3 @@ services:
        # tox for automated tests
        python3.8 -m pip install boto3 twine tox
        /bin/bash
-    environment:
-      - PLATFORM=aarch64

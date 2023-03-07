@@ -42,7 +42,6 @@ jobs:
       run: |
         sudo docker run \
           --platform linux/arm64 \
-          -e PLATFORM=aarch64 \
           -e TWINE_NON_INTERACTIVE=1 \
           -e TWINE_USERNAME=__token__ \
           -e TWINE_PASSWORD=${{ secrets.SW_APM_PYPI_UPLOAD_TOKEN }} \
