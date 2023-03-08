@@ -91,7 +91,7 @@ function get_wheel(){
             exit 1
         fi
     else
-        pip_options=(--only-binary solarwinds-apm --dest "$wheel_dir" solarwinds-apm)
+        pip_options=(--only-binary solarwinds-apm --dest "$wheel_dir")
         if [ "$MODE" == "testpypi" ]
         then
             pip_options+=(--extra-index-url https://test.pypi.org/simple/)
