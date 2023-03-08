@@ -9,6 +9,7 @@
 # pylint: disable-msg=missing-module-docstring
 import logging
 import os
+import platform
 import sys
 
 from setuptools import (
@@ -43,7 +44,9 @@ def python_version_supported():
     return False
 
 def os_supported():
-    return sys.platform.startswith('linux')
+    is_linux = sys.platform.startswith('linux')
+    is_x86_64_or_aarch64 = platform.machine() in ["x86_64", "aarch64"]
+    return is_linux and is_x86_64_or_aarch64
 
 def link_oboe_lib(src_lib):
     """Set up the C-extension libraries.
@@ -83,21 +86,21 @@ class CustomBuildExt(build_ext):
         if sys.platform == 'darwin':
             return
 
-        platform = os.environ.get("PLATFORM")
-        oboe_lib = f"liboboe-1.0-alpine-{platform}.so" if is_alpine_distro() else f"liboboe-1.0-{platform}.so"
+        platform_m = platform.machine()
+        oboe_lib = f"liboboe-1.0-alpine-{platform_m}.so" if is_alpine_distro() else f"liboboe-1.0-{platform_m}.so"
         link_oboe_lib(oboe_lib)
         build_ext.run(self)
 
 class CustomBuildExtLambda(build_ext):
     def run(self):
-        platform = os.environ.get("PLATFORM")
-        link_oboe_lib(f"liboboe-1.0-lambda-{platform}.so")
+        platform_m = platform.machine()
+        link_oboe_lib(f"liboboe-1.0-lambda-{platform_m}.so")
         build_ext.run(self)
 
 
 if not (python_version_supported() and os_supported()):
     logger.warn(
-        "[SETUP] This package supports only Python 3.7 and above on Linux. "
+        "[SETUP] This package supports only Python 3.7 and above on Linux x86_64 or aarch64. "
         "Other platform or python versions may not work as expected.")
 
 ext_modules = [

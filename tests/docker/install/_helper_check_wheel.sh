@@ -40,18 +40,11 @@ VALID_PLATFORMS=(
     "x86_64"
     "aarch64"
 )
-if [ -z "$PLATFORM" ]
-then
-  echo "WARNING: Did not provide PLATFORM for check_wheel test."
-  echo "Defaulting to PLATFORM=x86_64"
-  PLATFORM=x86_64
-fi
+PLATFORM=$(uname -m)
 if [[ ! " ${VALID_PLATFORMS[*]} " =~ ${PLATFORM} ]]
 then
-  echo "FAILED: Did not provide valid PLATFORM for check_wheel test. Must be one of: x86_64, aarch64."
+  echo "FAILED: Invalid platform for check_wheel test. Must be run on one of: x86_64, aarch64."
   exit 1
-else
-  echo "Using provided PLATFORM=$PLATFORM for check_wheel test."
 fi
 
 if [ "$PLATFORM" == "x86_64" ]
@@ -60,11 +53,8 @@ then
 elif [ "$PLATFORM" == "aarch64" ]
 then
   WHEEL_FILENAME=manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl
-else
-  echo "FAILED: Could not set WHEEL_FILENAME based on PLATFORM."
-  exit 1
 fi
-echo "Set WHEEL_FILENAME=$WHEEL_FILENAME based on PLATFORM for check_wheel test."
+echo "Set WHEEL_FILENAME=$WHEEL_FILENAME based on platform for check_wheel test."
 
 function get_wheel(){
     wheel_dir="$PWD/tmp/wheel"

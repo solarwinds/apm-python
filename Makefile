@@ -32,11 +32,12 @@ nothing:
 # variable definitions and recipes for downloading of required header and library files
 #----------------------------------------------------------------------------------------------------------------------#
 
-# Platform for builds and install testing: x86_64 or aarch64
+# Platform for wheel tagging: x86_64 or aarch64
 platform := ${PLATFORM}
 ifeq (${platform},aarch64)
     wheel_tag := manylinux_2_28_aarch64
 else
+    platform := x86_64
     wheel_tag := manylinux_2_28_x86_64
 endif
 
