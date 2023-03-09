@@ -337,7 +337,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             # Some OTel instrumentation libraries are named not exactly
             # the same as the instrumented libraries!
             # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
-            if entry_point_name == "aiohttp-client":
+            if entry_point_name == "aiohttp_client":
                 entry_point_name = "aiohttp"
             elif "grpc_" in entry_point_name:
                 entry_point_name = "grpc"

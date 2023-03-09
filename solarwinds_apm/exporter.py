@@ -168,7 +168,7 @@ class SolarWindsSpanExporter(SpanExporter):
             # Some OTel instrumentation libraries are named not exactly
             # the same as the instrumented libraries!
             # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
-            if framework == "aiohttp-client":
+            if framework == "aiohttp_client":
                 framework = "aiohttp"
             elif framework == "system_metrics":
                 framework = "psutil"

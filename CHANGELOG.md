@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Fixed noisy trace state KV deletion attempts when key not present ([#121](https://github.com/solarwindscloud/solarwinds-apm-python/pull/121))
 
+### Changed
+- Bugfix: fix version lookup failures for instrumented aiohttp library ([#122](https://github.com/solarwindscloud/solarwinds-apm-python/pull/122))
+
 ## [0.8.1](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.8.1) - 2023-03-08
 ### Changed
 - Fixed installation from source distribution ([#119](https://github.com/solarwindscloud/solarwinds-apm-python/pull/119))
