@@ -53,6 +53,10 @@ class TestW3CTransformer():
         assert W3CTransformer.sw_from_span_and_decision(1234, "01") \
             == "{:016x}-{}".format(1234, "01")
 
-    def test_remove_response_from_sw(self):
+    def test_remove_response_from_sw_key_present(self):
         ts = TraceState([["bar", "456"],["xtrace_options_response", "123"]])
+        assert W3CTransformer.remove_response_from_sw(ts) == TraceState([["bar", "456"]])
+
+    def test_remove_response_from_sw_key_absent(self):
+        ts = TraceState([["bar", "456"]])
         assert W3CTransformer.remove_response_from_sw(ts) == TraceState([["bar", "456"]])
