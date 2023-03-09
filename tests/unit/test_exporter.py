@@ -799,7 +799,7 @@ class Test_SolarWindsSpanExporter():
             mock_event,
             mock_create_event,
             mock_sys_modules,
-            "opentelemetry.instrumentation.aiohttp-client",
+            "opentelemetry.instrumentation.aiohttp_client",
             "Python.aiohttp.Version",
             "4.5.6",
         )
