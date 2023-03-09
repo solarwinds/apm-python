@@ -85,4 +85,6 @@ class W3CTransformer:
     @classmethod
     def remove_response_from_sw(cls, trace_state: TraceState) -> TraceState:
         """Remove xtraceoptions response from tracestate"""
-        return trace_state.delete(INTL_SWO_X_OPTIONS_RESPONSE_KEY)
+        if trace_state.get(INTL_SWO_X_OPTIONS_RESPONSE_KEY):
+            trace_state = trace_state.delete(INTL_SWO_X_OPTIONS_RESPONSE_KEY)
+        return trace_state
