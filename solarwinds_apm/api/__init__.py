@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 from opentelemetry import baggage
-from opentelemetry.trace import get_tracer_provider
+from opentelemetry.trace import get_tracer_provider, NoOpTracerProvider
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_CURRENT_SPAN_ID,
@@ -41,6 +41,13 @@ def set_transaction_name(custom_name: str) -> bool:
      from solarwinds_apm.api import set_transaction_name
      result = set_transaction_name("my-foo-name")
     """
+    if isinstance(get_tracer_provider(), NoOpTracerProvider):
+        logger.debug(
+            "Cannot cache custom transaction name %s because agent not enabled; ignoring",
+            custom_name,
+        )
+        return False
+
     # Assumes TracerProvider's active span processor is SynchronousMultiSpanProcessor
     # or ConcurrentMultiSpanProcessor
     span_processors = (
