@@ -8,13 +8,15 @@ import logging
 from typing import Any
 
 from opentelemetry import baggage
-from opentelemetry.trace import get_tracer_provider, NoOpTracerProvider
+from opentelemetry.trace import NoOpTracerProvider, get_tracer_provider
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_CURRENT_SPAN_ID,
     INTL_SWO_CURRENT_TRACE_ID,
 )
 from solarwinds_apm.apm_oboe_codes import OboeReadyCode
+
+# pylint: disable=import-error,no-name-in-module
 from solarwinds_apm.extension.oboe import Context
 from solarwinds_apm.inbound_metrics_processor import (
     SolarWindsInboundMetricsSpanProcessor,

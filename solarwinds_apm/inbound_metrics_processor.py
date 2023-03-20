@@ -17,6 +17,8 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_CURRENT_TRACE_ID,
 )
 from solarwinds_apm.apm_noop import Span as NoopSpan
+
+# pylint: disable=import-error,no-name-in-module
 from solarwinds_apm.extension.oboe import Span
 
 if TYPE_CHECKING:

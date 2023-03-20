@@ -45,6 +45,8 @@ from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
 from solarwinds_apm.apm_noop import Reporter as NoopReporter
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
+
+# pylint: disable=import-error,no-name-in-module
 from solarwinds_apm.extension.oboe import Config, Context, Metadata, Reporter
 from solarwinds_apm.inbound_metrics_processor import (
     SolarWindsInboundMetricsSpanProcessor,
