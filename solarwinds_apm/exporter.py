@@ -26,6 +26,8 @@ from solarwinds_apm.apm_constants import (
 )
 from solarwinds_apm.apm_noop import Context as NoopContext
 from solarwinds_apm.apm_noop import Metadata as NoopMetadata
+
+# pylint: disable=import-error,no-name-in-module
 from solarwinds_apm.extension.oboe import Context, Metadata
 from solarwinds_apm.w3c_transformer import W3CTransformer
 

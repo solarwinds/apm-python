@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.8.2...HEAD)
 
+- Bugfix: fixed errors at API `set_transaction_name` calls when APM library tracing disabled ([#126](https://github.com/solarwindscloud/solarwinds-apm-python/pull/126))
+
 ## [0.8.2](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.8.2) - 2023-03-13
 ### Changed
 - Bugfix: fixed noisy trace state KV deletion attempts when key not present ([#121](https://github.com/solarwindscloud/solarwinds-apm-python/pull/121))
