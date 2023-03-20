@@ -37,7 +37,7 @@ def set_transaction_name(custom_name: str) -> bool:
     :custom_name:str, custom transaction name to apply
 
     :return:
-    bool True for successful name assignment, False for not
+    bool True
 
     :Example:
      from solarwinds_apm.api import set_transaction_name
@@ -48,7 +48,7 @@ def set_transaction_name(custom_name: str) -> bool:
             "Cannot cache custom transaction name %s because agent not enabled; ignoring",
             custom_name,
         )
-        return False
+        return True
 
     # Assumes TracerProvider's active span processor is SynchronousMultiSpanProcessor
     # or ConcurrentMultiSpanProcessor
@@ -63,7 +63,7 @@ def set_transaction_name(custom_name: str) -> bool:
 
     if not inbound_processor:
         logger.error("Could not find configured InboundMetricsSpanProcessor.")
-        return False
+        return True
 
     entry_trace_id = baggage.get_baggage(INTL_SWO_CURRENT_TRACE_ID)
     entry_span_id = baggage.get_baggage(INTL_SWO_CURRENT_SPAN_ID)
@@ -72,7 +72,7 @@ def set_transaction_name(custom_name: str) -> bool:
             "Cannot cache custom transaction name %s because OTel service entry span not started; ignoring",
             custom_name,
         )
-        return False
+        return True
     trace_span_id = f"{entry_trace_id}-{entry_span_id}"
     inbound_processor.apm_txname_manager[trace_span_id] = custom_name
     logger.debug(
