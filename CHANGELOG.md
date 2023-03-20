@@ -4,8 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.8.2...HEAD)
+## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.8.3...HEAD)
 
+## [0.8.3.2](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.8.3) - 2023-03-20
 ### Changed
 - Bugfix: fixed errors at API `set_transaction_name` calls when APM library tracing disabled ([#126](https://github.com/solarwindscloud/solarwinds-apm-python/pull/126))
 - SolarWinds c-lib 12.1.0, for enhanced metadata retrieval, skipping metrics HTTP status if unavailable, fixed threading locking issue ([#127](https://github.com/solarwindscloud/solarwinds-apm-python/pull/127))
