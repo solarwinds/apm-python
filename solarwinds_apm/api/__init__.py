@@ -48,7 +48,7 @@ def set_transaction_name(custom_name: str) -> bool:
             "Cannot cache custom transaction name %s because agent not enabled; ignoring",
             custom_name,
         )
-        return False
+        return True
 
     # Assumes TracerProvider's active span processor is SynchronousMultiSpanProcessor
     # or ConcurrentMultiSpanProcessor
