@@ -113,7 +113,6 @@ function check_agent_startup(){
 
     TEST_EXP_LOG_MESSAGES=(
     ">> SSL Reporter using host='apm.collector.cloud.solarwinds.com' port='443' log='' clientid='inva...7890:servicename' buf=1000 maxTransactions='200' flushMaxWaitTime='5000' eventsFlushInterval='2' maxRequestSizeBytes='3000000' proxy=''"
-    "Warning: There is an problem getting the API token authorized. Metrics and tracing for this agent are currently disabled. If you'd like to learn more about resolving this issue, please contact technicalsupport@solarwinds.com."
     )
 
     # unset stop on error so we can catch debug messages in case of failures
