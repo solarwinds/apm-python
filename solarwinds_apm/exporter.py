@@ -126,8 +126,11 @@ class SolarWindsSpanExporter(SpanExporter):
         trace_span_id = f"{span.context.trace_id}-{span.context.span_id}"
         txname = self.apm_txname_manager.get(trace_span_id)
         if txname:
+            logger.debug("Exporter using cached txn name %s", txname)
             evt.addInfo(self._INTERNAL_TRANSACTION_NAME, txname)
+            logger.debug("Exporter deleting cached txn name for %s", trace_span_id)
             del self.apm_txname_manager[trace_span_id]
+            logger.debug("txname_manager after deletion: %s", self.apm_txname_manager)
         else:
             logger.warning(
                 "There was an issue setting trace TransactionName. "
@@ -154,6 +157,7 @@ class SolarWindsSpanExporter(SpanExporter):
             evt.addInfo(
                 INTL_SWO_OTEL_SCOPE_VERSION, span.instrumentation_scope.version
             )
+        logger.debug("Exporter added instrumenation_scope name %s", span.instrumentation_scope.name)
 
     # pylint: disable=too-many-branches,too-many-statements
     def _add_info_instrumented_framework(self, span, evt) -> None:
@@ -216,6 +220,7 @@ class SolarWindsSpanExporter(SpanExporter):
             # Use cached version if available
             cached_version = self.apm_fwkv_manager.get(instr_key)
             if cached_version:
+                logger.debug("Exporter got cached_version %s: %s", instr_key, cached_version)
                 evt.addInfo(
                     instr_key,
                     cached_version,
@@ -261,6 +266,8 @@ class SolarWindsSpanExporter(SpanExporter):
                 )
                 # cache for future similar spans
                 self.apm_fwkv_manager[instr_key] = version_str
+                logger.debug("Exporter caching %s: %s", instr_key, version_str)
+                logger.debug("apm_fwkv_manager is %s", self.apm_fwkv_manager)
 
             except (AttributeError, ImportError) as ex:
                 # could not import package for whatever reason

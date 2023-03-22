@@ -72,6 +72,11 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         context.attach(
             baggage.set_baggage(INTL_SWO_CURRENT_SPAN_ID, span.context.span_id)
         )
+        logger.debug(
+            "Attached baggage to Otel context: %s, %s",
+            span.context.trace_id,
+            span.context.span_id
+            )
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics,
@@ -136,10 +141,17 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             )
 
         if span.context.trace_flags == TraceFlags.SAMPLED:
+            logger.debug(
+                "Caching txn name as %s (%s)",
+                liboboe_txn_name,
+                f"{span.context.trace_id}-{span.context.span_id}"
+            )
             # Cache txn_name for span export
             self.apm_txname_manager[
                 f"{span.context.trace_id}-{span.context.span_id}"
             ] = liboboe_txn_name  # type: ignore
+        else:
+            logger.debug("Not sampled, so not caching txn name")
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
         """This span from inbound HTTP request if from a SERVER by some http.method"""
