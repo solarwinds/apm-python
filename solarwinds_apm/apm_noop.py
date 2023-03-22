@@ -101,7 +101,15 @@ class Context:
         return ""
 
     @staticmethod
-    def createEvent():
+    def createEvent(*args, **kwargs):
+        return Event()
+
+    @staticmethod
+    def createEntry(*args, **kwargs):
+        return Event()
+
+    @staticmethod
+    def createExit(*args, **kwargs):
         return Event()
 
     @staticmethod
