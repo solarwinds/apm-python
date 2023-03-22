@@ -70,8 +70,7 @@ class Context:
 
         Go to oboe_api.h to see the descriptions of all the return values.
         """
-        # TEMP for testing: always record and sample
-        return 1, 1, 0, 6, 0, 0, 0, -1, "", "", 0
+        return 0, 0, 0, 6, 0, 0, 0, -1, "", "", 0
 
     @staticmethod
     def get():
@@ -159,11 +158,11 @@ class Reporter:
 class Span:
     @staticmethod
     def createHttpSpan(_, __, ___, ____, _____, ______, _______):
-        return "some_http_txn_name"
+        pass
 
     @staticmethod
     def createSpan(_, __, ___, ____):
-        return "some_txn_name"
+        pass
 
 
 class MetricTags:
