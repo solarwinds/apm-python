@@ -69,12 +69,13 @@ class SolarWindsSpanExporter(SpanExporter):
         self.reporter = reporter
         self.apm_txname_manager = apm_txname_manager
         self.apm_fwkv_manager = apm_fwkv_manager
-        if agent_enabled:
-            self.context = Context
-            self.metadata = Metadata
-        else:
-            self.context = NoopContext
-            self.metadata = NoopMetadata
+        # if agent_enabled:
+        #     self.context = Context
+        #     self.metadata = Metadata
+        # else:
+        # TEMP for testing: always noop
+        self.context = NoopContext
+        self.metadata = NoopMetadata
 
     def export(self, spans) -> None:
         """Export to AO events and report via liboboe.

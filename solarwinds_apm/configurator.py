@@ -78,8 +78,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self._configure_otel_components(
             apm_txname_manager, apm_fwkv_manager, apm_config, reporter
         )
+        # TEMP for testing: never a real reporter, so no init msg
         # Report an status event after everything is done.
-        self._report_init_event(reporter, apm_config)
+        # self._report_init_event(reporter, apm_config)
 
     def _configure_otel_components(
         self,
@@ -278,9 +279,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             "metric_format": apm_config.metric_format,
         }
 
-        if apm_config.agent_enabled:
-            return Reporter(**reporter_kwargs)
-
+        # if apm_config.agent_enabled:
+        #     return Reporter(**reporter_kwargs)
+        # TEMP for testing: never a real reporter
         return NoopReporter(**reporter_kwargs)
 
     # pylint: disable=too-many-branches,too-many-statements
