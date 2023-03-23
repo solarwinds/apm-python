@@ -5,6 +5,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
+import sys
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -31,3 +32,6 @@ class SolarWindsTxnNameManager:
 
     def get(self, key: str, default: Any = None) -> Any:
         return self.__cache.get(key, default)
+
+    def __sizeof__(self) -> int:
+        return sys.getsizeof(self.__cache)

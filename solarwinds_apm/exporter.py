@@ -132,6 +132,7 @@ class SolarWindsSpanExporter(SpanExporter):
             logger.debug("Exporter deleting cached txn name for %s", trace_span_id)
             del self.apm_txname_manager[trace_span_id]
             logger.debug("txname_manager after deletion: %s", self.apm_txname_manager)
+            logger.debug("getsizeof apm_txname_manager at span export: %s", sys.getsizeof(self.apm_txname_manager))
         else:
             logger.warning(
                 "There was an issue setting trace TransactionName. "
@@ -269,6 +270,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 self.apm_fwkv_manager[instr_key] = version_str
                 logger.debug("Exporter caching %s: %s", instr_key, version_str)
                 logger.debug("apm_fwkv_manager is %s", self.apm_fwkv_manager)
+                logger.debug("getsizeof apm_fwkv_manager at export: %s", sys.getsizeof(self.apm_fwkv_manager))
 
             except (AttributeError, ImportError) as ex:
                 # could not import package for whatever reason

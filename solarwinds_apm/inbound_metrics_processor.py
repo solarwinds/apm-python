@@ -5,6 +5,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
+import sys
 from typing import TYPE_CHECKING, Any, Optional, Tuple
 
 from opentelemetry import baggage, context
@@ -77,6 +78,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             span.context.trace_id,
             span.context.span_id
             )
+        logger.debug("getsizeof OTel context at span on_start: %s", sys.getsizeof(context))
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics,
@@ -154,6 +156,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             self.apm_txname_manager[
                 f"{span.context.trace_id}-{span.context.span_id}"
             ] = liboboe_txn_name  # type: ignore
+            logger.debug("getsizeof apm_txname_manager at span on_end: %s", sys.getsizeof(self.apm_txname_manager))
         else:
             logger.debug("Not sampled, so not caching txn name")
 
