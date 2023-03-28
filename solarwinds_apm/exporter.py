@@ -88,11 +88,11 @@ class SolarWindsSpanExporter(SpanExporter):
                 # If there is a parent, we need to add an edge to this parent to this entry event
                 logger.debug("Continue trace from %s", md.toString())
                 parent_md = self._build_metadata(self.metadata, span.parent)
-                evt = self.context.createEntry(
-                    md, int(span.start_time / 1000), parent_md
-                )
-                if span.parent.is_remote:
-                    self._add_info_transaction_name(span, evt)
+                # evt = self.context.createEntry(
+                #     md, int(span.start_time / 1000), parent_md
+                # )
+                # if span.parent.is_remote:
+                #     self._add_info_transaction_name(span, evt)
                 
                 self.metadata.deleteMetadata(parent_md)
             else:
@@ -100,29 +100,29 @@ class SolarWindsSpanExporter(SpanExporter):
                 # and trace ID. Thus, the entry event needs to be generated such that it has the
                 # same op ID as the span ID of the OTel span.
                 logger.debug("Start a new trace %s", md.toString())
-                evt = self.context.createEntry(md, int(span.start_time / 1000))
-                self._add_info_transaction_name(span, evt)
+                # evt = self.context.createEntry(md, int(span.start_time / 1000))
+                # self._add_info_transaction_name(span, evt)
 
             self.metadata.deleteMetadata(md)
 
-            evt.addInfo("Layer", span.name)
-            evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
-            evt.addInfo("Language", "Python")
-            self._add_info_instrumentation_scope(span, evt)
-            self._add_info_instrumented_framework(span, evt)
-            for attr_k, attr_v in span.attributes.items():
-                evt.addInfo(attr_k, attr_v)
-            self.reporter.sendReport(evt, False)
+            # evt.addInfo("Layer", span.name)
+            # evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
+            # evt.addInfo("Language", "Python")
+            # self._add_info_instrumentation_scope(span, evt)
+            # self._add_info_instrumented_framework(span, evt)
+            # for attr_k, attr_v in span.attributes.items():
+            #     evt.addInfo(attr_k, attr_v)
+            # self.reporter.sendReport(evt, False)
 
-            for event in span.events:
-                if event.name == "exception":
-                    self._report_exception_event(event)
-                else:
-                    self._report_info_event(event)
+            # for event in span.events:
+            #     if event.name == "exception":
+            #         self._report_exception_event(event)
+            #     else:
+            #         self._report_info_event(event)
 
-            evt = self.context.createExit(int(span.end_time / 1000))
-            evt.addInfo("Layer", span.name)
-            self.reporter.sendReport(evt, False)
+            # evt = self.context.createExit(int(span.end_time / 1000))
+            # evt.addInfo("Layer", span.name)
+            # self.reporter.sendReport(evt, False)
 
             
 
