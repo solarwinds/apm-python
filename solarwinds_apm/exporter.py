@@ -120,7 +120,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 else:
                     self._report_info_event(event)
 
-            evt = self.context.createExit(int(span.end_time / 1000))
+            # evt = self.context.createExit(int(span.end_time / 1000))
             evt.addInfo("Layer", span.name)
             # self.reporter.sendReport(evt, False)
 
@@ -277,7 +277,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 )
 
     def _report_exception_event(self, event) -> None:
-        evt = self.context.createEvent(int(event.timestamp / 1000))
+        # evt = self.context.createEvent(int(event.timestamp / 1000))
         evt.addInfo("Label", "error")
         evt.addInfo("Spec", "error")
         evt.addInfo("ErrorClass", event.attributes.get("exception.type", None))
@@ -301,7 +301,7 @@ class SolarWindsSpanExporter(SpanExporter):
         print("Found info event")
         print(dir(event))
         print(event)
-        evt = self.context.createEvent(int(event.timestamp / 1000))
+        # evt = self.context.createEvent(int(event.timestamp / 1000))
         evt.addInfo("Label", "info")
         for attr_k, attr_v in event.attributes.items():
             evt.addInfo(attr_k, attr_v)
