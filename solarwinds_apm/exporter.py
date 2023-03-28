@@ -93,6 +93,8 @@ class SolarWindsSpanExporter(SpanExporter):
                 )
                 if span.parent.is_remote:
                     self._add_info_transaction_name(span, evt)
+                
+                self.metadata.deleteMetadata(parent_md)
             else:
                 # In OpenTelemrtry, there are no events with individual IDs, but only a span ID
                 # and trace ID. Thus, the entry event needs to be generated such that it has the
@@ -100,6 +102,8 @@ class SolarWindsSpanExporter(SpanExporter):
                 logger.debug("Start a new trace %s", md.toString())
                 evt = self.context.createEntry(md, int(span.start_time / 1000))
                 self._add_info_transaction_name(span, evt)
+
+            self.metadata.deleteMetadata(md)
 
             evt.addInfo("Layer", span.name)
             evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
@@ -119,6 +123,8 @@ class SolarWindsSpanExporter(SpanExporter):
             evt = self.context.createExit(int(span.end_time / 1000))
             evt.addInfo("Layer", span.name)
             self.reporter.sendReport(evt, False)
+
+            
 
     def _add_info_transaction_name(self, span, evt) -> None:
         """Add transaction name from cache to root span
