@@ -89,6 +89,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 # logger.debug("Continue trace from %s", md.toString())
                 # parent_md = self._build_metadata(self.metadata, span.parent)
                 evt = self.context.createEvent()  # TEST
+                evt = self.context.createEvent(int(span.start_time / 1000))  # TEST
                 # evt = self.context.createEntry(
                 #     md, int(span.start_time / 1000), parent_md
                 # )
@@ -100,6 +101,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 # same op ID as the span ID of the OTel span.
                 # logger.debug("Start a new trace %s", md.toString())
                 evt = self.context.createEvent()  # TEST
+                evt = self.context.createEvent(int(span.start_time / 1000))  # TEST
                 # evt = self.context.createEntry(md, int(span.start_time / 1000))
                 # self._add_info_transaction_name(span, evt)
 
@@ -273,6 +275,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 )
 
     def _report_exception_event(self, event) -> None:
+        evt = self.context.createEvent()  # TEST
         evt = self.context.createEvent(int(event.timestamp / 1000))
         evt.addInfo("Label", "error")
         evt.addInfo("Spec", "error")
@@ -297,6 +300,7 @@ class SolarWindsSpanExporter(SpanExporter):
         print("Found info event")
         print(dir(event))
         print(event)
+        evt = self.context.createEvent()  # TEST
         evt = self.context.createEvent(int(event.timestamp / 1000))
         evt.addInfo("Label", "info")
         for attr_k, attr_v in event.attributes.items():
