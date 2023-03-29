@@ -83,11 +83,11 @@ class SolarWindsSpanExporter(SpanExporter):
         to be in microseconds, thus all times need to be divided by 1000.
         """
         for span in spans:
-            # md = self._build_metadata(self.metadata, span.get_span_context())
+            md = self._build_metadata(self.metadata, span.get_span_context())
             if span.parent and span.parent.is_valid:
                 # If there is a parent, we need to add an edge to this parent to this entry event
                 # logger.debug("Continue trace from %s", md.toString())
-                # parent_md = self._build_metadata(self.metadata, span.parent)
+                parent_md = self._build_metadata(self.metadata, span.parent)
                 evt = self.context.createEvent()  # TEST
                 evt = self.context.createEvent(int(span.start_time / 1000))  # TEST
                 # evt = self.context.createEntry(
