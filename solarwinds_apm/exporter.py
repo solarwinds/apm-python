@@ -90,9 +90,9 @@ class SolarWindsSpanExporter(SpanExporter):
                 parent_md = self._build_metadata(self.metadata, span.parent)
                 evt = self.context.createEvent()  # TEST
                 evt = self.context.createEvent(int(span.start_time / 1000))  # TEST
-                # evt = self.context.createEntry(
-                #     md, int(span.start_time / 1000), parent_md
-                # )
+                evt = self.context.createEntry(
+                    md, int(span.start_time / 1000), parent_md
+                )
                 # if span.parent.is_remote:
                 #     self._add_info_transaction_name(span, evt)
             else:
@@ -102,16 +102,16 @@ class SolarWindsSpanExporter(SpanExporter):
                 # logger.debug("Start a new trace %s", md.toString())
                 evt = self.context.createEvent()  # TEST
                 evt = self.context.createEvent(int(span.start_time / 1000))  # TEST
-                # evt = self.context.createEntry(md, int(span.start_time / 1000))
-                # self._add_info_transaction_name(span, evt)
+                evt = self.context.createEntry(md, int(span.start_time / 1000))
+                self._add_info_transaction_name(span, evt)
 
-            # evt.addInfo("Layer", span.name)
-            # evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
-            # evt.addInfo("Language", "Python")
-            # self._add_info_instrumentation_scope(span, evt)
-            # self._add_info_instrumented_framework(span, evt)
-            # for attr_k, attr_v in span.attributes.items():
-            #     evt.addInfo(attr_k, attr_v)
+            evt.addInfo("Layer", span.name)
+            evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
+            evt.addInfo("Language", "Python")
+            self._add_info_instrumentation_scope(span, evt)
+            self._add_info_instrumented_framework(span, evt)
+            for attr_k, attr_v in span.attributes.items():
+                evt.addInfo(attr_k, attr_v)
             # self.reporter.sendReport(evt, False)
 
             # for event in span.events:
@@ -120,8 +120,8 @@ class SolarWindsSpanExporter(SpanExporter):
             #     else:
             #         self._report_info_event(event)
 
-            # evt = self.context.createExit(int(span.end_time / 1000))
-            # evt.addInfo("Layer", span.name)
+            evt = self.context.createExit(int(span.end_time / 1000))
+            evt.addInfo("Layer", span.name)
             # self.reporter.sendReport(evt, False)
 
     def _add_info_transaction_name(self, span, evt) -> None:
