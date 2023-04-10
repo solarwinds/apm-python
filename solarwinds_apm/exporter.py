@@ -128,10 +128,11 @@ class SolarWindsSpanExporter(SpanExporter):
         """Add transaction name from cache to root span
         then removes from cache"""
         trace_span_id = f"{span.context.trace_id}-{span.context.span_id}"
-        txname = self.apm_txname_manager.get(trace_span_id)
+        # txname = self.apm_txname_manager.get(trace_span_id)
+        txname = "foo"  # TEST
         if txname:
             evt.addInfo(self._INTERNAL_TRANSACTION_NAME, txname)
-            del self.apm_txname_manager[trace_span_id]
+            # del self.apm_txname_manager[trace_span_id]
         else:
             logger.warning(
                 "There was an issue setting trace TransactionName. "

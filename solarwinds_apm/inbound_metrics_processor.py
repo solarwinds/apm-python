@@ -135,11 +135,11 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
                 has_error,
             )
 
-        if span.context.trace_flags == TraceFlags.SAMPLED:
-            # Cache txn_name for span export
-            self.apm_txname_manager[
-                f"{span.context.trace_id}-{span.context.span_id}"
-            ] = liboboe_txn_name  # type: ignore
+        # if span.context.trace_flags == TraceFlags.SAMPLED:
+        #     # Cache txn_name for span export
+        #     self.apm_txname_manager[
+        #         f"{span.context.trace_id}-{span.context.span_id}"
+        #     ] = liboboe_txn_name  # type: ignore
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
         """This span from inbound HTTP request if from a SERVER by some http.method"""
@@ -186,7 +186,8 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         """Get custom transaction name for trace by trace_id, if any"""
         trans_name = None
         trace_span_id = f"{span.context.trace_id}-{span.context.span_id}"
-        custom_name = self.apm_txname_manager.get(trace_span_id)
+        # custom_name = self.apm_txname_manager.get(trace_span_id)
+        custom_name = "custom_foo"  # TEST
         if custom_name:
             trans_name = custom_name
         return trans_name
