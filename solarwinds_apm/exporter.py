@@ -112,7 +112,7 @@ class SolarWindsSpanExporter(SpanExporter):
             self._add_info_instrumented_framework(span, evt)
             for attr_k, attr_v in span.attributes.items():
                 evt.addInfo(attr_k, attr_v)
-            self.reporter.sendReport(evt, False)
+            # self.reporter.sendReport(evt, False)
 
             for event in span.events:
                 if event.name == "exception":
@@ -122,7 +122,7 @@ class SolarWindsSpanExporter(SpanExporter):
 
             evt = self.context.createExit(int(span.end_time / 1000))
             evt.addInfo("Layer", span.name)
-            self.reporter.sendReport(evt, False)
+            # self.reporter.sendReport(evt, False)
 
     def _add_info_transaction_name(self, span, evt) -> None:
         """Add transaction name from cache to root span
@@ -294,7 +294,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 "exception.stacktrace",
             ):
                 evt.addInfo(attr_k, attr_v)
-        self.reporter.sendReport(evt, False)
+        # self.reporter.sendReport(evt, False)
 
     def _report_info_event(self, event) -> None:
         print("Found info event")
@@ -305,7 +305,7 @@ class SolarWindsSpanExporter(SpanExporter):
         evt.addInfo("Label", "info")
         for attr_k, attr_v in event.attributes.items():
             evt.addInfo(attr_k, attr_v)
-        self.reporter.sendReport(evt, False)
+        # self.reporter.sendReport(evt, False)
 
     @staticmethod
     def _build_metadata(metadata, span_context) -> Any:
