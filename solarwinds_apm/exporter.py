@@ -105,13 +105,13 @@ class SolarWindsSpanExporter(SpanExporter):
                 evt = self.context.createEntry(md, int(span.start_time / 1000))
                 self._add_info_transaction_name(span, evt)
 
-            # evt.addInfo("Layer", span.name)
-            # evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
-            # evt.addInfo("Language", "Python")
+            evt.addInfo("Layer", span.name)
+            evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
+            evt.addInfo("Language", "Python")
             self._add_info_instrumentation_scope(span, evt)
             self._add_info_instrumented_framework(span, evt)
-            # for attr_k, attr_v in span.attributes.items():
-            #     evt.addInfo(attr_k, attr_v)
+            for attr_k, attr_v in span.attributes.items():
+                evt.addInfo(attr_k, attr_v)
             # self.reporter.sendReport(evt, False)
 
             for event in span.events:
@@ -121,7 +121,7 @@ class SolarWindsSpanExporter(SpanExporter):
                     self._report_info_event(event)
 
             evt = self.context.createExit(int(span.end_time / 1000))
-            # evt.addInfo("Layer", span.name)
+            evt.addInfo("Layer", span.name)
             # self.reporter.sendReport(evt, False)
 
     def _add_info_transaction_name(self, span, evt) -> None:
@@ -130,7 +130,7 @@ class SolarWindsSpanExporter(SpanExporter):
         trace_span_id = f"{span.context.trace_id}-{span.context.span_id}"
         txname = self.apm_txname_manager.get(trace_span_id)
         if txname:
-            # evt.addInfo(self._INTERNAL_TRANSACTION_NAME, txname)
+            evt.addInfo(self._INTERNAL_TRANSACTION_NAME, txname)
             del self.apm_txname_manager[trace_span_id]
         else:
             logger.warning(
@@ -145,19 +145,19 @@ class SolarWindsSpanExporter(SpanExporter):
             logger.debug(
                 "OTel instrumentation scope is None, so setting empty values."
             )
-            # evt.addInfo(INTL_SWO_OTEL_SCOPE_NAME, "")
-            # evt.addInfo(INTL_SWO_OTEL_SCOPE_VERSION, "")
+            evt.addInfo(INTL_SWO_OTEL_SCOPE_NAME, "")
+            evt.addInfo(INTL_SWO_OTEL_SCOPE_VERSION, "")
             return
 
-        # # name is always string in Otel Python
-        # evt.addInfo(INTL_SWO_OTEL_SCOPE_NAME, span.instrumentation_scope.name)
-        # # version may be None
-        # if span.instrumentation_scope.version is None:
-        #     evt.addInfo(INTL_SWO_OTEL_SCOPE_VERSION, "")
-        # else:
-        #     evt.addInfo(
-        #         INTL_SWO_OTEL_SCOPE_VERSION, span.instrumentation_scope.version
-        #     )
+        # name is always string in Otel Python
+        evt.addInfo(INTL_SWO_OTEL_SCOPE_NAME, span.instrumentation_scope.name)
+        # version may be None
+        if span.instrumentation_scope.version is None:
+            evt.addInfo(INTL_SWO_OTEL_SCOPE_VERSION, "")
+        else:
+            evt.addInfo(
+                INTL_SWO_OTEL_SCOPE_VERSION, span.instrumentation_scope.version
+            )
 
     # pylint: disable=too-many-branches,too-many-statements
     def _add_info_instrumented_framework(self, span, evt) -> None:
@@ -220,10 +220,10 @@ class SolarWindsSpanExporter(SpanExporter):
             # Use cached version if available
             cached_version = self.apm_fwkv_manager.get(instr_key)
             if cached_version:
-                # evt.addInfo(
-                #     instr_key,
-                #     cached_version,
-                # )
+                evt.addInfo(
+                    instr_key,
+                    cached_version,
+                )
                 return
 
             try:
@@ -259,10 +259,10 @@ class SolarWindsSpanExporter(SpanExporter):
                 else:
                     version_str = sys.modules[framework].__version__
 
-                # evt.addInfo(
-                #     instr_key,
-                #     version_str,
-                # )
+                evt.addInfo(
+                    instr_key,
+                    version_str,
+                )
                 # cache for future similar spans
                 self.apm_fwkv_manager[instr_key] = version_str
 
@@ -277,23 +277,23 @@ class SolarWindsSpanExporter(SpanExporter):
     def _report_exception_event(self, event) -> None:
         evt = self.context.createEvent()  # TEST
         evt = self.context.createEvent(int(event.timestamp / 1000))
-        # evt.addInfo("Label", "error")
-        # evt.addInfo("Spec", "error")
-        # evt.addInfo("ErrorClass", event.attributes.get("exception.type", None))
-        # evt.addInfo(
-        #     "ErrorMsg", event.attributes.get("exception.message", None)
-        # )
-        # evt.addInfo(
-        #     "Backtrace", event.attributes.get("exception.stacktrace", None)
-        # )
+        evt.addInfo("Label", "error")
+        evt.addInfo("Spec", "error")
+        evt.addInfo("ErrorClass", event.attributes.get("exception.type", None))
+        evt.addInfo(
+            "ErrorMsg", event.attributes.get("exception.message", None)
+        )
+        evt.addInfo(
+            "Backtrace", event.attributes.get("exception.stacktrace", None)
+        )
         # add remaining attributes, if any
-        # for attr_k, attr_v in event.attributes.items():
-        #     if attr_k not in (
-        #         "exception.type",
-        #         "exception.message",
-        #         "exception.stacktrace",
-        #     ):
-        #         evt.addInfo(attr_k, attr_v)
+        for attr_k, attr_v in event.attributes.items():
+            if attr_k not in (
+                "exception.type",
+                "exception.message",
+                "exception.stacktrace",
+            ):
+                evt.addInfo(attr_k, attr_v)
         # self.reporter.sendReport(evt, False)
 
     def _report_info_event(self, event) -> None:
@@ -302,9 +302,9 @@ class SolarWindsSpanExporter(SpanExporter):
         print(event)
         evt = self.context.createEvent()  # TEST
         evt = self.context.createEvent(int(event.timestamp / 1000))
-        # evt.addInfo("Label", "info")
-        # for attr_k, attr_v in event.attributes.items():
-        #     evt.addInfo(attr_k, attr_v)
+        evt.addInfo("Label", "info")
+        for attr_k, attr_v in event.attributes.items():
+            evt.addInfo(attr_k, attr_v)
         # self.reporter.sendReport(evt, False)
 
     @staticmethod
