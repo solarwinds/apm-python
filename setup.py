@@ -110,7 +110,7 @@ ext_modules = [
                   'solarwinds_apm/extension/oboe_api.cpp'
               ],
               depends=[
-                  'solarwinds_apm/extension/oboe_api.hpp',
+                  'solarwinds_apm/extension/oboe_api.h'
               ],
               include_dirs=[
                   'solarwinds_apm/certs',
@@ -119,7 +119,7 @@ ext_modules = [
               ],
               libraries=['oboe', 'rt'],
               library_dirs=['solarwinds_apm/extension'],
-              extra_compile_args=["-std=c++11"],
+              extra_compile_args=["-std=c++14"],
               runtime_library_dirs=['$ORIGIN']),
 ]
 
