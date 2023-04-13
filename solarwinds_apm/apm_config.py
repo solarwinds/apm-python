@@ -4,6 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import json
 import logging
 import os
 import sys
@@ -129,11 +130,7 @@ class SolarWindsApmConfig:
         else:
             self.context = NoopContext
 
-        # TODO Implement config with cnf_file after alpha
-        # cnf_file = os.environ.get('SW_APM_APM_CONFIG_PYTHON', os.environ.get('SW_APM_PYCONF', None))
-        # if cnf_file:
-        #     self.update_with_cnf_file(cnf_file)
-
+        self.update_with_cnf_file()
         self.update_with_env_var()
 
         self.__config["service_key"] = self._update_service_key_name(
@@ -485,9 +482,26 @@ class SolarWindsApmConfig:
         )
         return value if value is not None else default
 
-    def update_with_cnf_file(self, cnf_path: str) -> None:
-        """Update the settings with the config file, if any."""
-        # TODO Implement config with cnf_file after alpha
+    def update_with_cnf_file(self) -> None:
+        """Update the settings with the config file (json), if any."""
+        cnf_filepath = os.environ.get('SW_APM_CONFIG_FILE')
+        if not cnf_filepath:
+            return
+
+        cnf_json = None
+        try:
+            with open(cnf_filepath) as cnf_file:
+                try:
+                    cnf_json = json.load(cnf_file)
+                except ValueError as e:
+                    logger.error("Invalid config file, must be valid json. Ignoring: %s", e)
+                    return
+        except FileNotFoundError as e:
+            logger.error("Invalid config file path. Ignoring: %s", e)
+            return
+
+        # TODO apply agent.transactionSettings
+        # TODO override other defaults if present
 
     def update_with_env_var(self) -> None:
         """Update the settings with environment variables."""
