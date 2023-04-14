@@ -485,7 +485,7 @@ class SolarWindsApmConfig:
 
     def update_with_cnf_file(self) -> None:
         """Update the settings with the config file (json), if any."""
-        cnf_filepath = os.environ.get('SW_APM_CONFIG_FILE')
+        cnf_filepath = os.environ.get('SW_APM_CONFIG_FILE', "./solarwinds-apm-config.json")
         if not cnf_filepath:
             return
         cnf_dict = None
