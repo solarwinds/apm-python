@@ -115,9 +115,9 @@ class SolarWindsApmConfig:
             "log_trace_id": "never",
             "proxy": "",
             "transaction": defaultdict(lambda: True),
-            "transaction_filters": [],
             "inst": defaultdict(lambda: True),
             "is_grpc_clean_hack_enabled": False,
+            "transaction_filters": [],
         }
         self.__config["transaction"]["prepend_domain_name"] = False
         self.agent_enabled = self._calculate_agent_enabled()
@@ -500,12 +500,26 @@ class SolarWindsApmConfig:
             logger.error("Invalid config file path. Ignoring: %s", e)
             return
 
+        try:
+            val = cnf_dict.get("transaction").get("prependDomain")
+            if val is not None:
+                self._set_config_value("transaction.prepend_domain_name", val)
+        except AttributeError:
+            pass
+        available_cnf = set(self.__config.keys())
+        # TODO after alpha: is_lambda
+        for key in available_cnf:
+            cnf_key_parts = key.split("_")
+            cnf = f"{cnf_key_parts[0]}{''.join(part.title() for part in cnf_key_parts[1:])}"
+            val = cnf_dict.get(cnf)
+            if val is not None:
+                self._set_config_value(key, val)
+
         self.update_transaction_filters(cnf_dict)
-        # TODO override other defaults if present
 
     def update_transaction_filters(self, cnf_dict: dict) -> None:
         """Update configured transaction_filters using config dict"""
-        txn_settings = cnf_dict.get("agent.transactionSettings")
+        txn_settings = cnf_dict.get("transactionSettings")
         if not txn_settings or not isinstance(txn_settings, list):
             logger.error("Transaction filters must be a non-empty list of filters. Ignoring.")
             return
