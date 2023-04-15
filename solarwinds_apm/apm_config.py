@@ -485,19 +485,24 @@ class SolarWindsApmConfig:
 
     def update_with_cnf_file(self) -> None:
         """Update the settings with the config file (json), if any."""
-        cnf_filepath = os.environ.get('SW_APM_CONFIG_FILE', "./solarwinds-apm-config.json")
+        cnf_filepath = os.environ.get(
+            "SW_APM_CONFIG_FILE", "./solarwinds-apm-config.json"
+        )
         if not cnf_filepath:
             return
         cnf_dict = None
         try:
-            with open(cnf_filepath) as cnf_file:
+            with open(cnf_filepath, encoding="utf-8") as cnf_file:
                 try:
                     cnf_dict = json.load(cnf_file)
-                except ValueError as e:
-                    logger.error("Invalid config file, must be valid json. Ignoring: %s", e)
+                except ValueError as ex:
+                    logger.error(
+                        "Invalid config file, must be valid json. Ignoring: %s",
+                        ex,
+                    )
                     return
-        except FileNotFoundError as e:
-            logger.error("Invalid config file path. Ignoring: %s", e)
+        except FileNotFoundError as ex:
+            logger.error("Invalid config file path. Ignoring: %s", ex)
             return
 
         try:
@@ -521,16 +526,28 @@ class SolarWindsApmConfig:
         """Update configured transaction_filters using config dict"""
         txn_settings = cnf_dict.get("transactionSettings")
         if not txn_settings or not isinstance(txn_settings, list):
-            logger.error("Transaction filters must be a non-empty list of filters. Ignoring.")
+            logger.error(
+                "Transaction filters must be a non-empty list of filters. Ignoring."
+            )
             return
         for filter in txn_settings:
-            if set(filter) != set(["regex", "tracing"]) or filter["tracing"] not in ["enabled", "disabled"]:
-                logger.error("Invalid transaction filter rule. Ignoring: %s", filter)
+            if set(filter) != set(["regex", "tracing"]) or filter[
+                "tracing"
+            ] not in ["enabled", "disabled"]:
+                logger.error(
+                    "Invalid transaction filter rule. Ignoring: %s", filter
+                )
                 continue
             # the first filter for given `regex` will be used
-            if filter["regex"] not in [cfilter["regex"] for cfilter in self.__config["transaction_filters"]]:
-                self.__config["transaction_filters"].append(filter) 
-        logger.debug("Set up transaction filters: %s", self.__config["transaction_filters"])
+            if filter["regex"] not in [
+                cfilter["regex"]
+                for cfilter in self.__config["transaction_filters"]
+            ]:
+                self.__config["transaction_filters"].append(filter)
+        logger.debug(
+            "Set up transaction filters: %s",
+            self.__config["transaction_filters"],
+        )
 
     def update_with_env_var(self) -> None:
         """Update the settings with environment variables."""
