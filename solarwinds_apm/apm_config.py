@@ -4,6 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import json
 import logging
 import os
 import sys
@@ -116,6 +117,7 @@ class SolarWindsApmConfig:
             "transaction": defaultdict(lambda: True),
             "inst": defaultdict(lambda: True),
             "is_grpc_clean_hack_enabled": False,
+            "transaction_filters": [],
         }
         self.__config["transaction"]["prepend_domain_name"] = False
         self.agent_enabled = self._calculate_agent_enabled()
@@ -129,11 +131,7 @@ class SolarWindsApmConfig:
         else:
             self.context = NoopContext
 
-        # TODO Implement config with cnf_file after alpha
-        # cnf_file = os.environ.get('SW_APM_APM_CONFIG_PYTHON', os.environ.get('SW_APM_PYCONF', None))
-        # if cnf_file:
-        #     self.update_with_cnf_file(cnf_file)
-
+        self.update_with_cnf_file()
         self.update_with_env_var()
 
         self.__config["service_key"] = self._update_service_key_name(
@@ -485,9 +483,71 @@ class SolarWindsApmConfig:
         )
         return value if value is not None else default
 
-    def update_with_cnf_file(self, cnf_path: str) -> None:
-        """Update the settings with the config file, if any."""
-        # TODO Implement config with cnf_file after alpha
+    def update_with_cnf_file(self) -> None:
+        """Update the settings with the config file (json), if any."""
+        cnf_filepath = os.environ.get(
+            "SW_APM_CONFIG_FILE", "./solarwinds-apm-config.json"
+        )
+        if not cnf_filepath:
+            return
+        cnf_dict = None
+        try:
+            with open(cnf_filepath, encoding="utf-8") as cnf_file:
+                try:
+                    cnf_dict = json.load(cnf_file)
+                except ValueError as ex:
+                    logger.error(
+                        "Invalid config file, must be valid json. Ignoring: %s",
+                        ex,
+                    )
+                    return
+        except FileNotFoundError as ex:
+            logger.error("Invalid config file path. Ignoring: %s", ex)
+            return
+
+        try:
+            val = cnf_dict.get("transaction").get("prependDomain")
+            if val is not None:
+                self._set_config_value("transaction.prepend_domain_name", val)
+        except AttributeError:
+            pass
+        available_cnf = set(self.__config.keys())
+        # TODO after alpha: is_lambda
+        for key in available_cnf:
+            cnf_key_parts = key.split("_")
+            cnf = f"{cnf_key_parts[0]}{''.join(part.title() for part in cnf_key_parts[1:])}"
+            val = cnf_dict.get(cnf)
+            if val is not None:
+                self._set_config_value(key, val)
+
+        self.update_transaction_filters(cnf_dict)
+
+    def update_transaction_filters(self, cnf_dict: dict) -> None:
+        """Update configured transaction_filters using config dict"""
+        txn_settings = cnf_dict.get("transactionSettings")
+        if not txn_settings or not isinstance(txn_settings, list):
+            logger.error(
+                "Transaction filters must be a non-empty list of filters. Ignoring."
+            )
+            return
+        for filter in txn_settings:
+            if set(filter) != set(["regex", "tracing"]) or filter[
+                "tracing"
+            ] not in ["enabled", "disabled"]:
+                logger.error(
+                    "Invalid transaction filter rule. Ignoring: %s", filter
+                )
+                continue
+            # the first filter for given `regex` will be used
+            if filter["regex"] not in [
+                cfilter["regex"]
+                for cfilter in self.__config["transaction_filters"]
+            ]:
+                self.__config["transaction_filters"].append(filter)
+        logger.debug(
+            "Set up transaction filters: %s",
+            self.__config["transaction_filters"],
+        )
 
     def update_with_env_var(self) -> None:
         """Update the settings with environment variables."""
