@@ -101,7 +101,8 @@ class SolarWindsSpanExporter(SpanExporter):
                 evt = self.context.createEntry(md, int(span.start_time / 1000))
                 self._add_info_transaction_name(span, evt)
 
-            evt.addInfo("Layer", span.name)
+            layer = f"{span.kind.name}:{span.name}"
+            evt.addInfo("Layer", layer)
             evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
             evt.addInfo("Language", "Python")
             self._add_info_instrumentation_scope(span, evt)
@@ -117,7 +118,7 @@ class SolarWindsSpanExporter(SpanExporter):
                     self._report_info_event(event)
 
             evt = self.context.createExit(int(span.end_time / 1000))
-            evt.addInfo("Layer", span.name)
+            evt.addInfo("Layer", layer)
             self.reporter.sendReport(evt, False)
 
     def _add_info_transaction_name(self, span, evt) -> None:
