@@ -489,7 +489,7 @@ class SolarWindsApmConfig:
         def _snake_to_camel_case(key):
             key_parts = key.split("_")
             camel_head = key_parts[0]
-            camel_body = ''.join(part.title() for part in key_parts[1:])
+            camel_body = "".join(part.title() for part in key_parts[1:])
             return f"{camel_head}{camel_body}"
 
         cnf_filepath = os.environ.get(
