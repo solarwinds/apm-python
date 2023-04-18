@@ -485,6 +485,13 @@ class SolarWindsApmConfig:
 
     def update_with_cnf_file(self) -> None:
         """Update the settings with the config file (json), if any."""
+
+        def _snake_to_camel_case(key):
+            key_parts = key.split("_")
+            camel_head = key_parts[0]
+            camel_body = ''.join(part.title() for part in key_parts[1:])
+            return f"{camel_head}{camel_body}"
+
         cnf_filepath = os.environ.get(
             "SW_APM_CONFIG_FILE", "./solarwinds-apm-config.json"
         )
@@ -514,9 +521,8 @@ class SolarWindsApmConfig:
         available_cnf = set(self.__config.keys())
         # TODO after alpha: is_lambda
         for key in available_cnf:
-            cnf_key_parts = key.split("_")
-            cnf = f"{cnf_key_parts[0]}{''.join(part.title() for part in cnf_key_parts[1:])}"
-            val = cnf_dict.get(cnf)
+            # Use internal snake_case config keys to check JSON config file camelCase keys
+            val = cnf_dict.get(_snake_to_camel_case(key))
             if val is not None:
                 self._set_config_value(key, val)
 
