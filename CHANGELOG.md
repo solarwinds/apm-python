@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.8.3...HEAD)
+### Changed
+- SolarWinds c-lib 12.2.0, to fix memory leak in extension ([#132](https://github.com/solarwindscloud/solarwinds-apm-python/pull/132))
+- Adds support for `SW_APM_CONFIG_FILE` ([#133](https://github.com/solarwindscloud/solarwinds-apm-python/pull/133))
+- Updates Span Layer to be `<KIND>:<NAME>` ([#134](https://github.com/solarwindscloud/solarwinds-apm-python/pull/134))
 
 ## [0.8.3](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.8.3) - 2023-03-21
 ### Changed
