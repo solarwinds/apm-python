@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.8.3...HEAD)
 ### Changed
+- OpenTelemetry API/SDK 1.17.0 ([#131](https://github.com/solarwindscloud/solarwinds-apm-python/pull/131))
 - SolarWinds c-lib 12.2.0, to fix memory leak in extension ([#132](https://github.com/solarwindscloud/solarwinds-apm-python/pull/132))
 - Adds support for `SW_APM_CONFIG_FILE` ([#133](https://github.com/solarwindscloud/solarwinds-apm-python/pull/133))
 - Updates Span Layer to be `<KIND>:<NAME>` ([#134](https://github.com/solarwindscloud/solarwinds-apm-python/pull/134))
