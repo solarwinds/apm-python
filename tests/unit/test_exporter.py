@@ -252,11 +252,11 @@ class Test_SolarWindsSpanExporter():
 
         # addInfo calls for entry and exit events
         mock_add_info.assert_has_calls([
-            mocker.call("Layer", "foo"),
+            mocker.call("Layer", "FOO:foo"),
             mocker.call(solarwinds_apm.exporter.SolarWindsSpanExporter._SW_SPAN_KIND, FooNum.FOO.name),
             mocker.call("Language", "Python"),
             mocker.call("foo", "bar"),
-            mocker.call("Layer", "foo"),
+            mocker.call("Layer", "FOO:foo"),
         ])
 
         # _add_info_instrumentation_scope call
