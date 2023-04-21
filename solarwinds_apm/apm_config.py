@@ -532,7 +532,7 @@ class SolarWindsApmConfig:
         """Update configured transaction_filters using config dict"""
         txn_settings = cnf_dict.get("transactionSettings")
         if not txn_settings or not isinstance(txn_settings, list):
-            logger.error(
+            logger.warning(
                 "Transaction filters must be a non-empty list of filters. Ignoring."
             )
             return
@@ -540,7 +540,7 @@ class SolarWindsApmConfig:
             if set(filter) != set(["regex", "tracing"]) or filter[
                 "tracing"
             ] not in ["enabled", "disabled"]:
-                logger.error(
+                logger.warning(
                     "Invalid transaction filter rule. Ignoring: %s", filter
                 )
                 continue
