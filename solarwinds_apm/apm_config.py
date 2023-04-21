@@ -579,10 +579,6 @@ class SolarWindsApmConfig:
                 txn_filter["regex"] = filter["regex"]
                 self.__config["transaction_filters"].append(txn_filter)
 
-                # TODO (NH-34752) Confirm handling web request filtering after instrumentation
-                #      libraries updated so http attributes available at should_sample
-                #      https://github.com/open-telemetry/opentelemetry-python-contrib/issues/936               
-
         logger.debug(
             "Set up transaction filters: %s",
             self.__config["transaction_filters"],
