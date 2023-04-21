@@ -561,6 +561,14 @@ class SolarWindsApmConfig:
                         filter,
                     )
                     continue
+
+                if not len(filter["regex"]) > 0:
+                    logger.warning(
+                        "Transaction filter regex must not be empty. Ignoring: %s",
+                        filter,
+                    )
+                    continue
+
                 try:
                     re.compile(filter["regex"])
                 except re.error:
