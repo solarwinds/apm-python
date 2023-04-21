@@ -75,10 +75,23 @@ class _SwSampler(Sampler):
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
 
+    def calculate_tracing_mode(
+        self,
+        name: str,
+        kind: SpanKind = None,
+        attributes: Attributes = None,
+    ) -> int:
+        """Calculates tracing mode per-request or global mode, if set"""
+        # TODO implement this
+        return self._UNSET
+
     # pylint: disable=too-many-locals
     def calculate_liboboe_decision(
         self,
         parent_span_context: SpanContext,
+        name: str,
+        kind: SpanKind = None,
+        attributes: Attributes = None,
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> dict:
         """Calculates oboe trace decision based on parent span context and APM config."""
@@ -91,8 +104,11 @@ class _SwSampler(Sampler):
             INTL_SWO_TRACESTATE_KEY
         )
 
-        # 'tracing_mode' is not supported in NH Python, so give as unset
-        tracing_mode = self._UNSET
+        tracing_mode = self.calculate_tracing_mode(
+            name,
+            kind,
+            attributes,
+        )
 
         trigger_trace_mode = OboeTracingMode.get_oboe_trigger_trace_mode(
             self.apm_config.get("trigger_trace")
@@ -486,7 +502,7 @@ class _SwSampler(Sampler):
         xtraceoptions = XTraceOptions(parent_context)
 
         liboboe_decision = self.calculate_liboboe_decision(
-            parent_span_context, xtraceoptions
+            parent_span_context, name, kind, attributes, xtraceoptions
         )
 
         # Always calculate trace_state for propagation
