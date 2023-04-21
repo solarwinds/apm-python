@@ -7,6 +7,7 @@
 import json
 import logging
 import os
+import re
 import sys
 from collections import defaultdict
 from functools import reduce
@@ -549,7 +550,31 @@ class SolarWindsApmConfig:
                 cfilter["regex"]
                 for cfilter in self.__config["transaction_filters"]
             ]:
-                self.__config["transaction_filters"].append(filter)
+                txn_filter = {}
+                txn_filter[
+                    "tracing_mode"
+                ] = OboeTracingMode.get_oboe_trace_mode(filter["tracing"])
+
+                if not isinstance(filter["regex"], str):
+                    logger.warning(
+                        "Transaction filter regex must be string or regex. Ignoring: %s",
+                        filter,
+                    )
+                    continue
+                try:
+                    re.compile(filter["regex"])
+                except re.error:
+                    logger.warning(
+                        "Transaction filter regex invalid. Ignoring: %s",
+                        filter,
+                    )
+                txn_filter["regex"] = filter["regex"]
+                self.__config["transaction_filters"].append(txn_filter)
+
+                # TODO (NH-34752) Confirm handling web request filtering after instrumentation
+                #      libraries updated so http attributes available at should_sample
+                #      https://github.com/open-telemetry/opentelemetry-python-contrib/issues/936               
+
         logger.debug(
             "Set up transaction filters: %s",
             self.__config["transaction_filters"],
