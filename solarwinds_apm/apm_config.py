@@ -658,9 +658,10 @@ class SolarWindsApmConfig:
                     val = "enabled" if val == "always" else "disabled"
                 if val not in ["enabled", "disabled"]:
                     raise ValueError
-                self.__config[key] = val
+                oboe_trace_mode = OboeTracingMode.get_oboe_trace_mode(val)
+                self.__config[key] = oboe_trace_mode
                 self.context.setTracingMode(
-                    OboeTracingMode.get_oboe_trace_mode(val)
+                    oboe_trace_mode
                 )
             elif keys == ["trigger_trace"]:
                 if not isinstance(val, str):
