@@ -662,9 +662,7 @@ class SolarWindsApmConfig:
                     raise ValueError
                 oboe_trace_mode = OboeTracingMode.get_oboe_trace_mode(val)
                 self.__config[key] = oboe_trace_mode
-                self.context.setTracingMode(
-                    oboe_trace_mode
-                )
+                self.context.setTracingMode(oboe_trace_mode)
             elif keys == ["trigger_trace"]:
                 if not isinstance(val, str):
                     raise ValueError

@@ -11,7 +11,6 @@ The custom sampler will fetch sampling configurations for the SolarWinds backend
 
 import enum
 import logging
-import re
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Optional, Sequence
 

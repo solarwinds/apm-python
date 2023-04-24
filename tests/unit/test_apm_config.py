@@ -650,7 +650,7 @@ class TestSolarWindsApmConfig:
     def test_set_config_value_default_tracing_mode(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("tracing_mode", "not-valid-mode")
-        assert test_config.get("tracing_mode") == None
+        assert test_config.get("tracing_mode") == -1
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
