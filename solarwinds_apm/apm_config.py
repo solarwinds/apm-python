@@ -576,6 +576,7 @@ class SolarWindsApmConfig:
                         "Transaction filter regex invalid. Ignoring: %s",
                         filter,
                     )
+                    continue
                 txn_filter["regex"] = filter["regex"]
                 self.__config["transaction_filters"].append(txn_filter)
 
