@@ -89,8 +89,8 @@ class SolarWindsApmConfig:
         self.__config = {}
         # Update the config with default values
         self.__config = {
-            # 'tracing_mode' is unset by default and not supported in NH Python
-            "tracing_mode": None,
+            # 'tracing_mode' is unset by default
+            "tracing_mode": OboeTracingMode.get_oboe_trace_mode("unset"),
             # 'trigger_trace' is enabled by default
             "trigger_trace": "enabled",
             "collector": "",  # the collector address in host:port format.
