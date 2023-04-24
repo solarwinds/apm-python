@@ -569,15 +569,16 @@ class SolarWindsApmConfig:
                     )
                     continue
 
+                txn_filter_re = None
                 try:
-                    re.compile(filter["regex"])
+                    txn_filter_re = re.compile(filter["regex"])
                 except re.error:
                     logger.warning(
                         "Transaction filter regex invalid. Ignoring: %s",
                         filter,
                     )
                     continue
-                txn_filter["regex"] = filter["regex"]
+                txn_filter["regex"] = txn_filter_re
                 self.__config["transaction_filters"].append(txn_filter)
 
         logger.debug(

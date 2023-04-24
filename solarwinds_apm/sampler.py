@@ -99,7 +99,7 @@ class _SwSampler(Sampler):
 
                 # Only matches span kind and name at this time
                 identifier = f"{kind.name}:{name}"
-                if re.search(txn_filter.get("regex"), identifier):
+                if txn_filter.get("regex").search(identifier):
                     logger.debug("Got a match for identifier %s", identifier)
                     logger.debug(
                         "Setting tracing_mode as %s",
