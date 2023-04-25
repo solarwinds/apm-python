@@ -4,7 +4,6 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-import json
 import os
 import pytest
 
@@ -14,18 +13,10 @@ from solarwinds_apm import apm_config
 from solarwinds_apm.apm_constants import (
     INTL_SWO_AO_COLLECTOR,
     INTL_SWO_AO_STG_COLLECTOR,
-    INTL_SWO_DEFAULT_PROPAGATORS,
-    INTL_SWO_DEFAULT_TRACES_EXPORTER,
 )
 
-@pytest.fixture(name="mock_env_vars")
-def fixture_mock_env_vars(mocker):
-    mocker.patch.dict(os.environ, {
-        "OTEL_PROPAGATORS": ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
-        "OTEL_TRACES_EXPORTER": INTL_SWO_DEFAULT_TRACES_EXPORTER,
-        "SW_APM_SERVICE_KEY": "valid:key",
-    })
-
+# pylint: disable=unused-import
+from .fixtures.env_vars import fixture_mock_env_vars
 
 class TestSolarWindsApmConfig:
     """
