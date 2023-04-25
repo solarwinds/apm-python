@@ -92,14 +92,19 @@ class _SwSampler(Sampler):
         #   https://github.com/open-telemetry/opentelemetry-python-contrib/issues/936
         if not attributes:
             return ""
+
+        url = ""
         scheme = attributes.get(SpanAttributes.HTTP_SCHEME)
         host = attributes.get(SpanAttributes.NET_HOST_NAME)
+        port = attributes.get(SpanAttributes.NET_HOST_PORT)
         target = attributes.get(SpanAttributes.HTTP_TARGET)
-        if scheme and host and target:
+        if scheme and host and target and port:
+            url = f"{scheme}://{host}:{port}{target}"
+            logger.debug("Constructed url for filtering: %s", url)
+        elif scheme and host and target:
             url = f"{scheme}://{host}{target}"
             logger.debug("Constructed url for filtering: %s", url)
-            return url
-        return ""
+        return url
 
     def calculate_tracing_mode(
         self,
