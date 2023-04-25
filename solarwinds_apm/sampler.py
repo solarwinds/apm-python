@@ -21,6 +21,7 @@ from opentelemetry.sdk.trace.sampling import (
     Sampler,
     SamplingResult,
 )
+from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import SpanContext, TraceState
 from opentelemetry.util.types import Attributes
@@ -81,6 +82,25 @@ class _SwSampler(Sampler):
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
 
+    def construct_url(
+        self,
+        attributes: Attributes = None,
+    ) -> str:
+        """Construct url"""
+        # TODO (NH-34752) Check http scheme, http target, net host name `attributes`
+        #   availability after OTel instrumentation library updates released
+        #   https://github.com/open-telemetry/opentelemetry-python-contrib/issues/936
+        if not attributes:
+            return ""
+        scheme = attributes.get(SpanAttributes.HTTP_SCHEME)
+        host = attributes.get(SpanAttributes.NET_HOST_NAME)
+        target = attributes.get(SpanAttributes.HTTP_TARGET)
+        if scheme and host and target:
+            url = f"{scheme}://{host}{target}"
+            logger.debug("Constructed url for filtering: %s", url)
+            return url
+        return ""
+
     def calculate_tracing_mode(
         self,
         name: str,
@@ -91,13 +111,14 @@ class _SwSampler(Sampler):
         Can still be overridden by remote settings."""
         # If future span matches txn filter, use filter's tracing mode
         if self.apm_config.get("transaction_filters"):
-            for txn_filter in self.apm_config.get("transaction_filters"):
-                # TODO (NH-34752) Check `attributes` for http.* then filter web requests
-                #   after OTel instrumentation library updates released
-                #   https://github.com/open-telemetry/opentelemetry-python-contrib/issues/936
-
-                # Only matches span kind and name at this time
+            # If span for http request, there should be a url
+            url = self.construct_url(attributes)
+            if url:
+                identifier = url
+            else:
                 identifier = f"{kind.name}:{name}"
+
+            for txn_filter in self.apm_config.get("transaction_filters"):
                 if txn_filter.get("regex").search(identifier):
                     logger.debug("Got a match for identifier %s", identifier)
                     logger.debug(
