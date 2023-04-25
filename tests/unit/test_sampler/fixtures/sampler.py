@@ -11,8 +11,9 @@ def config_get(param):
         return -1
     elif param == "transaction_filters":
         return []
+    return None
 
-@pytest.fixture(name="sw_sampler")
+@pytest.fixture(name="fixture_swsampler")
 def fixture_swsampler(mocker):
     mock_apm_config = mocker.Mock()
     mock_get = mocker.Mock(
@@ -67,8 +68,9 @@ def config_get_txn_filters(param):
                 "tracing_mode": 0,
             }
         ]
+    return None
 
-@pytest.fixture(name="sw_sampler_txnfilters")
+@pytest.fixture(name="fixture_swsampler_txnfilters")
 def fixture_swsampler_txnfilters(mocker):
     mock_apm_config = mocker.Mock()
     mock_get = mocker.Mock(

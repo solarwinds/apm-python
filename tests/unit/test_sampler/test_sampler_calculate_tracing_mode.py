@@ -17,30 +17,30 @@ from .fixtures.sampler import (
 class Test_SwSampler_construct_url():
     def test_construct_url_attrs_none(
         self,
-        sw_sampler,
+        fixture_swsampler,
     ):
-        assert sw_sampler.construct_url() == ""
+        assert fixture_swsampler.construct_url() == ""
 
     def test_construct_url_no_http(
         self,
-        sw_sampler,
+        fixture_swsampler,
     ):
-        assert sw_sampler.construct_url({"foo": "bar"}) == ""
+        assert fixture_swsampler.construct_url({"foo": "bar"}) == ""
 
     def test_construct_url_one_only(
         self,
-        sw_sampler,
+        fixture_swsampler,
     ):
-        assert sw_sampler.construct_url({"http.scheme": "bar"}) == ""
-        assert sw_sampler.construct_url({"net.host.name": "bar"}) == ""
-        assert sw_sampler.construct_url({"net.host.port": "bar"}) == ""
-        assert sw_sampler.construct_url({"http.target": "bar"}) == ""
+        assert fixture_swsampler.construct_url({"http.scheme": "bar"}) == ""
+        assert fixture_swsampler.construct_url({"net.host.name": "bar"}) == ""
+        assert fixture_swsampler.construct_url({"net.host.port": "bar"}) == ""
+        assert fixture_swsampler.construct_url({"http.target": "bar"}) == ""
 
     def test_construct_url_all_attrs(
         self,
-        sw_sampler,
+        fixture_swsampler,
     ):
-        assert sw_sampler.construct_url(
+        assert fixture_swsampler.construct_url(
             {
                 "http.scheme": "foo",
                 "net.host.name": "bar",
@@ -51,9 +51,9 @@ class Test_SwSampler_construct_url():
 
     def test_construct_url_all_attrs_except_port(
         self,
-        sw_sampler,
+        fixture_swsampler,
     ):
-        assert sw_sampler.construct_url(
+        assert fixture_swsampler.construct_url(
             {
                 "http.scheme": "foo",
                 "net.host.name": "bar",
@@ -65,17 +65,17 @@ class Test_SwSampler_construct_url():
 class Test_SwSampler_calculate_tracing_mode():
     def test_calculate_tracing_mode_no_filters(
         self,
-        sw_sampler,
+        fixture_swsampler,
     ):
         # this fixture has global tracing_mode -1 (unset)
-        assert sw_sampler.calculate_tracing_mode("foo", None) == -1
+        assert fixture_swsampler.calculate_tracing_mode("foo", None) == -1
 
     def test_calculate_tracing_mode_filters_url_no_match(
         self,
-        sw_sampler_txnfilters,
+        fixture_swsampler_txnfilters,
     ):
         # this fixture has global tracing_mode -1 (unset)
-        assert sw_sampler_txnfilters.calculate_tracing_mode(
+        assert fixture_swsampler_txnfilters.calculate_tracing_mode(
             "foo",
             None,
             {
@@ -88,9 +88,9 @@ class Test_SwSampler_calculate_tracing_mode():
 
     def test_calculate_tracing_mode_filters_url_one_match_exact(
         self,
-        sw_sampler_txnfilters,
+        fixture_swsampler_txnfilters,
     ):
-        assert sw_sampler_txnfilters.calculate_tracing_mode(
+        assert fixture_swsampler_txnfilters.calculate_tracing_mode(
             "foo",
             None,
             {
@@ -102,9 +102,9 @@ class Test_SwSampler_calculate_tracing_mode():
 
     def test_calculate_tracing_mode_filters_url_one_match(
         self,
-        sw_sampler_txnfilters,
+        fixture_swsampler_txnfilters,
     ):
-        assert sw_sampler_txnfilters.calculate_tracing_mode(
+        assert fixture_swsampler_txnfilters.calculate_tracing_mode(
             "foo",
             None,
             {
@@ -116,9 +116,9 @@ class Test_SwSampler_calculate_tracing_mode():
 
     def test_calculate_tracing_mode_filters_url_multiple_match(
         self,
-        sw_sampler_txnfilters,
+        fixture_swsampler_txnfilters,
     ):
-        assert sw_sampler_txnfilters.calculate_tracing_mode(
+        assert fixture_swsampler_txnfilters.calculate_tracing_mode(
             "foo",
             None,
             {
@@ -130,37 +130,37 @@ class Test_SwSampler_calculate_tracing_mode():
 
     def test_calculate_tracing_mode_filters_no_url_no_match(
         self,
-        sw_sampler_txnfilters,
+        fixture_swsampler_txnfilters,
     ):
         # the sampler fixture has global tracing_mode -1 (unset)
-        assert sw_sampler_txnfilters.calculate_tracing_mode(
+        assert fixture_swsampler_txnfilters.calculate_tracing_mode(
             "no-foo",
             SpanKind.CLIENT,
         ) == -1
 
     def test_calculate_tracing_mode_filters_no_url_one_match_exact(
         self,
-        sw_sampler_txnfilters,
+        fixture_swsampler_txnfilters,
     ):
-        assert sw_sampler_txnfilters.calculate_tracing_mode(
+        assert fixture_swsampler_txnfilters.calculate_tracing_mode(
             "foo",
             SpanKind.CLIENT,
         ) == 1
 
     def test_calculate_tracing_mode_filters_no_url_one_match(
         self,
-        sw_sampler_txnfilters,
+        fixture_swsampler_txnfilters,
     ):
-        assert sw_sampler_txnfilters.calculate_tracing_mode(
+        assert fixture_swsampler_txnfilters.calculate_tracing_mode(
             "fooooooo",
             SpanKind.CLIENT,
         ) == 1
 
     def test_calculate_tracing_mode_filters_no_url_multiple_match(
         self,
-        sw_sampler_txnfilters,
+        fixture_swsampler_txnfilters,
     ):
-        assert sw_sampler_txnfilters.calculate_tracing_mode(
+        assert fixture_swsampler_txnfilters.calculate_tracing_mode(
             "foo_bar",
             SpanKind.CLIENT,
         ) == 1

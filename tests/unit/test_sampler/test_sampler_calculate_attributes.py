@@ -248,11 +248,11 @@ class Test_SwSampler_calculate_attributes():
     def test_decision_drop_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
         self,
         mocker,
-        sw_sampler,
+        fixture_swsampler,
         decision_drop,
         mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
             decision=decision_drop,
@@ -264,11 +264,11 @@ class Test_SwSampler_calculate_attributes():
     def test_decision_drop_with_sw_keys_and_custom_keys_no_tt_unsigned(
         self,
         mocker,
-        sw_sampler,
+        fixture_swsampler,
         decision_drop,
         mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
             decision=decision_drop,
@@ -280,11 +280,11 @@ class Test_SwSampler_calculate_attributes():
     def test_decision_drop_with_no_sw_keys_nor_custom_keys_nor_tt_signed(
         self,
         mocker,
-        sw_sampler,
+        fixture_swsampler,
         decision_drop,
         mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_signed,
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
             decision=decision_drop,
@@ -296,11 +296,11 @@ class Test_SwSampler_calculate_attributes():
     def test_decision_drop_with_sw_keys_and_custom_keys_no_tt_signed(
         self,
         mocker,
-        sw_sampler,
+        fixture_swsampler,
         decision_drop,
         mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
             decision=decision_drop,
@@ -312,11 +312,11 @@ class Test_SwSampler_calculate_attributes():
     def test_decision_record_only_with_custom_and_sw_keys_no_tt_unsigned(
         self,
         mocker,
-        sw_sampler,
+        fixture_swsampler,
         decision_record_only_regular,
         mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
             decision=decision_record_only_regular,
@@ -328,11 +328,11 @@ class Test_SwSampler_calculate_attributes():
     def test_decision_record_only_with_custom_and_sw_keys_no_tt_signed(
         self,
         mocker,
-        sw_sampler,
+        fixture_swsampler,
         decision_record_only_regular,
         mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
             decision=decision_record_only_regular,
@@ -343,12 +343,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_decision_record_and_sample_with_sw_keys_and_custom_keys_no_tt_unsigned(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_record_and_sample_unsigned_tt,
         parent_span_context_invalid,
         mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_record_and_sample_unsigned_tt,
@@ -366,12 +366,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_decision_auth_ok_with_sw_keys_and_custom_keys_no_tt_signed(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_record_and_sample_signed_tt_auth_ok,
         parent_span_context_invalid,
         mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_record_and_sample_signed_tt_auth_ok,
@@ -389,12 +389,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_decision_auth_failed_with_sw_keys_and_custom_keys_no_tt_signed(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_record_only_signed_tt_auth_failed,
         parent_span_context_invalid,
         mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_record_only_signed_tt_auth_failed,
@@ -405,12 +405,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_decision_auth_ok_with_sw_keys_and_custom_keys_and_signed_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_record_and_sample_signed_tt_auth_ok,
         parent_span_context_invalid,
         mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_record_and_sample_signed_tt_auth_ok,
@@ -429,12 +429,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_decision_auth_failed_with_sw_keys_and_custom_keys_and_signed_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_record_only_signed_tt_auth_failed,
         parent_span_context_invalid,
         mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_record_only_signed_tt_auth_failed,
@@ -445,12 +445,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_contd_decision_sw_keys_and_custom_keys_and_unsigned_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_continued,
         parent_span_context_invalid,
         mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_continued,
@@ -469,12 +469,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_contd_decision_sw_keys_and_custom_keys_and_signed_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_continued,
         parent_span_context_invalid,
         mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_continued,
@@ -493,12 +493,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_continued,
         parent_span_context_invalid,
         mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_continued,
@@ -514,12 +514,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_signed(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_continued,
         parent_span_context_invalid,
         mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_continued,
@@ -535,12 +535,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_contd_decision_with_no_sw_keys_nor_custom_keys_with_unsigned_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_continued,
         parent_span_context_invalid,
         mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_continued,
@@ -557,12 +557,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_contd_decision_with_no_sw_keys_nor_custom_keys_with_signed_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_continued,
         parent_span_context_invalid,
         mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_signed_tt
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_continued,
@@ -579,12 +579,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_not_contd_decision_with_sw_keys_and_custom_keys_and_unsigned_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_not_continued,
         parent_span_context_invalid,
         mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_not_continued,
@@ -603,12 +603,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_not_contd_decision_with_sw_keys_and_custom_keys_and_signed_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_not_continued,
         parent_span_context_invalid,
         mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_not_continued,
@@ -627,12 +627,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_with_unsigned_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_not_continued,
         parent_span_context_invalid,
         mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_not_continued,
@@ -649,12 +649,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_with_signed_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_not_continued,
         parent_span_context_invalid,
         mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_signed_tt
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_not_continued,
@@ -671,12 +671,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_not_continued,
         parent_span_context_invalid,
         mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_not_continued,
@@ -692,12 +692,12 @@ class Test_SwSampler_calculate_attributes():
 
     def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_signed(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_not_continued,
         parent_span_context_invalid,
         mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_signed
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_not_continued,
@@ -713,13 +713,13 @@ class Test_SwSampler_calculate_attributes():
 
     def test_valid_parent_create_new_attrs_with_sw_keys_and_custom_keys_and_unsigned_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_continued,
         tracestate_with_sw_and_others,
         parent_span_context_valid_remote,
         mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_continued,
@@ -740,13 +740,13 @@ class Test_SwSampler_calculate_attributes():
 
     def test_valid_parent_create_new_attrs_with_sw_keys_and_custom_keys_and_signed_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_continued,
         tracestate_with_sw_and_others,
         parent_span_context_valid_remote,
         mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt
     ):
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
             decision=decision_continued,
@@ -767,14 +767,14 @@ class Test_SwSampler_calculate_attributes():
 
     def test_valid_parent_update_attrs_no_tracestate_capture_with_sw_keys_and_custom_keys_and_unsigned_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         attributes_no_tracestate,
         decision_continued,
         tracestate_with_sw_and_others,
         parent_span_context_valid_remote,
         mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
     ):
-        result = sw_sampler.calculate_attributes(
+        result = fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=attributes_no_tracestate,
             decision=decision_continued,
@@ -800,14 +800,14 @@ class Test_SwSampler_calculate_attributes():
 
     def test_valid_parent_update_attrs_no_tracestate_capture_with_sw_keys_and_custom_keys_and_signed_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         attributes_no_tracestate,
         decision_continued,
         tracestate_with_sw_and_others,
         parent_span_context_valid_remote,
         mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt
     ):
-        result = sw_sampler.calculate_attributes(
+        result = fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=attributes_no_tracestate,
             decision=decision_continued,
@@ -833,14 +833,14 @@ class Test_SwSampler_calculate_attributes():
 
     def test_valid_parent_update_attrs_tracestate_capture_with_sw_keys_and_custom_keys_and_unsigned_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         attributes_with_tracestate,
         decision_continued,
         tracestate_with_sw_and_others,
         parent_span_context_valid_remote,
         mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
     ):
-        result = sw_sampler.calculate_attributes(
+        result = fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=attributes_with_tracestate,
             decision=decision_continued,
@@ -866,14 +866,14 @@ class Test_SwSampler_calculate_attributes():
 
     def test_valid_parent_update_attrs_tracestate_capture_with_sw_keys_and_custom_keys_and_signed_tt(
         self,
-        sw_sampler,
+        fixture_swsampler,
         attributes_with_tracestate,
         decision_continued,
         tracestate_with_sw_and_others,
         parent_span_context_valid_remote,
         mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt
     ):
-        result = sw_sampler.calculate_attributes(
+        result = fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=attributes_with_tracestate,
             decision=decision_continued,
@@ -899,13 +899,13 @@ class Test_SwSampler_calculate_attributes():
 
     def test_no_parent_update_attrs_no_tracestate(
         self,
-        sw_sampler,
+        fixture_swsampler,
         attributes_no_tracestate,
         decision_record_and_sample_regular,
         mock_xtraceoptions_empty,
     ):
         """Represents manual SDK start_as_current_span with attributes at root"""
-        assert sw_sampler.calculate_attributes(
+        assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=attributes_no_tracestate,
             decision=decision_record_and_sample_regular,
