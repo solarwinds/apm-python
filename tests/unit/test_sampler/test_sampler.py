@@ -196,6 +196,9 @@ class Test_SwSampler():
     ):
         sw_sampler.calculate_liboboe_decision(
             parent_span_context_invalid,
+            'foo',
+            None,
+            {'foo': 'bar'},
             mock_xtraceoptions_signed_tt,
         )
         solarwinds_apm.extension.oboe.Context.getDecisions.assert_called_once_with(
@@ -219,6 +222,9 @@ class Test_SwSampler():
     ):
         sw_sampler.calculate_liboboe_decision(
             parent_span_context_valid_remote,
+            'foo',
+            None,
+            {'foo': 'bar'},
         )
         solarwinds_apm.extension.oboe.Context.getDecisions.assert_called_once_with(
             "foo-bar",
@@ -574,6 +580,9 @@ class Test_SwSampler():
 
         _SwSampler.calculate_liboboe_decision.assert_called_once_with(
             "my_span_context",
+            'foo',
+            None,
+            {'foo': 'bar'},
             mock_xtraceoptions
         )
         _SwSampler.calculate_trace_state.assert_called_once_with(

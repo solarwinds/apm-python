@@ -7,6 +7,7 @@
 import json
 import logging
 import os
+import re
 import sys
 from collections import defaultdict
 from functools import reduce
@@ -88,8 +89,8 @@ class SolarWindsApmConfig:
         self.__config = {}
         # Update the config with default values
         self.__config = {
-            # 'tracing_mode' is unset by default and not supported in NH Python
-            "tracing_mode": None,
+            # 'tracing_mode' is unset by default
+            "tracing_mode": OboeTracingMode.get_oboe_trace_mode("unset"),
             # 'trigger_trace' is enabled by default
             "trigger_trace": "enabled",
             "collector": "",  # the collector address in host:port format.
@@ -532,7 +533,7 @@ class SolarWindsApmConfig:
         """Update configured transaction_filters using config dict"""
         txn_settings = cnf_dict.get("transactionSettings")
         if not txn_settings or not isinstance(txn_settings, list):
-            logger.error(
+            logger.warning(
                 "Transaction filters must be a non-empty list of filters. Ignoring."
             )
             return
@@ -540,7 +541,7 @@ class SolarWindsApmConfig:
             if set(filter) != set(["regex", "tracing"]) or filter[
                 "tracing"
             ] not in ["enabled", "disabled"]:
-                logger.error(
+                logger.warning(
                     "Invalid transaction filter rule. Ignoring: %s", filter
                 )
                 continue
@@ -549,7 +550,37 @@ class SolarWindsApmConfig:
                 cfilter["regex"]
                 for cfilter in self.__config["transaction_filters"]
             ]:
-                self.__config["transaction_filters"].append(filter)
+                txn_filter = {}
+                txn_filter[
+                    "tracing_mode"
+                ] = OboeTracingMode.get_oboe_trace_mode(filter["tracing"])
+
+                if not isinstance(filter["regex"], str):
+                    logger.warning(
+                        "Transaction filter regex must be string or regex. Ignoring: %s",
+                        filter,
+                    )
+                    continue
+
+                if not len(filter["regex"]) > 0:
+                    logger.warning(
+                        "Transaction filter regex must not be empty. Ignoring: %s",
+                        filter,
+                    )
+                    continue
+
+                txn_filter_re = None
+                try:
+                    txn_filter_re = re.compile(filter["regex"])
+                except re.error:
+                    logger.warning(
+                        "Transaction filter regex invalid. Ignoring: %s",
+                        filter,
+                    )
+                    continue
+                txn_filter["regex"] = txn_filter_re
+                self.__config["transaction_filters"].append(txn_filter)
+
         logger.debug(
             "Set up transaction filters: %s",
             self.__config["transaction_filters"],
@@ -629,10 +660,9 @@ class SolarWindsApmConfig:
                     val = "enabled" if val == "always" else "disabled"
                 if val not in ["enabled", "disabled"]:
                     raise ValueError
-                self.__config[key] = val
-                self.context.setTracingMode(
-                    OboeTracingMode.get_oboe_trace_mode(val)
-                )
+                oboe_trace_mode = OboeTracingMode.get_oboe_trace_mode(val)
+                self.__config[key] = oboe_trace_mode
+                self.context.setTracingMode(oboe_trace_mode)
             elif keys == ["trigger_trace"]:
                 if not isinstance(val, str):
                     raise ValueError

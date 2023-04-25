@@ -67,18 +67,56 @@ class _SwSampler(Sampler):
     def __init__(self, apm_config: "SolarWindsApmConfig"):
         self.apm_config = apm_config
         self.context = None
+
         if self.apm_config.agent_enabled:
             self.context = Context
         else:
             self.context = NoopContext
 
+        if self.apm_config.get("tracing_mode") is not None:
+            self.tracing_mode = self.apm_config.get("tracing_mode")
+        else:
+            self.tracing_mode = self._UNSET
+
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
+
+    def calculate_tracing_mode(
+        self,
+        name: str,
+        kind: SpanKind = None,
+        attributes: Attributes = None,
+    ) -> int:
+        """Calculates tracing mode per-request or global tracing mode, if set.
+        Can still be overridden by remote settings."""
+        # If future span matches txn filter, use filter's tracing mode
+        if self.apm_config.get("transaction_filters"):
+            for txn_filter in self.apm_config.get("transaction_filters"):
+                # TODO (NH-34752) Check `attributes` for http.* then filter web requests
+                #   after OTel instrumentation library updates released
+                #   https://github.com/open-telemetry/opentelemetry-python-contrib/issues/936
+
+                # Only matches span kind and name at this time
+                identifier = f"{kind.name}:{name}"
+                if txn_filter.get("regex").search(identifier):
+                    logger.debug("Got a match for identifier %s", identifier)
+                    logger.debug(
+                        "Setting tracing_mode as %s",
+                        txn_filter.get("tracing_mode"),
+                    )
+                    return txn_filter.get("tracing_mode")
+
+        # Else use global 'tracing_mode'
+        logger.debug("Using global tracing_mode as %s", self.tracing_mode)
+        return self.tracing_mode
 
     # pylint: disable=too-many-locals
     def calculate_liboboe_decision(
         self,
         parent_span_context: SpanContext,
+        name: str,
+        kind: SpanKind = None,
+        attributes: Attributes = None,
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> dict:
         """Calculates oboe trace decision based on parent span context and APM config."""
@@ -91,8 +129,11 @@ class _SwSampler(Sampler):
             INTL_SWO_TRACESTATE_KEY
         )
 
-        # 'tracing_mode' is not supported in NH Python, so give as unset
-        tracing_mode = self._UNSET
+        tracing_mode = self.calculate_tracing_mode(
+            name,
+            kind,
+            attributes,
+        )
 
         trigger_trace_mode = OboeTracingMode.get_oboe_trigger_trace_mode(
             self.apm_config.get("trigger_trace")
@@ -486,7 +527,7 @@ class _SwSampler(Sampler):
         xtraceoptions = XTraceOptions(parent_context)
 
         liboboe_decision = self.calculate_liboboe_decision(
-            parent_span_context, xtraceoptions
+            parent_span_context, name, kind, attributes, xtraceoptions
         )
 
         # Always calculate trace_state for propagation
