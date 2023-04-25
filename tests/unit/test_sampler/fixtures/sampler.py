@@ -1,17 +1,19 @@
 import pytest
 import re
+from typing import Any
 
 from solarwinds_apm.sampler import _SwSampler
 
 
 # Basic Sampler fixture =====================================
 
-def config_get(param):
+def config_get(param) -> Any:
     if param == "tracing_mode":
         return -1
     elif param == "transaction_filters":
         return []
-    return None
+    else:
+        return None
 
 @pytest.fixture(name="fixture_swsampler")
 def fixture_swsampler(mocker):
@@ -30,7 +32,7 @@ def fixture_swsampler(mocker):
 
 # Sampler fixtures with Transaction Filters =================
 
-def config_get_txn_filters(param):
+def config_get_txn_filters(param)  -> Any:
     if param == "tracing_mode":
         return -1
     elif param == "transaction_filters":
@@ -68,7 +70,8 @@ def config_get_txn_filters(param):
                 "tracing_mode": 0,
             }
         ]
-    return None
+    else:
+        return None
 
 @pytest.fixture(name="fixture_swsampler_txnfilters")
 def fixture_swsampler_txnfilters(mocker):

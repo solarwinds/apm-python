@@ -259,7 +259,7 @@ class Test_SwSampler_calculate_attributes():
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
-        ) == None
+        ) is None
 
     def test_decision_drop_with_sw_keys_and_custom_keys_no_tt_unsigned(
         self,
@@ -275,7 +275,7 @@ class Test_SwSampler_calculate_attributes():
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
-        ) == None
+        ) is None
 
     def test_decision_drop_with_no_sw_keys_nor_custom_keys_nor_tt_signed(
         self,
@@ -291,7 +291,7 @@ class Test_SwSampler_calculate_attributes():
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_signed,
-        ) == None
+        ) is None
 
     def test_decision_drop_with_sw_keys_and_custom_keys_no_tt_signed(
         self,
@@ -307,7 +307,7 @@ class Test_SwSampler_calculate_attributes():
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
-        ) == None
+        ) is None
 
     def test_decision_record_only_with_custom_and_sw_keys_no_tt_unsigned(
         self,
@@ -323,7 +323,7 @@ class Test_SwSampler_calculate_attributes():
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
-        ) == None
+        ) is None
 
     def test_decision_record_only_with_custom_and_sw_keys_no_tt_signed(
         self,
@@ -339,7 +339,7 @@ class Test_SwSampler_calculate_attributes():
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
-        ) == None
+        ) is None
 
     def test_decision_record_and_sample_with_sw_keys_and_custom_keys_no_tt_unsigned(
         self,
@@ -401,7 +401,7 @@ class Test_SwSampler_calculate_attributes():
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
-        ) == None
+        ) is None
 
     def test_decision_auth_ok_with_sw_keys_and_custom_keys_and_signed_tt(
         self,
@@ -441,7 +441,7 @@ class Test_SwSampler_calculate_attributes():
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
-        ) == None
+        ) is None
 
     def test_contd_decision_sw_keys_and_custom_keys_and_unsigned_tt(
         self,
