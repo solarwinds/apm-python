@@ -1,7 +1,7 @@
 import pytest
 
 @pytest.fixture
-def fixture_cnf_dict(mocker):
+def fixture_cnf_dict():
     return {
         "agentEnabled": True,
         "tracingMode": "enabled",

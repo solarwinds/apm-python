@@ -379,8 +379,92 @@ class TestSolarWindsApmConfigCnfFile:
         if old_collector:
             os.environ["SW_APM_COLLECTOR"] = old_collector
 
+    # pylint:disable=unused-argument
     def test_update_with_cnf_file_and_several_invalid_env_vars(
         self,
-        mocker
+        mocker,
+        fixture_cnf_dict,
     ):
-        pass
+        # Save any collector in os for later
+        old_collector = os.environ.get("SW_APM_COLLECTOR", None)
+        if old_collector:
+            del os.environ["SW_APM_COLLECTOR"]
+
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "not-valid-and-agent-will-be-disabled",
+            "SW_APM_AGENT_ENABLED": "other-foo-bar",
+            "SW_APM_TRACING_MODE": "other-foo-bar",
+            "SW_APM_TRIGGER_TRACE": "other-foo-bar",
+            "SW_APM_COLLECTOR": "False",
+            "SW_APM_REPORTER": "other-foo-bar",
+            "SW_APM_DEBUG_LEVEL": "other-foo-bar",
+            "SW_APM_HOSTNAME_ALIAS": "False",
+            "SW_APM_TRUSTEDPATH": "False",
+            "SW_APM_EVENTS_FLUSH_INTERVAL": "other-foo-bar",
+            "SW_APM_MAX_REQUEST_SIZE_BYTES": "other-foo-bar",
+            "SW_APM_EC2_METADATA_TIMEOUT": "other-foo-bar",
+            "SW_APM_MAX_FLUSH_WAIT_TIME": "other-foo-bar",
+            "SW_APM_MAX_TRANSACTIONS": "other-foo-bar",
+            "SW_APM_LOGNAME": "False",
+            "SW_APM_TRACE_METRICS": "other-foo-bar",
+            "SW_APM_TOKEN_BUCKET_CAPACITY": "other-foo-bar",
+            "SW_APM_TOKEN_BUCKET_RATE": "other-foo-bar",
+            "SW_APM_BUFSIZE": "other-foo-bar",
+            "SW_APM_HISTOGRAM_PRECISION": "other-foo-bar",
+            "SW_APM_REPORTER_FILE_SINGLE": "other-foo-bar",
+            "SW_APM_ENABLE_SANITIZE_SQL": "other-foo-bar",
+            "SW_APM_LOG_TRACE_ID": "other-foo-bar",
+            "SW_APM_PROXY": "other-foo-bar",
+            "SW_APM_TRANSACTION": "wont-be-used",
+            "SW_APM_IS_GRPC_CLEAN_HACK_ENABLED": "other-foo-bar",
+        })
+        mock_update_txn_filters = mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
+        )
+        mock_get_cnf_dict = mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
+        )
+        mock_get_cnf_dict.configure_mock(
+            return_value=fixture_cnf_dict
+        )
+        resulting_config = apm_config.SolarWindsApmConfig()
+        # update_transaction_filters was called
+        mock_update_txn_filters.assert_called_once_with(fixture_cnf_dict)
+
+        # even if invalid, only service_key from env var used
+        # and APM will be disabled
+        assert resulting_config.agent_enabled == False
+        assert resulting_config.service_name == ""
+        # cnf_file always used for transaction.prependDomain (nested)
+        assert resulting_config.get("transaction.prepend_domain_name") == True
+
+        # cnf_file values from fixture_cnf_dict are kept if same env_var invalid
+        assert resulting_config.get("tracing_mode") == 1
+        assert resulting_config.get("trigger_trace") == "enabled"
+        assert resulting_config.get("reporter") == "udp"
+        assert resulting_config.get("debug_level") == 6
+        assert resulting_config.get("events_flush_interval") == 2
+        assert resulting_config.get("max_request_size_bytes") == 2
+        assert resulting_config.get("ec2_metadata_timeout") == 1234
+        assert resulting_config.get("max_flush_wait_time") == 2
+        assert resulting_config.get("max_transactions") == 2
+        assert resulting_config.get("trace_metrics") == 2
+        assert resulting_config.get("token_bucket_capacity") == 2
+        assert resulting_config.get("token_bucket_rate") == 2
+        assert resulting_config.get("bufsize") == 2
+        assert resulting_config.get("histogram_precision") == 2
+        assert resulting_config.get("reporter_file_single") == 2
+        assert resulting_config.get("enable_sanitize_sql") == True
+        assert resulting_config.get("log_trace_id") == "always"
+        assert resulting_config.get("proxy") == "http://foo-bar"
+        assert resulting_config.get("is_grpc_clean_hack_enabled") == True
+
+        # These are still valid, so env_var > cnf_file
+        assert resulting_config.get("collector") == "False"
+        assert resulting_config.get("hostname_alias") == "False"
+        assert resulting_config.get("trustedpath") == "False"
+        assert resulting_config.get("logname") == "False"
+        
+        # Restore old collector
+        if old_collector:
+            os.environ["SW_APM_COLLECTOR"] = old_collector
