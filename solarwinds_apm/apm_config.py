@@ -484,20 +484,11 @@ class SolarWindsApmConfig:
         )
         return value if value is not None else default
 
-    def update_with_cnf_file(self) -> None:
-        """Update the settings with the config file (json), if any."""
-
-        def _snake_to_camel_case(key):
-            key_parts = key.split("_")
-            camel_head = key_parts[0]
-            camel_body = "".join(part.title() for part in key_parts[1:])
-            return f"{camel_head}{camel_body}"
-
+    def get_cnf_dict(self) -> Any:
+        """Load Python dict from confg file (json), if any"""
         cnf_filepath = os.environ.get(
             "SW_APM_CONFIG_FILE", "./solarwinds-apm-config.json"
         )
-        if not cnf_filepath:
-            return
         cnf_dict = None
         try:
             with open(cnf_filepath, encoding="utf-8") as cnf_file:
@@ -508,9 +499,21 @@ class SolarWindsApmConfig:
                         "Invalid config file, must be valid json. Ignoring: %s",
                         ex,
                     )
-                    return
         except FileNotFoundError as ex:
             logger.error("Invalid config file path. Ignoring: %s", ex)
+        return cnf_dict
+
+    def update_with_cnf_file(self) -> None:
+        """Update the settings with the config file (json), if any."""
+
+        def _snake_to_camel_case(key):
+            key_parts = key.split("_")
+            camel_head = key_parts[0]
+            camel_body = "".join(part.title() for part in key_parts[1:])
+            return f"{camel_head}{camel_body}"
+
+        cnf_dict = self.get_cnf_dict()
+        if not cnf_dict:
             return
 
         try:
