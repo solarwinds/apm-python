@@ -493,7 +493,8 @@ class SolarWindsApmConfig:
         try:
             with open(cnf_filepath, encoding="utf-8") as cnf_file:
                 try:
-                    cnf_dict = json.load(cnf_file)
+                    file_content = cnf_file.read()
+                    cnf_dict = json.loads(file_content)
                 except ValueError as ex:
                     logger.error(
                         "Invalid config file, must be valid json. Ignoring: %s",
