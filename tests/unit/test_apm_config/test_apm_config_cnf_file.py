@@ -27,7 +27,7 @@ class TestSolarWindsApmConfigCnfFile:
         # use key from env var, agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config.agent_enabled == True
-        assert resulting_config.service_name == "key"
+        assert resulting_config.get("service_key") == "valid:key"
         # cnf_dict is none
         assert resulting_config.get_cnf_dict() is None
 
@@ -42,7 +42,7 @@ class TestSolarWindsApmConfigCnfFile:
         # use key from env var, agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config.agent_enabled == True
-        assert resulting_config.service_name == "key-service-name"
+        assert resulting_config.get("service_key") == "valid:key-service-name"
         # cnf_dict is none
         assert resulting_config.get_cnf_dict() is None
 
@@ -59,7 +59,7 @@ class TestSolarWindsApmConfigCnfFile:
         # use key from env var, agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config.agent_enabled == True
-        assert resulting_config.service_name == "key-service-name"
+        assert resulting_config.get("service_key") == "valid:key-service-name"
         # cnf_dict is none
         assert resulting_config.get_cnf_dict() is None
 
@@ -76,7 +76,7 @@ class TestSolarWindsApmConfigCnfFile:
         # use key from env var, agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config.agent_enabled == True
-        assert resulting_config.service_name == "key-service-name"
+        assert resulting_config.get("service_key") == "valid:key-service-name"
         # cnf_dict is dict with kv from fixture
         assert resulting_config.get_cnf_dict() == {"foo": "bar"}
 
@@ -104,7 +104,7 @@ class TestSolarWindsApmConfigCnfFile:
         # use key from env var, agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config.agent_enabled == True
-        assert resulting_config.service_name == "key-service-name"
+        assert resulting_config.get("service_key") == "valid:key-service-name"
         # config does not include prepend_domain from mock
         assert resulting_config.get("transaction.prepend_domain_name") == False
         # update_transaction_filters was called
@@ -134,7 +134,7 @@ class TestSolarWindsApmConfigCnfFile:
         # use key from env var, agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config.agent_enabled == True
-        assert resulting_config.service_name == "key-service-name"
+        assert resulting_config.get("service_key") == "valid:key-service-name"
         # config includes prepend_domain from mock
         assert resulting_config.get("transaction.prepend_domain_name") == True
         # update_transaction_filters was called
@@ -167,7 +167,7 @@ class TestSolarWindsApmConfigCnfFile:
         # agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config.agent_enabled == True
-        assert resulting_config.service_name == "key-service-name"
+        assert resulting_config.get("service_key") == "valid:key-service-name"
         # config includes snake_case versions of mock's camelCase keys
         # and valid values
         assert resulting_config.agent_enabled == True
@@ -257,7 +257,7 @@ class TestSolarWindsApmConfigCnfFile:
         # agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config.agent_enabled == True
-        assert resulting_config.service_name == "key-service-name"
+        assert resulting_config.get("service_key") == "valid:key-service-name"
         # config includes snake_case versions of mock's camelCase keys
         # and default values because invalid ones ignored
         assert resulting_config.get("tracing_mode") == -1
@@ -346,7 +346,7 @@ class TestSolarWindsApmConfigCnfFile:
 
         # use all keys from env var, none from cnf_file
         # except for transaction.prependDomain (nested)
-        assert resulting_config.service_name == ""  # no service_name if agent disabled
+        assert resulting_config.get("service_key") == "valid:key-service-name"
         assert resulting_config.get("transaction.prepend_domain_name") == True
 
         # Rest of config prioritizes env_var > cnf_file
@@ -434,7 +434,7 @@ class TestSolarWindsApmConfigCnfFile:
         # even if invalid, only service_key from env var used
         # and APM will be disabled
         assert resulting_config.agent_enabled == False
-        assert resulting_config.service_name == ""
+        assert resulting_config.get("service_key") == "not-valid-and-agent-will-be-disabled"  # the full key does not print to std out and appears masked
         # cnf_file always used for transaction.prependDomain (nested)
         assert resulting_config.get("transaction.prepend_domain_name") == True
 
