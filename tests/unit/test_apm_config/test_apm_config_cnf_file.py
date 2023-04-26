@@ -9,6 +9,10 @@ import os
 from solarwinds_apm import apm_config
 
 # pylint: disable=unused-import
+from .fixtures.cnf_file import (
+    fixture_cnf_file_invalid_json,
+)
+# pylint: disable=unused-import
 from .fixtures.env_vars import fixture_mock_env_vars
 
 class TestSolarWindsApmConfigCnfFile:
@@ -39,11 +43,22 @@ class TestSolarWindsApmConfigCnfFile:
         # cnf_dict is none
         assert resulting_config.get_cnf_dict() is None
 
-    def test_get_cnf_dict_not_json(self):
-        pass
-
-    def test_get_cnf_dict_json_but_invalid(self):
-        pass
+    # pylint:disable=unused-argument
+    def test_get_cnf_dict_not_valid_json(
+        self,
+        mocker,
+        fixture_cnf_file_invalid_json,
+    ):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "valid:key-service-name",
+            "SW_APM_CONFIG_FILE": "nothing-is-here",
+        })
+        # use key from env var, agent enabled, nothing has errored
+        resulting_config = apm_config.SolarWindsApmConfig()
+        assert resulting_config._calculate_agent_enabled()
+        assert resulting_config.service_name == "key-service-name"
+        # cnf_dict is none
+        assert resulting_config.get_cnf_dict() is None
 
     def test_get_cnf_dict(self):
         pass
