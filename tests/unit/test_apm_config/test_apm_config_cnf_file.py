@@ -9,6 +9,8 @@ import os
 from solarwinds_apm import apm_config
 
 # pylint: disable=unused-import
+from .fixtures.cnf_dict import fixture_cnf_dict
+# pylint: disable=unused-import
 from .fixtures.cnf_file import (
     fixture_cnf_file,
     fixture_cnf_file_invalid_json,
@@ -138,9 +140,11 @@ class TestSolarWindsApmConfigCnfFile:
         # update_transaction_filters was called
         mock_update_txn_filters.assert_called_once_with(some_cnf_dict)
 
+    # pylint:disable=unused-argument
     def test_update_with_cnf_file_all_valid(
         self,
         mocker,
+        fixture_cnf_dict,
     ):
         # Save any collector in os for later
         old_collector = os.environ.get("SW_APM_COLLECTOR", None)
@@ -153,41 +157,11 @@ class TestSolarWindsApmConfigCnfFile:
         mock_update_txn_filters = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
         )
-        some_cnf_dict = {
-            "enabled": True,
-            "tracingMode": "enabled",
-            "triggerTrace": "enabled",
-            "collector": "foo-bar",
-            "reporter": "udp",
-            "debugLevel": 6,
-            "serviceKey": "not-good-to-put-here:wont-be-used",
-            "hostnameAlias": "foo-bar",
-            "trustedpath": "foo-bar",
-            "eventsFlushInterval": 2,
-            "maxRequestSizeBytes": 2,
-            "ec2MetadataTimeout": 1234,
-            "maxFlushWaitTime": 2,
-            "maxTransactions": 2,
-            "logname": "foo-bar",
-            "traceMetrics": 2,
-            "tokenBucketCapacity": 2,
-            "tokenBucketRate": 2,
-            "bufsize": 2,
-            "histogramPrecision": 2,
-            "reporterFileSingle": 2,
-            "enableSanitizeSql": True,
-            "logTraceId": "always",
-            "proxy": "http://foo-bar",
-            "transaction": {
-                "prependDomain": True
-            },
-            "isGrpcCleanHackEnabled": True,
-        }
         mock_get_cnf_dict = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
         )
         mock_get_cnf_dict.configure_mock(
-            return_value=some_cnf_dict
+            return_value=fixture_cnf_dict
         )
         # use key from env var (Python APM only uses key from here),
         # agent enabled, nothing has errored
@@ -223,7 +197,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("is_grpc_clean_hack_enabled") == True
 
         # update_transaction_filters was called
-        mock_update_txn_filters.assert_called_once_with(some_cnf_dict)
+        mock_update_txn_filters.assert_called_once_with(fixture_cnf_dict)
         # Restore old collector
         if old_collector:
             os.environ["SW_APM_COLLECTOR"] = old_collector
@@ -243,8 +217,8 @@ class TestSolarWindsApmConfigCnfFile:
         mock_update_txn_filters = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
         )
-        some_cnf_dict = {
-            "enabled": "foo",
+        mostly_invalid_cnf_dict = {
+            "agentEnabled": "foo",
             "tracingMode": "foo",
             "triggerTrace": "foo",
             "collector": False,
@@ -277,7 +251,7 @@ class TestSolarWindsApmConfigCnfFile:
             "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
         )
         mock_get_cnf_dict.configure_mock(
-            return_value=some_cnf_dict
+            return_value=mostly_invalid_cnf_dict
         )
         # use key from env var (Python APM only uses key from here),
         # agent enabled, nothing has errored
@@ -313,14 +287,14 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("logname") == "False"
 
         # update_transaction_filters was called
-        mock_update_txn_filters.assert_called_once_with(some_cnf_dict)
+        mock_update_txn_filters.assert_called_once_with(mostly_invalid_cnf_dict)
         # Restore old collector
         if old_collector:
             os.environ["SW_APM_COLLECTOR"] = old_collector
 
-    def test_update_with_cnf_file_and_env_vars(
+    # pylint:disable=unused-argument
+    def test_update_with_cnf_file_and_all_validenv_vars(
         self,
         mocker,
     ):
         pass
-        # prioritize env_var > cnf_file
