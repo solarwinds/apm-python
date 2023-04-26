@@ -78,9 +78,35 @@ class TestSolarWindsApmConfigCnfFile:
         # cnf_dict is dict with kv from fixture
         assert resulting_config.get_cnf_dict() == {"foo": "bar"}
 
-    def test_update_with_cnf_file_prependdomain_invalid(self):
-        pass
+    def test_update_with_cnf_file_prependdomain_invalid(
+        self,
+        mocker,
+    ):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "valid:key-service-name",
+        })
+        mock_update_txn_filters = mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
+        )
+        some_cnf_dict = {
+            "transaction": {
+                "prependDomain": "not-valid-boolean"
+            }
+        }
+        mock_get_cnf_dict = mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
+        )
+        mock_get_cnf_dict.configure_mock(
+            return_value=some_cnf_dict
+        )
+        # use key from env var, agent enabled, nothing has errored
+        resulting_config = apm_config.SolarWindsApmConfig()
+        assert resulting_config._calculate_agent_enabled()
+        assert resulting_config.service_name == "key-service-name"
+        # config does not include prepend_domain from mock
+        assert resulting_config.get("transaction.prepend_domain_name") == False
         # update_transaction_filters was called
+        mock_update_txn_filters.assert_called_once_with(some_cnf_dict)
 
     def test_update_with_cnf_file_prependdomain_valid(
         self,
