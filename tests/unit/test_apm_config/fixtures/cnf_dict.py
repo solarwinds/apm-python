@@ -27,8 +27,5 @@ def fixture_cnf_dict():
         "enableSanitizeSql": True,
         "logTraceId": "always",
         "proxy": "http://foo-bar",
-        "transaction": {
-            "prependDomain": True
-        },
         "isGrpcCleanHackEnabled": True,
     }

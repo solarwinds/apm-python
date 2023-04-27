@@ -9,7 +9,6 @@ import logging
 import os
 import re
 import sys
-from collections import defaultdict
 from functools import reduce
 from pathlib import Path
 from typing import Any
@@ -114,11 +113,9 @@ class SolarWindsApmConfig:
             "enable_sanitize_sql": True,
             "log_trace_id": "never",
             "proxy": "",
-            "transaction": defaultdict(lambda: True),
             "is_grpc_clean_hack_enabled": False,
             "transaction_filters": [],
         }
-        self.__config["transaction"]["prepend_domain_name"] = False
         self.agent_enabled = self._calculate_agent_enabled()
         self.service_name = self._calculate_service_name(
             self.agent_enabled,
@@ -515,12 +512,6 @@ class SolarWindsApmConfig:
         if not cnf_dict:
             return
 
-        try:
-            val = cnf_dict.get("transaction").get("prependDomain")
-            if val is not None:
-                self._set_config_value("transaction.prepend_domain_name", val)
-        except AttributeError:
-            pass
         available_cnf = set(self.__config.keys())
         # TODO after alpha: is_lambda
         for key in available_cnf:
@@ -590,9 +581,6 @@ class SolarWindsApmConfig:
 
     def update_with_env_var(self) -> None:
         """Update the settings with environment variables."""
-        val = os.environ.get("SW_APM_PREPEND_DOMAIN_NAME", None)
-        if val is not None:
-            self._set_config_value("transaction.prepend_domain_name", val)
         available_envvs = set(self.__config.keys())
         # TODO after alpha: is_lambda
         for key in available_envvs:
