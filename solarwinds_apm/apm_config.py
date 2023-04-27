@@ -112,11 +112,9 @@ class SolarWindsApmConfig:
             "histogram_precision": -1,
             "reporter_file_single": 0,
             "enable_sanitize_sql": True,
-            "inst_enabled": defaultdict(lambda: True),
             "log_trace_id": "never",
             "proxy": "",
             "transaction": defaultdict(lambda: True),
-            "inst": defaultdict(lambda: True),
             "is_grpc_clean_hack_enabled": False,
             "transaction_filters": [],
         }
@@ -484,6 +482,26 @@ class SolarWindsApmConfig:
         )
         return value if value is not None else default
 
+    def get_cnf_dict(self) -> Any:
+        """Load Python dict from confg file (json), if any"""
+        cnf_filepath = os.environ.get(
+            "SW_APM_CONFIG_FILE", "./solarwinds-apm-config.json"
+        )
+        cnf_dict = None
+        try:
+            with open(cnf_filepath, encoding="utf-8") as cnf_file:
+                try:
+                    file_content = cnf_file.read()
+                    cnf_dict = json.loads(file_content)
+                except ValueError as ex:
+                    logger.error(
+                        "Invalid config file, must be valid json. Ignoring: %s",
+                        ex,
+                    )
+        except FileNotFoundError as ex:
+            logger.error("Invalid config file path. Ignoring: %s", ex)
+        return cnf_dict
+
     def update_with_cnf_file(self) -> None:
         """Update the settings with the config file (json), if any."""
 
@@ -493,24 +511,8 @@ class SolarWindsApmConfig:
             camel_body = "".join(part.title() for part in key_parts[1:])
             return f"{camel_head}{camel_body}"
 
-        cnf_filepath = os.environ.get(
-            "SW_APM_CONFIG_FILE", "./solarwinds-apm-config.json"
-        )
-        if not cnf_filepath:
-            return
-        cnf_dict = None
-        try:
-            with open(cnf_filepath, encoding="utf-8") as cnf_file:
-                try:
-                    cnf_dict = json.load(cnf_file)
-                except ValueError as ex:
-                    logger.error(
-                        "Invalid config file, must be valid json. Ignoring: %s",
-                        ex,
-                    )
-                    return
-        except FileNotFoundError as ex:
-            logger.error("Invalid config file path. Ignoring: %s", ex)
+        cnf_dict = self.get_cnf_dict()
+        if not cnf_dict:
             return
 
         try:
@@ -594,7 +596,7 @@ class SolarWindsApmConfig:
         available_envvs = set(self.__config.keys())
         # TODO after alpha: is_lambda
         for key in available_envvs:
-            if key in {"inst_enabled", "transaction", "inst"}:
+            if key == "transaction":
                 # we do not allow complex config options to be set via environment variables
                 continue
             env = "SW_APM_" + key.upper()
@@ -717,9 +719,5 @@ class SolarWindsApmConfig:
         except (ValueError, TypeError):
             logger.warning(
                 "Ignore config option with invalid (non-convertible or out-of-range) type: %s",
-                ".".join(
-                    keys
-                    if keys[0] not in ["inst", "transaction"]
-                    else keys[1:]
-                ),
+                ".".join(keys if keys[0] != "transaction" else keys[1:]),
             )
