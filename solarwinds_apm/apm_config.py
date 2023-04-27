@@ -538,39 +538,41 @@ class SolarWindsApmConfig:
                     "Invalid transaction filter rule. Ignoring: %s", filter
                 )
                 continue
-            # the first filter for given `regex` will be used
-            if filter["regex"] not in [
+
+            txn_filter = {}
+            txn_filter["tracing_mode"] = OboeTracingMode.get_oboe_trace_mode(
+                filter["tracing"]
+            )
+
+            if not isinstance(filter["regex"], str):
+                logger.warning(
+                    "Transaction filter regex must be string or regex. Ignoring: %s",
+                    filter,
+                )
+                continue
+
+            if not len(filter["regex"]) > 0:
+                logger.warning(
+                    "Transaction filter regex must not be empty. Ignoring: %s",
+                    filter,
+                )
+                continue
+
+            txn_filter_re = None
+            try:
+                txn_filter_re = re.compile(filter["regex"])
+            except re.error:
+                logger.warning(
+                    "Transaction filter regex invalid. Ignoring: %s",
+                    filter,
+                )
+                continue
+
+            # only the first filter for given `regex` will be used
+            if txn_filter_re not in [
                 cfilter["regex"]
                 for cfilter in self.__config["transaction_filters"]
             ]:
-                txn_filter = {}
-                txn_filter[
-                    "tracing_mode"
-                ] = OboeTracingMode.get_oboe_trace_mode(filter["tracing"])
-
-                if not isinstance(filter["regex"], str):
-                    logger.warning(
-                        "Transaction filter regex must be string or regex. Ignoring: %s",
-                        filter,
-                    )
-                    continue
-
-                if not len(filter["regex"]) > 0:
-                    logger.warning(
-                        "Transaction filter regex must not be empty. Ignoring: %s",
-                        filter,
-                    )
-                    continue
-
-                txn_filter_re = None
-                try:
-                    txn_filter_re = re.compile(filter["regex"])
-                except re.error:
-                    logger.warning(
-                        "Transaction filter regex invalid. Ignoring: %s",
-                        filter,
-                    )
-                    continue
                 txn_filter["regex"] = txn_filter_re
                 self.__config["transaction_filters"].append(txn_filter)
 
