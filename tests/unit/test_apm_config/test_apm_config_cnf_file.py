@@ -80,66 +80,6 @@ class TestSolarWindsApmConfigCnfFile:
         # cnf_dict is dict with kv from fixture
         assert resulting_config.get_cnf_dict() == {"foo": "bar"}
 
-    def test_update_with_cnf_file_prependdomain_invalid(
-        self,
-        mocker,
-    ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "valid:key-service-name",
-        })
-        mock_update_txn_filters = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
-        )
-        some_cnf_dict = {
-            "transaction": {
-                "prependDomain": "not-valid-boolean"
-            }
-        }
-        mock_get_cnf_dict = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
-        )
-        mock_get_cnf_dict.configure_mock(
-            return_value=some_cnf_dict
-        )
-        # use key from env var, agent enabled, nothing has errored
-        resulting_config = apm_config.SolarWindsApmConfig()
-        assert resulting_config.agent_enabled == True
-        assert resulting_config.get("service_key") == "valid:key-service-name"
-        # config does not include prepend_domain from mock
-        assert resulting_config.get("transaction.prepend_domain_name") == False
-        # update_transaction_filters was called
-        mock_update_txn_filters.assert_called_once_with(some_cnf_dict)
-
-    def test_update_with_cnf_file_prependdomain_valid(
-        self,
-        mocker,
-    ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "valid:key-service-name",
-        })
-        mock_update_txn_filters = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
-        )
-        some_cnf_dict = {
-            "transaction": {
-                "prependDomain": True
-            }
-        }
-        mock_get_cnf_dict = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
-        )
-        mock_get_cnf_dict.configure_mock(
-            return_value=some_cnf_dict
-        )
-        # use key from env var, agent enabled, nothing has errored
-        resulting_config = apm_config.SolarWindsApmConfig()
-        assert resulting_config.agent_enabled == True
-        assert resulting_config.get("service_key") == "valid:key-service-name"
-        # config includes prepend_domain from mock
-        assert resulting_config.get("transaction.prepend_domain_name") == True
-        # update_transaction_filters was called
-        mock_update_txn_filters.assert_called_once_with(some_cnf_dict)
-
     # pylint:disable=unused-argument
     def test_update_with_cnf_file_all_valid(
         self,
@@ -193,7 +133,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("enable_sanitize_sql") == True
         assert resulting_config.get("log_trace_id") == "always"
         assert resulting_config.get("proxy") == "http://foo-bar"
-        assert resulting_config.get("transaction.prepend_domain_name") == True
         assert resulting_config.get("is_grpc_clean_hack_enabled") == True
 
         # update_transaction_filters was called
@@ -242,9 +181,6 @@ class TestSolarWindsApmConfigCnfFile:
             "enableSanitizeSql": "foo",
             "log_trace_id": "not-never-always-etc",
             "proxy": "foo",
-            "transaction": {
-                "prependDomain": "foo"
-            },
             "isGrpcCleanHackEnabled": "foo",
         }
         mock_get_cnf_dict = mocker.patch(
@@ -278,7 +214,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("enable_sanitize_sql") == True
         assert resulting_config.get("log_trace_id") == "never"
         assert resulting_config.get("proxy") == ""
-        assert resulting_config.get("transaction.prepend_domain_name") == False
         assert resulting_config.get("is_grpc_clean_hack_enabled") == False
         # Meanwhile these are pretty open
         assert resulting_config.get("collector") == "False"
@@ -345,9 +280,7 @@ class TestSolarWindsApmConfigCnfFile:
         mock_update_txn_filters.assert_called_once_with(fixture_cnf_dict)
 
         # use all keys from env var, none from cnf_file
-        # except for transaction.prependDomain (nested)
         assert resulting_config.get("service_key") == "valid:key-service-name"
-        assert resulting_config.get("transaction.prepend_domain_name") == True
 
         # Rest of config prioritizes env_var > cnf_file
         assert resulting_config.agent_enabled == False
@@ -435,8 +368,6 @@ class TestSolarWindsApmConfigCnfFile:
         # and APM will be disabled
         assert resulting_config.agent_enabled == False
         assert resulting_config.get("service_key") == "not-valid-and-agent-will-be-disabled"  # the full key does not print to std out and appears masked
-        # cnf_file always used for transaction.prependDomain (nested)
-        assert resulting_config.get("transaction.prepend_domain_name") == True
 
         # cnf_file values from fixture_cnf_dict are kept if same env_var invalid
         assert resulting_config.get("tracing_mode") == 1
