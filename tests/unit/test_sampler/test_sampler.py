@@ -190,11 +190,11 @@ class Test_SwSampler():
 
     def test_calculate_liboboe_decision_root_span(
         self,
-        sw_sampler,
+        fixture_swsampler,
         parent_span_context_invalid,
         mock_xtraceoptions_signed_tt,
     ):
-        sw_sampler.calculate_liboboe_decision(
+        fixture_swsampler.calculate_liboboe_decision(
             parent_span_context_invalid,
             'foo',
             None,
@@ -216,11 +216,11 @@ class Test_SwSampler():
     # pylint:disable=unused-argument
     def test_calculate_liboboe_decision_parent_valid_remote(
         self,
-        sw_sampler,
+        fixture_swsampler,
         mock_traceparent_from_context,
         parent_span_context_valid_remote,
     ):
-        sw_sampler.calculate_liboboe_decision(
+        fixture_swsampler.calculate_liboboe_decision(
             parent_span_context_valid_remote,
             'foo',
             None,
@@ -238,67 +238,67 @@ class Test_SwSampler():
             None,
         )
 
-    def test_is_decision_continued_false(self, sw_sampler):
-        assert not sw_sampler.is_decision_continued({
+    def test_is_decision_continued_false(self, fixture_swsampler):
+        assert not fixture_swsampler.is_decision_continued({
             "rate": 0,
             "source": -1,
             "bucket_rate": -1,
             "bucket_cap": -1,
         })
-        assert not sw_sampler.is_decision_continued({
+        assert not fixture_swsampler.is_decision_continued({
             "rate": -1,
             "source": 0,
             "bucket_rate": -1,
             "bucket_cap": -1,
         })
-        assert not sw_sampler.is_decision_continued({
+        assert not fixture_swsampler.is_decision_continued({
             "rate": -1,
             "source": -1,
             "bucket_rate": 0,
             "bucket_cap": -1,
         })
-        assert not sw_sampler.is_decision_continued({
+        assert not fixture_swsampler.is_decision_continued({
             "rate": -1,
             "source": -1,
             "bucket_rate": -1,
             "bucket_cap": 0,
         })
 
-    def test_is_decision_continued_true(self, sw_sampler):
-        assert sw_sampler.is_decision_continued({
+    def test_is_decision_continued_true(self, fixture_swsampler):
+        assert fixture_swsampler.is_decision_continued({
             "rate": -1,
             "source": -1,
             "bucket_rate": -1,
             "bucket_cap": -1,
         })
 
-    def test_otel_decision_from_liboboe(self, sw_sampler):
-        assert sw_sampler.otel_decision_from_liboboe({
+    def test_otel_decision_from_liboboe(self, fixture_swsampler):
+        assert fixture_swsampler.otel_decision_from_liboboe({
             "do_metrics": 0,
             "do_sample": 0,
         }) == Decision.DROP
-        assert sw_sampler.otel_decision_from_liboboe({
+        assert fixture_swsampler.otel_decision_from_liboboe({
             "do_metrics": 1,
             "do_sample": 0,
         }) == Decision.RECORD_ONLY
-        assert sw_sampler.otel_decision_from_liboboe({
+        assert fixture_swsampler.otel_decision_from_liboboe({
             "do_metrics": 1,
             "do_sample": 1,
         }) == Decision.RECORD_AND_SAMPLE
         # Technically possible but we don't handle this
-        assert sw_sampler.otel_decision_from_liboboe({
+        assert fixture_swsampler.otel_decision_from_liboboe({
             "do_metrics": 0,
             "do_sample": 1,
         }) == Decision.RECORD_AND_SAMPLE
 
     def test_create_xtraceoptions_response_value_auth_valid_sig(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_auth_valid_sig,
         parent_span_context_valid_remote,
         mock_xtraceoptions_signed_tt,
     ):
-        response_val = sw_sampler.create_xtraceoptions_response_value(
+        response_val = fixture_swsampler.create_xtraceoptions_response_value(
             decision_auth_valid_sig,
             parent_span_context_valid_remote,
             mock_xtraceoptions_signed_tt,
@@ -307,12 +307,12 @@ class Test_SwSampler():
 
     def test_create_xtraceoptions_response_value_auth_invalid_sig(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_auth_invalid_sig,
         parent_span_context_valid_remote,
         mock_xtraceoptions_signed_tt,
     ):
-        response_val = sw_sampler.create_xtraceoptions_response_value(
+        response_val = fixture_swsampler.create_xtraceoptions_response_value(
             decision_auth_invalid_sig,
             parent_span_context_valid_remote,
             mock_xtraceoptions_signed_tt,
@@ -321,12 +321,12 @@ class Test_SwSampler():
 
     def test_create_xtraceoptions_response_value_tt_unauth_type_nonzero_root_span(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_not_auth_type_nonzero,
         parent_span_context_invalid,
         mock_xtraceoptions_signed_tt,
     ):
-        response_val = sw_sampler.create_xtraceoptions_response_value(
+        response_val = fixture_swsampler.create_xtraceoptions_response_value(
             decision_not_auth_type_nonzero,
             parent_span_context_invalid,
             mock_xtraceoptions_signed_tt,
@@ -335,12 +335,12 @@ class Test_SwSampler():
 
     def test_create_xtraceoptions_response_value_tt_unauth_type_nonzero_parent_span_remote(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_not_auth_type_nonzero,
         parent_span_context_valid_remote,
         mock_xtraceoptions_signed_tt,
     ):
-        response_val = sw_sampler.create_xtraceoptions_response_value(
+        response_val = fixture_swsampler.create_xtraceoptions_response_value(
             decision_not_auth_type_nonzero,
             parent_span_context_valid_remote,
             mock_xtraceoptions_signed_tt, 
@@ -349,12 +349,12 @@ class Test_SwSampler():
 
     def test_create_xtraceoptions_response_value_tt_unauth_type_zero_root_span(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_not_auth_type_zero,
         parent_span_context_invalid,
         mock_xtraceoptions_signed_tt,
     ):
-        response_val = sw_sampler.create_xtraceoptions_response_value(
+        response_val = fixture_swsampler.create_xtraceoptions_response_value(
             decision_not_auth_type_zero,
             parent_span_context_invalid,
             mock_xtraceoptions_signed_tt,
@@ -363,12 +363,12 @@ class Test_SwSampler():
 
     def test_create_xtraceoptions_response_value_tt_unauth_type_zero_parent_span_remote(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_not_auth_type_zero,
         parent_span_context_valid_remote,
         mock_xtraceoptions_signed_tt,
     ):
-        response_val = sw_sampler.create_xtraceoptions_response_value(
+        response_val = fixture_swsampler.create_xtraceoptions_response_value(
             decision_not_auth_type_zero,
             parent_span_context_valid_remote,
             mock_xtraceoptions_signed_tt,    
@@ -377,12 +377,12 @@ class Test_SwSampler():
 
     def test_create_xtraceoptions_response_value_not_tt_unauth(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_not_auth_type_nonzero,
         parent_span_context_invalid,
         mock_xtraceoptions_signed_not_tt,
     ):
-        response_val = sw_sampler.create_xtraceoptions_response_value(
+        response_val = fixture_swsampler.create_xtraceoptions_response_value(
             decision_not_auth_type_nonzero,
             parent_span_context_invalid,
             mock_xtraceoptions_signed_not_tt,     
@@ -391,12 +391,12 @@ class Test_SwSampler():
 
     def test_create_xtraceoptions_response_value_case_8(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_signed_tt_traced,
         parent_span_context_invalid,
         mock_xtraceoptions_signed_tt,
     ):
-        response_val = sw_sampler.create_xtraceoptions_response_value(
+        response_val = fixture_swsampler.create_xtraceoptions_response_value(
             decision_signed_tt_traced,
             parent_span_context_invalid,
             mock_xtraceoptions_signed_tt,   
@@ -405,12 +405,12 @@ class Test_SwSampler():
 
     def test_create_xtraceoptions_response_value_case_14(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_non_tt_traced,
         parent_span_context_invalid,
         mock_xtraceoptions_signed_not_tt,
     ):
-        response_val = sw_sampler.create_xtraceoptions_response_value(
+        response_val = fixture_swsampler.create_xtraceoptions_response_value(
             decision_non_tt_traced,
             parent_span_context_invalid,
             mock_xtraceoptions_signed_not_tt,   
@@ -419,12 +419,12 @@ class Test_SwSampler():
 
     def test_create_xtraceoptions_response_value_case_11(
         self,
-        sw_sampler,
+        fixture_swsampler,
         decision_unsigned_tt_not_traced,
         parent_span_context_invalid,
         mock_xtraceoptions_unsigned_tt,
     ):
-        response_val = sw_sampler.create_xtraceoptions_response_value(
+        response_val = fixture_swsampler.create_xtraceoptions_response_value(
             decision_unsigned_tt_not_traced,
             parent_span_context_invalid,
             mock_xtraceoptions_unsigned_tt, 
@@ -434,7 +434,7 @@ class Test_SwSampler():
     def test_create_new_trace_state(
         self,
         mocker,
-        sw_sampler,
+        fixture_swsampler,
         decision_auth_valid_sig,
         parent_span_context_valid_remote,
         mock_xtraceoptions_signed_tt
@@ -443,7 +443,7 @@ class Test_SwSampler():
             "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
             return_value="bar"
         )
-        trace_state = sw_sampler.create_new_trace_state(
+        trace_state = fixture_swsampler.create_new_trace_state(
             decision_auth_valid_sig,
             parent_span_context_valid_remote,
             mock_xtraceoptions_signed_tt
@@ -456,7 +456,7 @@ class Test_SwSampler():
     def test_create_new_trace_state_without_tt(
         self,
         mocker,
-        sw_sampler,
+        fixture_swsampler,
         decision_auth_valid_sig,
         parent_span_context_valid_remote,
         mock_xtraceoptions_signed_without_tt
@@ -465,7 +465,7 @@ class Test_SwSampler():
             "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
             return_value="bar"
         )
-        trace_state = sw_sampler.create_new_trace_state(
+        trace_state = fixture_swsampler.create_new_trace_state(
             decision_auth_valid_sig,
             parent_span_context_valid_remote,
             mock_xtraceoptions_signed_without_tt
@@ -478,7 +478,7 @@ class Test_SwSampler():
     def test_calculate_trace_state_root_span(
         self,
         mocker,
-        sw_sampler,
+        fixture_swsampler,
         decision_auth_valid_sig,
         parent_span_context_invalid
     ):
@@ -486,7 +486,7 @@ class Test_SwSampler():
             "solarwinds_apm.sampler._SwSampler.create_new_trace_state",
             return_value="bar"
         )
-        trace_state = sw_sampler.calculate_trace_state(
+        trace_state = fixture_swsampler.calculate_trace_state(
             decision_auth_valid_sig,
             parent_span_context_invalid
         )
@@ -495,7 +495,7 @@ class Test_SwSampler():
     def test_calculate_trace_state_is_remote_create(
         self,
         mocker,
-        sw_sampler,
+        fixture_swsampler,
         decision_auth_valid_sig,
         parent_span_context_valid_remote_no_tracestate
     ):
@@ -503,7 +503,7 @@ class Test_SwSampler():
             "solarwinds_apm.sampler._SwSampler.create_new_trace_state",
             return_value="bar"
         )
-        trace_state = sw_sampler.calculate_trace_state(
+        trace_state = fixture_swsampler.calculate_trace_state(
             decision_auth_valid_sig,
             parent_span_context_valid_remote_no_tracestate
         )
@@ -512,7 +512,7 @@ class Test_SwSampler():
     def test_calculate_trace_state_is_remote_update(
         self,
         mocker,
-        sw_sampler,
+        fixture_swsampler,
         decision_auth_valid_sig,
         parent_span_context_valid_remote,
         mock_xtraceoptions_signed_tt,
@@ -524,7 +524,7 @@ class Test_SwSampler():
         assert parent_span_context_valid_remote.trace_state == TraceState([
             ["sw", "123"]
         ])
-        trace_state = sw_sampler.calculate_trace_state(
+        trace_state = fixture_swsampler.calculate_trace_state(
             decision_auth_valid_sig,
             parent_span_context_valid_remote,
             mock_xtraceoptions_signed_tt,
@@ -537,7 +537,7 @@ class Test_SwSampler():
     def test_should_sample(
         self,
         mocker,
-        sw_sampler,
+        fixture_swsampler,
     ):
         mock_get_current_span = mocker.patch("solarwinds_apm.sampler.get_current_span")
         mock_get_current_span.configure_mock(
@@ -571,7 +571,7 @@ class Test_SwSampler():
             return_value=Decision.RECORD_AND_SAMPLE
         )
 
-        sampling_result = sw_sampler.should_sample(
+        sampling_result = fixture_swsampler.should_sample(
             parent_context=mocker.MagicMock(),
             trace_id=123,
             name="foo",
