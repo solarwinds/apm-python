@@ -195,9 +195,12 @@ def fixture_exporter(mocker):
         "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager",
         return_value=mocker.Mock()
     )
+    mock_txnman_get = mocker.Mock()
+    mock_txnman_get.configure_mock(return_value="foo")
     mock_apm_txname_manager.configure_mock(
         **{
-            "__delitem__": mocker.Mock()
+            "__delitem__": mocker.Mock(),
+            "get": mock_txnman_get
         }
     )
     mock_apm_fwkv_manager = mocker.patch(
@@ -239,7 +242,7 @@ class Test_SolarWindsSpanExporter():
         mock_report_exception,
         mock_add_info,
         mock_add_info_instr_scope,
-        mock_add_info_instr_fwork,        
+        mock_add_info_instr_fwork,     
         exporter
     ):
         # mock_spans has one info event, one exception event
@@ -252,7 +255,9 @@ class Test_SolarWindsSpanExporter():
 
         # addInfo calls for entry and exit events
         mock_add_info.assert_has_calls([
+            mocker.call("TransactionName", "foo"),
             mocker.call("Layer", "FOO:foo"),
+            mocker.call(solarwinds_apm.exporter.SolarWindsSpanExporter._SW_SPAN_NAME, "foo"),
             mocker.call(solarwinds_apm.exporter.SolarWindsSpanExporter._SW_SPAN_KIND, FooNum.FOO.name),
             mocker.call("Language", "Python"),
             mocker.call("foo", "bar"),

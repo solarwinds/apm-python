@@ -55,6 +55,7 @@ class SolarWindsSpanExporter(SpanExporter):
     ]
     _INTERNAL_TRANSACTION_NAME = "TransactionName"
     _SW_SPAN_KIND = "sw.span_kind"
+    _SW_SPAN_NAME = "sw.span_name"
 
     def __init__(
         self,
@@ -103,6 +104,7 @@ class SolarWindsSpanExporter(SpanExporter):
 
             layer = f"{span.kind.name}:{span.name}"
             evt.addInfo("Layer", layer)
+            evt.addInfo(self._SW_SPAN_NAME, span.name)
             evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
             evt.addInfo("Language", "Python")
             self._add_info_instrumentation_scope(span, evt)
