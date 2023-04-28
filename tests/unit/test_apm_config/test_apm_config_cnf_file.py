@@ -263,7 +263,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_ENABLE_SANITIZE_SQL": "false",
             "SW_APM_LOG_TRACE_ID": "never",
             "SW_APM_PROXY": "http://other-foo-bar",
-            "SW_APM_TRANSACTION": "wont-be-used",
             "SW_APM_IS_GRPC_CLEAN_HACK_ENABLED": "false",
         })
         mock_update_txn_filters = mocker.patch(
@@ -348,7 +347,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_ENABLE_SANITIZE_SQL": "other-foo-bar",
             "SW_APM_LOG_TRACE_ID": "other-foo-bar",
             "SW_APM_PROXY": "other-foo-bar",
-            "SW_APM_TRANSACTION": "wont-be-used",
             "SW_APM_IS_GRPC_CLEAN_HACK_ENABLED": "other-foo-bar",
         })
         mock_update_txn_filters = mocker.patch(
