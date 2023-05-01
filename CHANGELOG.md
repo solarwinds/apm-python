@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.10.0...HEAD)
 
-## [0.10.0.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.10.0) - 2023-05-01
+## [0.10.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.10.0) - 2023-05-01
 ### Added
 - Add custom transaction filtering support ([#136](https://github.com/solarwindscloud/solarwinds-apm-python/pull/136), [#137](https://github.com/solarwindscloud/solarwinds-apm-python/pull/137), [#138](https://github.com/solarwindscloud/solarwinds-apm-python/pull/138), [#139](https://github.com/solarwindscloud/solarwinds-apm-python/pull/139), [#141](https://github.com/solarwindscloud/solarwinds-apm-python/pull/141))
 - Add span attribute `sw.span_name` at export ([#143](https://github.com/solarwindscloud/solarwinds-apm-python/pull/143))
