@@ -13,7 +13,9 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.instrumentation.distro import BaseDistro
-from opentelemetry.instrumentation.logging.environment_variables import OTEL_PYTHON_LOG_FORMAT
+from opentelemetry.instrumentation.logging.environment_variables import (
+    OTEL_PYTHON_LOG_FORMAT,
+)
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_PROPAGATORS,
@@ -33,5 +35,6 @@ class SolarWindsDistro(BaseDistro):
             OTEL_PROPAGATORS, ",".join(INTL_SWO_DEFAULT_PROPAGATORS)
         )
         environ.setdefault(
-            OTEL_PYTHON_LOG_FORMAT, "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s trace_flags=%(otelTraceSampled)02d resource.service.name=%(otelServiceName)s] - %(message)s"
+            OTEL_PYTHON_LOG_FORMAT,
+            "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s trace_flags=%(otelTraceSampled)02d resource.service.name=%(otelServiceName)s] - %(message)s",
         )
