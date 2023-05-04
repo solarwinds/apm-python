@@ -75,6 +75,7 @@ class SolarWindsApmConfig:
     done only once during the initialization and the properties cannot be refreshed.
     """
 
+    _CONFIG_FILE_DEFAULT = "./solarwinds-apm-config.json"
     _DELIMITER = "."
     _KEY_MASK = "{}...{}:{}"
     _KEY_MASK_BAD_FORMAT = "{}...<invalid_format>"
@@ -481,10 +482,15 @@ class SolarWindsApmConfig:
 
     def get_cnf_dict(self) -> Any:
         """Load Python dict from confg file (json), if any"""
-        cnf_filepath = os.environ.get(
-            "SW_APM_CONFIG_FILE", "./solarwinds-apm-config.json"
-        )
+        cnf_filepath = os.environ.get("SW_APM_CONFIG_FILE")
         cnf_dict = None
+
+        if not cnf_filepath:
+            cnf_filepath = self._CONFIG_FILE_DEFAULT
+            if not os.path.isfile(cnf_filepath):
+                logger.debug("No config file at %s; skipping", cnf_filepath)
+                return cnf_dict
+
         try:
             with open(cnf_filepath, encoding="utf-8") as cnf_file:
                 try:
