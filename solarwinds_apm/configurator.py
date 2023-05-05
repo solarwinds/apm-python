@@ -14,6 +14,7 @@ import time
 
 from opentelemetry import metrics
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 
@@ -96,17 +97,28 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
         if apm_config.agent_enabled:
-            self._configure_metrics_span_processor(
-                apm_txname_manager,
+            # self._configure_metrics_span_processor(
+            #     apm_txname_manager,
+            #     apm_config,
+            # )
+            # self._configure_exporter(
+            #     reporter,
+            #     apm_txname_manager,
+            #     apm_fwkv_manager,
+            #     apm_config.agent_enabled,
+            # )
+
+            resource=Resource.create(
+                {"service.name": apm_config.service_name}
+            )
+            self._configure_otlp_trace_exporter(
                 apm_config,
+                resource,
             )
-            self._configure_exporter(
-                reporter,
-                apm_txname_manager,
-                apm_fwkv_manager,
-                apm_config.agent_enabled,
+            self._configure_otlp_metrics_exporter(
+                apm_config,
+                resource,
             )
-            self._configure_metrics_exporter(apm_config)
             self._configure_propagator()
             self._configure_response_propagator()
         else:
@@ -219,19 +231,31 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             span_processor = BatchSpanProcessor(exporter)
             trace.get_tracer_provider().add_span_processor(span_processor)
 
-    def _configure_metrics_exporter(
+    def _configure_otlp_trace_exporter(
         self,
         apm_config: SolarWindsApmConfig,
+        resource: Resource,
+    ) -> None:
+        """Configure default OTLP GRPC trace exporter, or none if agent disabled."""
+        if not apm_config.agent_enabled:
+            logger.error("Tracing disabled. Cannot set span_processor.")
+            return
+
+        provider = TracerProvider(resource=resource)
+        processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="apm.collector.cloud.solarwinds.com:443"))
+        provider.add_span_processor(processor)
+        trace.set_tracer_provider(provider)
+
+    def _configure_otlp_metrics_exporter(
+        self,
+        apm_config: SolarWindsApmConfig,
+        resource: Resource,
     ) -> None:
         """Configure default OTLP GRPC metrics exporter, or none if agent disabled."""
         if not apm_config.agent_enabled:
             logger.error("Tracing disabled. Cannot set span_processor.")
             return
 
-        # This is not the only Resource we create in distro; should consolidate later?
-        resource=Resource.create(
-            {"service.name": apm_config.service_name}
-        )
         reader = PeriodicExportingMetricReader(
             OTLPMetricExporter(endpoint="apm.collector.cloud.solarwinds.com:443")
         )
