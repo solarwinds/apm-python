@@ -75,6 +75,7 @@ class SolarWindsApmConfig:
     done only once during the initialization and the properties cannot be refreshed.
     """
 
+    _CONFIG_FILE_DEFAULT = "./solarwinds-apm-config.json"
     _DELIMITER = "."
     _KEY_MASK = "{}...{}:{}"
     _KEY_MASK_BAD_FORMAT = "{}...<invalid_format>"
@@ -481,10 +482,15 @@ class SolarWindsApmConfig:
 
     def get_cnf_dict(self) -> Any:
         """Load Python dict from confg file (json), if any"""
-        cnf_filepath = os.environ.get(
-            "SW_APM_CONFIG_FILE", "./solarwinds-apm-config.json"
-        )
+        cnf_filepath = os.environ.get("SW_APM_CONFIG_FILE")
         cnf_dict = None
+
+        if not cnf_filepath:
+            cnf_filepath = self._CONFIG_FILE_DEFAULT
+            if not os.path.isfile(cnf_filepath):
+                logger.debug("No config file at %s; skipping", cnf_filepath)
+                return cnf_dict
+
         try:
             with open(cnf_filepath, encoding="utf-8") as cnf_file:
                 try:
@@ -525,9 +531,12 @@ class SolarWindsApmConfig:
     def update_transaction_filters(self, cnf_dict: dict) -> None:
         """Update configured transaction_filters using config dict"""
         txn_settings = cnf_dict.get("transactionSettings")
-        if not txn_settings or not isinstance(txn_settings, list):
+        if not txn_settings:
+            logger.debug("No transaction filters provided by config.")
+            return
+        if not isinstance(txn_settings, list):
             logger.warning(
-                "Transaction filters must be a non-empty list of filters. Ignoring."
+                "Transaction filters must be a list of filters. Ignoring."
             )
             return
         for filter in txn_settings:
