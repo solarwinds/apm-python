@@ -532,9 +532,7 @@ class SolarWindsApmConfig:
         """Update configured transaction_filters using config dict"""
         txn_settings = cnf_dict.get("transactionSettings")
         if not txn_settings:
-            logger.debug(
-                "No transaction filters provided by config."
-            )
+            logger.debug("No transaction filters provided by config.")
             return
         if not isinstance(txn_settings, list):
             logger.warning(
