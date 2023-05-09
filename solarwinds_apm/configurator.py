@@ -15,7 +15,10 @@ import time
 from opentelemetry import metrics
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics.export import (
+    ConsoleMetricExporter,
+    PeriodicExportingMetricReader,
+)
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
@@ -232,8 +235,17 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         resource=Resource.create(
             {"service.name": apm_config.service_name}
         )
+        # reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
         reader = PeriodicExportingMetricReader(
-            OTLPMetricExporter(endpoint=os.environ.get("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT", "http://otel-collector:4317"))
+            OTLPMetricExporter(
+                # endpoint="http://otel-collector:4317",
+                # endpoint=os.environ.get("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT", "otel.collector.na-01.cloud.solarwinds.com"),
+                endpoint="otel.collector.na-01.cloud.solarwinds.com:443",
+                headers={
+                    "authorization": f"Bearer {os.environ.get('API_TOKEN')}"
+                },
+                insecure=False,
+            )
         )
         provider = MeterProvider(resource=resource, metric_readers=[reader])
         metrics.set_meter_provider(provider)
