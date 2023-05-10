@@ -12,18 +12,13 @@ import os
 import sys
 import time
 
-from opentelemetry import metrics
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import (
-    ConsoleMetricExporter,
-    PeriodicExportingMetricReader,
-)
-
-from opentelemetry import trace
+from opentelemetry import metrics, trace
 from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
+)
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
+    OTLPMetricExporter,
 )
 from opentelemetry.instrumentation.dependencies import (
     get_dist_dependency_conflicts,
@@ -37,6 +32,8 @@ from opentelemetry.instrumentation.propagators import (
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -233,19 +230,34 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             return
 
         # This is not the only Resource we create in distro; should consolidate later?
-        resource=Resource.create(
-            {"service.name": apm_config.service_name}
+        resource = Resource.create({"service.name": apm_config.service_name})
+
+        # Should be string representing KV pairs
+        # Example: key1=value1,KEY2 = value=2 would yield two headers
+        #          ("key1", "value1") and ("key2", "VALUE=2")
+        # https://github.com/open-telemetry/opentelemetry-python/blob/14ca9f4169ad433e34da5b0a5323eea619b3dc62/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L414-L420
+        # https://github.com/open-telemetry/opentelemetry-python/blob/14ca9f4169ad433e34da5b0a5323eea619b3dc62/exporter/opentelemetry-exporter-otlp-proto-grpc/tests/test_otlp_metrics_exporter.py#L263-L270
+        metrics_headers = os.environ.get(
+            "OTEL_EXPORTER_OTLP_METRICS_HEADERS", None
         )
-        # reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
+        if not metrics_headers:
+            service_key = apm_config.get("service_key")
+            if not service_key:
+                metrics_headers = None
+            else:
+                key_parts = service_key.split(":")
+                metrics_headers = {"authorization": f"Bearer {key_parts[0]}"}
+
         reader = PeriodicExportingMetricReader(
             OTLPMetricExporter(
-                # endpoint="http://otel-collector:4317",
-                # endpoint=os.environ.get("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT", "otel.collector.na-01.cloud.solarwinds.com"),
-                endpoint="otel.collector.na-01.cloud.solarwinds.com:443",
-                headers={
-                    "authorization": f"Bearer {os.environ.get('API_TOKEN')}"
-                },
-                insecure=False,
+                endpoint=os.environ.get(
+                    "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT",
+                    INTL_SWO_CHAINSAW_COLLECTOR_NA,
+                ),
+                headers=metrics_headers,
+                insecure=os.environ.get(
+                    "OTEL_EXPORTER_OTLP_METRICS_INSECURE", False
+                ),
             )
         )
         provider = MeterProvider(resource=resource, metric_readers=[reader])
