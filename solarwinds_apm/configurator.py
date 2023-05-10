@@ -45,6 +45,7 @@ from pkg_resources import get_distribution, iter_entry_points, load_entry_point
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import (
+    INTL_SWO_CHAINSAW_COLLECTOR_NA,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_SUPPORT_EMAIL,

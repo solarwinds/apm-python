@@ -6,6 +6,7 @@
 
 INTL_SWO_AO_COLLECTOR = "collector.appoptics.com"
 INTL_SWO_AO_STG_COLLECTOR = "collector-stg.appoptics.com"
+INTL_SWO_CHAINSAW_COLLECTOR_NA = "otel.collector.na-01.cloud.solarwinds.com:443"
 INTL_SWO_CURRENT_SPAN_ID = "sw-current-entry-span-id"
 INTL_SWO_CURRENT_TRACE_ID = "sw-current-trace-id"
 INTL_SWO_COMMA = ","
