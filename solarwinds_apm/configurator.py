@@ -33,7 +33,10 @@ from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics.export import (
+    ConsoleMetricExporter,
+    PeriodicExportingMetricReader,
+)
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -260,7 +263,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 ),
             )
         )
-        provider = MeterProvider(resource=resource, metric_readers=[reader])
+
+        # For debug exploration only
+        local_reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
+        provider = MeterProvider(
+            resource=resource, metric_readers=[reader, local_reader]
+        )
         metrics.set_meter_provider(provider)
 
     def _configure_propagator(self) -> None:
