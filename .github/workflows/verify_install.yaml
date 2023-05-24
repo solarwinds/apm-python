@@ -544,6 +544,20 @@ jobs:
   # x86_64 Python 3.10
   #--------------------------------------------------------------------
 
+  py310_install_amazon2023:
+    runs-on: ubuntu-latest
+    container:
+      image: amazonlinux:2023
+      options: --hostname py3.10-amazon2023
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup and run install test
+      working-directory: ./tests/docker/install
+      run: ./_helper_run_install_tests.sh
+      shell: sh
+      env:
+        MODE: ${{ github.event.inputs.install-registry }}
+
   py310_install_debian10:
     runs-on: ubuntu-latest
     container:
