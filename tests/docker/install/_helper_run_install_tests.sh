@@ -94,11 +94,10 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             echo "ERROR: Testing on Ubuntu <18.04 not supported."
             exit 1
         fi
-    
+
     elif grep "Amazon Linux" /etc/os-release; then
         yum update -y
-        if grep "Amazon Linux 2" /etc/os-release; then
-            # agent and test deps for py3.7
+        if grep "Amazon Linux 2023" /etc/os-release; then
             yum install -y \
                 python3-devel \
                 python3-pip \
@@ -110,24 +109,19 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 tar \
                 gzip
             update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-            update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1              
+            # cannot symlink/update-alternatives nor upgrade pip
         else
-            # agent and test deps
-            yum install -y \
-                "python$python_version_no_dot-devel" \
-                "python$python_version_no_dot-pip" \
-                "python$python_version_no_dot-setuptools" \
-                gcc \
-                gcc-c++ \
-                unzip \
-                findutils
-            alternatives --set python "/usr/bin/python$python_version"
+            echo "ERROR: Testing on Amazon <2023 not supported."
+            exit 1
         fi
     fi
 } >/dev/null
 
-# need at least pip 19.3 to find manylinux wheels
-pip install --upgrade pip >/dev/null
+# need at least pip 19.3 to find manylinux wheels (except Amazon Linux)
+is_amzn=$(find /etc/os-release -not -name "Amazon Linux")
+if [ ! "$is_amzn" = "/etc/os-release" ]; then
+    pip install --upgrade pip >/dev/null
+fi
 
 # run tests using bash so we can use pipefail
 bash -c "set -o pipefail && ./install_tests.sh 2>&1"
