@@ -46,8 +46,6 @@ from solarwinds_apm.apm_noop import Reporter as NoopReporter
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 
-# pylint: disable=import-error,no-name-in-module
-from solarwinds_apm.extension.oboe import Config, Context, Metadata, Reporter
 from solarwinds_apm.inbound_metrics_processor import (
     SolarWindsInboundMetricsSpanProcessor,
 )
@@ -59,6 +57,11 @@ from solarwinds_apm.version import __version__
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
 
+try:
+    from solarwinds_apm.extension.oboe import Config, Context, Metadata, Reporter
+except ImportError:
+    logger.error("Could not import extension. Tracing is disabled and will go into no-op mode.")
+    from solarwinds_apm.apm_noop import Config, Context, Metadata, Reporter
 
 class SolarWindsConfigurator(_OTelSDKConfigurator):
     """OpenTelemetry Configurator for initializing APM logger and SolarWinds-reporting SDK components"""
