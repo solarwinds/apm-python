@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.10.0...HEAD)
+## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.11.0...HEAD)
+
+## [0.11.0.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.11.0) - 2023-05-23
+### Added
+- Added trace context to logging ([#146](https://github.com/solarwindscloud/solarwinds-apm-python/pull/146))
+
+### Changed
+- Adjusted config file logging ([#147](https://github.com/solarwindscloud/solarwinds-apm-python/pull/147))
+- OpenTelemetry API/SDK 1.18.0 ([#150](https://github.com/solarwindscloud/solarwinds-apm-python/pull/150))
+- Added Amazon 2023 install tests; removed Amazon 2018 and Amazon 2 install tests ([#151](https://github.com/solarwindscloud/solarwinds-apm-python/pull/151))
+
 
 ## [0.10.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.10.0) - 2023-05-01
 ### Added
