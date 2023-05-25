@@ -123,11 +123,5 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
     fi
 } >/dev/null
 
-# need at least pip 19.3 to find manylinux wheels (except Amazon Linux)
-is_amzn=$(find /etc/os-release -not -name "Amazon Linux")
-if [ ! "$is_amzn" = "/etc/os-release" ]; then
-    pip install --upgrade pip >/dev/null
-fi
-
 # run tests using bash so we can use pipefail
 bash -c "set -o pipefail && ./install_tests.sh 2>&1"
