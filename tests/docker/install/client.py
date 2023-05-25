@@ -41,6 +41,8 @@ def request_server(attempts=10):
 
 
 if __name__ == "__main__":
+    logger.debug("Waiting a moment for instrumented app to start...")
+    time.sleep(20)
     request_server()
     logger.debug("Waiting a moment in case reporter needs extra time...")
     time.sleep(10)
