@@ -551,7 +551,7 @@ jobs:
       options: --hostname py3.10-amazon2023
     steps:
     - name: Install checkout deps
-      run: yum update -y && yum install -y tar
+      run: yum update -y && yum install -y tar gzip
     - uses: actions/checkout@v3
     - name: Setup and run install test
       working-directory: ./tests/docker/install
