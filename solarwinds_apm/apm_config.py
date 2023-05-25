@@ -35,12 +35,10 @@ from solarwinds_apm.apm_constants import (
 from solarwinds_apm.apm_noop import Context as NoopContext
 from solarwinds_apm.certs.ao_issuer_ca import get_public_cert
 
-logger = logging.getLogger(__name__)
+# pylint: disable=import-error,no-name-in-module
+from solarwinds_apm.extension.oboe import Context
 
-try:
-    from solarwinds_apm.extension.oboe import Context
-except ImportError:
-    from solarwinds_apm.apm_noop import Context as Context
+logger = logging.getLogger(__name__)
 
 
 class OboeTracingMode:

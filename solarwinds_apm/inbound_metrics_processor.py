@@ -18,10 +18,8 @@ from solarwinds_apm.apm_constants import (
 )
 from solarwinds_apm.apm_noop import Span as NoopSpan
 
-try:
-    from solarwinds_apm.extension.oboe import Span
-except ImportError:
-    from solarwinds_apm.apm_noop import Span as Span
+# pylint: disable=import-error,no-name-in-module
+from solarwinds_apm.extension.oboe import Span
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
