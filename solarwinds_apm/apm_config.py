@@ -180,14 +180,14 @@ class SolarWindsApmConfig:
             return False
         return True
 
-    # TODO: Account for cnf_file and env var
+    # TODO: Account for any in-code config
     # pylint: disable=too-many-return-statements
     def _calculate_agent_enabled_config(self) -> bool:
         """Checks if agent is enabled/disabled based on config:
-        - SW_APM_SERVICE_KEY   (required)
-        - SW_APM_AGENT_ENABLED (optional)
-        - OTEL_PROPAGATORS     (optional)
-        - OTEL_TRACES_EXPORTER (optional)
+        - SW_APM_SERVICE_KEY   (required) (env var only)
+        - SW_APM_AGENT_ENABLED (optional) (env var OR cnf file)
+        - OTEL_PROPAGATORS     (optional) (env var only)
+        - OTEL_TRACES_EXPORTER (optional) (env var only)
         """
         # (1) SW_APM_SERVICE_KEY
         if (
@@ -502,7 +502,7 @@ class SolarWindsApmConfig:
         return cnf_dict
 
     def update_with_cnf_file(self) -> None:
-        """Update the settings with the config file (json), if any."""
+        """Update the settings with the config file (json), if any, EXCEPT for service_key"""
 
         def _snake_to_camel_case(key):
             key_parts = key.split("_")
@@ -518,9 +518,10 @@ class SolarWindsApmConfig:
         # TODO after alpha: is_lambda
         for key in available_cnf:
             # Use internal snake_case config keys to check JSON config file camelCase keys
-            val = cnf_dict.get(_snake_to_camel_case(key))
-            if val is not None:
-                self._set_config_value(key, val)
+            if key != "service_key":
+                val = cnf_dict.get(_snake_to_camel_case(key))
+                if val is not None:
+                    self._set_config_value(key, val)
 
         self.update_transaction_filters(cnf_dict)
 
