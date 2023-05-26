@@ -27,16 +27,11 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_DOC_SUPPORTED_PLATFORMS,
-    INTL_SWO_DOC_TRACING_PYTHON,
     INTL_SWO_PROPAGATOR,
     INTL_SWO_SUPPORT_EMAIL,
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
-from solarwinds_apm.apm_noop import Context as NoopContext
 from solarwinds_apm.certs.ao_issuer_ca import get_public_cert
-
-# pylint: disable=import-error,no-name-in-module
-from solarwinds_apm.extension.oboe import Context
 
 logger = logging.getLogger(__name__)
 
@@ -124,9 +119,24 @@ class SolarWindsApmConfig:
         )
 
         if self.agent_enabled:
-            self.context = Context
+            try:
+                # pylint: disable=import-outside-toplevel
+                import solarwinds_apm.extension.oboe as c_extension
+            except ImportError as err:
+                # At this point, if agent_enabled but cannot import
+                # extension then something unexpected happened
+                logger.error(
+                    "Could not import extension. Please contact %s. Tracing disabled: %s",
+                    INTL_SWO_SUPPORT_EMAIL,
+                    err,
+                )
+                # pylint: disable=import-outside-toplevel
+                import solarwinds_apm.apm_noop as c_extension
         else:
-            self.context = NoopContext
+            # pylint: disable-next=import-outside-toplevel
+            import solarwinds_apm.apm_noop as c_extension
+        self.extension = c_extension
+        self.context = self.extension.Context
 
         self.update_with_cnf_file()
         self.update_with_env_var()
@@ -155,16 +165,57 @@ class SolarWindsApmConfig:
             return True
         return False
 
-    # pylint: disable=too-many-branches,too-many-statements
-    def _calculate_agent_enabled(self) -> bool:
+    def _calculate_agent_enabled_platform(self) -> bool:
+        """Checks if agent is enabled/disabled based on platform"""
+        if not sys.platform.startswith("linux"):
+            logger.warning(
+                """Platform %s not supported.
+                See: %s
+                Tracing is disabled and will go into no-op mode.
+                Contact %s if this is unexpected.""",
+                sys.platform,
+                INTL_SWO_DOC_SUPPORTED_PLATFORMS,
+                INTL_SWO_SUPPORT_EMAIL,
+            )
+            return False
+        return True
+
+    # TODO: Account for cnf_file and env var
+    # pylint: disable=too-many-return-statements
+    def _calculate_agent_enabled_config(self) -> bool:
         """Checks if agent is enabled/disabled based on config:
         - SW_APM_SERVICE_KEY   (required)
+        - SW_APM_AGENT_ENABLED (optional)
         - OTEL_PROPAGATORS     (optional)
         - OTEL_TRACES_EXPORTER (optional)
-        - SW_APM_AGENT_ENABLED (optional)
         """
-        agent_enabled = True
+        # (1) SW_APM_SERVICE_KEY
+        if (
+            not os.environ.get("SW_APM_SERVICE_KEY", None)
+            and not self._is_lambda()
+        ):
+            logger.error("Missing service key. Tracing disabled.")
+            return False
+        # Key must be at least one char + ":" + at least one other char
+        key_parts = [
+            p
+            for p in os.environ.get("SW_APM_SERVICE_KEY", "").split(":")
+            if len(p) > 0
+        ]
+        if len(key_parts) != 2:
+            logger.error("Incorrect service key format. Tracing disabled.")
+            return False
 
+        # (2) SW_APM_AGENT_ENABLED
+        if os.environ.get("SW_APM_AGENT_ENABLED", "true").lower() == "false":
+            logger.info(
+                "SolarWinds APM is disabled and will not report any traces because the environment variable "
+                "SW_APM_AGENT_ENABLED is set to 'false'! If this is not intended either unset the variable or set it to "
+                "a value other than false. Note that the value of SW_APM_AGENT_ENABLED is case-insensitive."
+            )
+            return False
+
+        # (3) OTEL_PROPAGATORS
         try:
             # SolarWindsDistro._configure does setdefault so this shouldn't
             # be None, but safer and more explicit this way
@@ -184,7 +235,7 @@ class SolarWindsApmConfig:
                     logger.error(
                         "Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled."
                     )
-                    raise ValueError
+                    return False
 
                 if environ_propagators.index(
                     INTL_SWO_PROPAGATOR
@@ -194,10 +245,14 @@ class SolarWindsApmConfig:
                     logger.error(
                         "tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled."
                     )
-                    raise ValueError
+                    return False
         except ValueError:
-            agent_enabled = False
+            logger.error(
+                "OTEL_PROPAGATORS must be a string of comma-separated propagator names. Tracing disabled."
+            )
+            return False
 
+        # (4) OTEL_TRACES_EXPORTER
         try:
             # SolarWindsDistro._configure does setdefault so this shouldn't
             # be None, but safer and more explicit this way
@@ -213,7 +268,7 @@ class SolarWindsApmConfig:
                 logger.error(
                     "Must include solarwinds_exporter in OTEL_TRACES_EXPORTER to use Solarwinds APM. Tracing disabled."
                 )
-                raise ValueError
+                return False
             for environ_exporter_name in environ_exporters:
                 try:
                     if (
@@ -230,80 +285,21 @@ class SolarWindsApmConfig:
                     logger.error(
                         "Failed to load configured OTEL_TRACES_EXPORTER. Tracing disabled."
                     )
-                    agent_enabled = False
+                    return False
         except ValueError:
-            agent_enabled = False
+            logger.error(
+                "OTEL_TRACES_EXPORTER must be a string of comma-separated exporter names. Tracing disabled."
+            )
+            return False
 
-        try:
-            if (
-                os.environ.get("SW_APM_AGENT_ENABLED", "true").lower()
-                == "false"
-            ):
-                agent_enabled = False
-                logger.info(
-                    "SolarWinds APM is disabled and will not report any traces because the environment variable "
-                    "SW_APM_AGENT_ENABLED is set to 'false'! If this is not intended either unset the variable or set it to "
-                    "a value other than false. Note that the value of SW_APM_AGENT_ENABLED is case-insensitive."
-                )
-                raise ImportError
+        return True
 
-            if (
-                not os.environ.get("SW_APM_SERVICE_KEY", None)
-                and not self._is_lambda()
-            ):
-                logger.error("Missing service key. Tracing disabled.")
-                agent_enabled = False
-                raise ImportError
-
-            # Key must be at least one char + ":" + at least one other char
-            key_parts = [
-                p
-                for p in os.environ.get("SW_APM_SERVICE_KEY", "").split(":")
-                if len(p) > 0
-            ]
-            if len(key_parts) != 2:
-                logger.error("Incorrect service key format. Tracing disabled.")
-                agent_enabled = False
-                raise ImportError
-
-        except ImportError as ex:
-            try:
-                if agent_enabled:
-                    # only log the following messages if agent wasn't explicitly disabled
-                    # via SW_APM_AGENT_ENABLED or due to missing service key
-                    if sys.platform.startswith("linux"):
-                        logger.warning(
-                            """Missing extension library.
-                            Tracing is disabled and will go into no-op mode.
-                            Contact %s if this is unexpected.
-                            Error: %s
-                            See: %s""",
-                            INTL_SWO_SUPPORT_EMAIL,
-                            ex,
-                            INTL_SWO_DOC_TRACING_PYTHON,
-                        )
-                    else:
-                        logger.warning(
-                            """Platform %s not yet supported.
-                            See: %s
-                            Tracing is disabled and will go into no-op mode.
-                            Contact %s if this is unexpected.""",
-                            sys.platform,
-                            INTL_SWO_DOC_SUPPORTED_PLATFORMS,
-                            INTL_SWO_SUPPORT_EMAIL,
-                        )
-            except ImportError as err:
-                logger.error(
-                    """Unexpected error: %s.
-                    Please reinstall or contact %s.""",
-                    err,
-                    INTL_SWO_SUPPORT_EMAIL,
-                )
-            finally:
-                # regardless of how we got into this (outer) exception block, the agent will not be able to trace (and thus be
-                # disabled)
-                agent_enabled = False
-
+    # pylint: disable=too-many-branches,too-many-statements
+    def _calculate_agent_enabled(self) -> bool:
+        """Checks if agent is enabled/disabled based on platform and config"""
+        agent_enabled = False
+        if self._calculate_agent_enabled_platform():
+            agent_enabled = self._calculate_agent_enabled_config()
         logger.debug("agent_enabled: %s", agent_enabled)
         return agent_enabled
 

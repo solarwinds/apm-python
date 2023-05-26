@@ -42,12 +42,9 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_SUPPORT_EMAIL,
 )
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
-from solarwinds_apm.apm_noop import Reporter as NoopReporter
+from solarwinds_apm.apm_noop import Reporter
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
-
-# pylint: disable=import-error,no-name-in-module
-from solarwinds_apm.extension.oboe import Config, Context, Metadata, Reporter
 from solarwinds_apm.inbound_metrics_processor import (
     SolarWindsInboundMetricsSpanProcessor,
 )
@@ -149,7 +146,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         trace.get_tracer_provider().add_span_processor(
             SolarWindsInboundMetricsSpanProcessor(
                 apm_txname_manager,
-                apm_config.agent_enabled,
+                apm_config,
             )
         )
 
@@ -278,10 +275,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             "metric_format": apm_config.metric_format,
         }
 
-        if apm_config.agent_enabled:
-            return Reporter(**reporter_kwargs)
-
-        return NoopReporter(**reporter_kwargs)
+        return apm_config.extension.Reporter(**reporter_kwargs)
 
     # pylint: disable=too-many-branches,too-many-statements
     def _add_all_instrumented_python_framework_versions(
@@ -453,7 +447,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         version_keys["process.executable.path"] = sys.executable
 
         version_keys["APM.Version"] = __version__
-        version_keys["APM.Extension.Version"] = Config.getVersionString()
+        version_keys[
+            "APM.Extension.Version"
+        ] = apm_config.extension.Config.getVersionString()
 
         version_keys = self._add_all_instrumented_python_framework_versions(
             version_keys
@@ -462,13 +458,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         if keys:
             version_keys.update(keys)
 
-        md = Metadata.makeRandom(True)
+        md = apm_config.extension.Metadata.makeRandom(True)
         if not md.isValid():
             logger.warning(
                 "Warning: Could not generate Metadata for reporter init. Skipping init message."
             )
             return
-        Context.set(md)
+        apm_config.extension.Context.set(md)
         evt = md.createEvent()
         evt.addInfo("Layer", layer)
         for ver_k, ver_v in version_keys.items():
