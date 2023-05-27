@@ -112,7 +112,7 @@ class TestSolarWindsApmConfigCnfFile:
         # and valid values
         assert resulting_config.agent_enabled == True
         assert resulting_config.get("tracing_mode") == 1
-        assert resulting_config.get("trigger_trace") == "enabled"
+        assert resulting_config.get("trigger_trace") == 1
         assert resulting_config.get("collector") == "foo-bar"
         assert resulting_config.get("reporter") == "udp"
         assert resulting_config.get("debug_level") == 6
@@ -197,7 +197,7 @@ class TestSolarWindsApmConfigCnfFile:
         # config includes snake_case versions of mock's camelCase keys
         # and default values because invalid ones ignored
         assert resulting_config.get("tracing_mode") == -1
-        assert resulting_config.get("trigger_trace") == "enabled"
+        assert resulting_config.get("trigger_trace") == 1
         assert resulting_config.get("reporter") == ""
         assert resulting_config.get("debug_level") == 2
         assert resulting_config.get("events_flush_interval") == -1
@@ -284,7 +284,7 @@ class TestSolarWindsApmConfigCnfFile:
         # Rest of config prioritizes env_var > cnf_file
         assert resulting_config.agent_enabled == False
         assert resulting_config.get("tracing_mode") == 0
-        assert resulting_config.get("trigger_trace") == "disabled"
+        assert resulting_config.get("trigger_trace") == 0
         assert resulting_config.get("collector") == "other-foo-bar"
         assert resulting_config.get("reporter") == "file"
         assert resulting_config.get("debug_level") == 5
@@ -369,7 +369,7 @@ class TestSolarWindsApmConfigCnfFile:
 
         # cnf_file values from fixture_cnf_dict are kept if same env_var invalid
         assert resulting_config.get("tracing_mode") == 1
-        assert resulting_config.get("trigger_trace") == "enabled"
+        assert resulting_config.get("trigger_trace") == 1
         assert resulting_config.get("reporter") == "udp"
         assert resulting_config.get("debug_level") == 6
         assert resulting_config.get("events_flush_interval") == 2

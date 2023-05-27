@@ -84,10 +84,10 @@ class SolarWindsApmConfig:
         self.__config = {}
         # Update the config with default values
         self.__config = {
-            # 'tracing_mode' is unset by default
             "tracing_mode": OboeTracingMode.get_oboe_trace_mode("unset"),
-            # 'trigger_trace' is enabled by default
-            "trigger_trace": "enabled",
+            "trigger_trace": OboeTracingMode.get_oboe_trigger_trace_mode(
+                "enabled"
+            ),
             "collector": "",  # the collector address in host:port format.
             "reporter": "",  # the reporter mode, either 'udp' or 'ssl'.
             "debug_level": apm_logging.ApmLoggingLevel.default_level(),
@@ -112,10 +112,21 @@ class SolarWindsApmConfig:
             "is_grpc_clean_hack_enabled": False,
             "transaction_filters": [],
         }
+        self.agent_enabled = True
+        self.update_with_cnf_file()
+        self.update_with_env_var()
+        # TODO Implement in-code config with kwargs after alpha
+        # self.update_with_kwargs(kwargs)
+
         self.agent_enabled = self._calculate_agent_enabled()
         self.service_name = self._calculate_service_name(
             self.agent_enabled,
             otel_resource,
+        )
+        self.__config["service_key"] = self._update_service_key_name(
+            self.agent_enabled,
+            self.__config["service_key"],
+            self.service_name,
         )
 
         if self.agent_enabled:
@@ -137,20 +148,11 @@ class SolarWindsApmConfig:
             import solarwinds_apm.apm_noop as c_extension
         self.extension = c_extension
         self.context = self.extension.Context
+        self.context.setTracingMode(self.__config["tracing_mode"])
+        self.context.setTriggerMode(self.__config["trigger_trace"])
 
-        self.update_with_cnf_file()
-        self.update_with_env_var()
-
-        self.__config["service_key"] = self._update_service_key_name(
-            self.agent_enabled,
-            self.__config["service_key"],
-            self.service_name,
-        )
         self.metric_format = self._calculate_metric_format()
         self.certificates = self._calculate_certificates()
-
-        # TODO Implement in-code config with kwargs after alpha
-        # self.update_with_kwargs(kwargs)
 
         logger.debug("Set ApmConfig as: %s", self)
 
@@ -180,26 +182,23 @@ class SolarWindsApmConfig:
             return False
         return True
 
-    # TODO: Account for cnf_file and env var
+    # TODO: Account for in-code config with kwargs after alpha
     # pylint: disable=too-many-return-statements
     def _calculate_agent_enabled_config(self) -> bool:
         """Checks if agent is enabled/disabled based on config:
-        - SW_APM_SERVICE_KEY   (required)
-        - SW_APM_AGENT_ENABLED (optional)
-        - OTEL_PROPAGATORS     (optional)
-        - OTEL_TRACES_EXPORTER (optional)
+        - SW_APM_SERVICE_KEY   (required) (env var or cnf file)
+        - SW_APM_AGENT_ENABLED (optional) (env var or cnf file)
+        - OTEL_PROPAGATORS     (optional) (env var only)
+        - OTEL_TRACES_EXPORTER (optional) (env var only)
         """
         # (1) SW_APM_SERVICE_KEY
-        if (
-            not os.environ.get("SW_APM_SERVICE_KEY", None)
-            and not self._is_lambda()
-        ):
+        if not self.__config.get("service_key") and not self._is_lambda():
             logger.error("Missing service key. Tracing disabled.")
             return False
         # Key must be at least one char + ":" + at least one other char
         key_parts = [
             p
-            for p in os.environ.get("SW_APM_SERVICE_KEY", "").split(":")
+            for p in self.__config.get("service_key", "").split(":")
             if len(p) > 0
         ]
         if len(key_parts) != 2:
@@ -207,7 +206,8 @@ class SolarWindsApmConfig:
             return False
 
         # (2) SW_APM_AGENT_ENABLED
-        if os.environ.get("SW_APM_AGENT_ENABLED", "true").lower() == "false":
+        # At this point it might be false after reading env var or cnf file
+        if not self.agent_enabled:
             logger.info(
                 "SolarWinds APM is disabled and will not report any traces because the environment variable "
                 "SW_APM_AGENT_ENABLED is set to 'false'! If this is not intended either unset the variable or set it to "
@@ -336,7 +336,7 @@ class SolarWindsApmConfig:
             )
             if otel_service_name and otel_service_name == "unknown_service":
                 # When agent_enabled, assume service_key exists and is formatted correctly.
-                service_name = os.environ.get("SW_APM_SERVICE_KEY", ":").split(
+                service_name = self.__config.get("service_key", ":").split(
                     ":"
                 )[1]
             else:
@@ -514,6 +514,15 @@ class SolarWindsApmConfig:
         if not cnf_dict:
             return
 
+        # agent_enabled is special
+        cnf_agent_enabled = cnf_dict.get(_snake_to_camel_case("agent_enabled"))
+        if cnf_agent_enabled in set([True, False]):
+            self.agent_enabled = cnf_agent_enabled
+        elif cnf_agent_enabled:
+            logger.warning(
+                "Config file agentEnabled must be one of: true, false. Ignoring."
+            )
+
         available_cnf = set(self.__config.keys())
         # TODO after alpha: is_lambda
         for key in available_cnf:
@@ -588,6 +597,22 @@ class SolarWindsApmConfig:
 
     def update_with_env_var(self) -> None:
         """Update the settings with environment variables."""
+        # agent_enabled is special
+        env_agent_enabled = os.environ.get("SW_APM_AGENT_ENABLED")
+        if env_agent_enabled and env_agent_enabled in set(
+            [
+                "True",
+                "true",
+                "False",
+                "false",
+            ]
+        ):
+            self.agent_enabled = json.loads(env_agent_enabled.lower())
+        elif env_agent_enabled:
+            logger.warning(
+                "Environment SW_APM_AGENT_ENABLED must be one of: true, false. Ignoring."
+            )
+
         available_envvs = set(self.__config.keys())
         # TODO after alpha: is_lambda
         for key in available_envvs:
@@ -659,7 +684,6 @@ class SolarWindsApmConfig:
                     raise ValueError
                 oboe_trace_mode = OboeTracingMode.get_oboe_trace_mode(val)
                 self.__config[key] = oboe_trace_mode
-                self.context.setTracingMode(oboe_trace_mode)
             elif keys == ["trigger_trace"]:
                 if not isinstance(val, str):
                     raise ValueError
@@ -668,10 +692,10 @@ class SolarWindsApmConfig:
                     val = "enabled" if val == "always" else "disabled"
                 if val not in ["enabled", "disabled"]:
                     raise ValueError
-                self.__config[key] = val
-                self.context.setTriggerMode(
+                oboe_trigger_trace = (
                     OboeTracingMode.get_oboe_trigger_trace_mode(val)
                 )
+                self.__config[key] = oboe_trigger_trace
             elif keys == ["reporter"]:
                 # TODO: support 'lambda'
                 if not isinstance(val, str) or val.lower() not in (
