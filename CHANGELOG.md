@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.11.0...HEAD)
 
+### Changed
+- Bugfix: APM tracing disabled when platform not supported ([#153](https://github.com/solarwindscloud/solarwinds-apm-python/pull/153))
+
 ## [0.11.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.11.0) - 2023-05-25
 ### Added
 - Added trace context to logging ([#146](https://github.com/solarwindscloud/solarwinds-apm-python/pull/146))
