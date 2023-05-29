@@ -96,7 +96,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 reporter,
                 apm_txname_manager,
                 apm_fwkv_manager,
-                apm_config.agent_enabled,
+                apm_config,
             )
             self._configure_propagator()
             self._configure_response_propagator()
@@ -155,12 +155,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         reporter: "Reporter",
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
-        agent_enabled: bool = True,
+        apm_config: SolarWindsApmConfig,
     ) -> None:
         """Configure SolarWinds OTel span exporters, defaults or environment
         configured, or none if agent disabled. Initialization of SolarWinds
         exporter requires a liboboe reporter and agent_enabled flag."""
-        if not agent_enabled:
+        if not apm_config.agent_enabled:
             logger.error("Tracing disabled. Cannot set span_processor.")
             return
 
@@ -183,7 +183,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                         reporter,
                         apm_txname_manager,
                         apm_fwkv_manager,
-                        agent_enabled,
+                        apm_config,
                     )
                 else:
                     exporter = next(

@@ -24,11 +24,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_OTEL_SCOPE_VERSION,
     INTL_SWO_SUPPORT_EMAIL,
 )
-from solarwinds_apm.apm_noop import Context as NoopContext
-from solarwinds_apm.apm_noop import Metadata as NoopMetadata
 
-# pylint: disable=import-error,no-name-in-module
-from solarwinds_apm.extension.oboe import Context, Metadata
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
@@ -62,7 +58,7 @@ class SolarWindsSpanExporter(SpanExporter):
         reporter,
         apm_txname_manager,
         apm_fwkv_manager,
-        agent_enabled,
+        apm_config,
         *args,
         **kw_args,
     ) -> None:
@@ -70,12 +66,8 @@ class SolarWindsSpanExporter(SpanExporter):
         self.reporter = reporter
         self.apm_txname_manager = apm_txname_manager
         self.apm_fwkv_manager = apm_fwkv_manager
-        if agent_enabled:
-            self.context = Context
-            self.metadata = Metadata
-        else:
-            self.context = NoopContext
-            self.metadata = NoopMetadata
+        self.context = apm_config.extension.Context
+        self.metadata = apm_config.extension.Metadata
 
     def export(self, spans) -> None:
         """Export to AO events and report via liboboe.
