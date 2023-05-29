@@ -13,13 +13,7 @@ from .fixtures.cnf_dict import (
     fixture_cnf_dict,
     fixture_cnf_dict_enabled_false,
 )
-# pylint: disable=unused-import
-from .fixtures.cnf_file import (
-    fixture_cnf_file,
-    fixture_cnf_file_invalid_json,
-)
-# pylint: disable=unused-import
-from .fixtures.env_vars import fixture_mock_env_vars
+
 
 class TestSolarWindsApmConfigAgentEnabled:
     def test_calculate_agent_enabled_service_key_missing(self, mocker):
