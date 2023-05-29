@@ -24,7 +24,6 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_OTEL_SCOPE_VERSION,
     INTL_SWO_SUPPORT_EMAIL,
 )
-
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
