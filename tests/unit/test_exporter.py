@@ -96,18 +96,6 @@ def fixture_mock_md(mocker):
     )
     return mock_md
 
-@pytest.fixture(name="mock_create_entry")
-def fixture_mock_create_entry(mocker):
-    return mocker.patch(
-        "solarwinds_apm.extension.oboe.Context.createEntry"
-    )
-
-@pytest.fixture(name="mock_create_exit")
-def fixture_mock_create_exit(mocker):
-    return mocker.patch(
-        "solarwinds_apm.extension.oboe.Context.createExit"
-    )
-
 @pytest.fixture(name="mock_create_event")
 def fixture_mock_create_event(mocker):
     return mocker.patch(
@@ -143,23 +131,6 @@ def fixture_mock_report_info(mocker):
     return mocker.patch(
         "solarwinds_apm.exporter.SolarWindsSpanExporter._report_info_event",
     )
-
-def configure_entry_mocks(
-    mocker,
-    mock_event,
-    mock_create_entry,
-    mock_create_exit,
-):
-    """Helper to configure liboboe Entry mocks"""
-    mock_add_info = mocker.Mock()
-    mock_event.configure_mock(
-        **{
-            "addInfo": mock_add_info
-        }
-    )
-    mock_create_entry.configure_mock(return_value=mock_event)
-    mock_create_exit.configure_mock(return_value=mock_event)
-    return mock_event, mock_add_info, mock_create_entry, mock_create_exit
 
 def configure_event_mocks(
     mocker,
