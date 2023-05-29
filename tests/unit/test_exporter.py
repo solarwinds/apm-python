@@ -207,6 +207,36 @@ def fixture_exporter(mocker):
         "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager",
         return_value=mocker.Mock()
     )
+    mock_add_info = mocker.Mock()
+    mock_event = mocker.Mock()
+    mock_entry = mocker.Mock()
+    mock_exit = mocker.Mock()
+    mock_event.configure_mock(
+        **{
+            "addInfo": mock_add_info
+        }
+    )
+    mock_context = mocker.Mock()
+    mock_context.configure_mock(
+        **{
+            "createEvent": mock_event,
+            "createEntry": mock_entry,
+            "createExit": mock_exit,
+        }
+    )
+    mock_extension = mocker.Mock()
+    mock_extension.configure_mock(
+        **{
+            "Context": mock_context,
+            "Metadata": "bar",
+        }
+    )
+    mock_apm_config = mocker.Mock()
+    mock_apm_config.configure_mock(
+        **{
+            "extension": mock_extension
+        }
+    )
     mock_reporter.configure_mock(
         **{
             "sendReport": mocker.Mock()
@@ -225,9 +255,105 @@ def fixture_exporter(mocker):
         mock_reporter,
         mock_apm_txname_manager,
         mock_apm_fwkv_manager,
-        True
+        mock_apm_config,
     )
 
+def get_exporter_addinfo_event(
+    mocker,
+    is_exception=False,
+):
+    """Returns addInfo and Event mocks with mocked-up Exporter
+    for detailed span export testing"""
+    mock_reporter = mocker.Mock()
+    mock_apm_txname_manager = mocker.patch(
+        "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager",
+        return_value=mocker.Mock()
+    )
+    mock_txnman_get = mocker.Mock()
+    mock_txnman_get.configure_mock(return_value="foo")
+    mock_apm_txname_manager.configure_mock(
+        **{
+            "__delitem__": mocker.Mock(),
+            "get": mock_txnman_get
+        }
+    )
+    mock_apm_fwkv_manager = mocker.patch(
+        "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager",
+        return_value=mocker.Mock()
+    )
+    mock_event = mocker.patch(
+        "solarwinds_apm.extension.oboe.Event"
+    )
+    mock_add_info = mocker.Mock()
+    event_config = {
+        "addInfo": mock_add_info
+    }
+    if is_exception:
+        event_config.update({
+            "attributes": {
+                "exception.type": "foo",
+                "exception.message": "bar",
+                "exception.stacktrace": "baz",
+                "some": "other",
+            }
+        })
+    mock_event.configure_mock(
+        **event_config
+    )
+    mock_create_event = mocker.patch(
+        "solarwinds_apm.extension.oboe.Context.createEvent"
+    )
+    mock_create_event.configure_mock(return_value=mock_event)
+    mock_create_entry = mocker.patch(
+        "solarwinds_apm.extension.oboe.Context.createEntry"
+    )
+    mock_create_entry.configure_mock(return_value=mock_event)
+    mock_create_exit = mocker.patch(
+        "solarwinds_apm.extension.oboe.Context.createExit"
+    )
+    mock_create_exit.configure_mock(return_value=mock_event)
+
+    mock_context = mocker.Mock()
+    mock_context.configure_mock(
+        **{
+            "createEvent": mock_create_event,
+            "createEntry": mock_create_entry,
+            "createExit": mock_create_exit,
+        }
+    )
+    mock_extension = mocker.Mock()
+    mock_extension.configure_mock(
+        **{
+            "Context": mock_context,
+            "Metadata": "bar",
+        }
+    )
+    mock_apm_config = mocker.Mock()
+    mock_apm_config.configure_mock(
+        **{
+            "extension": mock_extension
+        }
+    )
+    mock_reporter.configure_mock(
+        **{
+            "sendReport": mocker.Mock()
+        }
+    )
+    mock_from_string = mocker.MagicMock()
+    mock_metadata = mocker.patch(
+        "solarwinds_apm.extension.oboe.Metadata",
+    )
+    mock_metadata.configure_mock(
+        **{
+            "fromString": mock_from_string,
+        }
+    )
+    return solarwinds_apm.exporter.SolarWindsSpanExporter(
+        mock_reporter,
+        mock_apm_txname_manager,
+        mock_apm_fwkv_manager,
+        mock_apm_config,
+    ), mock_add_info, mock_event, mock_create_event
 
 # Tests =============================================================
 
@@ -281,82 +407,58 @@ class Test_SolarWindsSpanExporter():
             mocker.call(mock_event, False),
         ])
 
-    def test_init_agent_enabled_true(self, mocker):
+    def test_init(self, mocker):
         mock_reporter = mocker.Mock()
         mock_apm_txname_manager = mocker.Mock()
         mock_apm_fwkv_manager = mocker.Mock()
-        mock_ext_context = mocker.patch(
-            "solarwinds_apm.exporter.Context",      
+        mock_extension = mocker.Mock()
+        mock_extension.configure_mock(
+            **{
+                "Context": "foo",
+                "Metadata": "bar",
+            }
         )
-        mock_ext_metadata = mocker.patch(
-            "solarwinds_apm.exporter.Metadata",
+        mock_apm_config = mocker.Mock()
+        mock_apm_config.configure_mock(
+            **{
+                "extension": mock_extension
+            }
         )
         exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
             mock_reporter,
             mock_apm_txname_manager,
             mock_apm_fwkv_manager,
-            True,
+            mock_apm_config,
         )
         assert exporter.reporter == mock_reporter
-        assert exporter.context == mock_ext_context
-        assert exporter.metadata == mock_ext_metadata
-
-    def test_init_agent_enabled_false(self, mocker):
-        mock_reporter = mocker.Mock()
-        mock_apm_txname_manager = mocker.Mock()
-        mock_apm_fwkv_manager = mocker.Mock()
-        mock_noop_context = mocker.patch(
-            "solarwinds_apm.exporter.NoopContext",      
-        )
-        mock_noop_metadata = mocker.patch(
-            "solarwinds_apm.exporter.NoopMetadata",
-        )
-        exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
-            mock_reporter,
-            mock_apm_txname_manager,
-            mock_apm_fwkv_manager,
-            False,
-        )
-        assert exporter.reporter == mock_reporter
-        assert exporter.context == mock_noop_context
-        assert exporter.metadata == mock_noop_metadata
+        assert exporter.context == "foo"
+        assert exporter.metadata == "bar"
 
     def test_export_root_span(
         self,
         mocker,
-        exporter,
-        mock_event,
-        mock_create_entry,
-        mock_create_exit,
         mock_report_info,
         mock_report_exception,
         mock_add_info_instr_scope,
         mock_add_info_instr_fwork,
         mock_md,
         mock_spans_root
-    ):
-        mock_event, mock_add_info, mock_create_entry, \
-            mock_create_exit = configure_entry_mocks(
-                    mocker,
-                    mock_event,
-                    mock_create_entry,
-                    mock_create_exit,
-                )
+    ):       
         mock_build_md = mocker.patch(
             "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
             return_value=mock_md
         )
-
+        exporter, mock_add_info, mock_event, _ = get_exporter_addinfo_event(mocker)
         exporter.export(mock_spans_root)
 
         mock_build_md.assert_has_calls([
             mocker.call(exporter.metadata, "my_span_context")
         ])
-        mock_create_entry.assert_called_once_with(
+        exporter.context.createEntry.assert_called_once_with(
             mock_md,
             1,
         )
-        mock_create_exit.assert_called_once_with(2)
+        exporter.context.createExit.assert_called_once_with(2)
 
         self.assert_export_add_info_and_report(
             mocker,
@@ -373,10 +475,6 @@ class Test_SolarWindsSpanExporter():
     def test_export_parent_valid(
         self,
         mocker,
-        exporter,
-        mock_event,
-        mock_create_entry,
-        mock_create_exit,
         mock_report_info,
         mock_report_exception,
         mock_add_info_instr_scope,
@@ -384,18 +482,11 @@ class Test_SolarWindsSpanExporter():
         mock_md,
         mock_spans_parent_valid
     ):
-        mock_event, mock_add_info, mock_create_entry, \
-            mock_create_exit = configure_entry_mocks(
-                    mocker,
-                    mock_event,
-                    mock_create_entry,
-                    mock_create_exit,
-                )
         mock_build_md = mocker.patch(
             "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
             return_value=mock_md
         )
-
+        exporter, mock_add_info, mock_event, _ = get_exporter_addinfo_event(mocker)
         exporter.export(mock_spans_parent_valid)
 
         mock_span_parent = mock_spans_parent_valid[0].parent
@@ -403,12 +494,12 @@ class Test_SolarWindsSpanExporter():
             mocker.call(exporter.metadata, "my_span_context"),
             mocker.call(exporter.metadata, mock_span_parent)
         ])
-        mock_create_entry.assert_called_once_with(
+        exporter.context.createEntry.assert_called_once_with(
             mock_md,
             1,
             mock_md,
         )
-        mock_create_exit.assert_called_once_with(2)
+        exporter.context.createExit.assert_called_once_with(2)
 
         self.assert_export_add_info_and_report(
             mocker,
@@ -557,6 +648,19 @@ class Test_SolarWindsSpanExporter():
             "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager",
             return_value=mocker.Mock()
         )
+        mock_extension = mocker.Mock()
+        mock_extension.configure_mock(
+            **{
+                "Context": "foo",
+                "Metadata": "bar",
+            }
+        )
+        mock_apm_config = mocker.Mock()
+        mock_apm_config.configure_mock(
+            **{
+                "extension": mock_extension
+            }
+        )
         # mocks cache with existing framework KV, if provided
         mock_set = mocker.Mock()
         mock_get = mocker.Mock()
@@ -571,7 +675,7 @@ class Test_SolarWindsSpanExporter():
             mock_reporter,
             mock_apm_txname_manager,
             mock_apm_fwkv_manager,
-            True
+            mock_apm_config,
         )
 
         # patch importlib so mock sys modules "importable"
@@ -1058,18 +1162,8 @@ class Test_SolarWindsSpanExporter():
     def test__report_exception_event(
         self,
         mocker,
-        exporter,
-        mock_event,
-        mock_create_event,
     ):
-        mock_event, mock_add_info, mock_create_event \
-             = configure_event_mocks(
-                mocker,
-                mock_event,
-                mock_create_event,
-                True,
-             )
-
+        exporter, mock_add_info, mock_event, mock_create_event = get_exporter_addinfo_event(mocker, True)
         exporter._report_exception_event(mock_event)
 
         mock_create_event.assert_called_once_with(1)
@@ -1092,13 +1186,7 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        mock_event, mock_add_info, mock_create_event \
-             = configure_event_mocks(
-                mocker,
-                mock_event,
-                mock_create_event,
-             )
-
+        exporter, mock_add_info, mock_event, mock_create_event = get_exporter_addinfo_event(mocker)
         exporter._report_info_event(mock_event)
 
         mock_create_event.assert_called_once_with(1)
