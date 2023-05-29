@@ -33,7 +33,6 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_TRACESTATE_KEY,
     INTL_SWO_X_OPTIONS_RESPONSE_KEY,
 )
-
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
