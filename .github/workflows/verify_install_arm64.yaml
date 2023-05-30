@@ -67,6 +67,7 @@ jobs:
   install-tests:
     needs:
       - launch-arm64
+    runs-on: ${{ matrix.arch == 'arm64' && fromJSON(needs.launch-arm64.outputs.matrix)[matrix.image].label || 'ubuntu-latest' }}
     strategy:
       matrix:
         image:
@@ -78,6 +79,9 @@ jobs:
           - python:3.8-buster
           - python:3.10-alpine3.16
           - python:3.10-alpine3.17
+        arch:
+          - x64
+          - arm64
         include:
           - image: amazonlinux:2023
             hostname: py3.10-install-amazon2023
@@ -99,7 +103,13 @@ jobs:
             hostname: py3.10-alpine3.16
           - image: python:3.10-alpine3.17
             hostname: py3.10-alpine3.17
-    runs-on: ${{ fromJSON(needs.launch-arm64.outputs.matrix)[matrix.image].label }}
+        exclude:
+          - image: python:3.7-alpine3.12
+            arch: arm64
+          - image: python:3.10-alpine3.16
+            arch: arm64
+          - image: python:3.10-alpine3.17
+            arch: arm64
     container:
       image: ${{ matrix.image }}
       options: --hostname ${{ matrix.hostname }}
