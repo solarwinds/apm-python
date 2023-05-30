@@ -51,7 +51,7 @@ jobs:
             py3.11-ubuntu20.04
           github-token: ${{ secrets.CI_GITHUB_TOKEN }}
           runner-user: github
-          runner-directory: /github/actions
+          runner-directory: /gh
           instance-type: t4g.medium
           ami-name: gha-arm64-ubuntu22-.*
           ami-owner: "858939916050"
