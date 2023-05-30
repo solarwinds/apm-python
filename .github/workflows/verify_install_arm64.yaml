@@ -71,6 +71,7 @@ jobs:
       - run: echo "Hello from EC2 ${{ matrix.job }} !"
 
   terminate-arm64:
+    if: ${{ always() }}
     needs:
       - launch-arm64
       - install-tests
