@@ -37,7 +37,7 @@ jobs:
     outputs:
       matrix: ${{ steps.launch.outputs.matrix }}
     steps:
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.CI_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.CI_SECRET_ACCESS_KEY }}
@@ -76,7 +76,7 @@ jobs:
       - install-tests
     runs-on: ubuntu-latest
     steps:
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.CI_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.CI_SECRET_ACCESS_KEY }}
