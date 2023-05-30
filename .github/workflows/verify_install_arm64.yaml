@@ -112,6 +112,9 @@ jobs:
             arch: arm64
     container:
       image: ${{ matrix.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
       options: --hostname ${{ matrix.hostname }}
     steps:
       - uses: actions/checkout@v3
