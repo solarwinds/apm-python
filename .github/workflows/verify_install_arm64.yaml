@@ -78,9 +78,30 @@ jobs:
           - python:3.8-buster
           - python:3.10-alpine3.16
           - python:3.10-alpine3.17
+        include:
+          - image: amazonlinux:2023
+            hostname: py3.10-install-amazon2023
+          - image: centos:8
+            hostname: py3.9-centos8
+          - image: ubuntu18.04
+            hostname: py3.7-ubuntu18.04 
+          - image: ubuntu:20.04
+            hostname: py3.9-ubuntu20.04
+          - image: ubuntu:20.04
+            hostname: py3.10-ubuntu20.04
+          - image: ubuntu:20.04
+            hostname: py3.11-ubuntu20.04
+          - image: python:3.7-alpine3.12
+            hostname: py3.7-alpine3.12
+          - image: python:3.8-buster
+            hostname: py3.8-debian10
+          - image: python:3.10-alpine3.16
+            hostname: py3.10-alpine3.16
+          - image: python:3.10-alpine3.17
+            hostname: py3.10-alpine3.17
     runs-on: ${{ fromJSON(needs.launch-arm64.outputs.matrix)[matrix.image].label }}
     steps:
-      - run: echo "Hello from EC2 ${{ matrix.image }} !"
+      - run: echo "Hello from EC2 ${{ matrix.image }}, ${{ matrix.hostname }}!"
 
   terminate-arm64:
     if: ${{ always() }}
