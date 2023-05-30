@@ -113,8 +113,8 @@ jobs:
     container:
       image: ${{ matrix.image }}
       credentials:
-        username: github
-        password: ${{ secrets.CI_GITHUB_TOKEN }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
       options: --hostname ${{ matrix.hostname }}
     steps:
       - uses: actions/checkout@v3
