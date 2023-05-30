@@ -113,7 +113,7 @@ jobs:
     container:
       image: ${{ matrix.image }}
       credentials:
-        username: ${{ github.actor }}
+        username: github
         password: ${{ secrets.GITHUB_TOKEN }}
       options: --hostname ${{ matrix.hostname }}
     steps:
