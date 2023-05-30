@@ -47,52 +47,40 @@ jobs:
         with:
           action: launch
           matrix: |
-            {
-              "py3.7-ubuntu18.04": {
-                "runner-user": "github",
-                "runner-directory": "/gh",
-                "instance-type": "t4g.medium",
-                "ami-name": "gha-arm64-ubuntu22-.*",
-                "ami-owner": ["858939916050"],
-                "subnet-id": "subnet-0fd499f8a50e41807",
-                "security-group-ids": [
-                  "sg-0fd8d8cd6effda4a5"
-                ],
-                "test-image": "ubuntu:18.04",
-                "test-hostname": "py3.7-ubuntu18.04"
-              },
-              "py3.11-ubuntu20.04": {
-                "runner-user": "github",
-                "runner-directory": "/gh",
-                "instance-type": "t4g.medium",
-                "ami-name": "gha-arm64-ubuntu22-.*",
-                "ami-owner": ["858939916050"],
-                "subnet-id": "subnet-0fd499f8a50e41807",
-                "security-group-ids": [
-                  "sg-0fd8d8cd6effda4a5"
-                ],
-                "test-image": "ubuntu:20.04",
-                "test-hostname": "py3.11-ubuntu20.04"
-              }
-            }
+            amazonlinux:2023
+            centos:8
+            ubuntu18.04
+            ubuntu:20.04
+            python:3.7-alpine3.12
+            python:3.8-buster
+            python:3.10-alpine3.16
+            python:3.10-alpine3.17
           github-token: ${{ secrets.CI_GITHUB_TOKEN }}
+          runner-user: github
+          runner-directory: /gh
+          instance-type: t4g.medium
+          ami-name: gha-arm64-ubuntu22-.*
+          ami-owner: "858939916050"
+          subnet-id: subnet-0fd499f8a50e41807
+          security-group-ids: sg-0fd8d8cd6effda4a5
 
   install-tests:
     needs:
       - launch-arm64
     strategy:
       matrix:
-        job:
-          - py3.7-ubuntu18.04
-          - py3.11-ubuntu20.04
-    runs-on: ${{ fromJSON(needs.launch-arm64.outputs.matrix)[matrix.job].label }}
-    container:
-      image: ${{ fromJSON(needs.launch-arm64.outputs.matrix)[matrix.job].test-image }}
-      options: --hostname ${{ fromJSON(needs.launch-arm64.outputs.matrix)[matrix.job].test-hostname }}
+        image:
+          - amazonlinux:2023
+          - centos:8
+          - ubuntu18.04
+          - ubuntu:20.04
+          - python:3.7-alpine3.12
+          - python:3.8-buster
+          - python:3.10-alpine3.16
+          - python:3.10-alpine3.17
+    runs-on: ${{ fromJSON(needs.launch-arm64.outputs.matrix)[matrix.image].label }}
     steps:
-      - run: echo "Hello from EC2 ${{ matrix.job }} !"
-      - run: echo "Output test-image ${{ fromJSON(needs.launch-arm64.outputs.matrix)[matrix.job].test-image }}"
-      - run: echo "Output test-hostname ${{ fromJSON(needs.launch-arm64.outputs.matrix)[matrix.job].test-hostname }}"
+      - run: echo "Hello from EC2 ${{ matrix.image }} !"
 
   terminate-arm64:
     if: ${{ always() }}
