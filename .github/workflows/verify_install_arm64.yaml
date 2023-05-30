@@ -49,7 +49,7 @@ jobs:
           matrix: |
             py3.7-ubuntu18.04
             py3.11-ubuntu20.04
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CI_GITHUB_TOKEN }}
           runner-user: github
           runner-directory: /github/actions
           instance-type: t4g.medium
@@ -85,5 +85,5 @@ jobs:
       - uses: solarwindscloud/ec2-runner-action@main
         with:
           action: terminate
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CI_GITHUB_TOKEN }}
           matrix: ${{ needs.launch-arm64.outputs.matrix }}
