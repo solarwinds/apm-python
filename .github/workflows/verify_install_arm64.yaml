@@ -100,8 +100,17 @@ jobs:
           - image: python:3.10-alpine3.17
             hostname: py3.10-alpine3.17
     runs-on: ${{ fromJSON(needs.launch-arm64.outputs.matrix)[matrix.image].label }}
+    container:
+      image: ${{ matrix.image }}
+      options: --hostname ${{ matrix.hostname }}
     steps:
-      - run: echo "Hello from EC2 ${{ matrix.image }}, ${{ matrix.hostname }}!"
+      - uses: actions/checkout@v3
+      - name: Setup and run install test
+        working-directory: ./tests/docker/install
+        run: ./_helper_run_install_tests.sh
+        shell: sh
+        env:
+          MODE: ${{ github.event.inputs.install-registry }}
 
   terminate-arm64:
     if: ${{ always() }}
