@@ -62,9 +62,10 @@ jobs:
     needs:
       - launch-arm64
     strategy:
-      matrix: |
-        py3.7-ubuntu18.04
-        py3.11-ubuntu20.04
+      matrix:
+        job:
+          - py3.7-ubuntu18.04
+          - py3.11-ubuntu20.04
     runs-on: ${{ fromJSON(needs.launch-runners.outputs.matrix)[matrix.job].label }}
     steps:
       - run: echo "Hello from EC2 ${{ matrix.job }} !"
