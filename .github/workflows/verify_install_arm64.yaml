@@ -70,7 +70,7 @@ jobs:
             python:3.10-buster
             python:3.11-alpine3.16
             python:3.11-alpine3.17
-            python:3.11-rc-buster
+            python:3.11-buster
           github-token: ${{ secrets.CI_GITHUB_TOKEN }}
           runner-user: github
           runner-directory: /gh
@@ -110,7 +110,7 @@ jobs:
           - python:3.10-buster
           - python:3.11-alpine3.16
           - python:3.11-alpine3.17
-          - python:3.11-rc-buster
+          - python:3.11-buster
         arch:
           - x64
           - arm64
@@ -171,7 +171,7 @@ jobs:
             hostname: py3.11-alpine3.16
           - image: python:3.11-alpine3.17
             hostname: py3.11-alpine3.17
-          - image: python:3.11-rc-buster
+          - image: python:3.11-buster
             hostname: py3.11-debian10
         exclude:
           - image: python:3.7-alpine3.12
