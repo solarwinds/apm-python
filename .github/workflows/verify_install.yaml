@@ -52,6 +52,7 @@ jobs:
             registry.fedoraproject.org/f33/python3
             ubuntu:18.04
             ubuntu:20.04
+            ubuntu:22.04
             python:3.7-alpine3.12
             python:3.7-alpine3.13
             python:3.7-alpine3.17
@@ -92,6 +93,7 @@ jobs:
           - registry.fedoraproject.org/f33/python3
           - ubuntu:18.04
           - ubuntu:20.04
+          - ubuntu:22.04
           - python:3.7-alpine3.12
           - python:3.7-alpine3.13
           - python:3.7-alpine3.17
@@ -131,10 +133,14 @@ jobs:
             hostname: py3.9-ubuntu20.04
           - image: ubuntu:20.04
             hostname: py3.10-ubuntu20.04
+          - image: ubuntu:22.04
+            hostname: py3.10-ubuntu22.04
           - image: ubuntu:20.04
             hostname: py3.11-ubuntu20.04
           - image: ubuntu:20.04
             hostname: py3.11-ubuntu20.04
+          - image: ubuntu:22.04
+            hostname: py3.11-ubuntu22.04
           - image: python:3.7-alpine3.12
             hostname: py3.7-alpine3.12
           - image: python:3.7-alpine3.13

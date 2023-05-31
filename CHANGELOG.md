@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Verify Installation tests run on EC2 ([#156](https://github.com/solarwindscloud/solarwinds-apm-python/pull/156))
+- Installation tests include Ubuntu 22 ([#158](https://github.com/solarwindscloud/solarwinds-apm-python/pull/158))
 
 ## [0.11.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.11.0) - 2023-05-25
 ### Added

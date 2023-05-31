@@ -204,6 +204,13 @@ services:
     environment:
       << : *envvars-install-test
 
+  py3.10-install-ubuntu22.04:
+    hostname: "py3.10-ubuntu22.04"
+    image: "ubuntu:22.04"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
   py3.10-install-alpine3.13:
     hostname: "py3.10-alpine3.13"
     image: "python:3.10-alpine3.13"
@@ -239,6 +246,13 @@ services:
   py3.11-install-ubuntu20.04:
     hostname: "py3.11-ubuntu20.04"
     image: "ubuntu:20.04"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.11-install-ubuntu22.04:
+    hostname: "py3.11-ubuntu22.04"
+    image: "ubuntu:22.04"
     << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
