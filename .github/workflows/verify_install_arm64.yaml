@@ -125,7 +125,7 @@ jobs:
             hostname: py3.7-ubuntu18.04
           - image: ubuntu:18.04
             hostname: py3.8-ubuntu18.04
-          - image: ubuntu:20.05
+          - image: ubuntu:20.04
             hostname: py3.8-ubuntu20.04
           - image: ubuntu:20.04
             hostname: py3.9-ubuntu20.04
