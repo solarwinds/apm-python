@@ -48,45 +48,35 @@ services:
   py3.7-install-debian10:
     hostname: "py3.7-debian10"
     image: "python:3.7-buster"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.7-install-ubuntu18.04:
     hostname: "py3.7-ubuntu18.04"
     image: "ubuntu:18.04"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.7-install-alpine3.12:
     hostname: "py3.7-alpine3.12"
     image: "python:3.7-alpine3.12"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.7-install-alpine3.13:
     hostname: "py3.7-alpine3.13"
     image: "python:3.7-alpine3.13"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.7-install-alpine3.17:
     hostname: "py3.7-alpine3.17"
     image: "python:3.7-alpine3.17"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
@@ -97,45 +87,35 @@ services:
   py3.8-install-debian10:
     hostname: "py3.8-debian10"
     image: "python:3.8-buster"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.8-install-ubuntu18.04:
     hostname: "py3.8-ubuntu18.04"
     image: "ubuntu:18.04"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.8-install-ubuntu20.04:
     hostname: "py3.8-ubuntu20.04"
     image: "ubuntu:20.04"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.8-install-alpine3.12:
     hostname: "py3.8-alpine3.12"
     image: "python:3.8-alpine3.12"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.8-install-alpine3.13:
     hostname: "py3.8-alpine3.13"
     image: "python:3.8-alpine3.13"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
@@ -146,72 +126,56 @@ services:
   py3.9-install-debian10:
     hostname: "py3.9-debian10"
     image: "python:3.9-buster"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.9-install-ubuntu20.04:
     hostname: "py3.9-ubuntu20.04"
     image: "ubuntu:20.04"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.9-install-centos8:
     hostname: "py3.9-centos8"
     image: "centos:8"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.9-install-alpine3.12:
     hostname: "py3.9-alpine3.12"
     image: "python:3.9-alpine3.12"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.9-install-alpine3.13:
     hostname: "py3.9-alpine3.13"
     image: "python:3.9-alpine3.13"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.9-install-alpine3.16:
     hostname: "py3.9-alpine3.16"
     image: "python:3.9-alpine3.16"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.9-install-alpine3.17:
     hostname: "py3.9-alpine3.17"
     image: "python:3.9-alpine3.17"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.9-install-rhel8:
     hostname: "py3.9-rhel8"
     image: "registry.fedoraproject.org/f33/python3"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
@@ -222,54 +186,42 @@ services:
   py3.10-install-amazon2023:
     hostname: "py3.10-amazon2023"
     image: "amazonlinux:2023"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.10-install-debian10:
     hostname: "py3.10-debian10"
     image: "python:3.10-buster"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.10-install-ubuntu20.04:
     hostname: "py3.10-ubuntu20.04"
     image: "ubuntu:20.04"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.10-install-alpine3.13:
     hostname: "py3.10-alpine3.13"
     image: "python:3.10-alpine3.13"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.10-install-alpine3.16:
     hostname: "py3.10-alpine3.16"
     image: "python:3.10-alpine3.16"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.10-install-alpine3.17:
     hostname: "py3.10-alpine3.17"
     image: "python:3.10-alpine3.17"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
@@ -280,35 +232,27 @@ services:
   py3.11-install-debian10:
     hostname: "py3.11-debian10"
     image: "python:3.11-rc-buster"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.11-install-ubuntu20.04:
     hostname: "py3.11-ubuntu20.04"
     image: "ubuntu:20.04"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.11-install-alpine3.16:
     hostname: "py3.11-alpine3.16"
     image: "python:3.11-alpine3.16"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
 
   py3.11-install-alpine3.17:
     hostname: "py3.11-alpine3.17"
     image: "python:3.11-alpine3.17"
-    << : *command-install-test
-    << : *workdir
-    << : *volumes-codebase
+    << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test

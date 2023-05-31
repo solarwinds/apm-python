@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.11.0...HEAD)
 
 ### Changed
-- Updated to liboboe version 12.3.0 ([#155](https://github.com/solarwindscloud/solarwinds-apm-python/pull/155))
+- Updated to liboboe version 12.3.1 ([#155](https://github.com/solarwindscloud/solarwinds-apm-python/pull/155))
+- Verify Installation tests run on EC2 ([#156](https://github.com/solarwindscloud/solarwinds-apm-python/pull/156))
 
 ## [0.11.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.11.0) - 2023-05-25
 ### Added
