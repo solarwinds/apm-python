@@ -73,7 +73,7 @@ jobs:
         image:
           - amazonlinux:2023
           - centos:8
-          - ubuntu18.04
+          - ubuntu:18.04
           - ubuntu:20.04
           - python:3.7-alpine3.12
           - python:3.8-buster
@@ -114,6 +114,8 @@ jobs:
       image: "${{ matrix.image }}"
       options: --hostname "${{ matrix.hostname }}"
     steps:
+      - if: ${{ matrix.image == 'amazonlinux:2023' }}
+        run: yum install -y tar gzip
       - uses: actions/checkout@v3
       - name: Setup and run install test
         working-directory: ./tests/docker/install
