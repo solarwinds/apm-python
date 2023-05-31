@@ -147,20 +147,6 @@ function check_agent_startup(){
 
 function install_test_app_dependencies(){
     pip install flask requests
-    # setuptools 66.0.0 breaks opentelemetry-bootstrap on Ubuntu 18.04+, Python 3.10+ from deadsnakes
-    if grep Ubuntu /etc/os-release; then
-        ubuntu_version=$(grep VERSION_ID /etc/os-release | sed 's/VERSION_ID="//' | sed 's/"//')
-        if [ "$ubuntu_version" = "18.04" ] || [ "$ubuntu_version" = "20.04" ]; then
-            echo "Installing test app deps on ubuntu_version $ubuntu_version"
-            # get Python version from container hostname, e.g. "3.7", "3.10"
-            python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')
-            if [ "$python_version" = "3.10" ] || [ "$python_version" = "3.11" ]; then
-                echo "Re-installing setuptools for Python $python_version"
-                apt-get remove -y python3-setuptools
-                pip install --ignore-installed setuptools==65.7.0
-            fi
-        fi
-    fi
     opentelemetry-bootstrap --action=install
 }
 
