@@ -47,6 +47,7 @@ jobs:
         with:
           action: launch
           matrix: |
+            amazonlinux:2023
             centos:8
             ubuntu:18.04
             ubuntu:20.04
@@ -70,6 +71,7 @@ jobs:
     strategy:
       matrix:
         image:
+          - amazonlinux:2023
           - centos:8
           - ubuntu18.04
           - ubuntu:20.04
@@ -81,6 +83,8 @@ jobs:
           - x64
           - arm64
         include:
+          - image: amazonlinux:2023
+            hostname: py3.10-install-amazon2023
           - image: centos:8
             hostname: py3.9-centos8
           - image: ubuntu:18.04
