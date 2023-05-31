@@ -48,7 +48,7 @@ jobs:
           action: launch
           matrix: |
             centos:8
-            ubuntu18.04
+            ubuntu:18.04
             ubuntu:20.04
             python:3.7-alpine3.12
             python:3.8-buster
@@ -83,7 +83,7 @@ jobs:
         include:
           - image: centos:8
             hostname: py3.9-centos8
-          - image: ubuntu18.04
+          - image: ubuntu:18.04
             hostname: py3.7-ubuntu18.04 
           - image: ubuntu:20.04
             hostname: py3.9-ubuntu20.04
