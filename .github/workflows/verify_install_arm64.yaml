@@ -116,7 +116,7 @@ jobs:
           - arm64
         include:
           - image: amazonlinux:2023
-            hostname: py3.10-install-amazon2023
+            hostname: py3.10-amazon2023
           - image: centos:8
             hostname: py3.9-centos8
           - image: registry.fedoraproject.org/f33/python3
