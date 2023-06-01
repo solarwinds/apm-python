@@ -87,32 +87,38 @@ jobs:
     runs-on: ${{ matrix.arch == 'arm64' && fromJSON(needs.launch-arm64.outputs.matrix)[matrix.image].label || 'ubuntu-latest' }}
     strategy:
       matrix:
-        image:
-          - amazonlinux:2023
-          - centos:8
-          - registry.fedoraproject.org/f33/python3
-          - ubuntu:18.04
-          - ubuntu:20.04
-          - ubuntu:22.04
-          - python:3.7-alpine3.12
-          - python:3.7-alpine3.13
-          - python:3.7-alpine3.17
-          - python:3.7-buster
-          - python:3.8-alpine3.12
-          - python:3.8-alpine3.13
-          - python:3.8-buster
-          - python:3.9-alpine3.12
-          - python:3.9-alpine3.13
-          - python:3.9-alpine3.16
-          - python:3.9-alpine3.17
-          - python:3.9-buster
-          - python:3.10-alpine3.13
-          - python:3.10-alpine3.16
-          - python:3.10-alpine3.17
-          - python:3.10-buster
-          - python:3.11-alpine3.16
-          - python:3.11-alpine3.17
-          - python:3.11-buster
+        hostname:
+          - py3.10-amazon2023
+          - py3.9-centos8
+          - py3.9-rhel8
+          - py3.7-ubuntu18.04
+          - py3.8-ubuntu18.04
+          - py3.8-ubuntu20.04
+          - py3.9-ubuntu20.04
+          - py3.10-ubuntu20.04
+          - py3.10-ubuntu22.04
+          - py3.11-ubuntu20.04
+          - py3.11-ubuntu20.04
+          - py3.11-ubuntu22.04
+          - py3.7-alpine3.12
+          - py3.7-alpine3.13
+          - py3.7-alpine3.17
+          - py3.7-debian10
+          - py3.8-alpine3.12
+          - py3.8-alpine3.13
+          - py3.8-debian10
+          - py3.9-alpine3.12
+          - py3.9-alpine3.13
+          - py3.9-alpine3.16
+          - py3.9-alpine3.17
+          - py3.9-debian10
+          - py3.10-alpine3.13
+          - py3.10-alpine3.16
+          - py3.10-alpine3.17
+          - py3.10-debian10
+          - py3.11-alpine3.16
+          - py3.11-alpine3.17
+          - py3.11-debian10
         arch:
           - x64
           - arm64
@@ -180,33 +186,33 @@ jobs:
           - image: python:3.11-buster
             hostname: py3.11-debian10
         exclude:
-          - image: python:3.7-alpine3.12
+          - hostname: py3.7-alpine3.12
             arch: arm64
-          - image: python:3.7-alpine3.13
+          - hostname: py3.7-alpine3.13
             arch: arm64
-          - image: python:3.7-alpine3.17
+          - hostname: py3.7-alpine3.17
             arch: arm64
-          - image: python:3.8-alpine3.12
+          - hostname: py3.8-alpine3.12
             arch: arm64
-          - image: python:3.8-alpine3.13
+          - hostname: py3.8-alpine3.13
             arch: arm64           
-          - image: python:3.9-alpine3.12
+          - hostname: py3.9-alpine3.12
             arch: arm64
-          - image: python:3.9-alpine3.13
+          - hostname: py3.9-alpine3.13
             arch: arm64
-          - image: python:3.9-alpine3.16
+          - hostname: py3.9-alpine3.16
             arch: arm64
-          - image: python:3.9-alpine3.17
+          - hostname: py3.9-alpine3.17
             arch: arm64
-          - image: python:3.10-alpine3.13
+          - hostname: py3.10-alpine3.13
             arch: arm64
-          - image: python:3.10-alpine3.16
+          - hostname: py3.10-alpine3.16
             arch: arm64
-          - image: python:3.10-alpine3.17
+          - hostname: py3.10-alpine3.17
             arch: arm64
-          - image: python:3.11-alpine3.16
+          - hostname: py3.11-alpine3.16
             arch: arm64
-          - image: python:3.11-alpine3.17
+          - hostname: py3.11-alpine3.17
             arch: arm64
     container:
       image: "${{ matrix.image }}"
