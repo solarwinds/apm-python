@@ -21,10 +21,30 @@ def fixture_swsampler(mocker):
     mock_get = mocker.Mock(
         side_effect=config_get
     )
+    mock_get_decisions = mocker.patch(
+        "solarwinds_apm.extension.oboe.Context.getDecisions"
+    )
+    mock_get_decisions.configure_mock(
+        # returns 11 values
+        return_value=list(range(11))
+    )
+    mock_context = mocker.Mock()
+    mock_context.configure_mock(
+        **{
+            "getDecisions": mock_get_decisions
+        }
+    )
+    mock_extension = mocker.Mock()
+    mock_extension.configure_mock(
+        **{
+            "Context": mock_context,
+        }
+    )
     mock_apm_config.configure_mock(
         **{
             "agent_enabled": True,
             "get": mock_get,
+            "extension": mock_extension,
         }
     )
     return _SwSampler(mock_apm_config)

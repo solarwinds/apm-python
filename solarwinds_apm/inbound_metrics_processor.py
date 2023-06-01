@@ -16,14 +16,11 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_CURRENT_SPAN_ID,
     INTL_SWO_CURRENT_TRACE_ID,
 )
-from solarwinds_apm.apm_noop import Span as NoopSpan
-
-# pylint: disable=import-error,no-name-in-module
-from solarwinds_apm.extension.oboe import Span
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
+    from solarwinds_apm.apm_config import SolarWindsApmConfig
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 
 
@@ -41,13 +38,10 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     def __init__(
         self,
         apm_txname_manager: "SolarWindsTxnNameManager",
-        agent_enabled: bool,
+        apm_config: "SolarWindsApmConfig",
     ) -> None:
         self.apm_txname_manager = apm_txname_manager
-        if agent_enabled:
-            self._span = Span
-        else:
-            self._span = NoopSpan
+        self._span = apm_config.extension.Span
 
     def on_start(
         self,
