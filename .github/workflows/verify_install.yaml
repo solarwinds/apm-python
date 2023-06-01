@@ -125,28 +125,22 @@ jobs:
             hostname: py3.9-rhel8
           - image: ubuntu:18.04
             hostname: py3.7-ubuntu18.04
-            python: 3.7
           - image: ubuntu:18.04
             hostname: py3.8-ubuntu18.04
-            python: 3.8
           - image: ubuntu:20.04
             hostname: py3.8-ubuntu20.04
-            python: 3.8
           - image: ubuntu:20.04
             hostname: py3.9-ubuntu20.04
-            python: 3.9
           - image: ubuntu:20.04
             hostname: py3.10-ubuntu20.04
-            python: 3.10
           - image: ubuntu:22.04
             hostname: py3.10-ubuntu22.04
-            python: 3.10
           - image: ubuntu:20.04
             hostname: py3.11-ubuntu20.04
-            python: 3.11
+          - image: ubuntu:20.04
+            hostname: py3.11-ubuntu20.04
           - image: ubuntu:22.04
             hostname: py3.11-ubuntu22.04
-            python: 3.11
           - image: python:3.7-alpine3.12
             hostname: py3.7-alpine3.12
           - image: python:3.7-alpine3.13
