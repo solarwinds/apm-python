@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Bugfix: APM tracing disabled when platform not supported ([#153](https://github.com/solarwindscloud/solarwinds-apm-python/pull/153))
+- Updated to liboboe version 12.3.1 ([#155](https://github.com/solarwindscloud/solarwinds-apm-python/pull/155))
+- Verify Installation tests run on EC2 ([#156](https://github.com/solarwindscloud/solarwinds-apm-python/pull/156))
+- Installation tests include Ubuntu 22 ([#158](https://github.com/solarwindscloud/solarwinds-apm-python/pull/158))
 
 ## [0.11.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.11.0) - 2023-05-25
 ### Added
