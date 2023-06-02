@@ -37,7 +37,8 @@ def set_transaction_name(custom_name: str) -> bool:
     :custom_name:str, custom transaction name to apply
 
     :return:
-    bool True for successful name assignment, False for not
+    bool True if successful name assignment or if tracing disabled,
+         False if unsuccessful due to invalid name, nonexistent span, or distro error.
 
     :Example:
      from solarwinds_apm.api import set_transaction_name
