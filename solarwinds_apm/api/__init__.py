@@ -51,7 +51,7 @@ def set_transaction_name(custom_name: str) -> bool:
         return False
 
     if isinstance(get_tracer_provider(), NoOpTracerProvider):
-        logger.warning(
+        logger.debug(
             "Cannot cache custom transaction name %s because agent not enabled; ignoring",
             custom_name,
         )
@@ -75,7 +75,7 @@ def set_transaction_name(custom_name: str) -> bool:
     entry_trace_id = baggage.get_baggage(INTL_SWO_CURRENT_TRACE_ID)
     entry_span_id = baggage.get_baggage(INTL_SWO_CURRENT_SPAN_ID)
     if not entry_trace_id or not entry_span_id:
-        logger.error(
+        logger.warning(
             "Cannot cache custom transaction name %s because OTel service entry span not started; ignoring",
             custom_name,
         )
