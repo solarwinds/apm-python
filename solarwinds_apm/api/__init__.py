@@ -37,12 +37,19 @@ def set_transaction_name(custom_name: str) -> bool:
     :custom_name:str, custom transaction name to apply
 
     :return:
-    bool True for successful name assignment, False for not
+    bool True if successful name assignment or if tracing disabled,
+         False if unsuccessful due to invalid name, nonexistent span, or distro error.
 
     :Example:
      from solarwinds_apm.api import set_transaction_name
      result = set_transaction_name("my-foo-name")
     """
+    if not custom_name:
+        logger.warning(
+            "Cannot set custom transaction name as empty string; ignoring"
+        )
+        return False
+
     if isinstance(get_tracer_provider(), NoOpTracerProvider):
         logger.debug(
             "Cannot cache custom transaction name %s because agent not enabled; ignoring",
@@ -68,7 +75,7 @@ def set_transaction_name(custom_name: str) -> bool:
     entry_trace_id = baggage.get_baggage(INTL_SWO_CURRENT_TRACE_ID)
     entry_span_id = baggage.get_baggage(INTL_SWO_CURRENT_SPAN_ID)
     if not entry_trace_id or not entry_span_id:
-        logger.debug(
+        logger.warning(
             "Cannot cache custom transaction name %s because OTel service entry span not started; ignoring",
             custom_name,
         )
