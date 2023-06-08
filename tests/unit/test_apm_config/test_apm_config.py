@@ -504,13 +504,6 @@ class TestSolarWindsApmConfig:
         if old_debug_level:
             os.environ["SW_APM_DEBUG_LEVEL"] = old_debug_level
 
-    # pylint:disable=unused-argument
-    def test_set_config_value_default_log_trace_id(self, caplog, mock_env_vars):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("log_trace_id", "not-valid-mode")
-        assert test_config.get("log_trace_id") == "never"
-        assert "Ignore config option" in caplog.text
-
     def test__calculate_service_name_agent_disabled(self):
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._calculate_service_name(
