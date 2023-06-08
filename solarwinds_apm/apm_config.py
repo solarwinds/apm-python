@@ -516,8 +516,21 @@ class SolarWindsApmConfig:
 
         # agent_enabled is special
         cnf_agent_enabled = cnf_dict.get(_snake_to_camel_case("agent_enabled"))
-        if cnf_agent_enabled in set([True, False]):
+        logger.warning(
+            "cnf_agent_enabled is %s, type %s",
+            cnf_agent_enabled,
+            type(cnf_agent_enabled),
+        )
+        # accepts boolean or string from dict
+        if isinstance(cnf_agent_enabled, bool):
             self.agent_enabled = cnf_agent_enabled
+        elif cnf_agent_enabled and cnf_agent_enabled.lower() in set(
+            [
+                "true",
+                "false",
+            ]
+        ):
+            self.agent_enabled = json.loads(cnf_agent_enabled.lower())
         elif cnf_agent_enabled:
             logger.warning(
                 "Config file agentEnabled must be one of: true, false. Ignoring."
@@ -599,11 +612,9 @@ class SolarWindsApmConfig:
         """Update the settings with environment variables."""
         # agent_enabled is special
         env_agent_enabled = os.environ.get("SW_APM_AGENT_ENABLED")
-        if env_agent_enabled and env_agent_enabled in set(
+        if env_agent_enabled and env_agent_enabled.lower() in set(
             [
-                "True",
                 "true",
-                "False",
                 "false",
             ]
         ):
