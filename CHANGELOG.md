@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add log warning when `set_transaction_name` with empty name ([#162](https://github.com/solarwindscloud/solarwinds-apm-python/pull/162))
 
+
+- Removed unused is_grpc_clean_hack_enabled config storage ([#165](https://github.com/solarwindscloud/solarwinds-apm-python/pull/165))
+
 ## [0.12.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.12.0) - 2023-06-01
 ### Changed
 - Bugfix: APM tracing disabled when platform not supported ([#153](https://github.com/solarwindscloud/solarwinds-apm-python/pull/153))
