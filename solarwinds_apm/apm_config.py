@@ -106,7 +106,6 @@ class SolarWindsApmConfig:
             "bufsize": -1,
             "histogram_precision": -1,
             "reporter_file_single": 0,
-            "log_trace_id": "never",
             "proxy": "",
             "is_grpc_clean_hack_enabled": False,
             "transaction_filters": [],
@@ -445,11 +444,6 @@ class SolarWindsApmConfig:
         """Refresh the configurations in liboboe global struct while user changes settings."""
         if key == "tracing_mode":
             self._set_config_value(key, value)
-
-        # TODO set up using OTel logging instrumentation
-        elif key == "log_trace_id":
-            self._set_config_value(key, value)
-
         else:
             logger.warning(
                 "Unsupported SolarWinds APM config key: %s",
@@ -710,15 +704,6 @@ class SolarWindsApmConfig:
                 self.__config[key] = val
                 # update logging level of agent logger
                 apm_logging.set_sw_log_level(val)
-            elif keys == ["log_trace_id"]:
-                if not isinstance(val, str) or val.lower() not in [
-                    "never",
-                    "sampled",
-                    "traced",
-                    "always",
-                ]:
-                    raise ValueError
-                self.__config[key] = val.lower()
             elif keys == ["is_grpc_clean_hack_enabled"]:
                 self.__config[key] = _convert_to_bool(val)
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
