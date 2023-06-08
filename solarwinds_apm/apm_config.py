@@ -106,7 +106,6 @@ class SolarWindsApmConfig:
             "bufsize": -1,
             "histogram_precision": -1,
             "reporter_file_single": 0,
-            "enable_sanitize_sql": True,
             "log_trace_id": "never",
             "proxy": "",
             "is_grpc_clean_hack_enabled": False,
@@ -451,8 +450,6 @@ class SolarWindsApmConfig:
         elif key == "log_trace_id":
             self._set_config_value(key, value)
 
-        elif key in {"enable_sanitize_sql", "warn_deprecated"}:
-            self._set_config_value(key, value)
         else:
             logger.warning(
                 "Unsupported SolarWinds APM config key: %s",

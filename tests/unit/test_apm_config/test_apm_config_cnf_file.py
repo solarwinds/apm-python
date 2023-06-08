@@ -130,7 +130,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("bufsize") == 2
         assert resulting_config.get("histogram_precision") == 2
         assert resulting_config.get("reporter_file_single") == 2
-        assert resulting_config.get("enable_sanitize_sql") == True
         assert resulting_config.get("log_trace_id") == "always"
         assert resulting_config.get("proxy") == "http://foo-bar"
         assert resulting_config.get("is_grpc_clean_hack_enabled") == True
@@ -178,7 +177,6 @@ class TestSolarWindsApmConfigCnfFile:
             "bufsize": "foo",
             "histogramPrecision": "foo",
             "reporterFileSingle": "foo",
-            "enableSanitizeSql": "foo",
             "log_trace_id": "not-never-always-etc",
             "proxy": "foo",
             "isGrpcCleanHackEnabled": "foo",
@@ -211,7 +209,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("bufsize") == -1
         assert resulting_config.get("histogram_precision") == -1
         assert resulting_config.get("reporter_file_single") == 0
-        assert resulting_config.get("enable_sanitize_sql") == True
         assert resulting_config.get("log_trace_id") == "never"
         assert resulting_config.get("proxy") == ""
         assert resulting_config.get("is_grpc_clean_hack_enabled") == False
@@ -260,7 +257,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_BUFSIZE": "3",
             "SW_APM_HISTOGRAM_PRECISION": "3",
             "SW_APM_REPORTER_FILE_SINGLE": "3",
-            "SW_APM_ENABLE_SANITIZE_SQL": "false",
             "SW_APM_LOG_TRACE_ID": "never",
             "SW_APM_PROXY": "http://other-foo-bar",
             "SW_APM_IS_GRPC_CLEAN_HACK_ENABLED": "false",
@@ -302,7 +298,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("bufsize") == 3
         assert resulting_config.get("histogram_precision") == 3
         assert resulting_config.get("reporter_file_single") == 3
-        assert resulting_config.get("enable_sanitize_sql") == False
         assert resulting_config.get("log_trace_id") == "never"
         assert resulting_config.get("proxy") == "http://other-foo-bar"
         assert resulting_config.get("is_grpc_clean_hack_enabled") == False
@@ -344,7 +339,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_BUFSIZE": "other-foo-bar",
             "SW_APM_HISTOGRAM_PRECISION": "other-foo-bar",
             "SW_APM_REPORTER_FILE_SINGLE": "other-foo-bar",
-            "SW_APM_ENABLE_SANITIZE_SQL": "other-foo-bar",
             "SW_APM_LOG_TRACE_ID": "other-foo-bar",
             "SW_APM_PROXY": "other-foo-bar",
             "SW_APM_IS_GRPC_CLEAN_HACK_ENABLED": "other-foo-bar",
@@ -383,7 +377,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("bufsize") == 2
         assert resulting_config.get("histogram_precision") == 2
         assert resulting_config.get("reporter_file_single") == 2
-        assert resulting_config.get("enable_sanitize_sql") == True
         assert resulting_config.get("log_trace_id") == "always"
         assert resulting_config.get("proxy") == "http://foo-bar"
         assert resulting_config.get("is_grpc_clean_hack_enabled") == True
