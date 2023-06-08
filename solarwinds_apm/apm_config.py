@@ -516,11 +516,6 @@ class SolarWindsApmConfig:
 
         # agent_enabled is special
         cnf_agent_enabled = cnf_dict.get(_snake_to_camel_case("agent_enabled"))
-        logger.warning(
-            "cnf_agent_enabled is %s, type %s",
-            cnf_agent_enabled,
-            type(cnf_agent_enabled),
-        )
         # accepts boolean or string from dict
         if isinstance(cnf_agent_enabled, bool):
             self.agent_enabled = cnf_agent_enabled
