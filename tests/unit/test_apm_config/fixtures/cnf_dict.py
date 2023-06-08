@@ -27,7 +27,6 @@ def fixture_cnf_dict():
         "enableSanitizeSql": True,
         "logTraceId": "always",
         "proxy": "http://foo-bar",
-        "isGrpcCleanHackEnabled": True,
     }
 
 @pytest.fixture
@@ -57,5 +56,4 @@ def fixture_cnf_dict_enabled_false():
         "enableSanitizeSql": True,
         "logTraceId": "always",
         "proxy": "http://foo-bar",
-        "isGrpcCleanHackEnabled": True,
     }

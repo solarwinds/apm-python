@@ -109,7 +109,6 @@ class SolarWindsApmConfig:
             "enable_sanitize_sql": True,
             "log_trace_id": "never",
             "proxy": "",
-            "is_grpc_clean_hack_enabled": False,
             "transaction_filters": [],
         }
         self.agent_enabled = True
@@ -722,8 +721,6 @@ class SolarWindsApmConfig:
                 ]:
                     raise ValueError
                 self.__config[key] = val.lower()
-            elif keys == ["is_grpc_clean_hack_enabled"]:
-                self.__config[key] = _convert_to_bool(val)
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
                     val = _convert_to_bool(val)

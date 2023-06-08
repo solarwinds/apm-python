@@ -133,7 +133,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("enable_sanitize_sql") == True
         assert resulting_config.get("log_trace_id") == "always"
         assert resulting_config.get("proxy") == "http://foo-bar"
-        assert resulting_config.get("is_grpc_clean_hack_enabled") == True
 
         # update_transaction_filters was called
         mock_update_txn_filters.assert_called_once_with(fixture_cnf_dict)
@@ -181,7 +180,6 @@ class TestSolarWindsApmConfigCnfFile:
             "enableSanitizeSql": "foo",
             "log_trace_id": "not-never-always-etc",
             "proxy": "foo",
-            "isGrpcCleanHackEnabled": "foo",
         }
         mock_get_cnf_dict = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
@@ -214,7 +212,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("enable_sanitize_sql") == True
         assert resulting_config.get("log_trace_id") == "never"
         assert resulting_config.get("proxy") == ""
-        assert resulting_config.get("is_grpc_clean_hack_enabled") == False
         # Meanwhile these are pretty open
         assert resulting_config.get("collector") == "False"
         assert resulting_config.get("hostname_alias") == "False"
@@ -263,7 +260,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_ENABLE_SANITIZE_SQL": "false",
             "SW_APM_LOG_TRACE_ID": "never",
             "SW_APM_PROXY": "http://other-foo-bar",
-            "SW_APM_IS_GRPC_CLEAN_HACK_ENABLED": "false",
         })
         mock_update_txn_filters = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
@@ -305,7 +301,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("enable_sanitize_sql") == False
         assert resulting_config.get("log_trace_id") == "never"
         assert resulting_config.get("proxy") == "http://other-foo-bar"
-        assert resulting_config.get("is_grpc_clean_hack_enabled") == False
 
         # Restore old collector
         if old_collector:
@@ -347,7 +342,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_ENABLE_SANITIZE_SQL": "other-foo-bar",
             "SW_APM_LOG_TRACE_ID": "other-foo-bar",
             "SW_APM_PROXY": "other-foo-bar",
-            "SW_APM_IS_GRPC_CLEAN_HACK_ENABLED": "other-foo-bar",
         })
         mock_update_txn_filters = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
@@ -386,7 +380,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("enable_sanitize_sql") == True
         assert resulting_config.get("log_trace_id") == "always"
         assert resulting_config.get("proxy") == "http://foo-bar"
-        assert resulting_config.get("is_grpc_clean_hack_enabled") == True
 
         # These are still valid, so env_var > cnf_file
         assert resulting_config.get("collector") == "False"
