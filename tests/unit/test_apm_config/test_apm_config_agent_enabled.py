@@ -12,6 +12,7 @@ from solarwinds_apm import apm_config
 from .fixtures.cnf_dict import (
     fixture_cnf_dict,
     fixture_cnf_dict_enabled_false,
+    fixture_cnf_dict_enabled_false_mixed_case,
 )
 
 
@@ -190,6 +191,23 @@ class TestSolarWindsApmConfigAgentEnabled:
         assert not resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == ""
 
+    def test_calculate_agent_enabled_env_var_false_mixed_case(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "valid:key",
+            "SW_APM_AGENT_ENABLED": "fALsE",
+        })
+        mock_iter_entry_points = mocker.patch(
+            "solarwinds_apm.apm_config.iter_entry_points"
+        )
+        mock_points = mocker.MagicMock()
+        mock_points.__iter__.return_value = ["foo"]
+        mock_iter_entry_points.configure_mock(
+            return_value=mock_points
+        )
+        resulting_config = apm_config.SolarWindsApmConfig()
+        assert not resulting_config._calculate_agent_enabled()
+        assert resulting_config.service_name == ""
+
     def test_calculate_agent_enabled_env_var_not_set_cnf_file_false(
         self,
         mocker,
@@ -212,6 +230,33 @@ class TestSolarWindsApmConfigAgentEnabled:
         # cnf with "agentEnabled": False
         mock_get_cnf_dict.configure_mock(
             return_value=fixture_cnf_dict_enabled_false
+        )
+        resulting_config = apm_config.SolarWindsApmConfig()
+        assert not resulting_config.agent_enabled
+        assert resulting_config.service_name == ""
+
+    def test_calculate_agent_enabled_env_var_not_set_cnf_file_false_mixed_case(
+        self,
+        mocker,
+        fixture_cnf_dict_enabled_false_mixed_case,
+    ):
+        mock_iter_entry_points = mocker.patch(
+            "solarwinds_apm.apm_config.iter_entry_points"
+        )
+        mock_points = mocker.MagicMock()
+        mock_points.__iter__.return_value = ["foo"]
+        mock_iter_entry_points.configure_mock(
+            return_value=mock_points
+        )
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "valid:key",
+        })
+        mock_get_cnf_dict = mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
+        )
+        # cnf with "agentEnabled": False
+        mock_get_cnf_dict.configure_mock(
+            return_value=fixture_cnf_dict_enabled_false_mixed_case
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config.agent_enabled
