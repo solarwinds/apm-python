@@ -438,7 +438,7 @@ class TestSolarWindsApmConfig:
     def test_set_config_value_invalid_key(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("invalid_key", "foo")
-        assert test_config.get("invalid_key", None) == None
+        assert test_config.get("invalid_key", None) is None
         assert "Ignore invalid configuration key" in caplog.text
 
     # pylint:disable=unused-argument
@@ -601,11 +601,11 @@ class TestSolarWindsApmConfig:
 
     def test__convert_to_bool_int(self):
         test_config = apm_config.SolarWindsApmConfig()
-        assert test_config._convert_to_bool(0) == None
+        assert test_config._convert_to_bool(0) is None
 
     def test__convert_to_bool_str_invalid(self):
         test_config = apm_config.SolarWindsApmConfig()
-        assert test_config._convert_to_bool("not-true-nor-false") == None
+        assert test_config._convert_to_bool("not-true-nor-false") is None
 
     def test__convert_to_bool_str_true(self):
         test_config = apm_config.SolarWindsApmConfig()
