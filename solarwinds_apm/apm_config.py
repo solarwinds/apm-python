@@ -612,15 +612,11 @@ class SolarWindsApmConfig:
         if isinstance(val, bool):
             return val
         if isinstance(val, str):
-            val = val.lower()
-            if val == "true":
+            if val.lower() == "true":
                 return True
-            if val == "false":
+            if val.lower() == "false":
                 return False
-            logger.warning(
-                "Received invalid config %s instead of true/false", val
-            )
-            return None
+        logger.debug("Received config %s instead of true/false", val)
         return None
 
     # pylint: disable=too-many-branches,too-many-statements
