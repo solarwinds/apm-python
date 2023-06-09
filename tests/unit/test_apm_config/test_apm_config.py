@@ -590,3 +590,35 @@ class TestSolarWindsApmConfig:
             "bar-service"
         )
         assert result == "valid_key_with:bar-service"
+
+    def test__convert_to_bool_bool_true(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config._convert_to_bool(True)
+
+    def test__convert_to_bool_bool_false(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert not test_config._convert_to_bool(False)
+
+    def test__convert_to_bool_int(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config._convert_to_bool(0) == None
+
+    def test__convert_to_bool_str_invalid(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config._convert_to_bool("not-true-nor-false") == None
+
+    def test__convert_to_bool_str_true(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config._convert_to_bool("true")
+
+    def test__convert_to_bool_str_true_mixed_case(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config._convert_to_bool("tRuE")
+
+    def test__convert_to_bool_str_false(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert not test_config._convert_to_bool("false")
+
+    def test__convert_to_bool_str_false_mixed_case(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert not test_config._convert_to_bool("fAlSE")
