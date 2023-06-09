@@ -24,10 +24,8 @@ def fixture_cnf_dict():
         "bufsize": 2,
         "histogramPrecision": 2,
         "reporterFileSingle": 2,
-        "enableSanitizeSql": True,
         "logTraceId": "always",
         "proxy": "http://foo-bar",
-        "isGrpcCleanHackEnabled": True,
     }
 
 @pytest.fixture
@@ -54,10 +52,8 @@ def fixture_cnf_dict_enabled_false():
         "bufsize": 2,
         "histogramPrecision": 2,
         "reporterFileSingle": 2,
-        "enableSanitizeSql": True,
         "logTraceId": "always",
         "proxy": "http://foo-bar",
-        "isGrpcCleanHackEnabled": True,
     }
 
 @pytest.fixture

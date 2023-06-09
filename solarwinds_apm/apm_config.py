@@ -106,9 +106,7 @@ class SolarWindsApmConfig:
             "bufsize": -1,
             "histogram_precision": -1,
             "reporter_file_single": 0,
-            "enable_sanitize_sql": True,
             "proxy": "",
-            "is_grpc_clean_hack_enabled": False,
             "transaction_filters": [],
         }
         self.agent_enabled = True
@@ -445,9 +443,6 @@ class SolarWindsApmConfig:
         """Refresh the configurations in liboboe global struct while user changes settings."""
         if key == "tracing_mode":
             self._set_config_value(key, value)
-
-        elif key in {"enable_sanitize_sql", "warn_deprecated"}:
-            self._set_config_value(key, value)
         else:
             logger.warning(
                 "Unsupported SolarWinds APM config key: %s",
@@ -714,8 +709,6 @@ class SolarWindsApmConfig:
                 self.__config[key] = val
                 # update logging level of agent logger
                 apm_logging.set_sw_log_level(val)
-            elif keys == ["is_grpc_clean_hack_enabled"]:
-                self.__config[key] = _convert_to_bool(val)
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
                     val = _convert_to_bool(val)
