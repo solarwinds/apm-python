@@ -107,7 +107,6 @@ class SolarWindsApmConfig:
             "histogram_precision": -1,
             "reporter_file_single": 0,
             "proxy": "",
-            "is_grpc_clean_hack_enabled": False,
             "transaction_filters": [],
         }
         self.agent_enabled = True
@@ -704,8 +703,6 @@ class SolarWindsApmConfig:
                 self.__config[key] = val
                 # update logging level of agent logger
                 apm_logging.set_sw_log_level(val)
-            elif keys == ["is_grpc_clean_hack_enabled"]:
-                self.__config[key] = _convert_to_bool(val)
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
                     val = _convert_to_bool(val)

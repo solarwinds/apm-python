@@ -131,7 +131,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("histogram_precision") == 2
         assert resulting_config.get("reporter_file_single") == 2
         assert resulting_config.get("proxy") == "http://foo-bar"
-        assert resulting_config.get("is_grpc_clean_hack_enabled") == True
 
         # update_transaction_filters was called
         mock_update_txn_filters.assert_called_once_with(fixture_cnf_dict)
@@ -177,7 +176,6 @@ class TestSolarWindsApmConfigCnfFile:
             "histogramPrecision": "foo",
             "reporterFileSingle": "foo",
             "proxy": "foo",
-            "isGrpcCleanHackEnabled": "foo",
         }
         mock_get_cnf_dict = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
@@ -208,7 +206,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("histogram_precision") == -1
         assert resulting_config.get("reporter_file_single") == 0
         assert resulting_config.get("proxy") == ""
-        assert resulting_config.get("is_grpc_clean_hack_enabled") == False
         # Meanwhile these are pretty open
         assert resulting_config.get("collector") == "False"
         assert resulting_config.get("hostname_alias") == "False"
@@ -255,7 +252,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_HISTOGRAM_PRECISION": "3",
             "SW_APM_REPORTER_FILE_SINGLE": "3",
             "SW_APM_PROXY": "http://other-foo-bar",
-            "SW_APM_IS_GRPC_CLEAN_HACK_ENABLED": "false",
         })
         mock_update_txn_filters = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
@@ -295,7 +291,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("histogram_precision") == 3
         assert resulting_config.get("reporter_file_single") == 3
         assert resulting_config.get("proxy") == "http://other-foo-bar"
-        assert resulting_config.get("is_grpc_clean_hack_enabled") == False
 
         # Restore old collector
         if old_collector:
@@ -335,7 +330,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_HISTOGRAM_PRECISION": "other-foo-bar",
             "SW_APM_REPORTER_FILE_SINGLE": "other-foo-bar",
             "SW_APM_PROXY": "other-foo-bar",
-            "SW_APM_IS_GRPC_CLEAN_HACK_ENABLED": "other-foo-bar",
         })
         mock_update_txn_filters = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
@@ -372,7 +366,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("histogram_precision") == 2
         assert resulting_config.get("reporter_file_single") == 2
         assert resulting_config.get("proxy") == "http://foo-bar"
-        assert resulting_config.get("is_grpc_clean_hack_enabled") == True
 
         # These are still valid, so env_var > cnf_file
         assert resulting_config.get("collector") == "False"

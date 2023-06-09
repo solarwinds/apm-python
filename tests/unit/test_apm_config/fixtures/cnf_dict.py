@@ -26,7 +26,6 @@ def fixture_cnf_dict():
         "reporterFileSingle": 2,
         "logTraceId": "always",
         "proxy": "http://foo-bar",
-        "isGrpcCleanHackEnabled": True,
     }
 
 @pytest.fixture
@@ -55,5 +54,4 @@ def fixture_cnf_dict_enabled_false():
         "reporterFileSingle": 2,
         "logTraceId": "always",
         "proxy": "http://foo-bar",
-        "isGrpcCleanHackEnabled": True,
     }
