@@ -207,8 +207,8 @@ class SolarWindsApmConfig:
         if not self.agent_enabled:
             logger.info(
                 "SolarWinds APM is disabled and will not report any traces because the environment variable "
-                "SW_APM_AGENT_ENABLED is set to 'false'! If this is not intended either unset the variable or set it to "
-                "a value other than false. Note that the value of SW_APM_AGENT_ENABLED is case-insensitive."
+                "SW_APM_AGENT_ENABLED or the config file agentEnabled field is set to 'false'! If this is not intended either unset the variable or set it to "
+                "a value other than false. Note that SW_APM_AGENT_ENABLED/agentEnabled is case-insensitive."
             )
             return False
 
