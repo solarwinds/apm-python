@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Removed unused log_trace_id config storage ([#163](https://github.com/solarwindscloud/solarwinds-apm-python/pull/163))
+- Removed unused enable_sanitize_sql config storage ([#164](https://github.com/solarwindscloud/solarwinds-apm-python/pull/164))
+- Removed unused is_grpc_clean_hack_enabled config storage ([#165](https://github.com/solarwindscloud/solarwinds-apm-python/pull/165))
 
 ## [0.12.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.12.0) - 2023-06-01
 ### Changed
