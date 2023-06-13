@@ -207,8 +207,8 @@ class SolarWindsApmConfig:
         if not self.agent_enabled:
             logger.info(
                 "SolarWinds APM is disabled and will not report any traces because the environment variable "
-                "SW_APM_AGENT_ENABLED is set to 'false'! If this is not intended either unset the variable or set it to "
-                "a value other than false. Note that the value of SW_APM_AGENT_ENABLED is case-insensitive."
+                "SW_APM_AGENT_ENABLED or the config file agentEnabled field is set to 'false'! If this is not intended either unset the variable or set it to "
+                "a value other than false. Note that SW_APM_AGENT_ENABLED/agentEnabled is case-insensitive."
             )
             return False
 
@@ -505,13 +505,11 @@ class SolarWindsApmConfig:
             return
 
         # agent_enabled is special
-        cnf_agent_enabled = cnf_dict.get(_snake_to_camel_case("agent_enabled"))
-        if cnf_agent_enabled in set([True, False]):
+        cnf_agent_enabled = self._convert_to_bool(
+            cnf_dict.get(_snake_to_camel_case("agent_enabled"))
+        )
+        if cnf_agent_enabled is not None:
             self.agent_enabled = cnf_agent_enabled
-        elif cnf_agent_enabled:
-            logger.warning(
-                "Config file agentEnabled must be one of: true, false. Ignoring."
-            )
 
         available_cnf = set(self.__config.keys())
         # TODO after alpha: is_lambda
@@ -588,20 +586,11 @@ class SolarWindsApmConfig:
     def update_with_env_var(self) -> None:
         """Update the settings with environment variables."""
         # agent_enabled is special
-        env_agent_enabled = os.environ.get("SW_APM_AGENT_ENABLED")
-        if env_agent_enabled and env_agent_enabled in set(
-            [
-                "True",
-                "true",
-                "False",
-                "false",
-            ]
-        ):
-            self.agent_enabled = json.loads(env_agent_enabled.lower())
-        elif env_agent_enabled:
-            logger.warning(
-                "Environment SW_APM_AGENT_ENABLED must be one of: true, false. Ignoring."
-            )
+        env_agent_enabled = self._convert_to_bool(
+            os.environ.get("SW_APM_AGENT_ENABLED")
+        )
+        if env_agent_enabled is not None:
+            self.agent_enabled = env_agent_enabled
 
         available_envvs = set(self.__config.keys())
         # TODO after alpha: is_lambda
@@ -618,26 +607,28 @@ class SolarWindsApmConfig:
         """Update the configuration settings with (in-code) keyword arguments"""
         # TODO Implement in-code config with kwargs after alpha
 
+    def _convert_to_bool(self, val):
+        """Converts given value to boolean value if bool or str representation, else None"""
+        if isinstance(val, bool):
+            return val
+        if isinstance(val, str):
+            if val.lower() == "true":
+                return True
+            if val.lower() == "false":
+                return False
+        logger.debug("Received config %s instead of true/false", val)
+        return None
+
     # pylint: disable=too-many-branches,too-many-statements
-    def _set_config_value(self, keys: str, val: Any) -> Any:
+    def _set_config_value(self, keys_str: str, val: Any) -> Any:
         """Sets the value of the config option indexed by 'keys' to 'val', where 'keys' is a nested key (separated by
         self.delimiter, i.e., the position of the element to be changed in the nested dictionary)
         """
-
-        def _convert_to_bool(val):
-            """Converts given value to boolean value"""
-            val = val.lower() if isinstance(val, str) else val
-            return (
-                val == "true"
-                if isinstance(val, str) and val in {"true", "false"}
-                else bool(int(val))
-            )
-
         # _config is a nested dict, thus find most deeply nested sub dict according to the provided keys
         # by defaulting to None in d.get(), we do not allow the creation of any new (key, value) pair, even
         # when we are handling a defaultdict (i.e., with this we do not allow e.g. the creation of new instrumentations
         # through the config)
-        keys = keys.split(self._DELIMITER)
+        keys = keys_str.split(self._DELIMITER)
         sub_dict = reduce(
             lambda d, key: d.get(key, None) if isinstance(d, dict) else None,
             keys[:-1],
@@ -705,7 +696,7 @@ class SolarWindsApmConfig:
                 apm_logging.set_sw_log_level(val)
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
-                    val = _convert_to_bool(val)
+                    val = self._convert_to_bool(val)
                 else:
                     val = type(sub_dict[keys[-1]])(val)
                 sub_dict[keys[-1]] = val

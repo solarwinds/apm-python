@@ -438,7 +438,7 @@ class TestSolarWindsApmConfig:
     def test_set_config_value_invalid_key(self, caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("invalid_key", "foo")
-        assert test_config.get("invalid_key", None) == None
+        assert test_config.get("invalid_key", None) is None
         assert "Ignore invalid configuration key" in caplog.text
 
     # pylint:disable=unused-argument
@@ -590,3 +590,35 @@ class TestSolarWindsApmConfig:
             "bar-service"
         )
         assert result == "valid_key_with:bar-service"
+
+    def test__convert_to_bool_bool_true(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config._convert_to_bool(True)
+
+    def test__convert_to_bool_bool_false(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert not test_config._convert_to_bool(False)
+
+    def test__convert_to_bool_int(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config._convert_to_bool(0) is None
+
+    def test__convert_to_bool_str_invalid(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config._convert_to_bool("not-true-nor-false") is None
+
+    def test__convert_to_bool_str_true(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config._convert_to_bool("true")
+
+    def test__convert_to_bool_str_true_mixed_case(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config._convert_to_bool("tRuE")
+
+    def test__convert_to_bool_str_false(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert not test_config._convert_to_bool("false")
+
+    def test__convert_to_bool_str_false_mixed_case(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert not test_config._convert_to_bool("fAlSE")

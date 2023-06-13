@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add log warning when `set_transaction_name` with empty name ([#162](https://github.com/solarwindscloud/solarwinds-apm-python/pull/162))
 
+### Changed
+- Fix accepted config boolean values ([#166](https://github.com/solarwindscloud/solarwinds-apm-python/pull/166))
+
 ### Removed
 - Removed unused log_trace_id config storage ([#163](https://github.com/solarwindscloud/solarwinds-apm-python/pull/163))
 - Removed unused enable_sanitize_sql config storage ([#164](https://github.com/solarwindscloud/solarwinds-apm-python/pull/164))
