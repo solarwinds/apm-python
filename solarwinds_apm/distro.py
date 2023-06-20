@@ -8,11 +8,14 @@
 
 from os import environ
 
+from pkg_resources import EntryPoint
+
 from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.instrumentation.distro import BaseDistro
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.logging.environment_variables import (
     OTEL_PYTHON_LOG_FORMAT,
 )
@@ -38,3 +41,19 @@ class SolarWindsDistro(BaseDistro):
             OTEL_PYTHON_LOG_FORMAT,
             "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s trace_flags=%(otelTraceSampled)02d resource.service.name=%(otelServiceName)s] - %(message)s",
         )
+    
+    def load_instrumentor(
+        self, entry_point: EntryPoint, **kwargs
+    ):
+        """Takes a collection of instrumentation entry points
+        and activates them by instantiating and calling instrument()
+        on each one.
+
+        This is a method override to pass additional arguments to each
+        entry point.
+        """
+        # Enable sqlcommenter feature, if implemented
+        kwargs["enable_commenter"] = True
+        kwargs["is_sql_commentor_enabled"] = True
+        instrumentor: BaseInstrumentor = entry_point.load()
+        instrumentor().instrument(**kwargs)
