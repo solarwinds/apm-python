@@ -80,7 +80,7 @@ class SolarWindsDistro(BaseDistro):
         if enable_commenter.lower() == "true":
             if entry_point.name == "sqlalchemy":
                 engine_url = environ.get("SW_APM_SQLALCHEMY_ENGINE_URL")
-                # We don't check if engine_url is actually correct
+                # We check if engine_url present but not necessarily correct
                 if not engine_url:
                     logger.warning(
                         "OTEL_SQLCOMMENTER_ENABLED but "
@@ -89,5 +89,5 @@ class SolarWindsDistro(BaseDistro):
                     )
                     return False
             else:
-                return True
+            return True
         return False
