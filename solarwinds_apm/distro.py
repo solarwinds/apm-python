@@ -6,7 +6,6 @@
 
 """Module to configure OpenTelemetry to work with SolarWinds backend"""
 
-import logging
 from os import environ
 
 from opentelemetry.environment_variables import (
@@ -19,14 +18,11 @@ from opentelemetry.instrumentation.logging.environment_variables import (
     OTEL_PYTHON_LOG_FORMAT,
 )
 from pkg_resources import EntryPoint
-# from sqlalchemy import create_engine
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
 )
-
-logger = logging.getLogger(__name__)
 
 
 class SolarWindsDistro(BaseDistro):
@@ -53,44 +49,19 @@ class SolarWindsDistro(BaseDistro):
         This is a method override to pass additional arguments to each
         entry point.
         """
-        # Set enable for sqlcommenter. Assumes kwargs ignored if not 
+        # Set enable for sqlcommenter. Assumes kwargs ignored if not
         # implemented for current instrumentation library
         if self.enable_commenter(entry_point, **kwargs):
+            # instrumentation for Flask ORM, sqlalchemy, psycopg2
             kwargs["enable_commenter"] = True
+            # instrumentation for Django ORM
             kwargs["is_sql_commentor_enabled"] = True
-            # TODO: Does sqlalchemy instrument need an engine to enable sqlcommenter?
-
-            # TODO: Can an engine init'd here be exposed to customers?
-            #       Cannot be stored in TracerProvider.resource.attributes,
-            #       must be one of ['bool', 'str', 'bytes', 'int', 'float'].
-            #       Also cannot set_tracer_provider more than once
-            # if entry_point.name == "sqlalchemy":
-                # engine_url = environ.get("SW_APM_SQLALCHEMY_ENGINE_URL", "")
-                # engine = create_engine(engine_url)
-                # kwargs["engine"] = engine
-
-        # debug
-        logger.warning("entry_point.name: %s", entry_point.name)
-        logger.warning("load_instrumentor kwargs: %s", kwargs)
-
         instrumentor: BaseInstrumentor = entry_point.load()
         instrumentor().instrument(**kwargs)
-        # For sqlalchemy instrumentation, instrument() returns EngineTracer
 
     def enable_commenter(self, entry_point: EntryPoint, **kwargs) -> bool:
         """Enable sqlcommenter feature, if implemented"""
         enable_commenter = environ.get("OTEL_SQLCOMMENTER_ENABLED", "")
-        logger.warning("enable_commenter env var: %s", enable_commenter)
         if enable_commenter.lower() == "true":
-            if entry_point.name == "sqlalchemy":
-                engine_url = environ.get("SW_APM_SQLALCHEMY_ENGINE_URL")
-                # We check if engine_url present but not necessarily correct
-                if not engine_url:
-                    logger.warning(
-                        "OTEL_SQLCOMMENTER_ENABLED but "
-                        "SW_APM_SQLALCHEMY_ENGINE_URL not provided. Not "
-                        "enabling sqlcommenter for SQLAlchemy."
-                    )
-                    return False
             return True
         return False

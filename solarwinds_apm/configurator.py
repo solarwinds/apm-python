@@ -68,17 +68,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
-        # TODO: Can this make anything available to Distro.load_instrumentor?
-        #       Most likely not because
-        #       auto-instrumentation makes calls in this order:
-        #         1. Distro._configure
-        #         2. Configurator._configure (this method)
-        #         3. Distro.load_instrumentor
-        #       https://github.com/open-telemetry/opentelemetry-python-contrib/blob/8afbce753332729739f84e477d993d267d2c3551/opentelemetry-instrumentation/src/opentelemetry/instrumentation/auto_instrumentation/sitecustomize.py#L112-L124
-        #       ApmConfig cannot be used to store a sqlalchemy engine seen by Distro.
-        #       TracerProvider.resource.attributes cannot store engine.
-        #       Do not want to load_instrumentor here; should be in Distro.
-
         apm_txname_manager = SolarWindsTxnNameManager()
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
