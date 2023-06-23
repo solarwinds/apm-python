@@ -44,10 +44,8 @@ class SolarWindsDistro(BaseDistro):
     def load_instrumentor(self, entry_point: EntryPoint, **kwargs):
         """Takes a collection of instrumentation entry points
         and activates them by instantiating and calling instrument()
-        on each one.
-
-        This is a method override to pass additional arguments to each
-        entry point.
+        on each one. This is a method override to pass additional
+        arguments to each entry point.
         """
         # Set enable for sqlcommenter. Assumes kwargs ignored if not
         # implemented for current instrumentation library
@@ -61,6 +59,8 @@ class SolarWindsDistro(BaseDistro):
 
     def enable_commenter(self, entry_point: EntryPoint, **kwargs) -> bool:
         """Enable sqlcommenter feature, if implemented"""
+        # TODO: Update if changed in OTel spec:
+        # https://github.com/open-telemetry/opentelemetry-specification/issues/3560
         enable_commenter = environ.get("OTEL_SQLCOMMENTER_ENABLED", "")
         if enable_commenter.lower() == "true":
             return True
