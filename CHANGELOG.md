@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.12.1...HEAD)
 
+### Changed
+- Builds run on EC2 ([#170](https://github.com/solarwindscloud/solarwinds-apm-python/pull/170))
+
 ## [0.12.1](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.12.1) - 2023-06-13
 ### Added
 - Add log warning when `set_transaction_name` with empty name ([#162](https://github.com/solarwindscloud/solarwinds-apm-python/pull/162))
