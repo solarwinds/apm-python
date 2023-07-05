@@ -73,6 +73,7 @@ jobs:
   build_publish_aarch64:
     name: Build and publish aarch64
     needs:
+      - is_publishable
       - launch_arm64
     runs-on: ${{ needs.launch_arm64.outputs.label }}
     steps:
