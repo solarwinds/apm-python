@@ -41,7 +41,7 @@ jobs:
     name: Build and publish sdist and wheels
     needs:
       - launch_arm64
-    runs-on: ${{ fromJSON(needs.launch_arm64.outputs.matrix)[matrix.image].label }}
+    runs-on: ${{ matrix.arch == 'arm64' && fromJSON(needs.launch_arm64.outputs.matrix)[matrix.image].label || 'ubuntu-latest' }}
     strategy:
       matrix:
         arch:
