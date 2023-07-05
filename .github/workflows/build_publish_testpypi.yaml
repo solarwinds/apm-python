@@ -26,8 +26,8 @@ jobs:
         with:
           action: launch
           matrix: |
-            - x64
-            - arm64
+            x64
+            arm64
           github-token: ${{ secrets.CI_GITHUB_TOKEN }}
           runner-user: github
           runner-directory: /gh
