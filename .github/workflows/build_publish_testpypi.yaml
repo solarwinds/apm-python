@@ -10,33 +10,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_publish_sdist_and_x86_64:
-    name: Build and publish sdist and x86_64
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Build x86_64
-      uses: ./.github/actions/package_solarwinds_apm_x86_64
-    - name: Install Twine
-      run: pip install --upgrade --no-cache-dir --prefer-binary twine
-    - name: Check distribution artifacts
-      run: twine check dist/*
-    - name: Publish sdist and x86_64 wheels to TestPyPi
-      env:
-        TWINE_NON_INTERACTIVE: 1
-        TWINE_REPOSITORY: testpypi
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
-      run: twine upload dist/*
-
   launch_arm64:
-    name: Launch arm64 ec2 runners
-    needs:
-      - build_publish_sdist_and_x86_64
+    name: Launch ec2 runners
     runs-on: ubuntu-latest
     outputs:
-      label: ${{ steps.launch.outputs.label }} # github runner label
-      instance-id: ${{ steps.launch.outputs.instance-id }} # ec2 instance id
+      matrix: ${{ steps.launch.outputs.matrix }}
     steps:
       - uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -47,6 +25,9 @@ jobs:
         uses: solarwindscloud/ec2-runner-action@main
         with:
           action: launch
+          matrix: |
+            - x64
+            - arm64
           github-token: ${{ secrets.CI_GITHUB_TOKEN }}
           runner-user: github
           runner-directory: /gh
@@ -56,33 +37,51 @@ jobs:
           subnet-id: subnet-0fd499f8a50e41807
           security-group-ids: sg-0fd8d8cd6effda4a5
 
-  build_publish_aarch64:
-    name: Build and publish aarch64
+  build_publish_sdist_and_wheels:
+    name: Build and publish sdist and wheels
     needs:
       - launch_arm64
-    runs-on: ${{ needs.launch_arm64.outputs.label }}
+    runs-on: ${{ matrix.arch == 'arm64' && fromJSON(needs.launch_arm64.outputs.matrix)[matrix.image].label || 'ubuntu-latest' }}
+    strategy:
+      matrix:
+        arch:
+          - x64
+          - arm64
     steps:
-      - uses: actions/checkout@v3
-      - name: Build aarch64
-        uses: ./.github/actions/package_solarwinds_apm_aarch64
-      - name: Install Twine
-        run: pip install --upgrade --no-cache-dir --prefer-binary twine
-      - name: Check distribution artifacts
-        run: /gh/.local/bin/twine check dist/*
-      - name: Publish aarch64 wheels to TestPyPi
-        env:
-          TWINE_NON_INTERACTIVE: 1
-          TWINE_REPOSITORY: testpypi
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
-        run: /gh/.local/bin/twine upload dist/*.whl
+    - uses: actions/checkout@v3
+    - if: ${{ matrix.arch == 'x64' }}
+      name: Build sdist and x86_64
+      uses: ./.github/actions/package_solarwinds_apm_x86_64
+    - if: ${{ matrix.arch == 'arm64' }}
+      name: Build aarch64
+      uses: ./.github/actions/package_solarwinds_apm_aarch64
+    - name: Install Twine
+      run: pip install --upgrade --no-cache-dir --prefer-binary twine
+    - name: Check distribution artifacts
+      run: /gh/.local/bin/twine check dist/*
+    - if: ${{ matrix.arch == 'x64' }}
+      name: Publish sdist and x86_64 wheels to TestPyPi
+      env:
+        TWINE_NON_INTERACTIVE: 1
+        TWINE_REPOSITORY: testpypi
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
+      run: /gh/.local/bin/twine upload dist/*
+    - if: ${{ matrix.arch == 'arm64' }}
+      name: Publish arm64 wheels to TestPyPi
+      env:
+        TWINE_NON_INTERACTIVE: 1
+        TWINE_REPOSITORY: testpypi
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
+      run: /gh/.local/bin/twine upload dist/*
 
   terminate_arm64:
     name: Terminate ec2 instances
     if: ${{ always() }}
     needs:
       - launch_arm64
-      - build_publish_aarch64
+      - build_publish_sdist_and_wheels
     runs-on: ubuntu-latest
     steps:
       - uses: aws-actions/configure-aws-credentials@v2
@@ -94,5 +93,4 @@ jobs:
         with:
           action: terminate
           github-token: ${{ secrets.CI_GITHUB_TOKEN }}
-          label: ${{ needs.launch_arm64.outputs.label }}
-          instance-id: ${{ needs.launch_arm64.outputs.instance-id }}
+          matrix: ${{ needs.launch_arm64.outputs.matrix }}
