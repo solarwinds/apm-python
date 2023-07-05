@@ -30,6 +30,8 @@ jobs:
       run: twine upload dist/*
 
   launch_arm64:
+    needs:
+      - build_publish_sdist_and_x86_64
     runs-on: ubuntu-latest
     outputs:
       label: ${{ steps.launch.outputs.label }} # github runner label
