@@ -14,3 +14,5 @@ runs:
   entrypoint: 'make'
   args:
     - 'package'
+  env:
+    PLATFORM: aarch64
