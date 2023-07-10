@@ -41,22 +41,12 @@ jobs:
     name: Build and publish sdist and wheels
     needs:
       - launch_arm64
-    runs-on: ${{ matrix.arch == 'arm64' && fromJSON(needs.launch_arm64.outputs.matrix)[matrix.image].label || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.arch == 'arm64' && fromJSON(needs.launch_arm64.outputs.matrix)[matrix.job].label || 'ubuntu-latest' }}
     strategy:
       matrix:
         arch:
           - x64
           - arm64
-        image:
-          - x86_64
-          - aarch64
-        exclude:
-          - arch: x64
-            image: aarch64
-          - arch: arm64
-            image: x86_64
-    container:
-      image: "quay.io/pypa/manylinux_2_28_${{ matrix.image }}:latest"
     steps:
     - uses: actions/checkout@v3
     - if: ${{ matrix.arch == 'x64' }}
