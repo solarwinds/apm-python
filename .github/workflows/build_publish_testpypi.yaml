@@ -26,8 +26,8 @@ jobs:
         with:
           action: launch
           matrix: |
-            x64
-            arm64
+            quay.io/pypa/manylinux_2_28_x86_64:latest
+            quay.io/pypa/manylinux_2_28_aarch64:latest
           github-token: ${{ secrets.CI_GITHUB_TOKEN }}
           runner-user: github
           runner-directory: /gh
