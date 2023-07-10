@@ -50,6 +50,11 @@ jobs:
         image:
           - x86_64
           - aarch64
+        exclude:
+          - arch: x64
+            image: aarch64
+          - arch: arm64
+            image: x86_64
     container:
       image: "quay.io/pypa/manylinux_2_28_${{ matrix.image }}:latest"
     steps:
