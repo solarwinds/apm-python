@@ -48,13 +48,10 @@ jobs:
           - x64
           - arm64
         image:
-          - quay.io/pypa/manylinux_2_28_x86_64:latest
-          - quay.io/pypa/manylinux_2_28_aarch64:latest
-        include:
-          - arch: x64
-            image: quay.io/pypa/manylinux_2_28_x86_64:latest
-          - arch: arm64
-            image: quay.io/pypa/manylinux_2_28_aarch64:latest
+          - x86_64
+          - aarch64
+    container:
+      image: "quay.io/pypa/manylinux_2_28_${{ matrix.image }}:latest"
     steps:
     - uses: actions/checkout@v3
     - if: ${{ matrix.arch == 'x64' }}
