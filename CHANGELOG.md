@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.13.0...HEAD)
 
-## [0.13.0.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.13.0) - 2023-07-11
+## [0.13.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.13.0) - 2023-07-11
 ### Added
 - Add OTEL_SQLCOMMENTER_ENABLED for some instrumentation libraries ([#169](https://github.com/solarwindscloud/solarwinds-apm-python/pull/169))
 
