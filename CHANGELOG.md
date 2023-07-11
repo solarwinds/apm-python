@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Builds run on EC2 ([#170](https://github.com/solarwindscloud/solarwinds-apm-python/pull/170))
+- Metric format for AO backend is `TransactionResponseTime` instead of both ([#172](https://github.com/solarwindscloud/solarwinds-apm-python/pull/172))
 
 ## [0.12.1](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.12.1) - 2023-06-13
 ### Added

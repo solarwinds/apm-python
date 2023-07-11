@@ -356,13 +356,14 @@ class SolarWindsApmConfig:
         return service_key
 
     def _calculate_metric_format(self) -> int:
-        """Return one of 0 (both) or 1 (TransactionResponseTime only). Future: return 2 (ResponseTime only) instead of 0. Based on collector URL which may have a port e.g. foo-collector.com:443"""
-        metric_format = 0
+        """Return one of 1 (TransactionResponseTime only) or 2 (default; ResponseTime only). Note: 0 (both) is no longer supported. Based on collector URL which may have a port e.g. foo-collector.com:443"""
+        metric_format = 2
         host = self.get("collector")
         if host:
-            if len(host.split(":")) > 1:
-                host = host.split(":")[0]
-            if host in [INTL_SWO_AO_COLLECTOR, INTL_SWO_AO_STG_COLLECTOR]:
+            if (
+                INTL_SWO_AO_COLLECTOR in host
+                or INTL_SWO_AO_STG_COLLECTOR in host
+            ):
                 logger.warning(
                     "AO collector detected. Only exporting TransactionResponseTime metrics"
                 )

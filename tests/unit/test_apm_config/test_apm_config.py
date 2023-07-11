@@ -160,7 +160,7 @@ class TestSolarWindsApmConfig:
         old_collector = os.environ.get("SW_APM_COLLECTOR", None)
         if old_collector:
             del os.environ["SW_APM_COLLECTOR"]
-        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 0
+        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 2
         # Restore old collector
         if old_collector:
             os.environ["SW_APM_COLLECTOR"] = old_collector
@@ -169,7 +169,7 @@ class TestSolarWindsApmConfig:
         mocker.patch.dict(os.environ, {
             "SW_APM_COLLECTOR": "foo-collector-not-ao"
         })
-        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 0
+        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 2
 
     def test_calculate_metric_format_ao_prod(self, mocker):
         mocker.patch.dict(os.environ, {
