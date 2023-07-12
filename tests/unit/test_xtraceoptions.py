@@ -9,7 +9,6 @@ import pytest  # pylint: disable=unused-import
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.apm_constants import (
     INTL_SWO_X_OPTIONS_KEY,   # "sw_xtraceoptions"
-    INTL_SWO_SIGNATURE_KEY,   # "sw_signature"
 )
 
 
@@ -224,7 +223,6 @@ class TestXTraceOptions():
     def test_init_signature_stored_if_options(self):
         mock_otel_context = {
             INTL_SWO_X_OPTIONS_KEY: "trigger-trace",
-            INTL_SWO_SIGNATURE_KEY: "my-foo-signature",
         }
         xto = XTraceOptions(mock_otel_context)
         assert xto.ignored == []
@@ -237,7 +235,6 @@ class TestXTraceOptions():
 
     def test_init_signature_still_stored_without_options(self):
         mock_otel_context = {
-            INTL_SWO_SIGNATURE_KEY: "my-foo-signature",
         }
         xto = XTraceOptions(mock_otel_context)
         assert xto.ignored == []
@@ -277,7 +274,6 @@ class TestXTraceOptions():
     def test_init_xtraceoptions_documented_example_3(self):
         mock_otel_context = {
             INTL_SWO_X_OPTIONS_KEY: "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;ts=1564432370",
-            INTL_SWO_SIGNATURE_KEY: "5c7c733c727e5038d2cd537630206d072bbfc07c",
         }
         xto = XTraceOptions(mock_otel_context)
         assert xto.ignored == []

@@ -13,10 +13,10 @@ from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
 from solarwinds_apm.apm_constants import (
-    INTL_SWO_SIGNATURE_KEY,
     INTL_SWO_TRACESTATE_KEY,
     INTL_SWO_X_OPTIONS_KEY,
 )
+from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
@@ -44,29 +44,32 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         if context is None:
             context = Context()
 
+        xtraceoptions = None
         xtraceoptions_header = getter.get(
             carrier, self._XTRACEOPTIONS_HEADER_NAME
         )
-        if xtraceoptions_header:
-            context.update({INTL_SWO_X_OPTIONS_KEY: xtraceoptions_header[0]})
+        signature_header = getter.get(
+            carrier, self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME
+        )
+        if xtraceoptions_header and signature_header:
+            xtraceoptions = XTraceOptions(
+                xtraceoptions_header[0],
+                signature_header[0],
+            )
+        elif xtraceoptions_header:
+            xtraceoptions = XTraceOptions(
+                xtraceoptions_header[0],
+            )
+
+        if xtraceoptions:
+            context.update({INTL_SWO_X_OPTIONS_KEY: xtraceoptions})
             logger.debug(
                 "Extracted %s as %s: %s",
                 self._XTRACEOPTIONS_HEADER_NAME,
                 INTL_SWO_X_OPTIONS_KEY,
-                xtraceoptions_header[0],
+                xtraceoptions,
             )
 
-        signature_header = getter.get(
-            carrier, self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME
-        )
-        if signature_header:
-            context.update({INTL_SWO_SIGNATURE_KEY: signature_header[0]})
-            logger.debug(
-                "Extracted %s as %s: %s",
-                self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME,
-                INTL_SWO_SIGNATURE_KEY,
-                signature_header[0],
-            )
         return context
 
     def inject(
