@@ -39,6 +39,9 @@ class XTraceOptions:
         self.trigger_trace = 0
         self.timestamp = 0
 
+        if not xtraceoptions_header:
+            return
+
         # always store original header for sample decision later
         self.options_header = xtraceoptions_header
 

@@ -511,7 +511,11 @@ class _SwSampler(Sampler):
         parent_span_context = get_current_span(
             parent_context
         ).get_span_context()
-        xtraceoptions = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
+
+        if not parent_context or not parent_context.get(INTL_SWO_X_OPTIONS_KEY):
+            xtraceoptions = XTraceOptions()
+        else:
+            xtraceoptions = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
 
         liboboe_decision = self.calculate_liboboe_decision(
             parent_span_context, name, kind, attributes, xtraceoptions

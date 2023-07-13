@@ -44,13 +44,13 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         if context is None:
             context = Context()
 
-        xtraceoptions = None
         xtraceoptions_header = getter.get(
             carrier, self._XTRACEOPTIONS_HEADER_NAME
         )
         signature_header = getter.get(
             carrier, self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME
         )
+        
         if xtraceoptions_header and signature_header:
             xtraceoptions = XTraceOptions(
                 xtraceoptions_header[0],
@@ -60,16 +60,10 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             xtraceoptions = XTraceOptions(
                 xtraceoptions_header[0],
             )
+        else:
+            xtraceoptions = XTraceOptions()
 
-        if xtraceoptions:
-            context.update({INTL_SWO_X_OPTIONS_KEY: xtraceoptions})
-            logger.debug(
-                "Extracted %s as %s: %s",
-                self._XTRACEOPTIONS_HEADER_NAME,
-                INTL_SWO_X_OPTIONS_KEY,
-                xtraceoptions,
-            )
-
+        context.update({INTL_SWO_X_OPTIONS_KEY: xtraceoptions})
         return context
 
     def inject(
