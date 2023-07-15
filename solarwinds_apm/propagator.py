@@ -50,7 +50,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         signature_header = getter.get(
             carrier, self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME
         )
-        
+
         if xtraceoptions_header and signature_header:
             xtraceoptions = XTraceOptions(
                 xtraceoptions_header[0],

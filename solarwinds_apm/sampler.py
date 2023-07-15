@@ -325,7 +325,10 @@ class _SwSampler(Sampler):
     ) -> TraceState:
         """Calculates trace_state based on x-trace-options if provided -- for non-existent or remote parent spans only."""
         # No valid parent i.e. root span, or parent is remote
-        if not parent_span_context.is_valid or not parent_span_context.trace_state:
+        if (
+            not parent_span_context.is_valid
+            or not parent_span_context.trace_state
+        ):
             trace_state = TraceState()
         else:
             trace_state = parent_span_context.trace_state
@@ -492,7 +495,9 @@ class _SwSampler(Sampler):
             parent_context
         ).get_span_context()
 
-        if not parent_context or not parent_context.get(INTL_SWO_X_OPTIONS_KEY):
+        if not parent_context or not parent_context.get(
+            INTL_SWO_X_OPTIONS_KEY
+        ):
             xtraceoptions = XTraceOptions()
         else:
             xtraceoptions = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
