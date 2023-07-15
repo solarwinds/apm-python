@@ -42,9 +42,6 @@ class XTraceOptions:
         if not xtraceoptions_header:
             return
 
-        # always store original header for sample decision later
-        self.options_header = xtraceoptions_header
-
         if xtraceoptions_header:
             traceoptions = re.split(r";+", xtraceoptions_header)
             for option in traceoptions:
@@ -114,3 +111,6 @@ class XTraceOptions:
 
         if signature_header:
             self.signature = signature_header
+            # store original header for c-lib sample decision later
+            # if signature_header exists
+            self.options_header = xtraceoptions_header
