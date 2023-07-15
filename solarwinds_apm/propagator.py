@@ -46,22 +46,14 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
 
         xtraceoptions_header = getter.get(
             carrier, self._XTRACEOPTIONS_HEADER_NAME
-        )
+        ) or [""]
         signature_header = getter.get(
             carrier, self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME
+        ) or [""]
+        xtraceoptions = XTraceOptions(
+            xtraceoptions_header[0],
+            signature_header[0],
         )
-
-        if xtraceoptions_header and signature_header:
-            xtraceoptions = XTraceOptions(
-                xtraceoptions_header[0],
-                signature_header[0],
-            )
-        elif xtraceoptions_header:
-            xtraceoptions = XTraceOptions(
-                xtraceoptions_header[0],
-            )
-        else:
-            xtraceoptions = XTraceOptions()
 
         context.update({INTL_SWO_X_OPTIONS_KEY: xtraceoptions})
         return context
