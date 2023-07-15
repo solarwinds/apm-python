@@ -317,24 +317,6 @@ class _SwSampler(Sampler):
 
         return ";".join(response)
 
-    def create_new_trace_state(
-        self,
-        decision: dict,
-        parent_span_context: SpanContext,
-        xtraceoptions: Optional[XTraceOptions] = None,
-    ) -> TraceState:
-        """Creates new TraceState with x-trace-options if provided"""
-        trace_state = TraceState()
-        if xtraceoptions and xtraceoptions.options_header:
-            trace_state = trace_state.add(
-                INTL_SWO_X_OPTIONS_RESPONSE_KEY,
-                self.create_xtraceoptions_response_value(
-                    decision, parent_span_context, xtraceoptions
-                ),
-            )
-        logger.debug("Created new trace_state: %s", trace_state)
-        return trace_state
-
     def calculate_trace_state(
         self,
         decision: dict,
@@ -344,21 +326,19 @@ class _SwSampler(Sampler):
         """Calculates trace_state based on x-trace-options if provided -- for non-existent or remote parent spans only."""
         # No valid parent i.e. root span, or parent is remote
         if not parent_span_context.is_valid or not parent_span_context.trace_state:
-            trace_state = self.create_new_trace_state(
-                decision, parent_span_context, xtraceoptions
-            )
+            trace_state = TraceState()
         else:
             trace_state = parent_span_context.trace_state
-            # Update existing trace_state with x-trace-options-response
-            # Not a propagated header, so always add at should_sample
-            if xtraceoptions and xtraceoptions.options_header:
-                trace_state = trace_state.add(
-                    INTL_SWO_X_OPTIONS_RESPONSE_KEY,
-                    self.create_xtraceoptions_response_value(
-                        decision, parent_span_context, xtraceoptions
-                    ),
-                )
-            logger.debug("Updated trace_state: %s", trace_state)
+        # Update with x-trace-options-response.
+        # Not a propagated header, so always add at should_sample
+        if xtraceoptions:
+            trace_state = trace_state.add(
+                INTL_SWO_X_OPTIONS_RESPONSE_KEY,
+                self.create_xtraceoptions_response_value(
+                    decision, parent_span_context, xtraceoptions
+                ),
+            )
+        logger.debug("Calculated trace_state: %s", trace_state)
         return trace_state
 
     def add_tracestate_capture_to_attributes_dict(
