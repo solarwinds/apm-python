@@ -10,6 +10,7 @@ from unittest.mock import call
 from opentelemetry.context.context import Context
 from opentelemetry.trace.span import TraceState
 
+from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_KEY
 from solarwinds_apm.propagator import SolarWindsPropagator
 
 
@@ -26,19 +27,18 @@ class TestSolarWindsPropagator():
             "x-trace-options-signature": "bar"
         }
         result = SolarWindsPropagator().extract(mock_carrier)
-        assert result == {
-            "sw_xtraceoptions": "foo",
-            "sw_signature": "bar"
-        }
+        actual_xto = result.get(INTL_SWO_X_OPTIONS_KEY)
+        assert actual_xto.options_header == "foo"
+        assert actual_xto.signature == "bar"
 
     def test_extract_new_context_no_xtraceoptions_yes_signature(self):
         mock_carrier = {
             "x-trace-options-signature": "bar"
         }
         result = SolarWindsPropagator().extract(mock_carrier)
-        assert result == {
-            "sw_signature": "bar"
-        }
+        actual_xto = result.get(INTL_SWO_X_OPTIONS_KEY)
+        assert actual_xto.options_header == ""
+        assert actual_xto.signature == "bar"
 
     def test_extract_existing_context(self):
         mock_carrier = {
@@ -47,15 +47,16 @@ class TestSolarWindsPropagator():
         }
         mock_otel_context = {
             "foo_key": "foo_value",
-            "sw_xtraceoptions": "dont_know_why_these_are_here",
-            "sw_signature": "but_they_will_be_replaced",
+            "sw_xtraceoptions": "dont_know_why_this_here_but_will_be_replaced",
         }
         result = SolarWindsPropagator().extract(mock_carrier, mock_otel_context)
-        assert result == {
-            "foo_key": "foo_value",
-            "sw_xtraceoptions": "foo",
-            "sw_signature": "bar"
-        }
+
+        # This one is kept as-is
+        assert result.get("foo_key") == "foo_value"
+        # This one is replaced
+        actual_xto = result.get(INTL_SWO_X_OPTIONS_KEY)
+        assert actual_xto.options_header == "foo"
+        assert actual_xto.signature == "bar"
 
     def mock_otel_context(self, mocker, valid_span_id=True):
         """Shared mocks for OTel trace context"""
