@@ -33,14 +33,17 @@ class XTraceOptions:
         """
         self.ignored = []
         self.options_header = ""
-        self.signature = None
+        self.signature = ""
         self.custom_kvs = {}
         self.sw_keys = ""
         self.trigger_trace = 0
         self.timestamp = 0
 
-        if not xtraceoptions_header:
-            return
+        if signature_header:
+            self.signature = signature_header
+            # store original header for c-lib sample decision later
+            # only if signature_header exists
+            self.options_header = xtraceoptions_header
 
         if xtraceoptions_header:
             traceoptions = re.split(r";+", xtraceoptions_header)
@@ -108,9 +111,3 @@ class XTraceOptions:
                         "Some x-trace-options were ignored: %s",
                         ", ".join(self.ignored),
                     )
-
-        if signature_header:
-            self.signature = signature_header
-            # store original header for c-lib sample decision later
-            # if signature_header exists
-            self.options_header = xtraceoptions_header
