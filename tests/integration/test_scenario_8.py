@@ -443,7 +443,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "{:032x}".format(span_server.context.trace_id) == trace_id
         assert "{:032x}".format(span_client.context.trace_id) == trace_id
 
-        # Check service entry span tracestate has `sw` key.
+        # Check service entry span tracestate has `sw` and `xtrace_options_response` keys
         # In this test it should be span_id, traceflags from extracted traceparent.
         # SWO APM uses TraceState to stash the trigger trace response so it's available 
         # at the time of custom injecting the x-trace-options-response header.
@@ -709,14 +709,15 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert span_client.name == "HTTP GET"
         assert span_client.kind == trace_api.SpanKind.CLIENT
 
-        # Check root span tracestate has `xtrace_options_response` key
+        # Check root span tracestate has `xtrace_options_response` key but no `sw` key
+        # because no valid parent context.
         # SWO APM uses TraceState to stash the trigger trace response so it's available 
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
         ])
         actual_trace_state = span_server.context.trace_state
-        assert actual_trace_state.get("sw") == expected_trace_state.get("sw")
+        assert actual_trace_state.get("sw") == expected_trace_state.get("sw")  # None
         assert actual_trace_state.get("xtrace_options_response") == expected_trace_state.get("xtrace_options_response")
 
         # Check root span attributes
@@ -742,14 +743,15 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert span_server.attributes["TriggeredTrace"] == True
         assert "this-will-be-ignored" not in span_server.attributes
 
-        # Check root span tracestate has `xtrace_options_response` key
+        # Check root span tracestate has `xtrace_options_response` key but no `sw` key
+        # because no valid parent context.
         # SWO APM uses TraceState to stash the trigger trace response so it's available 
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
         ])
         actual_trace_state = span_client.context.trace_state
-        assert actual_trace_state.get("sw") == expected_trace_state.get("sw")
+        assert actual_trace_state.get("sw") == expected_trace_state.get("sw")  # None
         assert actual_trace_state.get("xtrace_options_response") == expected_trace_state.get("xtrace_options_response")
 
         # Check outgoing request span attributes

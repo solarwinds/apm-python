@@ -100,7 +100,7 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         # Check root span tracestate has no `sw` key
         # because no valid parent context
         expected_trace_state = trace_api.TraceState([])
-        assert span_server.context.trace_state.get("sw") == expected_trace_state.get("sw")
+        assert span_server.context.trace_state.get("sw") == expected_trace_state.get("sw")  # None
 
         # Check root span attributes
         #   :present:
@@ -119,7 +119,7 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         # Check outgoing request span tracestate has no `sw` key
         # because no valid parent context
         expected_trace_state = trace_api.TraceState([])
-        assert span_client.context.trace_state.get("sw") == expected_trace_state.get("sw")
+        assert span_client.context.trace_state.get("sw") == expected_trace_state.get("sw")  # None
 
         # Check outgoing request span attributes
         #   :absent:
