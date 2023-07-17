@@ -443,13 +443,17 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "{:032x}".format(span_server.context.trace_id) == trace_id
         assert "{:032x}".format(span_client.context.trace_id) == trace_id
 
-        # # Check service entry span tracestate has `xtrace_options_response` key.
-        # # SWO APM uses TraceState to stash the trigger trace response so it's available 
-        # # at the time of custom injecting the x-trace-options-response header.
-        # expected_trace_state = trace_api.TraceState([
-        #     ("xtrace_options_response", "trigger-trace####not-requested;ignored####foo"),
-        # ])
-        # assert span_server.context.trace_state == expected_trace_state
+        # Check service entry span tracestate has `sw` key.
+        # In this test it should be span_id, traceflags from extracted traceparent.
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
+        expected_trace_state = trace_api.TraceState([
+            ("sw", "{}-{}".format(tracestate_span, trace_flags)),
+            ("xtrace_options_response", "trigger-trace####not-requested;ignored####foo"),
+        ])
+        actual_trace_state = span_server.context.trace_state
+        assert actual_trace_state.get("sw") == expected_trace_state.get("sw")
+        assert actual_trace_state.get("xtrace_options_response") == expected_trace_state.get("xtrace_options_response")
 
         # Check service entry span attributes
         #   :present:
@@ -469,13 +473,17 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "SWKeys" in span_server.attributes
         assert span_server.attributes["SWKeys"] == "custom-sw-from:tammy,baz:qux"
 
-        # # Check outgoing request tracestate has `xtrace_options_response` key
-        # # SWO APM uses TraceState to stash the trigger trace response so it's available 
-        # # at the time of custom injecting the x-trace-options-response header.
-        # expected_trace_state = trace_api.TraceState([
-        #     ("xtrace_options_response", "trigger-trace####not-requested;ignored####foo"),
-        # ])
-        # assert span_client.context.trace_state == expected_trace_state
+        # Check outgoing request tracestate has `sw` and `xtrace_options_response` keys
+        # In this test it should also be span_id, traceflags from extracted traceparent
+        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # at the time of custom injecting the x-trace-options-response header.
+        expected_trace_state = trace_api.TraceState([
+            ("sw", "{}-{}".format(tracestate_span, trace_flags)),
+            ("xtrace_options_response", "trigger-trace####not-requested;ignored####foo"),
+        ])
+        actual_trace_state = span_client.context.trace_state
+        assert actual_trace_state.get("sw") == expected_trace_state.get("sw")
+        assert actual_trace_state.get("xtrace_options_response") == expected_trace_state.get("xtrace_options_response")
 
         # Check outgoing request span attributes
         #   :absent:
@@ -707,7 +715,9 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
         ])
-        assert span_server.context.trace_state == expected_trace_state
+        actual_trace_state = span_server.context.trace_state
+        assert actual_trace_state.get("sw") == expected_trace_state.get("sw")
+        assert actual_trace_state.get("xtrace_options_response") == expected_trace_state.get("xtrace_options_response")
 
         # Check root span attributes
         #   :present:
@@ -738,7 +748,9 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
         ])
-        assert span_client.context.trace_state == expected_trace_state
+        actual_trace_state = span_client.context.trace_state
+        assert actual_trace_state.get("sw") == expected_trace_state.get("sw")
+        assert actual_trace_state.get("xtrace_options_response") == expected_trace_state.get("xtrace_options_response")
 
         # Check outgoing request span attributes
         #   :absent:
