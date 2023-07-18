@@ -484,12 +484,13 @@ class Test_SwSampler():
         assert expected_trace_state.get("sw") == actual_trace_state.get("sw")
         assert expected_trace_state.get("xtrace_options_response") == actual_trace_state.get("xtrace_options_response")
 
-    def test_should_sample_no_parent_context(
+    def should_sample_test_helper(
         self,
         mocker,
         fixture_swsampler,
+        parent_context,
+        expected_xto,
     ):
-        mock_parent_context = None
         mock_get_current_span = mocker.patch("solarwinds_apm.sampler.get_current_span")
         mock_get_current_span.configure_mock(
             return_value=mocker.Mock(
@@ -522,8 +523,11 @@ class Test_SwSampler():
             return_value=Decision.RECORD_AND_SAMPLE
         )
 
+        if not parent_context:
+            expected_xto = mock_xtraceoptions
+
         sampling_result = fixture_swsampler.should_sample(
-            parent_context=mock_parent_context,
+            parent_context=parent_context,
             trace_id=123,
             name="foo",
             attributes={"foo": "bar"}
@@ -534,12 +538,12 @@ class Test_SwSampler():
             'foo',
             None,
             {'foo': 'bar'},
-            mock_xtraceoptions,
+            expected_xto,
         )
         _SwSampler.calculate_trace_state.assert_called_once_with(
             "my_decision",
             "my_span_context",
-            mock_xtraceoptions,
+            expected_xto,
         )
         _SwSampler.calculate_attributes.assert_called_once_with(
             "foo",
@@ -547,7 +551,7 @@ class Test_SwSampler():
             "my_decision",
             "my_trace_state",
             "my_span_context",
-            mock_xtraceoptions,
+            expected_xto,
         )
         _SwSampler.otel_decision_from_liboboe.assert_called_once_with(
             "my_decision"
@@ -555,6 +559,19 @@ class Test_SwSampler():
         assert sampling_result.attributes == "my_attributes"
         assert sampling_result.decision == Decision.RECORD_AND_SAMPLE
         assert sampling_result.trace_state == "my_trace_state"
+
+    def test_should_sample_no_parent_context(
+        self,
+        mocker,
+        fixture_swsampler,
+    ):
+        mock_parent_context = None
+        self.should_sample_test_helper(
+            mocker,
+            fixture_swsampler,
+            mock_parent_context,
+            "not-used",
+        )
 
     def test_should_sample_yes_parent_context(
         self,
@@ -569,72 +586,12 @@ class Test_SwSampler():
                 )
             }
         )
-        mock_get_current_span = mocker.patch("solarwinds_apm.sampler.get_current_span")
-        mock_get_current_span.configure_mock(
-            return_value=mocker.Mock(
-                **{
-                    "get_span_context.return_value": "my_span_context",
-                }
-            )
-        )
-        mock_xtraceoptions_cls = mocker.patch(
-            "solarwinds_apm.sampler.XTraceOptions"
-        )
-        mock_xtraceoptions = mocker.Mock()
-        mock_xtraceoptions_cls.configure_mock(
-            return_value=mock_xtraceoptions
-        )
-        mocker.patch(
-            "solarwinds_apm.sampler._SwSampler.calculate_liboboe_decision",
-            return_value="my_decision"
-        )
-        mocker.patch(
-            "solarwinds_apm.sampler._SwSampler.calculate_trace_state",
-            return_value="my_trace_state"
-        )
-        mocker.patch(
-            "solarwinds_apm.sampler._SwSampler.calculate_attributes",
-            return_value="my_attributes"
-        )
-        mocker.patch(
-            "solarwinds_apm.sampler._SwSampler.otel_decision_from_liboboe",
-            return_value=Decision.RECORD_AND_SAMPLE
-        )
-
-        sampling_result = fixture_swsampler.should_sample(
-            parent_context=mock_parent_context,
-            trace_id=123,
-            name="foo",
-            attributes={"foo": "bar"}
-        )
-
-        _SwSampler.calculate_liboboe_decision.assert_called_once_with(
-            "my_span_context",
-            'foo',
-            None,
-            {'foo': 'bar'},
-            "foo_xto"
-        )
-        _SwSampler.calculate_trace_state.assert_called_once_with(
-            "my_decision",
-            "my_span_context",
+        self.should_sample_test_helper(
+            mocker,
+            fixture_swsampler,
+            mock_parent_context,
             "foo_xto",
         )
-        _SwSampler.calculate_attributes.assert_called_once_with(
-            "foo",
-            {"foo": "bar"},
-            "my_decision",
-            "my_trace_state",
-            "my_span_context",
-            "foo_xto",
-        )
-        _SwSampler.otel_decision_from_liboboe.assert_called_once_with(
-            "my_decision"
-        )
-        assert sampling_result.attributes == "my_attributes"
-        assert sampling_result.decision == Decision.RECORD_AND_SAMPLE
-        assert sampling_result.trace_state == "my_trace_state"
-
 
 class TestParentBasedSwSampler():
     def test_init(self, mocker):
