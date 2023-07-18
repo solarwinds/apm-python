@@ -46,4 +46,4 @@ jobs:
     - name: Open draft Pull Request for version bump
       run: gh pr create --draft --title "solarwinds-apm ${{ env.RELEASE_VERSION }}" --body "For PyPI release of solarwinds-apm ${{ env.RELEASE_VERSION }}. See also CHANGELOG.md."
       env:
-        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        GITHUB_TOKEN: ${{secrets.APM_CI_GHA_GITHUB_TOKEN}}
