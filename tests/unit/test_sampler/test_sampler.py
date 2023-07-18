@@ -90,6 +90,18 @@ def fixture_xtraceoptions_unsigned_tt(mocker):
     options.ignored = ["baz", "qux"]
     return options
 
+@pytest.fixture(name="mock_xtraceoptions_no_response")
+def fixture_xtraceoptions_no_response(mocker):
+    options = mocker.Mock()
+    options.include_response = False
+    return options
+
+@pytest.fixture(name="mock_xtraceoptions_yes_response")
+def fixture_xtraceoptions_yes_response(mocker):
+    options = mocker.Mock()
+    options.include_response = True
+    return options
+
 # Other Fixtures, manually used =====================================
 
 @pytest.fixture(name="decision_auth_valid_sig")
@@ -433,7 +445,6 @@ class Test_SwSampler():
 
     def test_calculate_trace_state_root_span(
         self,
-        mocker,
         fixture_swsampler,
         decision_auth_valid_sig,
         parent_span_context_invalid
@@ -443,6 +454,43 @@ class Test_SwSampler():
             parent_span_context_invalid
         )
         assert len(actual_trace_state.items()) == 0
+
+    def test_calculate_trace_state_root_span_no_xtraceoptions_response(
+        self,
+        fixture_swsampler,
+        decision_auth_valid_sig,
+        parent_span_context_invalid,
+        mock_xtraceoptions_no_response
+    ):
+        actual_trace_state = fixture_swsampler.calculate_trace_state(
+            decision_auth_valid_sig,
+            parent_span_context_invalid,
+            mock_xtraceoptions_no_response
+        )
+        assert len(actual_trace_state.items()) == 0
+
+    def test_calculate_trace_state_root_span_yes_xtraceoptions_response(
+        self,
+        mocker,
+        fixture_swsampler,
+        decision_auth_valid_sig,
+        parent_span_context_invalid,
+        mock_xtraceoptions_yes_response
+    ):
+        mocker.patch(
+            "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
+            return_value="bar"
+        )
+        expected_trace_state = TraceState([
+            ["xtrace_options_response", "bar"]
+        ])
+        actual_trace_state = fixture_swsampler.calculate_trace_state(
+            decision_auth_valid_sig,
+            parent_span_context_invalid,
+            mock_xtraceoptions_yes_response
+        )
+        assert len(actual_trace_state.items()) == 1
+        assert expected_trace_state.get("xtrace_options_response") == actual_trace_state.get("xtrace_options_response")
 
     def test_calculate_trace_state_is_remote_create(
         self,

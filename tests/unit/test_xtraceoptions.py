@@ -19,6 +19,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+        assert not xto.include_response
 
     # options_header NOT stored unless signature provided
     def test_init_xtraceoptions_only(self):
@@ -30,6 +31,20 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+        assert xto.include_response
+
+    # include_response is False if no x-trace-options header
+    # signature is still stored
+    def test_init_signature_only(self):
+        xto = XTraceOptions("", "bar")
+        assert xto.ignored == []
+        assert xto.options_header == ""
+        assert xto.signature == "bar"
+        assert xto.custom_kvs == {}
+        assert xto.sw_keys == ""
+        assert xto.trigger_trace == 0
+        assert xto.timestamp == 0
+        assert not xto.include_response
 
     def test_init_xtraceoption_and_signature(self):
         xto = XTraceOptions("foo", "bar")
@@ -40,16 +55,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
-
-    def test_init_signature_still_stored_without_options(self):
-        xto = XTraceOptions("", "bar")
-        assert xto.ignored == []
-        assert xto.options_header == ""
-        assert xto.signature == "bar"
-        assert xto.custom_kvs == {}
-        assert xto.sw_keys == ""
-        assert xto.trigger_trace == 0
-        assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_tt_key_valid(self):
         xto = XTraceOptions("trigger-trace", "bar")
@@ -60,6 +66,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 1
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_tt_key_ignored(self):
         xto = XTraceOptions("trigger-trace=1", "bar")
@@ -70,6 +77,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_swkeys_key_value_strip(self):
         xto = XTraceOptions("sw-keys=   foo:key   ", "bar")
@@ -80,6 +88,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == "foo:key"
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_swkeys_containing_semicolon_ignore_after(self):
         xto = XTraceOptions(
@@ -93,6 +102,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == "check-id:check-1013,website-id"
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_custom_key_match_stored_in_options_header_and_custom_kvs(self):
         xto = XTraceOptions("custom-awesome-key=foo", "bar")
@@ -103,6 +113,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_custom_key_match_stored_in_options_header_and_custom_kvs_strip(self):
         xto = XTraceOptions(
@@ -116,6 +127,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_custom_key_match_but_no_value_ignored(self):
         xto = XTraceOptions("custom-no-value", "bar")
@@ -126,6 +138,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_custom_key_match_equals_in_value_ok(self):
         xto = XTraceOptions(
@@ -139,6 +152,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_custom_key_spaces_in_key_not_allowed(self):
         xto = XTraceOptions(
@@ -152,6 +166,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_ts_valid(self):
         xto = XTraceOptions("ts=12345", "bar")
@@ -162,6 +177,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 12345
+        assert xto.include_response
 
     def test_init_ts_ignored(self):
         xto = XTraceOptions("ts=incorrect", "bar")
@@ -172,6 +188,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_other_key_ignored(self):
         xto = XTraceOptions("customer-key=foo", "bar")
@@ -182,6 +199,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 0
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_xtraceoptions_documented_example_1(self):
         xto = XTraceOptions(
@@ -195,6 +213,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == "check-id:check-1013,website-id:booking-demo"
         assert xto.trigger_trace == 1
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_xtraceoptions_documented_example_2(self):
         xto = XTraceOptions(
@@ -208,6 +227,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 1
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_xtraceoptions_documented_example_3(self):
         xto = XTraceOptions(
@@ -221,6 +241,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == "check-id:check-1013,website-id:booking-demo"
         assert xto.trigger_trace == 1
         assert xto.timestamp == 1564432370
+        assert xto.include_response
 
     def test_init_all_options_strip(self):
         xto = XTraceOptions(
@@ -237,6 +258,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == "029734wr70:9wqj21,0d9j1"
         assert xto.trigger_trace == 1
         assert xto.timestamp == 12345
+        assert xto.include_response
 
     def test_init_all_options_handle_sequential_semis(self):
         xto = XTraceOptions(
@@ -253,6 +275,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == "02973r70:1b2a3"
         assert xto.trigger_trace == 1
         assert xto.timestamp == 12345
+        assert xto.include_response
 
     def test_init_keep_first_repeated_key_value(self):
         xto = XTraceOptions(
@@ -268,6 +291,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == "keep_this"
         assert xto.trigger_trace == 0
         assert xto.timestamp == 123
+        assert xto.include_response
 
     def test_init_keep_values_containing_equals_char(self):
         xto = XTraceOptions(
@@ -284,6 +308,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == "g049sj345=0spd"
         assert xto.trigger_trace == 1
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_single_quotes_are_ok(self):
         xto = XTraceOptions(
@@ -300,6 +325,7 @@ class TestXTraceOptions():
         assert xto.sw_keys == ""
         assert xto.trigger_trace == 1
         assert xto.timestamp == 0
+        assert xto.include_response
 
     def test_init_multiple_missing_values_and_semis(self):
         xto = XTraceOptions(
@@ -315,3 +341,4 @@ class TestXTraceOptions():
         assert xto.sw_keys == "02973r70:9wqj21,0d9j1"
         assert xto.trigger_trace == 1
         assert xto.timestamp == 0
+        assert xto.include_response

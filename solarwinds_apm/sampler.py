@@ -332,9 +332,9 @@ class _SwSampler(Sampler):
             trace_state = TraceState()
         else:
             trace_state = parent_span_context.trace_state
-        # Update with x-trace-options-response.
+        # Update with x-trace-options-response if applicable
         # Not a propagated header, so always add at should_sample
-        if xtraceoptions:
+        if xtraceoptions and xtraceoptions.include_response:
             trace_state = trace_state.add(
                 INTL_SWO_X_OPTIONS_RESPONSE_KEY,
                 self.create_xtraceoptions_response_value(

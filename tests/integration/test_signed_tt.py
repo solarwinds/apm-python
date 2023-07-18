@@ -910,7 +910,7 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
 
         # Verify x-trace-options-response response header not present
         # because no x-trace-options-header
-        # assert "x-trace-options-response" not in resp.headers  # !!!
+        assert "x-trace-options-response" not in resp.headers
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()

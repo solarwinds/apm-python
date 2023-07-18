@@ -38,6 +38,7 @@ class XTraceOptions:
         self.sw_keys = ""
         self.trigger_trace = 0
         self.timestamp = 0
+        self.include_response = False
 
         if signature_header:
             self.signature = signature_header
@@ -46,6 +47,9 @@ class XTraceOptions:
             self.options_header = xtraceoptions_header
 
         if xtraceoptions_header:
+            # If x-trace-options header given, set response header
+            self.include_response = True
+
             traceoptions = re.split(r";+", xtraceoptions_header)
             for option in traceoptions:
                 # KVs (e.g. sw-keys or custom-key1) are assigned by equals
