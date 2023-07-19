@@ -90,6 +90,18 @@ def fixture_xtraceoptions_unsigned_tt(mocker):
     options.ignored = ["baz", "qux"]
     return options
 
+@pytest.fixture(name="mock_xtraceoptions_no_response")
+def fixture_xtraceoptions_no_response(mocker):
+    options = mocker.Mock()
+    options.include_response = False
+    return options
+
+@pytest.fixture(name="mock_xtraceoptions_yes_response")
+def fixture_xtraceoptions_yes_response(mocker):
+    options = mocker.Mock()
+    options.include_response = True
+    return options
+
 # Other Fixtures, manually used =====================================
 
 @pytest.fixture(name="decision_auth_valid_sig")
@@ -431,66 +443,54 @@ class Test_SwSampler():
         )
         assert response_val == "trigger-trace####trigger-tracing-disabled;ignored####baz....qux"
 
-    def test_create_new_trace_state(
-        self,
-        mocker,
-        fixture_swsampler,
-        decision_auth_valid_sig,
-        parent_span_context_valid_remote,
-        mock_xtraceoptions_signed_tt
-    ):
-        mocker.patch(
-            "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
-            return_value="bar"
-        )
-        trace_state = fixture_swsampler.create_new_trace_state(
-            decision_auth_valid_sig,
-            parent_span_context_valid_remote,
-            mock_xtraceoptions_signed_tt
-        )
-        assert trace_state == TraceState([
-            ["sw", "1111222233334444-01"],
-            ["xtrace_options_response", "bar"]
-        ])
-
-    def test_create_new_trace_state_without_tt(
-        self,
-        mocker,
-        fixture_swsampler,
-        decision_auth_valid_sig,
-        parent_span_context_valid_remote,
-        mock_xtraceoptions_signed_without_tt
-    ):
-        mocker.patch(
-            "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
-            return_value="bar"
-        )
-        trace_state = fixture_swsampler.create_new_trace_state(
-            decision_auth_valid_sig,
-            parent_span_context_valid_remote,
-            mock_xtraceoptions_signed_without_tt
-        )
-        assert trace_state == TraceState([
-            ["sw", "1111222233334444-01"],
-            ["xtrace_options_response", "bar"]
-        ])
-
     def test_calculate_trace_state_root_span(
         self,
-        mocker,
         fixture_swsampler,
         decision_auth_valid_sig,
         parent_span_context_invalid
     ):
-        mocker.patch(
-            "solarwinds_apm.sampler._SwSampler.create_new_trace_state",
-            return_value="bar"
-        )
-        trace_state = fixture_swsampler.calculate_trace_state(
+        actual_trace_state = fixture_swsampler.calculate_trace_state(
             decision_auth_valid_sig,
             parent_span_context_invalid
         )
-        assert trace_state == "bar"
+        assert len(actual_trace_state.items()) == 0
+
+    def test_calculate_trace_state_root_span_no_xtraceoptions_response(
+        self,
+        fixture_swsampler,
+        decision_auth_valid_sig,
+        parent_span_context_invalid,
+        mock_xtraceoptions_no_response
+    ):
+        actual_trace_state = fixture_swsampler.calculate_trace_state(
+            decision_auth_valid_sig,
+            parent_span_context_invalid,
+            mock_xtraceoptions_no_response
+        )
+        assert len(actual_trace_state.items()) == 0
+
+    def test_calculate_trace_state_root_span_yes_xtraceoptions_response(
+        self,
+        mocker,
+        fixture_swsampler,
+        decision_auth_valid_sig,
+        parent_span_context_invalid,
+        mock_xtraceoptions_yes_response
+    ):
+        mocker.patch(
+            "solarwinds_apm.sampler._SwSampler.create_xtraceoptions_response_value",
+            return_value="bar"
+        )
+        expected_trace_state = TraceState([
+            ["xtrace_options_response", "bar"]
+        ])
+        actual_trace_state = fixture_swsampler.calculate_trace_state(
+            decision_auth_valid_sig,
+            parent_span_context_invalid,
+            mock_xtraceoptions_yes_response
+        )
+        assert len(actual_trace_state.items()) == 1
+        assert expected_trace_state.get("xtrace_options_response") == actual_trace_state.get("xtrace_options_response")
 
     def test_calculate_trace_state_is_remote_create(
         self,
@@ -499,15 +499,11 @@ class Test_SwSampler():
         decision_auth_valid_sig,
         parent_span_context_valid_remote_no_tracestate
     ):
-        mocker.patch(
-            "solarwinds_apm.sampler._SwSampler.create_new_trace_state",
-            return_value="bar"
-        )
-        trace_state = fixture_swsampler.calculate_trace_state(
+        actual_trace_state = fixture_swsampler.calculate_trace_state(
             decision_auth_valid_sig,
             parent_span_context_valid_remote_no_tracestate
         )
-        assert trace_state == "bar"
+        assert len(actual_trace_state.items()) == 0
 
     def test_calculate_trace_state_is_remote_update(
         self,
@@ -524,20 +520,24 @@ class Test_SwSampler():
         assert parent_span_context_valid_remote.trace_state == TraceState([
             ["sw", "123"]
         ])
-        trace_state = fixture_swsampler.calculate_trace_state(
+        expected_trace_state = TraceState([
+            ["sw", "123"],
+            ["xtrace_options_response", "bar"]
+        ])
+        actual_trace_state = fixture_swsampler.calculate_trace_state(
             decision_auth_valid_sig,
             parent_span_context_valid_remote,
             mock_xtraceoptions_signed_tt,
         )
-        assert trace_state == TraceState([
-            ["sw", "1111222233334444-01"],
-            ["xtrace_options_response", "bar"]
-        ])
+        assert expected_trace_state.get("sw") == actual_trace_state.get("sw")
+        assert expected_trace_state.get("xtrace_options_response") == actual_trace_state.get("xtrace_options_response")
 
-    def test_should_sample(
+    def should_sample_test_helper(
         self,
         mocker,
         fixture_swsampler,
+        parent_context,
+        expected_xto,
     ):
         mock_get_current_span = mocker.patch("solarwinds_apm.sampler.get_current_span")
         mock_get_current_span.configure_mock(
@@ -571,8 +571,11 @@ class Test_SwSampler():
             return_value=Decision.RECORD_AND_SAMPLE
         )
 
+        if not parent_context:
+            expected_xto = mock_xtraceoptions
+
         sampling_result = fixture_swsampler.should_sample(
-            parent_context=mocker.MagicMock(),
+            parent_context=parent_context,
             trace_id=123,
             name="foo",
             attributes={"foo": "bar"}
@@ -583,12 +586,12 @@ class Test_SwSampler():
             'foo',
             None,
             {'foo': 'bar'},
-            mock_xtraceoptions
+            expected_xto,
         )
         _SwSampler.calculate_trace_state.assert_called_once_with(
             "my_decision",
             "my_span_context",
-            mock_xtraceoptions
+            expected_xto,
         )
         _SwSampler.calculate_attributes.assert_called_once_with(
             "foo",
@@ -596,7 +599,7 @@ class Test_SwSampler():
             "my_decision",
             "my_trace_state",
             "my_span_context",
-            mock_xtraceoptions
+            expected_xto,
         )
         _SwSampler.otel_decision_from_liboboe.assert_called_once_with(
             "my_decision"
@@ -605,6 +608,38 @@ class Test_SwSampler():
         assert sampling_result.decision == Decision.RECORD_AND_SAMPLE
         assert sampling_result.trace_state == "my_trace_state"
 
+    def test_should_sample_no_parent_context(
+        self,
+        mocker,
+        fixture_swsampler,
+    ):
+        mock_parent_context = None
+        self.should_sample_test_helper(
+            mocker,
+            fixture_swsampler,
+            mock_parent_context,
+            "not-used",
+        )
+
+    def test_should_sample_yes_parent_context(
+        self,
+        mocker,
+        fixture_swsampler,
+    ):
+        mock_parent_context = mocker.Mock()
+        mock_parent_context.configure_mock(
+            **{
+                "get": mocker.Mock(
+                    return_value="foo_xto"
+                )
+            }
+        )
+        self.should_sample_test_helper(
+            mocker,
+            fixture_swsampler,
+            mock_parent_context,
+            "foo_xto",
+        )
 
 class TestParentBasedSwSampler():
     def test_init(self, mocker):

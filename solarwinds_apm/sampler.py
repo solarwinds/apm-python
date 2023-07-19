@@ -31,6 +31,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_COMMA_W3C_SANITIZED,
     INTL_SWO_EQUALS_W3C_SANITIZED,
     INTL_SWO_TRACESTATE_KEY,
+    INTL_SWO_X_OPTIONS_KEY,
     INTL_SWO_X_OPTIONS_RESPONSE_KEY,
 )
 from solarwinds_apm.traceoptions import XTraceOptions
@@ -316,79 +317,32 @@ class _SwSampler(Sampler):
 
         return ";".join(response)
 
-    def create_new_trace_state(
-        self,
-        decision: dict,
-        parent_span_context: SpanContext,
-        xtraceoptions: Optional[XTraceOptions] = None,
-    ) -> TraceState:
-        """Creates new TraceState based on trace decision, parent span id,
-        and x-trace-options if provided"""
-        trace_state = TraceState(
-            [
-                (
-                    INTL_SWO_TRACESTATE_KEY,
-                    W3CTransformer.sw_from_span_and_decision(
-                        parent_span_context.span_id,
-                        W3CTransformer.trace_flags_from_int(
-                            decision["do_sample"]
-                        ),
-                    ),
-                )
-            ]
-        )
-        if xtraceoptions and xtraceoptions.options_header:
-            trace_state = trace_state.add(
-                INTL_SWO_X_OPTIONS_RESPONSE_KEY,
-                self.create_xtraceoptions_response_value(
-                    decision, parent_span_context, xtraceoptions
-                ),
-            )
-        logger.debug("Created new trace_state: %s", trace_state)
-        return trace_state
-
     def calculate_trace_state(
         self,
         decision: dict,
         parent_span_context: SpanContext,
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> TraceState:
-        """Calculates trace_state based on parent span context, trace decision,
-        and x-trace-options if provided -- for non-existent or remote parent
-        spans only."""
+        """Calculates trace_state based on x-trace-options if provided -- for non-existent or remote parent spans only."""
         # No valid parent i.e. root span, or parent is remote
-        if not parent_span_context.is_valid:
-            trace_state = self.create_new_trace_state(
-                decision, parent_span_context, xtraceoptions
-            )
+        if (
+            not parent_span_context
+            or not parent_span_context.is_valid
+            or not parent_span_context.trace_state
+        ):
+            trace_state = TraceState()
         else:
             trace_state = parent_span_context.trace_state
-            if not trace_state:
-                # tracestate nonexistent/non-parsable
-                trace_state = self.create_new_trace_state(
+        # Update with x-trace-options-response if applicable
+        # Not a propagated header, so always add at should_sample
+        if xtraceoptions and xtraceoptions.include_response:
+            trace_state = trace_state.add(
+                INTL_SWO_X_OPTIONS_RESPONSE_KEY,
+                self.create_xtraceoptions_response_value(
                     decision, parent_span_context, xtraceoptions
-                )
-            else:
-                # Update trace_state with span_id and sw trace_flags
-                trace_state = trace_state.update(
-                    INTL_SWO_TRACESTATE_KEY,
-                    W3CTransformer.sw_from_span_and_decision(
-                        parent_span_context.span_id,  # NOTE: This is a placeholder before propagator inject
-                        W3CTransformer.trace_flags_from_int(
-                            decision["do_sample"]
-                        ),
-                    ),
-                )
-                # Update trace_state with x-trace-options-response
-                # Not a propagated header, so always an add
-                if xtraceoptions and xtraceoptions.options_header:
-                    trace_state = trace_state.add(
-                        INTL_SWO_X_OPTIONS_RESPONSE_KEY,
-                        self.create_xtraceoptions_response_value(
-                            decision, parent_span_context, xtraceoptions
-                        ),
-                    )
-                logger.debug("Updated trace_state: %s", trace_state)
+                ),
+            )
+        logger.debug("Calculated trace_state: %s", trace_state)
         return trace_state
 
     def add_tracestate_capture_to_attributes_dict(
@@ -541,7 +495,13 @@ class _SwSampler(Sampler):
         parent_span_context = get_current_span(
             parent_context
         ).get_span_context()
-        xtraceoptions = XTraceOptions(parent_context)
+
+        if not parent_context or not parent_context.get(
+            INTL_SWO_X_OPTIONS_KEY
+        ):
+            xtraceoptions = XTraceOptions()
+        else:
+            xtraceoptions = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
 
         liboboe_decision = self.calculate_liboboe_decision(
             parent_span_context, name, kind, attributes, xtraceoptions

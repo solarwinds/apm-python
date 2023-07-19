@@ -128,11 +128,11 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert "{:032x}".format(span_client.context.trace_id) == trace_id
 
         # Check service entry span tracestate has `sw` key
-        # In this test it should be span_id, traceflags from extracted traceparent
+        # In this test it should be tracestate_span_id, traceflags from extracted traceparent
         expected_trace_state = trace_api.TraceState([
-            ("sw", "{}-{}".format(span_id, trace_flags))
+            ("sw", "{}-{}".format(tracestate_span, trace_flags))
         ])
-        assert span_server.context.trace_state == expected_trace_state
+        assert span_server.context.trace_state.get("sw") == expected_trace_state.get("sw")
 
         # Check service entry span attributes
         #   :present:
@@ -150,11 +150,11 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert not "SWKeys" in span_server.attributes
 
         # Check outgoing request tracestate has `sw` key
-        # In this test it should also be span_id, traceflags from extracted traceparent
+        # In this test it should also be tracestate_span_id, traceflags from extracted traceparent
         expected_trace_state = trace_api.TraceState([
-            ("sw", "{}-{}".format(span_id, trace_flags))
+            ("sw", "{}-{}".format(tracestate_span, trace_flags))
         ])
-        assert span_client.context.trace_state == expected_trace_state
+        assert span_client.context.trace_state.get("sw") == expected_trace_state.get("sw")
 
         # Check outgoing request span attributes
         #   :absent:

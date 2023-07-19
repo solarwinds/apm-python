@@ -6,14 +6,6 @@
 
 import logging
 import re
-import typing
-
-from opentelemetry.context.context import Context
-
-from solarwinds_apm.apm_constants import (
-    INTL_SWO_SIGNATURE_KEY,
-    INTL_SWO_X_OPTIONS_KEY,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -31,28 +23,34 @@ class XTraceOptions:
     # pylint: disable=too-many-branches,too-many-statements
     def __init__(
         self,
-        context: typing.Optional[Context] = None,
+        xtraceoptions_header: str = "",
+        signature_header: str = "",
     ):
         """
         Args:
-          context: OTel context that may contain OTEL_CONTEXT_SW_OPTIONS_KEY,OTEL_CONTEXT_SW_SIGNATURE_KEY
+          xtraceoptions_header: extracted request header value
+          signature_header: extracted request header value
         """
         self.ignored = []
         self.options_header = ""
-        self.signature = None
+        self.signature = ""
         self.custom_kvs = {}
         self.sw_keys = ""
         self.trigger_trace = 0
         self.timestamp = 0
+        self.include_response = False
 
-        if not context:
-            return
-        options_header = context.get(INTL_SWO_X_OPTIONS_KEY, "")
-        # store original header for sample decision later
-        self.options_header = options_header
+        if signature_header:
+            self.signature = signature_header
+            # store original header for c-lib sample decision later
+            # only if signature_header exists
+            self.options_header = xtraceoptions_header
 
-        if options_header:
-            traceoptions = re.split(r";+", options_header)
+        if xtraceoptions_header:
+            # If x-trace-options header given, set response header
+            self.include_response = True
+
+            traceoptions = re.split(r";+", xtraceoptions_header)
             for option in traceoptions:
                 # KVs (e.g. sw-keys or custom-key1) are assigned by equals
                 option_kv = option.split("=", 1)
@@ -117,7 +115,3 @@ class XTraceOptions:
                         "Some x-trace-options were ignored: %s",
                         ", ".join(self.ignored),
                     )
-
-        options_signature = context.get(INTL_SWO_SIGNATURE_KEY, None)
-        if options_signature:
-            self.signature = options_signature
