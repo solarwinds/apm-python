@@ -94,7 +94,7 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         span_client = spans[0]
         assert span_server.name == "/test_trace/"
         assert span_server.kind == trace_api.SpanKind.SERVER
-        assert span_client.name == "HTTP GET"
+        assert span_client.name == "GET"
         assert span_client.kind == trace_api.SpanKind.CLIENT
 
         # Check root span tracestate has no `sw` key

@@ -137,7 +137,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         span_client = spans[0]
         assert span_server.name == "/test_trace/"
         assert span_server.kind == trace_api.SpanKind.SERVER
-        assert span_client.name == "HTTP GET"
+        assert span_client.name == "GET"
         assert span_client.kind == trace_api.SpanKind.CLIENT
 
         # Check spans' trace_id, which should match traceparent of original request
@@ -435,7 +435,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         span_client = spans[0]
         assert span_server.name == "/test_trace/"
         assert span_server.kind == trace_api.SpanKind.SERVER
-        assert span_client.name == "HTTP GET"
+        assert span_client.name == "GET"
         assert span_client.kind == trace_api.SpanKind.CLIENT
 
         # Check spans' trace_id, which should match traceparent of original request
@@ -706,7 +706,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         span_client = spans[0]
         assert span_server.name == "/test_trace/"
         assert span_server.kind == trace_api.SpanKind.SERVER
-        assert span_client.name == "HTTP GET"
+        assert span_client.name == "GET"
         assert span_client.kind == trace_api.SpanKind.CLIENT
 
         # Check root span tracestate has `xtrace_options_response` key but no `sw` key
