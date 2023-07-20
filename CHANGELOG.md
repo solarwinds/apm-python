@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.13.0...HEAD)
 
+## [0.14.0.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.14.0) - 2023-07-20
+### Changed
+- Refactored propagator and sampler ([#175](https://github.com/solarwindscloud/solarwinds-apm-python/pull/175))
+- Renamed CI secrets ([#176](https://github.com/solarwindscloud/solarwinds-apm-python/pull/176))
+- Updated to liboboe version 12.4.0 ([#177](https://github.com/solarwindscloud/solarwinds-apm-python/pull/177))
+- OpenTelemetry API/SDK and instrumentation 1.19.0/0.40b0 ([#178](https://github.com/solarwindscloud/solarwinds-apm-python/pull/178))
+
+### Removed
+- Removed PackageCloud build workflows ([#179](https://github.com/solarwindscloud/solarwinds-apm-python/pull/179))
+
 ## [0.13.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.13.0) - 2023-07-11
 ### Added
 - Add OTEL_SQLCOMMENTER_ENABLED for some instrumentation libraries ([#169](https://github.com/solarwindscloud/solarwinds-apm-python/pull/169))
