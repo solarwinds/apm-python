@@ -13,7 +13,6 @@ set -e
 TEST_MODES=(
     "local"
     "testpypi"
-    "packagecloud"
     "pypi"
 )
 if [ -z "$MODE" ]
@@ -24,7 +23,7 @@ then
 fi
 if [[ ! " ${TEST_MODES[*]} " =~ ${MODE} ]]
 then
-  echo "FAILED: Did not provide valid MODE for check_wheel test. Must be one of: testpypi (default), local, packagecloud, pypi."
+  echo "FAILED: Did not provide valid MODE for check_wheel test. Must be one of: testpypi (default), local, pypi."
   exit 1
 else
   echo "Using provided MODE=$MODE for check_wheel test."
@@ -95,9 +94,6 @@ function get_wheel(){
         if [ "$MODE" == "testpypi" ]
         then
             pip_options+=(--extra-index-url https://test.pypi.org/simple/)
-        elif [ "$MODE" == "packagecloud" ]
-        then
-            curl -s https://packagecloud.io/install/repositories/solarwinds/solarwinds-apm-python/script.python.sh | bash
         fi
 
         if [ -z "$SOLARWINDS_APM_VERSION" ]

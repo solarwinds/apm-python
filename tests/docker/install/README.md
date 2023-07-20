@@ -6,7 +6,6 @@ These files provide containers and scripts to test installation of packaged `sol
    * `export MODE=local` (default; must be built in project `dist/`)
    * `export MODE=testpypi`
    * `export MODE=pypi`
-   * `export MODE=packagecloud`
 2. Optionally set the APM library version to install, e.g. `export SOLARWINDS_APM_VERSION=0.6.0`. If not provided, the install tests will use what's set in `version.py` (local) or the latest version (registry).
 3. Set these additional environment variables, required to create and export test traces:
    * `SW_APM_COLLECTOR_PROD`

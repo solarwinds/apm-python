@@ -11,12 +11,11 @@ on:
     inputs:
       install-registry:
         required: true
-        description: 'Registry used for install tests, e.g. pypi, testpypi, packagecloud'
+        description: 'Registry used for install tests, one of: pypi, testpypi'
         type: choice
         default: 'pypi'
         options:
         - pypi
-        - packagecloud
         - testpypi
       solarwinds-version:
         required: false
