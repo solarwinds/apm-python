@@ -6,6 +6,7 @@
 
 """Module to configure OpenTelemetry to work with SolarWinds backend"""
 
+import logging
 from os import environ
 
 from opentelemetry.environment_variables import (
@@ -23,6 +24,8 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class SolarWindsDistro(BaseDistro):
@@ -54,6 +57,12 @@ class SolarWindsDistro(BaseDistro):
             kwargs["enable_commenter"] = True
             # instrumentation for Django ORM
             kwargs["is_sql_commentor_enabled"] = True
+
+            # Assumes can be empty and any KVs not used
+            # by current library are ignored
+            # Note: Django ORM accepts options in settings.py
+            # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
+            kwargs["commenter_options"] = self.detect_commenter_options()
         instrumentor: BaseInstrumentor = entry_point.load()
         instrumentor().instrument(**kwargs)
 
@@ -65,3 +74,37 @@ class SolarWindsDistro(BaseDistro):
         if enable_commenter.lower() == "true":
             return True
         return False
+
+    def detect_commenter_options(self):
+        """Returns commenter options dict parsed from environment, if any"""
+        commenter_opts = {}
+        commenter_opts_env = environ.get("OTEL_SQLCOMMENTER_OPTIONS")
+        if commenter_opts_env:
+            for opt_item in commenter_opts_env.split(","):
+                opt_k = ""
+                opt_v = ""
+                try:
+                    opt_k, opt_v = opt_item.split("=", maxsplit=1)
+                except ValueError as exc:
+                    logger.warning(
+                        "Invalid key-value pair for sqlcommenter option %s: %s",
+                        opt_item,
+                        exc,
+                    )
+                opt_v_bool = self._convert_to_bool(opt_v.strip())
+                if opt_v_bool is not None:
+                    commenter_opts[opt_k.strip()] = opt_v_bool
+
+        return commenter_opts
+
+    # TODO Refactor as this also exists in ApmConfig
+    def _convert_to_bool(self, val):
+        """Converts given value to boolean value if bool or str representation, else None"""
+        if isinstance(val, bool):
+            return val
+        if isinstance(val, str):
+            if val.lower() == "true":
+                return True
+            if val.lower() == "false":
+                return False
+        return None
