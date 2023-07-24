@@ -53,7 +53,7 @@ class SolarWindsDistro(BaseDistro):
         """
         # Set enable for sqlcommenter. Assumes kwargs ignored if not
         # implemented for current instrumentation library
-        if self.enable_commenter(entry_point, **kwargs):
+        if self.enable_commenter():
             # instrumentation for Flask ORM, sqlalchemy, psycopg2
             kwargs["enable_commenter"] = True
             # instrumentation for Django ORM
@@ -67,7 +67,7 @@ class SolarWindsDistro(BaseDistro):
         instrumentor: BaseInstrumentor = entry_point.load()
         instrumentor().instrument(**kwargs)
 
-    def enable_commenter(self, entry_point: EntryPoint, **kwargs) -> bool:
+    def enable_commenter(self) -> bool:
         """Enable sqlcommenter feature, if implemented"""
         # TODO: Update if changed in OTel spec:
         # https://github.com/open-telemetry/opentelemetry-specification/issues/3560
