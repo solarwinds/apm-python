@@ -506,7 +506,7 @@ class SolarWindsApmConfig:
             return
 
         # agent_enabled is special
-        cnf_agent_enabled = self._convert_to_bool(
+        cnf_agent_enabled = self.convert_to_bool(
             cnf_dict.get(_snake_to_camel_case("agent_enabled"))
         )
         if cnf_agent_enabled is not None:
@@ -587,7 +587,7 @@ class SolarWindsApmConfig:
     def update_with_env_var(self) -> None:
         """Update the settings with environment variables."""
         # agent_enabled is special
-        env_agent_enabled = self._convert_to_bool(
+        env_agent_enabled = self.convert_to_bool(
             os.environ.get("SW_APM_AGENT_ENABLED")
         )
         if env_agent_enabled is not None:
@@ -609,7 +609,7 @@ class SolarWindsApmConfig:
         # TODO Implement in-code config with kwargs after alpha
 
     @classmethod
-    def _convert_to_bool(cls, val):
+    def convert_to_bool(cls, val):
         """Converts given value to boolean value if bool or str representation, else None"""
         if isinstance(val, bool):
             return val
@@ -698,7 +698,7 @@ class SolarWindsApmConfig:
                 apm_logging.set_sw_log_level(val)
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
-                    val = self._convert_to_bool(val)
+                    val = self.convert_to_bool(val)
                 else:
                     val = type(sub_dict[keys[-1]])(val)
                 sub_dict[keys[-1]] = val

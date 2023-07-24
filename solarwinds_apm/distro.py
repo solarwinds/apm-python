@@ -20,11 +20,11 @@ from opentelemetry.instrumentation.logging.environment_variables import (
 )
 from pkg_resources import EntryPoint
 
+from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
 )
-from solarwinds_apm.apm_config import SolarWindsApmConfig
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ class SolarWindsDistro(BaseDistro):
                         opt_item,
                         exc,
                     )
-                opt_v_bool = SolarWindsApmConfig._convert_to_bool(opt_v.strip())
+                opt_v_bool = SolarWindsApmConfig.convert_to_bool(opt_v.strip())
                 if opt_v_bool is not None:
                     commenter_opts[opt_k.strip()] = opt_v_bool
 

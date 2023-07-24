@@ -591,34 +591,34 @@ class TestSolarWindsApmConfig:
         )
         assert result == "valid_key_with:bar-service"
 
-    def test__convert_to_bool_bool_true(self):
+    def test_convert_to_bool_bool_true(self):
         test_config = apm_config.SolarWindsApmConfig()
-        assert test_config._convert_to_bool(True)
+        assert test_config.convert_to_bool(True)
 
-    def test__convert_to_bool_bool_false(self):
+    def test_convert_to_bool_bool_false(self):
         test_config = apm_config.SolarWindsApmConfig()
-        assert not test_config._convert_to_bool(False)
+        assert not test_config.convert_to_bool(False)
 
-    def test__convert_to_bool_int(self):
+    def test_convert_to_bool_int(self):
         test_config = apm_config.SolarWindsApmConfig()
-        assert test_config._convert_to_bool(0) is None
+        assert test_config.convert_to_bool(0) is None
 
-    def test__convert_to_bool_str_invalid(self):
+    def test_convert_to_bool_str_invalid(self):
         test_config = apm_config.SolarWindsApmConfig()
-        assert test_config._convert_to_bool("not-true-nor-false") is None
+        assert test_config.convert_to_bool("not-true-nor-false") is None
 
-    def test__convert_to_bool_str_true(self):
+    def test_convert_to_bool_str_true(self):
         test_config = apm_config.SolarWindsApmConfig()
-        assert test_config._convert_to_bool("true")
+        assert test_config.convert_to_bool("true")
 
-    def test__convert_to_bool_str_true_mixed_case(self):
+    def test_convert_to_bool_str_true_mixed_case(self):
         test_config = apm_config.SolarWindsApmConfig()
-        assert test_config._convert_to_bool("tRuE")
+        assert test_config.convert_to_bool("tRuE")
 
-    def test__convert_to_bool_str_false(self):
+    def test_convert_to_bool_str_false(self):
         test_config = apm_config.SolarWindsApmConfig()
-        assert not test_config._convert_to_bool("false")
+        assert not test_config.convert_to_bool("false")
 
-    def test__convert_to_bool_str_false_mixed_case(self):
+    def test_convert_to_bool_str_false_mixed_case(self):
         test_config = apm_config.SolarWindsApmConfig()
-        assert not test_config._convert_to_bool("fAlSE")
+        assert not test_config.convert_to_bool("fAlSE")
