@@ -24,6 +24,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
 )
+from solarwinds_apm.apm_config import SolarWindsApmConfig
 
 logger = logging.getLogger(__name__)
 
@@ -91,20 +92,8 @@ class SolarWindsDistro(BaseDistro):
                         opt_item,
                         exc,
                     )
-                opt_v_bool = self._convert_to_bool(opt_v.strip())
+                opt_v_bool = SolarWindsApmConfig._convert_to_bool(opt_v.strip())
                 if opt_v_bool is not None:
                     commenter_opts[opt_k.strip()] = opt_v_bool
 
         return commenter_opts
-
-    # TODO Refactor as this also exists in ApmConfig
-    def _convert_to_bool(self, val):
-        """Converts given value to boolean value if bool or str representation, else None"""
-        if isinstance(val, bool):
-            return val
-        if isinstance(val, str):
-            if val.lower() == "true":
-                return True
-            if val.lower() == "false":
-                return False
-        return None

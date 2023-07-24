@@ -608,7 +608,8 @@ class SolarWindsApmConfig:
         """Update the configuration settings with (in-code) keyword arguments"""
         # TODO Implement in-code config with kwargs after alpha
 
-    def _convert_to_bool(self, val):
+    @classmethod
+    def _convert_to_bool(cls, val):
         """Converts given value to boolean value if bool or str representation, else None"""
         if isinstance(val, bool):
             return val
