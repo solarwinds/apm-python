@@ -286,9 +286,6 @@ class SolarWindsSpanExporter(SpanExporter):
         self.reporter.sendReport(evt, False)
 
     def _report_info_event(self, event) -> None:
-        print("Found info event")
-        print(dir(event))
-        print(event)
         evt = self.context.createEvent(int(event.timestamp / 1000))
         evt.addInfo("Label", "info")
         for attr_k, attr_v in event.attributes.items():
