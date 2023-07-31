@@ -7,7 +7,6 @@
 import logging
 import typing
 from re import split
-from urllib.parse import unquote_plus
 
 from opentelemetry import trace
 from opentelemetry.baggage.propagation import _format_baggage
@@ -131,8 +130,8 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         self,
         baggage_header: str,
     ) -> str:
-        """Removes values used for custom naming from baggage header created by
-        upstream baggage propagator, if present"""
+        """Removes values used for custom naming from baggage header created
+        by upstream W3CBaggagePropagator propagator, if present"""
         baggage_entries: list[str] = split(_DELIMITER_PATTERN, baggage_header)
         baggage_kvs = {}
         for entry in baggage_entries:
@@ -140,18 +139,23 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
                 e_name, e_value = entry.split("=", 1)
             except Exception:  # pylint: disable=broad-except
                 logger.warning(
-                    "Baggage list-member `%s` doesn't match the format; skipping",
+                    "Baggage list-member `%s` doesn't match the format; "
+                    "skipping injection",
                     entry,
                 )
                 continue
-            e_name = unquote_plus(e_name).strip()
+
+            # empty key/val
+            if not e_name or not e_value:
+                continue
+
             if e_name not in [
                 INTL_SWO_CURRENT_TRACE_ID,
                 INTL_SWO_CURRENT_SPAN_ID,
             ]:
-                e_value = unquote_plus(e_value).strip()
                 baggage_kvs[e_name] = e_value
 
+        # Otel Python API method to nicely join items into header str
         return _format_baggage(baggage_kvs)
 
     # Note: this inherits deprecated `typing` use by OTel,
