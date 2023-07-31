@@ -19,10 +19,11 @@ INTL_SWO_X_OPTIONS_KEY = "sw_xtraceoptions"
 INTL_SWO_X_OPTIONS_RESPONSE_KEY = "xtrace_options_response"
 INTL_SWO_DEFAULT_TRACES_EXPORTER = "solarwinds_exporter"
 INTL_SWO_TRACECONTEXT_PROPAGATOR = "tracecontext"
+INTL_SWO_BAGGAGE_PROPAGATOR = "baggage"
 INTL_SWO_PROPAGATOR = "solarwinds_propagator"
 INTL_SWO_DEFAULT_PROPAGATORS = [
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
-    "baggage",
+    INTL_SWO_BAGGAGE_PROPAGATOR,
     INTL_SWO_PROPAGATOR,
 ]
 INTL_SWO_DOC_SUPPORTED_PLATFORMS = "https://documentation.solarwinds.com/en/success_center/observability/content/system_requirements/apm_requirements.htm#link3"
