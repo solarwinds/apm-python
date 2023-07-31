@@ -192,3 +192,67 @@ class TestSolarWindsPropagator():
                 TraceState([("sw", "1000100010001000-01"), ("foo", "bar")]).to_header(),
             ),
         ])
+
+    def test_inject_existing_baggage_no_sw(self, mocker):
+        self.mock_otel_context(mocker, True)
+        mock_carrier = {
+            "baggage": "foo=bar,zzz=abc",
+        }
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "baggage",
+                "foo=bar,zzz=abc",
+            ),
+        ])
+
+    def test_inject_existing_baggage_with_sw(self, mocker):
+        self.mock_otel_context(mocker, True)
+        mock_carrier = {
+            "baggage": "sw-current-trace-id=some-id,foo=bar,sw-current-entry-span-id=some-other-id,zzz=abc",
+        }
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "baggage",
+                "foo=bar,zzz=abc",
+            ),
+        ])
+
+    def test_remove_custom_naming_baggage_header_various_splits(self):
+        """Shouldn't happen with composite but just in case and coverage"""
+        prop = SolarWindsPropagator()
+        assert "" == prop.remove_custom_naming_baggage_header("this-has-no-equals-sign")
+        assert "" == prop.remove_custom_naming_baggage_header("=this-is-wrong")
+        assert "" == prop.remove_custom_naming_baggage_header("this-too=")
+        assert "this=is%3Dactually%3Dok" == prop.remove_custom_naming_baggage_header("this=is=actually=ok")
+        assert "this-is=ok,this%3Bweird.but=ok,this=is%3Dok" == prop.remove_custom_naming_baggage_header("not-ok,this-is=ok,=wrong,bad=,this;weird.but=ok,this=is=ok")
+
+    def test_remove_custom_naming_baggage_header_with_sw_vals(self):
+        assert "foo=bar,baz=qux" == SolarWindsPropagator().remove_custom_naming_baggage_header("foo=bar,sw-current-entry-span-id=some-id,baz=qux,sw-current-trace-id=also-some-id")

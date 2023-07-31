@@ -363,6 +363,24 @@ class TestSolarWindsApmConfigAgentEnabled:
         assert not resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == ""
 
+    def test_calculate_agent_enabled_sw_before_baggage_propagator(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": "tracecontext,solarwinds_propagator,baggage",
+            "SW_APM_SERVICE_KEY": "valid:key",
+        })
+        resulting_config = apm_config.SolarWindsApmConfig()
+        assert not resulting_config._calculate_agent_enabled()
+        assert resulting_config.service_name == ""
+
+    def test_calculate_agent_enabled_sw_after_baggage_propagator(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": "tracecontext,baggage,solarwinds_propagator",
+            "SW_APM_SERVICE_KEY": "valid:key",
+        })
+        resulting_config = apm_config.SolarWindsApmConfig()
+        assert resulting_config._calculate_agent_enabled()
+        assert resulting_config.service_name == "key"
+
     def test_calculate_agent_enabled_valid_other_but_missing_sw_exporter(self, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_TRACES_EXPORTER": "foo",
