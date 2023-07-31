@@ -64,6 +64,11 @@ class SolarWindsDistro(BaseDistro):
             # Note: Django ORM accepts options in settings.py
             # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
             kwargs["commenter_options"] = self.detect_commenter_options()
+
+        # # TODO don't hardcode
+        # # instrumentation for psycopg2 (dbapi)
+        # kwargs["enhanced_db_reporting"] = True
+
         instrumentor: BaseInstrumentor = entry_point.load()
         instrumentor().instrument(**kwargs)
 
