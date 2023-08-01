@@ -117,7 +117,9 @@ class SolarWindsSpanExporter(SpanExporter):
     def _add_info_transaction_name(self, span, evt) -> None:
         """Add transaction name from cache to root span
         then removes from cache"""
-        trace_span_id = f"{span.context.trace_id}-{span.context.span_id}"
+        trace_span_id = W3CTransformer.trace_and_span_id_from_context(
+            span.context
+        )
         txname = self.apm_txname_manager.get(trace_span_id)
         if txname:
             evt.addInfo(self._INTERNAL_TRANSACTION_NAME, txname)

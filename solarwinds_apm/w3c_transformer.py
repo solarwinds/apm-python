@@ -74,6 +74,12 @@ class W3CTransformer:
         return sw.format(span_context.span_id, span_context.trace_flags)
 
     @classmethod
+    def trace_and_span_id_from_context(cls, span_context: SpanContext) -> str:
+        """Formats trace ID and span ID as 32-byte and 16-byte hex str, respectively"""
+        trace_span = "-".join([cls._TRACE_ID_HEX, cls._SPAN_ID_HEX])
+        return trace_span.format(span_context.trace_id, span_context.span_id)
+
+    @classmethod
     def sw_from_span_and_decision(cls, span_id: int, decision: str) -> str:
         """Formats tracestate sw value from span_id and liboboe decision
         as 16-byte span_id with 8-bit trace_flags.
