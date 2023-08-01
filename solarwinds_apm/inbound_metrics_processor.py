@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Optional, Tuple
 from opentelemetry import baggage, context
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.trace import SpanKind, StatusCode, TraceFlags
+from opentelemetry.trace import SpanKind, StatusCode
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_CURRENT_SPAN_ID,
@@ -129,11 +129,11 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
                 has_error,
             )
 
-        if span.context.trace_flags == TraceFlags.SAMPLED:
-            # Cache txn_name for span export
-            self.apm_txname_manager[
-                f"{span.context.trace_id}-{span.context.span_id}"
-            ] = liboboe_txn_name  # type: ignore
+        # Cache txn_name for metrics and span export
+        # Any span passing through here is recorded, sometimes sampled
+        self.apm_txname_manager[
+            f"{span.context.trace_id}-{span.context.span_id}"
+        ] = liboboe_txn_name  # type: ignore
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
         """This span from inbound HTTP request if from a SERVER by some http.method"""
