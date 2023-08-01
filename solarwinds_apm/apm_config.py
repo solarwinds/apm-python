@@ -24,6 +24,7 @@ from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_constants import (
     INTL_SWO_AO_COLLECTOR,
     INTL_SWO_AO_STG_COLLECTOR,
+    INTL_SWO_BAGGAGE_PROPAGATOR,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_DOC_SUPPORTED_PLATFORMS,
@@ -180,7 +181,7 @@ class SolarWindsApmConfig:
         return True
 
     # TODO: Account for in-code config with kwargs after alpha
-    # pylint: disable=too-many-return-statements
+    # pylint: disable=too-many-branches,too-many-return-statements
     def _calculate_agent_enabled_config(self) -> bool:
         """Checks if agent is enabled/disabled based on config:
         - SW_APM_SERVICE_KEY   (required) (env var or cnf file)
@@ -222,8 +223,9 @@ class SolarWindsApmConfig:
             ).split(",")
             # If not using the default propagators,
             # can any arbitrary list BUT
-            # (1) must include tracecontext and solarwinds_propagator
-            # (2) tracecontext must be before solarwinds_propagator
+            # (a) must include tracecontext and solarwinds_propagator
+            # (b) tracecontext must be before solarwinds_propagator
+            # (c) baggage, if configured, must be before solarwinds_propagator
             if environ_propagators != INTL_SWO_DEFAULT_PROPAGATORS:
                 if (
                     INTL_SWO_TRACECONTEXT_PROPAGATOR not in environ_propagators
@@ -243,6 +245,16 @@ class SolarWindsApmConfig:
                         "tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled."
                     )
                     return False
+
+                if INTL_SWO_BAGGAGE_PROPAGATOR in environ_propagators:
+                    if environ_propagators.index(
+                        INTL_SWO_PROPAGATOR
+                    ) < environ_propagators.index(INTL_SWO_BAGGAGE_PROPAGATOR):
+                        logger.error(
+                            "baggage must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled."
+                        )
+                        return False
+
         except ValueError:
             logger.error(
                 "OTEL_PROPAGATORS must be a string of comma-separated propagator names. Tracing disabled."
