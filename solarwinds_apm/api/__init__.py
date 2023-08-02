@@ -10,10 +10,7 @@ from typing import Any
 from opentelemetry import baggage
 from opentelemetry.trace import NoOpTracerProvider, get_tracer_provider
 
-from solarwinds_apm.apm_constants import (
-    INTL_SWO_CURRENT_SPAN_ID,
-    INTL_SWO_CURRENT_TRACE_ID,
-)
+from solarwinds_apm.apm_constants import INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
 from solarwinds_apm.apm_oboe_codes import OboeReadyCode
 
 # pylint: disable=import-error,no-name-in-module
@@ -72,19 +69,21 @@ def set_transaction_name(custom_name: str) -> bool:
         logger.error("Could not find configured InboundMetricsSpanProcessor.")
         return False
 
-    entry_trace_id = baggage.get_baggage(INTL_SWO_CURRENT_TRACE_ID)
-    entry_span_id = baggage.get_baggage(INTL_SWO_CURRENT_SPAN_ID)
-    if not entry_trace_id or not entry_span_id:
+    current_trace_entry_span_id = baggage.get_baggage(
+        INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
+    )
+    if not current_trace_entry_span_id:
         logger.warning(
             "Cannot cache custom transaction name %s because OTel service entry span not started; ignoring",
             custom_name,
         )
         return False
-    trace_span_id = f"{entry_trace_id}-{entry_span_id}"
-    inbound_processor.apm_txname_manager[trace_span_id] = custom_name
-    logger.debug(
+    inbound_processor.apm_txname_manager[
+        current_trace_entry_span_id
+    ] = custom_name
+    logger.warning(
         "Cached custom transaction name for %s as %s",
-        trace_span_id,
+        current_trace_entry_span_id,
         custom_name,
     )
     return True

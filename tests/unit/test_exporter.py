@@ -49,8 +49,16 @@ def get_mock_spans(mocker, valid_parent=False):
         }
     )
     mock_span = mocker.Mock()
+    mock_span_context = mocker.Mock()
+    mock_span_context.configure_mock(
+        **{
+            "trace_id": 12341234123412345678567856785678,
+            "span_id": 1234123412341234
+        }
+    )
     span_config = {
         "get_span_context.return_value": "my_span_context",
+        "context": mock_span_context,
         "start_time": 1000,
         "end_time": 2000,
         "name": "foo",

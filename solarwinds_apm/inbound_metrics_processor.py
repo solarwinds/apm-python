@@ -12,10 +12,8 @@ from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import SpanKind, StatusCode, TraceFlags
 
-from solarwinds_apm.apm_constants import (
-    INTL_SWO_CURRENT_SPAN_ID,
-    INTL_SWO_CURRENT_TRACE_ID,
-)
+from solarwinds_apm.apm_constants import INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
+from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
@@ -48,8 +46,8 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         span: "ReadableSpan",
         parent_context: Optional[context.Context] = None,
     ) -> None:
-        """Caches current entry span ID in span context baggage"""
-        # Only cache current entry span ID for service entry spans
+        """Caches current trace ID and entry span ID in span context baggage"""
+        # Only caches for service entry spans
         parent_span_context = span.parent
         if (
             parent_span_context
@@ -60,11 +58,9 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
         context.attach(
             baggage.set_baggage(
-                INTL_SWO_CURRENT_TRACE_ID, span.context.trace_id
+                INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID,
+                W3CTransformer.trace_and_span_id_from_context(span.context),
             )
-        )
-        context.attach(
-            baggage.set_baggage(INTL_SWO_CURRENT_SPAN_ID, span.context.span_id)
         )
 
     def on_end(self, span: "ReadableSpan") -> None:
@@ -132,7 +128,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         if span.context.trace_flags == TraceFlags.SAMPLED:
             # Cache txn_name for span export
             self.apm_txname_manager[
-                f"{span.context.trace_id}-{span.context.span_id}"
+                W3CTransformer.trace_and_span_id_from_context(span.context)
             ] = liboboe_txn_name  # type: ignore
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
@@ -179,7 +175,9 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     def calculate_custom_transaction_name(self, span: "ReadableSpan") -> Any:
         """Get custom transaction name for trace by trace_id, if any"""
         trans_name = None
-        trace_span_id = f"{span.context.trace_id}-{span.context.span_id}"
+        trace_span_id = W3CTransformer.trace_and_span_id_from_context(
+            span.context
+        )
         custom_name = self.apm_txname_manager.get(trace_span_id)
         if custom_name:
             trans_name = custom_name
