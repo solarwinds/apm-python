@@ -181,6 +181,9 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         custom_name = self.apm_txname_manager.get(trace_span_id)
         if custom_name:
             trans_name = custom_name
+            # Remove custom name from cache in case not sampled.
+            # If sampled, should be re-added at on_end.
+            del self.apm_txname_manager[trace_span_id]
         return trans_name
 
     def calculate_span_time(
