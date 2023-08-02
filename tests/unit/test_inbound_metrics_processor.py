@@ -32,11 +32,101 @@ class TestSolarWindsInboundMetricsSpanProcessor():
     def test_on_end_not_sampled(self):
         pass
 
-    def test_is_span_http_true(self):
-        pass
+    def test_is_span_http_true(self, mocker):
+        mock_spankind = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanKind"
+        )
+        mock_spankind.configure_mock(
+            **{
+                "SERVER": "foo"
+            }
+        )
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_METHOD": "http.method"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "foo",
+                "attributes": {
+                    "http.method": "bar"
+                }
+            }
+        )
+        processor = SolarWindsInboundMetricsSpanProcessor(
+            mocker.Mock(),
+            mocker.Mock(),
+        )
+        assert True == processor.is_span_http(mock_span)
 
-    def test_is_span_http_false(self):
-        pass
+    def test_is_span_http_false_not_server_kind(self, mocker):
+        mock_spankind = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanKind"
+        )
+        mock_spankind.configure_mock(
+            **{
+                "SERVER": "foo"
+            }
+        )
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_METHOD": "http.method"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "not-foo-hehe",
+                "attributes": {
+                    "http.method": "bar"
+                }
+            }
+        )
+        processor = SolarWindsInboundMetricsSpanProcessor(
+            mocker.Mock(),
+            mocker.Mock(),
+        )
+        assert False == processor.is_span_http(mock_span)
+
+    def test_is_span_http_false_no_http_method(self, mocker):
+        mock_spankind = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanKind"
+        )
+        mock_spankind.configure_mock(
+            **{
+                "SERVER": "foo"
+            }
+        )
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_METHOD": "http.method"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "foo",
+                "attributes": {
+                    "NOT.http.method.hehehehe": "bar"
+                }
+            }
+        )
+        processor = SolarWindsInboundMetricsSpanProcessor(
+            mocker.Mock(),
+            mocker.Mock(),
+        )
+        assert False == processor.is_span_http(mock_span)
 
     def test_has_error_true(self):
         pass
