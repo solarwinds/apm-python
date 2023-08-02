@@ -128,11 +128,59 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         assert False == processor.is_span_http(mock_span)
 
-    def test_has_error_true(self):
-        pass
+    def test_has_error_true(self, mocker):
+        mock_statuscode = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.StatusCode"
+        )
+        mock_statuscode.configure_mock(
+            **{
+                "ERROR": "foo"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_status = mocker.Mock()
+        mock_status.configure_mock(
+            **{
+                "status_code": "foo"
+            }
+        )
+        mock_span.configure_mock(
+            **{
+                "status": mock_status
+            }
+        )
+        processor = SolarWindsInboundMetricsSpanProcessor(
+            mocker.Mock(),
+            mocker.Mock(),
+        )
+        assert True == processor.has_error(mock_span)
 
-    def test_has_error_false(self):
-        pass
+    def test_has_error_false(self, mocker):
+        mock_statuscode = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.StatusCode"
+        )
+        mock_statuscode.configure_mock(
+            **{
+                "ERROR": "foo"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_status = mocker.Mock()
+        mock_status.configure_mock(
+            **{
+                "status_code": "not-foo-hehehe"
+            }
+        )
+        mock_span.configure_mock(
+            **{
+                "status": mock_status
+            }
+        )
+        processor = SolarWindsInboundMetricsSpanProcessor(
+            mocker.Mock(),
+            mocker.Mock(),
+        )
+        assert False == processor.has_error(mock_span)
 
     def test_get_http_status_code_default(self):
         pass
