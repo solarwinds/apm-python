@@ -182,11 +182,53 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         assert False == processor.has_error(mock_span)
 
-    def test_get_http_status_code_default(self):
-        pass
+    def test_get_http_status_code_from_span(self, mocker):
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_STATUS_CODE": "http.status_code"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "foo",
+                "attributes": {
+                    "http.status_code": "foo"
+                }
+            }
+        )
+        processor = SolarWindsInboundMetricsSpanProcessor(
+            mocker.Mock(),
+            mocker.Mock(),
+        )
+        assert "foo" == processor.get_http_status_code(mock_span)
 
-    def test_get_http_status_code_from_span(self):
-        pass
+    def test_get_http_status_code_default(self, mocker):
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_STATUS_CODE": "http.status_code"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "foo",
+                "attributes": {
+                    "NOT.http.status_code.muahaha": "foo"
+                }
+            }
+        )
+        processor = SolarWindsInboundMetricsSpanProcessor(
+            mocker.Mock(),
+            mocker.Mock(),
+        )
+        assert 0 == processor.get_http_status_code(mock_span)
 
     def test_calculate_transaction_names_custom(self):
         pass
