@@ -717,6 +717,38 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         assert False == processor.is_span_http(mock_span)
 
+    def test_is_span_http_false_no_server_kind_no_method(self, mocker):
+        mock_spankind = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanKind"
+        )
+        mock_spankind.configure_mock(
+            **{
+                "SERVER": "foo"
+            }
+        )
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_METHOD": "http.method"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "not-foo-hehe",
+                "attributes": {
+                    "NOT.http.method.hehehehe": "bar"
+                }
+            }
+        )
+        processor = SolarWindsInboundMetricsSpanProcessor(
+            mocker.Mock(),
+            mocker.Mock(),
+        )
+        assert False == processor.is_span_http(mock_span)
+
     def test_has_error_true(self, mocker):
         mock_statuscode = mocker.patch(
             "solarwinds_apm.inbound_metrics_processor.StatusCode"
