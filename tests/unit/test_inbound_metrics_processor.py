@@ -505,6 +505,122 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_set.assert_called_once_with("some-id", "foo-name")
 
+    def test_on_end_not_sampled_is_http(self, mocker):
+        """Still submit inbound metrics but don't (re-)cache txn name because not exported"""
+        mock_get_http_status_code, \
+            mock_create_http_span, \
+            mock_create_span, \
+            mock_apm_config, \
+            mock_txname_manager, \
+            mock_set, \
+            _, _, _, _ = self.patch_for_on_end(
+                mocker,
+                is_span_http=True
+            )
+
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_METHOD": "http.method"
+            }
+        )
+        mock_traceflags = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.TraceFlags"
+        )
+        mock_traceflags.configure_mock(
+            **{
+                "SAMPLED": "foo-sampled"
+            }
+        )
+
+        mock_span_context = mocker.Mock()
+        mock_span_context.configure_mock(
+            **{
+                "trace_flags": "not-foo-sampled-hehe"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "parent": None,
+                "attributes": {
+                    "http.method": "foo-method"
+                },
+                "context": mock_span_context
+            }
+        )
+
+        processor = SolarWindsInboundMetricsSpanProcessor(
+            mock_txname_manager,
+            mock_apm_config,
+        )
+        assert processor.on_end(mock_span) is None
+        mock_get_http_status_code.assert_called_once()
+        mock_create_http_span.assert_called_once_with(
+            "foo",
+            "bar",
+            None,
+            123,
+            "foo-code",
+            "foo-method",
+            False,
+        )
+        mock_create_span.assert_not_called()
+        mock_set.assert_not_called()
+
+    def test_on_end_not_sampled_not_is_http(self, mocker):
+        """Still submit inbound metrics but don't (re-)cache txn name because not exported"""
+        mock_get_http_status_code, \
+            mock_create_http_span, \
+            mock_create_span, \
+            mock_apm_config, \
+            mock_txname_manager, \
+            mock_set, \
+            _, _, _, _ = self.patch_for_on_end(
+                mocker,
+                is_span_http=False
+            )
+
+        mock_traceflags = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.TraceFlags"
+        )
+        mock_traceflags.configure_mock(
+            **{
+                "SAMPLED": "foo-sampled"
+            }
+        )
+
+        mock_span_context = mocker.Mock()
+        mock_span_context.configure_mock(
+            **{
+                "trace_flags": "not-foo-sampled-hehe"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "parent": None,
+                "context": mock_span_context
+            }
+        )
+
+        processor = SolarWindsInboundMetricsSpanProcessor(
+            mock_txname_manager,
+            mock_apm_config,
+        )
+        assert processor.on_end(mock_span) is None
+        mock_get_http_status_code.assert_not_called()
+        mock_create_http_span.assert_not_called()
+        mock_create_span.assert_called_once_with(
+            "foo",
+            None,
+            123,
+            False,
+        )
+        mock_set.assert_not_called()
+
     def test_is_span_http_true(self, mocker):
         mock_spankind = mocker.patch(
             "solarwinds_apm.inbound_metrics_processor.SpanKind"
