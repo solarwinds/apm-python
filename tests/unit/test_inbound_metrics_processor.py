@@ -851,6 +851,37 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         assert 0 == processor.get_http_status_code(mock_span)
 
+    def test_calculate_transaction_names_span_name_default(self, mocker):
+        """Otel Python span.name should always exist"""
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_URL": "http.url",
+                "HTTP_ROUTE": "http.route"
+            }
+        )
+        mock_calculate_custom = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SolarWindsInboundMetricsSpanProcessor.calculate_custom_transaction_name"
+        )
+        mock_calculate_custom.configure_mock(return_value=None)
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "name": "foo",
+                "attributes": {
+                    "http.route": None,
+                    "http.url": None
+                }
+            }
+        )
+        processor = SolarWindsInboundMetricsSpanProcessor(
+            mocker.Mock(),
+            mocker.Mock(),
+        )
+        assert ("foo", None) == processor.calculate_transaction_names(mock_span)
+
     def test_calculate_transaction_names_custom(self, mocker):
         mock_spanattributes = mocker.patch(
             "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
@@ -908,7 +939,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         assert "foo", "bar" == processor.calculate_transaction_names(mock_span)
 
-    def test_calculate_transaction_names_span_name(self, mocker):
+    def test_calculate_transaction_names_span_name_and_url(self, mocker):
         mock_spanattributes = mocker.patch(
             "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
         )
