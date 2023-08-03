@@ -862,7 +862,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         mock_calculate_custom = mocker.patch(
-            "solarwinds_apm.inbound_metrics_processor.SolarWindsInboundMetricsSpanProcessor.calculate_transaction_names"
+            "solarwinds_apm.inbound_metrics_processor.SolarWindsInboundMetricsSpanProcessor.calculate_custom_transaction_name"
         )
         mock_calculate_custom.configure_mock(return_value="foo")
         mock_span = mocker.Mock()
@@ -890,7 +890,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         mock_calculate_custom = mocker.patch(
-            "solarwinds_apm.inbound_metrics_processor.SolarWindsInboundMetricsSpanProcessor.calculate_transaction_names"
+            "solarwinds_apm.inbound_metrics_processor.SolarWindsInboundMetricsSpanProcessor.calculate_custom_transaction_name"
         )
         mock_calculate_custom.configure_mock(return_value=None)
         mock_span = mocker.Mock()
@@ -919,7 +919,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         mock_calculate_custom = mocker.patch(
-            "solarwinds_apm.inbound_metrics_processor.SolarWindsInboundMetricsSpanProcessor.calculate_transaction_names"
+            "solarwinds_apm.inbound_metrics_processor.SolarWindsInboundMetricsSpanProcessor.calculate_custom_transaction_name"
         )
         mock_calculate_custom.configure_mock(return_value=None)
         mock_span = mocker.Mock()
