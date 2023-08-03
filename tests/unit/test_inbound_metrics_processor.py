@@ -45,6 +45,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         return mock_swo_baggage_key, mock_set_baggage, mock_attach
 
     def test_on_start_valid_local_parent_span(self, mocker):
+        mock_swo_baggage_key, mock_set_baggage, mock_attach = self.patch_for_on_start(mocker)
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -63,6 +64,9 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mocker.Mock(),
         )
         assert processor.on_start(mock_span, None) is None
+        mock_swo_baggage_key.assert_not_called()
+        mock_set_baggage.assert_not_called()
+        mock_attach.assert_not_called()
 
     def test_on_start_valid_remote_parent_span(self, mocker):
         mock_swo_baggage_key, mock_set_baggage, mock_attach = self.patch_for_on_start(mocker)
@@ -239,6 +243,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         return mock_get_http_status_code, mock_create_http_span, mock_create_span, mock_apm_config, mock_txname_manager, mock_set
 
     def test_on_end_valid_local_parent_span(self, mocker):
+        mock_get_http_status_code, mock_create_http_span, mock_create_span, mock_apm_config, mock_txname_manager, mock_set = self.patch_for_on_end(mocker)
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -257,6 +262,12 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mocker.Mock(),
         )
         assert processor.on_end(mock_span) is None
+        mock_get_http_status_code.assert_not_called()
+        mock_create_http_span.assert_not_called()
+        mock_create_span.assert_not_called()
+        mock_apm_config.assert_not_called()
+        mock_txname_manager.assert_not_called()
+        mock_set.assert_not_called()
 
     def test_on_end_is_span_http(self, mocker):
         mock_get_http_status_code, mock_create_http_span, mock_create_span, mock_apm_config, mock_txname_manager, mock_set = self.patch_for_on_end(mocker, is_span_http=True)
