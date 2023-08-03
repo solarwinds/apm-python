@@ -908,7 +908,8 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mocker.Mock(),
             mocker.Mock(),
         )
-        assert "foo", "bar" == processor.calculate_transaction_names(mock_span)
+        result = processor.calculate_transaction_names(mock_span)
+        assert "foo", "bar" == result
 
     def test_calculate_transaction_names_http_route(self, mocker):
         mock_spanattributes = mocker.patch(
@@ -937,7 +938,8 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mocker.Mock(),
             mocker.Mock(),
         )
-        assert "foo", "bar" == processor.calculate_transaction_names(mock_span)
+        result = processor.calculate_transaction_names(mock_span)
+        assert "foo", "bar" == result
 
     def test_calculate_transaction_names_span_name_and_url(self, mocker):
         mock_spanattributes = mocker.patch(
@@ -967,7 +969,8 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mocker.Mock(),
             mocker.Mock(),
         )
-        assert "foo", "bar" == processor.calculate_transaction_names(mock_span)
+        result = processor.calculate_transaction_names(mock_span)
+        assert "foo", "bar" == result
 
     def test_calculate_custom_transaction_name_none(self, mocker):
         mocker.patch(
