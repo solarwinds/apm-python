@@ -1148,7 +1148,6 @@ class Test_SolarWindsSpanExporter():
         mock_create_event.assert_called_once_with(1)
         mock_add_info.assert_has_calls([
             mocker.call("Label", "error"),
-            mocker.call("Spec", "error"),
             mocker.call("ErrorClass", "foo"),
             mocker.call("ErrorMsg", "bar"),
             mocker.call("Backtrace", "baz"),

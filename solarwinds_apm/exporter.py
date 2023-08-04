@@ -269,7 +269,6 @@ class SolarWindsSpanExporter(SpanExporter):
     def _report_exception_event(self, event) -> None:
         evt = self.context.createEvent(int(event.timestamp / 1000))
         evt.addInfo("Label", "error")
-        evt.addInfo("Spec", "error")
         evt.addInfo("ErrorClass", event.attributes.get("exception.type", None))
         evt.addInfo(
             "ErrorMsg", event.attributes.get("exception.message", None)
