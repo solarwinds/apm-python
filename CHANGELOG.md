@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.14.0...HEAD)
+## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.15.0...HEAD)
+
+## [0.15.0.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.15.0) - 2023-08-17
+
+### Added
+- Add context-in-logs configuration with `OTEL_SQLCOMMENTER_OPTIONS` ([#182](https://github.com/solarwindscloud/solarwinds-apm-python/pull/182))
+- Add CODEOWNERS file ([#189](https://github.com/solarwindscloud/solarwinds-apm-python/pull/189))
+
+### Changed
+- Remove unused baggage from propagator injection ([#184](https://github.com/solarwindscloud/solarwinds-apm-python/pull/184))
+- Simplify internal baggage setting for custom naming ([#186](https://github.com/solarwindscloud/solarwinds-apm-python/pull/186))
+- Fix custom name storage clearing when not sampled ([#187](https://github.com/solarwindscloud/solarwinds-apm-python/pull/187))
+
+### Removed
+- Remove old print statements in exporter ([#183](https://github.com/solarwindscloud/solarwinds-apm-python/pull/183))
+- Remove unneeded `Spec` key from error events ([#188](https://github.com/solarwindscloud/solarwinds-apm-python/pull/188))
 
 ## [0.14.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.14.0) - 2023-07-20
 ### Changed
