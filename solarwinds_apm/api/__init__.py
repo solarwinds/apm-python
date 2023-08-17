@@ -81,7 +81,7 @@ def set_transaction_name(custom_name: str) -> bool:
     inbound_processor.apm_txname_manager[
         current_trace_entry_span_id
     ] = custom_name
-    logger.warning(
+    logger.debug(
         "Cached custom transaction name for %s as %s",
         current_trace_entry_span_id,
         custom_name,
