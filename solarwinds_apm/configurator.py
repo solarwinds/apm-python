@@ -259,7 +259,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             "max_flush_wait_time": apm_config.get("max_flush_wait_time"),
             "events_flush_interval": apm_config.get("events_flush_interval"),
             "max_request_size_bytes": apm_config.get("max_request_size_bytes"),
-            "reporter": apm_config.get("reporter"),
+            "reporter": "ssl",
             "host": apm_config.get("collector"),
             "service_key": apm_config.get("service_key"),
             "certificates": apm_config.certificates,
