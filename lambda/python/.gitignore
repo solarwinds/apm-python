@@ -1,0 +1,9 @@
+# Ignore everything
+*
+
+# But not these files...
+!.gitignore
+!otel_wrapper.py
+!requirements-nodeps.txt
+!requirements-testpypi.txt
+!requirements.txt
