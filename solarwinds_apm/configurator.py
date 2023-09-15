@@ -23,6 +23,9 @@ from opentelemetry.instrumentation.dependencies import (
 from opentelemetry.instrumentation.environment_variables import (
     OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
 )
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter,
+)
 from opentelemetry.instrumentation.propagators import (
     set_global_response_propagator,
 )
@@ -209,6 +212,26 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             span_processor = BatchSpanProcessor(exporter)
             trace.get_tracer_provider().add_span_processor(span_processor)
+
+        # TEMP: also hardcode and add OTLPSpanExporter
+        service_key = apm_config.get("service_key")
+        if not service_key:
+            traces_headers = None
+        else:
+            key_parts = service_key.split(":")
+            traces_headers = {"authorization": f"Bearer {key_parts[0]}"}
+        otlp_exporter = OTLPSpanExporter(
+            endpoint=os.environ.get(
+                "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+                "otel.collector.na-01.cloud.solarwinds.com",
+            ),
+            headers=traces_headers,
+            insecure=os.environ.get(
+                "OTEL_EXPORTER_OTLP_TRACES_INSECURE", False
+            ),
+        )
+        span_processor = BatchSpanProcessor(otlp_exporter)
+        trace.get_tracer_provider().add_span_processor(span_processor)
 
     def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators, default or environment configured"""
