@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - c-lib reporter initialized as `ssl` ([#197](https://github.com/solarwindscloud/solarwinds-apm-python/pull/197))
 
-## [0.17.0.2](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.17.0) - 2023-09-20
+## [0.17.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.17.0) - 2023-09-20
 
 ### Changed
 - OpenTelemetry API/SDK and instrumentation 1.20.0/0.41b0 ([#195](https://github.com/solarwindscloud/solarwinds-apm-python/pull/195))
