@@ -31,9 +31,7 @@ from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import (
-    PeriodicExportingMetricReader,
-)
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -41,8 +39,7 @@ from pkg_resources import get_distribution, iter_entry_points, load_entry_point
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
-from solarwinds_apm.apm_constants import (
-    INTL_SWO_DEFAULT_METRICS_EXPORTER,
+from solarwinds_apm.apm_constants import (  # INTL_SWO_DEFAULT_METRICS_EXPORTER,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_SUPPORT_EMAIL,
@@ -232,15 +229,15 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         environ_exporter = os.environ.get(
             OTEL_METRICS_EXPORTER,
         )
-        
+
         if not environ_exporter:
             # TODO Is metrics export an opt-in feature or should it always load?
             #      If always, should the default be one exporter as otlp_proto_grpc?
             # environ_exporter_names = [INTL_SWO_DEFAULT_METRICS_EXPORTER]
             logger.debug("No OTEL_METRICS_EXPORTER set, skipping init")
             return
-        else:
-            environ_exporter_names = environ_exporter.split(",")
+
+        environ_exporter_names = environ_exporter.split(",")
 
         metric_readers = []
         for exporter_name in environ_exporter_names:
