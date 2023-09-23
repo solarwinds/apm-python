@@ -45,6 +45,7 @@ from solarwinds_apm.apm_constants import (  # INTL_SWO_DEFAULT_METRICS_EXPORTER,
     INTL_SWO_SUPPORT_EMAIL,
 )
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
+from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
 from solarwinds_apm.apm_noop import Reporter
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
@@ -73,10 +74,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure SolarWinds APM and OTel components"""
         apm_txname_manager = SolarWindsTxnNameManager()
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
+        apm_meters = SolarWindsMeterManager()
         apm_config = SolarWindsApmConfig()
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
-            apm_txname_manager, apm_fwkv_manager, apm_config, reporter
+            apm_txname_manager, apm_fwkv_manager, apm_config, reporter, apm_meters
         )
         # Report an status event after everything is done.
         self._report_init_event(reporter, apm_config)
@@ -87,6 +89,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
         reporter: "Reporter",
+        apm_meters: SolarWindsMeterManager,
     ) -> None:
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
@@ -94,6 +97,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             self._configure_metrics_span_processor(
                 apm_txname_manager,
                 apm_config,
+                apm_meters,
             )
             self._configure_exporter(
                 reporter,
@@ -145,12 +149,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
+        apm_meters: SolarWindsMeterManager,
     ) -> None:
         """Configure SolarWindsInboundMetricsSpanProcessor"""
         trace.get_tracer_provider().add_span_processor(
             SolarWindsInboundMetricsSpanProcessor(
                 apm_txname_manager,
                 apm_config,
+                apm_meters,
             )
         )
 
