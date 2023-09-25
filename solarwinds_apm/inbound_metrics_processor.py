@@ -19,7 +19,6 @@ if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
     from solarwinds_apm.apm_config import SolarWindsApmConfig
-    from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 
 
@@ -38,10 +37,8 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         self,
         apm_txname_manager: "SolarWindsTxnNameManager",
         apm_config: "SolarWindsApmConfig",
-        apm_meters: "SolarWindsMeterManager",
     ) -> None:
         self.apm_txname_manager = apm_txname_manager
-        self.apm_meters = apm_meters
         self._span = apm_config.extension.Span
 
     def on_start(
@@ -90,9 +87,6 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
         liboboe_txn_name = None
         if is_span_http:
-            # TEST
-            self.apm_meters.response_time.record(span_time)
-
             # createHttpSpan needs these other params
             status_code = self.get_http_status_code(span)
             request_method = span.attributes.get(self._HTTP_METHOD, None)

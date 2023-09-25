@@ -52,6 +52,9 @@ from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.inbound_metrics_processor import (
     SolarWindsInboundMetricsSpanProcessor,
 )
+from solarwinds_apm.otlp_metrics_processor import (
+    SolarWindsOTLPMetricsSpanProcessor
+)
 from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
@@ -97,6 +100,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             self._configure_metrics_span_processor(
                 apm_txname_manager,
                 apm_config,
+            )
+            self._configure_otlp_metrics_span_processor(
                 apm_meters,
             )
             self._configure_exporter(
@@ -149,13 +154,22 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
-        apm_meters: SolarWindsMeterManager,
     ) -> None:
         """Configure SolarWindsInboundMetricsSpanProcessor"""
         trace.get_tracer_provider().add_span_processor(
             SolarWindsInboundMetricsSpanProcessor(
                 apm_txname_manager,
                 apm_config,
+            )
+        )
+
+    def _configure_otlp_metrics_span_processor(
+        self,
+        apm_meters: SolarWindsMeterManager,
+    ) -> None:
+        """Configure SolarWindsOTLPMetricsSpanProcessor"""
+        trace.get_tracer_provider().add_span_processor(
+            SolarWindsOTLPMetricsSpanProcessor(
                 apm_meters,
             )
         )
