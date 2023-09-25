@@ -97,14 +97,13 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             status_code = self._LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE
         return status_code
 
-    # TODO If needed for both inbound and otlp metrics, refactor
     def calculate_span_time(
         self,
         start_time: int,
         end_time: int,
     ) -> int:
-        """Calculate span time in microseconds (us) using start and end time
+        """Calculate span time in ??? using start and end time
         in nanoseconds (ns). OTel span start/end_time are optional."""
         if not start_time or not end_time:
             return 0
-        return int((end_time - start_time) // 1e3)
+        return int((end_time - start_time) // 1e6)
