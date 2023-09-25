@@ -5,6 +5,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
+import random
 from typing import TYPE_CHECKING
 
 from opentelemetry.sdk.trace import SpanProcessor
@@ -45,6 +46,11 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         ):
             return
 
+        # support ssa and conform to Otel proto common_pb2
+        meter_attrs = {
+            "sw.nonce": random.getrandbits(64) >> 1
+        }
+
         is_span_http = self.is_span_http(span)
         span_time = self.calculate_span_time(
             span.start_time,
@@ -56,7 +62,10 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             status_code = self.get_http_status_code(span)
             request_method = span.attributes.get(self._HTTP_METHOD, None)
 
-            self.apm_meters.response_time.record(span_time)
+            self.apm_meters.response_time.record(
+                amount=span_time,
+                attributes=meter_attrs,
+            )
         else:
             # TODO
             pass
