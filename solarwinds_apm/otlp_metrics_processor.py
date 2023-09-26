@@ -69,7 +69,8 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
                 "sw.is_error": "false"
             })
 
-        trans_name, url_tran = self.calculate_transaction_names(span)
+        # trans_name will never be None because always at least span.name
+        trans_name, _ = self.calculate_transaction_names(span)
 
         is_span_http = self.is_span_http(span)
         span_time = self.calculate_span_time(
@@ -83,7 +84,7 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             meter_attrs.update({
                 self._HTTP_STATUS_CODE: status_code,
                 self._HTTP_METHOD: request_method,
-                "sw.transaction": trans_name  # or url_tran?
+                "sw.transaction": trans_name
             })
         else:
             meter_attrs.update({
