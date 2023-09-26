@@ -6,17 +6,19 @@
 
 import logging
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Tuple
 
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.trace import SpanKind, StatusCode
+from opentelemetry.trace import SpanKind, StatusCode, TraceFlags
 
+from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
     from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
+    from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 
 
 logger = logging.getLogger(__name__)
@@ -25,15 +27,20 @@ logger = logging.getLogger(__name__)
 class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
     # TODO If needed for both inbound and otlp metrics, refactor
     _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
-    #_HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
+    _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
     _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
-    #_HTTP_URL = SpanAttributes.HTTP_URL  # "http.url"
+    _HTTP_URL = SpanAttributes.HTTP_URL  # "http.url"
 
     def __init__(
         self,
+        apm_txname_manager: "SolarWindsTxnNameManager",
         apm_meters: "SolarWindsMeterManager",
     ) -> None:
+        self.apm_txname_manager = apm_txname_manager
         self.apm_meters = apm_meters
+
+    # TODO Assumes SolarWindsInboundMetricsSpanProcessor.on_start
+    #      is called to store span ID for any custom txn naming
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports OTLP trace metrics"""
@@ -51,25 +58,46 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             "sw.nonce": random.getrandbits(64) >> 1
         }
 
+        has_error = self.has_error(span)
+        if has_error:
+            meter_attrs.update({
+                "sw.is_error": "true"
+            })
+            # TODO set up a callback for error_ratio in MeterManager
+        else:
+            meter_attrs.update({
+                "sw.is_error": "false"
+            })
+
+        trans_name, url_tran = self.calculate_transaction_names(span)
+
         is_span_http = self.is_span_http(span)
         span_time = self.calculate_span_time(
             span.start_time,
             span.end_time,
         )
-        has_error = self.has_error(span)
 
         if is_span_http:
             status_code = self.get_http_status_code(span)
             request_method = span.attributes.get(self._HTTP_METHOD, None)
-
-            self.apm_meters.response_time.record(
-                amount=span_time,
-                attributes=meter_attrs,
-            )
+            meter_attrs.update({
+                self._HTTP_STATUS_CODE: status_code,
+                self._HTTP_METHOD: request_method,
+                "sw.transaction": trans_name  # or url_tran?
+            })
         else:
-            # TODO
-            pass
+            meter_attrs.update({
+                "sw.transaction": trans_name
+            })
+        self.apm_meters.response_time.record(
+            amount=span_time,
+            attributes=meter_attrs,
+        )
 
+        # This does not cache txn_name for span export because
+        # assuming SolarWindsInboundMetricsSpanProcessor does it
+        # for SW-style trace export. This processor is for OTLP-style.
+        # TODO: Cache txn_name for OTLP span export?     
 
     # TODO If needed for both inbound and otlp metrics, refactor
     def is_span_http(self, span: "ReadableSpan") -> bool:
@@ -96,6 +124,42 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         if not status_code:
             status_code = self._LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE
         return status_code
+
+    # TODO If needed for both inbound and otlp metrics, refactor
+    # Disable pylint for compatibility with Python3.7 else TypeError
+    def calculate_transaction_names(
+        self, span: "ReadableSpan"
+    ) -> Tuple[Any, Any]:  # pylint: disable=deprecated-typing-alias
+        """Get trans_name and url_tran of this span instance."""
+        url_tran = span.attributes.get(self._HTTP_URL, None)
+        http_route = span.attributes.get(self._HTTP_ROUTE, None)
+        trans_name = None
+        custom_trans_name = self.calculate_custom_transaction_name(span)
+
+        if custom_trans_name:
+            trans_name = custom_trans_name
+        elif http_route:
+            trans_name = http_route
+        elif span.name:
+            trans_name = span.name
+        return trans_name, url_tran
+
+    # TODO If needed for both inbound and otlp metrics, refactor
+    def calculate_custom_transaction_name(self, span: "ReadableSpan") -> Any:
+        """Get custom transaction name for trace by trace_id, if any"""
+        trans_name = None
+        trace_span_id = W3CTransformer.trace_and_span_id_from_context(
+            span.context
+        )
+        custom_name = self.apm_txname_manager.get(trace_span_id)
+        if custom_name:
+            trans_name = custom_name
+            # TODO change if refactor
+            # Assume SolarWindsInboundMetricsSpanProcessor is
+            # active and is doing the removal of any
+            # custom txn name from cache if not sampled,
+            # so not doing it here for OTLP
+        return trans_name
 
     def calculate_span_time(
         self,

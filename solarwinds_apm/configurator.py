@@ -102,6 +102,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_config,
             )
             self._configure_otlp_metrics_span_processor(
+                apm_txname_manager,
                 apm_meters,
             )
             self._configure_exporter(
@@ -165,11 +166,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _configure_otlp_metrics_span_processor(
         self,
+        apm_txname_manager: SolarWindsTxnNameManager,
         apm_meters: SolarWindsMeterManager,
     ) -> None:
         """Configure SolarWindsOTLPMetricsSpanProcessor"""
         trace.get_tracer_provider().add_span_processor(
             SolarWindsOTLPMetricsSpanProcessor(
+                apm_txname_manager,
                 apm_meters,
             )
         )
