@@ -18,11 +18,8 @@ class SolarWindsMeterManager:
         # Gets the global default meter 
         meter = metrics.get_meter(__name__)
 
-        self.requests = meter.create_counter(
-            "trace.service.requests.test"
-        )
         self.response_time = meter.create_histogram(
-            name="trace.service.response_time.test",
+            name="trace.service.response_time",
             description="measures the duration of an inbound HTTP request",
             unit="ms"
         )

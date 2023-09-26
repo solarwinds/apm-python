@@ -63,7 +63,6 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             meter_attrs.update({
                 "sw.is_error": "true"
             })
-            # TODO set up a callback for error_ratio in MeterManager
         else:
             meter_attrs.update({
                 "sw.is_error": "false"
