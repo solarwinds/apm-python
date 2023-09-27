@@ -56,7 +56,10 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             return
 
         # support ssa and conform to Otel proto common_pb2
-        meter_attrs = {"sw.nonce": random.getrandbits(64) >> 1}
+        meter_attrs = {
+            "sw.service_name": "flask-metrics-test",
+            "sw.nonce": random.getrandbits(64) >> 1,
+        }
 
         has_error = self.has_error(span)
         if has_error:
