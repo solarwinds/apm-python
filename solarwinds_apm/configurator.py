@@ -53,7 +53,7 @@ from solarwinds_apm.inbound_metrics_processor import (
     SolarWindsInboundMetricsSpanProcessor,
 )
 from solarwinds_apm.otlp_metrics_processor import (
-    SolarWindsOTLPMetricsSpanProcessor
+    SolarWindsOTLPMetricsSpanProcessor,
 )
 from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
@@ -81,7 +81,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config = SolarWindsApmConfig()
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
-            apm_txname_manager, apm_fwkv_manager, apm_config, reporter, apm_meters
+            apm_txname_manager,
+            apm_fwkv_manager,
+            apm_config,
+            reporter,
+            apm_meters,
         )
         # Report an status event after everything is done.
         self._report_init_event(reporter, apm_config)

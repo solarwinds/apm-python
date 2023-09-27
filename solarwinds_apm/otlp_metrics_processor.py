@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Tuple
 
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.trace import SpanKind, StatusCode, TraceFlags
+from opentelemetry.trace import SpanKind, StatusCode
 
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
@@ -30,6 +30,8 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
     _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
     _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
     _HTTP_URL = SpanAttributes.HTTP_URL  # "http.url"
+
+    _HTTP_SPAN_STATUS_UNAVAILABLE = 0
 
     def __init__(
         self,
@@ -54,19 +56,13 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             return
 
         # support ssa and conform to Otel proto common_pb2
-        meter_attrs = {
-            "sw.nonce": random.getrandbits(64) >> 1
-        }
+        meter_attrs = {"sw.nonce": random.getrandbits(64) >> 1}
 
         has_error = self.has_error(span)
         if has_error:
-            meter_attrs.update({
-                "sw.is_error": "true"
-            })
+            meter_attrs.update({"sw.is_error": "true"})
         else:
-            meter_attrs.update({
-                "sw.is_error": "false"
-            })
+            meter_attrs.update({"sw.is_error": "false"})
 
         # trans_name will never be None because always at least span.name
         trans_name, _ = self.calculate_transaction_names(span)
@@ -80,15 +76,15 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         if is_span_http:
             status_code = self.get_http_status_code(span)
             request_method = span.attributes.get(self._HTTP_METHOD, None)
-            meter_attrs.update({
-                self._HTTP_STATUS_CODE: status_code,
-                self._HTTP_METHOD: request_method,
-                "sw.transaction": trans_name
-            })
+            meter_attrs.update(
+                {
+                    self._HTTP_STATUS_CODE: status_code,
+                    self._HTTP_METHOD: request_method,
+                    "sw.transaction": trans_name,
+                }
+            )
         else:
-            meter_attrs.update({
-                "sw.transaction": trans_name
-            })
+            meter_attrs.update({"sw.transaction": trans_name})
         self.apm_meters.response_time.record(
             amount=span_time,
             attributes=meter_attrs,
@@ -97,7 +93,7 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         # This does not cache txn_name for span export because
         # assuming SolarWindsInboundMetricsSpanProcessor does it
         # for SW-style trace export. This processor is for OTLP-style.
-        # TODO: Cache txn_name for OTLP span export?     
+        # TODO: Cache txn_name for OTLP span export?
 
     # TODO If needed for both inbound and otlp metrics, refactor
     def is_span_http(self, span: "ReadableSpan") -> bool:
@@ -122,7 +118,8 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         # Something went wrong in OTel or instrumented service crashed early
         # if no status_code in attributes of HTTP span
         if not status_code:
-            status_code = self._LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE
+            # TODO change if refactor
+            status_code = self._HTTP_SPAN_STATUS_UNAVAILABLE
         return status_code
 
     # TODO If needed for both inbound and otlp metrics, refactor
