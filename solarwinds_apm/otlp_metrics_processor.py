@@ -163,7 +163,7 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         start_time: int,
         end_time: int,
     ) -> int:
-        """Calculate span time in ??? using start and end time
+        """Calculate span time in milliseconds (ms) using start and end time
         in nanoseconds (ns). OTel span start/end_time are optional."""
         if not start_time or not end_time:
             return 0
