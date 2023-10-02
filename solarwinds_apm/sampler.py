@@ -399,7 +399,10 @@ class _SwSampler(Sampler):
             )
             return None
 
-        new_attributes = {}
+        new_attributes = {
+            "sw.trace_span_mode": "otel",
+            "sw.data.module": "otel",
+        }
 
         if attributes:
             # Copy existing MappingProxyType KV into new_attributes for modification.
