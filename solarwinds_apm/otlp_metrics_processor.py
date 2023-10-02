@@ -56,8 +56,11 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             return
 
         # support ssa and conform to Otel proto common_pb2
+        # TODO init with ApmConfig to get service_name
         meter_attrs = {
             "sw.service_name": "flask-metrics-test",
+            "sw.trace_span_mode": "otel",
+            "sw.data.module": "otel",
             "sw.nonce": random.getrandbits(64) >> 1,
         }
 
