@@ -298,9 +298,17 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         # This is not the only Resource we create in distro;
         # should consolidate later?
-        resource = Resource.create({"service.name": apm_config.service_name})
+
+        # TODO If customer provides OTEL_RESOURCE_ATTRIBUTES then merge
+        #      with service.name and sw.trace_span_mode
         provider = MeterProvider(
-            resource=resource, metric_readers=metric_readers
+            resource=Resource.create(
+                {
+                    "sw.trace_span_mode": "otel",
+                    "service.name": apm_config.service_name,
+                }
+            ),
+            metric_readers=metric_readers,
         )
         metrics.set_meter_provider(provider)
 
