@@ -126,12 +126,17 @@ jobs:
     needs: [build_publish_sdist_and_x86_64, build_publish_aarch64]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Initialize git
-      run: |
-       git config user.name "GitHub Actions"
-       git config user.email noreply@github.com
-    - name: Create draft release
-      run: gh release create ${{ env.RELEASE_NAME }} --title "${{ env.RELEASE_NAME }}" --target release/${{ env.RELEASE_NAME }} --draft
-      env:
-        GITHUB_TOKEN: ${{secrets.APM_CI_GHA_GITHUB_TOKEN}}
+      - uses: getsentry/action-github-app-token@v2
+        id: github-token
+        with:
+          app_id: ${{ vars.APPLICATION_ID }}
+          private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
+      - uses: actions/checkout@v3
+      - name: Initialize git
+        run: |
+        git config user.name "GitHub Actions"
+        git config user.email noreply@github.com
+      - name: Create draft release
+        run: gh release create ${{ env.RELEASE_NAME }} --title "${{ env.RELEASE_NAME }}" --target release/${{ env.RELEASE_NAME }} --draft
+        env:
+          GITHUB_TOKEN: ${{ steps.github-token.outputs.token }}
