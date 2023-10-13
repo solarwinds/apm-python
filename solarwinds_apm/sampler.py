@@ -11,7 +11,6 @@ The custom sampler will fetch sampling configurations for the SolarWinds backend
 
 import enum
 import logging
-import random
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Optional, Sequence
 
@@ -40,7 +39,6 @@ from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
-    from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
 
 logger = logging.getLogger(__name__)
 
@@ -64,11 +62,7 @@ class _SwSampler(Sampler):
     _XTRACEOPTIONS_RESP_TRIGGER_NOT_REQUESTED = "not-requested"
     _XTRACEOPTIONS_RESP_TRIGGER_TRACE = "trigger-trace"
 
-    def __init__(
-        self,
-        apm_config: "SolarWindsApmConfig",
-        apm_meters: "SolarWindsMeterManager",
-    ):
+    def __init__(self, apm_config: "SolarWindsApmConfig"):
         self.apm_config = apm_config
         self.context = apm_config.extension.Context
 
@@ -76,8 +70,6 @@ class _SwSampler(Sampler):
             self.tracing_mode = self.apm_config.get("tracing_mode")
         else:
             self.tracing_mode = self._UNSET
-
-        self.request_counter = apm_meters.requests
 
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
@@ -482,20 +474,6 @@ class _SwSampler(Sampler):
         # attributes must be immutable for SamplingResult
         return MappingProxyType(new_attributes)
 
-    def count_request(self) -> None:
-        """
-        Count of all (tt, new and through) requests (entry spans), regardless
-        of whether they were traced
-        """
-        # support ssa and conform to Otel proto common_pb2
-        self.request_counter.add(
-            amount=1,
-            attributes={
-                "sw.service_name": self.apm_config.service_name,
-                "sw.nonce": random.getrandbits(64) >> 1,
-            },
-        )
-
     # Note: this inherits deprecated `typing` use by OTel,
     #       I think for compatibility with Python3.7 else TypeError
     def should_sample(
@@ -514,8 +492,6 @@ class _SwSampler(Sampler):
         Calculates SamplingResult based on calculation of new/continued trace
         decision, new/updated trace state, and new/updated attributes.
         """
-        self.count_request()
-
         parent_span_context = get_current_span(
             parent_context
         ).get_span_context()
@@ -557,23 +533,19 @@ class ParentBasedSwSampler(ParentBased):
     Sampler that respects its parent span's sampling decision, but otherwise
     samples according to the configurations from the NH/AO backend.
 
-    Requires "SolarWindsApmConfig", "SolarWindsMeterManager"
+    Requires "SolarWindsApmConfig".
     """
 
-    def __init__(
-        self,
-        apm_config: "SolarWindsApmConfig",
-        apm_meters: "SolarWindsMeterManager",
-    ):
+    def __init__(self, apm_config: "SolarWindsApmConfig"):
         """
         Uses _SwSampler/liboboe if no parent span.
         Uses _SwSampler/liboboe if parent span is_remote.
         Uses OTEL defaults if parent span is_local.
         """
         super().__init__(
-            root=_SwSampler(apm_config, apm_meters),
-            remote_parent_sampled=_SwSampler(apm_config, apm_meters),
-            remote_parent_not_sampled=_SwSampler(apm_config, apm_meters),
+            root=_SwSampler(apm_config),
+            remote_parent_sampled=_SwSampler(apm_config),
+            remote_parent_not_sampled=_SwSampler(apm_config),
         )
 
     # should_sample defined by ParentBased
