@@ -23,3 +23,8 @@ class SolarWindsMeterManager:
             description="measures the duration of an inbound HTTP request",
             unit="ms",
         )
+
+        self.requests = meter.create_counter(
+            name="trace.service.requests",
+            description="count of all (tt, new and through) requests, regardless of whether they were traced",
+        )

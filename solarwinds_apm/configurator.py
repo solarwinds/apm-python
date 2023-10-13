@@ -99,7 +99,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_meters: SolarWindsMeterManager,
     ) -> None:
         """Configure OTel sampler, exporter, propagator, response propagator"""
-        self._configure_sampler(apm_config)
+        self._configure_sampler(
+            apm_config,
+            apm_meters,
+        )
         if apm_config.agent_enabled:
             self._configure_metrics_span_processor(
                 apm_txname_manager,
@@ -125,6 +128,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_sampler(
         self,
         apm_config: SolarWindsApmConfig,
+        apm_meters: SolarWindsMeterManager,
     ) -> None:
         """Always configure SolarWinds OTel sampler, or none if disabled"""
         if not apm_config.agent_enabled:
@@ -136,7 +140,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "solarwinds_apm",
                 "opentelemetry_traces_sampler",
                 self._DEFAULT_SW_TRACES_SAMPLER,
-            )(apm_config)
+            )(
+                apm_config,
+                apm_meters,
+            )
         except Exception as ex:
             logger.exception("A exception was raised: %s", ex)
             logger.exception(
