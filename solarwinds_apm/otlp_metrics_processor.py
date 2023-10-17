@@ -100,9 +100,16 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         # for SW-style trace export. This processor is for OTLP-style.
         # TODO: Cache txn_name for OTLP span export?
 
+        mp = get_meter_provider()
+        if hasattr(mp, "force_flush"):
+            logger.warning("Will force_flush MeterProvider at on_end")
+        else:
+            logger.warning("No MeterProvider force_flush available at on_end")
+
         # Force flush metrics after every entry span via flush of all meters
         # including PeriodicExportingMetricReader
-        get_meter_provider().force_flush()
+        # get_meter_provider().force_flush()
+        mp.force_flush()
 
     # TODO If needed for both inbound and otlp metrics, refactor
     def is_span_http(self, span: "ReadableSpan") -> bool:
