@@ -21,7 +21,7 @@ class SolarWindsMeterManager:
 
     def __init__(self, **kwargs: int) -> None:
         # Gets the global default meter
-        meter = metrics.get_meter(__name__)
+        meter = metrics.get_meter("sw.apm.sampling.metrics")
 
         self.response_time = meter.create_histogram(
             name="trace.service.response_time",
