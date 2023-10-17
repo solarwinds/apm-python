@@ -5,11 +5,8 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
-import random
-from collections.abc import Iterable
 
 from opentelemetry import metrics
-from opentelemetry.metrics import CallbackOptions, Observation
 
 logger = logging.getLogger(__name__)
 
@@ -25,16 +22,4 @@ class SolarWindsMeterManager:
             name="trace.service.response_time",
             description="measures the duration of an inbound HTTP request",
             unit="ms",
-        )
-
-        def request_counter_func(
-            options: CallbackOptions,
-        ) -> Iterable[Observation]:
-            # TODO: Use c-lib API to get request count
-            yield Observation(random.randint(0, 10), {})
-
-        self.request_counter = meter.create_observable_gauge(
-            # TODO: Rename to SWO key
-            name="tammy.test.request_counter",
-            callbacks=[request_counter_func],
         )
