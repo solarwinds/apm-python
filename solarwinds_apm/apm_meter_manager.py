@@ -6,9 +6,7 @@
 
 import logging
 import random
-
-# pylint:disable=deprecated-typing-alias
-from typing import Iterable
+from collections.abc import Iterable
 
 from opentelemetry import metrics
 from opentelemetry.metrics import CallbackOptions, Observation
@@ -29,8 +27,6 @@ class SolarWindsMeterManager:
             unit="ms",
         )
 
-        # TODO: TypeError: 'ABCMeta' object is not subscriptable
-        #       with old import for this signature, with current Otel API
         def request_counter_func(
             options: CallbackOptions,
         ) -> Iterable[Observation]:
