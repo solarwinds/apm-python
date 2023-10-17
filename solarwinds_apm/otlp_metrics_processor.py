@@ -8,6 +8,7 @@ import logging
 import random
 from typing import TYPE_CHECKING, Any, Tuple
 
+from opentelemetry.metrics import get_meter_provider
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import SpanKind, StatusCode
@@ -98,6 +99,10 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         # assuming SolarWindsInboundMetricsSpanProcessor does it
         # for SW-style trace export. This processor is for OTLP-style.
         # TODO: Cache txn_name for OTLP span export?
+
+        # Force flush metrics after every entry span via flush of all meters
+        # including PeriodicExportingMetricReader
+        get_meter_provider().force_flush()
 
     # TODO If needed for both inbound and otlp metrics, refactor
     def is_span_http(self, span: "ReadableSpan") -> bool:
