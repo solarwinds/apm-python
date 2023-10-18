@@ -107,18 +107,22 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             mp = mp._real_meter_provider
         if not mp:
             logger.warning("There is no real_meter_provider. Cannot flush")
-            meter_by_get = mp.get_meter("sw.apm.sampling.metrics")
-            logger.warning("Tried get_meter by APM name, got %s type %s", meter_by_get, type(meter_by_get))
-            meters_by_attr = mp._meters()
-            logger.warning("Meter by attr is %s", meters_by_attr)
+            # try:
+            #     meter_by_get = mp.get_meter("sw.apm.sampling.metrics")
+            #     logger.warning("Tried get_meter by APM name, got %s type %s", meter_by_get, type(meter_by_get))
+            #     meters_by_attr = mp._meters()
+            #     logger.warning("Meter by attr is %s", meters_by_attr)
 
-            if meter_by_get:
-                try:
-                    logger.warning("Trying _real_meter, _instruments with meter_by_get")
-                    logger.warning("%s", meter_by_get._real_meter)
-                    logger.warning("%s", meter_by_get._instruments)
-                except Exception as exc:
-                    logger.error("Got exception playing with meter_by_get: %s", exc)
+            #     if meter_by_get:
+            #         try:
+            #             logger.warning("Trying _real_meter, _instruments with meter_by_get")
+            #             logger.warning("%s", meter_by_get._real_meter)
+            #             logger.warning("%s", meter_by_get._instruments)
+            #         except Exception as exc:
+            #             logger.error("Got exception playing with meter_by_get: %s", exc)
+            # except Exception as exc:
+            #     logger.error("Got exception trying to get_meter: %s", exc)
+            
             return
         if not hasattr(mp, "force_flush"):
             logger.warning("No MeterProvider force_flush available at on_end. Cannot flush")
