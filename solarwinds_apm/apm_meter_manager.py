@@ -18,6 +18,8 @@ class SolarWindsMeterManager:
         # Gets the global default meter
         meter = metrics.get_meter("sw.apm.sampling.metrics")
 
+        logger.warning("APM doing create_histogram using meter %s, type %s", meter, type(meter))
+
         self.response_time = meter.create_histogram(
             name="trace.service.response_time",
             description="measures the duration of an inbound HTTP request",
