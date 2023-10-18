@@ -9,6 +9,7 @@ import random
 from typing import TYPE_CHECKING, Any, Tuple
 
 from opentelemetry.metrics import get_meter_provider
+from opentelemetry.metrics._internal import _ProxyMeterProvider
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import SpanKind, StatusCode
@@ -101,14 +102,20 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         # TODO: Cache txn_name for OTLP span export?
 
         mp = get_meter_provider()
-        if hasattr(mp, "force_flush"):
-            logger.warning("Will force_flush MeterProvider at on_end")
-        else:
-            logger.warning("No MeterProvider force_flush available at on_end")
+        if isinstance(mp, _ProxyMeterProvider):
+            logger.warning("Attempting _ProxyMeterProvider._real_meter_provider")
+            mp = mp._real_meter_provider
+        if not mp:
+            logger.warning("There is no real_meter_provider. Cannot flush")
+            return
+        if not hasattr(mp, "force_flush"):
+            logger.warning("No MeterProvider force_flush available at on_end. Cannot flush")
+            return
 
         # Force flush metrics after every entry span via flush of all meters
         # including PeriodicExportingMetricReader
         # get_meter_provider().force_flush()
+        logger.warning("Will force_flush MeterProvider at on_end")
         mp.force_flush()
 
     # TODO If needed for both inbound and otlp metrics, refactor
