@@ -15,10 +15,11 @@ class SolarWindsMeterManager:
     """SolarWinds Python OTLP Meter Manager"""
 
     def __init__(self, **kwargs: int) -> None:
-        # Gets the global default meter
-        meter = metrics.get_meter("sw.apm.sampling.metrics")
+        # Returns a named `Meter` to handle instrument creation.
+        # A convenience wrapper for MeterProvider.get_meter
+        self.meter = metrics.get_meter("sw.apm.sampling.metrics")
 
-        self.response_time = meter.create_histogram(
+        self.response_time = self.meter.create_histogram(
             name="trace.service.response_time",
             description="measures the duration of an inbound HTTP request",
             unit="ms",
