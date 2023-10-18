@@ -311,7 +311,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             metric_readers=metric_readers,
         )
         metrics.set_meter_provider(provider)
-        logger.warning("APM set_meter_provider with %s, type %s", provider, type(provider))
 
     def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators, default or environment configured"""

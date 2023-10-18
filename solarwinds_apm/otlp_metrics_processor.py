@@ -9,7 +9,6 @@ import random
 from typing import TYPE_CHECKING, Any, Tuple
 
 from opentelemetry.metrics import get_meter_provider
-from opentelemetry.metrics._internal import _ProxyMeterProvider
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import SpanKind, StatusCode
@@ -101,38 +100,10 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         # for SW-style trace export. This processor is for OTLP-style.
         # TODO: Cache txn_name for OTLP span export?
 
-        mp = get_meter_provider()
-        if isinstance(mp, _ProxyMeterProvider):
-            logger.warning("Attempting _ProxyMeterProvider._real_meter_provider")
-            mp = mp._real_meter_provider
-        if not mp:
-            logger.warning("There is no real_meter_provider. Cannot flush")
-            # try:
-            #     meter_by_get = mp.get_meter("sw.apm.sampling.metrics")
-            #     logger.warning("Tried get_meter by APM name, got %s type %s", meter_by_get, type(meter_by_get))
-            #     meters_by_attr = mp._meters()
-            #     logger.warning("Meter by attr is %s", meters_by_attr)
-
-            #     if meter_by_get:
-            #         try:
-            #             logger.warning("Trying _real_meter, _instruments with meter_by_get")
-            #             logger.warning("%s", meter_by_get._real_meter)
-            #             logger.warning("%s", meter_by_get._instruments)
-            #         except Exception as exc:
-            #             logger.error("Got exception playing with meter_by_get: %s", exc)
-            # except Exception as exc:
-            #     logger.error("Got exception trying to get_meter: %s", exc)
-            
-            return
-        if not hasattr(mp, "force_flush"):
-            logger.warning("No MeterProvider force_flush available at on_end. Cannot flush")
-            return
-
         # Force flush metrics after every entry span via flush of all meters
         # including PeriodicExportingMetricReader
-        # get_meter_provider().force_flush()
-        logger.warning("Will force_flush MeterProvider at on_end")
-        mp.force_flush()
+        logger.debug("Performing MeterProvider force_flush of metrics")
+        get_meter_provider().force_flush()
 
     # TODO If needed for both inbound and otlp metrics, refactor
     def is_span_http(self, span: "ReadableSpan") -> bool:
