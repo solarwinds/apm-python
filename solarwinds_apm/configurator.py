@@ -263,8 +263,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             reader = PeriodicExportingMetricReader(exporter)
             metric_readers.append(reader)
 
-        # This is not the only Resource we create in distro;
-        # should consolidate later?
+        # Consolidate in #201
         resource = Resource.create({"service.name": apm_config.service_name})
         provider = MeterProvider(
             resource=resource, metric_readers=metric_readers
