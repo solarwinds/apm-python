@@ -231,9 +231,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         )
 
         if not environ_exporter:
-            # TODO Is metrics export an opt-in feature or should it always load?
-            #      If always, should the default be one exporter as otlp_proto_grpc?
-            # environ_exporter_names = [INTL_SWO_DEFAULT_METRICS_EXPORTER]
             logger.debug("No OTEL_METRICS_EXPORTER set, skipping init")
             return
 
@@ -263,9 +260,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "Creating PeriodicExportingMetricReader using %s",
                 exporter_name,
             )
-            # TODO: Does it have to be PeriodicExporting?
-            #       What about pull exporters i.e. Prometheus
-            #       https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#pull-metric-exporter
             reader = PeriodicExportingMetricReader(exporter)
             metric_readers.append(reader)
 
