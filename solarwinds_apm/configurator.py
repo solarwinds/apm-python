@@ -107,6 +107,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             self._configure_otlp_metrics_span_processor(
                 apm_txname_manager,
+                apm_config,
                 apm_meters,
             )
             self._configure_exporter(
@@ -171,12 +172,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_otlp_metrics_span_processor(
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
+        apm_config: SolarWindsApmConfig,
         apm_meters: SolarWindsMeterManager,
     ) -> None:
         """Configure SolarWindsOTLPMetricsSpanProcessor"""
         trace.get_tracer_provider().add_span_processor(
             SolarWindsOTLPMetricsSpanProcessor(
                 apm_txname_manager,
+                apm_config,
                 apm_meters,
             )
         )
@@ -287,9 +290,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "Creating PeriodicExportingMetricReader using %s",
                 exporter_name,
             )
-            # TODO: Does it have to be PeriodicExporting?
-            #       What about pull exporters i.e. Prometheus
-            #       https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#pull-metric-exporter
             reader = PeriodicExportingMetricReader(exporter)
             metric_readers.append(reader)
 

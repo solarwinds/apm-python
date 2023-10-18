@@ -18,6 +18,7 @@ from solarwinds_apm.w3c_transformer import W3CTransformer
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
+    from solarwinds_apm.apm_config import SolarWindsApmConfig
     from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 
@@ -37,9 +38,11 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
     def __init__(
         self,
         apm_txname_manager: "SolarWindsTxnNameManager",
+        apm_config: "SolarWindsApmConfig",
         apm_meters: "SolarWindsMeterManager",
     ) -> None:
         self.apm_txname_manager = apm_txname_manager
+        self.service_name = apm_config.service_name
         self.apm_meters = apm_meters
 
     # TODO Assumes SolarWindsInboundMetricsSpanProcessor.on_start
@@ -57,9 +60,8 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             return
 
         # support ssa and conform to Otel proto common_pb2
-        # TODO init with ApmConfig to get service_name
         meter_attrs = {
-            "sw.service_name": "flask-metrics-test",
+            "sw.service_name": self.service_name,
             "sw.nonce": random.getrandbits(64) >> 1,
         }
 
