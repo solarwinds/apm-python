@@ -39,7 +39,7 @@ from pkg_resources import get_distribution, iter_entry_points, load_entry_point
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
-from solarwinds_apm.apm_constants import (  # INTL_SWO_DEFAULT_METRICS_EXPORTER,
+from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_SUPPORT_EMAIL,
@@ -252,6 +252,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         configured if any, or none if agent disabled."""
         if not apm_config.agent_enabled:
             logger.error("Tracing disabled. Cannot set metrics exporter.")
+            return
+
+        if not apm_config.get("experimental").get("otel_collector") is True:
+            logger.debug(
+                "Experimental otel_collector flag not configured. Not setting metrics exporter."
+            )
             return
 
         # SolarWindsDistro._configure does not setdefault so this
