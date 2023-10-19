@@ -27,7 +27,8 @@ logger = logging.getLogger(__name__)
 
 
 class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
-    # TODO If needed for both inbound and otlp metrics, refactor
+    # TODO Refactor for both inbound and otlp metrics
+    #      https://swicloud.atlassian.net/browse/NH-65061
     _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
     _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
     _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
@@ -47,6 +48,7 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
 
     # TODO Assumes SolarWindsInboundMetricsSpanProcessor.on_start
     #      is called to store span ID for any custom txn naming
+    #      https://swicloud.atlassian.net/browse/NH-65061
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports OTLP trace metrics"""
@@ -101,13 +103,15 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         # assuming SolarWindsInboundMetricsSpanProcessor does it
         # for SW-style trace export. This processor is for OTLP-style.
         # TODO: Cache txn_name for OTLP span export?
+        #       https://swicloud.atlassian.net/browse/NH-65061
 
         # Force flush metrics after every entry span via flush of all meters
         # including PeriodicExportingMetricReader
         logger.debug("Performing MeterProvider force_flush of metrics")
         get_meter_provider().force_flush()
 
-    # TODO If needed for both inbound and otlp metrics, refactor
+    # TODO Refactor for both inbound and otlp metrics
+    #      https://swicloud.atlassian.net/browse/NH-65061
     def is_span_http(self, span: "ReadableSpan") -> bool:
         """This span from inbound HTTP request if from a SERVER by some http.method"""
         if span.kind == SpanKind.SERVER and span.attributes.get(
@@ -116,14 +120,16 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             return True
         return False
 
-    # TODO If needed for both inbound and otlp metrics, refactor
+    # TODO Refactor for both inbound and otlp metrics
+    #      https://swicloud.atlassian.net/browse/NH-65061
     def has_error(self, span: "ReadableSpan") -> bool:
         """Calculate if this span instance has_error"""
         if span.status.status_code == StatusCode.ERROR:
             return True
         return False
 
-    # TODO If needed for both inbound and otlp metrics, refactor
+    # TODO Refactor for both inbound and otlp metrics
+    #      https://swicloud.atlassian.net/browse/NH-65061
     def get_http_status_code(self, span: "ReadableSpan") -> int:
         """Calculate HTTP status_code from span or default to UNAVAILABLE"""
         status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
@@ -134,7 +140,8 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             status_code = self._HTTP_SPAN_STATUS_UNAVAILABLE
         return status_code
 
-    # TODO If needed for both inbound and otlp metrics, refactor
+    # TODO Refactor for both inbound and otlp metrics
+    #      https://swicloud.atlassian.net/browse/NH-65061
     # Disable pylint for compatibility with Python3.7 else TypeError
     def calculate_transaction_names(
         self, span: "ReadableSpan"
@@ -153,7 +160,8 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             trans_name = span.name
         return trans_name, url_tran
 
-    # TODO If needed for both inbound and otlp metrics, refactor
+    # TODO Refactor for both inbound and otlp metrics
+    #      https://swicloud.atlassian.net/browse/NH-65061
     def calculate_custom_transaction_name(self, span: "ReadableSpan") -> Any:
         """Get custom transaction name for trace by trace_id, if any"""
         trans_name = None
