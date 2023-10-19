@@ -224,6 +224,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             logger.error("Tracing disabled. Cannot set metrics exporter.")
             return
 
+        if not apm_config.get("experimental").get("otel_collector") is True:
+            logger.debug(
+                "Experimental otel_collector flag not configured. Not setting metrics exporter."
+            )
+            return
+
         # SolarWindsDistro._configure does not setdefault so this
         # could be None
         environ_exporter = os.environ.get(
