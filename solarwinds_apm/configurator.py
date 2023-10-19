@@ -47,6 +47,7 @@ from solarwinds_apm.apm_constants import (
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
 from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
 from solarwinds_apm.apm_noop import Reporter
+from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.inbound_metrics_processor import (
@@ -77,8 +78,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure SolarWinds APM and OTel components"""
         apm_txname_manager = SolarWindsTxnNameManager()
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
-        apm_meters = SolarWindsMeterManager()
         apm_config = SolarWindsApmConfig()
+
+        if not apm_config.get("experimental").get("otel_collector") is True:
+            logger.debug(
+                "Experimental otel_collector flag not configured. Creating meter manager as no-op."
+            )
+            apm_meters = NoopMeterManager()
+        else:
+            apm_meters = SolarWindsMeterManager()
+
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
             apm_txname_manager,
@@ -176,6 +185,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_meters: SolarWindsMeterManager,
     ) -> None:
         """Configure SolarWindsOTLPMetricsSpanProcessor"""
+        if not apm_config.get("experimental").get("otel_collector") is True:
+            logger.debug(
+                "Experimental otel_collector flag not configured. Not configuring OTLP metrics span processor."
+            )
+            return
+
         trace.get_tracer_provider().add_span_processor(
             SolarWindsOTLPMetricsSpanProcessor(
                 apm_txname_manager,

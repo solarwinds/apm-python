@@ -188,3 +188,15 @@ class Config:
     @staticmethod
     def getVersionString():
         return "No extension loaded."
+
+
+class OtelHistogram:
+    @staticmethod
+    def record(*args, **kwargs):
+        pass
+
+
+class SolarWindsMeterManager:
+    def __init__(self, *args, **kwargs):
+        self.meter = None
+        self.response_time = OtelHistogram()
