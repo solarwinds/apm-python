@@ -205,10 +205,22 @@ class SolarWindsMeterManager:
 class SettingsApi:
     def __init__(self, *args, **kwargs):
         pass
-    
+
     def getTracingDecision(self):
         # TODO should be zeroed out if noop
-        return 1, 1, 1000000, 6, 0.37400000000000005, 6.800000000000001, 0, -1, 'ok', '', 0
+        return (
+            1,
+            1,
+            1000000,
+            6,
+            0.37400000000000005,
+            6.800000000000001,
+            0,
+            -1,
+            "ok",
+            "",
+            0,
+        )
 
     def consumeRequestCount(self):
         return 200, 1
@@ -230,7 +242,7 @@ class SettingsApi:
 
     def consumeTriggeredTraceCount(self):
         return 0, 0
-    
+
     def getLastUsedSampleRate(self):
         return 0, 0
 

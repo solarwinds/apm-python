@@ -209,7 +209,7 @@ class _SwSampler(Sampler):
                 status_msg,
                 auth_msg,
                 status,
-            ) = oboe_settings_api.getTracingDecision()    
+            ) = oboe_settings_api.getTracingDecision()
         else:
             (
                 do_metrics,

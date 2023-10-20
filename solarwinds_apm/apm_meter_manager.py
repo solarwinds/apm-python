@@ -5,6 +5,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
+
 # pylint:disable=deprecated-typing-alias
 from typing import Iterable
 
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 # TODO Change when SWIG updated
 # TODO Move to Configurator?
 oboe_settings_api = SettingsApi()
+
 
 class SolarWindsMeterManager:
     """SolarWinds Python OTLP Meter Manager"""
