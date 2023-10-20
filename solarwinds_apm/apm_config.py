@@ -114,6 +114,7 @@ class SolarWindsApmConfig:
             "transaction_filters": [],
             "experimental": {},
         }
+        self.is_lambda = self._is_lambda()
         self.agent_enabled = True
         self.update_with_cnf_file()
         self.update_with_env_var()
@@ -164,7 +165,7 @@ class SolarWindsApmConfig:
             "LAMBDA_TASK_ROOT"
         ):
             logger.warning(
-                "AWS Lambda is not yet supported by Python SolarWinds APM."
+                "AWS Lambda is experimental in Python SolarWinds APM."
             )
             return True
         return False
