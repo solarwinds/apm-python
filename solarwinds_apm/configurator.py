@@ -92,7 +92,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         else:
             apm_meters = SolarWindsMeterManager()
 
-        reporter = self._initialize_solarwinds_reporter(apm_config)
+        if apm_config.is_lambda:
+            logger.debug("Running in Lambda mode with noop c-lib reporter")
+            reporter = NoopReporter()
+        else:
+            reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
             apm_txname_manager,
             apm_fwkv_manager,
