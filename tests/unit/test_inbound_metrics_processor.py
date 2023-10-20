@@ -919,6 +919,42 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         result = processor.calculate_transaction_names(mock_span)
         assert "foo", "bar" == result
 
+    def test_calculate_transaction_names_yes_custom_yes_config(self, mocker):
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_URL": "http.url",
+                "HTTP_ROUTE": "http.route"
+            }
+        )
+        mock_calculate_custom = mocker.patch(
+            "solarwinds_apm.inbound_metrics_processor.SolarWindsInboundMetricsSpanProcessor.calculate_custom_transaction_name"
+        )
+        mock_calculate_custom.configure_mock(return_value="foo")
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "attributes": {
+                    "http.url": "bar"
+                }
+            }
+        )
+        mock_get = mocker.Mock(return_value="not-used")
+        mock_apm_config = mocker.Mock()
+        mock_apm_config.configure_mock(
+            **{
+                "get": mock_get
+            }
+        )
+        processor = SolarWindsInboundMetricsSpanProcessor(
+            mocker.Mock(),
+            mock_apm_config,
+        )
+        result = processor.calculate_transaction_names(mock_span)
+        assert "foo", "bar" == result
+
     def test_calculate_transaction_names_no_custom_yes_config(self, mocker):
         mock_spanattributes = mocker.patch(
             "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
