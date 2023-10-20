@@ -34,6 +34,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_X_OPTIONS_KEY,
     INTL_SWO_X_OPTIONS_RESPONSE_KEY,
 )
+from solarwinds_apm.apm_noop import SettingsApi
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
@@ -41,6 +42,10 @@ if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
 
 logger = logging.getLogger(__name__)
+
+# TODO Change when SWIG updated
+# TODO Move to Configurator?
+oboe_settings_api = SettingsApi()
 
 
 class _SwSampler(Sampler):
@@ -190,29 +195,46 @@ class _SwSampler(Sampler):
             signature,
             timestamp,
         )
-        (
-            do_metrics,
-            do_sample,
-            rate,
-            source,
-            bucket_rate,
-            bucket_cap,
-            decision_type,
-            auth,
-            status_msg,
-            auth_msg,
-            status,
-        ) = self.context.getDecisions(
-            tracestring,
-            sw_member_value,
-            tracing_mode,
-            sample_rate,
-            trigger_trace_request,
-            trigger_trace_mode,
-            options,
-            signature,
-            timestamp,
-        )
+
+        if self.apm_config.is_lambda:
+            (
+                do_metrics,
+                do_sample,
+                rate,
+                source,
+                bucket_rate,
+                bucket_cap,
+                decision_type,
+                auth,
+                status_msg,
+                auth_msg,
+                status,
+            ) = oboe_settings_api.getTracingDecision()    
+        else:
+            (
+                do_metrics,
+                do_sample,
+                rate,
+                source,
+                bucket_rate,
+                bucket_cap,
+                decision_type,
+                auth,
+                status_msg,
+                auth_msg,
+                status,
+            ) = self.context.getDecisions(
+                tracestring,
+                sw_member_value,
+                tracing_mode,
+                sample_rate,
+                trigger_trace_request,
+                trigger_trace_mode,
+                options,
+                signature,
+                timestamp,
+            )
+
         decision = {
             "do_metrics": do_metrics,
             "do_sample": do_sample,
