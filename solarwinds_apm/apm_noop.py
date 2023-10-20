@@ -11,6 +11,7 @@ apm_noop defines no-op classes for platforms we don't support building the c ext
 # No-op classes intentionally left undocumented
 # "Missing docstring"
 # pylint: disable-msg=C0103
+import random
 import threading
 
 
@@ -223,7 +224,7 @@ class SettingsApi:
         )
 
     def consumeRequestCount(self):
-        return 200, 1
+        return 0, random.randint(0, 10)
 
     def consumeTokenBucketExhaustionCount(self):
         return 0, 0
