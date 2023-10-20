@@ -27,6 +27,8 @@ def set_transaction_name(custom_name: str) -> bool:
     Assign a custom transaction name to a current request. If multiple
     transaction names are set on the same trace, then the last one is used.
     Overrides default, out-of-the-box naming based on URL/controller/action.
+    Takes precedence over transaction_name set in environment variable or
+    config file.
 
     Any uppercase to lowercase conversions or special character replacements
     are done by the platform. Any truncations are done by the core extension.
