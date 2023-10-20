@@ -5,7 +5,6 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
-from os import environ
 from typing import TYPE_CHECKING, Any, Optional, Tuple
 
 from opentelemetry import baggage, context
@@ -27,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
-    _ENV_TRANSACTION_NAME = "SW_APM_TRANSACTION_NAME"
+    _TRANSACTION_NAME = "transaction_name"
     _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
     _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
     _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
@@ -42,6 +41,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     ) -> None:
         self.apm_txname_manager = apm_txname_manager
         self._span = apm_config.extension.Span
+        self.config_transaction_name = apm_config.get(self._TRANSACTION_NAME)
 
     def on_start(
         self,
@@ -166,7 +166,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         trans_name = None
         custom_trans_name = self.calculate_custom_transaction_name(span)
         if not custom_trans_name:
-            custom_trans_name = self.calculate_env_transaction_name()
+            custom_trans_name = self.config_transaction_name
 
         if custom_trans_name:
             trans_name = custom_trans_name
@@ -188,14 +188,6 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             # Remove custom name from cache in case not sampled.
             # If sampled, should be re-added at on_end.
             del self.apm_txname_manager[trace_span_id]
-        return trans_name
-
-    def calculate_env_transaction_name(self) -> Any:
-        """Get custom transaction name from environment, if any"""
-        trans_name = None
-        env_name = environ.get(self._ENV_TRANSACTION_NAME)
-        if env_name:
-            trans_name = env_name
         return trans_name
 
     def calculate_span_time(

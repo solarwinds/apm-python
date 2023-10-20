@@ -877,9 +877,16 @@ class TestSolarWindsInboundMetricsSpanProcessor():
                 }
             }
         )
+        mock_get = mocker.Mock(return_value=None)
+        mock_apm_config = mocker.Mock()
+        mock_apm_config.configure_mock(
+            **{
+                "get": mock_get
+            }
+        )
         processor = SolarWindsInboundMetricsSpanProcessor(
             mocker.Mock(),
-            mocker.Mock(),
+            mock_apm_config,
         )
         assert ("foo", None) == processor.calculate_transaction_names(mock_span)
 
@@ -912,10 +919,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         result = processor.calculate_transaction_names(mock_span)
         assert "foo", "bar" == result
 
-    def test_calculate_transaction_names_no_custom_yes_env(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_TRANSACTION_NAME": "foo",
-        })
+    def test_calculate_transaction_names_no_custom_yes_config(self, mocker):
         mock_spanattributes = mocker.patch(
             "solarwinds_apm.inbound_metrics_processor.SpanAttributes"
         )
@@ -937,9 +941,16 @@ class TestSolarWindsInboundMetricsSpanProcessor():
                 }
             }
         )
+        mock_get = mocker.Mock(return_value="foo")
+        mock_apm_config = mocker.Mock()
+        mock_apm_config.configure_mock(
+            **{
+                "get": mock_get
+            }
+        )
         processor = SolarWindsInboundMetricsSpanProcessor(
             mocker.Mock(),
-            mocker.Mock(),
+            mock_apm_config,
         )
         result = processor.calculate_transaction_names(mock_span)
         assert "foo", "bar" == result
@@ -1050,26 +1061,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         assert "foo" == processor.calculate_custom_transaction_name(mocker.Mock())
         mock_del.assert_called_once_with("some-id")
-
-    def test_calculate_env_transaction_name_none(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "not_txn_name": "foo-bar",
-        })
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
-            mocker.Mock(),
-        )
-        assert processor.calculate_env_transaction_name() is None
-
-    def test_calculate_env_transaction_name_present(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_TRANSACTION_NAME": "foo-bar",
-        })
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
-            mocker.Mock(),
-        )
-        assert "foo-bar" == processor.calculate_env_transaction_name()
 
     def test_calculate_span_time_missing(self, mocker):
         processor = SolarWindsInboundMetricsSpanProcessor(

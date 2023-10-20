@@ -109,6 +109,7 @@ class SolarWindsApmConfig:
             "reporter_file_single": 0,
             "proxy": "",
             "transaction_filters": [],
+            "transaction_name": None,
         }
         self.agent_enabled = True
         self.update_with_cnf_file()
