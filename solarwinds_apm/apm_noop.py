@@ -200,3 +200,39 @@ class SolarWindsMeterManager:
     def __init__(self, *args, **kwargs):
         self.meter = None
         self.response_time = OtelHistogram()
+
+
+class SettingsApi:
+    def __init__(self, *args, **kwargs):
+        pass
+    
+    def getTracingDecision(self):
+        # TODO should be zeroed out if noop
+        return 1, 1, 1000000, 6, 0.37400000000000005, 6.800000000000001, 0, -1, 'ok', '', 0
+
+    def consumeRequestCount(self):
+        return 200, 1
+
+    def consumeTokenBucketExhaustionCount(self):
+        return 0, 0
+
+    def consumeTraceCount(self):
+        return 0, 0
+
+    def consumeSampleCount(self):
+        return 0, 0
+
+    def consumeThroughIgnoredCount(self):
+        return 0, 0
+
+    def consumeThroughTraceCount(self):
+        return 0, 0
+
+    def consumeTriggeredTraceCount(self):
+        return 0, 0
+    
+    def getLastUsedSampleRate(self):
+        return 0, 0
+
+    def getLastUsedSampleSource(self):
+        return 0, 0
