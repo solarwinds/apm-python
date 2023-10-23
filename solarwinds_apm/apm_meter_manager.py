@@ -6,6 +6,8 @@
 
 import logging
 
+# TypeError: 'ABCMeta' object is not subscriptable
+# with this old import for callback signatures, with current Otel API
 # pylint:disable=deprecated-typing-alias
 from typing import Iterable
 
@@ -35,16 +37,101 @@ class SolarWindsMeterManager:
             unit="ms",
         )
 
-        # TypeError: 'ABCMeta' object is not subscriptable
-        # with old import for this signature, with current Otel API
-        def request_counter_func(
+        def request_count(
             options: CallbackOptions,
         ) -> Iterable[Observation]:
             status, trace_count = oboe_settings_api.consumeRequestCount()
             yield Observation(trace_count, {"status": status})
 
-        self.request_counter = self.meter.create_observable_gauge(
-            # TODO: This is just a test
-            name="test.python.swig.request_counter",
-            callbacks=[request_counter_func],
+        self.request_count = self.meter.create_observable_gauge(
+            name="trace.service.request_count",
+            callbacks=[request_count],
+        )
+
+        def token_bucket_exhaustion_count(
+            options: CallbackOptions,
+        ) -> Iterable[Observation]:
+            status, trace_count = oboe_settings_api.consumeTokenBucketExhaustionCount()
+            yield Observation(trace_count, {"status": status})
+
+        self.token_bucket_exhaustion_count = self.meter.create_observable_gauge(
+            name="trace.service.token_bucket_exhaustion_count",
+            callbacks=[token_bucket_exhaustion_count],
+        )
+
+        def consume_trace_count(
+            options: CallbackOptions,
+        ) -> Iterable[Observation]:
+            status, trace_count = oboe_settings_api.consumeTraceCount()
+            yield Observation(trace_count, {"status": status})
+
+        self.consume_trace_count = self.meter.create_observable_gauge(
+            name="trace.service.consume_trace_count",
+            callbacks=[consume_trace_count],
+        )
+
+        def consume_sample_count(
+            options: CallbackOptions,
+        ) -> Iterable[Observation]:
+            status, trace_count = oboe_settings_api.consumeSampleCount()
+            yield Observation(trace_count, {"status": status})
+
+        self.consume_sample_count = self.meter.create_observable_gauge(
+            name="trace.service.consume_sample_count",
+            callbacks=[consume_sample_count],
+        )
+
+        def consume_through_ignored_count(
+            options: CallbackOptions,
+        ) -> Iterable[Observation]:
+            status, trace_count = oboe_settings_api.consumeThroughIgnoredCount()
+            yield Observation(trace_count, {"status": status})
+
+        self.consume_through_ignored_count = self.meter.create_observable_gauge(
+            name="trace.service.consume_through_ignored_count",
+            callbacks=[consume_through_ignored_count],
+        )
+
+        def consume_through_trace_count(
+            options: CallbackOptions,
+        ) -> Iterable[Observation]:
+            status, trace_count = oboe_settings_api.consumeThroughTraceCount()
+            yield Observation(trace_count, {"status": status})
+
+        self.consume_through_trace_count = self.meter.create_observable_gauge(
+            name="trace.service.consume_through_trace_count",
+            callbacks=[consume_through_trace_count],
+        )
+
+        def consume_triggered_trace_count(
+            options: CallbackOptions,
+        ) -> Iterable[Observation]:
+            status, trace_count = oboe_settings_api.consumeTriggeredTraceCount()
+            yield Observation(trace_count, {"status": status})
+
+        self.consume_triggered_trace_count = self.meter.create_observable_gauge(
+            name="trace.service.consume_triggered_trace_count",
+            callbacks=[consume_triggered_trace_count],
+        )
+
+        def get_last_used_sample_rate(
+            options: CallbackOptions,
+        ) -> Iterable[Observation]:
+            status, trace_count = oboe_settings_api.getLastUsedSampleRate()
+            yield Observation(trace_count, {"status": status})
+
+        self.get_last_used_sample_rate = self.meter.create_observable_gauge(
+            name="trace.service.sample_rate",
+            callbacks=[get_last_used_sample_rate],
+        )
+
+        def get_last_used_sample_source(
+            options: CallbackOptions,
+        ) -> Iterable[Observation]:
+            status, trace_count = oboe_settings_api.getLastUsedSampleSource()
+            yield Observation(trace_count, {"status": status})
+
+        self.get_last_used_sample_source = self.meter.create_observable_gauge(
+            name="trace.service.sample_source",
+            callbacks=[get_last_used_sample_source],
         )
