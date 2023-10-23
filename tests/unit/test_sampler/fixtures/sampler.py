@@ -45,6 +45,7 @@ def fixture_swsampler(mocker):
             "agent_enabled": True,
             "get": mock_get,
             "extension": mock_extension,
+            "is_lambda": False,
         }
     )
     return _SwSampler(mock_apm_config)
