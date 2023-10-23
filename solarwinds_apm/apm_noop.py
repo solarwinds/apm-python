@@ -11,8 +11,6 @@ apm_noop defines no-op classes for platforms we don't support building the c ext
 # No-op classes intentionally left undocumented
 # "Missing docstring"
 # pylint: disable-msg=C0103
-# TODO should be zeroed out if noop
-import random
 import threading
 
 
@@ -209,53 +207,43 @@ class SettingsApi:
         pass
 
     def getTracingDecision(self):
-        # TODO should be zeroed out if noop
         return (
-            1,
-            1,
-            1000000,
-            6,
-            0.37400000000000005,
-            6.800000000000001,
             0,
-            -1,
-            "ok",
+            0,
+            0,
+            0,
+            0.0,
+            0.0,
+            0,
+            0,
+            "",
             "",
             0,
         )
 
     def consumeRequestCount(self):
-        # TODO should be zeroed out if noop
-        return 0, random.randint(0, 10)
+        return 0, 0
 
     def consumeTokenBucketExhaustionCount(self):
-        # TODO should be zeroed out if noop
-        return 0, random.randint(0, 10)
+        return 0, 0
 
     def consumeTraceCount(self):
-        # TODO should be zeroed out if noop
-        return 0, random.randint(0, 10)
+        return 0, 0
 
     def consumeSampleCount(self):
-        # TODO should be zeroed out if noop
-        return 0, random.randint(0, 10)
+        return 0, 0
 
     def consumeThroughIgnoredCount(self):
-        # TODO should be zeroed out if noop
-        return 0, random.randint(0, 10)
+        return 0, 0
 
     def consumeThroughTraceCount(self):
-        # TODO should be zeroed out if noop
-        return 0, random.randint(0, 10)
+        return 0, 0
 
     def consumeTriggeredTraceCount(self):
-        # TODO should be zeroed out if noop
-        return 0, random.randint(0, 10)
+        return 0, 0
 
     def getLastUsedSampleRate(self):
-        # TODO should be zeroed out if noop
-        return 0, random.randint(0, 10)
+        return 0, 0
 
     def getLastUsedSampleSource(self):
-        # TODO should be zeroed out if noop
-        return 0, random.randint(0, 10)
+        return 0, 0
