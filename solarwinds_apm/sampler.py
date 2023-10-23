@@ -30,11 +30,11 @@ from solarwinds_apm.apm_config import OboeTracingMode
 from solarwinds_apm.apm_constants import (
     INTL_SWO_COMMA_W3C_SANITIZED,
     INTL_SWO_EQUALS_W3C_SANITIZED,
+    INTL_SWO_SUPPORT_EMAIL,
     INTL_SWO_TRACESTATE_KEY,
     INTL_SWO_X_OPTIONS_KEY,
     INTL_SWO_X_OPTIONS_RESPONSE_KEY,
 )
-from solarwinds_apm.apm_noop import SettingsApi
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
@@ -42,10 +42,6 @@ if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
 
 logger = logging.getLogger(__name__)
-
-# TODO Change when SWIG updated
-# TODO Move to Configurator?
-oboe_settings_api = SettingsApi()
 
 
 class _SwSampler(Sampler):
@@ -75,6 +71,28 @@ class _SwSampler(Sampler):
             self.tracing_mode = self.apm_config.get("tracing_mode")
         else:
             self.tracing_mode = self._UNSET
+
+        # TODO need a better condition
+        # TODO move this init to Configurator? 2nd sampler?
+        if apm_config.agent_enabled and apm_config.is_lambda:
+            try:
+                # pylint: disable=import-outside-toplevel
+                import solarwinds_apm.extension.oboe as c_extension
+            except ImportError as err:
+                # At this point, if agent_enabled but cannot import
+                # extension then something unexpected happened
+                logger.error(
+                    "Could not import extension for settings API. Please contact %s. Tracing disabled: %s",
+                    INTL_SWO_SUPPORT_EMAIL,
+                    err,
+                )
+                # pylint: disable=import-outside-toplevel
+                import solarwinds_apm.apm_noop as c_extension
+        else:
+            # pylint: disable-next=import-outside-toplevel
+            import solarwinds_apm.apm_noop as c_extension
+
+        self.oboe_settings_api = c_extension.OboeAPI()
 
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
@@ -209,7 +227,7 @@ class _SwSampler(Sampler):
                 status_msg,
                 auth_msg,
                 status,
-            ) = oboe_settings_api.getTracingDecision()
+            ) = self.oboe_settings_api.getTracingDecision()
         else:
             (
                 do_metrics,

@@ -9,19 +9,17 @@ import logging
 # TypeError: 'ABCMeta' object is not subscriptable
 # with this old import for callback signatures, with current Otel API
 # pylint:disable=deprecated-typing-alias
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
 
 from opentelemetry import metrics
 from opentelemetry.metrics import CallbackOptions, Observation
+
+from solarwinds_apm.apm_constants import INTL_SWO_SUPPORT_EMAIL
 
 if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
 
 logger = logging.getLogger(__name__)
-
-# TODO Change when SWIG updated
-# TODO Move to Configurator?
-oboe_settings_api = SettingsApi()
 
 
 class SolarWindsMeterManager:
@@ -34,6 +32,28 @@ class SolarWindsMeterManager:
         # A convenience wrapper for MeterProvider.get_meter
         self.meter = metrics.get_meter("sw.apm.sampling.metrics")
 
+        # TODO need a better condition
+        # TODO move this init to Configurator?
+        if apm_config.agent_enabled and apm_config.is_lambda:
+            try:
+                # pylint: disable=import-outside-toplevel
+                import solarwinds_apm.extension.oboe as c_extension
+            except ImportError as err:
+                # At this point, if agent_enabled but cannot import
+                # extension then something unexpected happened
+                logger.error(
+                    "Could not import extension for settings API. Please contact %s. Tracing disabled: %s",
+                    INTL_SWO_SUPPORT_EMAIL,
+                    err,
+                )
+                # pylint: disable=import-outside-toplevel
+                import solarwinds_apm.apm_noop as c_extension
+        else:
+            # pylint: disable-next=import-outside-toplevel
+            import solarwinds_apm.apm_noop as c_extension
+
+        self.oboe_settings_api = c_extension.OboeAPI()
+
         self.response_time = self.meter.create_histogram(
             name="trace.service.response_time",
             description="measures the duration of an inbound HTTP request",
@@ -43,7 +63,7 @@ class SolarWindsMeterManager:
         def request_count(
             options: CallbackOptions,
         ) -> Iterable[Observation]:
-            status, trace_count = oboe_settings_api.consumeRequestCount()
+            status, trace_count = self.oboe_settings_api.consumeRequestCount()
             yield Observation(trace_count, {"status": status})
 
         self.request_count = self.meter.create_observable_gauge(
@@ -57,7 +77,7 @@ class SolarWindsMeterManager:
             (
                 status,
                 trace_count,
-            ) = oboe_settings_api.consumeTokenBucketExhaustionCount()
+            ) = self.oboe_settings_api.consumeTokenBucketExhaustionCount()
             yield Observation(trace_count, {"status": status})
 
         self.token_bucket_exhaustion_count = (
@@ -70,7 +90,7 @@ class SolarWindsMeterManager:
         def consume_trace_count(
             options: CallbackOptions,
         ) -> Iterable[Observation]:
-            status, trace_count = oboe_settings_api.consumeTraceCount()
+            status, trace_count = self.oboe_settings_api.consumeTraceCount()
             yield Observation(trace_count, {"status": status})
 
         self.consume_trace_count = self.meter.create_observable_gauge(
@@ -81,7 +101,7 @@ class SolarWindsMeterManager:
         def consume_sample_count(
             options: CallbackOptions,
         ) -> Iterable[Observation]:
-            status, trace_count = oboe_settings_api.consumeSampleCount()
+            status, trace_count = self.oboe_settings_api.consumeSampleCount()
             yield Observation(trace_count, {"status": status})
 
         self.consume_sample_count = self.meter.create_observable_gauge(
@@ -95,7 +115,7 @@ class SolarWindsMeterManager:
             (
                 status,
                 trace_count,
-            ) = oboe_settings_api.consumeThroughIgnoredCount()
+            ) = self.oboe_settings_api.consumeThroughIgnoredCount()
             yield Observation(trace_count, {"status": status})
 
         self.consume_through_ignored_count = (
@@ -108,7 +128,10 @@ class SolarWindsMeterManager:
         def consume_through_trace_count(
             options: CallbackOptions,
         ) -> Iterable[Observation]:
-            status, trace_count = oboe_settings_api.consumeThroughTraceCount()
+            (
+                status,
+                trace_count,
+            ) = self.oboe_settings_api.consumeThroughTraceCount()
             yield Observation(trace_count, {"status": status})
 
         self.consume_through_trace_count = self.meter.create_observable_gauge(
@@ -122,7 +145,7 @@ class SolarWindsMeterManager:
             (
                 status,
                 trace_count,
-            ) = oboe_settings_api.consumeTriggeredTraceCount()
+            ) = self.oboe_settings_api.consumeTriggeredTraceCount()
             yield Observation(trace_count, {"status": status})
 
         self.consume_triggered_trace_count = (
@@ -135,7 +158,10 @@ class SolarWindsMeterManager:
         def get_last_used_sample_rate(
             options: CallbackOptions,
         ) -> Iterable[Observation]:
-            status, trace_count = oboe_settings_api.getLastUsedSampleRate()
+            (
+                status,
+                trace_count,
+            ) = self.oboe_settings_api.getLastUsedSampleRate()
             yield Observation(trace_count, {"status": status})
 
         self.get_last_used_sample_rate = self.meter.create_observable_gauge(
@@ -146,7 +172,10 @@ class SolarWindsMeterManager:
         def get_last_used_sample_source(
             options: CallbackOptions,
         ) -> Iterable[Observation]:
-            status, trace_count = oboe_settings_api.getLastUsedSampleSource()
+            (
+                status,
+                trace_count,
+            ) = self.oboe_settings_api.getLastUsedSampleSource()
             yield Observation(trace_count, {"status": status})
 
         self.get_last_used_sample_source = self.meter.create_observable_gauge(

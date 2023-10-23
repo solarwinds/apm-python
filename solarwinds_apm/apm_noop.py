@@ -202,7 +202,7 @@ class SolarWindsMeterManager:
         self.response_time = OtelHistogram()
 
 
-class SettingsApi:
+class OboeAPI:
     def __init__(self, *args, **kwargs):
         pass
 
