@@ -11,6 +11,7 @@ apm_noop defines no-op classes for platforms we don't support building the c ext
 # No-op classes intentionally left undocumented
 # "Missing docstring"
 # pylint: disable-msg=C0103
+# TODO should be zeroed out if noop
 import random
 import threading
 
@@ -224,28 +225,37 @@ class SettingsApi:
         )
 
     def consumeRequestCount(self):
+        # TODO should be zeroed out if noop
         return 0, random.randint(0, 10)
 
     def consumeTokenBucketExhaustionCount(self):
-        return 0, 0
+        # TODO should be zeroed out if noop
+        return 0, random.randint(0, 10)
 
     def consumeTraceCount(self):
-        return 0, 0
+        # TODO should be zeroed out if noop
+        return 0, random.randint(0, 10)
 
     def consumeSampleCount(self):
-        return 0, 0
+        # TODO should be zeroed out if noop
+        return 0, random.randint(0, 10)
 
     def consumeThroughIgnoredCount(self):
-        return 0, 0
+        # TODO should be zeroed out if noop
+        return 0, random.randint(0, 10)
 
     def consumeThroughTraceCount(self):
-        return 0, 0
+        # TODO should be zeroed out if noop
+        return 0, random.randint(0, 10)
 
     def consumeTriggeredTraceCount(self):
-        return 0, 0
+        # TODO should be zeroed out if noop
+        return 0, random.randint(0, 10)
 
     def getLastUsedSampleRate(self):
-        return 0, 0
+        # TODO should be zeroed out if noop
+        return 0, random.randint(0, 10)
 
     def getLastUsedSampleSource(self):
-        return 0, 0
+        # TODO should be zeroed out if noop
+        return 0, random.randint(0, 10)
