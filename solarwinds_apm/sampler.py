@@ -192,29 +192,8 @@ class _SwSampler(Sampler):
             signature = xtraceoptions.signature
             timestamp = xtraceoptions.timestamp
 
-        logger.debug(
-            "Creating new oboe decision with "
-            "tracestring: %s, "
-            "sw_member_value: %s, "
-            "tracing_mode: %s, "
-            "sample_rate: %s, "
-            "trigger_trace_request: %s, "
-            "trigger_trace_mode: %s, "
-            "options: %s, "
-            "signature: %s, "
-            "timestamp: %s",
-            tracestring,
-            sw_member_value,
-            tracing_mode,
-            sample_rate,
-            trigger_trace_request,
-            trigger_trace_mode,
-            options,
-            signature,
-            timestamp,
-        )
-
         if self.apm_config.is_lambda:
+            logger.debug("Lambda mode; getting tracing decision from oboe API")
             (
                 do_metrics,
                 do_sample,
@@ -229,6 +208,27 @@ class _SwSampler(Sampler):
                 status,
             ) = self.oboe_settings_api.getTracingDecision()
         else:
+            logger.debug(
+                "Creating new oboe decision with "
+                "tracestring: %s, "
+                "sw_member_value: %s, "
+                "tracing_mode: %s, "
+                "sample_rate: %s, "
+                "trigger_trace_request: %s, "
+                "trigger_trace_mode: %s, "
+                "options: %s, "
+                "signature: %s, "
+                "timestamp: %s",
+                tracestring,
+                sw_member_value,
+                tracing_mode,
+                sample_rate,
+                trigger_trace_request,
+                trigger_trace_mode,
+                options,
+                signature,
+                timestamp,
+            )
             (
                 do_metrics,
                 do_sample,
