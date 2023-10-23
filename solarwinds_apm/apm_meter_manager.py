@@ -14,7 +14,8 @@ from typing import Iterable
 from opentelemetry import metrics
 from opentelemetry.metrics import CallbackOptions, Observation
 
-from solarwinds_apm.apm_noop import SettingsApi
+if TYPE_CHECKING:
+    from solarwinds_apm.apm_config import SolarWindsApmConfig
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,9 @@ oboe_settings_api = SettingsApi()
 class SolarWindsMeterManager:
     """SolarWinds Python OTLP Meter Manager"""
 
-    def __init__(self, **kwargs: int) -> None:
+    def __init__(
+        self, apm_config: "SolarWindsApmConfig", **kwargs: int
+    ) -> None:
         # Returns a named `Meter` to handle instrument creation.
         # A convenience wrapper for MeterProvider.get_meter
         self.meter = metrics.get_meter("sw.apm.sampling.metrics")

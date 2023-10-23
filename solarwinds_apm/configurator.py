@@ -90,7 +90,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             apm_meters = NoopMeterManager()
         else:
-            apm_meters = SolarWindsMeterManager()
+            apm_meters = SolarWindsMeterManager(apm_config)
 
         if apm_config.is_lambda:
             logger.debug("Running in Lambda mode with noop c-lib reporter")
