@@ -197,10 +197,16 @@ class _SwSampler(Sampler):
 
             logger.debug("checking solarwinds-apm-settings.json")
             try:
-                settings_json = open("/tmp/solarwinds-apm-settings.json")
+                # pylint:disable=consider-using-with
+                settings_json = open(
+                    "/tmp/solarwinds-apm-settings.json", encoding="utf-8"
+                )
                 logger.debug("%s", settings_json.read())
+            # pylint:disable=broad-exception-caught
             except Exception as exc:
-                logger.debug("Could not open /tmp/solarwinds-apm-settings.json")
+                logger.debug(
+                    "Could not open /tmp/solarwinds-apm-settings.json: %s", exc
+                )
 
             (
                 do_metrics,

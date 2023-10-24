@@ -244,12 +244,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     #     apm_config,
                     # )
                     continue
-                else:
-                    exporter = next(
-                        iter_entry_points(
-                            "opentelemetry_traces_exporter", exporter_name
-                        )
-                    ).load()()
+                exporter = next(
+                    iter_entry_points(
+                        "opentelemetry_traces_exporter", exporter_name
+                    )
+                ).load()()
             except Exception as ex:
                 logger.exception("A exception was raised: %s", ex)
                 # At this point any non-default OTEL_TRACES_EXPORTER has
