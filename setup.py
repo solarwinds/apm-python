@@ -87,7 +87,7 @@ class CustomBuildExt(build_ext):
             return
 
         platform_m = platform.machine()
-        oboe_lib = f"liboboe-1.0-alpine-{platform_m}.so" if is_alpine_distro() else f"liboboe-1.0-{platform_m}.so"
+        oboe_lib = f"liboboe-1.0-alpine-{platform_m}.so" if is_alpine_distro() else f"liboboe-1.0-lambda-{platform_m}.so"
         link_oboe_lib(oboe_lib)
         build_ext.run(self)
 
