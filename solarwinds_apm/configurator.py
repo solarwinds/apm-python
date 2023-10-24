@@ -228,6 +228,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             INTL_SWO_DEFAULT_TRACES_EXPORTER,
         ).split(",")
 
+        logger.debug(
+            "OTEL_TRACES_EXPORTER at configurator is %s",
+            environ_exporter_names,
+        )
+
         for exporter_name in environ_exporter_names:
             exporter = None
             try:
@@ -288,6 +293,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         # could be None
         environ_exporter = os.environ.get(
             OTEL_METRICS_EXPORTER,
+        )
+        logger.debug(
+            "OTEL_METRICS_EXPORTER at configurator is %s", environ_exporter
         )
 
         if not environ_exporter:

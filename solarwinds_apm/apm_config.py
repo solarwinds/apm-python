@@ -278,12 +278,16 @@ class SolarWindsApmConfig:
             # can any arbitrary list BUT
             # (1) must include solarwinds_exporter
             # (2) other exporters must be loadable by OTel
-            if INTL_SWO_DEFAULT_TRACES_EXPORTER not in environ_exporters:
-                logger.error(
-                    "Must include solarwinds_exporter in OTEL_TRACES_EXPORTER to use Solarwinds APM. Tracing disabled."
-                )
-                return False
+            # if INTL_SWO_DEFAULT_TRACES_EXPORTER not in environ_exporters:
+            #     logger.error(
+            #         "Must include solarwinds_exporter in OTEL_TRACES_EXPORTER to use Solarwinds APM. Tracing disabled."
+            #     )
+            #     return False
             for environ_exporter_name in environ_exporters:
+                logger.debug(
+                    "Checking environ_exporter_name %s in agent_enabled check",
+                    environ_exporter_name,
+                )
                 try:
                     if (
                         environ_exporter_name
