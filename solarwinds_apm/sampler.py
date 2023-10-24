@@ -194,6 +194,14 @@ class _SwSampler(Sampler):
 
         if self.apm_config.is_lambda:
             logger.debug("Lambda mode; getting tracing decision from oboe API")
+
+            logger.debug("checking solarwinds-apm-settings.json")
+            try:
+                settings_json = open("/tmp/solarwinds-apm-settings.json")
+                logger.debug("%s", settings_json.read())
+            except Exception as exc:
+                logger.debug("Could not open /tmp/solarwinds-apm-settings.json")
+
             (
                 do_metrics,
                 do_sample,

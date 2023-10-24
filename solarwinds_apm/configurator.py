@@ -105,7 +105,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             apm_meters,
         )
         # Report an status event after everything is done.
-        self._report_init_event(reporter, apm_config)
+        # self._report_init_event(reporter, apm_config)
 
     def _configure_otel_components(
         self,
@@ -232,16 +232,18 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             exporter = None
             try:
                 if exporter_name == INTL_SWO_DEFAULT_TRACES_EXPORTER:
-                    exporter = load_entry_point(
-                        "solarwinds_apm",
-                        "opentelemetry_traces_exporter",
-                        exporter_name,
-                    )(
-                        reporter,
-                        apm_txname_manager,
-                        apm_fwkv_manager,
-                        apm_config,
-                    )
+                    logger.debug("Test: not initializing SW Traces Exporter")
+                    # exporter = load_entry_point(
+                    #     "solarwinds_apm",
+                    #     "opentelemetry_traces_exporter",
+                    #     exporter_name,
+                    # )(
+                    #     reporter,
+                    #     apm_txname_manager,
+                    #     apm_fwkv_manager,
+                    #     apm_config,
+                    # )
+                    continue
                 else:
                     exporter = next(
                         iter_entry_points(

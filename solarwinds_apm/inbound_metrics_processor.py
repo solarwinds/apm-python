@@ -39,7 +39,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         apm_config: "SolarWindsApmConfig",
     ) -> None:
         self.apm_txname_manager = apm_txname_manager
-        self._span = apm_config.extension.Span
+        # self._span = apm_config.extension.Span
 
     def on_start(
         self,
@@ -101,15 +101,15 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
                 request_method,
                 has_error,
             )
-            liboboe_txn_name = self._span.createHttpSpan(
-                trans_name,
-                url_tran,
-                domain,
-                span_time,
-                status_code,
-                request_method,
-                has_error,
-            )
+            # liboboe_txn_name = self._span.createHttpSpan(
+            #     trans_name,
+            #     url_tran,
+            #     domain,
+            #     span_time,
+            #     status_code,
+            #     request_method,
+            #     has_error,
+            # )
         else:
             logger.debug(
                 "createSpan with trans_name: %s, domain: %s, span_time: %s, has_error: %s",
@@ -118,12 +118,12 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
                 span_time,
                 has_error,
             )
-            liboboe_txn_name = self._span.createSpan(
-                trans_name,
-                domain,
-                span_time,
-                has_error,
-            )
+            # liboboe_txn_name = self._span.createSpan(
+            #     trans_name,
+            #     domain,
+            #     span_time,
+            #     has_error,
+            # )
 
         if span.context.trace_flags == TraceFlags.SAMPLED:
             # Cache txn_name for span export
