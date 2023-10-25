@@ -337,8 +337,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
                 raise
             logger.debug(
-                "Setting trace with BatchSpanProcessor using %s",
+                "Setting trace with BatchSpanProcessor using %s, type %s",
                 exporter_name,
+                type(exporter),
             )
             span_processor = BatchSpanProcessor(exporter)
             trace.get_tracer_provider().add_span_processor(span_processor)
@@ -395,8 +396,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 raise
 
             logger.debug(
-                "Creating PeriodicExportingMetricReader using %s",
+                "Creating PeriodicExportingMetricReader using %s, type %s",
                 exporter_name,
+                type(exporter),
             )
             reader = PeriodicExportingMetricReader(exporter)
             metric_readers.append(reader)
