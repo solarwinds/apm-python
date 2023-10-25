@@ -9,6 +9,7 @@
 import logging
 from os import environ
 
+# from opentelemetry.distro import OpenTelemetryDistro
 from opentelemetry.environment_variables import (  # OTEL_EXPORTER_OTLP_PROTOCOL,
     OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
@@ -19,6 +20,7 @@ from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.logging.environment_variables import (
     OTEL_PYTHON_LOG_FORMAT,
 )
+from opentelemetry.sdk.environment_variables import OTEL_EXPORTER_OTLP_PROTOCOL
 from pkg_resources import EntryPoint
 
 from solarwinds_apm.apm_config import SolarWindsApmConfig
@@ -29,16 +31,23 @@ from solarwinds_apm.apm_constants import (  # INTL_SWO_DEFAULT_TRACES_EXPORTER,
 logger = logging.getLogger(__name__)
 
 
+# class SolarWindsDistro(BaseDistro, OpenTelemetryDistro):
 class SolarWindsDistro(BaseDistro):
     """OpenTelemetry Distro for SolarWinds reporting environment"""
 
     def _configure(self, **kwargs):
         """Configure default OTel exporter and propagators"""
+        # super()._configure(**kwargs)
+
+        # TODO we don't want this requirement anymore
         # environ.setdefault(
         #     OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER
         # )
+        # TODO this duplicates OpenTelemetryDistro method
         environ.setdefault(OTEL_TRACES_EXPORTER, "otlp")
         environ.setdefault(OTEL_METRICS_EXPORTER, "otlp")
+        environ.setdefault(OTEL_EXPORTER_OTLP_PROTOCOL, "grpc")
+
         environ.setdefault(
             OTEL_PROPAGATORS, ",".join(INTL_SWO_DEFAULT_PROPAGATORS)
         )
