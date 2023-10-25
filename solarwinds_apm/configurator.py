@@ -78,8 +78,78 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     # https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-sdk/src/opentelemetry/sdk/trace/sampling.py#L364-L380
     _DEFAULT_SW_TRACES_SAMPLER = "solarwinds_sampler"
 
+    def _env_debug(self) -> None:
+        # pylint: disable=import-outside-toplevel,too-many-locals
+        from opentelemetry.sdk.environment_variables import (
+            OTEL_EXPORTER_OTLP_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_ENDPOINT,
+            OTEL_EXPORTER_OTLP_HEADERS,
+            OTEL_EXPORTER_OTLP_INSECURE,
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+            OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+            OTEL_EXPORTER_OTLP_METRICS_HEADERS,
+            OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
+            OTEL_EXPORTER_OTLP_PROTOCOL,
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+            OTEL_EXPORTER_OTLP_TRACES_INSECURE,
+            OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
+        )
+
+        otel_vars = {
+            OTEL_METRICS_EXPORTER: os.environ.get(OTEL_METRICS_EXPORTER),
+            OTEL_TRACES_EXPORTER: os.environ.get(OTEL_TRACES_EXPORTER),
+            OTEL_EXPORTER_OTLP_PROTOCOL: os.environ.get(
+                OTEL_EXPORTER_OTLP_PROTOCOL
+            ),
+            OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: os.environ.get(
+                OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+            ),
+            OTEL_EXPORTER_OTLP_METRICS_PROTOCOL: os.environ.get(
+                OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
+            ),
+            OTEL_EXPORTER_OTLP_LOGS_PROTOCOL: os.environ.get(
+                OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
+            ),
+            OTEL_EXPORTER_OTLP_CERTIFICATE: os.environ.get(
+                OTEL_EXPORTER_OTLP_CERTIFICATE
+            ),
+            OTEL_EXPORTER_OTLP_HEADERS: os.environ.get(
+                OTEL_EXPORTER_OTLP_HEADERS
+            ),
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS: os.environ.get(
+                OTEL_EXPORTER_OTLP_TRACES_HEADERS
+            ),
+            OTEL_EXPORTER_OTLP_METRICS_HEADERS: os.environ.get(
+                OTEL_EXPORTER_OTLP_METRICS_HEADERS
+            ),
+            OTEL_EXPORTER_OTLP_INSECURE: os.environ.get(
+                OTEL_EXPORTER_OTLP_INSECURE
+            ),
+            OTEL_EXPORTER_OTLP_ENDPOINT: os.environ.get(
+                OTEL_EXPORTER_OTLP_ENDPOINT
+            ),
+            OTEL_EXPORTER_OTLP_TRACES_INSECURE: os.environ.get(
+                OTEL_EXPORTER_OTLP_TRACES_INSECURE
+            ),
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: os.environ.get(
+                OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+            ),
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: os.environ.get(
+                OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+            ),
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: os.environ.get(
+                OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+            ),
+        }
+        logger.debug("Got following OTEL_* variables at APM configuration:")
+        logger.debug("%s", otel_vars)
+
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
+        self._env_debug()
+
         apm_txname_manager = SolarWindsTxnNameManager()
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
