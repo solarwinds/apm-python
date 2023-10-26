@@ -12,8 +12,9 @@ import os
 import sys
 import time
 
-from opentelemetry import trace
+from opentelemetry import metrics, trace
 from opentelemetry.environment_variables import (
+    OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
 )
@@ -29,6 +30,8 @@ from opentelemetry.instrumentation.propagators import (
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -98,6 +101,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_fwkv_manager,
                 apm_config,
             )
+            self._configure_metrics_exporter(apm_config)
             self._configure_propagator()
             self._configure_response_propagator()
         else:
@@ -209,6 +213,68 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             span_processor = BatchSpanProcessor(exporter)
             trace.get_tracer_provider().add_span_processor(span_processor)
+
+    def _configure_metrics_exporter(
+        self,
+        apm_config: SolarWindsApmConfig,
+    ) -> None:
+        """Configure SolarWinds OTel metrics exporters, environment
+        configured if any, or none if agent disabled."""
+        if not apm_config.agent_enabled:
+            logger.error("Tracing disabled. Cannot set metrics exporter.")
+            return
+
+        if not apm_config.get("experimental").get("otel_collector") is True:
+            logger.debug(
+                "Experimental otel_collector flag not configured. Not setting metrics exporter."
+            )
+            return
+
+        # SolarWindsDistro._configure does not setdefault so this
+        # could be None
+        environ_exporter = os.environ.get(
+            OTEL_METRICS_EXPORTER,
+        )
+
+        if not environ_exporter:
+            logger.debug("No OTEL_METRICS_EXPORTER set, skipping init")
+            return
+
+        environ_exporter_names = environ_exporter.split(",")
+
+        metric_readers = []
+        for exporter_name in environ_exporter_names:
+            exporter = None
+            try:
+                exporter = next(
+                    iter_entry_points(
+                        "opentelemetry_metrics_exporter",
+                        exporter_name,
+                    )
+                ).load()()
+            except Exception as ex:
+                logger.exception("A exception was raised: %s", ex)
+                logger.exception(
+                    "Failed to load configured metrics exporter %s. "
+                    "Please reinstall or contact %s.",
+                    exporter_name,
+                    INTL_SWO_SUPPORT_EMAIL,
+                )
+                raise
+
+            logger.debug(
+                "Creating PeriodicExportingMetricReader using %s",
+                exporter_name,
+            )
+            reader = PeriodicExportingMetricReader(exporter)
+            metric_readers.append(reader)
+
+        # Consolidate in #201
+        resource = Resource.create({"service.name": apm_config.service_name})
+        provider = MeterProvider(
+            resource=resource, metric_readers=metric_readers
+        )
+        metrics.set_meter_provider(provider)
 
     def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators, default or environment configured"""

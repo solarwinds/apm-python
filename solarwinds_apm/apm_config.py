@@ -73,9 +73,12 @@ class SolarWindsApmConfig:
 
     _CONFIG_FILE_DEFAULT = "./solarwinds-apm-config.json"
     _DELIMITER = "."
+    _EXP_KEYS = ["otel_collector"]
+    _EXP_PREFIX = "experimental_"
     _KEY_MASK = "{}...{}:{}"
     _KEY_MASK_BAD_FORMAT = "{}...<invalid_format>"
     _KEY_MASK_BAD_FORMAT_SHORT = "{}<invalid_format>"
+    _SW_PREFIX = "sw_apm_"
 
     def __init__(
         self,
@@ -109,6 +112,7 @@ class SolarWindsApmConfig:
             "reporter_file_single": 0,
             "proxy": "",
             "transaction_filters": [],
+            "experimental": {},
             "transaction_name": None,
         }
         self.agent_enabled = True
@@ -612,7 +616,10 @@ class SolarWindsApmConfig:
             if key == "transaction":
                 # we do not allow complex config options to be set via environment variables
                 continue
-            env = "SW_APM_" + key.upper()
+            if key == "experimental":
+                # but we do allow flat SW_APM_EXPERIMENTAL_OTEL_COLLECTOR setting to match js
+                key = self._EXP_PREFIX + "otel_collector"
+            env = (self._SW_PREFIX + key).upper()
             val = os.environ.get(env)
             if val is not None:
                 self._set_config_value(key, val)
@@ -709,6 +716,25 @@ class SolarWindsApmConfig:
                 self.__config[key] = val
                 # update logging level of agent logger
                 apm_logging.set_sw_log_level(val)
+            elif keys == ["experimental"]:
+                for exp_k, exp_v in val.items():
+                    if exp_k in self._EXP_KEYS:
+                        exp_v = self.convert_to_bool(exp_v)
+                        if exp_v is None:
+                            logger.warning(
+                                "Ignore invalid config of experimental %s",
+                                exp_k,
+                            )
+                        else:
+                            self.__config["experimental"][exp_k] = exp_v
+            elif keys == ["experimental_otel_collector"]:
+                val = self.convert_to_bool(val)
+                if val is None:
+                    logger.warning(
+                        "Ignore invalid config of experimental otel_collector"
+                    )
+                else:
+                    self.__config["experimental"]["otel_collector"] = val
             elif keys == ["transaction_name"]:
                 self.__config[key] = val
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
