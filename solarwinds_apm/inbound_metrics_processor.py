@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
+    _TRANSACTION_NAME = "transaction_name"
     _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
     _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
     _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
@@ -40,6 +41,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     ) -> None:
         self.apm_txname_manager = apm_txname_manager
         self._span = apm_config.extension.Span
+        self.config_transaction_name = apm_config.get(self._TRANSACTION_NAME)
 
     def on_start(
         self,
@@ -163,6 +165,8 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         http_route = span.attributes.get(self._HTTP_ROUTE, None)
         trans_name = None
         custom_trans_name = self.calculate_custom_transaction_name(span)
+        if not custom_trans_name:
+            custom_trans_name = self.config_transaction_name
 
         if custom_trans_name:
             trans_name = custom_trans_name

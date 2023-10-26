@@ -109,6 +109,7 @@ class SolarWindsApmConfig:
             "reporter_file_single": 0,
             "proxy": "",
             "transaction_filters": [],
+            "transaction_name": None,
         }
         self.agent_enabled = True
         self.update_with_cnf_file()
@@ -708,6 +709,8 @@ class SolarWindsApmConfig:
                 self.__config[key] = val
                 # update logging level of agent logger
                 apm_logging.set_sw_log_level(val)
+            elif keys == ["transaction_name"]:
+                self.__config[key] = val
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
                     val = self.convert_to_bool(val)

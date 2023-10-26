@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.17.0...HEAD)
 
+### Added
+- Add support for `SW_APM_TRANSACTION_NAME` ([#206](https://github.com/solarwindscloud/solarwinds-apm-python/pull/206))
+
 ### Changed
 - c-lib reporter initialized as `ssl` ([#197](https://github.com/solarwindscloud/solarwinds-apm-python/pull/197))
 
