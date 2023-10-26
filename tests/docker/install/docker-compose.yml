@@ -52,6 +52,13 @@ services:
     environment:
       << : *envvars-install-test
 
+  py3.7-install-debian11:
+    hostname: "py3.7-debian11"
+    image: "python:3.7-bullseye"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
   py3.7-install-ubuntu18.04:
     hostname: "py3.7-ubuntu18.04"
     image: "ubuntu:18.04"
@@ -91,6 +98,13 @@ services:
     environment:
       << : *envvars-install-test
 
+  py3.8-install-debian11:
+    hostname: "py3.8-debian11"
+    image: "python:3.8-bullseye"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
   py3.8-install-ubuntu18.04:
     hostname: "py3.8-ubuntu18.04"
     image: "ubuntu:18.04"
@@ -126,6 +140,13 @@ services:
   py3.9-install-debian10:
     hostname: "py3.9-debian10"
     image: "python:3.9-buster"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.9-install-debian11:
+    hostname: "py3.9-debian11"
+    image: "python:3.9-bullseye"
     << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
@@ -197,6 +218,13 @@ services:
     environment:
       << : *envvars-install-test
 
+  py3.10-install-debian11:
+    hostname: "py3.10-debian11"
+    image: "python:3.10-bullseye"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
   py3.10-install-ubuntu20.04:
     hostname: "py3.10-ubuntu20.04"
     image: "ubuntu:20.04"
@@ -238,7 +266,14 @@ services:
 
   py3.11-install-debian10:
     hostname: "py3.11-debian10"
-    image: "python:3.11-rc-buster"
+    image: "python:3.11-buster"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.11-install-debian11:
+    hostname: "py3.11-debian11"
+    image: "python:3.11-bullseye"
     << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test

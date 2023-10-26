@@ -113,6 +113,7 @@ class SolarWindsApmConfig:
             "proxy": "",
             "transaction_filters": [],
             "experimental": {},
+            "transaction_name": None,
         }
         self.agent_enabled = True
         self.update_with_cnf_file()
@@ -734,6 +735,8 @@ class SolarWindsApmConfig:
                     )
                 else:
                     self.__config["experimental"]["otel_collector"] = val
+            elif keys == ["transaction_name"]:
+                self.__config[key] = val
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
                     val = self.convert_to_bool(val)
