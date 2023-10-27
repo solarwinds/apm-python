@@ -63,7 +63,6 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
 
         # support ssa and conform to Otel proto common_pb2
         meter_attrs = {
-            "sw.service_name": self.service_name,
             "sw.nonce": random.getrandbits(64) >> 1,
         }
 
