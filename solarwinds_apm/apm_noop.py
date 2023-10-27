@@ -13,6 +13,8 @@ apm_noop defines no-op classes for platforms we don't support building the c ext
 # pylint: disable-msg=C0103
 import threading
 
+from opentelemetry.metrics._internal.instrument import NoOpHistogram
+
 
 class Metadata:
     def __init__(self, _=None):
