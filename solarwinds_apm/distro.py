@@ -46,7 +46,7 @@ class SolarWindsDistro(BaseDistro):
         # TODO this duplicates OpenTelemetryDistro method
         environ.setdefault(OTEL_TRACES_EXPORTER, "otlp")
         environ.setdefault(OTEL_METRICS_EXPORTER, "otlp")
-        environ.setdefault(OTEL_EXPORTER_OTLP_PROTOCOL, "grpc")
+        # environ.setdefault(OTEL_EXPORTER_OTLP_PROTOCOL, "grpc")
 
         environ.setdefault(
             OTEL_PROPAGATORS, ",".join(INTL_SWO_DEFAULT_PROPAGATORS)
