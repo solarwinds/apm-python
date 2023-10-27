@@ -45,11 +45,16 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_SUPPORT_EMAIL,
 )
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
+from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
 from solarwinds_apm.apm_noop import Reporter
+from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.inbound_metrics_processor import (
     SolarWindsInboundMetricsSpanProcessor,
+)
+from solarwinds_apm.otlp_metrics_processor import (
+    SolarWindsOTLPMetricsSpanProcessor,
 )
 from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
@@ -74,9 +79,22 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager = SolarWindsTxnNameManager()
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
+
+        if not apm_config.get("experimental").get("otel_collector") is True:
+            logger.debug(
+                "Experimental otel_collector flag not configured. Creating meter manager as no-op."
+            )
+            apm_meters = NoopMeterManager()
+        else:
+            apm_meters = SolarWindsMeterManager()
+
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
-            apm_txname_manager, apm_fwkv_manager, apm_config, reporter
+            apm_txname_manager,
+            apm_fwkv_manager,
+            apm_config,
+            reporter,
+            apm_meters,
         )
         # Report an status event after everything is done.
         self._report_init_event(reporter, apm_config)
@@ -87,6 +105,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
         reporter: "Reporter",
+        apm_meters: SolarWindsMeterManager,
     ) -> None:
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
@@ -94,6 +113,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             self._configure_metrics_span_processor(
                 apm_txname_manager,
                 apm_config,
+            )
+            self._configure_otlp_metrics_span_processor(
+                apm_txname_manager,
+                apm_config,
+                apm_meters,
             )
             self._configure_exporter(
                 reporter,
@@ -151,6 +175,27 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             SolarWindsInboundMetricsSpanProcessor(
                 apm_txname_manager,
                 apm_config,
+            )
+        )
+
+    def _configure_otlp_metrics_span_processor(
+        self,
+        apm_txname_manager: SolarWindsTxnNameManager,
+        apm_config: SolarWindsApmConfig,
+        apm_meters: SolarWindsMeterManager,
+    ) -> None:
+        """Configure SolarWindsOTLPMetricsSpanProcessor"""
+        if not apm_config.get("experimental").get("otel_collector") is True:
+            logger.debug(
+                "Experimental otel_collector flag not configured. Not configuring OTLP metrics span processor."
+            )
+            return
+
+        trace.get_tracer_provider().add_span_processor(
+            SolarWindsOTLPMetricsSpanProcessor(
+                apm_txname_manager,
+                apm_config,
+                apm_meters,
             )
         )
 
@@ -269,10 +314,19 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             reader = PeriodicExportingMetricReader(exporter)
             metric_readers.append(reader)
 
-        # Consolidate in #201
-        resource = Resource.create({"service.name": apm_config.service_name})
+        # Use configured Resource attributes then merge with
+        # custom service.name and sw.trace_span_mode
+        resource = trace.get_tracer_provider().get_tracer(__name__).resource
+        sw_resource = Resource.create(
+            {
+                "sw.trace_span_mode": "otel",
+                "service.name": apm_config.service_name,
+            }
+        ).merge(resource)
+
         provider = MeterProvider(
-            resource=resource, metric_readers=metric_readers
+            resource=sw_resource,
+            metric_readers=metric_readers,
         )
         metrics.set_meter_provider(provider)
 
