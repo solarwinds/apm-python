@@ -13,6 +13,8 @@ apm_noop defines no-op classes for platforms we don't support building the c ext
 # pylint: disable-msg=C0103
 import threading
 
+from opentelemetry.metrics._internal.instrument import NoOpHistogram
+
 
 class Metadata:
     def __init__(self, _=None):
@@ -199,7 +201,7 @@ class OtelHistogram:
 class SolarWindsMeterManager:
     def __init__(self, *args, **kwargs):
         self.meter = None
-        self.response_time = OtelHistogram()
+        self.response_time = NoOpHistogram(name="trace.service.response_time")
 
 
 class OboeAPI:

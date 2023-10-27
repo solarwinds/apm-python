@@ -28,9 +28,10 @@ class SolarWindsMeterManager:
     def __init__(
         self, apm_config: "SolarWindsApmConfig", **kwargs: int
     ) -> None:
-        # Returns a named `Meter` to handle instrument creation.
+         # Returns named `Meter` to handle instrument creation.
         # A convenience wrapper for MeterProvider.get_meter
-        self.meter = metrics.get_meter("sw.apm.sampling.metrics")
+        self.meter_response_times = metrics.get_meter("sw.apm.request.metrics")
+        self.meter_request_counters = metrics.get_meter("sw.apm.sampling.metrics")
 
         # TODO need a better condition
         # TODO move this init to Configurator?
@@ -54,7 +55,7 @@ class SolarWindsMeterManager:
 
         self.oboe_settings_api = c_extension.OboeAPI()
 
-        self.response_time = self.meter.create_histogram(
+        self.response_time = self.meter_response_times.create_histogram(
             name="trace.service.response_time",
             description="measures the duration of an inbound HTTP request",
             unit="ms",
@@ -66,7 +67,7 @@ class SolarWindsMeterManager:
             status, trace_count = self.oboe_settings_api.consumeRequestCount()
             yield Observation(trace_count, {"status": status})
 
-        self.request_count = self.meter.create_observable_gauge(
+        self.request_count = self.meter_request_counters.create_observable_gauge(
             name="trace.service.request_count",
             callbacks=[request_count],
         )
@@ -81,7 +82,7 @@ class SolarWindsMeterManager:
             yield Observation(trace_count, {"status": status})
 
         self.token_bucket_exhaustion_count = (
-            self.meter.create_observable_gauge(
+            self.meter_request_counters.create_observable_gauge(
                 name="trace.service.token_bucket_exhaustion_count",
                 callbacks=[token_bucket_exhaustion_count],
             )
@@ -93,7 +94,7 @@ class SolarWindsMeterManager:
             status, trace_count = self.oboe_settings_api.consumeTraceCount()
             yield Observation(trace_count, {"status": status})
 
-        self.consume_trace_count = self.meter.create_observable_gauge(
+        self.consume_trace_count = self.meter_request_counters.create_observable_gauge(
             name="trace.service.consume_trace_count",
             callbacks=[consume_trace_count],
         )
@@ -104,7 +105,7 @@ class SolarWindsMeterManager:
             status, trace_count = self.oboe_settings_api.consumeSampleCount()
             yield Observation(trace_count, {"status": status})
 
-        self.consume_sample_count = self.meter.create_observable_gauge(
+        self.consume_sample_count = self.meter_request_counters.create_observable_gauge(
             name="trace.service.consume_sample_count",
             callbacks=[consume_sample_count],
         )
@@ -119,7 +120,7 @@ class SolarWindsMeterManager:
             yield Observation(trace_count, {"status": status})
 
         self.consume_through_ignored_count = (
-            self.meter.create_observable_gauge(
+            self.meter_request_counters.create_observable_gauge(
                 name="trace.service.consume_through_ignored_count",
                 callbacks=[consume_through_ignored_count],
             )
@@ -134,7 +135,7 @@ class SolarWindsMeterManager:
             ) = self.oboe_settings_api.consumeThroughTraceCount()
             yield Observation(trace_count, {"status": status})
 
-        self.consume_through_trace_count = self.meter.create_observable_gauge(
+        self.consume_through_trace_count = self.meter_request_counters.create_observable_gauge(
             name="trace.service.consume_through_trace_count",
             callbacks=[consume_through_trace_count],
         )
@@ -149,7 +150,7 @@ class SolarWindsMeterManager:
             yield Observation(trace_count, {"status": status})
 
         self.consume_triggered_trace_count = (
-            self.meter.create_observable_gauge(
+            self.meter_request_counters.create_observable_gauge(
                 name="trace.service.consume_triggered_trace_count",
                 callbacks=[consume_triggered_trace_count],
             )
@@ -164,7 +165,7 @@ class SolarWindsMeterManager:
             ) = self.oboe_settings_api.getLastUsedSampleRate()
             yield Observation(trace_count, {"status": status})
 
-        self.get_last_used_sample_rate = self.meter.create_observable_gauge(
+        self.get_last_used_sample_rate = self.meter_request_counters.create_observable_gauge(
             name="trace.service.sample_rate",
             callbacks=[get_last_used_sample_rate],
         )
@@ -178,7 +179,7 @@ class SolarWindsMeterManager:
             ) = self.oboe_settings_api.getLastUsedSampleSource()
             yield Observation(trace_count, {"status": status})
 
-        self.get_last_used_sample_source = self.meter.create_observable_gauge(
+        self.get_last_used_sample_source = self.meter_request_counters.create_observable_gauge(
             name="trace.service.sample_source",
             callbacks=[get_last_used_sample_source],
         )
