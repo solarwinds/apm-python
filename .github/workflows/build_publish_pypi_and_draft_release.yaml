@@ -134,8 +134,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Initialize git
         run: |
-        git config user.name "GitHub Actions"
-        git config user.email noreply@github.com
+          git config user.name "GitHub Actions"
+          git config user.email noreply@github.com
       - name: Create draft release
         run: gh release create ${{ env.RELEASE_NAME }} --title "${{ env.RELEASE_NAME }}" --target release/${{ env.RELEASE_NAME }} --draft
         env:
