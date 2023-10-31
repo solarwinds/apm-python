@@ -549,7 +549,6 @@ class SolarWindsApmConfig:
             self.agent_enabled = cnf_agent_enabled
 
         available_cnf = set(self.__config.keys())
-        # TODO after alpha: is_lambda
         for key in available_cnf:
             # Use internal snake_case config keys to check JSON config file camelCase keys
             val = cnf_dict.get(_snake_to_camel_case(key))
@@ -630,7 +629,6 @@ class SolarWindsApmConfig:
             self.agent_enabled = env_agent_enabled
 
         available_envvs = set(self.__config.keys())
-        # TODO after alpha: is_lambda
         for key in available_envvs:
             if key == "transaction":
                 # we do not allow complex config options to be set via environment variables
@@ -719,7 +717,6 @@ class SolarWindsApmConfig:
                 )
                 self.__config[key] = oboe_trigger_trace
             elif keys == ["reporter"]:
-                # TODO: support 'lambda'
                 if not isinstance(val, str) or val.lower() not in (
                     "udp",
                     "ssl",
