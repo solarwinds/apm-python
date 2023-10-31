@@ -284,6 +284,8 @@ class SolarWindsApmConfig:
             return False
 
         # (4) OTEL_TRACES_EXPORTER
+        # TODO Relax traces exporter requirements outside lambda
+        #      https://swicloud.atlassian.net/browse/NH-65713
         try:
             # SolarWindsDistro._configure does setdefault so this shouldn't
             # be None, but safer and more explicit this way
@@ -291,7 +293,7 @@ class SolarWindsApmConfig:
                 OTEL_TRACES_EXPORTER,
                 INTL_SWO_DEFAULT_TRACES_EXPORTER,
             ).split(",")
-            # If not using the default propagators,
+            # If not using the default exporters,
             # can any arbitrary list BUT
             # (1) must include solarwinds_exporter
             # (2) other exporters must be loadable by OTel
