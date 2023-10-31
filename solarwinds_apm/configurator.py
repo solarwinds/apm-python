@@ -373,7 +373,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> "Reporter":
-        """Initialize SolarWinds reporter used by sampler and exporter, using SolarWindsApmConfig. This establishes collector and sampling settings in a background thread."""
+        """Initialize SolarWinds reporter used by sampler and exporter, using SolarWindsApmConfig.
+        This establishes collector and sampling settings in a background thread.
+
+        Note: if config's extension is no-op, this has no effect."""
         reporter_kwargs = {
             "hostname_alias": apm_config.get("hostname_alias"),
             "log_level": apm_config.get("debug_level"),
