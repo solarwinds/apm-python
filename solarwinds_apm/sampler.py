@@ -71,6 +71,11 @@ class _SwSampler(Sampler):
         else:
             self.tracing_mode = self._UNSET
 
+        if self.apm_config.is_lambda:
+            # TODO Init OboeAPI if apm_config.is_lambda
+            #      https://swicloud.atlassian.net/browse/NH-64716
+            pass
+
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
 
@@ -169,50 +174,83 @@ class _SwSampler(Sampler):
             signature = xtraceoptions.signature
             timestamp = xtraceoptions.timestamp
 
-        logger.debug(
-            "Creating new oboe decision with "
-            "tracestring: %s, "
-            "sw_member_value: %s, "
-            "tracing_mode: %s, "
-            "sample_rate: %s, "
-            "trigger_trace_request: %s, "
-            "trigger_trace_mode: %s, "
-            "options: %s, "
-            "signature: %s, "
-            "timestamp: %s",
-            tracestring,
-            sw_member_value,
-            tracing_mode,
-            sample_rate,
-            trigger_trace_request,
-            trigger_trace_mode,
-            options,
-            signature,
-            timestamp,
-        )
-        (
-            do_metrics,
-            do_sample,
-            rate,
-            source,
-            bucket_rate,
-            bucket_cap,
-            decision_type,
-            auth,
-            status_msg,
-            auth_msg,
-            status,
-        ) = self.context.getDecisions(
-            tracestring,
-            sw_member_value,
-            tracing_mode,
-            sample_rate,
-            trigger_trace_request,
-            trigger_trace_mode,
-            options,
-            signature,
-            timestamp,
-        )
+        if self.apm_config.is_lambda:
+            # TODO OboeAPI getTracingDecision
+            #      https://swicloud.atlassian.net/browse/NH-64716
+            logger.warning(
+                "Sampling in lambda is not yet implemented. Dropping trace."
+            )
+            (
+                do_metrics,
+                do_sample,
+                rate,
+                source,
+                bucket_rate,
+                bucket_cap,
+                decision_type,
+                auth,
+                status_msg,
+                auth_msg,
+                status,
+            ) = (
+                0,
+                0,
+                0,
+                0,
+                0.0,
+                0.0,
+                0,
+                0,
+                "",
+                "",
+                0,
+            )
+
+        else:
+            logger.debug(
+                "Creating new oboe decision with "
+                "tracestring: %s, "
+                "sw_member_value: %s, "
+                "tracing_mode: %s, "
+                "sample_rate: %s, "
+                "trigger_trace_request: %s, "
+                "trigger_trace_mode: %s, "
+                "options: %s, "
+                "signature: %s, "
+                "timestamp: %s",
+                tracestring,
+                sw_member_value,
+                tracing_mode,
+                sample_rate,
+                trigger_trace_request,
+                trigger_trace_mode,
+                options,
+                signature,
+                timestamp,
+            )
+            (
+                do_metrics,
+                do_sample,
+                rate,
+                source,
+                bucket_rate,
+                bucket_cap,
+                decision_type,
+                auth,
+                status_msg,
+                auth_msg,
+                status,
+            ) = self.context.getDecisions(
+                tracestring,
+                sw_member_value,
+                tracing_mode,
+                sample_rate,
+                trigger_trace_request,
+                trigger_trace_mode,
+                options,
+                signature,
+                timestamp,
+            )
         decision = {
             "do_metrics": do_metrics,
             "do_sample": do_sample,
