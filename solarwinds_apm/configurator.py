@@ -113,7 +113,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
         if apm_config.agent_enabled:
-            self._configure_metrics_span_processor(
+            self._configure_inbound_metrics_span_processor(
                 apm_txname_manager,
                 apm_config,
             )
@@ -168,7 +168,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             ),
         )
 
-    def _configure_metrics_span_processor(
+    def _configure_inbound_metrics_span_processor(
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
