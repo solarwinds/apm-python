@@ -173,7 +173,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure SolarWindsInboundMetricsSpanProcessor"""
+        """Configure SolarWindsInboundMetricsSpanProcessor.
+        Note: if config's extension is no-op, the processor will run
+        but will not export inbound metrics."""
+        # TODO Refactor span processors
+        #      https://swicloud.atlassian.net/browse/NH-65061
         trace.get_tracer_provider().add_span_processor(
             SolarWindsInboundMetricsSpanProcessor(
                 apm_txname_manager,
@@ -211,8 +215,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     ) -> None:
         """Configure SolarWinds OTel span exporters, defaults or environment
         configured, or none if agent disabled.
-        
-        Initialization of SolarWinds exporter requires a liboboe reporter 
+
+        Initialization of SolarWinds exporter requires a liboboe reporter
         Note: if reporter is no-op, the SW exporter will not export spans."""
         if not apm_config.agent_enabled:
             logger.error("Tracing disabled. Cannot set span_processor.")
