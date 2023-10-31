@@ -83,6 +83,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
 
+        # TODO Add experimental trace flag, clean up
+        #      https://swicloud.atlassian.net/browse/NH-65067
         if not apm_config.get("experimental").get("otel_collector") is True:
             logger.debug(
                 "Experimental otel_collector flag not configured. Creating meter manager as no-op."
@@ -191,7 +193,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
         apm_meters: SolarWindsMeterManager,
     ) -> None:
-        """Configure SolarWindsOTLPMetricsSpanProcessor"""
+        """Configure SolarWindsOTLPMetricsSpanProcessor.
+        If no meters/instruments are initialized, the processor will
+        run but will not collect/flush OTLP metrics."""
+        # TODO Add experimental trace flag, clean up
+        #      https://swicloud.atlassian.net/browse/NH-65067
         if not apm_config.get("experimental").get("otel_collector") is True:
             logger.debug(
                 "Experimental otel_collector flag not configured. Not configuring OTLP metrics span processor."

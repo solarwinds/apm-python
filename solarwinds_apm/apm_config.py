@@ -656,6 +656,8 @@ class SolarWindsApmConfig:
             if key == "transaction":
                 # we do not allow complex config options to be set via environment variables
                 continue
+            # TODO Add experimental trace flag, clean up
+            #      https://swicloud.atlassian.net/browse/NH-65067
             if key == "experimental":
                 # but we do allow flat SW_APM_EXPERIMENTAL_OTEL_COLLECTOR setting to match js
                 key = self._EXP_PREFIX + "otel_collector"
@@ -755,6 +757,8 @@ class SolarWindsApmConfig:
                 self.__config[key] = val
                 # update logging level of agent logger
                 apm_logging.set_sw_log_level(val)
+            # TODO Add experimental trace flag, clean up
+            #      https://swicloud.atlassian.net/browse/NH-65067
             elif keys == ["experimental"]:
                 for exp_k, exp_v in val.items():
                     if exp_k in self._EXP_KEYS:
@@ -766,6 +770,8 @@ class SolarWindsApmConfig:
                             )
                         else:
                             self.__config["experimental"][exp_k] = exp_v
+            # TODO Add experimental trace flag, clean up
+            #      https://swicloud.atlassian.net/browse/NH-65067
             elif keys == ["experimental_otel_collector"]:
                 val = self.convert_to_bool(val)
                 if val is None:
