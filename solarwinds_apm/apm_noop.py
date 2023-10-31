@@ -235,9 +235,6 @@ class OboeAPI:
     def consumeSampleCount(self):
         return 0, 0
 
-    def consumeThroughIgnoredCount(self):
-        return 0, 0
-
     def consumeThroughTraceCount(self):
         return 0, 0
 

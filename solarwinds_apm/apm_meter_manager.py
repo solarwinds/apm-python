@@ -110,22 +110,6 @@ class SolarWindsMeterManager:
             callbacks=[consume_sample_count],
         )
 
-        def consume_through_ignored_count(
-            options: CallbackOptions,
-        ) -> Iterable[Observation]:
-            (
-                status,
-                trace_count,
-            ) = self.oboe_settings_api.consumeThroughIgnoredCount()
-            yield Observation(trace_count, {"status": status})
-
-        self.consume_through_ignored_count = (
-            self.meter_request_counters.create_observable_gauge(
-                name="trace.service.consume_through_ignored_count",
-                callbacks=[consume_through_ignored_count],
-            )
-        )
-
         def consume_through_trace_count(
             options: CallbackOptions,
         ) -> Iterable[Observation]:
