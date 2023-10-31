@@ -11,6 +11,7 @@ import logging
 import os
 import sys
 import time
+from typing import TYPE_CHECKING
 
 from opentelemetry import metrics, trace
 from opentelemetry.environment_variables import (
@@ -46,7 +47,6 @@ from solarwinds_apm.apm_constants import (
 )
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
 from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
-from solarwinds_apm.apm_noop import Reporter
 from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
@@ -60,6 +60,9 @@ from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
 from solarwinds_apm.version import __version__
+
+if TYPE_CHECKING:
+    from solarwinds_apm.extension.oboe import Reporter
 
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
