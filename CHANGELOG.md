@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.18.0...HEAD)
 
-## [0.18.0.16](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.18.0) - 2023-10-30
+## [0.18.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.18.0) - 2023-10-31
 
 ### Added
 - Add experimental configuration of OpenTelemetry metrics ([#200](https://github.com/solarwindscloud/solarwinds-apm-python/pull/200))
