@@ -186,6 +186,19 @@ class SolarWindsApmConfig:
             return False
         return True
 
+    def _calculate_agent_enabled_config_lambda(self) -> bool:
+        """Checks if agent is enabled/disabled based on config in lambda environment:
+        - SW_APM_AGENT_ENABLED (optional) (env var or cnf file)
+        """
+        if not self.agent_enabled:
+            logger.info(
+                "SolarWinds APM is disabled and will not report any traces because the environment variable "
+                "SW_APM_AGENT_ENABLED or the config file agentEnabled field is set to 'false'! If this is not intended either unset the variable or set it to "
+                "a value other than false. Note that SW_APM_AGENT_ENABLED/agentEnabled is case-insensitive."
+            )
+            return False
+        return True
+
     # TODO: Account for in-code config with kwargs after alpha
     # pylint: disable=too-many-branches,too-many-return-statements
     def _calculate_agent_enabled_config(self) -> bool:
@@ -195,8 +208,11 @@ class SolarWindsApmConfig:
         - OTEL_PROPAGATORS     (optional) (env var only)
         - OTEL_TRACES_EXPORTER (optional) (env var only)
         """
+        if self.is_lambda:
+            return self._calculate_agent_enabled_config_lambda()
+
         # (1) SW_APM_SERVICE_KEY
-        if not self.__config.get("service_key") and not self._is_lambda():
+        if not self.__config.get("service_key"):
             logger.error("Missing service key. Tracing disabled.")
             return False
         # Key must be at least one char + ":" + at least one other char
