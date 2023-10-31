@@ -20,6 +20,7 @@ from opentelemetry.environment_variables import (
 from opentelemetry.sdk.resources import Resource
 from pkg_resources import iter_entry_points
 
+import solarwinds_apm.apm_noop as noop_extension
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_constants import (
     INTL_SWO_AO_COLLECTOR,
@@ -133,25 +134,14 @@ class SolarWindsApmConfig:
             self.service_name,
         )
 
-        if self.agent_enabled:
-            try:
-                # pylint: disable=import-outside-toplevel
-                import solarwinds_apm.extension.oboe as c_extension
-            except ImportError as err:
-                # At this point, if agent_enabled but cannot import
-                # extension then something unexpected happened
-                logger.error(
-                    "Could not import extension. Please contact %s. Tracing disabled: %s",
-                    INTL_SWO_SUPPORT_EMAIL,
-                    err,
-                )
-                # pylint: disable=import-outside-toplevel
-                import solarwinds_apm.apm_noop as c_extension
-        else:
-            # pylint: disable-next=import-outside-toplevel
-            import solarwinds_apm.apm_noop as c_extension
-        self.extension = c_extension
-        self.context = self.extension.Context
+        # Calculate c-lib extension usage
+        # TODO Used returned OboeAPI
+        #      https://swicloud.atlassian.net/browse/NH-64716
+        self.extension, self.context = self._get_extension_components(
+            self.agent_enabled,
+            self.is_lambda,
+        )
+
         self.context.setTracingMode(self.__config["tracing_mode"])
         self.context.setTriggerMode(self.__config["trigger_trace"])
 
@@ -159,6 +149,39 @@ class SolarWindsApmConfig:
         self.certificates = self._calculate_certificates()
 
         logger.debug("Set ApmConfig as: %s", self)
+
+    def _get_extension_components(
+        self,
+        agent_enabled: bool,
+        is_lambda: bool,
+    ) -> None:
+        """Returns c-lib extension or noop components based on agent_enabled, is_lambda.
+
+        TODO: Return OboeAPI as noop or c-lib version
+        https://swicloud.atlassian.net/browse/NH-64716
+
+        agent_enabled T, is_lambda F -> c-lib extension, c-lib Context
+        agent_enabled T, is_lambda T -> no-op extension, no-op Context
+        agent_enabled F              -> all no-op
+        """
+        if not agent_enabled:
+            return noop_extension, noop_extension.Context
+        try:
+            # pylint: disable=import-outside-toplevel
+            import solarwinds_apm.extension.oboe as c_extension
+        except ImportError as err:
+            # At this point, if agent_enabled but cannot import
+            # extension then something unexpected happened
+            logger.error(
+                "Could not import extension. Please contact %s. Tracing disabled: %s",
+                INTL_SWO_SUPPORT_EMAIL,
+                err,
+            )
+            return noop_extension, noop_extension.Context
+
+        if is_lambda:
+            return noop_extension, noop_extension.Context
+        return c_extension, c_extension.Context
 
     def _is_lambda(self) -> bool:
         """Checks if agent is running in an AWS Lambda environment."""
