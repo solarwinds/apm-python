@@ -210,8 +210,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
     ) -> None:
         """Configure SolarWinds OTel span exporters, defaults or environment
-        configured, or none if agent disabled. Initialization of SolarWinds
-        exporter requires a liboboe reporter and agent_enabled flag."""
+        configured, or none if agent disabled.
+        
+        Initialization of SolarWinds exporter requires a liboboe reporter 
+        Note: if reporter is no-op, the SW exporter will not export spans."""
         if not apm_config.agent_enabled:
             logger.error("Tracing disabled. Cannot set span_processor.")
             return
