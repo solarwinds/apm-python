@@ -206,7 +206,7 @@ aws-lambda: check-zip wrapper
 	@cp solarwinds_apm/extension/liboboe-1.0-lambda-${platform}.so ${target_dir}/python/solarwinds_apm/extension/liboboe.
 	@echo -e "Copying OpenTelemetry lambda wrapper and entry script into target directory."
 	@cp lambda/otel_wrapper.py ${target_dir}/python/otel_wrapper.py
-	@cp lambda/otel_instrument ${target_dir}/otel_instrument
+	@cp lambda/otel-instrument ${target_dir}/otel-instrument
 	@rm -rf ${target_dir}/python/*-info
 	@find ${target_dir}/python -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi
