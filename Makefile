@@ -127,13 +127,19 @@ download-bson-headers:
 download-all: download-headers download-liboboe
 
 #----------------------------------------------------------------------------------------------------------------------#
-# check if SWIG is installed
+# check if build deps are installed
 #----------------------------------------------------------------------------------------------------------------------#
 
 check-swig:
 	@echo -e "Is SWIG installed?"
 	@command -v swig >/dev/null 2>&1 || \
 		{ echo >&2 "Swig is required to build the distribution. Aborting."; exit 1;}
+	@echo -e "Yes."
+
+check-zip:
+	@echo -e "Is zip installed?"
+	@command -v zip >/dev/null 2>&1 || \
+		{ echo >&2 "zip is required to build lambda layer. Installing."; dnf install zip -y;}
 	@echo -e "Yes."
 
 #----------------------------------------------------------------------------------------------------------------------#
@@ -301,4 +307,4 @@ clean-tox:
 	@rm -rf .tox/
 	@echo -e "Done."
 
-.PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all check-swig wrapper sdist manylinux-wheels package aws-lambda publish-lambda-layer-rc copy-liboboe copy-headers copy-bson-headers copy-all wrapper-from-local tox format lint clean
+.PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all check-swig check-zip wrapper sdist manylinux-wheels package aws-lambda publish-lambda-layer-rc copy-liboboe copy-headers copy-bson-headers copy-all wrapper-from-local tox format lint clean
