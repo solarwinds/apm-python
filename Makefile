@@ -212,7 +212,6 @@ aws-lambda: check-zip wrapper
 	@cp lambda/otel_wrapper.py ${target_dir}/python/otel_wrapper.py
 	@cp lambda/otel-instrument ${target_dir}/otel-instrument
 	@chmod 755 ${target_dir}/otel-instrument
-	@rm -rf ${target_dir}/python/*-info
 	@find ${target_dir}/python -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi
 	@pushd ./tmp && zip -r ../dist/solarwinds_apm_lambda.zip . && popd
