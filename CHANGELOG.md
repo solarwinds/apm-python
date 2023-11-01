@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.18.0...HEAD)
 
+### Changed
+- Updated Makefile for APM Python lambda builds ([#212](https://github.com/solarwindscloud/solarwinds-apm-python/pull/212))
+
 ## [0.18.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.18.0) - 2023-10-31
 
 ### Added
