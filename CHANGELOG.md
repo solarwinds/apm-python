@@ -4,12 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.17.0...HEAD)
+## [Unreleased](https://github.com/solarwindscloud/solarwinds-apm-python/compare/rel-0.18.0...HEAD)
+
+## [0.18.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.18.0) - 2023-10-31
 
 ### Added
 - Add experimental configuration of OpenTelemetry metrics ([#200](https://github.com/solarwindscloud/solarwinds-apm-python/pull/200))
 - Add generation and OTLP export of `trace.service.response_time` metrics ([#201](https://github.com/solarwindscloud/solarwinds-apm-python/pull/201))
 - Add support for `SW_APM_TRANSACTION_NAME` ([#206](https://github.com/solarwindscloud/solarwinds-apm-python/pull/206))
+
+### Changed
+- Fixed test dependency for support of Flask < 3 ([#202](https://github.com/solarwindscloud/solarwinds-apm-python/pull/202))
+- Fixed EC2 runner publish actions ([#203](https://github.com/solarwindscloud/solarwinds-apm-python/pull/203))
+- Updated install test coverage for Debian 11 ([#204](https://github.com/solarwindscloud/solarwinds-apm-python/pull/204))
+- Updated Codeowners ([#205](https://github.com/solarwindscloud/solarwinds-apm-python/pull/205))
 
 ## [0.17.0](https://github.com/solarwindscloud/solarwinds-apm-python/releases/tag/rel-0.17.0) - 2023-09-20
 
