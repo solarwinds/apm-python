@@ -205,7 +205,7 @@ aws-lambda: check-zip wrapper
 	@echo -e "Building AWS Lambda version of C-extensions for all supported Python versions in target directory."
 	@set -e; for PYBIN in cp37-cp37m cp38-cp38; do /opt/python/$${PYBIN}/bin/python setup.py build_ext_lambda -b ${target_dir}/nodeps; done
 	@echo -e "Copying AWS Lambda specific Oboe library liboboe-1.0-lambda-${platform}.so into target directory."
-	@cp solarwinds_apm/extension/liboboe-1.0-lambda-${platform}.so ${target_dir}/nodeps/solarwinds_apm/extension/liboboe.
+	@cp solarwinds_apm/extension/liboboe-1.0-lambda-${platform}.so ${target_dir}/nodeps/solarwinds_apm/extension/liboboe.so
 	@echo -e "Moving no-deps dependencies, needed for full opentelemetry/instrumentation path"
 	@cp -r ${target_dir}/nodeps/* ${target_dir}/python && rm -rf ${target_dir}/nodeps
 	@echo -e "Copying OpenTelemetry lambda wrapper and entry script into target directory."
