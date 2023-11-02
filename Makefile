@@ -182,7 +182,7 @@ check-wheel-local:
 # Build and check the full Python agent distribution (sdist and wheels)
 package: sdist check-sdist-local manylinux-wheels check-wheel-local
 
-# Build the AWS lambda layer.
+# Build the AWS lambda layer locally as zip file.
 # temporary target directory for AWS Lambda build artifacts
 # TODO cp39 and cp310
 target_dir := "./tmp"
