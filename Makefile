@@ -186,10 +186,10 @@ package: sdist check-sdist-local manylinux-wheels check-wheel-local
 # recipes for building APM Python AWS lambda layer
 #----------------------------------------------------------------------------------------------------------------------#
 
-# Build the AWS lambda layer locally as zip file in dist/ for manual upload
+# Build the AWS lambda layer as dist/solarwinds_apm_lambda.zip
 # TODO cp39 and cp310
 target_dir := "./tmp"
-aws-lambda-zip: check-zip wrapper
+aws-lambda: check-zip wrapper
 	@if [ -f ./dist/solarwinds_apm_lambda.zip ]; then \
 		echo -e "Deleting old solarwinds_apm_lambda.zip"; \
 		rm ./dist/solarwinds_apm_lambda.zip; \
@@ -347,4 +347,4 @@ clean-tox:
 	@rm -rf .tox/
 	@echo -e "Done."
 
-.PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all check-swig check-zip wrapper sdist manylinux-wheels package aws-lambda-zip publish-lambda-layer-rc copy-liboboe copy-headers copy-bson-headers copy-all wrapper-from-local tox format lint clean
+.PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all check-swig check-zip wrapper sdist manylinux-wheels package aws-lambda publish-lambda-layer-rc copy-liboboe copy-headers copy-bson-headers copy-all wrapper-from-local tox format lint clean
