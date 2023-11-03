@@ -1,5 +1,5 @@
 * @solarwindscloud/eng-apm-instrumentation
 
 # prepare for move to solarwinds
-@solarwinds/eng-pub-apm-instrumentation
+* @solarwinds/eng-pub-apm-instrumentation
 
