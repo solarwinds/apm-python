@@ -1,4 +1,5 @@
 * @solarwindscloud/eng-apm-instrumentation
 
-# placeholder for GH EMU where this will move to new org for public repos
-#* @solarwinds/eng-apm-instrumentation
+# prepare for move to solarwinds
+@solarwinds/eng-pub-apm-instrumentation
+
