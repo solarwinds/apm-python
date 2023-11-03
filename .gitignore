@@ -133,3 +133,7 @@ dmypy.json
 
 # VS Code
 .vscode/
+
+# Lambda builds
+lambda/.aws-sam/*
+lambda/*.zip

@@ -20,6 +20,7 @@ Resources:
         - python3.11
     Metadata:
       BuildMethod: makefile
+      BuildArchitecture: arm64
   LambdaApi:
     Type: AWS::Serverless::Api
     Properties:
