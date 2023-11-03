@@ -182,11 +182,14 @@ check-wheel-local:
 # Build and check the full Python agent distribution (sdist and wheels)
 package: sdist check-sdist-local manylinux-wheels check-wheel-local
 
-# Build the AWS lambda layer locally as zip file.
-# temporary target directory for AWS Lambda build artifacts
+#----------------------------------------------------------------------------------------------------------------------#
+# recipes for building APM Python AWS lambda layer
+#----------------------------------------------------------------------------------------------------------------------#
+
+# Build the AWS lambda layer locally as zip file in dist/ for manual upload
 # TODO cp39 and cp310
 target_dir := "./tmp"
-aws-lambda: check-zip wrapper
+aws-lambda-zip: check-zip wrapper
 	@if [ -f ./dist/solarwinds_apm_lambda.zip ]; then \
 		echo -e "Deleting old solarwinds_apm_lambda.zip"; \
 		rm ./dist/solarwinds_apm_lambda.zip; \
@@ -219,6 +222,7 @@ aws-lambda: check-zip wrapper
 	@echo -e "\nDone."
 
 # Target to build AWS lambda layer with AWS SAM for deployment
+# See lambda/run.sh
 # TODO consolidate with aws-lambda above
 # TODO add rm for boto*, urllib* installations
 # TODO add rm for six*, *setuptools
@@ -343,4 +347,4 @@ clean-tox:
 	@rm -rf .tox/
 	@echo -e "Done."
 
-.PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all check-swig check-zip wrapper sdist manylinux-wheels package aws-lambda build-SWOTelLayer publish-lambda-layer-rc copy-liboboe copy-headers copy-bson-headers copy-all wrapper-from-local tox format lint clean
+.PHONY: nothing verify-oboe-version download-liboboe download-headers download-bson-headers download-all check-swig check-zip wrapper sdist manylinux-wheels package aws-lambda-zip publish-lambda-layer-rc copy-liboboe copy-headers copy-bson-headers copy-all wrapper-from-local tox format lint clean
