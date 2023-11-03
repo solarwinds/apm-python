@@ -246,8 +246,8 @@ build-SWOTelLayer: check-zip wrapper
 	@cp -r ${ARTIFACTS_DIR}/nodeps/* ${ARTIFACTS_DIR}/python && rm -rf ${ARTIFACTS_DIR}/nodeps
 	@echo -e "Copying OpenTelemetry lambda wrapper and entry script into target directory."
 	@cp lambda/otel_instrumentation/otel_wrapper.py ${ARTIFACTS_DIR}/python/otel_wrapper.py
-	@cp lambda/otel_instrumentation/otel-instrument ${ARTIFACTS_DIR}/otel-instrument
-	@chmod 755 ${ARTIFACTS_DIR}/otel-instrument
+	@cp lambda/otel_instrumentation/otel-instrument ${ARTIFACTS_DIR}/python/otel-instrument
+	@chmod 755 ${ARTIFACTS_DIR}/python/otel-instrument
 
 #----------------------------------------------------------------------------------------------------------------------#
 # variable and recipe definitions for distribution/ publishing workflow
