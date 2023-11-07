@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 
 
 class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
+    # TODO Refactor span processors
+    #      https://swicloud.atlassian.net/browse/NH-65061
+
     _TRANSACTION_NAME = "transaction_name"
     _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
     _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"

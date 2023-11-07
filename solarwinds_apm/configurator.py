@@ -11,6 +11,7 @@ import logging
 import os
 import sys
 import time
+from typing import TYPE_CHECKING
 
 from opentelemetry import metrics, trace
 from opentelemetry.environment_variables import (
@@ -46,7 +47,6 @@ from solarwinds_apm.apm_constants import (
 )
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
 from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
-from solarwinds_apm.apm_noop import Reporter
 from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
@@ -60,6 +60,9 @@ from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
 from solarwinds_apm.version import __version__
+
+if TYPE_CHECKING:
+    from solarwinds_apm.extension.oboe import Reporter
 
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
@@ -80,6 +83,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
 
+        # TODO Add experimental trace flag, clean up
+        #      https://swicloud.atlassian.net/browse/NH-65067
         if not apm_config.get("experimental").get("otel_collector") is True:
             logger.debug(
                 "Experimental otel_collector flag not configured. Creating meter manager as no-op."
@@ -110,7 +115,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
         if apm_config.agent_enabled:
-            self._configure_metrics_span_processor(
+            self._configure_inbound_metrics_span_processor(
                 apm_txname_manager,
                 apm_config,
             )
@@ -165,12 +170,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             ),
         )
 
-    def _configure_metrics_span_processor(
+    def _configure_inbound_metrics_span_processor(
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure SolarWindsInboundMetricsSpanProcessor"""
+        """Configure SolarWindsInboundMetricsSpanProcessor.
+        Note: if config's extension is no-op, the processor will run
+        but will not export inbound metrics."""
+        # TODO Refactor span processors
+        #      https://swicloud.atlassian.net/browse/NH-65061
         trace.get_tracer_provider().add_span_processor(
             SolarWindsInboundMetricsSpanProcessor(
                 apm_txname_manager,
@@ -184,7 +193,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
         apm_meters: SolarWindsMeterManager,
     ) -> None:
-        """Configure SolarWindsOTLPMetricsSpanProcessor"""
+        """Configure SolarWindsOTLPMetricsSpanProcessor.
+        If no meters/instruments are initialized, the processor will
+        run but will not collect/flush OTLP metrics."""
+        # TODO Add experimental trace flag, clean up
+        #      https://swicloud.atlassian.net/browse/NH-65067
         if not apm_config.get("experimental").get("otel_collector") is True:
             logger.debug(
                 "Experimental otel_collector flag not configured. Not configuring OTLP metrics span processor."
@@ -207,8 +220,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
     ) -> None:
         """Configure SolarWinds OTel span exporters, defaults or environment
-        configured, or none if agent disabled. Initialization of SolarWinds
-        exporter requires a liboboe reporter and agent_enabled flag."""
+        configured, or none if agent disabled.
+
+        Initialization of SolarWinds exporter requires a liboboe reporter
+        Note: if reporter is no-op, the SW exporter will not export spans."""
         if not apm_config.agent_enabled:
             logger.error("Tracing disabled. Cannot set span_processor.")
             return
@@ -370,7 +385,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> "Reporter":
-        """Initialize SolarWinds reporter used by sampler and exporter, using SolarWindsApmConfig. This establishes collector and sampling settings in a background thread."""
+        """Initialize SolarWinds reporter used by sampler and exporter, using SolarWindsApmConfig.
+        This establishes collector and sampling settings in a background thread.
+
+        Note: if config's extension is no-op, this has no effect."""
         reporter_kwargs = {
             "hostname_alias": apm_config.get("hostname_alias"),
             "log_level": apm_config.get("debug_level"),

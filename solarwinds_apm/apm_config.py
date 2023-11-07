@@ -20,6 +20,7 @@ from opentelemetry.environment_variables import (
 from opentelemetry.sdk.resources import Resource
 from pkg_resources import iter_entry_points
 
+import solarwinds_apm.apm_noop as noop_extension
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_constants import (
     INTL_SWO_AO_COLLECTOR,
@@ -115,6 +116,7 @@ class SolarWindsApmConfig:
             "experimental": {},
             "transaction_name": None,
         }
+        self.is_lambda = self._is_lambda()
         self.agent_enabled = True
         self.update_with_cnf_file()
         self.update_with_env_var()
@@ -132,25 +134,14 @@ class SolarWindsApmConfig:
             self.service_name,
         )
 
-        if self.agent_enabled:
-            try:
-                # pylint: disable=import-outside-toplevel
-                import solarwinds_apm.extension.oboe as c_extension
-            except ImportError as err:
-                # At this point, if agent_enabled but cannot import
-                # extension then something unexpected happened
-                logger.error(
-                    "Could not import extension. Please contact %s. Tracing disabled: %s",
-                    INTL_SWO_SUPPORT_EMAIL,
-                    err,
-                )
-                # pylint: disable=import-outside-toplevel
-                import solarwinds_apm.apm_noop as c_extension
-        else:
-            # pylint: disable-next=import-outside-toplevel
-            import solarwinds_apm.apm_noop as c_extension
-        self.extension = c_extension
-        self.context = self.extension.Context
+        # Calculate c-lib extension usage
+        # TODO Used returned OboeAPI
+        #      https://swicloud.atlassian.net/browse/NH-64716
+        self.extension, self.context = self._get_extension_components(
+            self.agent_enabled,
+            self.is_lambda,
+        )
+
         self.context.setTracingMode(self.__config["tracing_mode"])
         self.context.setTriggerMode(self.__config["trigger_trace"])
 
@@ -159,13 +150,46 @@ class SolarWindsApmConfig:
 
         logger.debug("Set ApmConfig as: %s", self)
 
+    def _get_extension_components(
+        self,
+        agent_enabled: bool,
+        is_lambda: bool,
+    ) -> None:
+        """Returns c-lib extension or noop components based on agent_enabled, is_lambda.
+
+        TODO: Return OboeAPI as noop or c-lib version
+        https://swicloud.atlassian.net/browse/NH-64716
+
+        agent_enabled T, is_lambda F -> c-lib extension, c-lib Context
+        agent_enabled T, is_lambda T -> no-op extension, no-op Context
+        agent_enabled F              -> all no-op
+        """
+        if not agent_enabled:
+            return noop_extension, noop_extension.Context
+        try:
+            # pylint: disable=import-outside-toplevel
+            import solarwinds_apm.extension.oboe as c_extension
+        except ImportError as err:
+            # At this point, if agent_enabled but cannot import
+            # extension then something unexpected happened
+            logger.error(
+                "Could not import extension. Please contact %s. Tracing disabled: %s",
+                INTL_SWO_SUPPORT_EMAIL,
+                err,
+            )
+            return noop_extension, noop_extension.Context
+
+        if is_lambda:
+            return noop_extension, noop_extension.Context
+        return c_extension, c_extension.Context
+
     def _is_lambda(self) -> bool:
         """Checks if agent is running in an AWS Lambda environment."""
         if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") and os.environ.get(
             "LAMBDA_TASK_ROOT"
         ):
             logger.warning(
-                "AWS Lambda is not yet supported by Python SolarWinds APM."
+                "AWS Lambda is experimental in Python SolarWinds APM."
             )
             return True
         return False
@@ -185,6 +209,19 @@ class SolarWindsApmConfig:
             return False
         return True
 
+    def _calculate_agent_enabled_config_lambda(self) -> bool:
+        """Checks if agent is enabled/disabled based on config in lambda environment:
+        - SW_APM_AGENT_ENABLED (optional) (env var or cnf file)
+        """
+        if not self.agent_enabled:
+            logger.info(
+                "SolarWinds APM is disabled and will not report any traces because the environment variable "
+                "SW_APM_AGENT_ENABLED or the config file agentEnabled field is set to 'false'! If this is not intended either unset the variable or set it to "
+                "a value other than false. Note that SW_APM_AGENT_ENABLED/agentEnabled is case-insensitive."
+            )
+            return False
+        return True
+
     # TODO: Account for in-code config with kwargs after alpha
     # pylint: disable=too-many-branches,too-many-return-statements
     def _calculate_agent_enabled_config(self) -> bool:
@@ -194,8 +231,11 @@ class SolarWindsApmConfig:
         - OTEL_PROPAGATORS     (optional) (env var only)
         - OTEL_TRACES_EXPORTER (optional) (env var only)
         """
+        if self.is_lambda:
+            return self._calculate_agent_enabled_config_lambda()
+
         # (1) SW_APM_SERVICE_KEY
-        if not self.__config.get("service_key") and not self._is_lambda():
+        if not self.__config.get("service_key"):
             logger.error("Missing service key. Tracing disabled.")
             return False
         # Key must be at least one char + ":" + at least one other char
@@ -267,6 +307,8 @@ class SolarWindsApmConfig:
             return False
 
         # (4) OTEL_TRACES_EXPORTER
+        # TODO Relax traces exporter requirements outside lambda
+        #      https://swicloud.atlassian.net/browse/NH-65713
         try:
             # SolarWindsDistro._configure does setdefault so this shouldn't
             # be None, but safer and more explicit this way
@@ -274,7 +316,7 @@ class SolarWindsApmConfig:
                 OTEL_TRACES_EXPORTER,
                 INTL_SWO_DEFAULT_TRACES_EXPORTER,
             ).split(",")
-            # If not using the default propagators,
+            # If not using the default exporters,
             # can any arbitrary list BUT
             # (1) must include solarwinds_exporter
             # (2) other exporters must be loadable by OTel
@@ -530,7 +572,6 @@ class SolarWindsApmConfig:
             self.agent_enabled = cnf_agent_enabled
 
         available_cnf = set(self.__config.keys())
-        # TODO after alpha: is_lambda
         for key in available_cnf:
             # Use internal snake_case config keys to check JSON config file camelCase keys
             val = cnf_dict.get(_snake_to_camel_case(key))
@@ -611,11 +652,12 @@ class SolarWindsApmConfig:
             self.agent_enabled = env_agent_enabled
 
         available_envvs = set(self.__config.keys())
-        # TODO after alpha: is_lambda
         for key in available_envvs:
             if key == "transaction":
                 # we do not allow complex config options to be set via environment variables
                 continue
+            # TODO Add experimental trace flag, clean up
+            #      https://swicloud.atlassian.net/browse/NH-65067
             if key == "experimental":
                 # but we do allow flat SW_APM_EXPERIMENTAL_OTEL_COLLECTOR setting to match js
                 key = self._EXP_PREFIX + "otel_collector"
@@ -700,7 +742,6 @@ class SolarWindsApmConfig:
                 )
                 self.__config[key] = oboe_trigger_trace
             elif keys == ["reporter"]:
-                # TODO: support 'lambda'
                 if not isinstance(val, str) or val.lower() not in (
                     "udp",
                     "ssl",
@@ -716,6 +757,8 @@ class SolarWindsApmConfig:
                 self.__config[key] = val
                 # update logging level of agent logger
                 apm_logging.set_sw_log_level(val)
+            # TODO Add experimental trace flag, clean up
+            #      https://swicloud.atlassian.net/browse/NH-65067
             elif keys == ["experimental"]:
                 for exp_k, exp_v in val.items():
                     if exp_k in self._EXP_KEYS:
@@ -727,6 +770,8 @@ class SolarWindsApmConfig:
                             )
                         else:
                             self.__config["experimental"][exp_k] = exp_v
+            # TODO Add experimental trace flag, clean up
+            #      https://swicloud.atlassian.net/browse/NH-65067
             elif keys == ["experimental_otel_collector"]:
                 val = self.convert_to_bool(val)
                 if val is None:
