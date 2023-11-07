@@ -182,8 +182,7 @@ check-wheel-local:
 # Build and check the full Python agent distribution (sdist and wheels)
 package: sdist check-sdist-local manylinux-wheels check-wheel-local
 
-# Build the AWS lambda layer locally as zip file.
-# temporary target directory for AWS Lambda build artifacts
+# Build APM Python AWS lambda layer as zip artifact
 # TODO cp39 and cp310
 target_dir := "./tmp"
 aws-lambda: check-zip wrapper
@@ -217,15 +216,6 @@ aws-lambda: check-zip wrapper
 	@pushd ./tmp && zip -r ../dist/solarwinds_apm_lambda.zip . && popd
 	@rm -rf ./tmp ./build
 	@echo -e "\nDone."
-
-#----------------------------------------------------------------------------------------------------------------------#
-# variable and recipe definitions for distribution/ publishing workflow
-#----------------------------------------------------------------------------------------------------------------------#
-
-# Go through the build process and publish AWS Lambda layer RC version
-publish-lambda-layer-rc: aws-lambda
-	@python3.8 publish_lambda_layer.py rc
-	@echo -e "Done: Built the AWS Lambda layer and uploaded it to AWS."
 
 #----------------------------------------------------------------------------------------------------------------------#
 # recipes for local development
