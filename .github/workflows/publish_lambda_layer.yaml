@@ -1,0 +1,82 @@
+# © 2023 SolarWinds Worldwide, LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+name: Publish Lambda Layer to staging
+
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        description: 'Name of actions/upload-artifact result'
+        required: true
+        type: string
+      layer-name:
+        description: 'Base layer name'
+        required: true
+        type: string
+      component-version:
+        description: 'Version of APM Python library in this release'
+        required: true
+        type: string
+      aws_region:
+        description: 'Publish to which AWS region'
+        required: true
+        type: string
+      architecture:
+        description: 'Must be x86_64 or amd64'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish_layer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Construct Layer Name
+        shell: bash
+        run: |
+          LAYER_NAME=${{ inputs.layer-name }}
+          
+          if [[ "${{ inputs.architecture }}" != "x86_64" ]] && [[ "${{ inputs.architecture }}" != "amd64" ]] ; then
+            echo "ERROR: architecture must be one of x86_64, amd64"
+            exit 1
+          else
+            LAYER_NAME=$LAYER_NAME-${{ inputs.architecture }}
+            echo "ARCH=${{ inputs.architecture }}" >> $GITHUB_ENV
+          fi
+          
+          COMPONENT_VERSION_UNDERSCORES=$(echo ${{ inputs.component-version }} | sed -r 's/\./_/g')
+          LAYER_NAME=$LAYER_NAME-COMPONENT_VERSION_UNDERSCORES
+          
+          echo GITHUB_ENV:
+          cat $GITHUB_ENV
+
+      - name: Download built layer
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.artifact-name }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.STAGING_LAMBDA_ROLE_ARN }}
+          role-duration-seconds: 1200
+          aws-region: ${{ inputs.aws_region }}
+          mask-aws-account-id: false
+
+      - name: Publish Lambda Layer
+        run: |
+          LAYER_ARN=$(
+            aws lambda publish-layer-version \
+              --layer-name $LAYER_NAME \
+              --license-info "Apache 2.0" \
+              --compatible-architectures $ARCH \
+              --zip-file fileb://${{ inputs.artifact-name }} \
+              --query 'LayerVersionArn' \
+              --output text
+          )
