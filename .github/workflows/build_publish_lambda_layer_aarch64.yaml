@@ -54,5 +54,5 @@ jobs:
       layer-name: solarwinds_apm_lambda
       component-version: ${{ needs.build_layer_aarch64.outputs.SW_APM_VERSION }}
       aws_region: ${{ matrix.aws_region }}
-      architecture: amd64
+      architecture: arm64
     secrets: inherit
