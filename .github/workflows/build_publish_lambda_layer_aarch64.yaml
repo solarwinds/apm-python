@@ -1,0 +1,58 @@
+# © 2023 SolarWinds Worldwide, LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+name: Publish APM Python lambda layer for aarch64
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_layer_aarch64:
+    runs-on: ubuntu-latest
+    outputs:
+      SW_APM_VERSION: ${{ steps.save-apm-python-version.outputs.SW_APM_VERSION }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/package_lambda_solarwinds_apm_aarch64
+    - name: Save APM Python Version for naming
+      id: save-apm-python-version
+      run: |
+        echo "SW_APM_VERSION=$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')" >> $GITHUB_OUTPUT
+    - uses: actions/upload-artifact@v3
+      name: Save assembled layer to build
+      with:
+        name: solarwinds_apm_lambda.zip
+        path: dist/solarwinds_apm_lambda.zip
+
+  publish-layer:
+    uses: ./.github/workflows/layer-publish.yml
+    needs: build_layer_aarch64
+    strategy:
+      matrix:
+        aws_region: 
+          - ap-northeast-1
+          - ap-northeast-2
+          - ap-south-1
+          - ap-southeast-1
+          - ap-southeast-2
+          - ca-central-1
+          - eu-central-1
+          - eu-north-1
+          - eu-west-1
+          - eu-west-2
+          - eu-west-3
+          - sa-east-1
+          - us-east-1
+          - us-east-2
+          - us-west-1
+          - us-west-2
+    with:
+      artifact-name: solarwinds_apm_lambda.zip
+      layer-name: solarwinds_apm_lambda
+      component-version: ${{ needs.build_layer_aarch64.outputs.SW_APM_VERSION }}
+      aws_region: ${{ matrix.aws_region }}
+      architecture: amd64
+    secrets: inherit
