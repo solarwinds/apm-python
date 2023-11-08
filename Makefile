@@ -212,6 +212,11 @@ aws-lambda: check-zip wrapper
 	@cp lambda/otel_wrapper.py ${target_dir}/python/otel_wrapper.py
 	@cp lambda/otel-instrument ${target_dir}/otel-instrument
 	@chmod 755 ${target_dir}/otel-instrument
+	@echo -e "Removing unnecessary boto, six, setuptools, urllib3 installations"
+	@rm -rf ${target_dir}/python/boto*
+	@rm -rf ${target_dir}/python/six*
+	@rm -rf ${target_dir}/python/setuptools*
+	@rm -rf ${target_dir}/python/urllib3*
 	@find ${target_dir}/python -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi
 	@pushd ./tmp-lambda && zip -r ../dist/solarwinds_apm_lambda.zip . && popd
