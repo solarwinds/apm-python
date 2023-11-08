@@ -184,13 +184,13 @@ package: sdist check-sdist-local manylinux-wheels check-wheel-local
 
 # Build APM Python AWS lambda layer as zip artifact
 # TODO cp39 and cp310
-target_dir := "./tmp"
+target_dir := "./tmp-lambda"
 aws-lambda: check-zip wrapper
 	@if [ -f ./dist/solarwinds_apm_lambda.zip ]; then \
 		echo -e "Deleting old solarwinds_apm_lambda.zip"; \
 		rm ./dist/solarwinds_apm_lambda.zip; \
 	 fi
-	rm -rf ./tmp
+	rm -rf ./tmp-lambda
 	@echo -e "Creating target directory ${target_dir} for AWS Lambda layer artifacts."
 	mkdir -p ${target_dir}/python
 	@echo -e "Install upstream dependencies to include in layer"
@@ -213,8 +213,8 @@ aws-lambda: check-zip wrapper
 	@chmod 755 ${target_dir}/otel-instrument
 	@find ${target_dir}/python -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi
-	@pushd ./tmp && zip -r ../dist/solarwinds_apm_lambda.zip . && popd
-	@rm -rf ./tmp ./build
+	@pushd ./tmp-lambda && zip -r ../dist/solarwinds_apm_lambda.zip . && popd
+	@rm -rf ./tmp-lambda ./build
 	@echo -e "\nDone."
 
 #----------------------------------------------------------------------------------------------------------------------#
