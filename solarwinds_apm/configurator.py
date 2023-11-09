@@ -124,7 +124,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_config,
                 apm_meters,
             )
-            self._configure_exporter(
+            self._configure_traces_exporter(
                 reporter,
                 apm_txname_manager,
                 apm_fwkv_manager,
@@ -212,7 +212,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
         )
 
-    def _configure_exporter(
+    def _configure_traces_exporter(
         self,
         reporter: "Reporter",
         apm_txname_manager: SolarWindsTxnNameManager,
