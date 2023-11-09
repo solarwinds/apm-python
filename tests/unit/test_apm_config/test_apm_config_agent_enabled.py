@@ -381,23 +381,6 @@ class TestSolarWindsApmConfigAgentEnabled:
         assert resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == "key"
 
-    def test_calculate_agent_enabled_valid_other_but_missing_sw_exporter(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "OTEL_TRACES_EXPORTER": "foo",
-            "SW_APM_SERVICE_KEY": "valid:key",
-        })
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.iter_entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_iter_entry_points.configure_mock(
-            return_value=mock_points
-        )
-        resulting_config = apm_config.SolarWindsApmConfig()
-        assert not resulting_config._calculate_agent_enabled()
-        assert resulting_config.service_name == ""
-
     def test_calculate_agent_enabled_sw_but_no_such_other_exporter(self, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_TRACES_EXPORTER": "solarwinds_exporter,not-valid",

@@ -261,11 +261,9 @@ class SolarWindsApmConfig:
 
         # (3) OTEL_PROPAGATORS
         try:
-            # SolarWindsDistro._configure does setdefault so this shouldn't
-            # be None, but safer and more explicit this way
+            # SolarWindsDistro._configure does setdefault before this is called
             environ_propagators = os.environ.get(
                 OTEL_PROPAGATORS,
-                ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
             ).split(",")
             # If not using the default propagators,
             # can any arbitrary list BUT
@@ -308,25 +306,22 @@ class SolarWindsApmConfig:
             return False
 
         # (4) OTEL_TRACES_EXPORTER
-        # TODO Relax traces exporter requirements outside lambda
-        #      https://swicloud.atlassian.net/browse/NH-65713
+        # SolarWindsDistro._configure does setdefault before this is called
+        environ_exporter = os.environ.get(
+            OTEL_TRACES_EXPORTER,
+        )
+        if not environ_exporter:
+            logger.debug(
+                "No OTEL_TRACES_EXPORTER set, skipping entry point checks"
+            )
+            return True
+
+        environ_exporter_names = environ_exporter.split(",")
         try:
-            # SolarWindsDistro._configure does setdefault so this shouldn't
-            # be None, but safer and more explicit this way
-            environ_exporters = os.environ.get(
-                OTEL_TRACES_EXPORTER,
-                INTL_SWO_DEFAULT_TRACES_EXPORTER,
-            ).split(",")
             # If not using the default exporters,
             # can any arbitrary list BUT
-            # (1) must include solarwinds_exporter
-            # (2) other exporters must be loadable by OTel
-            if INTL_SWO_DEFAULT_TRACES_EXPORTER not in environ_exporters:
-                logger.error(
-                    "Must include solarwinds_exporter in OTEL_TRACES_EXPORTER to use Solarwinds APM. Tracing disabled."
-                )
-                return False
-            for environ_exporter_name in environ_exporters:
+            # outside-SW exporters must be loadable by OTel
+            for environ_exporter_name in environ_exporter_names:
                 try:
                     if (
                         environ_exporter_name
