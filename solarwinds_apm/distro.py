@@ -10,6 +10,7 @@ import logging
 from os import environ
 
 from opentelemetry.environment_variables import (
+    OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
 )
@@ -22,8 +23,10 @@ from pkg_resources import EntryPoint
 
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import (
+    INTL_SWO_DEFAULT_METRICS_EXPORTER_LAMBDA,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
+    INTL_SWO_DEFAULT_TRACES_EXPORTER_LAMBDA,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,9 +37,21 @@ class SolarWindsDistro(BaseDistro):
 
     def _configure(self, **kwargs):
         """Configure default OTel exporter and propagators"""
-        environ.setdefault(
-            OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER
-        )
+        is_lambda = SolarWindsApmConfig.calculate_is_lambda()
+        if is_lambda:
+            environ.setdefault(
+                OTEL_METRICS_EXPORTER, INTL_SWO_DEFAULT_METRICS_EXPORTER_LAMBDA
+            )
+            environ.setdefault(
+                OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER_LAMBDA
+            )
+        else:
+            # If experimental flag set, users need to specify OTEL_METRICS_EXPORTER
+            # or none will be loaded.
+            environ.setdefault(
+                OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER
+            )
+
         environ.setdefault(
             OTEL_PROPAGATORS, ",".join(INTL_SWO_DEFAULT_PROPAGATORS)
         )
