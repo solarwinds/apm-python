@@ -116,7 +116,7 @@ class SolarWindsApmConfig:
             "experimental": {},
             "transaction_name": None,
         }
-        self.is_lambda = self._is_lambda()
+        self.is_lambda = self.calculate_is_lambda()
         self.agent_enabled = True
         self.update_with_cnf_file()
         self.update_with_env_var()
@@ -183,7 +183,8 @@ class SolarWindsApmConfig:
             return noop_extension, noop_extension.Context
         return c_extension, c_extension.Context
 
-    def _is_lambda(self) -> bool:
+    @classmethod
+    def calculate_is_lambda(cls) -> bool:
         """Checks if agent is running in an AWS Lambda environment."""
         if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") and os.environ.get(
             "LAMBDA_TASK_ROOT"
