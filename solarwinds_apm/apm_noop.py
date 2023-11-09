@@ -202,3 +202,47 @@ class SolarWindsMeterManager:
     def __init__(self, *args, **kwargs):
         self.meter = None
         self.response_time = NoOpHistogram(name="trace.service.response_time")
+
+
+class OboeAPI:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def getTracingDecision(self):
+        return (
+            0,
+            0,
+            0,
+            0,
+            0.0,
+            0.0,
+            0,
+            0,
+            "",
+            "",
+            0,
+        )
+
+    def consumeRequestCount(self):
+        return 0, 0
+
+    def consumeTokenBucketExhaustionCount(self):
+        return 0, 0
+
+    def consumeTraceCount(self):
+        return 0, 0
+
+    def consumeSampleCount(self):
+        return 0, 0
+
+    def consumeThroughTraceCount(self):
+        return 0, 0
+
+    def consumeTriggeredTraceCount(self):
+        return 0, 0
+
+    def getLastUsedSampleRate(self):
+        return 0, 0
+
+    def getLastUsedSampleSource(self):
+        return 0, 0
