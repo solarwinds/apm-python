@@ -225,15 +225,17 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         Initialization of SolarWinds exporter requires a liboboe reporter
         Note: if reporter is no-op, the SW exporter will not export spans."""
         if not apm_config.agent_enabled:
-            logger.error("Tracing disabled. Cannot set span_processor.")
+            logger.error("Tracing disabled. Cannot set trace exporter.")
             return
 
-        # SolarWindsDistro._configure does setdefault so this shouldn't
-        # be None, but safer and more explicit this way
-        environ_exporter_names = os.environ.get(
+        # SolarWindsDistro._configure does setdefault before this is called
+        environ_exporter = os.environ.get(
             OTEL_TRACES_EXPORTER,
-            INTL_SWO_DEFAULT_TRACES_EXPORTER,
-        ).split(",")
+        )
+        if not environ_exporter:
+            logger.debug("No OTEL_TRACES_EXPORTER set, skipping init")
+            return
+        environ_exporter_names = environ_exporter.split(",")
 
         for exporter_name in environ_exporter_names:
             exporter = None
@@ -290,16 +292,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             return
 
-        # SolarWindsDistro._configure does not setdefault so this
-        # could be None
+        # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
             OTEL_METRICS_EXPORTER,
         )
-
         if not environ_exporter:
             logger.debug("No OTEL_METRICS_EXPORTER set, skipping init")
             return
-
         environ_exporter_names = environ_exporter.split(",")
 
         metric_readers = []
