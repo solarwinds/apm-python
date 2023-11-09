@@ -116,7 +116,7 @@ class SolarWindsApmConfig:
             "experimental": {},
             "transaction_name": None,
         }
-        self.is_lambda = self.calculate_is_lambda()
+        self.is_lambda = self._is_lambda()
         self.agent_enabled = True
         self.update_with_cnf_file()
         self.update_with_env_var()
@@ -183,8 +183,7 @@ class SolarWindsApmConfig:
             return noop_extension, noop_extension.Context
         return c_extension, c_extension.Context
 
-    @classmethod
-    def calculate_is_lambda(cls) -> bool:
+    def _is_lambda(self) -> bool:
         """Checks if agent is running in an AWS Lambda environment."""
         if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") and os.environ.get(
             "LAMBDA_TASK_ROOT"
@@ -261,9 +260,11 @@ class SolarWindsApmConfig:
 
         # (3) OTEL_PROPAGATORS
         try:
-            # SolarWindsDistro._configure does setdefault before this is called
+            # SolarWindsDistro._configure does setdefault so this shouldn't
+            # be None, but safer and more explicit this way
             environ_propagators = os.environ.get(
                 OTEL_PROPAGATORS,
+                ",".join(INTL_SWO_DEFAULT_PROPAGATORS),
             ).split(",")
             # If not using the default propagators,
             # can any arbitrary list BUT
@@ -306,22 +307,25 @@ class SolarWindsApmConfig:
             return False
 
         # (4) OTEL_TRACES_EXPORTER
-        # SolarWindsDistro._configure does setdefault before this is called
-        environ_exporter = os.environ.get(
-            OTEL_TRACES_EXPORTER,
-        )
-        if not environ_exporter:
-            logger.debug(
-                "No OTEL_TRACES_EXPORTER set, skipping entry point checks"
-            )
-            return True
-
-        environ_exporter_names = environ_exporter.split(",")
+        # TODO Relax traces exporter requirements outside lambda
+        #      https://swicloud.atlassian.net/browse/NH-65713
         try:
+            # SolarWindsDistro._configure does setdefault so this shouldn't
+            # be None, but safer and more explicit this way
+            environ_exporters = os.environ.get(
+                OTEL_TRACES_EXPORTER,
+                INTL_SWO_DEFAULT_TRACES_EXPORTER,
+            ).split(",")
             # If not using the default exporters,
             # can any arbitrary list BUT
-            # outside-SW exporters must be loadable by OTel
-            for environ_exporter_name in environ_exporter_names:
+            # (1) must include solarwinds_exporter
+            # (2) other exporters must be loadable by OTel
+            if INTL_SWO_DEFAULT_TRACES_EXPORTER not in environ_exporters:
+                logger.error(
+                    "Must include solarwinds_exporter in OTEL_TRACES_EXPORTER to use Solarwinds APM. Tracing disabled."
+                )
+                return False
+            for environ_exporter_name in environ_exporters:
                 try:
                     if (
                         environ_exporter_name

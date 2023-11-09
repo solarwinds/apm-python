@@ -124,7 +124,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_config,
                 apm_meters,
             )
-            self._configure_traces_exporter(
+            self._configure_exporter(
                 reporter,
                 apm_txname_manager,
                 apm_fwkv_manager,
@@ -212,7 +212,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
         )
 
-    def _configure_traces_exporter(
+    def _configure_exporter(
         self,
         reporter: "Reporter",
         apm_txname_manager: SolarWindsTxnNameManager,
@@ -225,17 +225,15 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         Initialization of SolarWinds exporter requires a liboboe reporter
         Note: if reporter is no-op, the SW exporter will not export spans."""
         if not apm_config.agent_enabled:
-            logger.error("Tracing disabled. Cannot set trace exporter.")
+            logger.error("Tracing disabled. Cannot set span_processor.")
             return
 
-        # SolarWindsDistro._configure does setdefault before this is called
-        environ_exporter = os.environ.get(
+        # SolarWindsDistro._configure does setdefault so this shouldn't
+        # be None, but safer and more explicit this way
+        environ_exporter_names = os.environ.get(
             OTEL_TRACES_EXPORTER,
-        )
-        if not environ_exporter:
-            logger.debug("No OTEL_TRACES_EXPORTER set, skipping init")
-            return
-        environ_exporter_names = environ_exporter.split(",")
+            INTL_SWO_DEFAULT_TRACES_EXPORTER,
+        ).split(",")
 
         for exporter_name in environ_exporter_names:
             exporter = None
@@ -292,13 +290,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             return
 
-        # SolarWindsDistro._configure does setdefault before this is called
+        # SolarWindsDistro._configure does not setdefault so this
+        # could be None
         environ_exporter = os.environ.get(
             OTEL_METRICS_EXPORTER,
         )
+
         if not environ_exporter:
             logger.debug("No OTEL_METRICS_EXPORTER set, skipping init")
             return
+
         environ_exporter_names = environ_exporter.split(",")
 
         metric_readers = []
