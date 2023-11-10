@@ -4,11 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-0.18.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.0.0...HEAD)
+
+## [1.0.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.0.0) - 2023-11-10
 
 ### Changed
 - Change c-lib usage and `agent_enabled` calculation if `is_lambda` ([#211](https://github.com/solarwinds/apm-python/pull/211))
 - Updated Makefile for APM Python lambda builds ([#212](https://github.com/solarwinds/apm-python/pull/212))
+- Move organization and repo ([#218](https://github.com/solarwinds/apm-python/pull/218))
 
 ## [0.18.0](https://github.com/solarwinds/apm-python/releases/tag/rel-0.18.0) - 2023-10-31
 
