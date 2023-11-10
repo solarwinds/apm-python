@@ -89,7 +89,8 @@ jobs:
 
   publish-layer:
     uses: ./.github/workflows/publish_lambda_layer.yaml
-    needs: build_layer_aarch64
+    needs:
+      - build_layer_aarch64
     strategy:
       matrix:
         aws_region: 
