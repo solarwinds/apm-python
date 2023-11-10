@@ -53,6 +53,7 @@ jobs:
           
           COMPONENT_VERSION_UNDERSCORES=$(echo ${{ inputs.component-version }} | sed -r 's/\./_/g')
           LAYER_NAME=$LAYER_NAME-COMPONENT_VERSION_UNDERSCORES
+          echo "LAYER_NAME=$LAYER_NAME" >> $GITHUB_ENV
           
           echo GITHUB_ENV:
           cat $GITHUB_ENV
