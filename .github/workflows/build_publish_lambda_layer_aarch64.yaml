@@ -8,10 +8,45 @@ name: Publish APM Python lambda layer for aarch64
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'NH-65069-add-lambda-workflows'
 
 jobs:
+  launch_arm64:
+    name: Launch arm64 ec2 runners
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.launch.outputs.label }} # github runner label
+      instance-id: ${{ steps.launch.outputs.instance-id }} # ec2 instance id
+    steps:
+      - uses: getsentry/action-github-app-token@v2
+        id: github-token
+        with:
+          app_id: ${{ vars.APPLICATION_ID }}
+          private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.API_CI_GHA_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.API_CI_GHA_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - id: launch
+        uses: solarwinds/ec2-runner-action@main
+        with:
+          action: launch
+          github-token: ${{ steps.github-token.outputs.token }}
+          runner-user: github
+          runner-directory: /gh
+          instance-type: t4g.medium
+          ami-name: gha-arm64-ubuntu22-.*
+          ami-owner: "858939916050"
+          subnet-id: subnet-0fd499f8a50e41807
+          security-group-ids: sg-0fd8d8cd6effda4a5
+
   build_layer_aarch64:
     runs-on: ubuntu-latest
+    needs:
+      - launch_arm64
     outputs:
       SW_APM_VERSION: ${{ steps.save-apm-python-version.outputs.SW_APM_VERSION }}
     steps:
@@ -27,8 +62,33 @@ jobs:
         name: solarwinds_apm_lambda.zip
         path: dist/solarwinds_apm_lambda.zip
 
+  terminate_arm64:
+    name: Terminate ec2 instances
+    if: ${{ always() }}
+    needs:
+      - launch_arm64
+      - build_layer_aarch64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: getsentry/action-github-app-token@v2
+        id: github-token
+        with:
+          app_id: ${{ vars.APPLICATION_ID }}
+          private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.API_CI_GHA_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.API_CI_GHA_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - uses: solarwinds/ec2-runner-action@main
+        with:
+          action: terminate
+          github-token: ${{ steps.github-token.outputs.token }}
+          label: ${{ needs.launch_arm64.outputs.label }}
+          instance-id: ${{ needs.launch_arm64.outputs.instance-id }}
+
   publish-layer:
-    uses: ./.github/workflows/layer-publish.yml
+    uses: ./.github/workflows/publish_lambda_layer.yaml
     needs: build_layer_aarch64
     strategy:
       matrix:
