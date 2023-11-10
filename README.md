@@ -1,4 +1,4 @@
-[![PyPI version](https://badge.fury.io/py/solarwinds-apm.svg)](https://badge.fury.io/py/solarwinds-apm) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/solarwinds-apm) [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?color=red)](https://github.com/solarwindscloud/solarwinds-apm-python/blob/main/LICENSE)
+[![PyPI version](https://badge.fury.io/py/solarwinds-apm.svg)](https://badge.fury.io/py/solarwinds-apm) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/solarwinds-apm) [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?color=red)](https://github.com/solarwinds/apm-python/blob/main/LICENSE)
 
 # Python solarwinds-apm
 An [OpenTelemetry Python](https://opentelemetry-python.readthedocs.io/) distribution for SolarWinds Observability. Provides automatic configuration, instrumentation, and APM data export for Python applications.
@@ -7,7 +7,7 @@ An [OpenTelemetry Python](https://opentelemetry-python.readthedocs.io/) distribu
 ## Requirements
 All published artifacts support Python 3.7 or higher. A full list of system requirements is available at [SolarWinds Observability System Requirements](https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-sysreqs-python-agent).
 
-See [CONTRIBUTING.md](https://github.com/solarwindscloud/solarwinds-apm-python/blob/main/CONTRIBUTING.md) for how to build for development.
+See [CONTRIBUTING.md](https://github.com/solarwinds/apm-python/blob/main/CONTRIBUTING.md) for how to build for development.
 
 ## Getting Started
 SolarWinds APM captures OpenTelemetry distributed traces and metrics from your application and sends them to SolarWinds Observability for analysis and visualization.
@@ -60,8 +60,8 @@ Online documentation for SolarWinds APM Python features, configuration, and more
 
 OpenTelemetry Python would not be possible without collaborations and efforts from many contributors. Our common goals as a community are to improve end user/developer experiences and empower them.
 
-For more information about contributing to Python `solarwinds-apm`, see [CONTRIBUTING.md](https://github.com/solarwindscloud/solarwinds-apm-python/blob/main/CONTRIBUTING.md). Thank you to everyone who has contributed:
+For more information about contributing to Python `solarwinds-apm`, see [CONTRIBUTING.md](https://github.com/solarwinds/apm-python/blob/main/CONTRIBUTING.md). Thank you to everyone who has contributed:
 
-<a href="https://github.com/solarwindscloud/solarwinds-apm-python/graphs/contributors">
-  <img src="https://contributors-img.web.app/image?repo=solarwindscloud/solarwinds-apm-python" />
+<a href="https://github.com/solarwinds/apm-python/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=solarwinds/apm-python" />
 </a>
