@@ -8,6 +8,7 @@ import os
 import pytest
 
 from opentelemetry.environment_variables import (
+    OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER
 )
@@ -20,12 +21,48 @@ class TestDistro:
         SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
+        assert not os.environ.get(OTEL_METRICS_EXPORTER)
 
     def test_configure_env_exporter(self, mocker):
-        mocker.patch.dict(os.environ, {"OTEL_TRACES_EXPORTER": "foobar"})
+        mocker.patch.dict(
+            os.environ, 
+                {
+                    "OTEL_TRACES_EXPORTER": "foobar",
+                    "OTEL_METRICS_EXPORTER": "baz"
+                }
+        )
         SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
+        assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
+
+    def test_configure_no_env_lambda(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "AWS_LAMBDA_FUNCTION_NAME": "foo",
+                "LAMBDA_TASK_ROOT": "bar"
+            }
+        )
+        SolarWindsDistro()._configure()
+        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_http"
+        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_http"
+
+    def test_configure_env_exporter_lambda(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "AWS_LAMBDA_FUNCTION_NAME": "foo",
+                "LAMBDA_TASK_ROOT": "bar",
+                "OTEL_TRACES_EXPORTER": "foobar",
+                "OTEL_METRICS_EXPORTER": "baz"
+            }
+        )
+        SolarWindsDistro()._configure()
+        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
+        assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
 
     def test_configure_env_propagators(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_PROPAGATORS": "tracecontext,solarwinds_propagator,foobar"})
