@@ -1,6 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/solarwinds-apm.svg)](https://badge.fury.io/py/solarwinds-apm) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/solarwinds-apm) [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?color=red)](https://github.com/solarwindscloud/solarwinds-apm-python/blob/main/LICENSE)
 
-# solarwinds-apm-python
+# Python solarwinds-apm
 An [OpenTelemetry Python](https://opentelemetry-python.readthedocs.io/) distribution for SolarWinds Observability. Provides automatic configuration, instrumentation, and APM data export for Python applications.
 
 ----
@@ -12,13 +12,13 @@ See [CONTRIBUTING.md](https://github.com/solarwindscloud/solarwinds-apm-python/b
 ## Getting Started
 SolarWinds APM captures OpenTelemetry distributed traces and metrics from your application and sends them to SolarWinds Observability for analysis and visualization.
 
-To install `solarwinds-apm-python` and all relevant Opentelemetry Python instrumentation libraries:
+To install `solarwinds-apm` and all relevant Opentelemetry Python instrumentation libraries:
 ```
 pip install solarwinds-apm
 opentelemetry-bootstrap --action=install
 ```
 
-`solarwinds_apm` already includes OpenTelemetry and therefore doesn't need to be installed separately. Python agent installation should be done _after_ installation of all other service dependencies. This is so `opentelemetry-bootstrap` detects those packages and installs their corresponding instrumentation libraries. For example:
+`solarwinds-apm` already includes OpenTelemetry and therefore doesn't need to be installed separately. Python agent installation should be done _after_ installation of all other service dependencies. This is so `opentelemetry-bootstrap` detects those packages and installs their corresponding instrumentation libraries. For example:
 
 ```
 pip install -r requirements.txt           # installs all other dependencies
@@ -60,7 +60,7 @@ Online documentation for SolarWinds APM Python features, configuration, and more
 
 OpenTelemetry Python would not be possible without collaborations and efforts from many contributors. Our common goals as a community are to improve end user/developer experiences and empower them.
 
-For more information about contributing to `solarwinds-apm-python`, see [CONTRIBUTING.md](https://github.com/solarwindscloud/solarwinds-apm-python/blob/main/CONTRIBUTING.md). Thank you to everyone who has contributed:
+For more information about contributing to Python `solarwinds-apm`, see [CONTRIBUTING.md](https://github.com/solarwindscloud/solarwinds-apm-python/blob/main/CONTRIBUTING.md). Thank you to everyone who has contributed:
 
 <a href="https://github.com/solarwindscloud/solarwinds-apm-python/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=solarwindscloud/solarwinds-apm-python" />

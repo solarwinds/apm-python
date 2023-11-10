@@ -1,6 +1,6 @@
-# Contributing to solarwinds-apm-python
+# Contributing to Python solarwinds-apm
 
-Thank you for contributing and helping us improve `solarwinds-apm-python`.
+Thank you for contributing and helping us improve Python `solarwinds-apm`.
 
 ----
 
@@ -83,7 +83,7 @@ Remotely, CodeQL can be run on GitHub with the [CodeQL Analysis](https://github.
 
 ### Install locally and instrument a test app
 
-`solarwinds-apm-python` can be installed and used to instrument a Python app running on your local:
+`solarwinds-apm` can be installed and used to instrument a Python app running on your local:
 
 1. Create and run a Docker build container as described above.
 2. Inside the build container: `make wrapper`. This downloads the version of a C/C++ dependency defined in `extension/VERSION` from SolarWinds Cloud and builds SWIG bindings.
