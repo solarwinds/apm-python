@@ -44,7 +44,7 @@ jobs:
           security-group-ids: sg-0fd8d8cd6effda4a5
 
   build_layer_aarch64:
-    runs-on: ubuntu-latest
+    runs-on: ${{ needs.launch_arm64.outputs.label }}
     needs:
       - launch_arm64
     outputs:
