@@ -42,7 +42,8 @@ class TestDistro:
             {
                 "AWS_LAMBDA_FUNCTION_NAME": "foo",
                 "LAMBDA_TASK_ROOT": "bar"
-            }
+            },
+            clear=True
         )
         SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
