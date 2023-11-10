@@ -31,7 +31,7 @@ jobs:
         path: dist/solarwinds_apm_lambda.zip
 
   publish-layer:
-    uses: ./.github/workflows/layer-publish.yml
+    uses: ./.github/workflows/publish_lambda_layer.yaml
     needs: build_layer_x86_64
     strategy:
       matrix:
