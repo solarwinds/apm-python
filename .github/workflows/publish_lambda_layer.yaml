@@ -64,10 +64,9 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.STAGING_LAMBDA_ROLE_ARN }}
-          role-duration-seconds: 1200
-          aws-region: ${{ inputs.aws_region }}
-          mask-aws-account-id: false
+          aws-access-key-id: ${{ secrets.API_CI_GHA_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.API_CI_GHA_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
       - name: Publish Lambda Layer
         run: |
