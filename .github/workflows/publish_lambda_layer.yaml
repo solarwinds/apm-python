@@ -52,7 +52,7 @@ jobs:
           fi
           
           COMPONENT_VERSION_UNDERSCORES=$(echo ${{ inputs.component-version }} | sed -r 's/\./_/g')
-          LAYER_NAME=$LAYER_NAME-COMPONENT_VERSION_UNDERSCORES
+          LAYER_NAME=$LAYER_NAME-$COMPONENT_VERSION_UNDERSCORES
           echo "LAYER_NAME=$LAYER_NAME" >> $GITHUB_ENV
           
           echo GITHUB_ENV:
@@ -67,7 +67,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.LAMBDA_PUBLISHER_STAGING_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.LAMBDA_PUBLISHER_STAGING_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{ inputs.aws_region }}
 
       - name: Publish Lambda Layer
         run: |
