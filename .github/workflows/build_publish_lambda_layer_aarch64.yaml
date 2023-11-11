@@ -90,7 +90,6 @@ jobs:
       - build_layer_aarch64
     with:
       artifact-name: solarwinds_apm_lambda.zip
-      layer-name: solarwinds_apm_lambda
       component-version: ${{ needs.build_layer_aarch64.outputs.SW_APM_VERSION }}
       architecture: arm64
     secrets: inherit

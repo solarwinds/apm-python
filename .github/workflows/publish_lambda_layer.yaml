@@ -13,10 +13,6 @@ on:
         description: 'Name of actions/upload-artifact result'
         required: true
         type: string
-      layer-name:
-        description: 'Base layer name'
-        required: true
-        type: string
       component-version:
         description: 'Version of APM Python library in this release'
         required: true
@@ -57,7 +53,7 @@ jobs:
       - name: Construct Layer Name
         shell: bash
         run: |
-          LAYER_NAME=${{ inputs.layer-name }}
+          LAYER_NAME=solarwinds_apm_lambda
           
           if [[ "${{ inputs.architecture }}" != "x86_64" ]] && [[ "${{ inputs.architecture }}" != "arm64" ]] ; then
             echo "ERROR: architecture must be one of x86_64, arm64"
