@@ -8,8 +8,6 @@ name: Publish APM Python lambda layer
 
 on:
   workflow_dispatch:
-  pull_request:
-    types: [opened]
 
 jobs:
   build_publish_layer_x86_64:
