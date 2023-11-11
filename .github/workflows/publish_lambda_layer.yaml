@@ -21,6 +21,10 @@ on:
         description: 'Must be x86_64 or arm64'
         required: true
         type: string
+      runtimes:
+        description: 'Space-delimited list of compatible runtimes'
+        required: true
+        type: string
 
 permissions:
   id-token: write
@@ -88,7 +92,7 @@ jobs:
               --layer-name $LAYER_NAME \
               --license-info "Apache 2.0" \
               --compatible-architectures $ARCH \
-              --compatible-runtimes python3.7 python3.8 python3.9 python3.10 python3.11 \
+              --compatible-runtimes ${{ inputs.runtimes }} \
               --zip-file fileb://${{ inputs.artifact-name }} \
               --query 'LayerVersionArn' \
               --output text
