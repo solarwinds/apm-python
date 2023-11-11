@@ -8,9 +8,6 @@ name: Publish APM Python lambda layer
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'NH-65069-add-lambda-workflows'
 
 jobs:
   build_publish_layer_x86_64:
