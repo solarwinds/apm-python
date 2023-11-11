@@ -30,29 +30,9 @@ jobs:
   publish-layer:
     uses: ./.github/workflows/publish_lambda_layer.yaml
     needs: build_layer_x86_64
-    strategy:
-      matrix:
-        aws_region: 
-          - ap-northeast-1
-          - ap-northeast-2
-          - ap-south-1
-          - ap-southeast-1
-          - ap-southeast-2
-          - ca-central-1
-          - eu-central-1
-          - eu-north-1
-          - eu-west-1
-          - eu-west-2
-          - eu-west-3
-          - sa-east-1
-          - us-east-1
-          - us-east-2
-          - us-west-1
-          - us-west-2
     with:
       artifact-name: solarwinds_apm_lambda.zip
       layer-name: solarwinds_apm_lambda
       component-version: ${{ needs.build_layer_x86_64.outputs.SW_APM_VERSION }}
-      aws_region: ${{ matrix.aws_region }}
       architecture: x86_64
     secrets: inherit
