@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.0.0...HEAD)
 
-## [1.0.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.0.0) - 2023-11-10
+## [1.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.0.0) - 2023-11-14
 
 ### Changed
 - Change c-lib usage and `agent_enabled` calculation if `is_lambda` ([#211](https://github.com/solarwinds/apm-python/pull/211))
