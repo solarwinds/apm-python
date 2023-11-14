@@ -159,9 +159,6 @@ class SolarWindsApmConfig:
     ) -> None:
         """Returns c-lib extension or noop components based on agent_enabled, is_lambda.
 
-        TODO: Return OboeAPI as noop or c-lib version
-        https://swicloud.atlassian.net/browse/NH-64716
-
         agent_enabled T, is_lambda F -> c-lib extension, c-lib Context, no-op settings API
         agent_enabled T, is_lambda T -> no-op extension, no-op Context, c-lib settings API
         agent_enabled F              -> all no-op
