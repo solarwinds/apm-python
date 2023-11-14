@@ -17,6 +17,10 @@ INTL_SWO_TRACESTATE_KEY = "sw"
 INTL_SWO_X_OPTIONS_KEY = "sw_xtraceoptions"
 INTL_SWO_X_OPTIONS_RESPONSE_KEY = "xtrace_options_response"
 INTL_SWO_DEFAULT_TRACES_EXPORTER = "solarwinds_exporter"
+# TODO change lambda defaults to `otlp`
+# https://swicloud.atlassian.net/browse/NH-66126
+INTL_SWO_DEFAULT_METRICS_EXPORTER_LAMBDA = "otlp_proto_http"
+INTL_SWO_DEFAULT_TRACES_EXPORTER_LAMBDA = "otlp_proto_http"
 INTL_SWO_TRACECONTEXT_PROPAGATOR = "tracecontext"
 INTL_SWO_BAGGAGE_PROPAGATOR = "baggage"
 INTL_SWO_PROPAGATOR = "solarwinds_propagator"
