@@ -541,6 +541,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         keys: dict = None,
     ) -> None:
         """Report the APM library's init message, when reporter ready."""
+        if apm_config.is_lambda:
+            logger.debug("Skipping init event in lambda")
+            return
+
         reporter_ready = False
         if reporter.init_status in (
             OboeReporterCode.OBOE_INIT_OK,
