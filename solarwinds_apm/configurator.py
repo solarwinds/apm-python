@@ -91,7 +91,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             apm_meters = NoopMeterManager()
         else:
-            apm_meters = SolarWindsMeterManager()
+            apm_meters = SolarWindsMeterManager(apm_config)
 
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(

@@ -5,8 +5,12 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
+from typing import TYPE_CHECKING
 
 from opentelemetry import metrics
+
+if TYPE_CHECKING:
+    from solarwinds_apm.apm_config import SolarWindsApmConfig
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +18,11 @@ logger = logging.getLogger(__name__)
 class SolarWindsMeterManager:
     """SolarWinds Python OTLP Meter Manager"""
 
-    def __init__(self, **kwargs: int) -> None:
+    def __init__(
+        self, apm_config: "SolarWindsApmConfig", **kwargs: int
+    ) -> None:
+        self.oboe_settings_api = apm_config.oboe_api()
+
         # Returns named `Meter` to handle instrument creation.
         # A convenience wrapper for MeterProvider.get_meter
         self.meter_response_times = metrics.get_meter("sw.apm.request.metrics")
