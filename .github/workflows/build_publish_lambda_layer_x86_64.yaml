@@ -1,0 +1,38 @@
+# © 2023 SolarWinds Worldwide, LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+name: Publish APM Python lambda layer for x86_64
+
+on:
+  workflow_call:
+
+jobs:
+  build_layer_x86_64:
+    runs-on: ubuntu-latest
+    outputs:
+      SW_APM_VERSION: ${{ steps.save-apm-python-version.outputs.SW_APM_VERSION }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/package_lambda_solarwinds_apm_x86_64
+    - name: Save APM Python Version for naming
+      id: save-apm-python-version
+      run: |
+        echo "SW_APM_VERSION=$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')" >> $GITHUB_OUTPUT
+    - uses: actions/upload-artifact@v3
+      name: Save assembled layer to build
+      with:
+        name: solarwinds_apm_lambda_x86_64.zip
+        path: dist/solarwinds_apm_lambda_x86_64.zip
+
+  publish-layer:
+    uses: ./.github/workflows/publish_lambda_layer.yaml
+    needs: build_layer_x86_64
+    with:
+      artifact-name: solarwinds_apm_lambda_x86_64.zip
+      component-version: ${{ needs.build_layer_x86_64.outputs.SW_APM_VERSION }}
+      architecture: x86_64
+      runtimes: "python3.7 python3.8 python3.9 python3.10 python3.11"
+    secrets: inherit
