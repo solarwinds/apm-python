@@ -7,9 +7,6 @@
 name: Publish Lambda Layer to staging
 
 on:
-  push:
-    branches:
-      - 'NH-65069-add-lambda-workflows'
   workflow_call:
     inputs:
       artifact-name:
