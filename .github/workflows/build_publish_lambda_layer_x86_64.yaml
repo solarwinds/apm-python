@@ -25,7 +25,7 @@ jobs:
       name: Save assembled layer to build
       with:
         name: solarwinds_apm_lambda_x86_64.zip
-        path: dist/solarwinds_apm_lambda.zip
+        path: dist/solarwinds_apm_lambda_x86_64.zip
 
   publish-layer:
     uses: ./.github/workflows/publish_lambda_layer.yaml
