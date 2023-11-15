@@ -4,8 +4,6 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-import pytest
-
 from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
 
 class TestApmMeterManager:
@@ -33,7 +31,7 @@ class TestApmMeterManager:
         mock_apm_config = mocker.Mock()
 
         # Test!
-        test_mgr = SolarWindsMeterManager(mock_apm_config)
+        SolarWindsMeterManager(mock_apm_config)
         mock_otel_get_meter.assert_has_calls(
             [
                 mocker.call("sw.apm.request.metrics"),
