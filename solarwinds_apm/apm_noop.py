@@ -199,7 +199,7 @@ class SolarWindsMeterManager:
     def __init__(self, *args, **kwargs):
         self.meter_response_times = None
         self.meter_request_counters = None
-        
+
         self.response_time = NoOpHistogram(name="trace.service.response_time")
         self.tracecount = NoOpObservableGauge(name="trace.service.tracecount")
         self.samplecount = NoOpObservableGauge(
