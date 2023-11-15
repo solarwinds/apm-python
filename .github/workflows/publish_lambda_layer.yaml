@@ -83,13 +83,11 @@ jobs:
 
       - name: Publish Lambda Layer
         run: |
-          LAYER_ARN=$(
-            aws lambda publish-layer-version \
-              --layer-name $LAYER_NAME \
-              --license-info "Apache 2.0" \
-              --compatible-architectures $ARCH \
-              --compatible-runtimes ${{ inputs.runtimes }} \
-              --zip-file fileb://${{ inputs.artifact-name }} \
-              --query 'LayerVersionArn' \
-              --output text
-          )
+          aws lambda publish-layer-version \
+            --layer-name $LAYER_NAME \
+            --license-info "Apache 2.0" \
+            --compatible-architectures $ARCH \
+            --compatible-runtimes ${{ inputs.runtimes }} \
+            --zip-file fileb://${{ inputs.artifact-name }} \
+            --query 'LayerVersionArn' \
+            --output text
