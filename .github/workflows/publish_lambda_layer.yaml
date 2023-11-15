@@ -26,10 +26,6 @@ on:
         required: true
         type: string
 
-permissions:
-  id-token: write
-  contents: read
-
 jobs:
   publish_layer:
     runs-on: ubuntu-latest
