@@ -333,7 +333,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         resource = trace.get_tracer_provider().get_tracer(__name__).resource
         sw_resource = Resource.create(
             {
-                "sw.trace_span_mode": "otel",
+                "sw.data.module": "apm",
                 "service.name": apm_config.service_name,
             }
         ).merge(resource)
