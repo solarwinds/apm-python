@@ -193,7 +193,8 @@ class SolarWindsApmConfig:
                 from solarwinds_apm.extension.oboe import OboeAPI as oboe_api
             except ImportError as err:
                 # c-lib version may not have settings API
-                # TODO remove this check later
+                # TODO Update this message to contact support after c-lib 14
+                # https://swicloud.atlassian.net/browse/NH-64716
                 logger.warning(
                     "Could not import API in lambda mode. Installed layer version not compatible. Tracing disabled: %s",
                     err,
