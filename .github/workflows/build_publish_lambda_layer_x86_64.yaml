@@ -24,14 +24,14 @@ jobs:
     - uses: actions/upload-artifact@v3
       name: Save assembled layer to build
       with:
-        name: solarwinds_apm_lambda.zip
+        name: solarwinds_apm_lambda_x86_64.zip
         path: dist/solarwinds_apm_lambda.zip
 
   publish-layer:
     uses: ./.github/workflows/publish_lambda_layer.yaml
     needs: build_layer_x86_64
     with:
-      artifact-name: solarwinds_apm_lambda.zip
+      artifact-name: solarwinds_apm_lambda_x86_64.zip
       component-version: ${{ needs.build_layer_x86_64.outputs.SW_APM_VERSION }}
       architecture: x86_64
       runtimes: "python3.7 python3.8 python3.9 python3.10 python3.11"
