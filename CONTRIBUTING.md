@@ -1,6 +1,6 @@
-# Contributing to solarwinds-apm-python
+# Contributing to Python solarwinds-apm
 
-Thank you for contributing and helping us improve `solarwinds-apm-python`.
+Thank you for contributing and helping us improve Python `solarwinds-apm`.
 
 ----
 
@@ -12,12 +12,12 @@ Please report any security issues privately to the SolarWinds Product Security I
 
 ### All other issues
 
-For non-security issues, please submit your ideas, questions, or problems as [GitHub issues](https://github.com/solarwindscloud/solarwinds-apm-python/issues). Please add as much information as you can, such as: Python version, platform, installed dependencies and their version numbers, hosting, code examples or gists, steps to reproduce, stack traces, and logs. SolarWinds project maintainers may ask for clarification or more context after submission.
+For non-security issues, please submit your ideas, questions, or problems as [GitHub issues](https://github.com/solarwinds/apm-python/issues). Please add as much information as you can, such as: Python version, platform, installed dependencies and their version numbers, hosting, code examples or gists, steps to reproduce, stack traces, and logs. SolarWinds project maintainers may ask for clarification or more context after submission.
 
 ----
 ## Contributing
 
-Any changes to this project must be made through a pull request to `main`. Major changes should be linked to an existing [GitHub issue](https://github.com/solarwindscloud/solarwinds-apm-python/issues). Smaller contributions like typo corrections don't require an issue.
+Any changes to this project must be made through a pull request to `main`. Major changes should be linked to an existing [GitHub issue](https://github.com/solarwinds/apm-python/issues). Smaller contributions like typo corrections don't require an issue.
 
 A PR is ready to merge when all tests pass, any major feedback has been resolved, and at least one SolarWinds maintainer has approved. Once ready, a PR can be merged by a SolarWinds maintainer.
 
@@ -61,7 +61,7 @@ make tox OPTIONS="--recreate -e py38-ao-prod"
 make tox OPTIONS="-- tests/integration/test_scenario_1.py"
 ```
 
-The unit and integration tests are also run on GitHub with the [Run tox tests](https://github.com/solarwindscloud/solarwinds-apm-python/actions/workflows/run_tox_tests.yaml) workflow.
+The unit and integration tests are also run on GitHub with the [Run tox tests](https://github.com/solarwinds/apm-python/actions/workflows/run_tox_tests.yaml) workflow.
 
 ### Formatting and Linting
 
@@ -79,16 +79,16 @@ make tox OPTIONS="-e lint -- --check-only"
 make tox OPTIONS="-e lint"
 ```
 
-Remotely, CodeQL can be run on GitHub with the [CodeQL Analysis](https://github.com/solarwindscloud/solarwinds-apm-python/actions/workflows/codeql_analysis.yaml) workflow.
+Remotely, CodeQL can be run on GitHub with the [CodeQL Analysis](https://github.com/solarwinds/apm-python/actions/workflows/codeql_analysis.yaml) workflow.
 
 ### Install locally and instrument a test app
 
-`solarwinds-apm-python` can be installed and used to instrument a Python app running on your local:
+`solarwinds-apm` can be installed and used to instrument a Python app running on your local:
 
 1. Create and run a Docker build container as described above.
 2. Inside the build container: `make wrapper`. This downloads the version of a C/C++ dependency defined in `extension/VERSION` from SolarWinds Cloud and builds SWIG bindings.
 3. In your Python app's environment/container, install your local `solarwinds-apm`. For example, if you've saved it to `~/gitrepos` then you could do:
-  ```pip install -Ie ~/gitrepos/solarwinds-apm-python/```
+  ```pip install -Ie ~/gitrepos/apm-python/```
 4. Install all relevant Opentelemetry Python instrumentation libraries:
   ```opentelemetry-bootstrap --action=install```
 5. Run your application with the prefix `opentelemetry-instrument` to wrap all common Python frameworks:
