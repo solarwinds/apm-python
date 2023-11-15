@@ -71,10 +71,7 @@ class _SwSampler(Sampler):
         else:
             self.tracing_mode = self._UNSET
 
-        if self.apm_config.is_lambda:
-            # TODO Init OboeAPI if apm_config.is_lambda
-            #      https://swicloud.atlassian.net/browse/NH-64716
-            pass
+        self.oboe_settings_api = apm_config.oboe_api()
 
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
@@ -175,11 +172,7 @@ class _SwSampler(Sampler):
             timestamp = xtraceoptions.timestamp
 
         if self.apm_config.is_lambda:
-            # TODO OboeAPI getTracingDecision
-            #      https://swicloud.atlassian.net/browse/NH-64716
-            logger.warning(
-                "Sampling in lambda is not yet implemented. Dropping trace."
-            )
+            logger.debug("Sampling in lambda mode.")
             (
                 do_metrics,
                 do_sample,
@@ -192,19 +185,7 @@ class _SwSampler(Sampler):
                 status_msg,
                 auth_msg,
                 status,
-            ) = (
-                0,
-                0,
-                0,
-                0,
-                0.0,
-                0.0,
-                0,
-                0,
-                "",
-                "",
-                0,
-            )
+            ) = self.oboe_settings_api.getTracingDecision()
 
         else:
             logger.debug(
