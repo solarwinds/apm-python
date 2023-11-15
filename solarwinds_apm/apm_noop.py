@@ -13,7 +13,10 @@ apm_noop defines no-op classes for platforms we don't support building the c ext
 # pylint: disable-msg=C0103
 import threading
 
-from opentelemetry.metrics._internal.instrument import NoOpHistogram
+from opentelemetry.metrics._internal.instrument import (
+    NoOpHistogram,
+    NoOpObservableGauge,
+)
 
 
 class Metadata:
@@ -192,16 +195,34 @@ class Config:
         return "No extension loaded."
 
 
-class OtelHistogram:
-    @staticmethod
-    def record(*args, **kwargs):
-        pass
-
-
 class SolarWindsMeterManager:
     def __init__(self, *args, **kwargs):
-        self.meter = None
+        self.meter_response_times = None
+        self.meter_request_counters = None
+        
         self.response_time = NoOpHistogram(name="trace.service.response_time")
+        self.tracecount = NoOpObservableGauge(name="trace.service.tracecount")
+        self.samplecount = NoOpObservableGauge(
+            name="trace.service.samplecount"
+        )
+        self.request_count = NoOpObservableGauge(
+            name="trace.service.request_count"
+        )
+        self.tokenbucket_exhaustion_count = NoOpObservableGauge(
+            name="trace.service.tokenbucket_exhaustion_count"
+        )
+        self.through_trace_count = NoOpObservableGauge(
+            name="trace.service.through_trace_count"
+        )
+        self.triggered_trace_count = NoOpObservableGauge(
+            name="trace.service.triggered_trace_count"
+        )
+        self.sample_rate = NoOpObservableGauge(
+            name="trace.service.sample_rate"
+        )
+        self.sample_source = NoOpObservableGauge(
+            name="trace.service.sample_source"
+        )
 
 
 class OboeAPI:
