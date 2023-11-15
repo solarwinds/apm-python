@@ -246,7 +246,7 @@ class _SwSampler(Sampler):
             "auth_msg": auth_msg,
             "status": status,
         }
-        logger.warning("Got liboboe decision outputs: %s", decision)
+        logger.debug("Got liboboe decision outputs: %s", decision)
         return decision
 
     def is_decision_continued(self, liboboe_decision: dict) -> bool:
