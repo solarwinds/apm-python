@@ -191,7 +191,7 @@ aws-lambda: check-zip wrapper
 		echo -e "Deleting old solarwinds_apm_lambda_${platform}.zip"; \
 		rm ./dist/solarwinds_apm_lambda_${platform}.zip; \
 	 fi
-	rm -rf ./tmp-lambda
+	rm -rf ${target_dir}
 	@echo -e "Creating target directory ${target_dir} for AWS Lambda layer artifacts."
 	mkdir -p ${target_dir}/python
 	@echo -e "Install upstream dependencies to include in layer"
@@ -220,8 +220,8 @@ aws-lambda: check-zip wrapper
 	@rm -rf ${target_dir}/python/urllib3*
 	@find ${target_dir}/python -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi
-	@pushd ./tmp-lambda && zip -r ../dist/solarwinds_apm_lambda_${platform}.zip . && popd
-	@rm -rf ./tmp-lambda ./build
+	@pushd ${target_dir} && zip -r ../dist/solarwinds_apm_lambda_${platform}.zip . && popd
+	@rm -rf ${target_dir} ./build
 	@echo -e "\nDone."
 
 #----------------------------------------------------------------------------------------------------------------------#
