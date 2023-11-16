@@ -38,6 +38,9 @@ class SolarWindsMeterManager:
             unit="ms",
         )
 
+        # TODO add trace.service.requests, trace.service.errors
+        # https://swicloud.atlassian.net/browse/NH-67392
+
         def consume_tracecount(
             options: CallbackOptions,
         ) -> Iterable[Observation]:

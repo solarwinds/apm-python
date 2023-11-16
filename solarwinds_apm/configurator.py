@@ -273,6 +273,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "Setting trace with BatchSpanProcessor using %s",
                 exporter_name,
             )
+
+            # TODO or SimpleSpanProcessor is_lambda
+            # https://swicloud.atlassian.net/browse/NH-67393
             span_processor = BatchSpanProcessor(exporter)
             trace.get_tracer_provider().add_span_processor(span_processor)
 
