@@ -61,11 +61,15 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         ):
             return
 
+        # TODO add sw.service_name
+        # https://swicloud.atlassian.net/browse/NH-67392
         # support ssa and conform to Otel proto common_pb2
         meter_attrs = {
             "sw.nonce": random.getrandbits(64) >> 1,
         }
 
+        # TODO add trace.service.requests, trace.service.errors
+        # https://swicloud.atlassian.net/browse/NH-67392
         has_error = self.has_error(span)
         if has_error:
             meter_attrs.update({"sw.is_error": "true"})

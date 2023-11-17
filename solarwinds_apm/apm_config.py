@@ -135,9 +135,11 @@ class SolarWindsApmConfig:
         )
 
         # Calculate c-lib extension usage
-        # TODO Used returned OboeAPI
-        #      https://swicloud.atlassian.net/browse/NH-64716
-        self.extension, self.context = self._get_extension_components(
+        (
+            self.extension,
+            self.context,
+            self.oboe_api,
+        ) = self._get_extension_components(
             self.agent_enabled,
             self.is_lambda,
         )
@@ -157,15 +159,17 @@ class SolarWindsApmConfig:
     ) -> None:
         """Returns c-lib extension or noop components based on agent_enabled, is_lambda.
 
-        TODO: Return OboeAPI as noop or c-lib version
-        https://swicloud.atlassian.net/browse/NH-64716
-
-        agent_enabled T, is_lambda F -> c-lib extension, c-lib Context
-        agent_enabled T, is_lambda T -> no-op extension, no-op Context
+        agent_enabled T, is_lambda F -> c-lib extension, c-lib Context, no-op settings API
+        agent_enabled T, is_lambda T -> no-op extension, no-op Context, c-lib settings API
         agent_enabled F              -> all no-op
         """
         if not agent_enabled:
-            return noop_extension, noop_extension.Context
+            return (
+                noop_extension,
+                noop_extension.Context,
+                noop_extension.OboeAPI,
+            )
+
         try:
             # pylint: disable=import-outside-toplevel
             import solarwinds_apm.extension.oboe as c_extension
@@ -177,11 +181,32 @@ class SolarWindsApmConfig:
                 INTL_SWO_SUPPORT_EMAIL,
                 err,
             )
-            return noop_extension, noop_extension.Context
+            return (
+                noop_extension,
+                noop_extension.Context,
+                noop_extension.OboeAPI,
+            )
 
         if is_lambda:
-            return noop_extension, noop_extension.Context
-        return c_extension, c_extension.Context
+            try:
+                # pylint: disable=import-outside-toplevel,no-name-in-module
+                from solarwinds_apm.extension.oboe import OboeAPI as oboe_api
+            except ImportError as err:
+                # c-lib version may not have settings API
+                # TODO Update this message to contact support after c-lib 14
+                # https://swicloud.atlassian.net/browse/NH-64716
+                logger.warning(
+                    "Could not import API in lambda mode. Installed layer version not compatible. Tracing disabled: %s",
+                    err,
+                )
+                return (
+                    noop_extension,
+                    noop_extension.Context,
+                    noop_extension.OboeAPI,
+                )
+            return noop_extension, noop_extension.Context, oboe_api
+
+        return c_extension, c_extension.Context, noop_extension.OboeAPI
 
     @classmethod
     def calculate_is_lambda(cls) -> bool:

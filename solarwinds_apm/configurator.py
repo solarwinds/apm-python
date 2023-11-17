@@ -91,7 +91,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             apm_meters = NoopMeterManager()
         else:
-            apm_meters = SolarWindsMeterManager()
+            apm_meters = SolarWindsMeterManager(apm_config)
 
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
@@ -273,6 +273,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "Setting trace with BatchSpanProcessor using %s",
                 exporter_name,
             )
+
+            # TODO or SimpleSpanProcessor is_lambda
+            # https://swicloud.atlassian.net/browse/NH-67393
             span_processor = BatchSpanProcessor(exporter)
             trace.get_tracer_provider().add_span_processor(span_processor)
 
@@ -333,7 +336,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         resource = trace.get_tracer_provider().get_tracer(__name__).resource
         sw_resource = Resource.create(
             {
-                "sw.trace_span_mode": "otel",
+                "sw.data.module": "apm",
                 "service.name": apm_config.service_name,
             }
         ).merge(resource)
@@ -541,6 +544,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         keys: dict = None,
     ) -> None:
         """Report the APM library's init message, when reporter ready."""
+        if apm_config.is_lambda:
+            logger.debug("Skipping init event in lambda")
+            return
+
         reporter_ready = False
         if reporter.init_status in (
             OboeReporterCode.OBOE_INIT_OK,

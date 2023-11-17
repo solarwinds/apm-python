@@ -19,7 +19,10 @@ from .fixtures.parent_span_context import (
     fixture_parent_span_context_invalid,
     fixture_parent_span_context_valid_remote,
 )
-from .fixtures.sampler import fixture_swsampler
+from .fixtures.sampler import (
+    config_get,
+    fixture_swsampler,
+)
 from .fixtures.span_id_from_sw import fixture_mock_span_id_from_sw
 from .fixtures.sw_from_span_and_decision import fixture_mock_sw_from_span_and_decision
 
@@ -199,6 +202,61 @@ class Test_SwSampler():
         mock_apm_config = mocker.Mock()
         sampler = _SwSampler(mock_apm_config)
         assert sampler.apm_config == mock_apm_config
+
+    def test_calculate_liboboe_decision_is_lambda(
+        self,
+        mocker,
+    ):
+        mock_apm_config = mocker.Mock()
+        mock_get = mocker.Mock(
+            side_effect=config_get
+        )
+        mock_get_tracing_decision = mocker.Mock()
+        mock_get_tracing_decision.configure_mock(
+            # returns 11 values
+            return_value=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        )
+        mock_oboe_api = mocker.Mock()
+        mock_oboe_api.configure_mock(
+            **{
+                "getTracingDecision": mock_get_tracing_decision
+            }
+        )
+        mock_oboe_api_component = mocker.patch(
+            "solarwinds_apm.extension.oboe.OboeAPI.__init__",
+            return_value=mock_oboe_api
+        )
+        mock_apm_config.configure_mock(
+            **{
+                "agent_enabled": True,
+                "get": mock_get,
+                "oboe_api": mock_oboe_api_component,
+                "is_lambda": True,
+            }
+        )
+        test_sampler = _SwSampler(mock_apm_config)
+
+        result = test_sampler.calculate_liboboe_decision(
+            'unused_parent_context',
+            'unused_name',
+            None,
+            {'unused': 'attrs'},
+            'unused_xtraceoptions',
+        )
+        mock_get_tracing_decision.assert_called_once()
+        assert result == {
+            "do_metrics": 0,
+            "do_sample": 1,
+            "rate": 2,
+            "source": 3,
+            "bucket_rate": 4,
+            "bucket_cap": 5,
+            "decision_type": 6,
+            "auth": 7,
+            "status_msg": 8,
+            "auth_msg": 9,
+            "status": 10,
+        }
 
     def test_calculate_liboboe_decision_root_span(
         self,
