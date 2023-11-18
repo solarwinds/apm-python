@@ -140,6 +140,59 @@ class _SwSampler(Sampler):
         xtraceoptions: Optional[XTraceOptions] = None,
     ) -> dict:
         """Calculates oboe trace decision based on parent span context and APM config."""
+        tracestring = None
+        if parent_span_context.is_valid and parent_span_context.is_remote:
+            tracestring = W3CTransformer.traceparent_from_context(
+                parent_span_context
+            )
+        sw_member_value = parent_span_context.trace_state.get(
+            INTL_SWO_TRACESTATE_KEY
+        )
+
+        tracing_mode = self.calculate_tracing_mode(
+            name,
+            kind,
+            attributes,
+        )
+
+        trigger_trace_mode = OboeTracingMode.get_oboe_trigger_trace_mode(
+            self.apm_config.get("trigger_trace")
+        )
+        # 'sample_rate' is legacy and not supported in NH Python, so give as unset
+        sample_rate = self._UNSET
+
+        options = None
+        trigger_trace_request = 0
+        signature = None
+        timestamp = None
+        if xtraceoptions:
+            options = xtraceoptions.options_header
+            trigger_trace_request = xtraceoptions.trigger_trace
+            signature = xtraceoptions.signature
+            timestamp = xtraceoptions.timestamp
+
+        logger.debug(
+            "Creating new oboe decision with "
+            "tracestring: %s, "
+            "sw_member_value: %s, "
+            "tracing_mode: %s, "
+            "sample_rate: %s, "
+            "trigger_trace_request: %s, "
+            "trigger_trace_mode: %s, "
+            "options: %s, "
+            "signature: %s, "
+            "timestamp: %s",
+            tracestring,
+            sw_member_value,
+            tracing_mode,
+            sample_rate,
+            trigger_trace_request,
+            trigger_trace_mode,
+            options,
+            signature,
+            timestamp,
+        )
+
         if self.apm_config.is_lambda:
             logger.debug("Sampling in lambda mode.")
             (
@@ -154,51 +207,7 @@ class _SwSampler(Sampler):
                 status_msg,
                 auth_msg,
                 status,
-            ) = self.oboe_settings_api.getTracingDecision()
-
-        else:
-            tracestring = None
-            if parent_span_context.is_valid and parent_span_context.is_remote:
-                tracestring = W3CTransformer.traceparent_from_context(
-                    parent_span_context
-                )
-            sw_member_value = parent_span_context.trace_state.get(
-                INTL_SWO_TRACESTATE_KEY
-            )
-
-            tracing_mode = self.calculate_tracing_mode(
-                name,
-                kind,
-                attributes,
-            )
-
-            trigger_trace_mode = OboeTracingMode.get_oboe_trigger_trace_mode(
-                self.apm_config.get("trigger_trace")
-            )
-            # 'sample_rate' is legacy and not supported in NH Python, so give as unset
-            sample_rate = self._UNSET
-
-            options = None
-            trigger_trace_request = 0
-            signature = None
-            timestamp = None
-            if xtraceoptions:
-                options = xtraceoptions.options_header
-                trigger_trace_request = xtraceoptions.trigger_trace
-                signature = xtraceoptions.signature
-                timestamp = xtraceoptions.timestamp
-
-            logger.debug(
-                "Creating new oboe decision with "
-                "tracestring: %s, "
-                "sw_member_value: %s, "
-                "tracing_mode: %s, "
-                "sample_rate: %s, "
-                "trigger_trace_request: %s, "
-                "trigger_trace_mode: %s, "
-                "options: %s, "
-                "signature: %s, "
-                "timestamp: %s",
+            ) = self.oboe_settings_api.getTracingDecision(
                 tracestring,
                 sw_member_value,
                 tracing_mode,
@@ -209,6 +218,8 @@ class _SwSampler(Sampler):
                 signature,
                 timestamp,
             )
+
+        else:
             (
                 do_metrics,
                 do_sample,
