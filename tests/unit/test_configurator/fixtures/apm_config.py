@@ -45,5 +45,5 @@ def fixture_mock_apmconfig_disabled(mocker):
 def fixture_mock_apmconfig_enabled(mocker):
     return mocker.patch(
         "solarwinds_apm.configurator.SolarWindsApmConfig",
-        get_apmconfig_mocks()
+        get_apmconfig_mocks(mocker, True, False)
     )
