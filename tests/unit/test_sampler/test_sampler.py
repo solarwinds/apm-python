@@ -206,6 +206,8 @@ class Test_SwSampler():
     def test_calculate_liboboe_decision_is_lambda(
         self,
         mocker,
+        parent_span_context_invalid,
+        mock_xtraceoptions_signed_tt,
     ):
         mock_apm_config = mocker.Mock()
         mock_get = mocker.Mock(
@@ -237,11 +239,11 @@ class Test_SwSampler():
         test_sampler = _SwSampler(mock_apm_config)
 
         result = test_sampler.calculate_liboboe_decision(
-            'unused_parent_context',
-            'unused_name',
+            parent_span_context_invalid,
+            'foo',
             None,
-            {'unused': 'attrs'},
-            'unused_xtraceoptions',
+            {'foo': 'bar'},
+            mock_xtraceoptions_signed_tt,
         )
         mock_get_tracing_decision.assert_called_once()
         assert result == {

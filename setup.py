@@ -39,7 +39,7 @@ def is_alpine_distro():
     return False
 
 def python_version_supported():
-    if sys.version_info[0] == 3 and sys.version_info[1] >= 6:
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 7:
         return True
     return False
 
@@ -87,14 +87,14 @@ class CustomBuildExt(build_ext):
             return
 
         platform_m = platform.machine()
-        oboe_lib = f"liboboe-1.0-alpine-{platform_m}.so" if is_alpine_distro() else f"liboboe-1.0-{platform_m}.so"
-        link_oboe_lib(oboe_lib)
-        build_ext.run(self)
+        oboe_lib = f"liboboe-1.0-"
+        if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") and os.environ.get("LAMBDA_TASK_ROOT"):
+            oboe_lib = f"{oboe_lib}lambda-"
+        if is_alpine_distro():
+            oboe_lib = f"{oboe_lib}alpine-"
+        oboe_lib = f"{oboe_lib}{platform_m}.so"
 
-class CustomBuildExtLambda(build_ext):
-    def run(self):
-        platform_m = platform.machine()
-        link_oboe_lib(f"liboboe-1.0-lambda-{platform_m}.so")
+        link_oboe_lib(oboe_lib)
         build_ext.run(self)
 
 
@@ -126,7 +126,6 @@ ext_modules = [
 setup(
     cmdclass={
         'build_ext': CustomBuildExt,
-        'build_ext_lambda': CustomBuildExtLambda,
         'build_py': CustomBuild,
     },
     ext_modules=ext_modules,
