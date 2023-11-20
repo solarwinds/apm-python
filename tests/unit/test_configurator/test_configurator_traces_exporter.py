@@ -26,7 +26,7 @@ from .fixtures.meter_manager import fixture_mock_meter_manager
 from .fixtures.txn_name_manager import fixture_mock_txn_name_manager
 
 
-class TestConfiguratorExporters:
+class TestConfiguratorTracesExporter:
     def test_configure_traces_exporter_disabled(
         self,
         mocker,
