@@ -7,7 +7,9 @@
 import pytest
 
 def mock_batch_span_processor(mocker):
-    return mocker.Mock()
+    return mocker.patch(
+        "solarwinds_apm.configurator.BatchSpanProcessor",
+    )
 
 @pytest.fixture(name="mock_bsprocessor")
 def fixture_mock_bsprocessor(mocker):
