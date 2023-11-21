@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated experimental exporter defaults ([#217](https://github.com/solarwinds/apm-python/pull/217))
 - Optimized layer builds ([#214](https://github.com/solarwinds/apm-python/pull/214))
 - Updated setup.py and OboeAPI usage ([#224](https://github.com/solarwinds/apm-python/pull/224))
+- Fixed release workflows ([#226](https://github.com/solarwinds/apm-python/pull/226))
 
 ## [1.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.0.0) - 2023-11-14
 
