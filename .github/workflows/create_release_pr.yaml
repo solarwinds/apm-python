@@ -20,12 +20,10 @@ env:
 jobs:
   create_release_pr:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
     steps:
-      - uses: getsentry/action-github-app-token@v2
-        id: github-token
-        with:
-          app_id: ${{ vars.APPLICATION_ID }}
-          private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
       - uses: actions/checkout@v3
       - name: Initialize git
         run: |
@@ -48,7 +46,9 @@ jobs:
           git commit --message "Update agent version to ${{ env.RELEASE_VERSION }}"
       - name: Push new release branch to remote repositories
         run: git push origin release/${{ env.RELEASE_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Open draft Pull Request for version bump
         run: gh pr create --draft --title "solarwinds-apm ${{ env.RELEASE_VERSION }}" --body "For PyPI release of solarwinds-apm ${{ env.RELEASE_VERSION }}. See also CHANGELOG.md."
         env:
-          GITHUB_TOKEN: ${{ steps.github-token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
