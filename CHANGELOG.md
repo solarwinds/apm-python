@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.0.1...HEAD)
 
-## [1.0.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.0.1) - 2023-11-21
+## [1.0.1](https://github.com/solarwinds/apm-python/releases/tag/rel-1.0.1) - 2023-11-21
 
 ### Added
 - Added lambda build workflows ([#221](https://github.com/solarwinds/apm-python/pull/221))
