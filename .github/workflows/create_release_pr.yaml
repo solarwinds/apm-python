@@ -50,6 +50,8 @@ jobs:
           git commit --message "Update agent version to ${{ env.RELEASE_VERSION }}"
       - name: Push new release branch to remote repositories
         run: git push origin release/${{ env.RELEASE_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ steps.github-token.outputs.token }}
       - name: Open draft Pull Request for version bump
         run: gh pr create --draft --title "solarwinds-apm ${{ env.RELEASE_VERSION }}" --body "For PyPI release of solarwinds-apm ${{ env.RELEASE_VERSION }}. See also CHANGELOG.md."
         env:
