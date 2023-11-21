@@ -4,7 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.0.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.0.1...HEAD)
+
+## [1.0.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.0.1) - 2023-11-21
+
+### Added
+- Added lambda build workflows ([#221](https://github.com/solarwinds/apm-python/pull/221))
+- Integrated OboeAPI ([#223](https://github.com/solarwinds/apm-python/pull/223))
+
+### Changed
+- Updated layer extension build target ([#215](https://github.com/solarwinds/apm-python/pull/215))
+- Updated experimental exporter defaults ([#217](https://github.com/solarwinds/apm-python/pull/217))
+- Optimized layer builds ([#214](https://github.com/solarwinds/apm-python/pull/214))
+- Updated setup.py and OboeAPI usage ([#224](https://github.com/solarwinds/apm-python/pull/224))
+- Fixed release workflows ([#226](https://github.com/solarwinds/apm-python/pull/226))
 
 ## [1.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.0.0) - 2023-11-14
 
