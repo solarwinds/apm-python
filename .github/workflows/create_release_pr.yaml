@@ -21,6 +21,7 @@ jobs:
   create_release_pr:
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       pull-requests: write
     steps:
       - uses: getsentry/action-github-app-token@v2
