@@ -125,6 +125,8 @@ jobs:
     name: Create draft release
     needs: [build_publish_sdist_and_x86_64, build_publish_aarch64]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: getsentry/action-github-app-token@v2
         id: github-token
@@ -139,4 +141,4 @@ jobs:
       - name: Create draft release
         run: gh release create ${{ env.RELEASE_NAME }} --title "${{ env.RELEASE_NAME }}" --target release/${{ env.RELEASE_NAME }} --draft
         env:
-          GITHUB_TOKEN: ${{ steps.github-token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
