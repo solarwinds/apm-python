@@ -125,6 +125,8 @@ jobs:
     name: Create draft release
     needs: [build_publish_sdist_and_x86_64, build_publish_aarch64]
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - uses: getsentry/action-github-app-token@v2
         id: github-token
