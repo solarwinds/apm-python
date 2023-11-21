@@ -20,9 +20,7 @@ env:
 jobs:
   create_release_pr:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
+    permissions: write-all
     steps:
       - uses: getsentry/action-github-app-token@v2
         id: github-token
