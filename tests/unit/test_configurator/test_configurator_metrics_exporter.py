@@ -21,11 +21,6 @@ from .fixtures.apm_config import (
     mock_apmconfig_enabled,
     mock_apmconfig_enabled_expt,
 )
-from .fixtures.extension import (
-    mock_reporter,
-)
-from .fixtures.fwkv_manager import mock_fwkv_manager
-from .fixtures.txn_name_manager import mock_txn_name_manager
 
 
 class TestConfiguratorMetricsExporter:
