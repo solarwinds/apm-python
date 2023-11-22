@@ -316,9 +316,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             except Exception as ex:
                 logger.exception("A exception was raised: %s", ex)
                 logger.exception(
-                    "Failed to load configured metrics exporter %s. "
+                    "Failed to load configured OTEL_METRICS_EXPORTER. "
                     "Please reinstall or contact %s.",
-                    exporter_name,
                     INTL_SWO_SUPPORT_EMAIL,
                 )
                 raise
