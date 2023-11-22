@@ -27,7 +27,8 @@ def get_apmconfig_mocks(mocker, enabled=True, exp_otel_col=True):
     mock_apmconfig.configure_mock(
         **{
             "agent_enabled": enabled,
-            "get": mock_get_exp
+            "get": mock_get_exp,
+            "service_name": "foo-service",
         }
     )
     return mock_apmconfig
@@ -46,4 +47,12 @@ def fixture_mock_apmconfig_enabled(mocker):
     return mocker.patch(
         "solarwinds_apm.configurator.SolarWindsApmConfig",
         get_apmconfig_mocks(mocker, True, False)
+    )
+
+
+@pytest.fixture(name="mock_apmconfig_enabled_expt")
+def fixture_mock_apmconfig_enabled_expt(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsApmConfig",
+        get_apmconfig_mocks(mocker, True, True)
     )

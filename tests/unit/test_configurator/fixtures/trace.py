@@ -6,10 +6,17 @@
 
 def get_trace_mocks(mocker):
     mock_add_span_processor = mocker.Mock()
+    mock_resource = mocker.Mock()
+    mock_resource.configure_mock(
+        **{
+            "attributes": {"foo": "bar"}
+        }
+    )
+
     mock_tracer = mocker.Mock()
     mock_tracer.configure_mock(
         **{
-            "resource": {"foo-merged": "bar-attrs"}
+            "resource": mock_resource
         }
     )
 
