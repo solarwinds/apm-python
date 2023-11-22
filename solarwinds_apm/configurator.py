@@ -263,9 +263,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 # been checked by ApmConfig so exception here means
                 # something quite wrong
                 logger.exception(
-                    "Failed to load configured exporter %s. "
+                    "Failed to load configured OTEL_TRACES_EXPORTER. "
                     "Please reinstall or contact %s.",
-                    exporter_name,
                     INTL_SWO_SUPPORT_EMAIL,
                 )
                 raise
