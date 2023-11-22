@@ -66,7 +66,7 @@ class TestConfiguratorPropagators:
 
         # Restore old PROPAGATOR
         if old_propagators:
-            os.environ["OTEL_PROPAGATORS"] = old_traces_propagator
+            os.environ["OTEL_PROPAGATORS"] = old_propagators
 
     def test_configure_propagator_invalid(
         self,
@@ -107,7 +107,7 @@ class TestConfiguratorPropagators:
 
         # Restore old PROPAGATOR
         if old_propagators:
-            os.environ["OTEL_PROPAGATORS"] = old_traces_propagator
+            os.environ["OTEL_PROPAGATORS"] = old_propagators
 
     def test_configure_propagator_valid(
         self,
@@ -160,7 +160,7 @@ class TestConfiguratorPropagators:
 
         # Restore old PROPAGATOR
         if old_propagators:
-            os.environ["OTEL_PROPAGATORS"] = old_traces_propagator
+            os.environ["OTEL_PROPAGATORS"] = old_propagators
 
     def test_configure_propagator_valid_invalid_mixed(
         self,
@@ -218,7 +218,7 @@ class TestConfiguratorPropagators:
 
         # Restore old PROPAGATOR
         if old_propagators:
-            os.environ["OTEL_PROPAGATORS"] = old_traces_propagator
+            os.environ["OTEL_PROPAGATORS"] = old_propagators
 
     def test_configure_response_propagator(
         self,
