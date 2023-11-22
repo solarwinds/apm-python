@@ -8,7 +8,7 @@ import pytest
 
 
 @pytest.fixture(name="mock_meter_manager")
-def fixture_mock_meter_manager(mocker):
+def mock_meter_manager(mocker):
     return mocker.patch(
         "solarwinds_apm.apm_meter_manager.SolarWindsMeterManager"
     )

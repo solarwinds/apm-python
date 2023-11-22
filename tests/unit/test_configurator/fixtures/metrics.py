@@ -10,7 +10,6 @@ def get_metrics_mocks(mocker):
     )
 
     mock_set_meter_provider = mocker.Mock(
-        # TODO not sure if needs to be returned
         return_value=mock_meter_provider
     )
 

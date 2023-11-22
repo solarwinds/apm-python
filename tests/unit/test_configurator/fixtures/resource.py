@@ -6,7 +6,7 @@
 
 import pytest
 
-def mock_resource(mocker):
+def get_mock_resource(mocker):
     mock_new_res = mocker.Mock()
     mock_new_res.configure_mock(
         **{
@@ -24,5 +24,5 @@ def mock_resource(mocker):
     return mock_res
 
 @pytest.fixture(name="mock_resource")
-def fixture_mock_resource(mocker):
-    return mock_resource(mocker)
+def mock_resource(mocker):
+    return get_mock_resource(mocker)

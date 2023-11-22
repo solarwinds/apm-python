@@ -12,5 +12,5 @@ def mock_periodic_exporting_metric_reader(mocker):
     )
 
 @pytest.fixture(name="mock_pemreader")
-def fixture_mock_pemreader(mocker):
+def mock_pemreader(mocker):
     return mock_periodic_exporting_metric_reader(mocker)

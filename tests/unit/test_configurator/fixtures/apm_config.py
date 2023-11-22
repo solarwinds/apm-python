@@ -35,7 +35,7 @@ def get_apmconfig_mocks(mocker, enabled=True, exp_otel_col=True):
 
 
 @pytest.fixture(name="mock_apmconfig_disabled")
-def fixture_mock_apmconfig_disabled(mocker):
+def mock_apmconfig_disabled(mocker):
     return mocker.patch(
         "solarwinds_apm.configurator.SolarWindsApmConfig",
         get_apmconfig_mocks(mocker, False, False)
@@ -43,7 +43,7 @@ def fixture_mock_apmconfig_disabled(mocker):
 
 
 @pytest.fixture(name="mock_apmconfig_enabled")
-def fixture_mock_apmconfig_enabled(mocker):
+def mock_apmconfig_enabled(mocker):
     return mocker.patch(
         "solarwinds_apm.configurator.SolarWindsApmConfig",
         get_apmconfig_mocks(mocker, True, False)
@@ -51,7 +51,7 @@ def fixture_mock_apmconfig_enabled(mocker):
 
 
 @pytest.fixture(name="mock_apmconfig_enabled_expt")
-def fixture_mock_apmconfig_enabled_expt(mocker):
+def mock_apmconfig_enabled_expt(mocker):
     return mocker.patch(
         "solarwinds_apm.configurator.SolarWindsApmConfig",
         get_apmconfig_mocks(mocker, True, True)

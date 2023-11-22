@@ -12,5 +12,5 @@ def mock_batch_span_processor(mocker):
     )
 
 @pytest.fixture(name="mock_bsprocessor")
-def fixture_mock_bsprocessor(mocker):
+def mock_bsprocessor(mocker):
     return mock_batch_span_processor(mocker)

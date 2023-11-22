@@ -11,21 +11,21 @@ from solarwinds_apm import configurator
 
 # otel fixtures
 from .fixtures.metrics import get_metrics_mocks
-from .fixtures.periodic_exporting_metric_reader import fixture_mock_pemreader
-from .fixtures.resource import fixture_mock_resource
+from .fixtures.periodic_exporting_metric_reader import mock_pemreader
+from .fixtures.resource import mock_resource
 from .fixtures.trace import get_trace_mocks
 
 # apm python fixtures
 from .fixtures.apm_config import (
-    fixture_mock_apmconfig_disabled,
-    fixture_mock_apmconfig_enabled,
-    fixture_mock_apmconfig_enabled_expt,
+    mock_apmconfig_disabled,
+    mock_apmconfig_enabled,
+    mock_apmconfig_enabled_expt,
 )
 from .fixtures.extension import (
-    fixture_mock_reporter,
+    mock_reporter,
 )
-from .fixtures.fwkv_manager import fixture_mock_fwkv_manager
-from .fixtures.txn_name_manager import fixture_mock_txn_name_manager
+from .fixtures.fwkv_manager import mock_fwkv_manager
+from .fixtures.txn_name_manager import mock_txn_name_manager
 
 
 class TestConfiguratorMetricsExporter:
