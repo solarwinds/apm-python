@@ -6,10 +6,18 @@
 
 def get_trace_mocks(mocker):
     mock_add_span_processor = mocker.Mock()
+    mock_tracer = mocker.Mock()
+    mock_tracer.configure_mock(
+        **{
+            "resource": {"foo-merged": "bar-attrs"}
+        }
+    )
+
     mock_tracer_provider = mocker.Mock()
     mock_tracer_provider.configure_mock(
         **{
-            "add_span_processor": mock_add_span_processor
+            "add_span_processor": mock_add_span_processor,
+            "get_tracer": mock_tracer,
         }
     )
     mock_get_tracer_provider = mocker.Mock(
@@ -23,4 +31,4 @@ def get_trace_mocks(mocker):
             "get_tracer_provider": mock_get_tracer_provider
         }
     )
-    return mock_trace, mock_get_tracer_provider, mock_add_span_processor
+    return mock_trace, mock_get_tracer_provider, mock_add_span_processor, mock_tracer
