@@ -109,13 +109,45 @@ class TestConfiguratorMetricsExporter:
     def test_configure_metrics_exporter_invalid(
         self,
         mocker,
+        mock_apmconfig_enabled_expt,
+        mock_pemreader,
+        mock_resource,
     ):
         # Save any EXPORTER env var for later
         old_metrics_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
         if old_metrics_exporter:
             del os.environ["OTEL_METRICS_EXPORTER"]
 
-        # TODO
+        # Mock entry points
+        mock_iter_entry_points = mocker.patch(
+            "solarwinds_apm.apm_config.iter_entry_points"
+        )
+        mock_iter_entry_points.configure_mock(
+            side_effect=StopIteration("mock error")
+        )
+        mocker.patch.dict(
+            os.environ,
+            {
+                "OTEL_METRICS_EXPORTER": "invalid_exporter"
+            }
+        )
+
+        # Mock Otel
+        mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
+
+        mock_trace, mock_get_tracer_provider, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+
+        # Test!
+        test_configurator = configurator.SolarWindsConfigurator()
+        with pytest.raises(Exception):
+            test_configurator._configure_metrics_exporter(
+                mock_apmconfig_enabled_expt,
+            )
+        mock_pemreader.assert_not_called()
+        mock_get_tracer_provider.assert_not_called()
+        mock_tracer.assert_not_called()
+        mock_set_meter_provider.assert_not_called()
+        mock_meter_provider.assert_not_called()
 
         # Restore old EXPORTER
         if old_metrics_exporter:
