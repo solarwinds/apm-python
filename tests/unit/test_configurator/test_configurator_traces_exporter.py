@@ -10,20 +10,19 @@ import pytest
 from solarwinds_apm import configurator
 
 # otel fixtures
-from .fixtures.batch_span_processor import fixture_mock_bsprocessor
+from .fixtures.batch_span_processor import mock_bsprocessor
 from .fixtures.trace import get_trace_mocks
 
 # apm python fixtures
 from .fixtures.apm_config import (
-    fixture_mock_apmconfig_disabled,
-    fixture_mock_apmconfig_enabled,
+    mock_apmconfig_disabled,
+    mock_apmconfig_enabled,
 )
 from .fixtures.extension import (
-    fixture_mock_reporter,
+    mock_reporter,
 )
-from .fixtures.fwkv_manager import fixture_mock_fwkv_manager
-from .fixtures.meter_manager import fixture_mock_meter_manager
-from .fixtures.txn_name_manager import fixture_mock_txn_name_manager
+from .fixtures.fwkv_manager import mock_fwkv_manager
+from .fixtures.txn_name_manager import mock_txn_name_manager
 
 
 class TestConfiguratorTracesExporter:
@@ -37,7 +36,7 @@ class TestConfiguratorTracesExporter:
         mock_bsprocessor,
     ):
         # Mock Otel
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
@@ -65,7 +64,7 @@ class TestConfiguratorTracesExporter:
             del os.environ["OTEL_TRACES_EXPORTER"]
 
         # Mock Otel
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
@@ -111,7 +110,7 @@ class TestConfiguratorTracesExporter:
         )
 
         # Mock Otel
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -169,7 +168,7 @@ class TestConfiguratorTracesExporter:
         )
 
         # Mock Otel
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()

@@ -8,7 +8,7 @@ import pytest
 
 
 @pytest.fixture(name="mock_txn_name_manager")
-def fixture_mock_txn_name_manager(mocker):
+def mock_txn_name_manager(mocker):
     return mocker.patch(
         "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager"
     )

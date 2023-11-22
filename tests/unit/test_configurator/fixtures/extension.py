@@ -7,11 +7,11 @@
 import pytest
 
 @pytest.fixture(name="mock_extension")
-def fixture_mock_extension(mocker):
+def mock_extension(mocker):
     return mocker.patch(
         "solarwinds_apm.extension"
     )
 
 @pytest.fixture(name="mock_reporter")
-def fixture_mock_reporter(mocker):
+def mock_reporter(mocker):
     return mocker.Mock()

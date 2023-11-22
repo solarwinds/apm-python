@@ -6,11 +6,11 @@
 
 import pytest
 
-def mock_batch_span_processor(mocker):
+def mock_periodic_exporting_metric_reader(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.BatchSpanProcessor",
+        "solarwinds_apm.configurator.PeriodicExportingMetricReader",
     )
 
-@pytest.fixture(name="mock_bsprocessor")
-def mock_bsprocessor(mocker):
-    return mock_batch_span_processor(mocker)
+@pytest.fixture(name="mock_pemreader")
+def mock_pemreader(mocker):
+    return mock_periodic_exporting_metric_reader(mocker)

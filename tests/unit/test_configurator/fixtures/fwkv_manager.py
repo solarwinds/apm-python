@@ -8,7 +8,7 @@ import pytest
 
 
 @pytest.fixture(name="mock_fwkv_manager")
-def fixture_mock_fwkv_manager(mocker):
+def mock_fwkv_manager(mocker):
     return mocker.patch(
         "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager"
     )

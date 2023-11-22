@@ -6,11 +6,23 @@
 
 import pytest
 
-def mock_batch_span_processor(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.BatchSpanProcessor",
+def get_mock_resource(mocker):
+    mock_new_res = mocker.Mock()
+    mock_new_res.configure_mock(
+        **{
+            "merge": {"foo-merged": "yay"}
+        }
     )
+    mock_res = mocker.patch(
+        "solarwinds_apm.configurator.Resource",
+    )
+    mock_res.configure_mock(
+        **{
+            "create": mock_new_res
+        }
+    )
+    return mock_res
 
-@pytest.fixture(name="mock_bsprocessor")
-def mock_bsprocessor(mocker):
-    return mock_batch_span_processor(mocker)
+@pytest.fixture(name="mock_resource")
+def mock_resource(mocker):
+    return get_mock_resource(mocker)

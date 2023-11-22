@@ -4,13 +4,21 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-import pytest
-
-def mock_batch_span_processor(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.BatchSpanProcessor",
+def get_metrics_mocks(mocker):
+    mock_meter_provider = mocker.patch(
+        "solarwinds_apm.configurator.MeterProvider",
     )
 
-@pytest.fixture(name="mock_bsprocessor")
-def mock_bsprocessor(mocker):
-    return mock_batch_span_processor(mocker)
+    mock_set_meter_provider = mocker.Mock(
+        return_value=mock_meter_provider
+    )
+
+    mock_metrics = mocker.patch(
+        "solarwinds_apm.configurator.metrics",
+    )
+    mock_metrics.configure_mock(
+        **{
+            "set_meter_provider": mock_set_meter_provider
+        }
+    )
+    return mock_metrics, mock_set_meter_provider, mock_meter_provider
