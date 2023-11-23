@@ -24,7 +24,7 @@ class TestConfiguratorSpanProcessors:
         mock_apmconfig_enabled,
         mock_txn_name_manager,
     ):
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
         mock_processor = mocker.patch(
             "solarwinds_apm.configurator.SolarWindsInboundMetricsSpanProcessor"
         )
@@ -48,7 +48,7 @@ class TestConfiguratorSpanProcessors:
         mock_txn_name_manager,
         mock_meter_manager,
     ):
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
         mock_processor = mocker.patch(
             "solarwinds_apm.configurator.SolarWindsOTLPMetricsSpanProcessor"
         )
@@ -70,7 +70,7 @@ class TestConfiguratorSpanProcessors:
         mock_txn_name_manager,
         mock_meter_manager,
     ):
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
         mock_processor = mocker.patch(
             "solarwinds_apm.configurator.SolarWindsOTLPMetricsSpanProcessor"
         )
