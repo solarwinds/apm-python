@@ -52,10 +52,3 @@ def get_trace_mocks(mocker):
         mock_add_span_processor,
         mock_tracer
     )
-
-
-@pytest.fixture(name="mock_tracerprovider")
-def mock_tracerprovider(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.TracerProvider"
-    )

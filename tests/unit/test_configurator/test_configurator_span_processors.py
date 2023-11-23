@@ -9,13 +9,6 @@ from solarwinds_apm import configurator
 # otel fixtures
 from .fixtures.trace import get_trace_mocks
 
-# apm python fixtures
-from .fixtures.apm_config import (
-    mock_apmconfig_enabled,
-    mock_apmconfig_enabled_expt,
-)
-from .fixtures.meter_manager import mock_meter_manager
-from .fixtures.txn_name_manager import mock_txn_name_manager
 
 class TestConfiguratorSpanProcessors:
     def test_configure_inbound_metrics_span_processor(

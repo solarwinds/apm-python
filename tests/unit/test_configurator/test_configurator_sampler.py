@@ -10,18 +10,9 @@ import pytest
 
 from solarwinds_apm import configurator
 
-# apm python fixtures
-from .fixtures.apm_config import (
-    mock_apmconfig_disabled,
-    mock_apmconfig_enabled,
-)
-
 # otel fixtures
 from .fixtures.resource import get_resource_mocks
-from .fixtures.trace import (
-    get_trace_mocks,
-    mock_tracerprovider,
-)
+from .fixtures.trace import get_trace_mocks
 
 class TestConfiguratorSampler:
     def test_configure_sampler_disabled(
