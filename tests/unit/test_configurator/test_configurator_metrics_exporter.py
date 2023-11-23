@@ -24,8 +24,7 @@ class TestConfiguratorMetricsExporter:
     ):
         # Mock Otel
         metrics_mocks = get_metrics_mocks(mocker)
-
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -33,8 +32,8 @@ class TestConfiguratorMetricsExporter:
             mock_apmconfig_disabled,
         )
         mock_pemreader.assert_not_called()
-        mock_get_tracer_provider.assert_not_called()
-        mock_tracer.assert_not_called()
+        trace_mocks["get_tracer_provider"].assert_not_called()
+        trace_mocks["get_tracer"].assert_not_called()
         metrics_mocks["set_meter_provider"].assert_not_called()
         metrics_mocks["MeterProvider"].assert_not_called()
 
@@ -47,8 +46,7 @@ class TestConfiguratorMetricsExporter:
     ):
         # Mock Otel
         metrics_mocks = get_metrics_mocks(mocker)
-
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -56,8 +54,8 @@ class TestConfiguratorMetricsExporter:
             mock_apmconfig_enabled,
         )
         mock_pemreader.assert_not_called()
-        mock_get_tracer_provider.assert_not_called()
-        mock_tracer.assert_not_called()
+        trace_mocks["get_tracer_provider"].assert_not_called()
+        trace_mocks["get_tracer"].assert_not_called()
         metrics_mocks["set_meter_provider"].assert_not_called()
         metrics_mocks["MeterProvider"].assert_not_called()
 
@@ -74,8 +72,7 @@ class TestConfiguratorMetricsExporter:
 
         # Mock Otel
         metrics_mocks = get_metrics_mocks(mocker)
-
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -83,8 +80,8 @@ class TestConfiguratorMetricsExporter:
             mock_apmconfig_enabled_expt,
         )
         mock_pemreader.assert_not_called()
-        mock_get_tracer_provider.assert_not_called()
-        mock_tracer.assert_not_called()
+        trace_mocks["get_tracer_provider"].assert_not_called()
+        trace_mocks["get_tracer"].assert_not_called()
         metrics_mocks["metrics"].assert_not_called()
         metrics_mocks["set_meter_provider"].assert_not_called()
         metrics_mocks["MeterProvider"].assert_not_called()
@@ -121,8 +118,7 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         get_resource_mocks(mocker)
         metrics_mocks = get_metrics_mocks(mocker)
-
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -131,8 +127,8 @@ class TestConfiguratorMetricsExporter:
                 mock_apmconfig_enabled_expt,
             )
         mock_pemreader.assert_not_called()
-        mock_get_tracer_provider.assert_not_called()
-        mock_tracer.assert_not_called()
+        trace_mocks["get_tracer_provider"].assert_not_called()
+        trace_mocks["get_tracer"].assert_not_called()
         metrics_mocks["set_meter_provider"].assert_not_called()
         metrics_mocks["MeterProvider"].assert_not_called()
 
@@ -176,8 +172,7 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         get_resource_mocks(mocker)
         metrics_mocks = get_metrics_mocks(mocker)
-
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -185,8 +180,8 @@ class TestConfiguratorMetricsExporter:
             mock_apmconfig_enabled_expt,
         )
         mock_pemreader.assert_called_once()
-        mock_get_tracer_provider.assert_called_once()
-        mock_tracer.assert_called_once()
+        trace_mocks["get_tracer_provider"].assert_called_once()
+        trace_mocks["get_tracer"].assert_called_once()
         metrics_mocks["set_meter_provider"].assert_called_once()
         metrics_mocks["MeterProvider"].assert_called_once()
 
@@ -240,8 +235,7 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         get_resource_mocks(mocker)
         metrics_mocks = get_metrics_mocks(mocker)
-
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -257,8 +251,8 @@ class TestConfiguratorMetricsExporter:
         )
         # Not called at all
         mock_pemreader.assert_not_called()
-        mock_get_tracer_provider.assert_not_called()
-        mock_tracer.assert_not_called()
+        trace_mocks["get_tracer_provider"].assert_not_called()
+        trace_mocks["get_tracer"].assert_not_called()
         metrics_mocks["set_meter_provider"].assert_not_called()
         metrics_mocks["MeterProvider"].assert_not_called()
 
@@ -318,8 +312,7 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         get_resource_mocks(mocker)
         metrics_mocks = get_metrics_mocks(mocker)
-
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -336,8 +329,8 @@ class TestConfiguratorMetricsExporter:
         # Called for the valid one
         mock_pemreader.assert_called_once()
         # Rest not called at all
-        mock_get_tracer_provider.assert_not_called()
-        mock_tracer.assert_not_called()
+        trace_mocks["get_tracer_provider"].assert_not_called()
+        trace_mocks["get_tracer"].assert_not_called()
         metrics_mocks["set_meter_provider"].assert_not_called()
         metrics_mocks["MeterProvider"].assert_not_called()
 

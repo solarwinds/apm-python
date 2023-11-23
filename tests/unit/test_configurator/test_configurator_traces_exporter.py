@@ -24,7 +24,7 @@ class TestConfiguratorTracesExporter:
         mock_bsprocessor,
     ):
         # Mock Otel
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
@@ -34,8 +34,8 @@ class TestConfiguratorTracesExporter:
             mock_apmconfig_disabled,
         )
         mock_bsprocessor.assert_not_called()
-        mock_get_tracer_provider.assert_not_called()
-        mock_add_span_processor.assert_not_called()
+        trace_mocks["get_tracer_provider"].assert_not_called()
+        trace_mocks["add_span_processor"].assert_not_called()
 
     def test_configure_traces_exporter_none(
         self,
@@ -52,7 +52,7 @@ class TestConfiguratorTracesExporter:
             del os.environ["OTEL_TRACES_EXPORTER"]
 
         # Mock Otel
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
@@ -62,8 +62,8 @@ class TestConfiguratorTracesExporter:
             mock_apmconfig_enabled,
         )
         mock_bsprocessor.assert_not_called()
-        mock_get_tracer_provider.assert_not_called()
-        mock_add_span_processor.assert_not_called()
+        trace_mocks["get_tracer_provider"].assert_not_called()
+        trace_mocks["add_span_processor"].assert_not_called()
 
         # Restore old EXPORTER
         if old_traces_exporter:
@@ -98,7 +98,7 @@ class TestConfiguratorTracesExporter:
         )
 
         # Mock Otel
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -112,8 +112,8 @@ class TestConfiguratorTracesExporter:
             )
 
         mock_bsprocessor.assert_not_called()
-        mock_get_tracer_provider.assert_not_called()
-        mock_add_span_processor.assert_not_called()
+        trace_mocks["get_tracer_provider"].assert_not_called()
+        trace_mocks["add_span_processor"].assert_not_called()
 
         # Restore old EXPORTER
         if old_traces_exporter:
@@ -156,7 +156,7 @@ class TestConfiguratorTracesExporter:
         )
 
         # Mock Otel
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -167,8 +167,8 @@ class TestConfiguratorTracesExporter:
             mock_apmconfig_enabled,
         )
         mock_bsprocessor.assert_called_once()
-        mock_get_tracer_provider.assert_called_once()
-        mock_add_span_processor.assert_called_once()
+        trace_mocks["get_tracer_provider"].assert_called_once()
+        trace_mocks["add_span_processor"].assert_called_once()
         
         # Restore old EXPORTER
         if old_traces_exporter:
@@ -229,7 +229,7 @@ class TestConfiguratorTracesExporter:
         )
         
         # Mock Otel
-        _, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -248,8 +248,8 @@ class TestConfiguratorTracesExporter:
         )
         # Not called at all
         mock_bsprocessor.assert_not_called()
-        mock_get_tracer_provider.assert_not_called()
-        mock_add_span_processor.assert_not_called()
+        trace_mocks["get_tracer_provider"].assert_not_called()
+        trace_mocks["add_span_processor"].assert_not_called()
 
         # Restore old EXPORTER
         if old_traces_exporter:
@@ -309,7 +309,7 @@ class TestConfiguratorTracesExporter:
         )
         
         # Mock Otel
-        _, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -328,8 +328,8 @@ class TestConfiguratorTracesExporter:
         )
         # Ends up called once for the valid exporter
         mock_bsprocessor.assert_called_once()
-        mock_get_tracer_provider.assert_called_once()
-        mock_add_span_processor.assert_called_once()
+        trace_mocks["get_tracer_provider"].assert_called_once()
+        trace_mocks["add_span_processor"].assert_called_once()
 
         # Restore old EXPORTER
         if old_traces_exporter:
