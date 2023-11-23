@@ -23,7 +23,7 @@ class TestConfiguratorMetricsExporter:
         mock_pemreader,
     ):
         # Mock Otel
-        mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
+        metrics_mocks = get_metrics_mocks(mocker)
 
         mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
@@ -35,8 +35,8 @@ class TestConfiguratorMetricsExporter:
         mock_pemreader.assert_not_called()
         mock_get_tracer_provider.assert_not_called()
         mock_tracer.assert_not_called()
-        mock_set_meter_provider.assert_not_called()
-        mock_meter_provider.assert_not_called()
+        metrics_mocks["set_meter_provider"].assert_not_called()
+        metrics_mocks["MeterProvider"].assert_not_called()
 
 
     def test_configure_metrics_exporter_flag_not_set(
@@ -46,7 +46,7 @@ class TestConfiguratorMetricsExporter:
         mock_pemreader,
     ):
         # Mock Otel
-        mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
+        metrics_mocks = get_metrics_mocks(mocker)
 
         mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
@@ -58,8 +58,8 @@ class TestConfiguratorMetricsExporter:
         mock_pemreader.assert_not_called()
         mock_get_tracer_provider.assert_not_called()
         mock_tracer.assert_not_called()
-        mock_set_meter_provider.assert_not_called()
-        mock_meter_provider.assert_not_called()
+        metrics_mocks["set_meter_provider"].assert_not_called()
+        metrics_mocks["MeterProvider"].assert_not_called()
 
     def test_configure_metrics_exporter_none(
         self,
@@ -73,7 +73,7 @@ class TestConfiguratorMetricsExporter:
             del os.environ["OTEL_METRICS_EXPORTER"]
 
         # Mock Otel
-        mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
+        metrics_mocks = get_metrics_mocks(mocker)
 
         mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
@@ -85,9 +85,9 @@ class TestConfiguratorMetricsExporter:
         mock_pemreader.assert_not_called()
         mock_get_tracer_provider.assert_not_called()
         mock_tracer.assert_not_called()
-        mock_metrics.assert_not_called()
-        mock_set_meter_provider.assert_not_called()
-        mock_meter_provider.assert_not_called()
+        metrics_mocks["metrics"].assert_not_called()
+        metrics_mocks["set_meter_provider"].assert_not_called()
+        metrics_mocks["MeterProvider"].assert_not_called()
 
         # Restore old EXPORTER
         if old_metrics_exporter:
@@ -119,9 +119,8 @@ class TestConfiguratorMetricsExporter:
         )
 
         # Mock Otel
-        _, _ = get_resource_mocks(mocker)
-
-        mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
+        get_resource_mocks(mocker)
+        metrics_mocks = get_metrics_mocks(mocker)
 
         mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
@@ -134,8 +133,8 @@ class TestConfiguratorMetricsExporter:
         mock_pemreader.assert_not_called()
         mock_get_tracer_provider.assert_not_called()
         mock_tracer.assert_not_called()
-        mock_set_meter_provider.assert_not_called()
-        mock_meter_provider.assert_not_called()
+        metrics_mocks["set_meter_provider"].assert_not_called()
+        metrics_mocks["MeterProvider"].assert_not_called()
 
         # Restore old EXPORTER
         if old_metrics_exporter:
@@ -175,9 +174,8 @@ class TestConfiguratorMetricsExporter:
         )
 
         # Mock Otel
-        _, _ = get_resource_mocks(mocker)
-
-        mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
+        get_resource_mocks(mocker)
+        metrics_mocks = get_metrics_mocks(mocker)
 
         mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
@@ -189,8 +187,8 @@ class TestConfiguratorMetricsExporter:
         mock_pemreader.assert_called_once()
         mock_get_tracer_provider.assert_called_once()
         mock_tracer.assert_called_once()
-        mock_set_meter_provider.assert_called_once()
-        mock_meter_provider.assert_called_once()
+        metrics_mocks["set_meter_provider"].assert_called_once()
+        metrics_mocks["MeterProvider"].assert_called_once()
 
         # Restore old EXPORTER
         if old_metrics_exporter:
@@ -240,9 +238,8 @@ class TestConfiguratorMetricsExporter:
         )
 
         # Mock Otel
-        _, _ = get_resource_mocks(mocker)
-
-        mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
+        get_resource_mocks(mocker)
+        metrics_mocks = get_metrics_mocks(mocker)
 
         mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
@@ -262,8 +259,8 @@ class TestConfiguratorMetricsExporter:
         mock_pemreader.assert_not_called()
         mock_get_tracer_provider.assert_not_called()
         mock_tracer.assert_not_called()
-        mock_set_meter_provider.assert_not_called()
-        mock_meter_provider.assert_not_called()
+        metrics_mocks["set_meter_provider"].assert_not_called()
+        metrics_mocks["MeterProvider"].assert_not_called()
 
         # Restore old EXPORTER
         if old_metrics_exporter:
@@ -319,9 +316,8 @@ class TestConfiguratorMetricsExporter:
         )
 
         # Mock Otel
-        _, _ = get_resource_mocks(mocker)
-
-        mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
+        get_resource_mocks(mocker)
+        metrics_mocks = get_metrics_mocks(mocker)
 
         mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
@@ -342,8 +338,8 @@ class TestConfiguratorMetricsExporter:
         # Rest not called at all
         mock_get_tracer_provider.assert_not_called()
         mock_tracer.assert_not_called()
-        mock_set_meter_provider.assert_not_called()
-        mock_meter_provider.assert_not_called()
+        metrics_mocks["set_meter_provider"].assert_not_called()
+        metrics_mocks["MeterProvider"].assert_not_called()
 
         # Restore old EXPORTER
         if old_metrics_exporter:
