@@ -10,12 +10,6 @@ import pytest
 
 from solarwinds_apm import configurator
 
-# otel fixtures
-from .fixtures.propagator import (
-    mock_composite_propagator,
-    mock_set_global_textmap,
-    mock_set_global_response_propagator,
-)
 
 class TestConfiguratorPropagators:
     def test_configure_propagator_none_uses_default(

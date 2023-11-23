@@ -9,13 +9,6 @@ from solarwinds_apm import configurator
 # otel fixtures
 from .fixtures.trace import get_trace_mocks
 
-# apm python fixtures
-from .fixtures.apm_config import (
-    mock_apmconfig_enabled,
-    mock_apmconfig_enabled_expt,
-)
-from .fixtures.meter_manager import mock_meter_manager
-from .fixtures.txn_name_manager import mock_txn_name_manager
 
 class TestConfiguratorSpanProcessors:
     def test_configure_inbound_metrics_span_processor(
@@ -24,7 +17,7 @@ class TestConfiguratorSpanProcessors:
         mock_apmconfig_enabled,
         mock_txn_name_manager,
     ):
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
         mock_processor = mocker.patch(
             "solarwinds_apm.configurator.SolarWindsInboundMetricsSpanProcessor"
         )
@@ -34,8 +27,8 @@ class TestConfiguratorSpanProcessors:
             mock_txn_name_manager,
             mock_apmconfig_enabled,
         )       
-        mock_get_tracer_provider.assert_called_once()
-        mock_add_span_processor.assert_called_once()
+        trace_mocks["get_tracer_provider"].assert_called_once()
+        trace_mocks["add_span_processor"].assert_called_once()
         mock_processor.assert_called_once_with(
             mock_txn_name_manager,
             mock_apmconfig_enabled,
@@ -48,7 +41,7 @@ class TestConfiguratorSpanProcessors:
         mock_txn_name_manager,
         mock_meter_manager,
     ):
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
         mock_processor = mocker.patch(
             "solarwinds_apm.configurator.SolarWindsOTLPMetricsSpanProcessor"
         )
@@ -59,8 +52,8 @@ class TestConfiguratorSpanProcessors:
             mock_apmconfig_enabled,
             mock_meter_manager,
         )       
-        mock_get_tracer_provider.assert_not_called()
-        mock_add_span_processor.assert_not_called()
+        trace_mocks["get_tracer_provider"].assert_not_called()
+        trace_mocks["add_span_processor"].assert_not_called()
         mock_processor.assert_not_called()
 
     def test_configure_otlp_metrics_span_processor(
@@ -70,7 +63,7 @@ class TestConfiguratorSpanProcessors:
         mock_txn_name_manager,
         mock_meter_manager,
     ):
-        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
         mock_processor = mocker.patch(
             "solarwinds_apm.configurator.SolarWindsOTLPMetricsSpanProcessor"
         )
@@ -81,8 +74,8 @@ class TestConfiguratorSpanProcessors:
             mock_apmconfig_enabled_expt,
             mock_meter_manager,
         )
-        mock_get_tracer_provider.assert_called_once()
-        mock_add_span_processor.assert_called_once()
+        trace_mocks["get_tracer_provider"].assert_called_once()
+        trace_mocks["add_span_processor"].assert_called_once()
         mock_processor.assert_called_once_with(
             mock_txn_name_manager,
             mock_apmconfig_enabled_expt,

@@ -10,18 +10,9 @@ import pytest
 
 from solarwinds_apm import configurator
 
-# apm python fixtures
-from .fixtures.apm_config import (
-    mock_apmconfig_disabled,
-    mock_apmconfig_enabled,
-)
-
 # otel fixtures
 from .fixtures.resource import get_resource_mocks
-from .fixtures.trace import (
-    get_trace_mocks,
-    mock_tracerprovider,
-)
+from .fixtures.trace import get_trace_mocks
 
 class TestConfiguratorSampler:
     def test_configure_sampler_disabled(
@@ -31,18 +22,18 @@ class TestConfiguratorSampler:
         mock_tracerprovider,
     ):
         # Mock Otel
-        mock_res, mock_new_res = get_resource_mocks(mocker)
-        _, _, mock_set_tracer_provider, mock_noop_tracer_provider, _, _ = get_trace_mocks(mocker)
+        resource_mocks = get_resource_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_sampler(mock_apmconfig_disabled)
 
         # sets tracer_provider with noop
-        mock_noop_tracer_provider.assert_called_once()
-        mock_set_tracer_provider.assert_called_once()
+        trace_mocks["NoOpTracerProvider"].assert_called_once()
+        trace_mocks["set_tracer_provider"].assert_called_once()
         
         # resource and real provider not used
-        mock_new_res.assert_not_called()
+        resource_mocks["create"].assert_not_called()
         mock_tracerprovider.assert_not_called()  
 
     def test_configure_sampler_error(
@@ -60,8 +51,8 @@ class TestConfiguratorSampler:
         )
 
         # Mock Otel
-        mock_res, mock_new_res = get_resource_mocks(mocker)
-        _, _, mock_set_tracer_provider, mock_noop_tracer_provider, _, _ = get_trace_mocks(mocker)
+        resource_mocks = get_resource_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -69,9 +60,9 @@ class TestConfiguratorSampler:
             test_configurator._configure_sampler(mock_apmconfig_enabled)
 
         # no tracer_provider is set
-        mock_noop_tracer_provider.assert_not_called()
-        mock_set_tracer_provider.assert_not_called()
-        mock_new_res.assert_not_called()
+        trace_mocks["NoOpTracerProvider"].assert_not_called()
+        trace_mocks["set_tracer_provider"].assert_not_called()
+        resource_mocks["create"].assert_not_called()
         mock_tracerprovider.assert_not_called()  
 
     def test_configure_sampler_default(
@@ -86,16 +77,16 @@ class TestConfiguratorSampler:
         )
 
         # Mock Otel
-        mock_res, mock_new_res = get_resource_mocks(mocker)
-        _, _, mock_set_tracer_provider, mock_noop_tracer_provider, _, _ = get_trace_mocks(mocker)
+        resource_mocks = get_resource_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_sampler(mock_apmconfig_enabled)
 
         # tracer_provider set with new resource using configured service_name
-        mock_set_tracer_provider.assert_called_once()
-        mock_new_res.assert_has_calls(
+        trace_mocks["set_tracer_provider"].assert_called_once()
+        resource_mocks["create"].assert_has_calls(
             [
                 # service name from apmconfig fixture
                 mocker.call({"service.name": "foo-service"})
@@ -104,7 +95,7 @@ class TestConfiguratorSampler:
         mock_tracerprovider.assert_called_once()
 
         # noop unused
-        mock_noop_tracer_provider.assert_not_called()
+        trace_mocks["NoOpTracerProvider"].assert_not_called()
 
     def test_configure_sampler_otel_env_var_ignored(
         self,
@@ -123,8 +114,8 @@ class TestConfiguratorSampler:
         )
 
         # Mock Otel
-        mock_res, mock_new_res = get_resource_mocks(mocker)
-        _, _, mock_set_tracer_provider, mock_noop_tracer_provider, _, _ = get_trace_mocks(mocker)
+        resource_mocks = get_resource_mocks(mocker)
+        trace_mocks = get_trace_mocks(mocker)
 
         # Mock sw sampler
         mock_sw_sampler = mocker.patch(
@@ -150,8 +141,8 @@ class TestConfiguratorSampler:
         )
 
         # tracer_provider set with new resource using configured service_name
-        mock_set_tracer_provider.assert_called_once()
-        mock_new_res.assert_has_calls(
+        trace_mocks["set_tracer_provider"].assert_called_once()
+        resource_mocks["create"].assert_has_calls(
             [
                 # service name from apmconfig fixture
                 mocker.call({"service.name": "foo-service"})
@@ -160,7 +151,7 @@ class TestConfiguratorSampler:
         mock_tracerprovider.assert_called_once()
 
         # noop unused
-        mock_noop_tracer_provider.assert_not_called()
+        trace_mocks["NoOpTracerProvider"].assert_not_called()
 
         # Restore old EXPORTER
         if old_traces_sampler:

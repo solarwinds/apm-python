@@ -21,4 +21,8 @@ def get_metrics_mocks(mocker):
             "set_meter_provider": mock_set_meter_provider
         }
     )
-    return mock_metrics, mock_set_meter_provider, mock_meter_provider
+    return {
+        "metrics": mock_metrics,
+        "set_meter_provider": mock_set_meter_provider,
+        "MeterProvider": mock_meter_provider,
+    }
