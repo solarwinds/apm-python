@@ -21,7 +21,4 @@ def get_resource_mocks(mocker):
             "create": mock_new_res
         }
     )
-    return {
-        "Resource": mock_res,
-        "create": mock_new_res
-    }
+    return mock_res

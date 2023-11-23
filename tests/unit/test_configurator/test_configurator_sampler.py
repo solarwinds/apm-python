@@ -29,11 +29,11 @@ class TestConfiguratorSampler:
         test_configurator._configure_sampler(mock_apmconfig_disabled)
 
         # sets tracer_provider with noop
-        trace_mocks["NoOpTracerProvider"].assert_called_once()
-        trace_mocks["set_tracer_provider"].assert_called_once()
+        trace_mocks.NoOpTracerProvider.assert_called_once()
+        trace_mocks.set_tracer_provider.assert_called_once()
         
         # resource and real provider not used
-        resource_mocks["create"].assert_not_called()
+        resource_mocks.create.assert_not_called()
         mock_tracerprovider.assert_not_called()  
 
     def test_configure_sampler_error(
@@ -60,9 +60,9 @@ class TestConfiguratorSampler:
             test_configurator._configure_sampler(mock_apmconfig_enabled)
 
         # no tracer_provider is set
-        trace_mocks["NoOpTracerProvider"].assert_not_called()
-        trace_mocks["set_tracer_provider"].assert_not_called()
-        resource_mocks["create"].assert_not_called()
+        trace_mocks.NoOpTracerProvider.assert_not_called()
+        trace_mocks.set_tracer_provider.assert_not_called()
+        resource_mocks.create.assert_not_called()
         mock_tracerprovider.assert_not_called()  
 
     def test_configure_sampler_default(
@@ -85,8 +85,8 @@ class TestConfiguratorSampler:
         test_configurator._configure_sampler(mock_apmconfig_enabled)
 
         # tracer_provider set with new resource using configured service_name
-        trace_mocks["set_tracer_provider"].assert_called_once()
-        resource_mocks["create"].assert_has_calls(
+        trace_mocks.set_tracer_provider.assert_called_once()
+        resource_mocks.create.assert_has_calls(
             [
                 # service name from apmconfig fixture
                 mocker.call({"service.name": "foo-service"})
@@ -95,7 +95,7 @@ class TestConfiguratorSampler:
         mock_tracerprovider.assert_called_once()
 
         # noop unused
-        trace_mocks["NoOpTracerProvider"].assert_not_called()
+        trace_mocks.NoOpTracerProvider.assert_not_called()
 
     def test_configure_sampler_otel_env_var_ignored(
         self,
@@ -141,8 +141,8 @@ class TestConfiguratorSampler:
         )
 
         # tracer_provider set with new resource using configured service_name
-        trace_mocks["set_tracer_provider"].assert_called_once()
-        resource_mocks["create"].assert_has_calls(
+        trace_mocks.set_tracer_provider.assert_called_once()
+        resource_mocks.create.assert_has_calls(
             [
                 # service name from apmconfig fixture
                 mocker.call({"service.name": "foo-service"})
@@ -151,7 +151,7 @@ class TestConfiguratorSampler:
         mock_tracerprovider.assert_called_once()
 
         # noop unused
-        trace_mocks["NoOpTracerProvider"].assert_not_called()
+        trace_mocks.NoOpTracerProvider.assert_not_called()
 
         # Restore old EXPORTER
         if old_traces_sampler:

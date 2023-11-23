@@ -46,6 +46,12 @@ def mock_tracerprovider(mocker):
         "solarwinds_apm.configurator.TracerProvider"
     )
 
+@pytest.fixture(name="mock_meterprovider")
+def mock_meterprovider(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.MeterProvider",
+    )
+
 # ==================================================================
 # Configurator APM Python mocks
 # ==================================================================
@@ -129,10 +135,7 @@ def mock_extension(mocker):
             "Reporter": mock_reporter
         }
     )
-    return {
-        "extension": mock_ext,
-        "Reporter": mock_reporter,
-    }
+    return mock_ext
 
 @pytest.fixture(name="mock_fwkv_manager")
 def mock_fwkv_manager(mocker):

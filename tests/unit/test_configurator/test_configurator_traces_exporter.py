@@ -28,14 +28,14 @@ class TestConfiguratorTracesExporter:
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
-            mock_extension["Reporter"],
+            mock_extension.Reporter,
             mock_txn_name_manager,
             mock_fwkv_manager,
             mock_apmconfig_disabled,
         )
         mock_bsprocessor.assert_not_called()
-        trace_mocks["get_tracer_provider"].assert_not_called()
-        trace_mocks["add_span_processor"].assert_not_called()
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
 
     def test_configure_traces_exporter_none(
         self,
@@ -56,14 +56,14 @@ class TestConfiguratorTracesExporter:
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
-            mock_extension["Reporter"],
+            mock_extension.Reporter,
             mock_txn_name_manager,
             mock_fwkv_manager,
             mock_apmconfig_enabled,
         )
         mock_bsprocessor.assert_not_called()
-        trace_mocks["get_tracer_provider"].assert_not_called()
-        trace_mocks["add_span_processor"].assert_not_called()
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
 
         # Restore old EXPORTER
         if old_traces_exporter:
@@ -105,15 +105,15 @@ class TestConfiguratorTracesExporter:
 
         with pytest.raises(Exception):
             test_configurator._configure_traces_exporter(
-                mock_extension["Reporter"],
+                mock_extension.Reporter,
                 mock_txn_name_manager,
                 mock_fwkv_manager,
                 mock_apmconfig_enabled,
             )
 
         mock_bsprocessor.assert_not_called()
-        trace_mocks["get_tracer_provider"].assert_not_called()
-        trace_mocks["add_span_processor"].assert_not_called()
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
 
         # Restore old EXPORTER
         if old_traces_exporter:
@@ -161,14 +161,14 @@ class TestConfiguratorTracesExporter:
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
-            mock_extension["Reporter"],
+            mock_extension.Reporter,
             mock_txn_name_manager,
             mock_fwkv_manager,
             mock_apmconfig_enabled,
         )
         mock_bsprocessor.assert_called_once()
-        trace_mocks["get_tracer_provider"].assert_called_once()
-        trace_mocks["add_span_processor"].assert_called_once()
+        trace_mocks.get_tracer_provider.assert_called_once()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
         
         # Restore old EXPORTER
         if old_traces_exporter:
@@ -235,7 +235,7 @@ class TestConfiguratorTracesExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         with pytest.raises(Exception):
             test_configurator._configure_traces_exporter(
-                mock_extension["Reporter"],
+                mock_extension.Reporter,
                 mock_txn_name_manager,
                 mock_fwkv_manager,
                 mock_apmconfig_enabled,
@@ -248,8 +248,8 @@ class TestConfiguratorTracesExporter:
         )
         # Not called at all
         mock_bsprocessor.assert_not_called()
-        trace_mocks["get_tracer_provider"].assert_not_called()
-        trace_mocks["add_span_processor"].assert_not_called()
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
 
         # Restore old EXPORTER
         if old_traces_exporter:
@@ -315,7 +315,7 @@ class TestConfiguratorTracesExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         with pytest.raises(Exception):
             test_configurator._configure_traces_exporter(
-                mock_extension["Reporter"],
+                mock_extension.Reporter,
                 mock_txn_name_manager,
                 mock_fwkv_manager,
                 mock_apmconfig_enabled,
@@ -328,8 +328,8 @@ class TestConfiguratorTracesExporter:
         )
         # Ends up called once for the valid exporter
         mock_bsprocessor.assert_called_once()
-        trace_mocks["get_tracer_provider"].assert_called_once()
-        trace_mocks["add_span_processor"].assert_called_once()
+        trace_mocks.get_tracer_provider.assert_called_once()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
 
         # Restore old EXPORTER
         if old_traces_exporter:
