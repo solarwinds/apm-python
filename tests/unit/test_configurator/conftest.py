@@ -97,15 +97,42 @@ def mock_apmconfig_enabled_expt(mocker):
         get_apmconfig_mocks(mocker, True, True)
     )
 
-@pytest.fixture(name="mock_extension")
-def mock_extension(mocker):
-    return mocker.patch(
-        "solarwinds_apm.extension"
+@pytest.fixture(name="mock_apmconfig_enabled_reporter_settings")
+def mock_apmconfig_enabled_reporter_settings(mocker):
+    mock_reporter = mocker.Mock()
+    mock_ext = mocker.Mock()
+    mock_ext.configure_mock(
+        **{
+            "Reporter": mock_reporter
+        }
     )
 
-@pytest.fixture(name="mock_reporter")
-def mock_reporter(mocker):
-    return mocker.Mock()
+    mock_apmconfig = mocker.Mock()
+    mock_apmconfig.configure_mock(
+        **{
+            "agent_enabled": True,
+            "certificates": "foo-certs",
+            "extension": mock_ext,
+            "get": mocker.Mock(return_value="foo"),
+            "service_name": "foo-service",
+            "metric_format": "bar"
+        }
+    )
+    return mock_apmconfig
+
+@pytest.fixture(name="mock_extension")
+def mock_extension(mocker):
+    mock_reporter = mocker.Mock()
+    mock_ext = mocker.Mock()
+    mock_ext.configure_mock(
+        **{
+            "Reporter": mock_reporter
+        }
+    )
+    return {
+        "extension": mock_ext,
+        "Reporter": mock_reporter,
+    }
 
 @pytest.fixture(name="mock_fwkv_manager")
 def mock_fwkv_manager(mocker):
