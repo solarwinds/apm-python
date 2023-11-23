@@ -99,13 +99,17 @@ def mock_apmconfig_enabled_expt(mocker):
 
 @pytest.fixture(name="mock_extension")
 def mock_extension(mocker):
-    return mocker.patch(
-        "solarwinds_apm.extension"
+    mock_reporter = mocker.Mock()
+    mock_ext = mocker.Mock()
+    mock_ext.configure_mock(
+        **{
+            "Reporter": mock_reporter
+        }
     )
-
-@pytest.fixture(name="mock_reporter")
-def mock_reporter(mocker):
-    return mocker.Mock()
+    return {
+        "extension": mock_ext,
+        "Reporter": mock_reporter,
+    }
 
 @pytest.fixture(name="mock_fwkv_manager")
 def mock_fwkv_manager(mocker):
