@@ -4,6 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import pytest
+
 def get_trace_mocks(mocker):
     mock_add_span_processor = mocker.Mock()
     mock_resource = mocker.Mock()
@@ -30,12 +32,30 @@ def get_trace_mocks(mocker):
     mock_get_tracer_provider = mocker.Mock(
         return_value=mock_tracer_provider
     )
+    mock_set_tracer_provider = mocker.Mock()
+    mock_noop_tracer_provider = mocker.Mock()
     mock_trace = mocker.patch(
         "solarwinds_apm.configurator.trace",
     )
     mock_trace.configure_mock(
         **{
-            "get_tracer_provider": mock_get_tracer_provider
+            "get_tracer_provider": mock_get_tracer_provider,
+            "set_tracer_provider": mock_set_tracer_provider,
+            "NoOpTracerProvider": mock_noop_tracer_provider,
         }
     )
-    return mock_trace, mock_get_tracer_provider, mock_add_span_processor, mock_tracer
+    return (
+        mock_trace,
+        mock_get_tracer_provider,
+        mock_set_tracer_provider,
+        mock_noop_tracer_provider,
+        mock_add_span_processor,
+        mock_tracer
+    )
+
+
+@pytest.fixture(name="mock_tracerprovider")
+def mock_tracerprovider(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.TracerProvider"
+    )

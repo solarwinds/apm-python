@@ -36,7 +36,7 @@ class TestConfiguratorTracesExporter:
         mock_bsprocessor,
     ):
         # Mock Otel
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
@@ -64,7 +64,7 @@ class TestConfiguratorTracesExporter:
             del os.environ["OTEL_TRACES_EXPORTER"]
 
         # Mock Otel
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
@@ -110,7 +110,7 @@ class TestConfiguratorTracesExporter:
         )
 
         # Mock Otel
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -168,7 +168,7 @@ class TestConfiguratorTracesExporter:
         )
 
         # Mock Otel
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -241,7 +241,7 @@ class TestConfiguratorTracesExporter:
         )
         
         # Mock Otel
-        _, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        _, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -321,7 +321,7 @@ class TestConfiguratorTracesExporter:
         )
         
         # Mock Otel
-        _, mock_get_tracer_provider, mock_add_span_processor, _ = get_trace_mocks(mocker)
+        _, mock_get_tracer_provider, _, _, mock_add_span_processor, _ = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()

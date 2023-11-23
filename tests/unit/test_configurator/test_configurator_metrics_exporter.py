@@ -12,7 +12,7 @@ from solarwinds_apm import configurator
 # otel fixtures
 from .fixtures.metrics import get_metrics_mocks
 from .fixtures.periodic_exporting_metric_reader import mock_pemreader
-from .fixtures.resource import mock_resource
+from .fixtures.resource import get_resource_mocks
 from .fixtures.trace import get_trace_mocks
 
 # apm python fixtures
@@ -33,7 +33,7 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
 
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -56,7 +56,7 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
 
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -83,7 +83,7 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
 
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -106,7 +106,6 @@ class TestConfiguratorMetricsExporter:
         mocker,
         mock_apmconfig_enabled_expt,
         mock_pemreader,
-        mock_resource,
     ):
         # Save any EXPORTER env var for later
         old_metrics_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
@@ -128,9 +127,11 @@ class TestConfiguratorMetricsExporter:
         )
 
         # Mock Otel
+        _, _ = get_resource_mocks(mocker)
+
         mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
 
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -153,7 +154,6 @@ class TestConfiguratorMetricsExporter:
         mocker,
         mock_apmconfig_enabled_expt,
         mock_pemreader,
-        mock_resource,
     ):
         # Save any EXPORTER env var for later
         old_metrics_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
@@ -183,9 +183,11 @@ class TestConfiguratorMetricsExporter:
         )
 
         # Mock Otel
+        _, _ = get_resource_mocks(mocker)
+
         mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
 
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -207,7 +209,6 @@ class TestConfiguratorMetricsExporter:
         mocker,
         mock_apmconfig_enabled_expt,
         mock_pemreader,
-        mock_resource,
     ):
         # Save any EXPORTER env var for later
         old_metrics_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
@@ -247,9 +248,11 @@ class TestConfiguratorMetricsExporter:
         )
 
         # Mock Otel
+        _, _ = get_resource_mocks(mocker)
+
         mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
 
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -279,7 +282,6 @@ class TestConfiguratorMetricsExporter:
         mocker,
         mock_apmconfig_enabled_expt,
         mock_pemreader,
-        mock_resource,
     ):
         # Save any EXPORTER env var for later
         old_metrics_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
@@ -325,9 +327,11 @@ class TestConfiguratorMetricsExporter:
         )
 
         # Mock Otel
+        _, _ = get_resource_mocks(mocker)
+
         mock_metrics, mock_set_meter_provider, mock_meter_provider = get_metrics_mocks(mocker)
 
-        mock_trace, mock_get_tracer_provider, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
+        mock_trace, mock_get_tracer_provider, _, _, mock_add_span_processor, mock_tracer = get_trace_mocks(mocker)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
