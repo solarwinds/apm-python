@@ -21,6 +21,7 @@ class TestConfiguratorMetricsExporter:
         mocker,
         mock_apmconfig_disabled,
         mock_pemreader,
+        mock_meterprovider,
     ):
         # Mock Otel
         metrics_mocks = get_metrics_mocks(mocker)
@@ -32,10 +33,10 @@ class TestConfiguratorMetricsExporter:
             mock_apmconfig_disabled,
         )
         mock_pemreader.assert_not_called()
-        trace_mocks["get_tracer_provider"].assert_not_called()
-        trace_mocks["get_tracer"].assert_not_called()
-        metrics_mocks["set_meter_provider"].assert_not_called()
-        metrics_mocks["MeterProvider"].assert_not_called()
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
+        metrics_mocks.set_meter_provider.assert_not_called()
+        mock_meterprovider.assert_not_called()
 
 
     def test_configure_metrics_exporter_flag_not_set(
@@ -43,6 +44,7 @@ class TestConfiguratorMetricsExporter:
         mocker,
         mock_apmconfig_enabled,
         mock_pemreader,
+        mock_meterprovider,
     ):
         # Mock Otel
         metrics_mocks = get_metrics_mocks(mocker)
@@ -54,16 +56,17 @@ class TestConfiguratorMetricsExporter:
             mock_apmconfig_enabled,
         )
         mock_pemreader.assert_not_called()
-        trace_mocks["get_tracer_provider"].assert_not_called()
-        trace_mocks["get_tracer"].assert_not_called()
-        metrics_mocks["set_meter_provider"].assert_not_called()
-        metrics_mocks["MeterProvider"].assert_not_called()
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
+        metrics_mocks.set_meter_provider.assert_not_called()
+        mock_meterprovider.assert_not_called()
 
     def test_configure_metrics_exporter_none(
         self,
         mocker,
         mock_apmconfig_enabled_expt,
         mock_pemreader,
+        mock_meterprovider,
     ):
         # Save any EXPORTER env var for later
         old_metrics_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
@@ -80,11 +83,11 @@ class TestConfiguratorMetricsExporter:
             mock_apmconfig_enabled_expt,
         )
         mock_pemreader.assert_not_called()
-        trace_mocks["get_tracer_provider"].assert_not_called()
-        trace_mocks["get_tracer"].assert_not_called()
-        metrics_mocks["metrics"].assert_not_called()
-        metrics_mocks["set_meter_provider"].assert_not_called()
-        metrics_mocks["MeterProvider"].assert_not_called()
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
+        metrics_mocks.metrics.assert_not_called()
+        metrics_mocks.set_meter_provider.assert_not_called()
+        mock_meterprovider.assert_not_called()
 
         # Restore old EXPORTER
         if old_metrics_exporter:
@@ -95,6 +98,7 @@ class TestConfiguratorMetricsExporter:
         mocker,
         mock_apmconfig_enabled_expt,
         mock_pemreader,
+        mock_meterprovider,
     ):
         # Save any EXPORTER env var for later
         old_metrics_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
@@ -127,10 +131,10 @@ class TestConfiguratorMetricsExporter:
                 mock_apmconfig_enabled_expt,
             )
         mock_pemreader.assert_not_called()
-        trace_mocks["get_tracer_provider"].assert_not_called()
-        trace_mocks["get_tracer"].assert_not_called()
-        metrics_mocks["set_meter_provider"].assert_not_called()
-        metrics_mocks["MeterProvider"].assert_not_called()
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
+        metrics_mocks.set_meter_provider.assert_not_called()
+        mock_meterprovider.assert_not_called()
 
         # Restore old EXPORTER
         if old_metrics_exporter:
@@ -141,6 +145,7 @@ class TestConfiguratorMetricsExporter:
         mocker,
         mock_apmconfig_enabled_expt,
         mock_pemreader,
+        mock_meterprovider,
     ):
         # Save any EXPORTER env var for later
         old_metrics_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
@@ -180,10 +185,10 @@ class TestConfiguratorMetricsExporter:
             mock_apmconfig_enabled_expt,
         )
         mock_pemreader.assert_called_once()
-        trace_mocks["get_tracer_provider"].assert_called_once()
-        trace_mocks["get_tracer"].assert_called_once()
-        metrics_mocks["set_meter_provider"].assert_called_once()
-        metrics_mocks["MeterProvider"].assert_called_once()
+        trace_mocks.get_tracer_provider.assert_called_once()
+        trace_mocks.get_tracer_provider().get_tracer.assert_called_once()
+        metrics_mocks.set_meter_provider.assert_called_once()
+        mock_meterprovider.assert_called_once()
 
         # Restore old EXPORTER
         if old_metrics_exporter:
@@ -194,6 +199,7 @@ class TestConfiguratorMetricsExporter:
         mocker,
         mock_apmconfig_enabled_expt,
         mock_pemreader,
+        mock_meterprovider,
     ):
         # Save any EXPORTER env var for later
         old_metrics_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
@@ -251,10 +257,10 @@ class TestConfiguratorMetricsExporter:
         )
         # Not called at all
         mock_pemreader.assert_not_called()
-        trace_mocks["get_tracer_provider"].assert_not_called()
-        trace_mocks["get_tracer"].assert_not_called()
-        metrics_mocks["set_meter_provider"].assert_not_called()
-        metrics_mocks["MeterProvider"].assert_not_called()
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
+        metrics_mocks.set_meter_provider.assert_not_called()
+        mock_meterprovider.assert_not_called()
 
         # Restore old EXPORTER
         if old_metrics_exporter:
@@ -265,6 +271,7 @@ class TestConfiguratorMetricsExporter:
         mocker,
         mock_apmconfig_enabled_expt,
         mock_pemreader,
+        mock_meterprovider,
     ):
         # Save any EXPORTER env var for later
         old_metrics_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
@@ -329,10 +336,10 @@ class TestConfiguratorMetricsExporter:
         # Called for the valid one
         mock_pemreader.assert_called_once()
         # Rest not called at all
-        trace_mocks["get_tracer_provider"].assert_not_called()
-        trace_mocks["get_tracer"].assert_not_called()
-        metrics_mocks["set_meter_provider"].assert_not_called()
-        metrics_mocks["MeterProvider"].assert_not_called()
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
+        metrics_mocks.set_meter_provider.assert_not_called()
+        mock_meterprovider.assert_not_called()
 
         # Restore old EXPORTER
         if old_metrics_exporter:

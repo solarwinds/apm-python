@@ -5,14 +5,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 def get_metrics_mocks(mocker):
-    mock_meter_provider = mocker.patch(
-        "solarwinds_apm.configurator.MeterProvider",
-    )
-
-    mock_set_meter_provider = mocker.Mock(
-        return_value=mock_meter_provider
-    )
-
+    mock_set_meter_provider = mocker.Mock()
     mock_metrics = mocker.patch(
         "solarwinds_apm.configurator.metrics",
     )
@@ -21,8 +14,4 @@ def get_metrics_mocks(mocker):
             "set_meter_provider": mock_set_meter_provider
         }
     )
-    return {
-        "metrics": mock_metrics,
-        "set_meter_provider": mock_set_meter_provider,
-        "MeterProvider": mock_meter_provider,
-    }
+    return mock_metrics

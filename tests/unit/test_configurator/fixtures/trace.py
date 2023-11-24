@@ -44,11 +44,4 @@ def get_trace_mocks(mocker):
             "NoOpTracerProvider": mock_noop_tracer_provider,
         }
     )
-    return {
-        "trace": mock_trace,
-        "get_tracer_provider": mock_get_tracer_provider,
-        "set_tracer_provider": mock_set_tracer_provider,
-        "NoOpTracerProvider": mock_noop_tracer_provider,
-        "add_span_processor": mock_add_span_processor,
-        "get_tracer": mock_tracer,
-    }
+    return mock_trace

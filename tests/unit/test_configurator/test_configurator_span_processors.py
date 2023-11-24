@@ -27,8 +27,8 @@ class TestConfiguratorSpanProcessors:
             mock_txn_name_manager,
             mock_apmconfig_enabled,
         )       
-        trace_mocks["get_tracer_provider"].assert_called_once()
-        trace_mocks["add_span_processor"].assert_called_once()
+        trace_mocks.get_tracer_provider.assert_called_once()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
         mock_processor.assert_called_once_with(
             mock_txn_name_manager,
             mock_apmconfig_enabled,
@@ -52,8 +52,8 @@ class TestConfiguratorSpanProcessors:
             mock_apmconfig_enabled,
             mock_meter_manager,
         )       
-        trace_mocks["get_tracer_provider"].assert_not_called()
-        trace_mocks["add_span_processor"].assert_not_called()
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
         mock_processor.assert_not_called()
 
     def test_configure_otlp_metrics_span_processor(
@@ -74,8 +74,8 @@ class TestConfiguratorSpanProcessors:
             mock_apmconfig_enabled_expt,
             mock_meter_manager,
         )
-        trace_mocks["get_tracer_provider"].assert_called_once()
-        trace_mocks["add_span_processor"].assert_called_once()
+        trace_mocks.get_tracer_provider.assert_called_once()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
         mock_processor.assert_called_once_with(
             mock_txn_name_manager,
             mock_apmconfig_enabled_expt,
