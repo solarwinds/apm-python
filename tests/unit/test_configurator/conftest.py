@@ -82,7 +82,7 @@ def get_apmconfig_mocks(
     mock_ext_config = mocker.Mock()
     mock_ext_config.configure_mock(
         **{
-            "getVersionString": mocker.Mock()
+            "getVersionString": mocker.Mock(return_value="1.1.1")
         }
     )
 
@@ -93,20 +93,22 @@ def get_apmconfig_mocks(
         }
     )
 
-    mock_create_event = mocker.Mock()
-    mock_create_event.configure_mock(
+    mock_event = mocker.Mock()
+    mock_event.configure_mock(
         **{
             "addInfo": mocker.Mock()
         }
     )
+    mock_create_event = mocker.Mock(return_value=mock_event)
 
     mock_make_random = mocker.Mock()
-    mock_make_random(
+    mock_make_random.configure_mock(
         **{
             "isValid": mocker.Mock(return_value=md_is_valid),
             "createEvent": mock_create_event
         }
     )
+
     mock_ext_metadata = mocker.Mock()
     mock_ext_metadata.configure_mock(
         **{
