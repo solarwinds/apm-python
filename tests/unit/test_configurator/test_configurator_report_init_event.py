@@ -12,13 +12,13 @@ class TestConfiguratorReportInitEvent:
     def test_configurator_report_init_is_lambda(
         self,
         mocker,
+        mock_sys,
         mock_extension,
+        mock_apm_version,
+        mock_fw_versions,
         mock_apmconfig_enabled_is_lambda,
     ):
         trace_mocks = get_trace_mocks(mocker)
-        mock_fw_versions = mocker.patch(
-            "solarwinds_apm.configurator.SolarWindsConfigurator._add_all_instrumented_python_framework_versions"
-        )
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._report_init_event(
@@ -39,7 +39,10 @@ class TestConfiguratorReportInitEvent:
     def test_configurator_report_init_bad_init_status_disabled(
         self,
         mocker,
+        mock_sys,
         mock_extension,
+        mock_apm_version,
+        mock_fw_versions,
         mock_apmconfig_disabled,
     ):
         # TODO
@@ -48,7 +51,10 @@ class TestConfiguratorReportInitEvent:
     def test_configurator_report_init_good_init_status_disabled(
         self,
         mocker,
+        mock_sys,
         mock_extension,
+        mock_apm_version,
+        mock_fw_versions,
         mock_apmconfig_disabled,
     ):
         # TODO
@@ -57,7 +63,10 @@ class TestConfiguratorReportInitEvent:
     def test_configurator_report_init_error_python_version(
         self,
         mocker,
+        mock_sys,
         mock_extension,
+        mock_apm_version,
+        mock_fw_versions,
         mock_apmconfig_enabled,
     ):
         # TODO
@@ -66,7 +75,10 @@ class TestConfiguratorReportInitEvent:
     def test_configurator_report_init_invalid_md_from_extension(
         self,
         mocker,
+        mock_sys,
         mock_extension,
+        mock_apm_version,
+        mock_fw_versions,
         mock_apmconfig_enabled,
     ):
         # TODO
@@ -75,42 +87,13 @@ class TestConfiguratorReportInitEvent:
     def test_configurator_report_init(
         self,
         mocker,
+        mock_sys,
         mock_extension,
+        mock_apm_version,
+        mock_fw_versions,
         mock_apmconfig_enabled,
     ):
         trace_mocks = get_trace_mocks(mocker)
-
-        # TODO mv APM fixtures to conftest
-        def add_fw_versions(input_dict):
-            input_dict.update({"foo-fw": "bar-version"})
-            return input_dict
-
-        mock_fw_versions = mocker.patch(
-            "solarwinds_apm.configurator.SolarWindsConfigurator._add_all_instrumented_python_framework_versions",
-            side_effect=add_fw_versions
-        )
-
-        mock_apm_version= mocker.patch(
-            "solarwinds_apm.configurator.__version__",
-            new="0.0.0",
-        )
-
-        # TODO mv sys fixtures to conftest
-        mock_version_info = mocker.PropertyMock()
-        mock_version_info.return_value = [3, 11, 12]
-        mock_version = mocker.PropertyMock()
-        mock_version.return_value = "foo-runtime"
-        mock_exec = mocker.PropertyMock()
-        mock_exec.return_value = "/foo/path"
-
-        mock_sys = mocker.patch(
-            "solarwinds_apm.configurator.sys"
-        )
-        type(mock_sys).version_info = mock_version_info
-        type(mock_sys).version = mock_version
-        type(mock_sys).executable = mock_exec
-        type(mock_sys).implementation = mocker.PropertyMock()
-        type(mock_sys).implementation.name = "foo-name"
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()

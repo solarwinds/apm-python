@@ -7,6 +7,30 @@
 import pytest
 
 # ==================================================================
+# Configurator stdlib fixtures
+# ==================================================================
+
+@pytest.fixture(name="mock_sys")
+def mock_sys(mocker):
+    mock_version_info = mocker.PropertyMock()
+    mock_version_info.return_value = [3, 11, 12]
+    mock_version = mocker.PropertyMock()
+    mock_version.return_value = "foo-runtime"
+    mock_exec = mocker.PropertyMock()
+    mock_exec.return_value = "/foo/path"
+
+    mock_sys = mocker.patch(
+        "solarwinds_apm.configurator.sys"
+    )
+    type(mock_sys).version_info = mock_version_info
+    type(mock_sys).version = mock_version
+    type(mock_sys).executable = mock_exec
+    type(mock_sys).implementation = mocker.PropertyMock()
+    type(mock_sys).implementation.name = "foo-name"
+
+    return mock_sys
+
+# ==================================================================
 # Configurator Otel fixtures
 # ==================================================================
 
@@ -210,6 +234,24 @@ def mock_apmconfig_enabled_reporter_settings(mocker):
 # ==================================================================
 # Configurator APM Python other mocks
 # ==================================================================
+
+def add_fw_versions(input_dict):
+    input_dict.update({"foo-fw": "bar-version"})
+    return input_dict
+
+@pytest.fixture(name="mock_fw_versions")
+def mock_fw_versions(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._add_all_instrumented_python_framework_versions",
+        side_effect=add_fw_versions
+    )
+
+@pytest.fixture(name="mock_apm_version")
+def mock_apm_version(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.__version__",
+        new="0.0.0",
+    )
 
 def get_extension_mocks(
     mocker,
