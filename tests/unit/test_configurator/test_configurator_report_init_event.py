@@ -149,29 +149,74 @@ class TestConfiguratorReportInitEvent:
         mock_apmconfig_disabled.extension.Metadata.makeRandom().createEvent().addInfo.assert_not_called()
         mock_extension_status_code_already_init.sendStatus.assert_not_called()
 
-    def test_configurator_report_init_error_python_version(
+    def test_configurator_report_init_invalid_md(
         self,
         mocker,
         mock_sys,
         mock_apm_version,
         mock_fw_versions,
         mock_extension,
-        mock_apmconfig_enabled,
+        mock_apmconfig_enabled_md_invalid,
     ):
-        # TODO
-        pass
+        trace_mocks = get_trace_mocks(mocker)
 
-    def test_configurator_report_init_invalid_md_from_extension(
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._report_init_event(
+            mock_extension.Reporter,
+            mock_apmconfig_enabled_md_invalid,
+        )
+
+        # Otel and APM methods called
+        trace_mocks.get_tracer_provider().get_tracer().resource.attributes.items.assert_called_once()
+        mock_fw_versions.assert_called_once()
+
+        # Some extension methods called
+        mock_apmconfig_enabled_md_invalid.extension.Config.getVersionString.assert_called_once()
+        # But message not sent
+        mock_extension.sendStatus.assert_not_called()
+
+    def test_configurator_report_init_bad_sys_py_version_still_reports_without_runtime_version(
         self,
         mocker,
-        mock_sys,
+        mock_sys_error_version_info,
         mock_apm_version,
         mock_fw_versions,
         mock_extension,
         mock_apmconfig_enabled,
     ):
-        # TODO
-        pass
+        trace_mocks = get_trace_mocks(mocker)
+
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._report_init_event(
+            mock_extension.Reporter,
+            mock_apmconfig_enabled,
+        )
+
+        # Otel and APM methods called
+        trace_mocks.get_tracer_provider().get_tracer().resource.attributes.items.assert_called_once()
+        mock_fw_versions.assert_called_once()
+
+        # Extension methods called
+        mock_apmconfig_enabled.extension.Config.getVersionString.assert_called_once()
+        mock_apmconfig_enabled.extension.Metadata.makeRandom.assert_has_calls(
+            [
+                mocker.call(True,),  # makeRandom(True)
+            ]
+        )
+        mock_apmconfig_enabled.extension.Context.set.assert_called_once()
+        mock_apmconfig_enabled.extension.Metadata.makeRandom().createEvent().addInfo.assert_has_calls(
+            [
+                mocker.call("Layer", "Python"),
+                mocker.call("__Init", True),
+                mocker.call("process.runtime.name", "foo-name"),
+                mocker.call("process.runtime.description", "foo-runtime"),
+                mocker.call("process.executable.path", "/foo/path"),
+                mocker.call("APM.Version", "0.0.0"),
+                mocker.call("APM.Extension.Version", "1.1.1"),
+                mocker.call("foo-fw", "bar-version")
+            ]
+        )
+        mock_extension.Reporter.sendStatus.assert_called_once()
 
     def test_configurator_report_init(
         self,

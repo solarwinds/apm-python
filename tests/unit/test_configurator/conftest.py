@@ -30,6 +30,26 @@ def mock_sys(mocker):
 
     return mock_sys
 
+@pytest.fixture(name="mock_sys_error_version_info")
+def mock_sys_error_version_info(mocker):
+    mock_version_info = mocker.PropertyMock()
+    mock_version_info.return_value = []
+    mock_version = mocker.PropertyMock()
+    mock_version.return_value = "foo-runtime"
+    mock_exec = mocker.PropertyMock()
+    mock_exec.return_value = "/foo/path"
+
+    mock_sys = mocker.patch(
+        "solarwinds_apm.configurator.sys"
+    )
+    type(mock_sys).version_info = mock_version_info
+    type(mock_sys).version = mock_version
+    type(mock_sys).executable = mock_exec
+    type(mock_sys).implementation = mocker.PropertyMock()
+    type(mock_sys).implementation.name = "foo-name"
+
+    return mock_sys
+
 # ==================================================================
 # Configurator Otel fixtures
 # ==================================================================
