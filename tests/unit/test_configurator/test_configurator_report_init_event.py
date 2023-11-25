@@ -13,9 +13,9 @@ class TestConfiguratorReportInitEvent:
         self,
         mocker,
         mock_sys,
-        mock_extension,
         mock_apm_version,
         mock_fw_versions,
+        mock_extension,
         mock_apmconfig_enabled_is_lambda,
     ):
         trace_mocks = get_trace_mocks(mocker)
@@ -34,39 +34,128 @@ class TestConfiguratorReportInitEvent:
         mock_apmconfig_enabled_is_lambda.extension.Config.getVersionString.assert_not_called()
         assert mocker.call(True,) not in mock_apmconfig_enabled_is_lambda.extension.Metadata.makeRandom.mock_calls
         mock_apmconfig_enabled_is_lambda.extension.Context.set.assert_not_called()
+        mock_apmconfig_enabled_is_lambda.extension.Metadata.makeRandom().createEvent().addInfo.assert_not_called()
         mock_extension.Reporter.sendStatus.assert_not_called()
 
     def test_configurator_report_init_bad_init_status_disabled(
         self,
         mocker,
         mock_sys,
-        mock_extension,
         mock_apm_version,
         mock_fw_versions,
+        mock_extension_status_code_invalid_protocol,
         mock_apmconfig_disabled,
     ):
-        # TODO
-        pass
+        trace_mocks = get_trace_mocks(mocker)
 
-    def test_configurator_report_init_good_init_status_disabled(
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._report_init_event(
+            mock_extension_status_code_invalid_protocol.Reporter,
+            mock_apmconfig_disabled,
+        )
+
+        # Otel and APM methods not called
+        trace_mocks.get_tracer_provider().get_tracer().resource.attributes.items.assert_not_called()
+        mock_fw_versions.assert_not_called()
+
+        # Extension methods not called
+        mock_apmconfig_disabled.extension.Config.getVersionString.assert_not_called()
+        assert mocker.call(True,) not in mock_apmconfig_disabled.extension.Metadata.makeRandom.mock_calls
+        mock_apmconfig_disabled.extension.Context.set.assert_not_called()
+        mock_apmconfig_disabled.extension.Metadata.makeRandom().createEvent().addInfo.assert_not_called()
+        mock_extension_status_code_invalid_protocol.Reporter.sendStatus.assert_not_called()
+
+    def test_configurator_report_init_bad_init_status_enabled(
         self,
         mocker,
         mock_sys,
-        mock_extension,
         mock_apm_version,
         mock_fw_versions,
+        mock_extension_status_code_invalid_protocol,
+        mock_apmconfig_enabled,
+    ):
+        trace_mocks = get_trace_mocks(mocker)
+
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._report_init_event(
+            mock_extension_status_code_invalid_protocol.Reporter,
+            mock_apmconfig_enabled,
+        )
+
+        # Otel and APM methods not called
+        trace_mocks.get_tracer_provider().get_tracer().resource.attributes.items.assert_not_called()
+        mock_fw_versions.assert_not_called()
+
+        # Extension methods not called
+        mock_apmconfig_enabled.extension.Config.getVersionString.assert_not_called()
+        assert mocker.call(True,) not in mock_apmconfig_enabled.extension.Metadata.makeRandom.mock_calls
+        mock_apmconfig_enabled.extension.Context.set.assert_not_called()
+        mock_apmconfig_enabled.extension.Metadata.makeRandom().createEvent().addInfo.assert_not_called()
+        mock_extension_status_code_invalid_protocol.Reporter.sendStatus.assert_not_called()
+
+    def test_configurator_report_init_ok_init_status_disabled(
+        self,
+        mocker,
+        mock_sys,
+        mock_apm_version,
+        mock_fw_versions,
+        mock_extension,
         mock_apmconfig_disabled,
     ):
-        # TODO
-        pass
+        trace_mocks = get_trace_mocks(mocker)
+
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._report_init_event(
+            mock_extension.Reporter,
+            mock_apmconfig_disabled,
+        )
+
+        # Otel and APM methods not called
+        trace_mocks.get_tracer_provider().get_tracer().resource.attributes.items.assert_not_called()
+        mock_fw_versions.assert_not_called()
+
+        # Extension methods not called
+        mock_apmconfig_disabled.extension.Config.getVersionString.assert_not_called()
+        assert mocker.call(True,) not in mock_apmconfig_disabled.extension.Metadata.makeRandom.mock_calls
+        mock_apmconfig_disabled.extension.Context.set.assert_not_called()
+        mock_apmconfig_disabled.extension.Metadata.makeRandom().createEvent().addInfo.assert_not_called()
+        mock_extension.sendStatus.assert_not_called()
+
+    def test_configurator_report_init_already_init_status_disabled(
+        self,
+        mocker,
+        mock_sys,
+        mock_apm_version,
+        mock_fw_versions,
+        mock_extension_status_code_already_init,
+        mock_apmconfig_disabled,
+    ):
+        trace_mocks = get_trace_mocks(mocker)
+
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._report_init_event(
+            mock_extension_status_code_already_init.Reporter,
+            mock_apmconfig_disabled,
+        )
+
+        # Otel and APM methods not called
+        trace_mocks.get_tracer_provider().get_tracer().resource.attributes.items.assert_not_called()
+        mock_fw_versions.assert_not_called()
+
+        # Extension methods not called
+        mock_apmconfig_disabled.extension.Config.getVersionString.assert_not_called()
+        assert mocker.call(True,) not in mock_apmconfig_disabled.extension.Metadata.makeRandom.mock_calls
+        mock_apmconfig_disabled.extension.Context.set.assert_not_called()
+        mock_apmconfig_disabled.extension.Metadata.makeRandom().createEvent().addInfo.assert_not_called()
+        mock_extension_status_code_already_init.sendStatus.assert_not_called()
 
     def test_configurator_report_init_error_python_version(
         self,
         mocker,
         mock_sys,
-        mock_extension,
         mock_apm_version,
         mock_fw_versions,
+        mock_extension,
         mock_apmconfig_enabled,
     ):
         # TODO
@@ -76,9 +165,9 @@ class TestConfiguratorReportInitEvent:
         self,
         mocker,
         mock_sys,
-        mock_extension,
         mock_apm_version,
         mock_fw_versions,
+        mock_extension,
         mock_apmconfig_enabled,
     ):
         # TODO
@@ -88,9 +177,9 @@ class TestConfiguratorReportInitEvent:
         self,
         mocker,
         mock_sys,
-        mock_extension,
         mock_apm_version,
         mock_fw_versions,
+        mock_extension,
         mock_apmconfig_enabled,
     ):
         trace_mocks = get_trace_mocks(mocker)
