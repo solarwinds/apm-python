@@ -232,26 +232,8 @@ def mock_apmconfig_enabled_reporter_settings(mocker):
     return mock_apmconfig
 
 # ==================================================================
-# Configurator APM Python other mocks
+# Configurator APM Python extension mocks
 # ==================================================================
-
-def add_fw_versions(input_dict):
-    input_dict.update({"foo-fw": "bar-version"})
-    return input_dict
-
-@pytest.fixture(name="mock_fw_versions")
-def mock_fw_versions(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._add_all_instrumented_python_framework_versions",
-        side_effect=add_fw_versions
-    )
-
-@pytest.fixture(name="mock_apm_version")
-def mock_apm_version(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.__version__",
-        new="0.0.0",
-    )
 
 def get_extension_mocks(
     mocker,
@@ -284,6 +266,28 @@ def mock_extension_status_code_already_init(mocker):
 @pytest.fixture(name="mock_extension_status_code_invalid_protocol")
 def mock_extension_status_code_invalid_protocol(mocker):
     return get_extension_mocks(mocker, 2)
+
+# ==================================================================
+# Configurator APM Python other mocks
+# ==================================================================
+
+def add_fw_versions(input_dict):
+    input_dict.update({"foo-fw": "bar-version"})
+    return input_dict
+
+@pytest.fixture(name="mock_fw_versions")
+def mock_fw_versions(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._add_all_instrumented_python_framework_versions",
+        side_effect=add_fw_versions
+    )
+
+@pytest.fixture(name="mock_apm_version")
+def mock_apm_version(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.__version__",
+        new="0.0.0",
+    )
 
 @pytest.fixture(name="mock_fwkv_manager")
 def mock_fwkv_manager(mocker):

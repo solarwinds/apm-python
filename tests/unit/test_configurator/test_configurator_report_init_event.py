@@ -26,15 +26,15 @@ class TestConfiguratorReportInitEvent:
             mock_apmconfig_enabled_is_lambda,
         )
 
-        # Extension methods not called
-        mock_extension.Reporter.sendStatus.assert_not_called()
-        mock_apmconfig_enabled_is_lambda.extension.Config.getVersionString.assert_not_called()
-        mock_apmconfig_enabled_is_lambda.extension.Context.set.assert_not_called()
-        assert mocker.call(True,) not in mock_apmconfig_enabled_is_lambda.extension.Metadata.makeRandom.mock_calls     
-
         # Otel and APM methods not called
         trace_mocks.get_tracer_provider().get_tracer().resource.attributes.items.assert_not_called()
         mock_fw_versions.assert_not_called()
+
+        # Extension methods not called
+        mock_apmconfig_enabled_is_lambda.extension.Config.getVersionString.assert_not_called()
+        assert mocker.call(True,) not in mock_apmconfig_enabled_is_lambda.extension.Metadata.makeRandom.mock_calls
+        mock_apmconfig_enabled_is_lambda.extension.Context.set.assert_not_called()
+        mock_extension.Reporter.sendStatus.assert_not_called()
 
     def test_configurator_report_init_bad_init_status_disabled(
         self,
@@ -102,15 +102,18 @@ class TestConfiguratorReportInitEvent:
             mock_apmconfig_enabled,
         )
 
+        # Otel and APM methods called
+        trace_mocks.get_tracer_provider().get_tracer().resource.attributes.items.assert_called_once()
+        mock_fw_versions.assert_called_once()
+
         # Extension methods called
-        mock_extension.Reporter.sendStatus.assert_called_once()
         mock_apmconfig_enabled.extension.Config.getVersionString.assert_called_once()
-        mock_apmconfig_enabled.extension.Context.set.assert_called_once()
         mock_apmconfig_enabled.extension.Metadata.makeRandom.assert_has_calls(
             [
                 mocker.call(True,),  # makeRandom(True)
             ]
         )
+        mock_apmconfig_enabled.extension.Context.set.assert_called_once()
         mock_apmconfig_enabled.extension.Metadata.makeRandom().createEvent().addInfo.assert_has_calls(
             [
                 mocker.call("Layer", "Python"),
@@ -124,7 +127,4 @@ class TestConfiguratorReportInitEvent:
                 mocker.call("foo-fw", "bar-version")
             ]
         )
-        
-        # Otel and APM methods called
-        trace_mocks.get_tracer_provider().get_tracer().resource.attributes.items.assert_called_once()
-        mock_fw_versions.assert_called_once()
+        mock_extension.Reporter.sendStatus.assert_called_once()
