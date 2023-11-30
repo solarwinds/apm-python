@@ -8,6 +8,7 @@ from solarwinds_apm import configurator
 
 class TestConfiguratorConfigureOtelComponents:
     def test_configure_otel_components_agent_enabled(
+        self,
         mocker,
         mock_txn_name_manager,
         mock_fwkv_manager,
@@ -51,6 +52,7 @@ class TestConfiguratorConfigureOtelComponents:
         mock_config_response_propagator.assert_called_once()
 
     def test_configure_otel_components_agent_disabled(
+        self,
         mocker,
         mock_txn_name_manager,
         mock_fwkv_manager,

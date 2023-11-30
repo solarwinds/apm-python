@@ -8,6 +8,7 @@ from solarwinds_apm import configurator
 
 class TestConfiguratorConfigure:
     def test_configurator_configure(
+        self,
         mocker,
         mock_txn_name_manager_init,
         mock_fwkv_manager_init,
@@ -33,6 +34,7 @@ class TestConfiguratorConfigure:
         mock_report_init.assert_called_once()
 
     def test_configurator_configure_experimental(
+        self,
         mocker,
         mock_txn_name_manager_init,
         mock_fwkv_manager_init,
