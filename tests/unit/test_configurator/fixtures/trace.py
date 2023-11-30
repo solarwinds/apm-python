@@ -8,25 +8,20 @@ import pytest
 
 def get_trace_mocks(mocker):
     mock_add_span_processor = mocker.Mock()
-    mock_resource = mocker.Mock()
-    mock_resource.configure_mock(
-        **{
-            "attributes": {"foo": "bar"}
-        }
-    )
-
+  
+    mock_attributes = mocker.PropertyMock()
+    mock_attributes.return_value = {"foo": "bar"}
+    mock_resource = mocker.PropertyMock()
+    type(mock_resource).attributes = mock_attributes
     mock_tracer = mocker.Mock()
-    mock_tracer.configure_mock(
-        **{
-            "resource": mock_resource
-        }
-    )
+    type(mock_tracer).resource = mock_resource
+    mock_get_tracer = mocker.Mock(return_value=mock_tracer)
 
     mock_tracer_provider = mocker.Mock()
     mock_tracer_provider.configure_mock(
         **{
             "add_span_processor": mock_add_span_processor,
-            "get_tracer": mock_tracer,
+            "get_tracer": mock_get_tracer,
         }
     )
     mock_get_tracer_provider = mocker.Mock(
