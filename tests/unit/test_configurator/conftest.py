@@ -251,6 +251,20 @@ def mock_apmconfig_enabled_reporter_settings(mocker):
     )
     return mock_apmconfig
 
+
+@pytest.fixture(name="mock_apmconfig_experimental_otelcol_init")
+def mock_apmconfig_experimental_otelcol_init(mocker):
+    mock_apmconfig = mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsApmConfig"
+    )
+    mock_apmconfig.return_value = {
+        "experimental":
+            {
+                "otel_collector": True
+            }
+    }
+    return mock_apmconfig
+
 # ==================================================================
 # Configurator APM Python extension mocks
 # ==================================================================
@@ -288,7 +302,7 @@ def mock_extension_status_code_invalid_protocol(mocker):
     return get_extension_mocks(mocker, 2)
 
 # ==================================================================
-# Configurator APM Python other mocks
+# Configurator APM Python configurator mocks
 # ==================================================================
 
 def add_fw_versions(input_dict):
@@ -301,6 +315,90 @@ def mock_fw_versions(mocker):
         "solarwinds_apm.configurator.SolarWindsConfigurator._add_all_instrumented_python_framework_versions",
         side_effect=add_fw_versions
     )
+
+@pytest.fixture(name="mock_config_inbound_processor")
+def mock_config_inbound_processor(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_inbound_metrics_span_processor"
+    )
+
+@pytest.fixture(name="mock_config_otlp_processor")
+def mock_config_otlp_processor(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_otlp_metrics_span_processor"
+    )
+
+@pytest.fixture(name="mock_config_traces_exp")
+def mock_config_traces_exp(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_traces_exporter"
+    )
+
+@pytest.fixture(name="mock_config_metrics_exp")
+def mock_config_metrics_exp(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_metrics_exporter"
+    )
+
+@pytest.fixture(name="mock_config_propagator")
+def mock_config_propagator(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_propagator"
+    )
+
+@pytest.fixture(name="mock_config_response_propagator")
+def mock_config_response_propagator(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_response_propagator"
+    )
+
+@pytest.fixture(name="mock_init_sw_reporter")
+def mock_init_sw_reporter(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._initialize_solarwinds_reporter"
+    )
+
+@pytest.fixture(name="mock_config_otel_components")
+def mock_config_otel_components(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_otel_components"
+    )
+
+@pytest.fixture(name="mock_report_init")
+def mock_report_init(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._report_init_event"
+    )
+
+
+@pytest.fixture(name="mock_txn_name_manager_init")
+def mock_txn_name_manager_init(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsTxnNameManager"
+    )
+
+@pytest.fixture(name="mock_fwkv_manager_init")
+def mock_fwkv_manager_init(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsFrameworkKvManager"
+    )
+
+@pytest.fixture(name="mock_meter_manager_init")
+def mock_meter_manager_init(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsMeterManager"
+    )
+
+@pytest.fixture(name="mock_noop_meter_manager_init")
+def mock_noop_meter_manager_init(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.NoopMeterManager"
+    )
+
+
+# ==================================================================
+# Configurator APM Python other mocks
+# ==================================================================
 
 @pytest.fixture(name="mock_apm_version")
 def mock_apm_version(mocker):
