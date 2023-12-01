@@ -270,7 +270,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
                 "version": "foo-version"
             }
         )
-        mock_get_dist = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.configurator.get_distribution",
             return_value=mock_dist,
         )
