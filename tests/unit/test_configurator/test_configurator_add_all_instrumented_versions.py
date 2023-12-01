@@ -67,7 +67,9 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         mock_sys_module = mocker.Mock()
         mock_sys_module.configure_mock(
             **{
-                "__version__": module_version
+                "__version__": module_version,
+                "sqlite_version": module_version,
+                "version": module_version,  # for tornado
             }
         )
         mock_sys = mocker.patch(
@@ -180,22 +182,49 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
     ):
-        # TODO
-        pass
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="grpc_some_module",
+            module_name="grpc",
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.Grpc.Version" in test_versions
+        assert test_versions["Python.Grpc.Version"] == "foo-version"
 
     def test_add_all_instr_versions_system_metrics(
         self,
         mocker,
     ):
-        # TODO
-        pass
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="system_metrics",
+            module_name="psutil",
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.Psutil.Version" in test_versions
+        assert test_versions["Python.Psutil.Version"] == "foo-version"
 
     def test_add_all_instr_versions_tortoiseorm(
         self,
         mocker,
     ):
-        # TODO
-        pass
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="tortoiseorm",
+            module_name="tortoise",
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.Tortoise.Version" in test_versions
+        assert test_versions["Python.Tortoise.Version"] == "foo-version"
 
     def test_add_all_instr_versions_mysql(
         self,
@@ -234,22 +263,63 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
     ):
-        # TODO
-        pass
+        # mock get_distribution
+        mock_dist = mocker.Mock()
+        mock_dist.configure_mock(
+            **{
+                "version": "foo-version"
+            }
+        )
+        mock_get_dist = mocker.patch(
+            "solarwinds_apm.configurator.get_distribution",
+            return_value=mock_dist,
+        )
+
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="pyramid",
+            module_name="pyramid",
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.Pyramid.Version" in test_versions
+        assert test_versions["Python.Pyramid.Version"] == "foo-version"
 
     def test_add_all_instr_versions_sqlite3(
         self,
         mocker,
     ):
-        # TODO
-        pass
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="sqlite3",
+            module_name="sqlite3",
+            module_version="foo-version",
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.Sqlite3.Version" in test_versions
+        assert test_versions["Python.Sqlite3.Version"] == "foo-version"
 
     def test_add_all_instr_versions_tornado(
         self,
         mocker,
     ):
-        # TODO
-        pass
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="tornado",
+            module_name="tornado",
+            module_version="foo-version",
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.Tornado.Version" in test_versions
+        assert test_versions["Python.Tornado.Version"] == "foo-version"
 
     def test_add_all_instr_versions_urllib(
         self,
