@@ -35,7 +35,10 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    SimpleSpanProcessor,
+)
 from pkg_resources import get_distribution, iter_entry_points, load_entry_point
 
 from solarwinds_apm import apm_logging
@@ -273,9 +276,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 exporter_name,
             )
 
-            # TODO or SimpleSpanProcessor is_lambda
-            # https://swicloud.atlassian.net/browse/NH-67393
-            span_processor = BatchSpanProcessor(exporter)
+            if apm_config.is_lambda:
+                span_processor = SimpleSpanProcessor(exporter)
+            else:
+                span_processor = BatchSpanProcessor(exporter)
+
             trace.get_tracer_provider().add_span_processor(span_processor)
 
     def _configure_metrics_exporter(
