@@ -9,6 +9,61 @@ import os
 from solarwinds_apm import configurator
 
 class TestConfiguratorAddAllInstrumentedFrameworkVersions:
+    def set_up_mocks(
+        self,
+        mocker,
+        entry_point_name,
+        conflicts=None,
+        conflicts_exception=False,
+        importlib_exception=False,
+    ):
+        # (1) Mock importlib
+        if importlib_exception:
+            mock_importlib_import_module = mocker.Mock(
+                side_effect=AttributeError("mock error")
+            )
+        else:
+            mock_importlib_import_module = mocker.Mock()
+        mock_importlib = mocker.patch(
+            "solarwinds_apm.configurator.importlib"
+        )
+        mock_importlib.configure_mock(
+            **{
+                "import_module": mock_importlib_import_module
+            }
+        )
+
+        # (2) Mock entry point
+        mock_instrumentor_entry_point = mocker.Mock()
+        mock_instrumentor_entry_point.configure_mock(
+            **{
+                "name": entry_point_name,
+                "dist": "foo",
+            }
+        )
+        mock_points = iter([mock_instrumentor_entry_point])
+        mock_iter_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.iter_entry_points"
+        )
+        mock_iter_entry_points.configure_mock(
+            return_value=mock_points
+        )
+
+        # (3) Mock otel dep conflicts
+        if not conflicts_exception:
+            mocker.patch(
+                "solarwinds_apm.configurator.get_dist_dependency_conflicts",
+                return_value=conflicts,
+            )
+        else:
+            mocker.patch(
+                "solarwinds_apm.configurator.get_dist_dependency_conflicts",
+                side_effect=Exception("mock conflict")
+            )
+        
+        # TODO mock sys module?
+
+
     def test_add_all_instr_versions_skip_disabled_instrumentors(
         self,
         mocker,
@@ -25,20 +80,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
             }
         )
 
-        # Mock entry point
-        mock_instrumentor_entry_point = mocker.Mock()
-        mock_instrumentor_entry_point.configure_mock(
-            **{
-                "name": "foo-bar-module",
-            }
-        )
-        mock_points = iter([mock_instrumentor_entry_point])
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
-        )
-        mock_iter_entry_points.configure_mock(
-            return_value=mock_points
-        )
+        self.set_up_mocks(mocker, "foo-bar-module")
 
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
@@ -53,25 +95,10 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
     ):
-        # Mock conflicts - not None
-        mocker.patch(
-            "solarwinds_apm.configurator.get_dist_dependency_conflicts",
-            return_value="not-none"
-        )
-
-        # Mock entry point
-        mock_instrumentor_entry_point = mocker.Mock()
-        mock_instrumentor_entry_point.configure_mock(
-            **{
-                "name": "foo-bar-module",
-            }
-        )
-        mock_points = iter([mock_instrumentor_entry_point])
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
-        )
-        mock_iter_entry_points.configure_mock(
-            return_value=mock_points
+        self.set_up_mocks(
+            mocker,
+            entry_point_name="foo-bar-module",
+            conflicts="not-none",
         )
 
         # Test!
@@ -83,25 +110,10 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
     ):
-        # Mock conflicts - exception
-        mocker.patch(
-            "solarwinds_apm.configurator.get_dist_dependency_conflicts",
-            side_effect=Exception("mock conflict")
-        )
-
-        # Mock entry point
-        mock_instrumentor_entry_point = mocker.Mock()
-        mock_instrumentor_entry_point.configure_mock(
-            **{
-                "name": "foo-bar-module",
-            }
-        )
-        mock_points = iter([mock_instrumentor_entry_point])
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
-        )
-        mock_iter_entry_points.configure_mock(
-            return_value=mock_points
+        self.set_up_mocks(
+            mocker,
+            entry_point_name="foo-bar-module",
+            conflicts_exception=True,
         )
 
         # Test!
@@ -113,39 +125,10 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
     ):
-        # Mock importlib - error
-        mock_importlib_import_module = mocker.Mock(
-            side_effect=AttributeError("mock error")
-        )
-        mock_importlib = mocker.patch(
-            "solarwinds_apm.configurator.importlib"
-        )
-        mock_importlib.configure_mock(
-            **{
-                "import_module": mock_importlib_import_module
-            }
-        )
-
-        # Mock entry point
-        mock_instrumentor_entry_point = mocker.Mock()
-        mock_instrumentor_entry_point.configure_mock(
-            **{
-                "name": "foo-bar-module",
-                "dist": "foo",
-            }
-        )
-        mock_points = iter([mock_instrumentor_entry_point])
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
-        )
-        mock_iter_entry_points.configure_mock(
-            return_value=mock_points
-        )
-
-        # Mock conflicts - none
-        mocker.patch(
-            "solarwinds_apm.configurator.get_dist_dependency_conflicts",
-            return_value=None,
+        self.set_up_mocks(
+            mocker,
+            "foo-bar-module",
+            importlib_exception=True,
         )
 
         # Test!
@@ -211,17 +194,6 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
     ):
-        # Mock importlib
-        mock_importlib_import_module = mocker.Mock()
-        mock_importlib = mocker.patch(
-            "solarwinds_apm.configurator.importlib"
-        )
-        mock_importlib.configure_mock(
-            **{
-                "import_module": mock_importlib_import_module
-            }
-        )
-
         # Mock sys module
         mock_sys_module = mocker.Mock()
         mock_sys_module.configure_mock(
@@ -240,27 +212,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
             }
         )
 
-        # Mock entry point
-        mock_instrumentor_entry_point = mocker.Mock()
-        mock_instrumentor_entry_point.configure_mock(
-            **{
-                "name": "urllib",
-                "dist": "foo",
-            }
-        )
-        mock_points = iter([mock_instrumentor_entry_point])
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
-        )
-        mock_iter_entry_points.configure_mock(
-            return_value=mock_points
-        )
-
-        # Mock conflicts - none
-        mocker.patch(
-            "solarwinds_apm.configurator.get_dist_dependency_conflicts",
-            return_value=None,
-        )
+        self.set_up_mocks(mocker, "urllib")
 
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
@@ -273,17 +225,6 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
     ):
-        # Mock importlib
-        mock_importlib_import_module = mocker.Mock()
-        mock_importlib = mocker.patch(
-            "solarwinds_apm.configurator.importlib"
-        )
-        mock_importlib.configure_mock(
-            **{
-                "import_module": mock_importlib_import_module
-            }
-        )
-
         # Mock sys module
         mock_sys_module = mocker.Mock()
         mock_sys_module.configure_mock(
@@ -302,27 +243,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
             }
         )
 
-        # Mock entry point
-        mock_instrumentor_entry_point = mocker.Mock()
-        mock_instrumentor_entry_point.configure_mock(
-            **{
-                "name": "foo-bar-module",
-                "dist": "foo",
-            }
-        )
-        mock_points = iter([mock_instrumentor_entry_point])
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
-        )
-        mock_iter_entry_points.configure_mock(
-            return_value=mock_points
-        )
-
-        # Mock conflicts - none
-        mocker.patch(
-            "solarwinds_apm.configurator.get_dist_dependency_conflicts",
-            return_value=None,
-        )
+        self.set_up_mocks(mocker, "foo-bar-module")
 
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
