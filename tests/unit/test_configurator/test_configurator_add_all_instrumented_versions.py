@@ -43,7 +43,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        assert "Python.FooBarModule.Version" not in test_versions
+        assert "Python.foo-bar-module.Version" not in test_versions
 
         # Restore old DISABLED
         if old_disabled:
@@ -77,7 +77,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        assert "Python.FooBarModule.Version" not in test_versions
+        assert "Python.foo-bar-module.Version" not in test_versions
 
     def test_add_all_instr_versions_skip_conflict_check_exception(
         self,
@@ -107,27 +107,22 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        assert "Python.FooBarModule.Version" not in test_versions
+        assert "Python.foo-bar-module.Version" not in test_versions
 
     def test_add_all_instr_versions_skip_module_lookup_exception(
         self,
         mocker,
     ):
-        # Mock sys module - some error
-        mock_sys_module = mocker.Mock()
-        mock_sys_module.configure_mock(
-            **{
-                "__version__": AttributeError("mock error")
-            }
+        # Mock importlib - error
+        mock_importlib_import_module = mocker.Mock(
+            side_effect=AttributeError("mock error")
         )
-        mock_sys = mocker.patch(
-            "solarwinds_apm.configurator.sys"
+        mock_importlib = mocker.patch(
+            "solarwinds_apm.configurator.importlib"
         )
-        mock_sys.configure_mock(
+        mock_importlib.configure_mock(
             **{
-                "modules": {
-                    "foo-bar-module": mock_sys_module
-                }
+                "import_module": mock_importlib_import_module
             }
         )
 
@@ -156,7 +151,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        assert "Python.FooBarModule.Version" not in test_versions
+        assert "Python.foo-bar-module.Version" not in test_versions
 
     def test_add_all_instr_versions_aiohttp_client(
         self,
@@ -183,12 +178,6 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         pass
 
     def test_add_all_instr_versions_mysql(
-        self,
-        mocker,
-    ):
-        pass
-
-    def test_add_all_instr_versions_urllib(
         self,
         mocker,
     ):
@@ -222,6 +211,17 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
     ):
+        # Mock importlib
+        mock_importlib_import_module = mocker.Mock()
+        mock_importlib = mocker.patch(
+            "solarwinds_apm.configurator.importlib"
+        )
+        mock_importlib.configure_mock(
+            **{
+                "import_module": mock_importlib_import_module
+            }
+        )
+
         # Mock sys module
         mock_sys_module = mocker.Mock()
         mock_sys_module.configure_mock(
