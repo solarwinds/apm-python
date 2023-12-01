@@ -106,7 +106,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        assert "Python.foo-bar-module.Version" not in test_versions
+        assert "Python.Foo-bar-module.Version" not in test_versions
 
         # Restore old DISABLED
         if old_disabled:
@@ -126,7 +126,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        assert "Python.foo-bar-module.Version" not in test_versions
+        assert "Python.Foo-bar-module.Version" not in test_versions
 
     def test_add_all_instr_versions_skip_conflict_check_exception(
         self,
@@ -142,7 +142,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        assert "Python.foo-bar-module.Version" not in test_versions
+        assert "Python.Foo-bar-module.Version" not in test_versions
 
     def test_add_all_instr_versions_skip_module_lookup_exception(
         self,
@@ -158,7 +158,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        assert "Python.foo-bar-module.Version" not in test_versions
+        assert "Python.Foo-bar-module.Version" not in test_versions
 
     def test_add_all_instr_versions_aiohttp_client(
         self,
@@ -173,8 +173,8 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        assert "Python.aiohttp.Version" in test_versions
-        assert test_versions["Python.aiohttp.Version"] == "foo-version"
+        assert "Python.Aiohttp.Version" in test_versions
+        assert test_versions["Python.Aiohttp.Version"] == "foo-version"
 
     def test_add_all_instr_versions_grpc(
         self,
@@ -210,8 +210,8 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        assert "Python.mysql.Version" in test_versions
-        assert test_versions["Python.mysql.Version"] == "foo-version"
+        assert "Python.Mysql.Version" in test_versions
+        assert test_versions["Python.Mysql.Version"] == "foo-version"
 
     def test_add_all_instr_versions_elasticsearch(
         self,
@@ -227,8 +227,8 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        assert "Python.elasticsearch.Version" in test_versions
-        assert test_versions["Python.elasticsearch.Version"] == "elastic.version.tuple"
+        assert "Python.Elasticsearch.Version" in test_versions
+        assert test_versions["Python.Elasticsearch.Version"] == "elastic.version.tuple"
 
     def test_add_all_instr_versions_pyramid(
         self,
@@ -264,9 +264,8 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        # TODO: should be capitalized Urllib
-        assert "Python.urllib.Version" in test_versions
-        assert test_versions["Python.urllib.Version"] == "foo-version"
+        assert "Python.Urllib.Version" in test_versions
+        assert test_versions["Python.Urllib.Version"] == "foo-version"
 
     def test_add_all_instr_versions_nonspecial_case(
         self,
@@ -281,6 +280,5 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        # TODO: should be capitalized FooBarModule?
-        assert "Python.foo-bar-module.Version" in test_versions
-        assert test_versions["Python.foo-bar-module.Version"] == "foo-version"
+        assert "Python.Foo-bar-module.Version" in test_versions
+        assert test_versions["Python.Foo-bar-module.Version"] == "foo-version"
