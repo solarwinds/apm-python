@@ -174,6 +174,63 @@ class TestConfiguratorTracesExporter:
         if old_traces_exporter:
             os.environ["OTEL_TRACES_EXPORTER"] = old_traces_exporter
 
+    def test_configure_traces_exporter_valid_lambda(
+        self,
+        mocker,
+        mock_extension,
+        mock_txn_name_manager,
+        mock_fwkv_manager,
+        mock_apmconfig_enabled_is_lambda,
+        mock_bsprocessor,
+        mock_ssprocessor,
+    ):
+        # Save any EXPORTER env var for later
+        old_traces_exporter = os.environ.get("OTEL_TRACES_EXPORTER", None)
+        if old_traces_exporter:
+            del os.environ["OTEL_TRACES_EXPORTER"]
+
+        # Mock entry points
+        mock_exporter_class = mocker.MagicMock()
+        mock_exporter_entry_point = mocker.Mock()
+        mock_exporter_entry_point.configure_mock(
+            **{
+                "load": mock_exporter_class
+            }
+        )
+        mock_points = iter([mock_exporter_entry_point])
+        mock_iter_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.iter_entry_points"
+        )
+        mock_iter_entry_points.configure_mock(
+            return_value=mock_points
+        )
+        mocker.patch.dict(
+            os.environ,
+            {
+                "OTEL_TRACES_EXPORTER": "valid_exporter"
+            }
+        )
+
+        # Mock Otel
+        trace_mocks = get_trace_mocks(mocker)
+
+        # Test!
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure_traces_exporter(
+            mock_extension.Reporter,
+            mock_txn_name_manager,
+            mock_fwkv_manager,
+            mock_apmconfig_enabled_is_lambda,
+        )
+        mock_bsprocessor.assert_not_called()
+        mock_ssprocessor.assert_called_once()
+        trace_mocks.get_tracer_provider.assert_called_once()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
+        
+        # Restore old EXPORTER
+        if old_traces_exporter:
+            os.environ["OTEL_TRACES_EXPORTER"] = old_traces_exporter
+
     def test_configure_traces_exporter_invalid_valid_mixed(
         self,
         mocker,
