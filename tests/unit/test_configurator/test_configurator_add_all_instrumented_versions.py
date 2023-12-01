@@ -13,6 +13,8 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
         entry_point_name,
+        module_name,
+        module_version="foo-version",
         conflicts=None,
         conflicts_exception=False,
         importlib_exception=False,
@@ -61,8 +63,23 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
                 side_effect=Exception("mock conflict")
             )
         
-        # TODO mock sys module?
-
+        # (4) Mock sys module
+        mock_sys_module = mocker.Mock()
+        mock_sys_module.configure_mock(
+            **{
+                "__version__": module_version
+            }
+        )
+        mock_sys = mocker.patch(
+            "solarwinds_apm.configurator.sys"
+        )
+        mock_sys.configure_mock(
+            **{
+                "modules": {
+                    module_name: mock_sys_module
+                }
+            }
+        )
 
     def test_add_all_instr_versions_skip_disabled_instrumentors(
         self,
@@ -80,7 +97,11 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
             }
         )
 
-        self.set_up_mocks(mocker, "foo-bar-module")
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="foo-bar-module",
+            module_name="foo"
+        )
 
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
@@ -96,8 +117,9 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         mocker,
     ):
         self.set_up_mocks(
-            mocker,
+            mocker=mocker,
             entry_point_name="foo-bar-module",
+            module_name="foo",
             conflicts="not-none",
         )
 
@@ -111,8 +133,9 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         mocker,
     ):
         self.set_up_mocks(
-            mocker,
+            mocker=mocker,
             entry_point_name="foo-bar-module",
+            module_name="foo",
             conflicts_exception=True,
         )
 
@@ -126,8 +149,9 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         mocker,
     ):
         self.set_up_mocks(
-            mocker,
-            "foo-bar-module",
+            mocker=mocker,
+            entry_point_name="foo-bar-module",
+            module_name="foo",
             importlib_exception=True,
         )
 
@@ -140,79 +164,102 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
     ):
-        pass
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="aiohttp_client",
+            module_name="aiohttp",
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.aiohttp.Version" in test_versions
+        assert test_versions["Python.aiohttp.Version"] == "foo-version"
 
     def test_add_all_instr_versions_grpc(
         self,
         mocker,
     ):
+        # TODO
         pass
 
     def test_add_all_instr_versions_system_metrics(
         self,
         mocker,
     ):
+        # TODO
         pass
 
     def test_add_all_instr_versions_tortoiseorm(
         self,
         mocker,
     ):
+        # TODO
         pass
 
     def test_add_all_instr_versions_mysql(
         self,
         mocker,
     ):
-        pass
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="mysql",
+            module_name="mysql.connector",
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.mysql.Version" in test_versions
+        assert test_versions["Python.mysql.Version"] == "foo-version"
 
     def test_add_all_instr_versions_elasticsearch(
         self,
         mocker,
     ):
-        pass
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="elasticsearch",
+            module_name="elasticsearch",
+            module_version=("elastic", "version", "tuple"),
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.elasticsearch.Version" in test_versions
+        assert test_versions["Python.elasticsearch.Version"] == "elastic.version.tuple"
 
     def test_add_all_instr_versions_pyramid(
         self,
         mocker,
     ):
+        # TODO
         pass
 
     def test_add_all_instr_versions_sqlite3(
         self,
         mocker,
     ):
+        # TODO
         pass
 
     def test_add_all_instr_versions_tornado(
         self,
         mocker,
     ):
+        # TODO
         pass
 
     def test_add_all_instr_versions_urllib(
         self,
         mocker,
     ):
-        # Mock sys module
-        mock_sys_module = mocker.Mock()
-        mock_sys_module.configure_mock(
-            **{
-                "__version__": "foo-version"
-            }
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="urllib",
+            module_name="urllib.request",
         )
-        mock_sys = mocker.patch(
-            "solarwinds_apm.configurator.sys"
-        )
-        mock_sys.configure_mock(
-            **{
-                "modules": {
-                    "urllib.request": mock_sys_module
-                }
-            }
-        )
-
-        self.set_up_mocks(mocker, "urllib")
 
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
@@ -225,25 +272,11 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
     ):
-        # Mock sys module
-        mock_sys_module = mocker.Mock()
-        mock_sys_module.configure_mock(
-            **{
-                "__version__": "foo-version"
-            }
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="foo-bar-module",
+            module_name="foo-bar-module",
         )
-        mock_sys = mocker.patch(
-            "solarwinds_apm.configurator.sys"
-        )
-        mock_sys.configure_mock(
-            **{
-                "modules": {
-                    "foo-bar-module": mock_sys_module
-                }
-            }
-        )
-
-        self.set_up_mocks(mocker, "foo-bar-module")
 
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
