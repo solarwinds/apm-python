@@ -269,8 +269,64 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         assert "Python.urllib.Version" in test_versions
         assert test_versions["Python.urllib.Version"] == "foo-version"
 
-    def test_add_all_instr_versions_urllib3_nonspecial_case(
+    def test_add_all_instr_versions_nonspecial_case(
         self,
         mocker,
     ):
-        pass
+        # Mock importlib
+        mock_importlib_import_module = mocker.Mock()
+        mock_importlib = mocker.patch(
+            "solarwinds_apm.configurator.importlib"
+        )
+        mock_importlib.configure_mock(
+            **{
+                "import_module": mock_importlib_import_module
+            }
+        )
+
+        # Mock sys module
+        mock_sys_module = mocker.Mock()
+        mock_sys_module.configure_mock(
+            **{
+                "__version__": "foo-version"
+            }
+        )
+        mock_sys = mocker.patch(
+            "solarwinds_apm.configurator.sys"
+        )
+        mock_sys.configure_mock(
+            **{
+                "modules": {
+                    "foo-bar-module": mock_sys_module
+                }
+            }
+        )
+
+        # Mock entry point
+        mock_instrumentor_entry_point = mocker.Mock()
+        mock_instrumentor_entry_point.configure_mock(
+            **{
+                "name": "foo-bar-module",
+                "dist": "foo",
+            }
+        )
+        mock_points = iter([mock_instrumentor_entry_point])
+        mock_iter_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.iter_entry_points"
+        )
+        mock_iter_entry_points.configure_mock(
+            return_value=mock_points
+        )
+
+        # Mock conflicts - none
+        mocker.patch(
+            "solarwinds_apm.configurator.get_dist_dependency_conflicts",
+            return_value=None,
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        # TODO: should be capitalized FooBarModule?
+        assert "Python.foo-bar-module.Version" in test_versions
+        assert test_versions["Python.foo-bar-module.Version"] == "foo-version"
