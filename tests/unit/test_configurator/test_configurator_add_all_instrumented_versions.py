@@ -21,7 +21,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         mocker.patch.dict(
             os.environ,
             {
-                "OTEL_PYTHON_DISABLED_INSTRUMENTATIONS": "urllib3"
+                "OTEL_PYTHON_DISABLED_INSTRUMENTATIONS": "foo-bar-module"
             }
         )
 
@@ -29,8 +29,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         mock_instrumentor_entry_point = mocker.Mock()
         mock_instrumentor_entry_point.configure_mock(
             **{
-                "name": "urllib3",
-                "dist": "foo",
+                "name": "foo-bar-module",
             }
         )
         mock_points = iter([mock_instrumentor_entry_point])
@@ -44,7 +43,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         # Test!
         test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
         assert test_versions["foo"] == "bar"
-        assert "Python.Urllib3.Version" not in test_versions
+        assert "Python.FooBarModule.Version" not in test_versions
 
         # Restore old DISABLED
         if old_disabled:
@@ -54,29 +53,110 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
     ):
-        mock_get_dist_dep_conflicts = mocker.patch(
+        # Mock conflicts - not None
+        mocker.patch(
             "solarwinds_apm.configurator.get_dist_dependency_conflicts",
             return_value="not-none"
         )
 
-        # TODO
+        # Mock entry point
+        mock_instrumentor_entry_point = mocker.Mock()
+        mock_instrumentor_entry_point.configure_mock(
+            **{
+                "name": "foo-bar-module",
+            }
+        )
+        mock_points = iter([mock_instrumentor_entry_point])
+        mock_iter_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.iter_entry_points"
+        )
+        mock_iter_entry_points.configure_mock(
+            return_value=mock_points
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.FooBarModule.Version" not in test_versions
 
     def test_add_all_instr_versions_skip_conflict_check_exception(
         self,
         mocker,
     ):
-        mock_get_dist_dep_conflicts = mocker.patch(
+        # Mock conflicts - exception
+        mocker.patch(
             "solarwinds_apm.configurator.get_dist_dependency_conflicts",
             side_effect=Exception("mock conflict")
         )
 
-        # TODO
+        # Mock entry point
+        mock_instrumentor_entry_point = mocker.Mock()
+        mock_instrumentor_entry_point.configure_mock(
+            **{
+                "name": "foo-bar-module",
+            }
+        )
+        mock_points = iter([mock_instrumentor_entry_point])
+        mock_iter_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.iter_entry_points"
+        )
+        mock_iter_entry_points.configure_mock(
+            return_value=mock_points
+        )
 
-    def test_add_all_instr_versions_skip_other_exception(
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.FooBarModule.Version" not in test_versions
+
+    def test_add_all_instr_versions_skip_module_lookup_exception(
         self,
         mocker,
     ):
-        pass
+        # Mock sys module - some error
+        mock_sys_module = mocker.Mock()
+        mock_sys_module.configure_mock(
+            **{
+                "__version__": AttributeError("mock error")
+            }
+        )
+        mock_sys = mocker.patch(
+            "solarwinds_apm.configurator.sys"
+        )
+        mock_sys.configure_mock(
+            **{
+                "modules": {
+                    "foo-bar-module": mock_sys_module
+                }
+            }
+        )
+
+        # Mock entry point
+        mock_instrumentor_entry_point = mocker.Mock()
+        mock_instrumentor_entry_point.configure_mock(
+            **{
+                "name": "foo-bar-module",
+                "dist": "foo",
+            }
+        )
+        mock_points = iter([mock_instrumentor_entry_point])
+        mock_iter_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.iter_entry_points"
+        )
+        mock_iter_entry_points.configure_mock(
+            return_value=mock_points
+        )
+
+        # Mock conflicts - none
+        mocker.patch(
+            "solarwinds_apm.configurator.get_dist_dependency_conflicts",
+            return_value=None,
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.FooBarModule.Version" not in test_versions
 
     def test_add_all_instr_versions_aiohttp_client(
         self,
@@ -177,7 +257,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         )
 
         # Mock conflicts - none
-        mock_get_dist_dep_conflicts = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.configurator.get_dist_dependency_conflicts",
             return_value=None,
         )
