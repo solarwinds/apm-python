@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.0.2...HEAD)
 
-## [1.0.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.0.2) - 2023-12-04
+## [1.0.2](https://github.com/solarwinds/apm-python/releases/tag/rel-1.0.2) - 2023-12-04
 
 ### Changed
 - Update setup.cfg metadata ([#232](https://github.com/solarwinds/apm-python/pull/232))
