@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.0.1...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.0.2...HEAD)
+
+## [1.0.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.0.2) - 2023-12-04
+
+### Changed
+- Update setup.cfg metadata ([#232](https://github.com/solarwinds/apm-python/pull/232))
+- Increased unit test coverage ([#225](https://github.com/solarwinds/apm-python/pull/225), [#231](https://github.com/solarwinds/apm-python/pull/231), [#233](https://github.com/solarwinds/apm-python/pull/233), [#234](https://github.com/solarwinds/apm-python/pull/234), [#235](https://github.com/solarwinds/apm-python/pull/235), [#236](https://github.com/solarwinds/apm-python/pull/236), [#237](https://github.com/solarwinds/apm-python/pull/237), [#238](https://github.com/solarwinds/apm-python/pull/238), [#239](https://github.com/solarwinds/apm-python/pull/239), [#240](https://github.com/solarwinds/apm-python/pull/240), [#241](https://github.com/solarwinds/apm-python/pull/241), [#242](https://github.com/solarwinds/apm-python/pull/242), [#243](https://github.com/solarwinds/apm-python/pull/243), [#244](https://github.com/solarwinds/apm-python/pull/244))
+- SimpleSpanProcessor when lambda ([#245](https://github.com/solarwinds/apm-python/pull/245))
 
 ## [1.0.1](https://github.com/solarwinds/apm-python/releases/tag/rel-1.0.1) - 2023-11-21
 
