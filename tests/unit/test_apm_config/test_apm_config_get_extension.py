@@ -14,10 +14,16 @@ from solarwinds_apm.apm_noop import (
     OboeAPI as NoopOboeApi,
 )
 from solarwinds_apm.extension import oboe as Extension
-from solarwinds_apm.extension.oboe import (
-    Context,
-    OboeAPI,
-)
+from solarwinds_apm.extension.oboe import Context
+
+try:
+    # c-lib <14 does not have OboeAPI
+    # TODO remove the except after upgrading
+    # https://swicloud.atlassian.net/browse/NH-68264
+    from solarwinds_apm.extension.oboe import OboeAPI
+except ImportError:
+    from solarwinds_apm.apm_noop import OboeAPI as OboeAPI
+
 
 # pylint: disable=unused-import
 from .fixtures.env_vars import fixture_mock_env_vars
