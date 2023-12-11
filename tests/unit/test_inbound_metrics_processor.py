@@ -408,7 +408,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_METHOD": "http.method"
+                "HTTP_REQUEST_METHOD": "http.request.method"
             }
         )
         mock_traceflags = mocker.patch(
@@ -431,7 +431,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             **{
                 "parent": None,
                 "attributes": {
-                    "http.method": "foo-method"
+                    "http.request.method": "foo-method"
                 },
                 "context": mock_span_context
             }
@@ -523,7 +523,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_METHOD": "http.method"
+                "HTTP_REQUEST_METHOD": "http.request.method"
             }
         )
         mock_traceflags = mocker.patch(
@@ -546,7 +546,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             **{
                 "parent": None,
                 "attributes": {
-                    "http.method": "foo-method"
+                    "http.request.method": "foo-method"
                 },
                 "context": mock_span_context
             }
@@ -635,7 +635,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_METHOD": "http.method"
+                "HTTP_REQUEST_METHOD": "http.request.method"
             }
         )
         mock_span = mocker.Mock()
@@ -643,7 +643,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             **{
                 "kind": "foo",
                 "attributes": {
-                    "http.method": "bar"
+                    "http.request.method": "bar"
                 }
             }
         )
@@ -667,7 +667,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_METHOD": "http.method"
+                "HTTP_REQUEST_METHOD": "http.request.method"
             }
         )
         mock_span = mocker.Mock()
@@ -675,7 +675,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             **{
                 "kind": "not-foo-hehe",
                 "attributes": {
-                    "http.method": "bar"
+                    "http.request.method": "bar"
                 }
             }
         )
@@ -699,7 +699,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_METHOD": "http.method"
+                "HTTP_REQUEST_METHOD": "http.request.method"
             }
         )
         mock_span = mocker.Mock()
@@ -707,7 +707,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             **{
                 "kind": "foo",
                 "attributes": {
-                    "NOT.http.method.hehehehe": "bar"
+                    "NOT.http.request.method.hehehehe": "bar"
                 }
             }
         )
@@ -731,7 +731,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_METHOD": "http.method"
+                "HTTP_REQUEST_METHOD": "http.request.method"
             }
         )
         mock_span = mocker.Mock()
@@ -739,7 +739,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             **{
                 "kind": "not-foo-hehe",
                 "attributes": {
-                    "NOT.http.method.hehehehe": "bar"
+                    "NOT.http.request.method.hehehehe": "bar"
                 }
             }
         )
@@ -809,7 +809,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_STATUS_CODE": "http.status_code"
+                "HTTP_RESPONSE_STATUS_CODE": "http.response.status_code"
             }
         )
         mock_span = mocker.Mock()
@@ -817,7 +817,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             **{
                 "kind": "foo",
                 "attributes": {
-                    "http.status_code": "foo"
+                    "http.response.status_code": "foo"
                 }
             }
         )
@@ -833,7 +833,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_STATUS_CODE": "http.status_code"
+                "HTTP_RESPONSE_STATUS_CODE": "http.response.status_code"
             }
         )
         mock_span = mocker.Mock()
@@ -841,7 +841,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             **{
                 "kind": "foo",
                 "attributes": {
-                    "NOT.http.status_code.muahaha": "foo"
+                    "NOT.http.response.status_code.muahaha": "foo"
                 }
             }
         )
@@ -858,7 +858,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_URL": "http.url",
+                "URL_FULL": "url.full",
                 "HTTP_ROUTE": "http.route"
             }
         )
@@ -872,7 +872,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
                 "name": "foo",
                 "attributes": {
                     "http.route": None,
-                    "http.url": None
+                    "url.full": None
                 }
             }
         )
@@ -895,7 +895,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_URL": "http.url",
+                "URL_FULL": "url.full",
                 "HTTP_ROUTE": "http.route"
             }
         )
@@ -907,7 +907,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         mock_span.configure_mock(
             **{
                 "attributes": {
-                    "http.url": "bar"
+                    "url.full": "bar"
                 }
             }
         )
@@ -924,7 +924,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_URL": "http.url",
+                "URL_FULL": "url.full",
                 "HTTP_ROUTE": "http.route"
             }
         )
@@ -936,7 +936,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         mock_span.configure_mock(
             **{
                 "attributes": {
-                    "http.url": "bar"
+                    "url.full": "bar"
                 }
             }
         )
@@ -960,7 +960,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_URL": "http.url",
+                "URL_FULL": "url.full",
                 "HTTP_ROUTE": "http.route"
             }
         )
@@ -972,7 +972,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         mock_span.configure_mock(
             **{
                 "attributes": {
-                    "http.url": "bar"
+                    "url.full": "bar"
                 }
             }
         )
@@ -996,7 +996,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_URL": "http.url",
+                "URL_FULL": "url.full",
                 "HTTP_ROUTE": "http.route"
             }
         )
@@ -1009,7 +1009,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             **{
                 "attributes": {
                     "http.route": "foo",
-                    "http.url": "bar",
+                    "url.full": "bar",
                 }
             }
         )
@@ -1026,7 +1026,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_URL": "http.url",
+                "URL_FULL": "url.full",
                 "HTTP_ROUTE": "http.route"
             }
         )
@@ -1040,7 +1040,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
                 "name": "foo",
                 "attributes": {
                     "not.http.route.hehe": "baz",
-                    "http.url": "bar",
+                    "url.full": "bar",
                 }
             }
         )

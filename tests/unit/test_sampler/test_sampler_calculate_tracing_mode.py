@@ -31,9 +31,9 @@ class Test_SwSampler_construct_url():
         self,
         fixture_swsampler,
     ):
-        assert fixture_swsampler.construct_url({"http.scheme": "bar"}) == ""
+        assert fixture_swsampler.construct_url({"url.scheme": "bar"}) == ""
         assert fixture_swsampler.construct_url({"net.host.name": "bar"}) == ""
-        assert fixture_swsampler.construct_url({"net.host.port": "bar"}) == ""
+        assert fixture_swsampler.construct_url({"server.port": "bar"}) == ""
         assert fixture_swsampler.construct_url({"http.target": "bar"}) == ""
 
     def test_construct_url_all_attrs(
@@ -42,9 +42,9 @@ class Test_SwSampler_construct_url():
     ):
         assert fixture_swsampler.construct_url(
             {
-                "http.scheme": "foo",
+                "url.scheme": "foo",
                 "net.host.name": "bar",
-                "net.host.port": "baz",
+                "server.port": "baz",
                 "http.target": "/qux"
             }
         ) == "foo://bar:baz/qux"
@@ -55,7 +55,7 @@ class Test_SwSampler_construct_url():
     ):
         assert fixture_swsampler.construct_url(
             {
-                "http.scheme": "foo",
+                "url.scheme": "foo",
                 "net.host.name": "bar",
                 "http.target": "/qux"
             }
@@ -79,9 +79,9 @@ class Test_SwSampler_calculate_tracing_mode():
             "foo",
             None,
             {
-                "http.scheme": "foo",
+                "url.scheme": "foo",
                 "net.host.name": "bar",
-                "net.host.port": "baz",
+                "server.port": "baz",
                 "http.target": "/qux"   
             }
         ) == -1
@@ -94,7 +94,7 @@ class Test_SwSampler_calculate_tracing_mode():
             "foo",
             None,
             {
-                "http.scheme": "http",
+                "url.scheme": "http",
                 "net.host.name": "foo",
                 "http.target": "/bar"   
             }
@@ -108,7 +108,7 @@ class Test_SwSampler_calculate_tracing_mode():
             "foo",
             None,
             {
-                "http.scheme": "http",
+                "url.scheme": "http",
                 "net.host.name": "foo",
                 "http.target": "/abcdef/bar"   
             }
@@ -122,7 +122,7 @@ class Test_SwSampler_calculate_tracing_mode():
             "foo",
             None,
             {
-                "http.scheme": "http",
+                "url.scheme": "http",
                 "net.host.name": "foo",
                 "http.target": "/bar-baz"   
             }

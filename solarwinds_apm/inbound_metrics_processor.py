@@ -30,10 +30,14 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
     #      https://swicloud.atlassian.net/browse/NH-65061
 
     _TRANSACTION_NAME = "transaction_name"
-    _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
+    _HTTP_REQUEST_METHOD = (
+        SpanAttributes.HTTP_REQUEST_METHOD
+    )  # "http.request.method"
     _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
-    _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
-    _HTTP_URL = SpanAttributes.HTTP_URL  # "http.url"
+    _HTTP_RESPONSE_STATUS_CODE = (
+        SpanAttributes.HTTP_RESPONSE_STATUS_CODE
+    )  # "http.response.status_code"
+    _URL_FULL = SpanAttributes.URL_FULL  # "url.full"
 
     _LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE = 0
 
@@ -94,7 +98,9 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         if is_span_http:
             # createHttpSpan needs these other params
             status_code = self.get_http_status_code(span)
-            request_method = span.attributes.get(self._HTTP_METHOD, None)
+            request_method = span.attributes.get(
+                self._HTTP_REQUEST_METHOD, None
+            )
 
             # TODO Change when this is logged (don't when no-op)
             # https://swicloud.atlassian.net/browse/NH-65061
@@ -141,9 +147,9 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             ] = liboboe_txn_name  # type: ignore
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
-        """This span from inbound HTTP request if from a SERVER by some http.method"""
+        """This span from inbound HTTP request if from a SERVER by some http.request.method"""
         if span.kind == SpanKind.SERVER and span.attributes.get(
-            self._HTTP_METHOD, None
+            self._HTTP_REQUEST_METHOD, None
         ):
             return True
         return False
@@ -156,7 +162,9 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
 
     def get_http_status_code(self, span: "ReadableSpan") -> int:
         """Calculate HTTP status_code from span or default to UNAVAILABLE"""
-        status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
+        status_code = span.attributes.get(
+            self._HTTP_RESPONSE_STATUS_CODE, None
+        )
         # Something went wrong in OTel or instrumented service crashed early
         # if no status_code in attributes of HTTP span
         if not status_code:
@@ -168,7 +176,7 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         self, span: "ReadableSpan"
     ) -> Tuple[Any, Any]:  # pylint: disable=deprecated-typing-alias
         """Get trans_name and url_tran of this span instance."""
-        url_tran = span.attributes.get(self._HTTP_URL, None)
+        url_tran = span.attributes.get(self._URL_FULL, None)
         http_route = span.attributes.get(self._HTTP_ROUTE, None)
         trans_name = None
         custom_trans_name = self.calculate_custom_transaction_name(span)

@@ -88,9 +88,9 @@ class _SwSampler(Sampler):
             return ""
 
         url = ""
-        scheme = attributes.get(SpanAttributes.HTTP_SCHEME)
+        scheme = attributes.get(SpanAttributes.URL_SCHEME)
         host = attributes.get(SpanAttributes.NET_HOST_NAME)
-        port = attributes.get(SpanAttributes.NET_HOST_PORT)
+        port = attributes.get(SpanAttributes.SERVER_PORT)
         target = attributes.get(SpanAttributes.HTTP_TARGET)
         if scheme and host and target and port:
             url = f"{scheme}://{host}:{port}{target}"
