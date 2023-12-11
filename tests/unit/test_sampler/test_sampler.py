@@ -224,10 +224,20 @@ class Test_SwSampler():
                 "getTracingDecision": mock_get_tracing_decision
             }
         )
-        mock_oboe_api_component = mocker.patch(
-            "solarwinds_apm.extension.oboe.OboeAPI.__init__",
-            return_value=mock_oboe_api
-        )
+        try:
+            mock_oboe_api_component = mocker.patch(
+                "solarwinds_apm.extension.oboe.OboeAPI.__init__",
+                return_value=mock_oboe_api
+            )
+        except ModuleNotFoundError:
+            # c-lib <14 does not have OboeAPI
+            # TODO remove the except after upgrading
+            # https://swicloud.atlassian.net/browse/NH-68264
+            mock_oboe_api_component = mocker.patch(
+                "solarwinds_apm.apm_noop.OboeAPI.__init__",
+                return_value=mock_oboe_api
+            )
+
         mock_apm_config.configure_mock(
             **{
                 "agent_enabled": True,
