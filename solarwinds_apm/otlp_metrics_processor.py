@@ -29,14 +29,10 @@ logger = logging.getLogger(__name__)
 class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
     # TODO Refactor for both inbound and otlp metrics
     #      https://swicloud.atlassian.net/browse/NH-65061
-    _HTTP_REQUEST_METHOD = (
-        SpanAttributes.HTTP_REQUEST_METHOD
-    )  # "http.request.method"
+    _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
     _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
-    _HTTP_RESPONSE_STATUS_CODE = (
-        SpanAttributes.HTTP_RESPONSE_STATUS_CODE
-    )  # "http.response.status_code"
-    _URL_FULL = SpanAttributes.URL_FULL  # "url.full"
+    _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
+    _HTTP_URL = SpanAttributes.HTTP_URL  # "http.url"
 
     _HTTP_SPAN_STATUS_UNAVAILABLE = 0
 
@@ -91,13 +87,11 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
 
         if is_span_http:
             status_code = self.get_http_status_code(span)
-            request_method = span.attributes.get(
-                self._HTTP_REQUEST_METHOD, None
-            )
+            request_method = span.attributes.get(self._HTTP_METHOD, None)
             meter_attrs.update(
                 {
-                    self._HTTP_RESPONSE_STATUS_CODE: status_code,
-                    self._HTTP_REQUEST_METHOD: request_method,
+                    self._HTTP_STATUS_CODE: status_code,
+                    self._HTTP_METHOD: request_method,
                     "sw.transaction": trans_name,
                 }
             )
@@ -126,9 +120,9 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
     # TODO Refactor for both inbound and otlp metrics
     #      https://swicloud.atlassian.net/browse/NH-65061
     def is_span_http(self, span: "ReadableSpan") -> bool:
-        """This span from inbound HTTP request if from a SERVER by some http.request.method"""
+        """This span from inbound HTTP request if from a SERVER by some http.method"""
         if span.kind == SpanKind.SERVER and span.attributes.get(
-            self._HTTP_REQUEST_METHOD, None
+            self._HTTP_METHOD, None
         ):
             return True
         return False
@@ -145,9 +139,7 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
     #      https://swicloud.atlassian.net/browse/NH-65061
     def get_http_status_code(self, span: "ReadableSpan") -> int:
         """Calculate HTTP status_code from span or default to UNAVAILABLE"""
-        status_code = span.attributes.get(
-            self._HTTP_RESPONSE_STATUS_CODE, None
-        )
+        status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
         # Something went wrong in OTel or instrumented service crashed early
         # if no status_code in attributes of HTTP span
         if not status_code:
@@ -162,7 +154,7 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         self, span: "ReadableSpan"
     ) -> Tuple[Any, Any]:  # pylint: disable=deprecated-typing-alias
         """Get trans_name and url_tran of this span instance."""
-        url_tran = span.attributes.get(self._URL_FULL, None)
+        url_tran = span.attributes.get(self._HTTP_URL, None)
         http_route = span.attributes.get(self._HTTP_ROUTE, None)
         trans_name = None
         custom_trans_name = self.calculate_custom_transaction_name(span)
