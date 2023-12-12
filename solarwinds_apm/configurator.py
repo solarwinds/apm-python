@@ -62,6 +62,7 @@ from solarwinds_apm.otlp_metrics_processor import (
 from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
+from solarwinds_apm.trace import ForceFlushSpanProcessor
 from solarwinds_apm.version import __version__
 
 if TYPE_CHECKING:
@@ -122,7 +123,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_txname_manager,
                 apm_config,
             )
-            self._configure_otlp_metrics_span_processor(
+            self._configure_otlp_metrics_span_processors(
                 apm_txname_manager,
                 apm_config,
                 apm_meters,
@@ -190,13 +191,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
         )
 
-    def _configure_otlp_metrics_span_processor(
+    def _configure_otlp_metrics_span_processors(
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
         apm_meters: SolarWindsMeterManager,
     ) -> None:
-        """Configure SolarWindsOTLPMetricsSpanProcessor.
+        """Configure SolarWindsOTLPMetricsSpanProcessor and ForceFlushSpanProcessor.
         If no meters/instruments are initialized, the processor will
         run but will not collect/flush OTLP metrics."""
         # TODO Add experimental trace flag, clean up
@@ -213,6 +214,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_config,
                 apm_meters,
             )
+        )
+        trace.get_tracer_provider().add_span_processor(
+            ForceFlushSpanProcessor(),
         )
 
     def _configure_traces_exporter(
