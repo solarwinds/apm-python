@@ -13,7 +13,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
 
     def patch_for_on_start(self, mocker):
         mock_otel_context = mocker.patch(
-            "solarwinds_apm.inbound_metrics_processor.context"
+            "solarwinds_apm.trace.inbound_metrics_processor.context"
         )
         mock_attach = mocker.Mock()
         mock_otel_context.configure_mock(
@@ -22,7 +22,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         mock_otel_baggage = mocker.patch(
-            "solarwinds_apm.inbound_metrics_processor.baggage"
+            "solarwinds_apm.trace.inbound_metrics_processor.baggage"
         )
         mock_set_baggage = mocker.Mock()
         mock_otel_baggage.configure_mock(
@@ -31,10 +31,10 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         mock_swo_baggage_key = mocker.patch(
-            "solarwinds_apm.inbound_metrics_processor.INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID"
+            "solarwinds_apm.trace.inbound_metrics_processor.INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID"
         )
         mock_w3c = mocker.patch(
-            "solarwinds_apm.inbound_metrics_processor.W3CTransformer"
+            "solarwinds_apm.trace.inbound_metrics_processor.W3CTransformer"
         )
         mock_ts_id = mocker.Mock(return_value="some-id")
         mock_w3c.configure_mock(
