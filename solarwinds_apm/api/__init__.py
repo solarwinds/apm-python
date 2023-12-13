@@ -15,7 +15,7 @@ from solarwinds_apm.apm_oboe_codes import OboeReadyCode
 
 # pylint: disable=import-error,no-name-in-module
 from solarwinds_apm.extension.oboe import Context
-from solarwinds_apm.inbound_metrics_processor import (
+from solarwinds_apm.trace import (
     SolarWindsInboundMetricsSpanProcessor,
 )
 
