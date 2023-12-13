@@ -11,6 +11,20 @@ from .fixtures.trace import get_trace_mocks
 
 
 class TestConfiguratorSpanProcessors:
+    def test_configure_service_entry_id_span_processor(
+        self,
+        mocker,
+    ):
+        trace_mocks = get_trace_mocks(mocker)
+        mock_processor = mocker.patch(
+            "solarwinds_apm.configurator.ServiceEntryIdSpanProcessor"
+        )
+
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure_service_entry_id_span_processor()
+        trace_mocks.get_tracer_provider.assert_called_once()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
+
     def test_configure_inbound_metrics_span_processor(
         self,
         mocker,

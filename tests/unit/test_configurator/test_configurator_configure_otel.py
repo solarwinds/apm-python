@@ -16,6 +16,7 @@ class TestConfiguratorConfigureOtelComponents:
         mock_extension,
         mock_apmconfig_enabled,
 
+        mock_config_serviceentryid_processor,
         mock_config_inbound_processor,
         mock_config_otlp_processors,
         mock_config_traces_exp,
@@ -32,6 +33,7 @@ class TestConfiguratorConfigureOtelComponents:
             mock_meter_manager,
         )
 
+        mock_config_serviceentryid_processor.assert_called_once()
         mock_config_inbound_processor.assert_called_once_with(
             mock_txn_name_manager,
             mock_apmconfig_enabled,
@@ -60,6 +62,7 @@ class TestConfiguratorConfigureOtelComponents:
         mock_extension,
         mock_apmconfig_disabled,
 
+        mock_config_serviceentryid_processor,
         mock_config_inbound_processor,
         mock_config_otlp_processors,
         mock_config_traces_exp,
@@ -76,6 +79,7 @@ class TestConfiguratorConfigureOtelComponents:
             mock_meter_manager,
         )
 
+        mock_config_serviceentryid_processor.assert_not_called()
         mock_config_inbound_processor.assert_not_called()
         mock_config_otlp_processors.assert_not_called()
         mock_config_traces_exp.assert_not_called()
