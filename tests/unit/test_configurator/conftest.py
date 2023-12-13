@@ -328,8 +328,8 @@ def mock_config_inbound_processor(mocker):
         "solarwinds_apm.configurator.SolarWindsConfigurator._configure_inbound_metrics_span_processor"
     )
 
-@pytest.fixture(name="mock_config_otlp_processor")
-def mock_config_otlp_processor(mocker):
+@pytest.fixture(name="mock_config_otlp_processors")
+def mock_config_otlp_processors(mocker):
     return mocker.patch(
         "solarwinds_apm.configurator.SolarWindsConfigurator._configure_otlp_metrics_span_processors"
     )
