@@ -8,10 +8,9 @@ import logging
 import random
 from typing import TYPE_CHECKING, Any, Tuple
 
-from opentelemetry.metrics import get_meter_provider
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.trace import SpanKind, StatusCode, get_tracer_provider
+from opentelemetry.trace import SpanKind, StatusCode
 
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
@@ -107,15 +106,6 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         # for SW-style trace export. This processor is for OTLP-style.
         # TODO: Cache txn_name for OTLP span export?
         #       https://swicloud.atlassian.net/browse/NH-65061
-
-        # Force flush metrics after every entry span via flush of all meters
-        # including PeriodicExportingMetricReader
-        logger.debug("Performing MeterProvider force_flush of metrics")
-        get_meter_provider().force_flush()
-
-        # Force flush spans that have not yet been processed
-        logger.debug("Performing TracerProvider force_flush of traces")
-        get_tracer_provider().force_flush()
 
     # TODO Refactor for both inbound and otlp metrics
     #      https://swicloud.atlassian.net/browse/NH-65061

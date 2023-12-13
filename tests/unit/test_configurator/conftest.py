@@ -331,7 +331,7 @@ def mock_config_inbound_processor(mocker):
 @pytest.fixture(name="mock_config_otlp_processor")
 def mock_config_otlp_processor(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_otlp_metrics_span_processor"
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_otlp_metrics_span_processors"
     )
 
 @pytest.fixture(name="mock_config_traces_exp")

@@ -34,7 +34,7 @@ class TestConfiguratorSpanProcessors:
             mock_apmconfig_enabled,
         ) 
 
-    def test_configure_otlp_metrics_span_processor_missing_flag(
+    def test_configure_otlp_metrics_span_processors_missing_flag(
         self,
         mocker,
         mock_apmconfig_enabled,
@@ -42,21 +42,25 @@ class TestConfiguratorSpanProcessors:
         mock_meter_manager,
     ):
         trace_mocks = get_trace_mocks(mocker)
-        mock_processor = mocker.patch(
+        mock_otlp_processor = mocker.patch(
             "solarwinds_apm.configurator.SolarWindsOTLPMetricsSpanProcessor"
+        )
+        mock_flush_processor = mocker.patch(
+            "solarwinds_apm.configurator.ForceFlushSpanProcessor"
         )
 
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_otlp_metrics_span_processor(
+        test_configurator._configure_otlp_metrics_span_processors(
             mock_txn_name_manager,
             mock_apmconfig_enabled,
             mock_meter_manager,
         )       
         trace_mocks.get_tracer_provider.assert_not_called()
         trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
-        mock_processor.assert_not_called()
+        mock_otlp_processor.assert_not_called()
+        mock_flush_processor.assert_not_called()
 
-    def test_configure_otlp_metrics_span_processor(
+    def test_configure_otlp_metrics_span_processors(
         self,
         mocker,
         mock_apmconfig_enabled_expt,
@@ -64,20 +68,37 @@ class TestConfiguratorSpanProcessors:
         mock_meter_manager,
     ):
         trace_mocks = get_trace_mocks(mocker)
-        mock_processor = mocker.patch(
-            "solarwinds_apm.configurator.SolarWindsOTLPMetricsSpanProcessor"
+        mock_processor_instance = mocker.Mock()
+        mock_otlp_processor = mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsOTLPMetricsSpanProcessor",
+            return_value=mock_processor_instance,
+        )
+        mock_flush_processor = mocker.patch(
+            "solarwinds_apm.configurator.ForceFlushSpanProcessor",
+            return_value=mock_processor_instance,
         )
 
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_otlp_metrics_span_processor(
+        test_configurator._configure_otlp_metrics_span_processors(
             mock_txn_name_manager,
             mock_apmconfig_enabled_expt,
             mock_meter_manager,
         )
-        trace_mocks.get_tracer_provider.assert_called_once()
-        trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
-        mock_processor.assert_called_once_with(
+        trace_mocks.get_tracer_provider.assert_has_calls(
+            [
+                mocker.call(),
+                mocker.call(),
+            ]
+        )
+        trace_mocks.get_tracer_provider().add_span_processor.assert_has_calls(
+            [
+                mocker.call(mock_processor_instance),
+                mocker.call(mock_processor_instance),
+            ]
+        )
+        mock_otlp_processor.assert_called_once_with(
             mock_txn_name_manager,
             mock_apmconfig_enabled_expt,
             mock_meter_manager,
-        ) 
+        )
+        mock_flush_processor.assert_called_once()
