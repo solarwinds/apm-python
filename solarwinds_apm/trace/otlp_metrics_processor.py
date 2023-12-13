@@ -8,10 +8,7 @@ import logging
 import random
 from typing import TYPE_CHECKING, Any, Tuple
 
-from opentelemetry.sdk.trace import SpanProcessor
-from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.trace import SpanKind, StatusCode
-
+from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
@@ -25,15 +22,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
-    # TODO Refactor for both inbound and otlp metrics
-    #      https://swicloud.atlassian.net/browse/NH-65061
-    _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
-    _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
-    _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
-    _HTTP_URL = SpanAttributes.HTTP_URL  # "http.url"
-
-    _HTTP_SPAN_STATUS_UNAVAILABLE = 0
+class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
+    """SolarWinds span processor for OTLP metrics recording"""
 
     def __init__(
         self,
@@ -41,13 +31,11 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
         apm_config: "SolarWindsApmConfig",
         apm_meters: "SolarWindsMeterManager",
     ) -> None:
-        self.apm_txname_manager = apm_txname_manager
+        super().__init__(
+            apm_txname_manager=apm_txname_manager,
+        )
         self.service_name = apm_config.service_name
         self.apm_meters = apm_meters
-
-    # TODO Assumes SolarWindsInboundMetricsSpanProcessor.on_start
-    #      is called to store span ID for any custom txn naming
-    #      https://swicloud.atlassian.net/browse/NH-65061
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports OTLP trace metrics"""
@@ -109,36 +97,6 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
 
     # TODO Refactor for both inbound and otlp metrics
     #      https://swicloud.atlassian.net/browse/NH-65061
-    def is_span_http(self, span: "ReadableSpan") -> bool:
-        """This span from inbound HTTP request if from a SERVER by some http.method"""
-        if span.kind == SpanKind.SERVER and span.attributes.get(
-            self._HTTP_METHOD, None
-        ):
-            return True
-        return False
-
-    # TODO Refactor for both inbound and otlp metrics
-    #      https://swicloud.atlassian.net/browse/NH-65061
-    def has_error(self, span: "ReadableSpan") -> bool:
-        """Calculate if this span instance has_error"""
-        if span.status.status_code == StatusCode.ERROR:
-            return True
-        return False
-
-    # TODO Refactor for both inbound and otlp metrics
-    #      https://swicloud.atlassian.net/browse/NH-65061
-    def get_http_status_code(self, span: "ReadableSpan") -> int:
-        """Calculate HTTP status_code from span or default to UNAVAILABLE"""
-        status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
-        # Something went wrong in OTel or instrumented service crashed early
-        # if no status_code in attributes of HTTP span
-        if not status_code:
-            # TODO change if refactor
-            status_code = self._HTTP_SPAN_STATUS_UNAVAILABLE
-        return status_code
-
-    # TODO Refactor for both inbound and otlp metrics
-    #      https://swicloud.atlassian.net/browse/NH-65061
     # Disable pylint for compatibility with Python3.7 else TypeError
     def calculate_transaction_names(
         self, span: "ReadableSpan"
@@ -174,14 +132,3 @@ class SolarWindsOTLPMetricsSpanProcessor(SpanProcessor):
             # custom txn name from cache if not sampled,
             # so not doing it here for OTLP
         return trans_name
-
-    def calculate_span_time(
-        self,
-        start_time: int,
-        end_time: int,
-    ) -> int:
-        """Calculate span time in milliseconds (ms) using start and end time
-        in nanoseconds (ns). OTel span start/end_time are optional."""
-        if not start_time or not end_time:
-            return 0
-        return int((end_time - start_time) // 1e6)

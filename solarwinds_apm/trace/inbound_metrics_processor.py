@@ -8,11 +8,10 @@ import logging
 from typing import TYPE_CHECKING, Any, Optional, Tuple
 
 from opentelemetry import baggage, context
-from opentelemetry.sdk.trace import SpanProcessor
-from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.trace import SpanKind, StatusCode, TraceFlags
+from opentelemetry.trace import TraceFlags
 
 from solarwinds_apm.apm_constants import INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
+from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
@@ -25,27 +24,21 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
-    # TODO Refactor span processors
-    #      https://swicloud.atlassian.net/browse/NH-65061
-
-    _TRANSACTION_NAME = "transaction_name"
-    _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
-    _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
-    _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
-    _HTTP_URL = SpanAttributes.HTTP_URL  # "http.url"
-
-    _LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE = 0
+class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
+    """SolarWinds span processor for APM-proto inbound metrics generation"""
 
     def __init__(
         self,
         apm_txname_manager: "SolarWindsTxnNameManager",
         apm_config: "SolarWindsApmConfig",
     ) -> None:
-        self.apm_txname_manager = apm_txname_manager
+        super().__init__(
+            apm_txname_manager=apm_txname_manager,
+        )
         self._span = apm_config.extension.Span
         self.config_transaction_name = apm_config.get(self._TRANSACTION_NAME)
 
+    # This is moved in https://github.com/solarwinds/apm-python/pull/252
     def on_start(
         self,
         span: "ReadableSpan",
@@ -140,29 +133,6 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
                 W3CTransformer.trace_and_span_id_from_context(span.context)
             ] = liboboe_txn_name  # type: ignore
 
-    def is_span_http(self, span: "ReadableSpan") -> bool:
-        """This span from inbound HTTP request if from a SERVER by some http.method"""
-        if span.kind == SpanKind.SERVER and span.attributes.get(
-            self._HTTP_METHOD, None
-        ):
-            return True
-        return False
-
-    def has_error(self, span: "ReadableSpan") -> bool:
-        """Calculate if this span instance has_error"""
-        if span.status.status_code == StatusCode.ERROR:
-            return True
-        return False
-
-    def get_http_status_code(self, span: "ReadableSpan") -> int:
-        """Calculate HTTP status_code from span or default to UNAVAILABLE"""
-        status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
-        # Something went wrong in OTel or instrumented service crashed early
-        # if no status_code in attributes of HTTP span
-        if not status_code:
-            status_code = self._LIBOBOE_HTTP_SPAN_STATUS_UNAVAILABLE
-        return status_code
-
     # Disable pylint for compatibility with Python3.7 else TypeError
     def calculate_transaction_names(
         self, span: "ReadableSpan"
@@ -196,14 +166,3 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
             # If sampled, should be re-added at on_end.
             del self.apm_txname_manager[trace_span_id]
         return trans_name
-
-    def calculate_span_time(
-        self,
-        start_time: int,
-        end_time: int,
-    ) -> int:
-        """Calculate span time in microseconds (us) using start and end time
-        in nanoseconds (ns). OTel span start/end_time are optional."""
-        if not start_time or not end_time:
-            return 0
-        return int((end_time - start_time) // 1e3)
