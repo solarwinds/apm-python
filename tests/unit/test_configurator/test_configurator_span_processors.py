@@ -4,6 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import os
+
 from solarwinds_apm import configurator
 
 # otel fixtures
@@ -25,12 +27,79 @@ class TestConfiguratorSpanProcessors:
         trace_mocks.get_tracer_provider.assert_called_once()
         trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
 
-    def test_configure_inbound_metrics_span_processor(
+    def test_configure_inbound_metrics_span_processor_no_exporters(
+        self,
+        mocker,
+    ):
+        # Save any exporters in os for later
+        old_exporter = os.environ.get("OTEL_TRACES_EXPORTER", None)
+        if old_exporter:
+            del os.environ["OTEL_TRACES_EXPORTER"]
+
+        trace_mocks = get_trace_mocks(mocker)
+        mock_processor = mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsInboundMetricsSpanProcessor"
+        )
+
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure_inbound_metrics_span_processor(
+            mocker.Mock(),
+            mocker.Mock(),
+        )  
+
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
+        mock_processor.assert_not_called()
+
+        # Restore the os exporters
+        if old_exporter:
+            os.environ["OTEL_TRACES_EXPORTER"] = old_exporter
+
+    def test_configure_inbound_metrics_span_processor_no_sw_exporter(
+        self,
+        mocker,
+    ):
+        # Save any exporters in os for later
+        old_exporter = os.environ.get("OTEL_TRACES_EXPORTER", None)
+        if old_exporter:
+            del os.environ["OTEL_TRACES_EXPORTER"]
+        mocker.patch.dict(os.environ, {
+            "OTEL_TRACES_EXPORTER": "foo_exporter_not_sw",
+        })
+
+        trace_mocks = get_trace_mocks(mocker)
+        mock_processor = mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsInboundMetricsSpanProcessor"
+        )
+
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure_inbound_metrics_span_processor(
+            mocker.Mock(),
+            mocker.Mock(),
+        )  
+
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
+        mock_processor.assert_not_called()
+
+        # Restore the os exporters
+        if old_exporter:
+            os.environ["OTEL_TRACES_EXPORTER"] = old_exporter
+
+    def test_configure_inbound_metrics_span_processor_ok(
         self,
         mocker,
         mock_apmconfig_enabled,
         mock_txn_name_manager,
     ):
+        # Save any exporters in os for later
+        old_exporter = os.environ.get("OTEL_TRACES_EXPORTER", None)
+        if old_exporter:
+            del os.environ["OTEL_TRACES_EXPORTER"]
+        mocker.patch.dict(os.environ, {
+            "OTEL_TRACES_EXPORTER": "solarwinds_exporter",
+        })
+
         trace_mocks = get_trace_mocks(mocker)
         mock_processor = mocker.patch(
             "solarwinds_apm.configurator.SolarWindsInboundMetricsSpanProcessor"
@@ -46,7 +115,11 @@ class TestConfiguratorSpanProcessors:
         mock_processor.assert_called_once_with(
             mock_txn_name_manager,
             mock_apmconfig_enabled,
-        ) 
+        )
+
+        # Restore the os exporters
+        if old_exporter:
+            os.environ["OTEL_TRACES_EXPORTER"] = old_exporter
 
     def test_configure_otlp_metrics_span_processors_missing_flag(
         self,
