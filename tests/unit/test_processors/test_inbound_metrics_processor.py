@@ -293,7 +293,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             False,
         )
         mock_create_span.assert_not_called()
-        mock_set.assert_called_once_with("some-id", "foo-http-name")
+        mock_set.assert_called_once_with("oboe-some-id", "foo-http-name")
 
     def test_on_end_not_is_span_http(self, mocker):
         mock_get_http_status_code, \
@@ -343,7 +343,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             123,
             False,
         )
-        mock_set.assert_called_once_with("some-id", "foo-name")
+        mock_set.assert_called_once_with("oboe-some-id", "foo-name")
 
     def test_on_end_not_sampled_is_http(self, mocker):
         """Still submit inbound metrics but don't (re-)cache txn name because not exported"""

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from opentelemetry.trace import TraceFlags
 
+from solarwinds_apm.apm_constants import INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
@@ -37,8 +38,16 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
         self.config_transaction_name = apm_config.get(self._TRANSACTION_NAME)
 
     def on_end(self, span: "ReadableSpan") -> None:
-        """Calculates and reports inbound trace metrics,
-        and caches liboboe transaction name"""
+        """Calculates and reports inbound trace metrics.
+
+        If trace is sampled, caches liboboe transaction name under
+        a prefixed key for solarwinds_exporter. For example:
+
+        {
+            'oboe-<trace_id_01>-<span_id_01>': 'some_http_name',
+            'oboe-<trace_id_02>-<span_id_02>': 'some_non_http_name',
+        }
+        """
         # Only calculate inbound metrics for service entry spans
         parent_span_context = span.parent
         if (
@@ -109,10 +118,6 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
             )
 
         if span.context.trace_flags == TraceFlags.SAMPLED:
-            # !!!
-            # TODO store under a different key
-            #      so not removed by TxnNameCleanup
             # Cache txn_name for span export
-            self.apm_txname_manager[
-                W3CTransformer.trace_and_span_id_from_context(span.context)
-            ] = liboboe_txn_name  # type: ignore
+            txname_key = f"{INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX}-{W3CTransformer.trace_and_span_id_from_context(span.context)}"
+            self.apm_txname_manager[txname_key] = liboboe_txn_name

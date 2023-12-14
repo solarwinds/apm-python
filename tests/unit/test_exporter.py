@@ -492,6 +492,102 @@ class Test_SolarWindsSpanExporter():
             exporter
         )
 
+    def patch__add_info_transaction_name(
+        self,
+        mocker,
+        get_retval=None,
+    ):
+        mock_w3c = mocker.patch(
+            "solarwinds_apm.exporter.W3CTransformer"
+        )
+        mock_ts_id = mocker.Mock(return_value="some-id")
+        mock_w3c.configure_mock(
+            **{
+                "trace_and_span_id_from_context": mock_ts_id
+            }
+        )
+
+        mock_event = mocker.patch(
+            "solarwinds_apm.extension.oboe.Event"
+        )
+        mock_add_info = mocker.Mock()
+        mock_event.configure_mock(
+            **{
+                "addInfo": mock_add_info
+            }
+        )
+
+        mock_apm_txname_manager = mocker.patch(
+            "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager",
+            return_value=mocker.Mock()
+        )
+        mock_txnman_get = mocker.Mock()
+        mock_txnman_get.configure_mock(return_value=get_retval)
+        mock_txnman_del = mocker.Mock()
+        mock_apm_txname_manager.configure_mock(
+            **{
+                "__delitem__": mock_txnman_del,
+                "get": mock_txnman_get
+            }
+        )
+
+        return mock_apm_txname_manager, \
+            mock_event, \
+            mock_txnman_get, \
+            mock_txnman_del, \
+            mock_add_info
+
+    def test__add_info_transaction_name_ok(
+        self,
+        mocker,
+    ):
+        mock_apm_txname_manager, \
+            mock_event, \
+            mock_txnman_get, \
+            mock_txnman_del, \
+            mock_add_info = self.patch__add_info_transaction_name(mocker, "foo")
+
+        exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
+            mocker.Mock(),
+            mock_apm_txname_manager,
+            mocker.Mock(),
+            mocker.Mock(),
+        )
+        exporter._add_info_transaction_name(
+            mocker.Mock(),
+            mock_event,
+        )
+        mock_txnman_get.assert_called_once_with("oboe-some-id")
+        mock_txnman_del.assert_called_once_with("oboe-some-id")
+        mock_add_info.assert_called_once_with(
+            "TransactionName",
+            "foo",
+        ) 
+
+    def test__add_info_transaction_name_none(
+        self,
+        mocker,
+    ):
+        mock_apm_txname_manager, \
+            mock_event, \
+            mock_txnman_get, \
+            mock_txnman_del, \
+            mock_add_info = self.patch__add_info_transaction_name(mocker)
+        
+        exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
+            mocker.Mock(),
+            mock_apm_txname_manager,
+            mocker.Mock(),
+            mocker.Mock(),
+        )
+        exporter._add_info_transaction_name(
+            mocker.Mock(),
+            mock_event,
+        )
+        mock_txnman_get.assert_called_once_with("oboe-some-id")
+        mock_txnman_del.assert_not_called()
+        mock_add_info.assert_not_called()
+
     def test__add_info_instrumentation_scope_none(
         self,
         mocker,
