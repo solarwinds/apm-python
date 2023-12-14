@@ -8,6 +8,7 @@ import logging
 import random
 from typing import TYPE_CHECKING
 
+from solarwinds_apm.apm_constants import INTL_SWO_SUPPORT_EMAIL
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
@@ -48,6 +49,25 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         ):
             return
 
+        txn_name_tuple = self.apm_txname_manager.get(
+            W3CTransformer.trace_and_span_id_from_context(span.context)
+        )
+        if not txn_name_tuple:
+            logger.error(
+                "Failed to retrieve transaction name for OTLP metrics generation. Please contact %s",
+                INTL_SWO_SUPPORT_EMAIL,
+            )
+            return
+
+        try:
+            trans_name = txn_name_tuple[0]
+        except IndexError:
+            logger.error(
+                "Failed to retrieve transaction and URL names for OTLP metrics generation. Please contact %s",
+                INTL_SWO_SUPPORT_EMAIL,
+            )
+            return
+
         # TODO add sw.service_name
         # https://swicloud.atlassian.net/browse/NH-67392
         # support ssa and conform to Otel proto common_pb2
@@ -62,13 +82,6 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
             meter_attrs.update({"sw.is_error": "true"})
         else:
             meter_attrs.update({"sw.is_error": "false"})
-
-        # trans_name will never be None because always at least span.name
-        # TODO don't assume successfully calculated and stored for every span
-        txn_name_tuple = self.apm_txname_manager.get(
-            W3CTransformer.trace_and_span_id_from_context(span.context)
-        )
-        trans_name = txn_name_tuple[0]
 
         is_span_http = self.is_span_http(span)
         span_time = self.calculate_span_time(

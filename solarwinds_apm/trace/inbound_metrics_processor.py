@@ -9,7 +9,10 @@ from typing import TYPE_CHECKING
 
 from opentelemetry.trace import TraceFlags
 
-from solarwinds_apm.apm_constants import INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX,
+    INTL_SWO_SUPPORT_EMAIL,
+)
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
@@ -57,6 +60,26 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
         ):
             return
 
+        txn_name_tuple = self.apm_txname_manager.get(
+            W3CTransformer.trace_and_span_id_from_context(span.context)
+        )
+        if not txn_name_tuple:
+            logger.error(
+                "Failed to retrieve transaction name for inbound metrics generation. Please contact %s",
+                INTL_SWO_SUPPORT_EMAIL,
+            )
+            return
+
+        try:
+            trans_name = txn_name_tuple[0]
+            url_tran = txn_name_tuple[1]
+        except IndexError:
+            logger.error(
+                "Failed to retrieve transaction and URL names for inbound metrics generation. Please contact %s",
+                INTL_SWO_SUPPORT_EMAIL,
+            )
+            return
+
         is_span_http = self.is_span_http(span)
         span_time = self.calculate_span_time(
             span.start_time,
@@ -65,13 +88,6 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
         # TODO Use `domain` for custom transaction naming after alpha/beta
         domain = None
         has_error = self.has_error(span)
-
-        # TODO don't assume successfully calculated and stored for every span
-        txn_name_tuple = self.apm_txname_manager.get(
-            W3CTransformer.trace_and_span_id_from_context(span.context)
-        )
-        trans_name = txn_name_tuple[0]
-        url_tran = txn_name_tuple[1]
 
         liboboe_txn_name = None
         if is_span_http:
