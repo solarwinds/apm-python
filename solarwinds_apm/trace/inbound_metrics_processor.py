@@ -80,7 +80,7 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
             request_method = span.attributes.get(self._HTTP_METHOD, None)
 
             # TODO Change when this is logged (don't when no-op)
-            # https://swicloud.atlassian.net/browse/NH-65061
+            # https://swicloud.atlassian.net/browse/NH-69129
             logger.debug(
                 "createHttpSpan with trans_name: %s, url_tran: %s, domain: %s, span_time: %s status_code: %s, request_method: %s, has_error: %s",
                 trans_name,
@@ -102,7 +102,7 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
             )
         else:
             # TODO Change when this is logged (don't when no-op)
-            # https://swicloud.atlassian.net/browse/NH-65061
+            # https://swicloud.atlassian.net/browse/NH-69129
             logger.debug(
                 "createSpan with trans_name: %s, domain: %s, span_time: %s, has_error: %s",
                 trans_name,
