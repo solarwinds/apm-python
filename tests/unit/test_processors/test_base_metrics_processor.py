@@ -132,6 +132,52 @@ class TestSwBaseMetricsProcessor:
         )
         assert False == processor.is_span_http(mock_span)
 
+    def test_get_http_status_code_from_span(self, mocker):
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.trace.base_metrics_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_STATUS_CODE": "http.status_code"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "foo",
+                "attributes": {
+                    "http.status_code": "foo"
+                }
+            }
+        )
+        processor = _SwBaseMetricsProcessor(
+            mocker.Mock(),
+        )
+        assert "foo" == processor.get_http_status_code(mock_span)
+
+    def test_get_http_status_code_default(self, mocker):
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.trace.base_metrics_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_STATUS_CODE": "http.status_code"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "foo",
+                "attributes": {
+                    "NOT.http.status_code.muahaha": "foo"
+                }
+            }
+        )
+        processor = _SwBaseMetricsProcessor(
+            mocker.Mock(),
+        )
+        assert 0 == processor.get_http_status_code(mock_span)
+
     def test_has_error_true(self, mocker):
         mock_statuscode = mocker.patch(
             "solarwinds_apm.trace.base_metrics_processor.StatusCode"

@@ -24,9 +24,7 @@ class _SwBaseMetricsProcessor(SpanProcessor):
     """Solarwinds base class for metrics span processors"""
 
     _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
-    _HTTP_ROUTE = SpanAttributes.HTTP_ROUTE  # "http.route"
     _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
-    _HTTP_URL = SpanAttributes.HTTP_URL  # "http.url"
 
     _HTTP_SPAN_STATUS_UNAVAILABLE = 0
     _TRANSACTION_NAME = "transaction_name"

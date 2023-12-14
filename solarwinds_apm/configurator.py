@@ -60,6 +60,8 @@ from solarwinds_apm.trace import (
     ForceFlushSpanProcessor,
     SolarWindsInboundMetricsSpanProcessor,
     SolarWindsOTLPMetricsSpanProcessor,
+    TxnNameCalculatorProcessor,
+    TxnNameCleanupProcessor,
 )
 from solarwinds_apm.version import __version__
 
@@ -117,6 +119,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
         if apm_config.agent_enabled:
+            self._configure_txnname_calculator_span_processor(
+                apm_txname_manager,
+            )
             self._configure_inbound_metrics_span_processor(
                 apm_txname_manager,
                 apm_config,
@@ -125,6 +130,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_txname_manager,
                 apm_config,
                 apm_meters,
+            )
+            self._configure_txnname_cleanup_span_processor(
+                apm_txname_manager,
             )
             self._configure_traces_exporter(
                 reporter,
@@ -170,6 +178,28 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     {"service.name": apm_config.service_name}
                 ),
             ),
+        )
+
+    def _configure_txnname_calculator_span_processor(
+        self,
+        apm_txname_manager: SolarWindsTxnNameManager,
+    ) -> None:
+        """Configure TxnNameCalculatorSpanProcessor"""
+        trace.get_tracer_provider().add_span_processor(
+            TxnNameCalculatorProcessor(
+                apm_txname_manager,
+            )
+        )
+
+    def _configure_txnname_cleanup_span_processor(
+        self,
+        apm_txname_manager: SolarWindsTxnNameManager,
+    ) -> None:
+        """Configure TxnNameCleanupSpanProcessor"""
+        trace.get_tracer_provider().add_span_processor(
+            TxnNameCleanupProcessor(
+                apm_txname_manager,
+            )
         )
 
     def _configure_inbound_metrics_span_processor(

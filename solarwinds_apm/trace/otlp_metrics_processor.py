@@ -6,7 +6,7 @@
 
 import logging
 import random
-from typing import TYPE_CHECKING, Any, Tuple
+from typing import TYPE_CHECKING
 
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 from solarwinds_apm.w3c_transformer import W3CTransformer
@@ -64,7 +64,11 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
             meter_attrs.update({"sw.is_error": "false"})
 
         # trans_name will never be None because always at least span.name
-        trans_name, _ = self.calculate_transaction_names(span)
+        # TODO don't assume successfully calculated and stored for every span
+        txn_name_tuple = self.apm_txname_manager.get(
+            W3CTransformer.trace_and_span_id_from_context(span.context)
+        )
+        trans_name = txn_name_tuple[0]
 
         is_span_http = self.is_span_http(span)
         span_time = self.calculate_span_time(
@@ -88,47 +92,3 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
             amount=span_time,
             attributes=meter_attrs,
         )
-
-        # This does not cache txn_name for span export because
-        # assuming SolarWindsInboundMetricsSpanProcessor does it
-        # for SW-style trace export. This processor is for OTLP-style.
-        # TODO: Cache txn_name for OTLP span export?
-        #       https://swicloud.atlassian.net/browse/NH-65061
-
-    # TODO Refactor for both inbound and otlp metrics
-    #      https://swicloud.atlassian.net/browse/NH-65061
-    # Disable pylint for compatibility with Python3.7 else TypeError
-    def calculate_transaction_names(
-        self, span: "ReadableSpan"
-    ) -> Tuple[Any, Any]:  # pylint: disable=deprecated-typing-alias
-        """Get trans_name and url_tran of this span instance."""
-        url_tran = span.attributes.get(self._HTTP_URL, None)
-        http_route = span.attributes.get(self._HTTP_ROUTE, None)
-        trans_name = None
-        custom_trans_name = self.calculate_custom_transaction_name(span)
-
-        if custom_trans_name:
-            trans_name = custom_trans_name
-        elif http_route:
-            trans_name = http_route
-        elif span.name:
-            trans_name = span.name
-        return trans_name, url_tran
-
-    # TODO Refactor for both inbound and otlp metrics
-    #      https://swicloud.atlassian.net/browse/NH-65061
-    def calculate_custom_transaction_name(self, span: "ReadableSpan") -> Any:
-        """Get custom transaction name for trace by trace_id, if any"""
-        trans_name = None
-        trace_span_id = W3CTransformer.trace_and_span_id_from_context(
-            span.context
-        )
-        custom_name = self.apm_txname_manager.get(trace_span_id)
-        if custom_name:
-            trans_name = custom_name
-            # TODO change if refactor
-            # Assume SolarWindsInboundMetricsSpanProcessor is
-            # active and is doing the removal of any
-            # custom txn name from cache if not sampled,
-            # so not doing it here for OTLP
-        return trans_name

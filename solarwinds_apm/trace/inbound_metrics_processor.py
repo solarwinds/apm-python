@@ -5,7 +5,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional, Tuple
+from typing import TYPE_CHECKING, Optional
 
 from opentelemetry import baggage, context
 from opentelemetry.trace import TraceFlags
@@ -81,7 +81,13 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
         # TODO Use `domain` for custom transaction naming after alpha/beta
         domain = None
         has_error = self.has_error(span)
-        trans_name, url_tran = self.calculate_transaction_names(span)
+
+        # TODO don't assume successfully calculated and stored for every span
+        txn_name_tuple = self.apm_txname_manager.get(
+            W3CTransformer.trace_and_span_id_from_context(span.context)
+        )
+        trans_name = txn_name_tuple[0]
+        url_tran = txn_name_tuple[1]
 
         liboboe_txn_name = None
         if is_span_http:
@@ -128,41 +134,10 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
             )
 
         if span.context.trace_flags == TraceFlags.SAMPLED:
+            # !!!
+            # TODO store under a different key
+            #      so not removed by TxnNameCleanup
             # Cache txn_name for span export
             self.apm_txname_manager[
                 W3CTransformer.trace_and_span_id_from_context(span.context)
             ] = liboboe_txn_name  # type: ignore
-
-    # Disable pylint for compatibility with Python3.7 else TypeError
-    def calculate_transaction_names(
-        self, span: "ReadableSpan"
-    ) -> Tuple[Any, Any]:  # pylint: disable=deprecated-typing-alias
-        """Get trans_name and url_tran of this span instance."""
-        url_tran = span.attributes.get(self._HTTP_URL, None)
-        http_route = span.attributes.get(self._HTTP_ROUTE, None)
-        trans_name = None
-        custom_trans_name = self.calculate_custom_transaction_name(span)
-        if not custom_trans_name:
-            custom_trans_name = self.config_transaction_name
-
-        if custom_trans_name:
-            trans_name = custom_trans_name
-        elif http_route:
-            trans_name = http_route
-        elif span.name:
-            trans_name = span.name
-        return trans_name, url_tran
-
-    def calculate_custom_transaction_name(self, span: "ReadableSpan") -> Any:
-        """Get custom transaction name for trace by trace_id, if any"""
-        trans_name = None
-        trace_span_id = W3CTransformer.trace_and_span_id_from_context(
-            span.context
-        )
-        custom_name = self.apm_txname_manager.get(trace_span_id)
-        if custom_name:
-            trans_name = custom_name
-            # Remove custom name from cache in case not sampled.
-            # If sampled, should be re-added at on_end.
-            del self.apm_txname_manager[trace_span_id]
-        return trans_name

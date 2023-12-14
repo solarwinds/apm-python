@@ -189,11 +189,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
         mock_calculate_span_time.configure_mock(return_value=123)
 
-        mock_calculate_transaction_names = mocker.patch(
-            "solarwinds_apm.trace.SolarWindsInboundMetricsSpanProcessor.calculate_transaction_names"
-        )
-        mock_calculate_transaction_names.configure_mock(return_value=("foo", "bar"))
-
         mock_get_http_status_code = mocker.patch(
             "solarwinds_apm.trace.SolarWindsInboundMetricsSpanProcessor.get_http_status_code"
         )
@@ -228,6 +223,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             **{
                 "__setitem__": mock_set,
                 "__delitem__": mock_del,
+                "get": mocker.Mock(return_value=("foo", "bar"))
             }
         )
 
@@ -249,16 +245,16 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mock_set, \
             mock_is_span_http, \
             mock_calculate_span_time, \
-            mock_has_error, \
-            mock_calculate_transaction_names
+            mock_has_error
 
     def test_on_end_valid_local_parent_span(self, mocker):
         """Only scenario to skip inbound metrics generation (not entry span)"""
-        _, _, _, _, _, _, \
+        _, _, _, _, \
+            mock_txname_manager, \
+            _, \
             mock_is_span_http, \
             mock_calculate_span_time, \
-            mock_has_error, \
-            mock_calculate_transaction_names = self.patch_for_on_end(mocker)
+            mock_has_error = self.patch_for_on_end(mocker)
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -273,21 +269,21 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
+            mock_txname_manager,
             mocker.Mock(),
         )
         assert processor.on_end(mock_span) is None
         mock_is_span_http.assert_not_called()
         mock_calculate_span_time.assert_not_called()
         mock_has_error.assert_not_called()
-        mock_calculate_transaction_names.assert_not_called()
 
     def test_on_end_valid_remote_parent_span(self, mocker):
-        _, _, _, _, _, _, \
+        _, _, _, _, \
+            mock_txname_manager, \
+            _, \
             mock_is_span_http, \
             mock_calculate_span_time, \
-            mock_has_error, \
-            mock_calculate_transaction_names = self.patch_for_on_end(mocker)
+            mock_has_error = self.patch_for_on_end(mocker)
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -302,21 +298,21 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
+            mock_txname_manager,
             mocker.Mock(),
         )
         assert processor.on_end(mock_span) is None
         mock_is_span_http.assert_called_once()
         mock_calculate_span_time.assert_called_once()
         mock_has_error.assert_called_once()
-        mock_calculate_transaction_names.assert_called_once()
 
     def test_on_end_invalid_remote_parent_span(self, mocker):
-        _, _, _, _, _, _, \
+        _, _, _, _, \
+            mock_txname_manager, \
+             _, \
             mock_is_span_http, \
             mock_calculate_span_time, \
-            mock_has_error, \
-            mock_calculate_transaction_names = self.patch_for_on_end(mocker)
+            mock_has_error = self.patch_for_on_end(mocker)
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -331,21 +327,21 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
+            mock_txname_manager,
             mocker.Mock(),
         )
         assert processor.on_end(mock_span) is None
         mock_is_span_http.assert_called_once()
         mock_calculate_span_time.assert_called_once()
         mock_has_error.assert_called_once()
-        mock_calculate_transaction_names.assert_called_once()
 
     def test_on_end_invalid_local_parent_span(self, mocker):
-        _, _, _, _, _, _, \
+        _, _, _, _, \
+            mock_txname_manager, \
+            _, \
             mock_is_span_http, \
             mock_calculate_span_time, \
-            mock_has_error, \
-            mock_calculate_transaction_names = self.patch_for_on_end(mocker)
+            mock_has_error = self.patch_for_on_end(mocker)
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -360,21 +356,21 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
+            mock_txname_manager,
             mocker.Mock(),
         )
         assert processor.on_end(mock_span) is None
         mock_is_span_http.assert_called_once()
         mock_calculate_span_time.assert_called_once()
         mock_has_error.assert_called_once()
-        mock_calculate_transaction_names.assert_called_once()
 
     def test_on_end_missing_parent(self, mocker):
-        _, _, _, _, _, _, \
+        _, _, _, _, \
+            mock_txname_manager, \
+            _, \
             mock_is_span_http, \
             mock_calculate_span_time, \
-            mock_has_error, \
-            mock_calculate_transaction_names = self.patch_for_on_end(mocker)
+            mock_has_error = self.patch_for_on_end(mocker)
         mock_span = mocker.Mock()
         mock_span.configure_mock(
             **{
@@ -382,14 +378,13 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
+            mock_txname_manager,
             mocker.Mock(),
         )
         assert processor.on_end(mock_span) is None
         mock_is_span_http.assert_called_once()
         mock_calculate_span_time.assert_called_once()
         mock_has_error.assert_called_once()
-        mock_calculate_transaction_names.assert_called_once()
 
     def test_on_end_is_span_http(self, mocker):
         mock_get_http_status_code, \
@@ -398,7 +393,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mock_apm_config, \
             mock_txname_manager, \
             mock_set, \
-            _, _, _, _ = self.patch_for_on_end(
+            _, _, _ = self.patch_for_on_end(
                 mocker,
                 is_span_http=True
             )
@@ -462,7 +457,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mock_apm_config, \
             mock_txname_manager, \
             mock_set, \
-            _, _, _, _ = self.patch_for_on_end(
+            _, _, _ = self.patch_for_on_end(
                 mocker,
                 is_span_http=False
             )
@@ -513,7 +508,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mock_apm_config, \
             mock_txname_manager, \
             mock_set, \
-            _, _, _, _ = self.patch_for_on_end(
+            _, _, _ = self.patch_for_on_end(
                 mocker,
                 is_span_http=True
             )
@@ -578,7 +573,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mock_apm_config, \
             mock_txname_manager, \
             mock_set, \
-            _, _, _, _ = self.patch_for_on_end(
+            _, _, _ = self.patch_for_on_end(
                 mocker,
                 is_span_http=False
             )
@@ -620,297 +615,3 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             False,
         )
         mock_set.assert_not_called()
-
-    def test_get_http_status_code_from_span(self, mocker):
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.base_metrics_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_STATUS_CODE": "http.status_code"
-            }
-        )
-        mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "kind": "foo",
-                "attributes": {
-                    "http.status_code": "foo"
-                }
-            }
-        )
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
-            mocker.Mock(),
-        )
-        assert "foo" == processor.get_http_status_code(mock_span)
-
-    def test_get_http_status_code_default(self, mocker):
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.base_metrics_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_STATUS_CODE": "http.status_code"
-            }
-        )
-        mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "kind": "foo",
-                "attributes": {
-                    "NOT.http.status_code.muahaha": "foo"
-                }
-            }
-        )
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
-            mocker.Mock(),
-        )
-        assert 0 == processor.get_http_status_code(mock_span)
-
-    def test_calculate_transaction_names_span_name_default(self, mocker):
-        """Otel Python span.name should always exist"""
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.base_metrics_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_URL": "http.url",
-                "HTTP_ROUTE": "http.route"
-            }
-        )
-        mock_calculate_custom = mocker.patch(
-            "solarwinds_apm.trace.SolarWindsInboundMetricsSpanProcessor.calculate_custom_transaction_name"
-        )
-        mock_calculate_custom.configure_mock(return_value=None)
-        mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "name": "foo",
-                "attributes": {
-                    "http.route": None,
-                    "http.url": None
-                }
-            }
-        )
-        mock_get = mocker.Mock(return_value=None)
-        mock_apm_config = mocker.Mock()
-        mock_apm_config.configure_mock(
-            **{
-                "get": mock_get
-            }
-        )
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
-            mock_apm_config,
-        )
-        assert ("foo", None) == processor.calculate_transaction_names(mock_span)
-
-    def test_calculate_transaction_names_custom(self, mocker):
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.base_metrics_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_URL": "http.url",
-                "HTTP_ROUTE": "http.route"
-            }
-        )
-        mock_calculate_custom = mocker.patch(
-            "solarwinds_apm.trace.SolarWindsInboundMetricsSpanProcessor.calculate_custom_transaction_name"
-        )
-        mock_calculate_custom.configure_mock(return_value="foo")
-        mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "attributes": {
-                    "http.url": "bar"
-                }
-            }
-        )
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
-            mocker.Mock(),
-        )
-        result = processor.calculate_transaction_names(mock_span)
-        assert "foo", "bar" == result
-
-    def test_calculate_transaction_names_yes_custom_yes_config(self, mocker):
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.base_metrics_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_URL": "http.url",
-                "HTTP_ROUTE": "http.route"
-            }
-        )
-        mock_calculate_custom = mocker.patch(
-            "solarwinds_apm.trace.SolarWindsInboundMetricsSpanProcessor.calculate_custom_transaction_name"
-        )
-        mock_calculate_custom.configure_mock(return_value="foo")
-        mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "attributes": {
-                    "http.url": "bar"
-                }
-            }
-        )
-        mock_get = mocker.Mock(return_value="not-used")
-        mock_apm_config = mocker.Mock()
-        mock_apm_config.configure_mock(
-            **{
-                "get": mock_get
-            }
-        )
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
-            mock_apm_config,
-        )
-        result = processor.calculate_transaction_names(mock_span)
-        assert "foo", "bar" == result
-
-    def test_calculate_transaction_names_no_custom_yes_config(self, mocker):
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.base_metrics_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_URL": "http.url",
-                "HTTP_ROUTE": "http.route"
-            }
-        )
-        mock_calculate_custom = mocker.patch(
-            "solarwinds_apm.trace.SolarWindsInboundMetricsSpanProcessor.calculate_custom_transaction_name"
-        )
-        mock_calculate_custom.configure_mock(return_value=None)
-        mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "attributes": {
-                    "http.url": "bar"
-                }
-            }
-        )
-        mock_get = mocker.Mock(return_value="foo")
-        mock_apm_config = mocker.Mock()
-        mock_apm_config.configure_mock(
-            **{
-                "get": mock_get
-            }
-        )
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
-            mock_apm_config,
-        )
-        result = processor.calculate_transaction_names(mock_span)
-        assert "foo", "bar" == result
-
-    def test_calculate_transaction_names_http_route(self, mocker):
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.base_metrics_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_URL": "http.url",
-                "HTTP_ROUTE": "http.route"
-            }
-        )
-        mock_calculate_custom = mocker.patch(
-            "solarwinds_apm.trace.SolarWindsInboundMetricsSpanProcessor.calculate_custom_transaction_name"
-        )
-        mock_calculate_custom.configure_mock(return_value=None)
-        mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "attributes": {
-                    "http.route": "foo",
-                    "http.url": "bar",
-                }
-            }
-        )
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
-            mocker.Mock(),
-        )
-        result = processor.calculate_transaction_names(mock_span)
-        assert "foo", "bar" == result
-
-    def test_calculate_transaction_names_span_name_and_url(self, mocker):
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.base_metrics_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_URL": "http.url",
-                "HTTP_ROUTE": "http.route"
-            }
-        )
-        mock_calculate_custom = mocker.patch(
-            "solarwinds_apm.trace.SolarWindsInboundMetricsSpanProcessor.calculate_custom_transaction_name"
-        )
-        mock_calculate_custom.configure_mock(return_value=None)
-        mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "name": "foo",
-                "attributes": {
-                    "not.http.route.hehe": "baz",
-                    "http.url": "bar",
-                }
-            }
-        )
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mocker.Mock(),
-            mocker.Mock(),
-        )
-        result = processor.calculate_transaction_names(mock_span)
-        assert "foo", "bar" == result
-
-    def test_calculate_custom_transaction_name_none(self, mocker):
-        mocker.patch(
-            "solarwinds_apm.trace.inbound_metrics_processor.W3CTransformer"
-        )
-        mock_txname_manager = mocker.Mock()
-        mock_get = mocker.Mock(return_value=None)
-        mock_del = mocker.Mock()
-        mock_txname_manager.configure_mock(
-            **{
-                "get": mock_get,
-                "__delitem__": mock_del,
-            }
-        )
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
-            mocker.Mock(),
-        )
-        assert processor.calculate_custom_transaction_name(mocker.Mock()) is None
-        mock_del.assert_not_called()
-
-    def test_calculate_custom_transaction_name_present(self, mocker):
-        mock_w3c = mocker.patch(
-            "solarwinds_apm.trace.inbound_metrics_processor.W3CTransformer"
-        )
-        mock_ts_id = mocker.Mock(return_value="some-id")
-        mock_w3c.configure_mock(
-            **{
-                "trace_and_span_id_from_context": mock_ts_id
-            }
-        )
-        mock_txname_manager = mocker.Mock()
-        mock_get = mocker.Mock(return_value="foo")
-        mock_del = mocker.Mock()
-        mock_txname_manager.configure_mock(
-            **{
-                "get": mock_get,
-                "__delitem__": mock_del,
-            }
-        )
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
-            mocker.Mock(),
-        )
-        assert "foo" == processor.calculate_custom_transaction_name(mocker.Mock())
-        mock_del.assert_called_once_with("some-id")
