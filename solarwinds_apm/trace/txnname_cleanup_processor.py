@@ -39,4 +39,4 @@ class TxnNameCleanupProcessor(SpanProcessor):
         )
         txn_name = self.apm_txname_manager.get(trace_span_id)
         if txn_name:
-            del self.apm_txname_manager[txn_name]
+            del self.apm_txname_manager[trace_span_id]
