@@ -53,18 +53,14 @@ from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
 from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
-from solarwinds_apm.inbound_metrics_processor import (
-    SolarWindsInboundMetricsSpanProcessor,
-)
-from solarwinds_apm.otlp_metrics_processor import (
-    SolarWindsOTLPMetricsSpanProcessor,
-)
 from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
 from solarwinds_apm.trace import (
     ForceFlushSpanProcessor,
     ServiceEntryIdSpanProcessor,
+    SolarWindsInboundMetricsSpanProcessor,
+    SolarWindsOTLPMetricsSpanProcessor,
 )
 from solarwinds_apm.version import __version__
 
