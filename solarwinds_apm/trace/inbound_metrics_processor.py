@@ -5,14 +5,12 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Tuple
 
-from opentelemetry import baggage, context
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import SpanKind, StatusCode, TraceFlags
 
-from solarwinds_apm.apm_constants import INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
@@ -45,28 +43,6 @@ class SolarWindsInboundMetricsSpanProcessor(SpanProcessor):
         self.apm_txname_manager = apm_txname_manager
         self._span = apm_config.extension.Span
         self.config_transaction_name = apm_config.get(self._TRANSACTION_NAME)
-
-    def on_start(
-        self,
-        span: "ReadableSpan",
-        parent_context: Optional[context.Context] = None,
-    ) -> None:
-        """Caches current trace ID and entry span ID in span context baggage"""
-        # Only caches for service entry spans
-        parent_span_context = span.parent
-        if (
-            parent_span_context
-            and parent_span_context.is_valid
-            and not parent_span_context.is_remote
-        ):
-            return
-
-        context.attach(
-            baggage.set_baggage(
-                INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID,
-                W3CTransformer.trace_and_span_id_from_context(span.context),
-            )
-        )
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports inbound trace metrics,

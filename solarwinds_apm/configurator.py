@@ -58,6 +58,7 @@ from solarwinds_apm.response_propagator import (
 )
 from solarwinds_apm.trace import (
     ForceFlushSpanProcessor,
+    ServiceEntryIdSpanProcessor,
     SolarWindsInboundMetricsSpanProcessor,
     SolarWindsOTLPMetricsSpanProcessor,
 )
@@ -117,6 +118,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config)
         if apm_config.agent_enabled:
+            self._configure_service_entry_id_span_processor()
             self._configure_inbound_metrics_span_processor(
                 apm_txname_manager,
                 apm_config,
@@ -170,6 +172,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     {"service.name": apm_config.service_name}
                 ),
             ),
+        )
+
+    def _configure_service_entry_id_span_processor(
+        self,
+    ) -> None:
+        """Configure ServiceEntryIdSpanProcessor"""
+        trace.get_tracer_provider().add_span_processor(
+            ServiceEntryIdSpanProcessor()
         )
 
     def _configure_inbound_metrics_span_processor(
