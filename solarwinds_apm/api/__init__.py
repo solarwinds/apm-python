@@ -15,7 +15,7 @@ from solarwinds_apm.apm_oboe_codes import OboeReadyCode
 
 # pylint: disable=import-error,no-name-in-module
 from solarwinds_apm.extension.oboe import Context
-from solarwinds_apm.trace import SolarWindsInboundMetricsSpanProcessor
+from solarwinds_apm.trace import TxnNameCalculatorProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -60,13 +60,13 @@ def set_transaction_name(custom_name: str) -> bool:
         # pylint: disable=protected-access
         get_tracer_provider()._active_span_processor._span_processors
     )
-    inbound_processor = None
+    txnname_processor = None
     for spr in span_processors:
-        if isinstance(spr, SolarWindsInboundMetricsSpanProcessor):
-            inbound_processor = spr
+        if isinstance(spr, TxnNameCalculatorProcessor):
+            txnname_processor = spr
 
-    if not inbound_processor:
-        logger.error("Could not find configured InboundMetricsSpanProcessor.")
+    if not txnname_processor:
+        logger.error("Could not find configured TxnNameCalculatorProcessor.")
         return False
 
     current_trace_entry_span_id = baggage.get_baggage(
@@ -78,7 +78,7 @@ def set_transaction_name(custom_name: str) -> bool:
             custom_name,
         )
         return False
-    inbound_processor.apm_txname_manager[
+    txnname_processor.apm_txname_manager[
         current_trace_entry_span_id
     ] = custom_name
     logger.debug(

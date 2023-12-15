@@ -41,7 +41,11 @@ class TxnNameCalculatorProcessor(SpanProcessor):
         self.apm_txname_manager = apm_txname_manager
 
     def on_end(self, span: "ReadableSpan") -> None:
-        """Calculates and stores transaction name for service entry spans"""
+        """Calculates and stores (trans_name, url_tran) tuple
+        for service entry spans.
+
+        If a custom name str was stored by the API, this method
+        overwrites that str with a tuple"""
         # Only calculate inbound metrics for service entry spans
         parent_span_context = span.parent
         if (
