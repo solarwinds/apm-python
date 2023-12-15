@@ -80,7 +80,6 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             }
         )
 
-        mock_record = mocker.Mock()
         mock_response_time = mocker.PropertyMock()
         mock_meters = mocker.Mock()
         type(mock_meters).response_time = mock_response_time

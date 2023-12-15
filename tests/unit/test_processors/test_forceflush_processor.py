@@ -17,7 +17,7 @@ class TestForceFlushSpanProcessor:
                 "force_flush": mock_meter_flush
             }
         )
-        mock_meter_provider_fn = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.trace.forceflush_processor.get_meter_provider",
             return_value=mock_meter_provider
         )
@@ -29,7 +29,7 @@ class TestForceFlushSpanProcessor:
                 "force_flush": mock_tracer_flush
             }
         )
-        mock_tracer_provider_fn = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.trace.forceflush_processor.get_tracer_provider",
             return_value=mock_tracer_provider
         )

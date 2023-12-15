@@ -79,7 +79,6 @@ class _SwBaseMetricsProcessor(SpanProcessor):
         # Something went wrong in OTel or instrumented service crashed early
         # if no status_code in attributes of HTTP span
         if not status_code:
-            # TODO change if refactor
             status_code = self._HTTP_SPAN_STATUS_UNAVAILABLE
         return status_code
 

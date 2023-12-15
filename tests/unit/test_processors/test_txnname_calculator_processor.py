@@ -193,11 +193,10 @@ class TestTxnNameCalculatorProcessor:
                 }
             }
         )
-        processor = TxnNameCalculatorProcessor(
+
+        assert "foo", "bar" == TxnNameCalculatorProcessor(
             mocker.Mock(),
-        )
-        result = processor.calculate_transaction_names(mock_span)
-        assert "foo", "bar" == result
+        ).calculate_transaction_names(mock_span)
 
     def test_calculate_transaction_names_yes_custom_yes_config(self, mocker):
         mock_spanattributes = mocker.patch(
@@ -228,10 +227,10 @@ class TestTxnNameCalculatorProcessor:
                 "get": mock_get
             }
         )
-        processor = TxnNameCalculatorProcessor(
+
+        assert "foo", "bar" == TxnNameCalculatorProcessor(
             mocker.Mock(),
-        )
-        assert "foo", "bar" == processor.calculate_transaction_names(mock_span)
+        ).calculate_transaction_names(mock_span)
 
     def test_calculate_transaction_names_no_custom_yes_config(self, mocker):
         mock_spanattributes = mocker.patch(
@@ -262,10 +261,10 @@ class TestTxnNameCalculatorProcessor:
                 "get": mock_get
             }
         )
-        processor = TxnNameCalculatorProcessor(
+
+        assert "foo", "bar" == TxnNameCalculatorProcessor(
             mocker.Mock(),
-        )
-        assert "foo", "bar" == processor.calculate_transaction_names(mock_span)
+        ).calculate_transaction_names(mock_span)
 
     def test_calculate_transaction_names_http_route(self, mocker):
         mock_spanattributes = mocker.patch(
@@ -290,10 +289,10 @@ class TestTxnNameCalculatorProcessor:
                 }
             }
         )
-        processor = TxnNameCalculatorProcessor(
+
+        assert "foo", "bar" == TxnNameCalculatorProcessor(
             mocker.Mock(),
-        )
-        assert "foo", "bar" == processor.calculate_transaction_names(mock_span)
+        ).calculate_transaction_names(mock_span)
 
     def test_calculate_transaction_names_span_name_and_url(self, mocker):
         mock_spanattributes = mocker.patch(
@@ -319,10 +318,11 @@ class TestTxnNameCalculatorProcessor:
                 }
             }
         )
-        processor = TxnNameCalculatorProcessor(
+
+
+        assert "foo", "bar" == TxnNameCalculatorProcessor(
             mocker.Mock(),
-        )
-        assert "foo", "bar" == processor.calculate_transaction_names(mock_span)
+        ).calculate_transaction_names(mock_span)
 
     def test_calculate_custom_transaction_name_none(self, mocker):
         mocker.patch(
@@ -335,10 +335,10 @@ class TestTxnNameCalculatorProcessor:
                 "get": mock_get,
             }
         )
-        processor = TxnNameCalculatorProcessor(
+
+        assert TxnNameCalculatorProcessor(
             mock_txname_manager,
-        )
-        assert processor.calculate_custom_transaction_name(mocker.Mock()) is None
+        ).calculate_custom_transaction_name(mocker.Mock()) is None
 
     def test_calculate_custom_transaction_name_present(self, mocker):
         mock_w3c = mocker.patch(
@@ -357,7 +357,7 @@ class TestTxnNameCalculatorProcessor:
                 "get": mock_get,
             }
         )
-        processor = TxnNameCalculatorProcessor(
+
+        assert "foo" == TxnNameCalculatorProcessor(
             mock_txname_manager,
-        )
-        assert "foo" == processor.calculate_custom_transaction_name(mocker.Mock())
+        ).calculate_custom_transaction_name(mocker.Mock())
