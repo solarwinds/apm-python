@@ -94,3 +94,49 @@ class TestSetTransactionName:
         mock_set = self.patch_set_name(mocker)
         assert set_transaction_name("bar") == True
         mock_set.assert_called_once_with("foo", "bar")
+
+class TestSolarWindsReady:
+    def patch_is_ready(
+        self,
+        mocker,
+        ready_retval,
+    ):
+        mock_is_ready = mocker.Mock(return_value=ready_retval)
+        mock_context = mocker.patch(
+            "solarwinds_apm.api.Context"
+        )
+        mock_context.configure_mock(
+            **{
+                "isReady": mock_is_ready
+            }
+        )
+        return mock_is_ready
+
+    def test_bad_code_integer_response(self, mocker):
+        mock_is_ready = self.patch_is_ready(mocker, "bad-code")
+        assert solarwinds_ready(
+            integer_response=True
+        ) == 0
+        mock_is_ready.assert_called_once_with(3000)
+
+    def test_bad_code_bool_response(self, mocker):
+        mock_is_ready = self.patch_is_ready(mocker, "bad-code")
+        assert solarwinds_ready() == False
+        mock_is_ready.assert_called_once_with(3000)
+
+    def test_integer_response(self, mocker):
+        mock_is_ready = self.patch_is_ready(mocker, 1)
+        assert solarwinds_ready(
+            integer_response=True
+        ) == 1
+        mock_is_ready.assert_called_once_with(3000)
+
+    def test_bool_response(self, mocker):
+        mock_is_ready = self.patch_is_ready(mocker, 1)
+        assert solarwinds_ready() == True
+        mock_is_ready.assert_called_once_with(3000)
+
+    def test_wait_specified(self, mocker):
+        mock_is_ready = self.patch_is_ready(mocker, 1)
+        solarwinds_ready(999999)
+        mock_is_ready.assert_called_once_with(999999)
