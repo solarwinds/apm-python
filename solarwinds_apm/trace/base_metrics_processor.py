@@ -48,7 +48,7 @@ class _SwBaseMetricsProcessor(SpanProcessor):
         )
         if not txn_name_tuple:
             logger.error(
-                "Failed to retrieve transaction name for OTLP metrics generation. Please contact %s",
+                "Failed to retrieve transaction name for metrics generation. Please contact %s",
                 INTL_SWO_SUPPORT_EMAIL,
             )
             return None, None
@@ -58,7 +58,7 @@ class _SwBaseMetricsProcessor(SpanProcessor):
             url_tran = txn_name_tuple[1]
         except IndexError:
             logger.error(
-                "Failed to retrieve transaction and URL names for OTLP metrics generation. Please contact %s",
+                "Failed to retrieve transaction and URL names for metrics generation. Please contact %s",
                 INTL_SWO_SUPPORT_EMAIL,
             )
             return None, None
