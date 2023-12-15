@@ -5,6 +5,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
+from solarwinds_apm.trace.tnames import TransactionNames
 
 class TestSwBaseMetricsProcessor:
 
@@ -54,10 +55,10 @@ class TestSwBaseMetricsProcessor:
         )
         assert (None, None) == processor.get_trans_name_and_url_tran(mock_span)
 
-    def test_get_trans_name_and_url_tran_indexerror(self, mocker):
+    def test_get_trans_name_and_url_tran_wrong_type(self, mocker):
         mocks = self.patch_get_trans_name(
             mocker,
-            get_retval=(),
+            get_retval="some-str",
         )
         mock_txname_manager = mocks[0]
         mock_span = mocks[1]
@@ -69,7 +70,7 @@ class TestSwBaseMetricsProcessor:
     def test_get_trans_name_and_url_tran_ok(self, mocker):
         mocks = self.patch_get_trans_name(
             mocker,
-            get_retval=("foo", "bar"),
+            get_retval=TransactionNames("foo", "bar"),
         )
         mock_txname_manager = mocks[0]
         mock_span = mocks[1]

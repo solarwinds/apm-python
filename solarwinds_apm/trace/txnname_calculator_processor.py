@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Tuple
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
 
+from solarwinds_apm.trace.tnames import TransactionNames
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
@@ -41,11 +42,11 @@ class TxnNameCalculatorProcessor(SpanProcessor):
         self.apm_txname_manager = apm_txname_manager
 
     def on_end(self, span: "ReadableSpan") -> None:
-        """Calculates and stores (trans_name, url_tran) tuple
+        """Calculates and stores (trans_name, url_tran) TransactionName
         for service entry spans.
 
         If a custom name str was stored by the API, this method
-        overwrites that str with a tuple"""
+        overwrites that str with a new TransactionName"""
         # Only calculate inbound metrics for service entry spans
         parent_span_context = span.parent
         if (
@@ -58,7 +59,7 @@ class TxnNameCalculatorProcessor(SpanProcessor):
         trans_name, url_tran = self.calculate_transaction_names(span)
         self.apm_txname_manager[
             W3CTransformer.trace_and_span_id_from_context(span.context)
-        ] = (
+        ] = TransactionNames(
             trans_name,
             url_tran,
         )  # type: ignore

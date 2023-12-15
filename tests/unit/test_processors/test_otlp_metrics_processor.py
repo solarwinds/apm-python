@@ -5,7 +5,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 from solarwinds_apm.trace import SolarWindsOTLPMetricsSpanProcessor
-
+from solarwinds_apm.trace.tnames import TransactionNames
 
 class TestSolarWindsOTLPMetricsSpanProcessor:
 
@@ -14,7 +14,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         mocker,
         has_error=True,
         is_span_http=True,
-        get_retval=("foo", "bar")
+        get_retval=TransactionNames("foo", "bar")
     ):
         mock_random = mocker.patch(
             "solarwinds_apm.trace.otlp_metrics_processor.random"
@@ -259,13 +259,13 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
 
         mock_meters.response_time.record.assert_not_called()
 
-    def test_on_end_txn_name_indexerror(self, mocker):
+    def test_on_end_txn_name_wrong_type(self, mocker):
         mock_txname_manager, \
             mock_apm_config, \
             mock_meters, \
             mock_basic_span = self.patch_for_on_end(
                 mocker,
-                get_retval=(),
+                get_retval="some-str",
             )
 
         processor = SolarWindsOTLPMetricsSpanProcessor(
@@ -367,6 +367,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 mocker,
                 has_error=False,
                 is_span_http=False,
+                get_retval=TransactionNames("foo", "bar"),
             )
         
         processor = SolarWindsOTLPMetricsSpanProcessor(
