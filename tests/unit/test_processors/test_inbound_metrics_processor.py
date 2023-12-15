@@ -74,7 +74,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
 
         mock_w3c = mocker.patch(
-            "solarwinds_apm.trace.inbound_metrics_processor.W3CTransformer"
+            "solarwinds_apm.trace.base_metrics_processor.W3CTransformer"
         )
         mock_ts_id = mocker.Mock(return_value="some-id")
         mock_w3c.configure_mock(
@@ -300,6 +300,16 @@ class TestSolarWindsInboundMetricsSpanProcessor():
                 is_span_http=True
             )
 
+        mock_w3c = mocker.patch(
+            "solarwinds_apm.trace.inbound_metrics_processor.W3CTransformer"
+        )
+        mock_ts_id = mocker.Mock(return_value="some-id")
+        mock_w3c.configure_mock(
+            **{
+                "trace_and_span_id_from_context": mock_ts_id
+            }
+        )
+
         mock_spanattributes = mocker.patch(
             "solarwinds_apm.trace.base_metrics_processor.SpanAttributes"
         )
@@ -363,6 +373,16 @@ class TestSolarWindsInboundMetricsSpanProcessor():
                 mocker,
                 is_span_http=False
             )
+
+        mock_w3c = mocker.patch(
+            "solarwinds_apm.trace.inbound_metrics_processor.W3CTransformer"
+        )
+        mock_ts_id = mocker.Mock(return_value="some-id")
+        mock_w3c.configure_mock(
+            **{
+                "trace_and_span_id_from_context": mock_ts_id
+            }
+        )
 
         mock_traceflags = mocker.patch(
             "solarwinds_apm.trace.inbound_metrics_processor.TraceFlags"

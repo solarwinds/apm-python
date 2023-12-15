@@ -8,9 +8,7 @@ import logging
 import random
 from typing import TYPE_CHECKING
 
-from solarwinds_apm.apm_constants import INTL_SWO_SUPPORT_EMAIL
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
-from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
@@ -49,22 +47,10 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         ):
             return
 
-        txn_name_tuple = self.apm_txname_manager.get(
-            W3CTransformer.trace_and_span_id_from_context(span.context)
-        )
-        if not txn_name_tuple:
+        trans_name, _ = self.get_trans_name_and_url_tran(span)
+        if not trans_name:
             logger.error(
-                "Failed to retrieve transaction name for OTLP metrics generation. Please contact %s",
-                INTL_SWO_SUPPORT_EMAIL,
-            )
-            return
-
-        try:
-            trans_name = txn_name_tuple[0]
-        except IndexError:
-            logger.error(
-                "Failed to retrieve transaction and URL names for OTLP metrics generation. Please contact %s",
-                INTL_SWO_SUPPORT_EMAIL,
+                "Could not get transaction name. Not recording otlp metrics."
             )
             return
 

@@ -11,6 +11,9 @@ from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import SpanKind, StatusCode
 
+from solarwinds_apm.apm_constants import INTL_SWO_SUPPORT_EMAIL
+from solarwinds_apm.w3c_transformer import W3CTransformer
+
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
@@ -34,6 +37,33 @@ class _SwBaseMetricsProcessor(SpanProcessor):
         apm_txname_manager: "SolarWindsTxnNameManager",
     ) -> None:
         self.apm_txname_manager = apm_txname_manager
+
+    def get_trans_name_and_url_tran(
+        self,
+        span: "ReadableSpan",
+    ):
+        """Return cached trans_name and url_tran for current trace and span ID"""
+        txn_name_tuple = self.apm_txname_manager.get(
+            W3CTransformer.trace_and_span_id_from_context(span.context)
+        )
+        if not txn_name_tuple:
+            logger.error(
+                "Failed to retrieve transaction name for OTLP metrics generation. Please contact %s",
+                INTL_SWO_SUPPORT_EMAIL,
+            )
+            return None, None
+
+        try:
+            trans_name = txn_name_tuple[0]
+            url_tran = txn_name_tuple[1]
+        except IndexError:
+            logger.error(
+                "Failed to retrieve transaction and URL names for OTLP metrics generation. Please contact %s",
+                INTL_SWO_SUPPORT_EMAIL,
+            )
+            return None, None
+
+        return trans_name, url_tran
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
         """This span from inbound HTTP request if from a SERVER by some http.method"""

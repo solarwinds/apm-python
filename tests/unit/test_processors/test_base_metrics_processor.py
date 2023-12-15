@@ -8,6 +8,76 @@ from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 
 class TestSwBaseMetricsProcessor:
 
+    def patch_get_trans_name(
+        self,
+        mocker,
+        get_retval=None,
+    ):
+        mock_txname_manager = mocker.Mock()
+        mock_txname_manager.configure_mock(
+            **{
+                "get": mocker.Mock(return_value=get_retval)
+            }
+        )
+        mock_w3c = mocker.patch(
+            "solarwinds_apm.trace.base_metrics_processor.W3CTransformer"
+        )
+        mock_ts_id = mocker.Mock(return_value="some-id")
+        mock_w3c.configure_mock(
+            **{
+                "trace_and_span_id_from_context": mock_ts_id
+            }
+        )
+
+        mock_span_context = mocker.Mock()
+        mock_span_context.configure_mock(
+            **{
+                "trace_id": "foo",
+                "span_id": "bar"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "context": mock_span_context
+            }
+        )
+
+        return mock_txname_manager, mock_span
+
+    def test_get_trans_name_and_url_tran_not_found(self, mocker):
+        mocks = self.patch_get_trans_name(mocker)
+        mock_txname_manager = mocks[0]
+        mock_span = mocks[1]
+        processor = _SwBaseMetricsProcessor(
+            mock_txname_manager
+        )
+        assert (None, None) == processor.get_trans_name_and_url_tran(mock_span)
+
+    def test_get_trans_name_and_url_tran_indexerror(self, mocker):
+        mocks = self.patch_get_trans_name(
+            mocker,
+            get_retval=(),
+        )
+        mock_txname_manager = mocks[0]
+        mock_span = mocks[1]
+        processor = _SwBaseMetricsProcessor(
+            mock_txname_manager
+        )
+        assert (None, None) == processor.get_trans_name_and_url_tran(mock_span)
+
+    def test_get_trans_name_and_url_tran_ok(self, mocker):
+        mocks = self.patch_get_trans_name(
+            mocker,
+            get_retval=("foo", "bar"),
+        )
+        mock_txname_manager = mocks[0]
+        mock_span = mocks[1]
+        processor = _SwBaseMetricsProcessor(
+            mock_txname_manager
+        )
+        assert ("foo", "bar") == processor.get_trans_name_and_url_tran(mock_span)
+
     def test_is_span_http_true(self, mocker):
         mock_spankind = mocker.patch(
             "solarwinds_apm.trace.base_metrics_processor.SpanKind"

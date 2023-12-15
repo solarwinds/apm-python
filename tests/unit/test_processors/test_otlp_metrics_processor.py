@@ -71,7 +71,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         )
 
         mock_w3c = mocker.patch(
-            "solarwinds_apm.trace.otlp_metrics_processor.W3CTransformer"
+            "solarwinds_apm.trace.base_metrics_processor.W3CTransformer"
         )
         mock_ts_id = mocker.Mock(return_value="some-id")
         mock_w3c.configure_mock(
