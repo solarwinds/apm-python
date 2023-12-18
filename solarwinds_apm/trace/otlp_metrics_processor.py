@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
     from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
+    from solarwinds_apm.trace.tnames import TransactionNames
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,34 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
             apm_txname_manager=apm_txname_manager,
         )
         self.service_name = apm_config.service_name
+        # SW_APM_TRANSACTION_NAME and AWS_LAMBDA_FUNCTION_NAME
+        self.env_transaction_name = apm_config.get("transaction_name")
+        self.lambda_function_name = apm_config.lambda_function_name
+
         self.apm_meters = apm_meters
+
+    def calculate_otlp_transaction_name(
+        self,
+        tnames: "TransactionNames",
+    ) -> str:
+        """Calculate transaction name for OTLP metrics following this order
+        of decreasing precedence:
+
+        1. custom SDK name
+        2. SW_APM_TRANSACTION_NAME
+        3. AWS_LAMBDA_FUNCTION_NAME
+        4. automated naming from span name, attributes
+        """
+        if tnames.custom_name:
+            return tnames.custom_name
+
+        if self.env_transaction_name:
+            return self.env_transaction_name
+
+        if self.lambda_function_name:
+            return self.lambda_function_name
+
+        return tnames.trans_name
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports OTLP trace metrics"""
@@ -54,9 +82,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
             )
             return
 
-        trans_name = tnames.trans_name
-        if tnames.custom_name:
-            trans_name = tnames.custom_name
+        trans_name = self.calculate_otlp_transaction_name(tnames)
 
         # TODO add sw.service_name
         # https://swicloud.atlassian.net/browse/NH-67392
