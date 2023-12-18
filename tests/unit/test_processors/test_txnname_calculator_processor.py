@@ -22,8 +22,8 @@ class TestTxnNameCalculatorProcessor:
         )
 
         mocker.patch(
-            "solarwinds_apm.trace.TxnNameCalculatorProcessor.calculate_transaction_names",
-            return_value=("foo", "bar")
+            "solarwinds_apm.trace.txnname_calculator_processor.TransactionNames",
+            return_value="foo-tnames",
         )
 
     def test_on_end_valid_local_parent_span(self, mocker):
@@ -70,7 +70,7 @@ class TestTxnNameCalculatorProcessor:
             txn_name_mgr,
         )
         processor.on_end(mock_span)
-        assert txn_name_mgr.get("some-id") == ("foo", "bar")
+        assert txn_name_mgr.get("some-id") == "foo-tnames"
 
     def test_on_end_invalid_remote_parent_span(self, mocker):
         self.patch_on_end(mocker)
@@ -93,7 +93,7 @@ class TestTxnNameCalculatorProcessor:
             txn_name_mgr,
         )
         processor.on_end(mock_span)
-        assert txn_name_mgr.get("some-id") == ("foo", "bar")
+        assert txn_name_mgr.get("some-id") == "foo-tnames"
 
     def test_on_end_invalid_local_parent_span(self, mocker):
         self.patch_on_end(mocker)
@@ -116,7 +116,7 @@ class TestTxnNameCalculatorProcessor:
             txn_name_mgr,
         )
         processor.on_end(mock_span)
-        assert txn_name_mgr.get("some-id") == ("foo", "bar")
+        assert txn_name_mgr.get("some-id") == "foo-tnames"
 
     def test_on_end_missing_parent(self, mocker):
         self.patch_on_end(mocker)
@@ -132,7 +132,7 @@ class TestTxnNameCalculatorProcessor:
             txn_name_mgr,
         )
         processor.on_end(mock_span)
-        assert txn_name_mgr.get("some-id") == ("foo", "bar")
+        assert txn_name_mgr.get("some-id") == "foo-tnames"
 
     def test_calculate_transaction_names_span_name_default(self, mocker):
         """Otel Python span.name should always exist"""

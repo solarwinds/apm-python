@@ -7,6 +7,7 @@
 import pytest  # pylint: disable=unused-import
 
 from solarwinds_apm.trace import SolarWindsInboundMetricsSpanProcessor
+from solarwinds_apm.trace.tnames import TransactionNames
 
 
 class TestSolarWindsInboundMetricsSpanProcessor():
@@ -15,7 +16,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         self,
         mocker,
         is_span_http=True,
-        get_retval=("foo", "bar"),
+        get_retval=TransactionNames("foo", "bar"),
     ):
         mock_is_span_http = mocker.patch(
             "solarwinds_apm.trace.SolarWindsInboundMetricsSpanProcessor.is_span_http"
@@ -260,7 +261,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         mock_calculate_span_time.assert_not_called()
         mock_has_error.assert_not_called()
 
-    def test_on_end_txn_name_indexerror(self, mocker):
+    def test_on_end_txn_name_wrong_type(self, mocker):
         mock_get_http_status_code, \
             mock_create_http_span, \
             mock_create_span, \
@@ -271,7 +272,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mock_calculate_span_time, \
             mock_has_error = self.patch_for_on_end(
                 mocker,
-                get_retval=("only_one_name",),
+                get_retval="some-str",
             )
         
         processor = SolarWindsInboundMetricsSpanProcessor(

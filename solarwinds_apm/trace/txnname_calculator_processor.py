@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Tuple
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
 
+from solarwinds_apm.trace.tnames import TransactionNames
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
@@ -41,11 +42,11 @@ class TxnNameCalculatorProcessor(SpanProcessor):
         self.apm_txname_manager = apm_txname_manager
 
     def on_end(self, span: "ReadableSpan") -> None:
-        """Calculates and stores (trans_name, url_tran) tuple
+        """Calculates and stores automated and custom TransactionNames
         for service entry spans.
 
         If a custom name str was stored by the API, this method
-        overwrites that str with a tuple"""
+        overwrites that str with a new TransactionName object"""
         # Only calculate inbound metrics for service entry spans
         parent_span_context = span.parent
         if (
@@ -56,11 +57,13 @@ class TxnNameCalculatorProcessor(SpanProcessor):
             return
 
         trans_name, url_tran = self.calculate_transaction_names(span)
+        custom_name = self.calculate_custom_transaction_name(span)
         self.apm_txname_manager[
             W3CTransformer.trace_and_span_id_from_context(span.context)
-        ] = (
+        ] = TransactionNames(
             trans_name,
             url_tran,
+            custom_name,
         )  # type: ignore
 
     # Disable pylint for compatibility with Python3.7 else TypeError
@@ -71,11 +74,8 @@ class TxnNameCalculatorProcessor(SpanProcessor):
         url_tran = span.attributes.get(self._HTTP_URL, None)
         http_route = span.attributes.get(self._HTTP_ROUTE, None)
         trans_name = None
-        custom_trans_name = self.calculate_custom_transaction_name(span)
 
-        if custom_trans_name:
-            trans_name = custom_trans_name
-        elif http_route:
+        if http_route:
             trans_name = http_route
         elif span.name:
             trans_name = span.name

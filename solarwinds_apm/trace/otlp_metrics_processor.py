@@ -47,12 +47,16 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         ):
             return
 
-        trans_name, _ = self.get_trans_name_and_url_tran(span)
-        if not trans_name:
+        tnames = self.get_tnames(span)
+        if not tnames:
             logger.error(
                 "Could not get transaction name. Not recording otlp metrics."
             )
             return
+
+        trans_name = tnames.trans_name
+        if tnames.custom_name:
+            trans_name = tnames.custom_name
 
         # TODO add sw.service_name
         # https://swicloud.atlassian.net/browse/NH-67392
