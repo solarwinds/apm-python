@@ -57,12 +57,17 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
         ):
             return
 
-        trans_name, url_tran = self.get_trans_name_and_url_tran(span)
-        if not trans_name:
+        tnames = self.get_tnames(span)
+        if not tnames:
             logger.error(
-                "Could not get transaction name. Not recording otlp metrics."
+                "Could not get transaction name. Not recording inbound metrics."
             )
             return
+
+        trans_name = tnames.trans_name
+        url_tran = tnames.url_tran
+        if tnames.custom_name:
+            trans_name = tnames.custom_name
 
         is_span_http = self.is_span_http(span)
         span_time = self.calculate_span_time(

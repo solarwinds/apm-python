@@ -4,14 +4,18 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+from typing import Any
+
 
 class TransactionNames:
-    """Data type to store calculated trans_name and url_tran"""
+    """Data type to store calculated trans_name, url_tran, and custom_name"""
 
     def __init__(
         self,
         trans_name: str,
         url_tran: str,
+        custom_name: Any = None,
     ):
         self.trans_name = trans_name
         self.url_tran = url_tran
+        self.custom_name = custom_name

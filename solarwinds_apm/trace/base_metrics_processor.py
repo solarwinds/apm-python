@@ -5,7 +5,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
@@ -39,11 +39,11 @@ class _SwBaseMetricsProcessor(SpanProcessor):
     ) -> None:
         self.apm_txname_manager = apm_txname_manager
 
-    def get_trans_name_and_url_tran(
+    def get_tnames(
         self,
         span: "ReadableSpan",
-    ):
-        """Return cached trans_name and url_tran for current trace and span ID"""
+    ) -> Any:
+        """Return cached TransactionNames for current trace and span ID"""
         tnames = self.apm_txname_manager.get(
             W3CTransformer.trace_and_span_id_from_context(span.context)
         )
@@ -52,16 +52,16 @@ class _SwBaseMetricsProcessor(SpanProcessor):
                 "Failed to retrieve transaction name for metrics generation. Please contact %s",
                 INTL_SWO_SUPPORT_EMAIL,
             )
-            return None, None
+            return None
 
         if not isinstance(tnames, TransactionNames):
             logger.error(
                 "Something went wrong with storing transaction and URL names for metrics generation. Please contact %s",
                 INTL_SWO_SUPPORT_EMAIL,
             )
-            return None, None
+            return None
 
-        return tnames.trans_name, tnames.url_tran
+        return tnames
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
         """This span from inbound HTTP request if from a SERVER by some http.method"""
