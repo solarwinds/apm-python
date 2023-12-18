@@ -16,6 +16,11 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         is_span_http=True,
         get_retval=TransactionNames("foo", "bar")
     ):
+        mocker.patch(
+            "solarwinds_apm.trace.SolarWindsOTLPMetricsSpanProcessor.calculate_otlp_transaction_name",
+            return_value="foo",
+        )
+
         mock_random = mocker.patch(
             "solarwinds_apm.trace.otlp_metrics_processor.random"
         )
