@@ -61,6 +61,8 @@ from solarwinds_apm.trace import (
     ServiceEntryIdSpanProcessor,
     SolarWindsInboundMetricsSpanProcessor,
     SolarWindsOTLPMetricsSpanProcessor,
+    TxnNameCalculatorProcessor,
+    TxnNameCleanupProcessor,
 )
 from solarwinds_apm.version import __version__
 
@@ -119,6 +121,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self._configure_sampler(apm_config)
         if apm_config.agent_enabled:
             self._configure_service_entry_id_span_processor()
+            self._configure_txnname_calculator_span_processor(
+                apm_txname_manager,
+            )
             self._configure_inbound_metrics_span_processor(
                 apm_txname_manager,
                 apm_config,
@@ -127,6 +132,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_txname_manager,
                 apm_config,
                 apm_meters,
+            )
+            self._configure_txnname_cleanup_span_processor(
+                apm_txname_manager,
             )
             self._configure_traces_exporter(
                 reporter,
@@ -182,16 +190,54 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             ServiceEntryIdSpanProcessor()
         )
 
+    def _configure_txnname_calculator_span_processor(
+        self,
+        apm_txname_manager: SolarWindsTxnNameManager,
+    ) -> None:
+        """Configure TxnNameCalculatorSpanProcessor"""
+        trace.get_tracer_provider().add_span_processor(
+            TxnNameCalculatorProcessor(
+                apm_txname_manager,
+            )
+        )
+
+    def _configure_txnname_cleanup_span_processor(
+        self,
+        apm_txname_manager: SolarWindsTxnNameManager,
+    ) -> None:
+        """Configure TxnNameCleanupSpanProcessor"""
+        trace.get_tracer_provider().add_span_processor(
+            TxnNameCleanupProcessor(
+                apm_txname_manager,
+            )
+        )
+
     def _configure_inbound_metrics_span_processor(
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure SolarWindsInboundMetricsSpanProcessor.
+        """Configure SolarWindsInboundMetricsSpanProcessor only if solarwinds_exporter
+        for traces will also be loaded.
+
         Note: if config's extension is no-op, the processor will run
         but will not export inbound metrics."""
-        # TODO Refactor span processors
-        #      https://swicloud.atlassian.net/browse/NH-65061
+        # SolarWindsDistro._configure does setdefault before this is called
+        environ_exporter = os.environ.get(
+            OTEL_TRACES_EXPORTER,
+        )
+        if not environ_exporter:
+            logger.debug(
+                "No OTEL_TRACES_EXPORTER set, skipping init of inbound metrics processor."
+            )
+            return
+        environ_exporter_names = environ_exporter.split(",")
+        if INTL_SWO_DEFAULT_TRACES_EXPORTER not in environ_exporter_names:
+            logger.debug(
+                "Skipping init of inbound metrics processor because not exporting AO-proto traces."
+            )
+            return
+
         trace.get_tracer_provider().add_span_processor(
             SolarWindsInboundMetricsSpanProcessor(
                 apm_txname_manager,
@@ -248,7 +294,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             OTEL_TRACES_EXPORTER,
         )
         if not environ_exporter:
-            logger.debug("No OTEL_TRACES_EXPORTER set, skipping init")
+            logger.debug(
+                "No OTEL_TRACES_EXPORTER set, skipping init of traces exporter."
+            )
             return
         environ_exporter_names = environ_exporter.split(",")
 

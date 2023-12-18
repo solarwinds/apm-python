@@ -20,6 +20,7 @@ from opentelemetry.trace import SpanKind
 from pkg_resources import get_distribution
 
 from solarwinds_apm.apm_constants import (
+    INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX,
     INTL_SWO_OTEL_SCOPE_NAME,
     INTL_SWO_OTEL_SCOPE_VERSION,
     INTL_SWO_SUPPORT_EMAIL,
@@ -117,13 +118,11 @@ class SolarWindsSpanExporter(SpanExporter):
     def _add_info_transaction_name(self, span, evt) -> None:
         """Add transaction name from cache to root span
         then removes from cache"""
-        trace_span_id = W3CTransformer.trace_and_span_id_from_context(
-            span.context
-        )
-        txname = self.apm_txname_manager.get(trace_span_id)
+        txname_key = f"{INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX}-{W3CTransformer.trace_and_span_id_from_context(span.context)}"
+        txname = self.apm_txname_manager.get(txname_key)
         if txname:
             evt.addInfo(self._INTERNAL_TRANSACTION_NAME, txname)
-            del self.apm_txname_manager[trace_span_id]
+            del self.apm_txname_manager[txname_key]
         else:
             logger.warning(
                 "There was an issue setting trace TransactionName. "
