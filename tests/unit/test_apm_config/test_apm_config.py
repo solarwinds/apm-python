@@ -155,6 +155,33 @@ class TestSolarWindsApmConfig:
         assert test_config.service_name == "sw_service_name"
         assert test_config.get("service_key") == "service_key_with:sw_service_name"
 
+    def test__init_custom_transction_names_env_vars(self, mocker):
+        # save any env vars for later
+        old_env_lambda_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+        if old_env_lambda_name:
+            del os.environ["AWS_LAMBDA_FUNCTION_NAME"]
+        old_env_trans_name = os.environ.get("SW_APM_TRANSACTION_NAME")
+        if old_env_trans_name:
+            del os.environ["SW_APM_TRANSACTION_NAME"]
+
+        mocker.patch.dict(
+            os.environ,
+            {
+                "AWS_LAMBDA_FUNCTION_NAME": "foo-lambda",
+                "SW_APM_TRANSACTION_NAME": "foo-trans-name",
+            },
+        )
+
+        config = apm_config.SolarWindsApmConfig()
+        assert config.lambda_function_name == "foo-lambda"
+        assert config.get("transaction_name") == "foo-trans-name"
+
+        # restore env vars
+        if old_env_lambda_name:
+            os.environ["AWS_LAMBDA_FUNCTION_NAME"] = old_env_lambda_name
+        if old_env_trans_name:
+            os.environ["SW_APM_TRANSACTION_NAME"] = old_env_trans_name
+
     def test_calculate_metric_format_no_collector(self, mocker):
         # Save any collector in os for later
         old_collector = os.environ.get("SW_APM_COLLECTOR", None)

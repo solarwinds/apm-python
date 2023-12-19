@@ -117,6 +117,7 @@ class SolarWindsApmConfig:
             "transaction_name": None,
         }
         self.is_lambda = self.calculate_is_lambda()
+        self.lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
         self.agent_enabled = True
         self.update_with_cnf_file()
         self.update_with_env_var()
