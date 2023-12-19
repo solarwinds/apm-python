@@ -33,6 +33,13 @@ from solarwinds_apm.distro import SolarWindsDistro
 from solarwinds_apm.propagator import SolarWindsPropagator
 from solarwinds_apm.sampler import ParentBasedSwSampler
 
+try:
+    # c-lib <14 does not have OboeAPI
+    # TODO remove the except after upgrading
+    # https://swicloud.atlassian.net/browse/NH-68264
+    from solarwinds_apm.extension.oboe import OboeAPI
+except ImportError:
+    from solarwinds_apm.apm_noop import OboeAPI
 
 class TestBaseSwHeadersAndAttributes(TestBase):
     """
@@ -105,7 +112,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
             "solarwinds_apm",
             "opentelemetry_traces_sampler",
             configurator._DEFAULT_SW_TRACES_SAMPLER
-        )(apm_config)
+        )(apm_config, OboeAPI())
         self.tracer_provider = TracerProvider(sampler=sampler)
         # Set InMemorySpanExporter for testing
         # We do NOT use SolarWindsSpanExporter

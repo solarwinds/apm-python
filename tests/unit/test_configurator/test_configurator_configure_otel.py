@@ -15,6 +15,7 @@ class TestConfiguratorConfigureOtelComponents:
         mock_meter_manager,
         mock_extension,
         mock_apmconfig_enabled,
+        mock_oboe_api_obj,
 
         mock_config_serviceentryid_processor,
         mock_config_inbound_processor,
@@ -31,6 +32,7 @@ class TestConfiguratorConfigureOtelComponents:
             mock_apmconfig_enabled,
             mock_extension.Reporter,
             mock_meter_manager,
+            mock_oboe_api_obj,
         )
 
         mock_config_serviceentryid_processor.assert_called_once()
@@ -61,6 +63,7 @@ class TestConfiguratorConfigureOtelComponents:
         mock_meter_manager,
         mock_extension,
         mock_apmconfig_disabled,
+        mock_oboe_api_obj,
 
         mock_config_serviceentryid_processor,
         mock_config_inbound_processor,
@@ -77,6 +80,7 @@ class TestConfiguratorConfigureOtelComponents:
             mock_apmconfig_disabled,
             mock_extension.Reporter,
             mock_meter_manager,
+            mock_oboe_api_obj,
         )
 
         mock_config_serviceentryid_processor.assert_not_called()

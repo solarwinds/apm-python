@@ -48,7 +48,7 @@ def fixture_swsampler(mocker):
             "is_lambda": False,
         }
     )
-    return _SwSampler(mock_apm_config)
+    return _SwSampler(mock_apm_config, mocker.Mock())
 
 
 # Sampler fixtures with Transaction Filters =================
@@ -106,4 +106,4 @@ def fixture_swsampler_txnfilters(mocker):
             "get": mock_get,
         }
     )
-    return _SwSampler(mock_apm_config)
+    return _SwSampler(mock_apm_config, mocker.Mock())

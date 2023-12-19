@@ -40,6 +40,14 @@ from solarwinds_apm.w3c_transformer import W3CTransformer
 if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
 
+    try:
+        # c-lib <14 does not have OboeAPI
+        # TODO remove the except after upgrading
+        # https://swicloud.atlassian.net/browse/NH-68264
+        from solarwinds_apm.extension.oboe import OboeAPI
+    except ImportError:
+        from solarwinds_apm.apm_noop import OboeAPI
+
 logger = logging.getLogger(__name__)
 
 
@@ -62,7 +70,11 @@ class _SwSampler(Sampler):
     _XTRACEOPTIONS_RESP_TRIGGER_NOT_REQUESTED = "not-requested"
     _XTRACEOPTIONS_RESP_TRIGGER_TRACE = "trigger-trace"
 
-    def __init__(self, apm_config: "SolarWindsApmConfig"):
+    def __init__(
+        self,
+        apm_config: "SolarWindsApmConfig",
+        oboe_api: "OboeAPI",
+    ):
         self.apm_config = apm_config
         self.context = apm_config.extension.Context
 
@@ -71,7 +83,7 @@ class _SwSampler(Sampler):
         else:
             self.tracing_mode = self._UNSET
 
-        self.oboe_settings_api = apm_config.oboe_api()
+        self.oboe_settings_api = oboe_api
 
     def get_description(self) -> str:
         return "SolarWinds custom opentelemetry sampler"
@@ -567,16 +579,20 @@ class ParentBasedSwSampler(ParentBased):
     Requires "SolarWindsApmConfig".
     """
 
-    def __init__(self, apm_config: "SolarWindsApmConfig"):
+    def __init__(
+        self,
+        apm_config: "SolarWindsApmConfig",
+        oboe_api: "OboeAPI",
+    ):
         """
         Uses _SwSampler/liboboe if no parent span.
         Uses _SwSampler/liboboe if parent span is_remote.
         Uses OTEL defaults if parent span is_local.
         """
         super().__init__(
-            root=_SwSampler(apm_config),
-            remote_parent_sampled=_SwSampler(apm_config),
-            remote_parent_not_sampled=_SwSampler(apm_config),
+            root=_SwSampler(apm_config, oboe_api),
+            remote_parent_sampled=_SwSampler(apm_config, oboe_api),
+            remote_parent_not_sampled=_SwSampler(apm_config, oboe_api),
         )
 
     # should_sample defined by ParentBased

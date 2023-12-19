@@ -200,8 +200,10 @@ def fixture_parent_span_context_valid_remote_no_tracestate():
 class Test_SwSampler():
     def test_init(self, mocker):
         mock_apm_config = mocker.Mock()
-        sampler = _SwSampler(mock_apm_config)
+        mock_oboe_api = mocker.Mock()
+        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
         assert sampler.apm_config == mock_apm_config
+        assert sampler.oboe_settings_api == mock_oboe_api
 
     def test_calculate_liboboe_decision_is_lambda(
         self,
@@ -224,29 +226,15 @@ class Test_SwSampler():
                 "getTracingDecision": mock_get_tracing_decision
             }
         )
-        try:
-            mock_oboe_api_component = mocker.patch(
-                "solarwinds_apm.extension.oboe.OboeAPI.__init__",
-                return_value=mock_oboe_api
-            )
-        except ModuleNotFoundError:
-            # c-lib <14 does not have OboeAPI
-            # TODO remove the except after upgrading
-            # https://swicloud.atlassian.net/browse/NH-68264
-            mock_oboe_api_component = mocker.patch(
-                "solarwinds_apm.apm_noop.OboeAPI.__init__",
-                return_value=mock_oboe_api
-            )
 
         mock_apm_config.configure_mock(
             **{
                 "agent_enabled": True,
                 "get": mock_get,
-                "oboe_api": mock_oboe_api_component,
                 "is_lambda": True,
             }
         )
-        test_sampler = _SwSampler(mock_apm_config)
+        test_sampler = _SwSampler(mock_apm_config, mock_oboe_api)
 
         result = test_sampler.calculate_liboboe_decision(
             parent_span_context_invalid,
@@ -713,7 +701,7 @@ class Test_SwSampler():
 
 class TestParentBasedSwSampler():
     def test_init(self, mocker):
-        sampler = ParentBasedSwSampler(mocker.Mock())
+        sampler = ParentBasedSwSampler(mocker.Mock(), mocker.Mock())
         assert type(sampler._root) == _SwSampler
         assert type(sampler._remote_parent_sampled) == _SwSampler
         assert type(sampler._remote_parent_not_sampled) == _SwSampler
