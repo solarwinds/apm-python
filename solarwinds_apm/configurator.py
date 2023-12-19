@@ -473,6 +473,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         Note: if config's extension is no-op, this has no effect."""
         reporter_kwargs = {
             "hostname_alias": apm_config.get("hostname_alias"),
+            "log_type": apm_config.get("log_type"),
             "log_level": apm_config.get("debug_level"),
             "log_file_path": apm_config.get("logname"),
             "max_transactions": apm_config.get("max_transactions"),

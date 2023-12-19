@@ -95,7 +95,9 @@ class SolarWindsApmConfig:
             ),
             "collector": "",  # the collector address in host:port format.
             "reporter": "",  # the reporter mode, either 'udp' or 'ssl'.
+            "log_type": 0,
             "debug_level": apm_logging.ApmLoggingLevel.default_level(),
+            "logname": "",
             "service_key": "",
             "hostname_alias": "",
             "trustedpath": "",
@@ -104,7 +106,6 @@ class SolarWindsApmConfig:
             "ec2_metadata_timeout": 1000,
             "max_flush_wait_time": -1,
             "max_transactions": -1,
-            "logname": "",
             "trace_metrics": -1,
             "token_bucket_capacity": -1,
             "token_bucket_rate": -1,
