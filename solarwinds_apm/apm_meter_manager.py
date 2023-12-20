@@ -15,14 +15,7 @@ from opentelemetry.metrics import CallbackOptions, Observation, get_meter
 
 if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
-
-    try:
-        # c-lib <14 does not have OboeAPI
-        # TODO remove the except after upgrading
-        # https://swicloud.atlassian.net/browse/NH-68264
-        from solarwinds_apm.extension.oboe import OboeAPI
-    except ImportError:
-        from solarwinds_apm.apm_noop import OboeAPI
+    from solarwinds_apm.extension.oboe import OboeAPI
 
 logger = logging.getLogger(__name__)
 

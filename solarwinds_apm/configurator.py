@@ -67,15 +67,7 @@ from solarwinds_apm.trace import (
 from solarwinds_apm.version import __version__
 
 if TYPE_CHECKING:
-    from solarwinds_apm.extension.oboe import Reporter
-
-    try:
-        # c-lib <14 does not have OboeAPI
-        # TODO remove the except after upgrading
-        # https://swicloud.atlassian.net/browse/NH-68264
-        from solarwinds_apm.extension.oboe import OboeAPI
-    except ImportError:
-        from solarwinds_apm.apm_noop import OboeAPI
+    from solarwinds_apm.extension.oboe import OboeAPI, Reporter
 
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
