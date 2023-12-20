@@ -97,6 +97,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config = SolarWindsApmConfig()
         # TODO add args
         # https://swicloud.atlassian.net/browse/NH-68264
+        # See also SolarWindsApmConfig._get_extension_components
         oboe_api = apm_config.oboe_api()
 
         # TODO Add experimental trace flag, clean up
