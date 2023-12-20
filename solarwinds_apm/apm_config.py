@@ -95,7 +95,7 @@ class SolarWindsApmConfig:
             ),
             "collector": "",  # the collector address in host:port format.
             "reporter": "",  # the reporter mode, either 'udp' or 'ssl'.
-            "log_type": 0,
+            "log_type": apm_logging.ApmLoggingType.default_level(),
             "debug_level": apm_logging.ApmLoggingLevel.default_level(),
             "logname": "",
             "service_key": "",
@@ -803,6 +803,11 @@ class SolarWindsApmConfig:
                 self.__config[key] = val
                 # update logging level of agent logger
                 apm_logging.set_sw_log_level(val)
+            elif keys == ["log_type"]:
+                val = int(val)
+                if not apm_logging.ApmLoggingType.is_valid_level(val):
+                    raise ValueError
+                self.__config[key] = val
             # TODO Add experimental trace flag, clean up
             #      https://swicloud.atlassian.net/browse/NH-65067
             elif keys == ["experimental"]:

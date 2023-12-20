@@ -38,8 +38,34 @@ import logging
 import os
 
 
+class ApmLoggingType:
+    """Mapping of solarwinds_apm library log types"""
+
+    log_types = {
+        "STDERR": 0,
+        "STDOUT": 1,
+        "FILE": 2,
+        "NULL": 3,
+        "DISABLED": 4,
+    }
+
+    @classmethod
+    def default_level(cls):
+        """Returns integer representation of default log type"""
+        return cls.log_types["STDERR"]
+
+    @classmethod
+    def is_valid_level(cls, level):
+        """Returns True if the provided level is a valid interger representation of log type, False otherwise."""
+        try:
+            level = int(level)
+            return bool(level in list(cls.log_types.values()))
+        except (ValueError, TypeError):
+            return False
+
+
 class ApmLoggingLevel:
-    """Abstract mapping class providing a conversion between solarwinds_apm agent logging level and Python logging module
+    """Abstract mapping class providing a conversion between solarwinds_apm library logging level and Python logging module
     logging levels.
     The solarwinds_apm package has seven different log levels, which are defined in the debug_levels dictionary.
     """
