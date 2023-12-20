@@ -225,6 +225,17 @@ class SolarWindsMeterManager:
         )
 
 
+class LoggingOptions:
+    def __init__(self, *args, **kwargs):
+        self.level = 0
+        self.type = 0
+
+
+class OboeAPIOptions:
+    def __init__(self, *args, **kwargs):
+        self.logging_options = LoggingOptions()
+
+
 class OboeAPI:
     def __init__(self, *args, **kwargs):
         pass

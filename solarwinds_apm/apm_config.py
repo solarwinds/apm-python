@@ -141,10 +141,18 @@ class SolarWindsApmConfig:
             self.extension,
             self.context,
             self.oboe_api,
+            oboe_api_options_swig,
         ) = self._get_extension_components(
             self.agent_enabled,
             self.is_lambda,
         )
+
+        # Create OboeAPI options using extension and __config
+        self.oboe_api_options = oboe_api_options_swig()
+        self.oboe_api_options.logging_options.level = self.__config[
+            "debug_level"
+        ]
+        self.oboe_api_options.logging_options.type = self.__config["log_type"]
 
         self.context.setTracingMode(self.__config["tracing_mode"])
         self.context.setTriggerMode(self.__config["trigger_trace"])
@@ -161,8 +169,8 @@ class SolarWindsApmConfig:
     ) -> None:
         """Returns c-lib extension or noop components based on agent_enabled, is_lambda.
 
-        agent_enabled T, is_lambda F -> c-lib extension, c-lib Context, no-op settings API
-        agent_enabled T, is_lambda T -> no-op extension, no-op Context, c-lib settings API
+        agent_enabled T, is_lambda F -> c-lib extension, c-lib Context, no-op settings API, no-op API options
+        agent_enabled T, is_lambda T -> no-op extension, no-op Context, c-lib settings API, c-lib API options
         agent_enabled F              -> all no-op
         """
         if not agent_enabled:
@@ -170,6 +178,7 @@ class SolarWindsApmConfig:
                 noop_extension,
                 noop_extension.Context,
                 noop_extension.OboeAPI,
+                noop_extension.OboeAPIOptions,
             )
 
         try:
@@ -187,12 +196,16 @@ class SolarWindsApmConfig:
                 noop_extension,
                 noop_extension.Context,
                 noop_extension.OboeAPI,
+                noop_extension.OboeAPIOptions,
             )
 
         if is_lambda:
             try:
                 # pylint: disable=import-outside-toplevel,no-name-in-module
                 from solarwinds_apm.extension.oboe import OboeAPI as oboe_api
+                from solarwinds_apm.extension.oboe import (
+                    OboeAPIOptions as api_options,
+                )
             except ImportError as err:
                 logger.warning(
                     "Could not import API in lambda mode. Please contact %s. Tracing disabled: %s",
@@ -203,10 +216,21 @@ class SolarWindsApmConfig:
                     noop_extension,
                     noop_extension.Context,
                     noop_extension.OboeAPI,
+                    noop_extension.OboeAPIOptions,
                 )
-            return noop_extension, noop_extension.Context, oboe_api
+            return (
+                noop_extension,
+                noop_extension.Context,
+                oboe_api,
+                api_options,
+            )
 
-        return c_extension, c_extension.Context, noop_extension.OboeAPI
+        return (
+            c_extension,
+            c_extension.Context,
+            noop_extension.OboeAPI,
+            noop_extension.OboeAPIOptions,
+        )
 
     @classmethod
     def calculate_is_lambda(cls) -> bool:
