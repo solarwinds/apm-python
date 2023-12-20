@@ -140,7 +140,7 @@ class SolarWindsApmConfig:
         (
             self.extension,
             self.context,
-            self.oboe_api,
+            oboe_api_swig,
             oboe_api_options_swig,
         ) = self._get_extension_components(
             self.agent_enabled,
@@ -148,11 +148,12 @@ class SolarWindsApmConfig:
         )
 
         # Create OboeAPI options using extension and __config
-        self.oboe_api_options = oboe_api_options_swig()
-        self.oboe_api_options.logging_options.level = self.__config[
-            "debug_level"
-        ]
-        self.oboe_api_options.logging_options.type = self.__config["log_type"]
+        oboe_api_options = oboe_api_options_swig()
+        oboe_api_options.logging_options.level = self.__config["debug_level"]
+        oboe_api_options.logging_options.type = self.__config["log_type"]
+        self.oboe_api = oboe_api_swig(
+            oboe_api_options,
+        )
 
         self.context.setTracingMode(self.__config["tracing_mode"])
         self.context.setTriggerMode(self.__config["trigger_trace"])
