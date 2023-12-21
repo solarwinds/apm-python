@@ -531,6 +531,23 @@ class TestSolarWindsApmConfig:
         if old_debug_level:
             os.environ["SW_APM_DEBUG_LEVEL"] = old_debug_level
 
+    def test_set_config_value_default_log_type(
+        self,
+        caplog,
+        mock_env_vars,
+    ):
+        # Save any log_type in os for later
+        old_log_type = os.environ.get("SW_APM_LOG_TYPE", None)
+        if old_log_type:
+            del os.environ["SW_APM_LOG_TYPE"]
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_type", "not-valid-level")
+        assert test_config.get("log_type") == 0
+        assert "Ignore config option" in caplog.text
+        # Restore old debug_level
+        if old_log_type:
+            os.environ["SW_APM_LOG_TYPE"] = old_log_type
+
     def test__calculate_service_name_agent_disabled(self):
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._calculate_service_name(
