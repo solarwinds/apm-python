@@ -116,6 +116,8 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("collector") == "foo-bar"
         assert resulting_config.get("reporter") == "udp"
         assert resulting_config.get("debug_level") == 6
+        assert resulting_config.get("log_type") == 1
+        assert resulting_config.get("logname") == "foo-bar"
         assert resulting_config.get("hostname_alias") == "foo-bar"
         assert resulting_config.get("trustedpath") == "foo-bar"
         assert resulting_config.get("events_flush_interval") == 2
@@ -123,7 +125,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("ec2_metadata_timeout") == 1234
         assert resulting_config.get("max_flush_wait_time") == 2
         assert resulting_config.get("max_transactions") == 2
-        assert resulting_config.get("logname") == "foo-bar"
         assert resulting_config.get("trace_metrics") == 2
         assert resulting_config.get("token_bucket_capacity") == 2
         assert resulting_config.get("token_bucket_rate") == 2
@@ -160,6 +161,8 @@ class TestSolarWindsApmConfigCnfFile:
             "collector": False,
             "reporter": "not-ssl-or-anything",
             "debugLevel": "foo",
+            "logType": "foo",
+            "logname": False,
             "serviceKey": "not-good-to-put-here-and-wont-be-used",
             "hostnameAlias": False,
             "trustedpath": False,
@@ -168,7 +171,6 @@ class TestSolarWindsApmConfigCnfFile:
             "ec2MetadataTimeout": 999999999,
             "maxFlushWaitTime": "foo",
             "maxTransactions": "foo",
-            "logname": False,
             "traceMetrics": "foo",
             "tokenBucketCapacity": "foo",
             "tokenBucketRate": "foo",
@@ -194,6 +196,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("trigger_trace") == 1
         assert resulting_config.get("reporter") == ""
         assert resulting_config.get("debug_level") == 2
+        assert resulting_config.get("log_type") == 0
         assert resulting_config.get("events_flush_interval") == -1
         assert resulting_config.get("max_request_size_bytes") == -1
         assert resulting_config.get("ec2_metadata_timeout") == 1000
@@ -237,14 +240,15 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_COLLECTOR": "other-foo-bar",
             "SW_APM_REPORTER": "file",
             "SW_APM_DEBUG_LEVEL": "5",
+            "SW_APM_LOG_TYPE": "1",
+            "SW_APM_LOGNAME": "other-foo-bar",
             "SW_APM_HOSTNAME_ALIAS": "other-foo-bar",
             "SW_APM_TRUSTEDPATH": "other-foo-bar",
             "SW_APM_EVENTS_FLUSH_INTERVAL": "3",
             "SW_APM_MAX_REQUEST_SIZE_BYTES": "3",
             "SW_APM_EC2_METADATA_TIMEOUT": "2222",
             "SW_APM_MAX_FLUSH_WAIT_TIME": "3",
-            "SW_APM_MAX_TRANSACTIONS": "3",
-            "SW_APM_LOGNAME": "other-foo-bar",
+            "SW_APM_MAX_TRANSACTIONS": "3",  
             "SW_APM_TRACE_METRICS": "3",
             "SW_APM_TOKEN_BUCKET_CAPACITY": "3",
             "SW_APM_TOKEN_BUCKET_RATE": "3",
@@ -276,6 +280,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("collector") == "other-foo-bar"
         assert resulting_config.get("reporter") == "file"
         assert resulting_config.get("debug_level") == 5
+        assert resulting_config.get("log_type") == 1
         assert resulting_config.get("hostname_alias") == "other-foo-bar"
         assert resulting_config.get("trustedpath") == "other-foo-bar"
         assert resulting_config.get("events_flush_interval") == 3
@@ -315,6 +320,8 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_COLLECTOR": "False",
             "SW_APM_REPORTER": "other-foo-bar",
             "SW_APM_DEBUG_LEVEL": "other-foo-bar",
+            "SW_APM_LOG_TYPE": "other-foo-bar",
+            "SW_APM_LOGNAME": "False",
             "SW_APM_HOSTNAME_ALIAS": "False",
             "SW_APM_TRUSTEDPATH": "False",
             "SW_APM_EVENTS_FLUSH_INTERVAL": "other-foo-bar",
@@ -322,7 +329,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_EC2_METADATA_TIMEOUT": "other-foo-bar",
             "SW_APM_MAX_FLUSH_WAIT_TIME": "other-foo-bar",
             "SW_APM_MAX_TRANSACTIONS": "other-foo-bar",
-            "SW_APM_LOGNAME": "False",
             "SW_APM_TRACE_METRICS": "other-foo-bar",
             "SW_APM_TOKEN_BUCKET_CAPACITY": "other-foo-bar",
             "SW_APM_TOKEN_BUCKET_RATE": "other-foo-bar",
@@ -354,6 +360,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("trigger_trace") == 1
         assert resulting_config.get("reporter") == "udp"
         assert resulting_config.get("debug_level") == 6
+        assert resulting_config.get("log_type") == 1
         assert resulting_config.get("events_flush_interval") == 2
         assert resulting_config.get("max_request_size_bytes") == 2
         assert resulting_config.get("ec2_metadata_timeout") == 1234
