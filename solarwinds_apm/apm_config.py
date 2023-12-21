@@ -135,6 +135,7 @@ class SolarWindsApmConfig:
             self.__config["service_key"],
             self.service_name,
         )
+        self._update_log_settings()
 
         # Calculate c-lib extension usage
         (
@@ -459,6 +460,26 @@ class SolarWindsApmConfig:
 
         # Else no need to update service_key when not reporting
         return service_key
+
+    def _update_log_settings(
+        self,
+    ) -> None:
+        """Update log-related config settings.
+
+        SW_APM_DEBUG_LEVEL -1 to disable logging is deprecated so this re-maps for c-lib compatibility.
+        """
+        # TODO no longer allow -1 and remove this helper
+        # https://swicloud.atlassian.net/browse/NH-69517
+        if self.__config["debug_level"] == -1:
+            logger.warning(
+                "Debug level -1 for APM Python is deprecated. Please update configuration to use log type 3."
+            )
+            self.__config[
+                "log_type"
+            ] = apm_logging.ApmLoggingType.disabled_level()
+            self.__config[
+                "debug_level"
+            ] = apm_logging.ApmLoggingLevel.critical_level()
 
     def _calculate_metric_format(self) -> int:
         """Return one of 1 (TransactionResponseTime only) or 2 (default; ResponseTime only). Note: 0 (both) is no longer supported. Based on collector URL which may have a port e.g. foo-collector.com:443"""

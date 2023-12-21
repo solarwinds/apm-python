@@ -55,6 +55,11 @@ class ApmLoggingType:
         return cls.log_types["STDERR"]
 
     @classmethod
+    def disabled_level(cls):
+        """Returns integer representation of disabled log type"""
+        return cls.log_types["DISABLED"]
+
+    @classmethod
     def is_valid_level(cls, level):
         """Returns True if the provided level is a valid interger representation of log type, False otherwise."""
         try:
@@ -71,6 +76,8 @@ class ApmLoggingLevel:
     """
 
     # maps string representation of solarwinds_apm.sw_logging levels to their integer counterpart
+    # TODO no longer allow -1
+    # https://swicloud.atlassian.net/browse/NH-69517
     debug_levels = {
         "OBOE_DEBUG_DISABLE": -1,
         "OBOE_DEBUG_FATAL": 0,
@@ -98,6 +105,11 @@ class ApmLoggingLevel:
     def default_level(cls):
         """Returns integer representation of default debugging level"""
         return cls.debug_levels["OBOE_DEBUG_WARNING"]
+
+    @classmethod
+    def critical_level(cls):
+        """Returns integer representation of default debugging level"""
+        return cls.debug_levels["OBOE_DEBUG_FATAL"]
 
     @classmethod
     def is_valid_level(cls, level):
