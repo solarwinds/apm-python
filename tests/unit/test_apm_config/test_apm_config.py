@@ -4,6 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import logging
 import os
 import pytest
 
@@ -634,6 +635,22 @@ class TestSolarWindsApmConfig:
             "bar-service"
         )
         assert result == "valid_key_with:bar-service"
+
+    def test__update_log_settings_deprecated(self):        
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("debug_level", -1)
+        test_config._set_config_value("log_type", 0)
+        test_config._update_log_settings()
+        assert test_config.get("debug_level") == 0
+        assert test_config.get("log_type") == 4
+
+    def test__update_log_settings_ok(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("debug_level", 1)
+        test_config._set_config_value("log_type", 1)
+        test_config._update_log_settings()
+        assert test_config.get("debug_level") == 1
+        assert test_config.get("log_type") == 1
 
     def test_convert_to_bool_bool_true(self):
         test_config = apm_config.SolarWindsApmConfig()
