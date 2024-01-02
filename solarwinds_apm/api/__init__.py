@@ -117,7 +117,7 @@ def solarwinds_ready(
     if not isinstance(rc, int) or rc not in OboeReadyCode.code_values():
         logger.warning("Unrecognized return code: %s", rc)
         return (
-            OboeReadyCode.OBOE_SERVER_RESPONSE_UNKNOWN
+            OboeReadyCode.OBOE_SERVER_RESPONSE_UNKNOWN[0]
             if integer_response
             else False
         )
