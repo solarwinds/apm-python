@@ -19,6 +19,7 @@ class TestConfiguratorSampler:
         self,
         mocker,
         mock_apmconfig_disabled,
+        mock_oboe_api_obj,
         mock_tracerprovider,
     ):
         # Mock Otel
@@ -26,7 +27,10 @@ class TestConfiguratorSampler:
         trace_mocks = get_trace_mocks(mocker)
 
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_sampler(mock_apmconfig_disabled)
+        test_configurator._configure_sampler(
+            mock_apmconfig_disabled,
+            mock_oboe_api_obj,
+        )
 
         # sets tracer_provider with noop
         trace_mocks.NoOpTracerProvider.assert_called_once()
@@ -40,6 +44,7 @@ class TestConfiguratorSampler:
         self,
         mocker,
         mock_apmconfig_enabled,
+        mock_oboe_api_obj,
         mock_tracerprovider,
     ):
         # Mock entry points
@@ -57,7 +62,10 @@ class TestConfiguratorSampler:
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
         with pytest.raises(Exception):
-            test_configurator._configure_sampler(mock_apmconfig_enabled)
+            test_configurator._configure_sampler(
+                mock_apmconfig_enabled,
+                mock_oboe_api_obj,
+            )
 
         # no tracer_provider is set
         trace_mocks.NoOpTracerProvider.assert_not_called()
@@ -69,6 +77,7 @@ class TestConfiguratorSampler:
         self,
         mocker,
         mock_apmconfig_enabled,
+        mock_oboe_api_obj,
         mock_tracerprovider,
     ):
         # Mock entry points
@@ -82,7 +91,10 @@ class TestConfiguratorSampler:
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_sampler(mock_apmconfig_enabled)
+        test_configurator._configure_sampler(
+            mock_apmconfig_enabled,
+            mock_oboe_api_obj,
+        )
 
         # tracer_provider set with new resource using configured service_name
         trace_mocks.set_tracer_provider.assert_called_once()
@@ -101,6 +113,7 @@ class TestConfiguratorSampler:
         self,
         mocker,
         mock_apmconfig_enabled,
+        mock_oboe_api_obj,
         mock_tracerprovider,
     ):
         # Save any SAMPLER env var for later
@@ -131,7 +144,10 @@ class TestConfiguratorSampler:
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_sampler(mock_apmconfig_enabled)
+        test_configurator._configure_sampler(
+            mock_apmconfig_enabled,
+            mock_oboe_api_obj,
+        )
 
         # sampler loaded was solarwinds_sampler, not configured foo_sampler
         mock_load_entry_point.assert_called_once_with(

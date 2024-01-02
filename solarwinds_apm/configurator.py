@@ -69,6 +69,14 @@ from solarwinds_apm.version import __version__
 if TYPE_CHECKING:
     from solarwinds_apm.extension.oboe import Reporter
 
+    try:
+        # c-lib <14 does not have OboeAPI
+        # TODO remove the except after upgrading
+        # https://swicloud.atlassian.net/browse/NH-68264
+        from solarwinds_apm.extension.oboe import OboeAPI
+    except ImportError:
+        from solarwinds_apm.apm_noop import OboeAPI
+
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
 
@@ -87,6 +95,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager = SolarWindsTxnNameManager()
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
+        # TODO add args
+        # https://swicloud.atlassian.net/browse/NH-68264
+        # See also SolarWindsApmConfig._get_extension_components
+        oboe_api = apm_config.oboe_api()
 
         # TODO Add experimental trace flag, clean up
         #      https://swicloud.atlassian.net/browse/NH-65067
@@ -96,7 +108,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             apm_meters = NoopMeterManager()
         else:
-            apm_meters = SolarWindsMeterManager(apm_config)
+            apm_meters = SolarWindsMeterManager(
+                apm_config,
+                oboe_api,
+            )
 
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
@@ -105,6 +120,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             apm_config,
             reporter,
             apm_meters,
+            oboe_api,
         )
         # Report an status event after everything is done.
         self._report_init_event(reporter, apm_config)
@@ -116,9 +132,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
         reporter: "Reporter",
         apm_meters: SolarWindsMeterManager,
+        oboe_api: "OboeAPI",
     ) -> None:
         """Configure OTel sampler, exporter, propagator, response propagator"""
-        self._configure_sampler(apm_config)
+        self._configure_sampler(apm_config, oboe_api)
         if apm_config.agent_enabled:
             self._configure_service_entry_id_span_processor()
             self._configure_txnname_calculator_span_processor(
@@ -152,6 +169,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_sampler(
         self,
         apm_config: SolarWindsApmConfig,
+        oboe_api: "OboeAPI",
     ) -> None:
         """Always configure SolarWinds OTel sampler, or none if disabled"""
         if not apm_config.agent_enabled:
@@ -163,7 +181,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "solarwinds_apm",
                 "opentelemetry_traces_sampler",
                 self._DEFAULT_SW_TRACES_SAMPLER,
-            )(apm_config)
+            )(apm_config, oboe_api)
         except Exception as ex:
             logger.exception("A exception was raised: %s", ex)
             logger.exception(

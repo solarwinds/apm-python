@@ -242,8 +242,10 @@ class Test_SwSampler_calculate_attributes():
     """
     def test_init(self, mocker):
         mock_apm_config = mocker.Mock()
-        sampler = _SwSampler(mock_apm_config)
+        mock_oboe_api = mocker.Mock()
+        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
         assert sampler.apm_config == mock_apm_config
+        assert sampler.oboe_settings_api == mock_oboe_api
 
     def test_decision_drop_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
         self,

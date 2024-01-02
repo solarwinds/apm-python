@@ -27,11 +27,13 @@ class TestApmMeterManager:
             return_value=mock_meter
         )
 
-        # Mock APM Config
+        # Mock args
         mock_apm_config = mocker.Mock()
+        mock_oboe_api = mocker.Mock()
 
         # Test!
-        SolarWindsMeterManager(mock_apm_config)
+        mgr = SolarWindsMeterManager(mock_apm_config, mock_oboe_api)
+        assert mgr.oboe_settings_api == mock_oboe_api
         mock_otel_get_meter.assert_has_calls(
             [
                 mocker.call("sw.apm.request.metrics"),
