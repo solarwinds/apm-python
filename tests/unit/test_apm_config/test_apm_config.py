@@ -764,21 +764,45 @@ class TestSolarWindsApmConfig:
         )
         assert result == "valid_key_with:bar-service"
 
-    def test__update_log_settings_deprecated(self):        
+    def test_update_log_type_no_change(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("debug_level", 2)
+        test_config._set_config_value("log_type", 0)
+        test_config._set_config_value("logname", "")
+        test_config.update_log_type()
+        assert test_config.get("debug_level") == 2
+        assert test_config.get("log_type") == 0
+        assert test_config.get("logname") == ""
+
+    def test_update_log_type_disabled(self):        
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("debug_level", -1)
         test_config._set_config_value("log_type", 0)
-        test_config._update_log_settings()
-        assert test_config.get("debug_level") == 0
+        test_config._set_config_value("logname", "")
+        test_config.update_log_type()
+        assert test_config.get("debug_level") == -1
         assert test_config.get("log_type") == 4
+        assert test_config.get("logname") == ""
 
-    def test__update_log_settings_ok(self):
+    def test_update_log_type_logname(self):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("debug_level", 1)
-        test_config._set_config_value("log_type", 1)
-        test_config._update_log_settings()
+        test_config._set_config_value("log_type", 0)
+        test_config._set_config_value("logname", "some-file-path")
+        test_config.update_log_type()
         assert test_config.get("debug_level") == 1
-        assert test_config.get("log_type") == 1
+        assert test_config.get("log_type") == 2
+        assert test_config.get("logname") == "some-file-path"
+
+    def test_update_log_type_logname_but_disabled(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("debug_level", -1)
+        test_config._set_config_value("log_type", 0)
+        test_config._set_config_value("logname", "some-file-path")
+        test_config.update_log_type()
+        assert test_config.get("debug_level") == -1
+        assert test_config.get("log_type") == 4
+        assert test_config.get("logname") == "some-file-path"
 
     def test_convert_to_bool_bool_true(self):
         test_config = apm_config.SolarWindsApmConfig()
