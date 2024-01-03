@@ -21,16 +21,16 @@ class TestApmLoggingType:
         assert apm_logging.ApmLoggingType.is_valid_log_type(2)
         assert apm_logging.ApmLoggingType.is_valid_log_type(4)
 
-    def test_is_valid_type_not_int(self):
-        assert not apm_logging.ApmLoggingType.is_valid_log_type("abc")
+    def test_is_valid_type_not_int_ret_default(self):
+        assert apm_logging.ApmLoggingType.is_valid_log_type("abc") == 0
 
-    def test_is_valid_type_int_out_of_range(self):
-        assert not apm_logging.ApmLoggingType.is_valid_log_type(-9999)
-        assert not apm_logging.ApmLoggingType.is_valid_log_type(-1)
-        assert not apm_logging.ApmLoggingType.is_valid_log_type(1)
-        assert not apm_logging.ApmLoggingType.is_valid_log_type(3)
-        assert not apm_logging.ApmLoggingType.is_valid_log_type(5)
-        assert not apm_logging.ApmLoggingType.is_valid_log_type(9999)
+    def test_is_valid_type_int_out_of_range_ret_default(self):
+        assert apm_logging.ApmLoggingType.is_valid_log_type(-9999) == 0
+        assert apm_logging.ApmLoggingType.is_valid_log_type(-1) == 0
+        assert apm_logging.ApmLoggingType.is_valid_log_type(1) == 0
+        assert apm_logging.ApmLoggingType.is_valid_log_type(3) == 0
+        assert apm_logging.ApmLoggingType.is_valid_log_type(5) == 0
+        assert apm_logging.ApmLoggingType.is_valid_log_type(9999) == 0
 
 class TestApmLoggingLevel:
     def test_default_level(self):

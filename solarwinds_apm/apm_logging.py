@@ -69,7 +69,7 @@ class ApmLoggingType:
             log_type = int(log_type)
             return bool(log_type in list(cls.log_types.values()))
         except (ValueError, TypeError):
-            return False
+            return cls.default_type()
 
 
 class ApmLoggingLevel:
@@ -115,7 +115,7 @@ class ApmLoggingLevel:
 
     @classmethod
     def is_valid_level(cls, level):
-        """Returns True if the provided level is a valid interger representation of a solarwinds_apm.sw_logging level,
+        """Returns True if the provided level is a valid integer representation of a solarwinds_apm.sw_logging level,
         False otherwise."""
         try:
             level = int(level)
