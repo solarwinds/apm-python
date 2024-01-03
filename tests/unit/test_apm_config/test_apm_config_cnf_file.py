@@ -161,7 +161,6 @@ class TestSolarWindsApmConfigCnfFile:
             "collector": False,
             "reporter": "not-ssl-or-anything",
             "debugLevel": "foo",
-            "logType": "foo",
             "logname": False,
             "serviceKey": "not-good-to-put-here-and-wont-be-used",
             "hostnameAlias": False,
