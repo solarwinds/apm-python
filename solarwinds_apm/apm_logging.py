@@ -109,11 +109,6 @@ class ApmLoggingLevel:
         return cls.debug_levels["OBOE_DEBUG_WARNING"]
 
     @classmethod
-    def critical_level(cls):
-        """Returns integer representation of critical/fatal debugging level"""
-        return cls.debug_levels["OBOE_DEBUG_FATAL"]
-
-    @classmethod
     def is_valid_level(cls, level):
         """Returns True if the provided level is a valid integer representation of a solarwinds_apm.sw_logging level,
         False otherwise."""

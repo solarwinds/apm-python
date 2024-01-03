@@ -36,9 +36,6 @@ class TestApmLoggingLevel:
     def test_default_level(self):
         assert apm_logging.ApmLoggingLevel.default_level() == 2
 
-    def test_critical_level(self):
-        assert apm_logging.ApmLoggingLevel.critical_level() == 0
-
     def test_is_valid_level_ok(self):
         assert apm_logging.ApmLoggingLevel.is_valid_level(-1)
         assert apm_logging.ApmLoggingLevel.is_valid_level(0)
