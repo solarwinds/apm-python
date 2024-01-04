@@ -20,6 +20,7 @@ class TestConfiguratorInitializeReporter:
         mock_apmconfig_enabled_reporter_settings.extension.Reporter.assert_called_once_with(
             **{
                 "hostname_alias": "foo",
+                "log_type": "foo",
                 "log_level": "foo",
                 "log_file_path": "foo",
                 "max_transactions": "foo",

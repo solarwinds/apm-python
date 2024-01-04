@@ -38,10 +38,45 @@ import logging
 import os
 
 
+class ApmLoggingType:
+    """Mapping of supported solarwinds_apm library log types"""
+
+    log_types = {
+        "STDERR": 0,
+        "FILE": 2,
+        "DISABLED": 4,
+    }
+
+    @classmethod
+    def default_type(cls):
+        """Returns integer representation of default log type"""
+        return cls.log_types["STDERR"]
+
+    @classmethod
+    def disabled_type(cls):
+        """Returns integer representation of disabled log type"""
+        return cls.log_types["DISABLED"]
+
+    @classmethod
+    def file_type(cls):
+        """Returns integer representation of to-file log type"""
+        return cls.log_types["FILE"]
+
+    @classmethod
+    def is_valid_log_type(cls, log_type):
+        """Returns True if the provided type is a valid interger representation of log type, False otherwise."""
+        try:
+            log_type = int(log_type)
+            return bool(log_type in list(cls.log_types.values()))
+        except (ValueError, TypeError):
+            return cls.default_type()
+
+
 class ApmLoggingLevel:
-    """Abstract mapping class providing a conversion between solarwinds_apm agent logging level and Python logging module
+    """Mapping class providing a conversion between solarwinds_apm library logging level and Python logging module
     logging levels.
-    The solarwinds_apm package has seven different log levels, which are defined in the debug_levels dictionary.
+    The solarwinds_apm package has six main log levels, which are defined in the debug_levels dictionary.
+    There is also a special 7th OBOE_DEBUG_DISABLE for disabling logging, as there is no "disabled" level in Python logging nor agent logging.
     """
 
     # maps string representation of solarwinds_apm.sw_logging levels to their integer counterpart
@@ -75,7 +110,7 @@ class ApmLoggingLevel:
 
     @classmethod
     def is_valid_level(cls, level):
-        """Returns True if the provided level is a valid interger representation of a solarwinds_apm.sw_logging level,
+        """Returns True if the provided level is a valid integer representation of a solarwinds_apm.sw_logging level,
         False otherwise."""
         try:
             level = int(level)

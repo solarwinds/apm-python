@@ -182,6 +182,134 @@ class TestSolarWindsApmConfig:
         if old_env_trans_name:
             os.environ["SW_APM_TRANSACTION_NAME"] = old_env_trans_name
 
+    def test__init_oboe_api_and_options_defaults(self, mocker):
+        mock_level = mocker.PropertyMock()
+        mock_type = mocker.PropertyMock()
+        mock_logging_options = mocker.Mock()
+        type(mock_logging_options).level = mock_level
+        type(mock_logging_options).type = mock_type
+
+        mock_oboe_api_options_obj = mocker.Mock()
+        type(mock_oboe_api_options_obj).logging_options = mock_logging_options
+
+        mock_oboe_api_options_swig = mocker.Mock(
+            return_value=mock_oboe_api_options_obj
+        )
+        mock_oboe_api_swig = mocker.Mock()
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
+            return_value=(
+                "unused",
+                mocker.Mock(),
+                mock_oboe_api_swig,
+                mock_oboe_api_options_swig,
+            )
+        )
+
+        apm_config.SolarWindsApmConfig()
+        mock_oboe_api_options_swig.assert_called_once()
+        # default values used
+        mock_level.assert_called_once_with(2)
+        mock_type.assert_called_once_with(0)
+        mock_oboe_api_swig.assert_called_once()
+
+    def test__init_oboe_api_and_options_configured_invalid(self, mocker):
+        # Save any debug_level, log_type env var for later
+        old_debug_level = os.environ.get("SW_APM_DEBUG_LEVEL")
+        if old_debug_level:
+            del os.environ["SW_APM_DEBUG_LEVEL"]
+        old_log_type = os.environ.get("SW_APM_LOG_TYPE")
+        if old_log_type:
+            del os.environ["SW_APM_LOG_TYPE"]
+        mocker.patch.dict(os.environ, {
+            "SW_APM_DEBUG_LEVEL": "not-valid",
+            "SW_APM_LOG_TYPE": "nor-this",
+        })
+
+        mock_level = mocker.PropertyMock()
+        mock_type = mocker.PropertyMock()
+        mock_logging_options = mocker.Mock()
+        type(mock_logging_options).level = mock_level
+        type(mock_logging_options).type = mock_type
+
+        mock_oboe_api_options_obj = mocker.Mock()
+        type(mock_oboe_api_options_obj).logging_options = mock_logging_options
+
+        mock_oboe_api_options_swig = mocker.Mock(
+            return_value=mock_oboe_api_options_obj
+        )
+        mock_oboe_api_swig = mocker.Mock()
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
+            return_value=(
+                "unused",
+                mocker.Mock(),
+                mock_oboe_api_swig,
+                mock_oboe_api_options_swig,
+            )
+        )
+
+        apm_config.SolarWindsApmConfig()
+        mock_oboe_api_options_swig.assert_called_once()
+        # default values used instead
+        mock_level.assert_called_once_with(2)
+        mock_type.assert_called_once_with(0)
+        mock_oboe_api_swig.assert_called_once()
+
+        # restore debug_level, log_type
+        if old_debug_level:
+            os.environ["SW_APM_DEBUG_LEVEL"] = old_debug_level
+        if old_log_type:
+            os.environ["SW_APM_LOG_TYPE"] = old_log_type
+
+    def test__init_oboe_api_and_options_configured_valid(self, mocker):
+        # Save any debug_level, log_type env var for later
+        old_debug_level = os.environ.get("SW_APM_DEBUG_LEVEL")
+        if old_debug_level:
+            del os.environ["SW_APM_DEBUG_LEVEL"]
+        old_log_type = os.environ.get("SW_APM_LOG_TYPE")
+        if old_log_type:
+            del os.environ["SW_APM_LOG_TYPE"]
+        mocker.patch.dict(os.environ, {
+            "SW_APM_DEBUG_LEVEL": "6",
+            "SW_APM_LOG_TYPE": "1",
+        })
+
+        mock_level = mocker.PropertyMock()
+        mock_type = mocker.PropertyMock()
+        mock_logging_options = mocker.Mock()
+        type(mock_logging_options).level = mock_level
+        type(mock_logging_options).type = mock_type
+
+        mock_oboe_api_options_obj = mocker.Mock()
+        type(mock_oboe_api_options_obj).logging_options = mock_logging_options
+
+        mock_oboe_api_options_swig = mocker.Mock(
+            return_value=mock_oboe_api_options_obj
+        )
+        mock_oboe_api_swig = mocker.Mock()
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
+            return_value=(
+                "unused",
+                mocker.Mock(),
+                mock_oboe_api_swig,
+                mock_oboe_api_options_swig,
+            )
+        )
+
+        apm_config.SolarWindsApmConfig()
+        mock_oboe_api_options_swig.assert_called_once()
+        mock_level.assert_called_once_with(6)
+        mock_type.assert_called_once_with(1)
+        mock_oboe_api_swig.assert_called_once()
+
+        # restore debug_level, log_type
+        if old_debug_level:
+            os.environ["SW_APM_DEBUG_LEVEL"] = old_debug_level
+        if old_log_type:
+            os.environ["SW_APM_LOG_TYPE"] = old_log_type
+
     def test_calculate_metric_format_no_collector(self, mocker):
         # Save any collector in os for later
         old_collector = os.environ.get("SW_APM_COLLECTOR", None)
@@ -531,6 +659,23 @@ class TestSolarWindsApmConfig:
         if old_debug_level:
             os.environ["SW_APM_DEBUG_LEVEL"] = old_debug_level
 
+    def test_set_config_value_default_log_type(
+        self,
+        caplog,
+        mock_env_vars,
+    ):
+        # Save any log_type in os for later
+        old_log_type = os.environ.get("SW_APM_LOG_TYPE", None)
+        if old_log_type:
+            del os.environ["SW_APM_LOG_TYPE"]
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_type", "not-valid-level")
+        assert test_config.get("log_type") == 0
+        assert "Ignore config option" in caplog.text
+        # Restore old debug_level
+        if old_log_type:
+            os.environ["SW_APM_LOG_TYPE"] = old_log_type
+
     def test__calculate_service_name_agent_disabled(self):
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._calculate_service_name(
@@ -617,6 +762,46 @@ class TestSolarWindsApmConfig:
             "bar-service"
         )
         assert result == "valid_key_with:bar-service"
+
+    def test_update_log_type_no_change(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("debug_level", 2)
+        test_config._set_config_value("log_type", 0)
+        test_config._set_config_value("logname", "")
+        test_config.update_log_type()
+        assert test_config.get("debug_level") == 2
+        assert test_config.get("log_type") == 0
+        assert test_config.get("logname") == ""
+
+    def test_update_log_type_disabled(self):        
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("debug_level", -1)
+        test_config._set_config_value("log_type", 0)
+        test_config._set_config_value("logname", "")
+        test_config.update_log_type()
+        assert test_config.get("debug_level") == -1
+        assert test_config.get("log_type") == 4
+        assert test_config.get("logname") == ""
+
+    def test_update_log_type_logname(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("debug_level", 1)
+        test_config._set_config_value("log_type", 0)
+        test_config._set_config_value("logname", "some-file-path")
+        test_config.update_log_type()
+        assert test_config.get("debug_level") == 1
+        assert test_config.get("log_type") == 2
+        assert test_config.get("logname") == "some-file-path"
+
+    def test_update_log_type_logname_but_disabled(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("debug_level", -1)
+        test_config._set_config_value("log_type", 0)
+        test_config._set_config_value("logname", "some-file-path")
+        test_config.update_log_type()
+        assert test_config.get("debug_level") == -1
+        assert test_config.get("log_type") == 4
+        assert test_config.get("logname") == "some-file-path"
 
     def test_convert_to_bool_bool_true(self):
         test_config = apm_config.SolarWindsApmConfig()

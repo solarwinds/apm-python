@@ -30,16 +30,10 @@ from opentelemetry.test.test_base import TestBase
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro
+from solarwinds_apm.extension.oboe import OboeAPI
 from solarwinds_apm.propagator import SolarWindsPropagator
 from solarwinds_apm.sampler import ParentBasedSwSampler
 
-try:
-    # c-lib <14 does not have OboeAPI
-    # TODO remove the except after upgrading
-    # https://swicloud.atlassian.net/browse/NH-68264
-    from solarwinds_apm.extension.oboe import OboeAPI
-except ImportError:
-    from solarwinds_apm.apm_noop import OboeAPI
 
 class TestBaseSwHeadersAndAttributes(TestBase):
     """

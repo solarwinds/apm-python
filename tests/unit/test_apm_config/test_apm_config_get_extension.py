@@ -12,17 +12,14 @@ import solarwinds_apm.apm_noop as NoopExtension
 from solarwinds_apm.apm_noop import (
     Context as NoopContext,
     OboeAPI as NoopOboeApi,
+    OboeAPIOptions as NoopOboeApiOptions,
 )
 from solarwinds_apm.extension import oboe as Extension
-from solarwinds_apm.extension.oboe import Context
-
-try:
-    # c-lib <14 does not have OboeAPI
-    # TODO remove the except after upgrading
-    # https://swicloud.atlassian.net/browse/NH-68264
-    from solarwinds_apm.extension.oboe import OboeAPI
-except ImportError:
-    from solarwinds_apm.apm_noop import OboeAPI as OboeAPI
+from solarwinds_apm.extension.oboe import (
+    Context,
+    OboeAPI,
+    OboeAPIOptions,
+)
 
 
 # pylint: disable=unused-import
@@ -43,10 +40,11 @@ class TestApmConfigGetExtensionComponents:
         self,
         mock_env_vars,
     ):
-        res1, res2, res3 = apm_config.SolarWindsApmConfig()._get_extension_components(False, False)
+        res1, res2, res3, res4 = apm_config.SolarWindsApmConfig()._get_extension_components(False, False)
         assert res1 == NoopExtension
         assert res2 == NoopContext
         assert res3 == NoopOboeApi
+        assert res4 == NoopOboeApiOptions
 
     def test__get_extension_components_cannot_import(
         self,
@@ -55,10 +53,11 @@ class TestApmConfigGetExtensionComponents:
     ):
         monkeypatch.delitem(sys.modules, 'solarwinds_apm.extension.oboe', raising=False)
         monkeypatch.setattr(builtins, '__import__', monkeypatch_importerror)
-        res1, res2, res3 = apm_config.SolarWindsApmConfig()._get_extension_components(True, False)
+        res1, res2, res3, res4 = apm_config.SolarWindsApmConfig()._get_extension_components(True, False)
         assert res1 == NoopExtension
         assert res2 == NoopContext
         assert res3 == NoopOboeApi
+        assert res4 == NoopOboeApiOptions
 
     def test__get_extension_components_is_lambda_cannot_import(
         self,
@@ -67,25 +66,28 @@ class TestApmConfigGetExtensionComponents:
     ):
         monkeypatch.delitem(sys.modules, 'solarwinds_apm.extension.oboe', raising=False)
         monkeypatch.setattr(builtins, '__import__', monkeypatch_importerror)
-        res1, res2, res3 = apm_config.SolarWindsApmConfig()._get_extension_components(True, True)
+        res1, res2, res3, res4 = apm_config.SolarWindsApmConfig()._get_extension_components(True, True)
         assert res1 == NoopExtension
         assert res2 == NoopContext
         assert res3 == NoopOboeApi
+        assert res4 == NoopOboeApiOptions
 
     def test__get_extension_components_is_lambda(
         self,
         mock_env_vars,
     ):
-        res1, res2, res3 = apm_config.SolarWindsApmConfig()._get_extension_components(True, True)
+        res1, res2, res3, res4 = apm_config.SolarWindsApmConfig()._get_extension_components(True, True)
         assert res1 == NoopExtension
         assert res2 == NoopContext
         assert res3 == OboeAPI
+        assert res4 == OboeAPIOptions
 
     def test__get_extension_components_enabled(
         self,
         mock_env_vars,
     ):
-        res1, res2, res3 = apm_config.SolarWindsApmConfig()._get_extension_components(True, False)
+        res1, res2, res3, res4 = apm_config.SolarWindsApmConfig()._get_extension_components(True, False)
         assert res1 == Extension
         assert res2 == Context
         assert res3 == NoopOboeApi
+        assert res4 == NoopOboeApiOptions

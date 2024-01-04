@@ -95,7 +95,9 @@ class SolarWindsApmConfig:
             ),
             "collector": "",  # the collector address in host:port format.
             "reporter": "",  # the reporter mode, either 'udp' or 'ssl'.
+            "log_type": apm_logging.ApmLoggingType.default_type(),
             "debug_level": apm_logging.ApmLoggingLevel.default_level(),
+            "logname": "",
             "service_key": "",
             "hostname_alias": "",
             "trustedpath": "",
@@ -104,7 +106,6 @@ class SolarWindsApmConfig:
             "ec2_metadata_timeout": 1000,
             "max_flush_wait_time": -1,
             "max_transactions": -1,
-            "logname": "",
             "trace_metrics": -1,
             "token_bucket_capacity": -1,
             "token_bucket_rate": -1,
@@ -134,15 +135,27 @@ class SolarWindsApmConfig:
             self.__config["service_key"],
             self.service_name,
         )
+        self.update_log_type()
+        # update logging level of Python logging logger
+        apm_logging.set_sw_log_level(self.__config["debug_level"])
 
         # Calculate c-lib extension usage
         (
             self.extension,
             self.context,
-            self.oboe_api,
+            oboe_api_swig,
+            oboe_api_options_swig,
         ) = self._get_extension_components(
             self.agent_enabled,
             self.is_lambda,
+        )
+
+        # Create OboeAPI options using extension and __config
+        oboe_api_options = oboe_api_options_swig()
+        oboe_api_options.logging_options.level = self.__config["debug_level"]
+        oboe_api_options.logging_options.type = self.__config["log_type"]
+        self.oboe_api = oboe_api_swig(
+            oboe_api_options,
         )
 
         self.context.setTracingMode(self.__config["tracing_mode"])
@@ -160,8 +173,8 @@ class SolarWindsApmConfig:
     ) -> None:
         """Returns c-lib extension or noop components based on agent_enabled, is_lambda.
 
-        agent_enabled T, is_lambda F -> c-lib extension, c-lib Context, no-op settings API
-        agent_enabled T, is_lambda T -> no-op extension, no-op Context, c-lib settings API
+        agent_enabled T, is_lambda F -> c-lib extension, c-lib Context, no-op settings API, no-op API options
+        agent_enabled T, is_lambda T -> no-op extension, no-op Context, c-lib settings API, c-lib API options
         agent_enabled F              -> all no-op
         """
         if not agent_enabled:
@@ -169,6 +182,7 @@ class SolarWindsApmConfig:
                 noop_extension,
                 noop_extension.Context,
                 noop_extension.OboeAPI,
+                noop_extension.OboeAPIOptions,
             )
 
         try:
@@ -186,28 +200,41 @@ class SolarWindsApmConfig:
                 noop_extension,
                 noop_extension.Context,
                 noop_extension.OboeAPI,
+                noop_extension.OboeAPIOptions,
             )
 
         if is_lambda:
             try:
                 # pylint: disable=import-outside-toplevel,no-name-in-module
                 from solarwinds_apm.extension.oboe import OboeAPI as oboe_api
+                from solarwinds_apm.extension.oboe import (
+                    OboeAPIOptions as api_options,
+                )
             except ImportError as err:
-                # c-lib version may not have settings API
-                # TODO Update this message to contact support after c-lib 14
-                # https://swicloud.atlassian.net/browse/NH-64716
                 logger.warning(
-                    "Could not import API in lambda mode. Installed layer version not compatible. Tracing disabled: %s",
+                    "Could not import API in lambda mode. Please contact %s. Tracing disabled: %s",
+                    INTL_SWO_SUPPORT_EMAIL,
                     err,
                 )
                 return (
                     noop_extension,
                     noop_extension.Context,
                     noop_extension.OboeAPI,
+                    noop_extension.OboeAPIOptions,
                 )
-            return noop_extension, noop_extension.Context, oboe_api
+            return (
+                noop_extension,
+                noop_extension.Context,
+                oboe_api,
+                api_options,
+            )
 
-        return c_extension, c_extension.Context, noop_extension.OboeAPI
+        return (
+            c_extension,
+            c_extension.Context,
+            noop_extension.OboeAPI,
+            noop_extension.OboeAPIOptions,
+        )
 
     @classmethod
     def calculate_is_lambda(cls) -> bool:
@@ -435,6 +462,21 @@ class SolarWindsApmConfig:
 
         # Else no need to update service_key when not reporting
         return service_key
+
+    def update_log_type(
+        self,
+    ) -> None:
+        """Updates agent log type depending on other configs.
+
+        SW_APM_DEBUG_LEVEL -1 will set c-lib log_type to disabled (4).
+        SW_APM_LOGNAME not None will set c-lib log_type to file (2).
+        """
+        if self.__config["debug_level"] == -1:
+            self.__config[
+                "log_type"
+            ] = apm_logging.ApmLoggingType.disabled_type()
+        elif self.__config["logname"]:
+            self.__config["log_type"] = apm_logging.ApmLoggingType.file_type()
 
     def _calculate_metric_format(self) -> int:
         """Return one of 1 (TransactionResponseTime only) or 2 (default; ResponseTime only). Note: 0 (both) is no longer supported. Based on collector URL which may have a port e.g. foo-collector.com:443"""
@@ -777,8 +819,6 @@ class SolarWindsApmConfig:
                 if not apm_logging.ApmLoggingLevel.is_valid_level(val):
                     raise ValueError
                 self.__config[key] = val
-                # update logging level of agent logger
-                apm_logging.set_sw_log_level(val)
             # TODO Add experimental trace flag, clean up
             #      https://swicloud.atlassian.net/browse/NH-65067
             elif keys == ["experimental"]:

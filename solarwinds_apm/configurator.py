@@ -67,15 +67,7 @@ from solarwinds_apm.trace import (
 from solarwinds_apm.version import __version__
 
 if TYPE_CHECKING:
-    from solarwinds_apm.extension.oboe import Reporter
-
-    try:
-        # c-lib <14 does not have OboeAPI
-        # TODO remove the except after upgrading
-        # https://swicloud.atlassian.net/browse/NH-68264
-        from solarwinds_apm.extension.oboe import OboeAPI
-    except ImportError:
-        from solarwinds_apm.apm_noop import OboeAPI
+    from solarwinds_apm.extension.oboe import OboeAPI, Reporter
 
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
@@ -95,10 +87,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager = SolarWindsTxnNameManager()
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
-        # TODO add args
-        # https://swicloud.atlassian.net/browse/NH-68264
-        # See also SolarWindsApmConfig._get_extension_components
-        oboe_api = apm_config.oboe_api()
+        oboe_api = apm_config.oboe_api
 
         # TODO Add experimental trace flag, clean up
         #      https://swicloud.atlassian.net/browse/NH-65067
@@ -474,6 +463,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         Note: if config's extension is no-op, this has no effect."""
         reporter_kwargs = {
             "hostname_alias": apm_config.get("hostname_alias"),
+            "log_type": apm_config.get("log_type"),
             "log_level": apm_config.get("debug_level"),
             "log_file_path": apm_config.get("logname"),
             "max_transactions": apm_config.get("max_transactions"),
