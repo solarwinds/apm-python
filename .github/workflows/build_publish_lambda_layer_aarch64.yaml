@@ -72,7 +72,7 @@ jobs:
         with:
           app_id: ${{ vars.APPLICATION_ID }}
           private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
-      - uses: aws-actions/configure-aws-credentials@v2
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.API_CI_GHA_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.API_CI_GHA_SECRET_ACCESS_KEY }}
