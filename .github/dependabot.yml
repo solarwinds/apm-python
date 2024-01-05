@@ -1,0 +1,35 @@
+version: 2
+
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "11:00"
+    timezone: "America/Vancouver"
+
+  groups:
+    otel-contrib:
+      patterns:
+        - "opentelemetry-instrumentation-*"
+      update-types:
+        - minor
+        - patch
+
+    otel:
+      patterns:
+        - "opentelemetry-api"
+        - "opentelemetry-sdk"
+      update-types:
+        - minor
+        - patch
+
+    misc:
+      update-types:
+        - minor
+        - patch
+
+- package-ecosystem: github-actions
+  directory: "/"
+  schedule:
+    interval: weekly
