@@ -14,7 +14,7 @@ jobs:
     name: Build and publish sdist and x86_64
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Build x86_64
       uses: ./.github/actions/package_solarwinds_apm_x86_64
     - name: Install Twine
@@ -67,7 +67,7 @@ jobs:
       - launch_arm64
     runs-on: ${{ needs.launch_arm64.outputs.label }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Build aarch64
         uses: ./.github/actions/package_solarwinds_apm_aarch64
       - name: Install Twine

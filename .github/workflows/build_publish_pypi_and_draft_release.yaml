@@ -21,7 +21,7 @@ jobs:
     name: Check if version valid
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Check version
       run: cd .github/scripts && ./is_publishable.sh ${{ github.event.inputs.version }}
 
@@ -30,7 +30,7 @@ jobs:
     needs: is_publishable
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: ./.github/actions/package_solarwinds_apm_x86_64
     - name: Install Twine
       run: pip install --upgrade --no-cache-dir --prefer-binary twine
@@ -82,7 +82,7 @@ jobs:
       - launch_arm64
     runs-on: ${{ needs.launch_arm64.outputs.label }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Build aarch64
         uses: ./.github/actions/package_solarwinds_apm_aarch64
       - name: Install Twine
@@ -133,7 +133,7 @@ jobs:
         with:
           app_id: ${{ vars.APPLICATION_ID }}
           private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Initialize git
         run: |
           git config user.name "GitHub Actions"
