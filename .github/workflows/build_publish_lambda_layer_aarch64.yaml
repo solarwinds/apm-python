@@ -53,7 +53,7 @@ jobs:
       id: save-apm-python-version
       run: |
         echo "SW_APM_VERSION=$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')" >> $GITHUB_OUTPUT
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       name: Save assembled layer to build
       with:
         name: solarwinds_apm_lambda_aarch64.zip
