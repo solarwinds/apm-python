@@ -50,6 +50,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://www.solarwinds.com/solarwinds-observability/use-cases/python-performance-monitoring"
+Download = "https://pypi.org/project/solarwinds-apm/"
 Documentation = "https://documentation.solarwinds.com/en/success_center/observability/content/configure/services/python/python.htm"
 Changelog = "https://documentation.solarwinds.com/en/success_center/observability/content/release_notes/python-release-notes.htm"
 
