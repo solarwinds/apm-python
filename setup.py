@@ -103,23 +103,25 @@ if not (python_version_supported() and os_supported()):
         "Other platform or python versions may not work as expected.")
 
 ext_modules = [
-    Extension('solarwinds_apm.extension._oboe',
-              sources=[
-                  'solarwinds_apm/extension/oboe_wrap.cxx',
-                  'solarwinds_apm/extension/oboe_api.cpp'
-              ],
-              depends=[
-                  'solarwinds_apm/extension/oboe_api.h'
-              ],
-              include_dirs=[
-                  'solarwinds_apm/certs',
-                  'solarwinds_apm/extension',
-                  'solarwinds_apm'
-              ],
-              libraries=['oboe', 'rt'],
-              library_dirs=['solarwinds_apm/extension'],
-              extra_compile_args=["-std=c++14"],
-              runtime_library_dirs=['$ORIGIN']),
+    Extension(
+        name='solarwinds_apm.extension._oboe',
+        sources=[
+            'solarwinds_apm/extension/oboe_wrap.cxx',
+            'solarwinds_apm/extension/oboe_api.cpp'
+        ],
+        depends=[
+            'solarwinds_apm/extension/oboe_api.h',
+        ],
+        include_dirs=[
+            'solarwinds_apm/certs',
+            'solarwinds_apm/extension/bson',
+            'solarwinds_apm'
+        ],
+        libraries=['oboe', 'rt'],
+        library_dirs=['solarwinds_apm/extension'],
+        extra_compile_args=["-std=c++14"],
+        runtime_library_dirs=['$ORIGIN']
+    ),
 ]
 
 setup(
