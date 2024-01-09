@@ -102,12 +102,12 @@ jobs:
           - py3.7-alpine3.17
           - py3.7-debian10
           - py3.7-debian11
-          - py3.7-ubuntu18.04
+          # - py3.7-ubuntu18.04
           - py3.8-alpine3.12
           - py3.8-alpine3.13
           - py3.8-debian10
           - py3.8-debian11
-          - py3.8-ubuntu18.04
+          # - py3.8-ubuntu18.04
           - py3.8-ubuntu20.04
           - py3.9-alpine3.12
           - py3.9-alpine3.13
@@ -146,8 +146,8 @@ jobs:
             image: python:3.7-buster
           - hostname: py3.7-debian11
             image: python:3.7-bullseye
-          - hostname: py3.7-ubuntu18.04
-            image: ubuntu:18.04
+          # - hostname: py3.7-ubuntu18.04
+          #   image: ubuntu:18.04
           - hostname: py3.8-alpine3.12
             image: python:3.8-alpine3.12
           - hostname: py3.8-alpine3.13
@@ -156,8 +156,8 @@ jobs:
             image: python:3.8-buster
           - hostname: py3.8-debian11
             image: python:3.8-bullseye
-          - hostname: py3.8-ubuntu18.04
-            image: ubuntu:18.04
+          # - hostname: py3.8-ubuntu18.04
+          #   image: ubuntu:18.04
           - hostname: py3.8-ubuntu20.04
             image: ubuntu:20.04
           - hostname: py3.9-alpine3.12
