@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added configuration of transaction name in response_time metrics by lambda environment ([#257](https://github.com/solarwinds/apm-python/pull/257))
+- Added Dependabot config ([#261](https://github.com/solarwinds/apm-python/pull/261))
 
 ### Changed
 - Fixed unit tests ([#249](https://github.com/solarwinds/apm-python/pull/249))
