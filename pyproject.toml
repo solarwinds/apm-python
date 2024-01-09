@@ -1,5 +1,8 @@
 [build-system]
-requires = ["setuptools >= 61.0", "wheel"]
+requires = [
+  "setuptools >= 61.0",
+  "wheel >= 0.41"
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -66,6 +69,7 @@ solarwinds_exporter = "solarwinds_apm.exporter:SolarWindsSpanExporter"
 solarwinds_sampler = "solarwinds_apm.sampler:ParentBasedSwSampler"
 
 [tool.setuptools]
+include-package-data = false
 packages = [
   "solarwinds_apm",
   "solarwinds_apm.api",
