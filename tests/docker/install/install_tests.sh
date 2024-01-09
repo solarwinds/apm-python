@@ -118,7 +118,7 @@ function check_agent_startup(){
     # unset stop on error so we can catch debug messages in case of failures
     set +e
 
-    result=$(opentelemetry-instrument python -c 'from solarwinds_apm.api import solarwinds_ready; r=solarwinds_ready(wait_milliseconds=10000, integer_response=True); print(r)' 2>startup.log)
+    result=$(opentelemetry-instrument python -c 'from solarwinds_apm.api import solarwinds_ready; r=solarwinds_ready(wait_milliseconds=10000, integer_response=True); print(r)' 2>startup.log | tail -1)
 
     if [ "$result" != "$expected_agent_return" ]; then
         echo "FAILED! Expected solarwinds_ready to return $expected_agent_return, but got: $result"
