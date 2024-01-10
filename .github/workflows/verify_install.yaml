@@ -241,10 +241,6 @@ jobs:
     steps:
       - if: ${{ matrix.image == 'amazonlinux:2023' }}
         run: yum install -y tar gzip
-      - if: ${{ matrix.image == 'ubuntu:18.04' }}
-        run: |
-          nvm install 16.20.0
-          nvm use 16.20.0
       - uses: actions/checkout@v4
       - name: Setup and run install test
         working-directory: ./tests/docker/install
