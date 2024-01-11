@@ -297,6 +297,9 @@ class TestSolarWindsApmConfig:
                 mock_oboe_api_options_swig,
             )
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.fix_logname"
+        )
 
         apm_config.SolarWindsApmConfig()
         mock_oboe_api_options_swig.assert_called_once()

@@ -135,9 +135,16 @@ class SolarWindsApmConfig:
             self.__config["service_key"],
             self.service_name,
         )
+
+        # Update and apply all logging settings
+        self.fix_logname()
         self.update_log_type()
-        # update logging level of Python logging logger
+        apm_logging.set_sw_log_type(
+            self.__config["log_type"],
+            self.__config["logname"],
+        )
         apm_logging.set_sw_log_level(self.__config["debug_level"])
+        self.update_logname_for_reporter()
 
         # Calculate c-lib extension usage
         (
@@ -463,6 +470,27 @@ class SolarWindsApmConfig:
         # Else no need to update service_key when not reporting
         return service_key
 
+    def fix_logname(
+        self,
+    ) -> None:
+        """Checks SW_APM_LOGNAME path to file else fileHandler will fail.
+        If invalid, create path to match Boost.log behaviour.
+        If not possible, switch to default log settings.
+        """
+        logname_path = os.path.dirname(self.__config["logname"])
+        if not os.path.exists(logname_path):
+            try:
+                os.makedirs(logname_path)
+                logger.debug(
+                    "Created directory path from provided SW_APM_LOGNAME."
+                )
+            except FileNotFoundError:
+                logger.error(
+                    "Could not create log file directory path from provided SW_APM_LOGNAME. Using default log settings."
+                )
+                self.__config["logname"] = ""
+                self.__config["log_type"] = apm_logging.ApmLoggingType.default_type()
+
     def update_log_type(
         self,
     ) -> None:
@@ -477,6 +505,15 @@ class SolarWindsApmConfig:
             ] = apm_logging.ApmLoggingType.disabled_type()
         elif self.__config["logname"]:
             self.__config["log_type"] = apm_logging.ApmLoggingType.file_type()
+
+    def update_logname_for_reporter(
+        self,
+    ) -> None:
+        """Updates logname for extension Reporter to avoid conflict"""
+        orig_logname = self.__config["logname"]
+        if orig_logname:
+            logname, logname_ext = os.path.splitext(orig_logname)
+            self.__config["logname"] = f"{logname}_ext{logname_ext}"
 
     def _calculate_metric_format(self) -> int:
         """Return one of 1 (TransactionResponseTime only) or 2 (default; ResponseTime only). Note: 0 (both) is no longer supported. Based on collector URL which may have a port e.g. foo-collector.com:443"""

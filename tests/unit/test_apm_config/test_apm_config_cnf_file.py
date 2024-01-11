@@ -103,6 +103,10 @@ class TestSolarWindsApmConfigCnfFile:
         mock_get_cnf_dict.configure_mock(
             return_value=fixture_cnf_dict
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.fix_logname"
+        )
+
         # use key from env var (Python APM only uses key from here),
         # agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
@@ -117,7 +121,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("reporter") == "udp"
         assert resulting_config.get("debug_level") == 6
         assert resulting_config.get("log_type") == 2  # because logname not none
-        assert resulting_config.get("logname") == "foo-bar"
+        assert resulting_config.get("logname") == "foo-bar_ext"
         assert resulting_config.get("hostname_alias") == "foo-bar"
         assert resulting_config.get("trustedpath") == "foo-bar"
         assert resulting_config.get("events_flush_interval") == 2
@@ -184,6 +188,9 @@ class TestSolarWindsApmConfigCnfFile:
         mock_get_cnf_dict.configure_mock(
             return_value=mostly_invalid_cnf_dict
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.fix_logname"
+        )
         # use key from env var (Python APM only uses key from here),
         # agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
@@ -212,7 +219,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("collector") == "False"
         assert resulting_config.get("hostname_alias") == "False"
         assert resulting_config.get("trustedpath") == "False"
-        assert resulting_config.get("logname") == "False"
+        assert resulting_config.get("logname") == "False_ext"
 
         # update_transaction_filters was called
         mock_update_txn_filters.assert_called_once_with(mostly_invalid_cnf_dict)
@@ -264,6 +271,9 @@ class TestSolarWindsApmConfigCnfFile:
         mock_get_cnf_dict.configure_mock(
             return_value=fixture_cnf_dict
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.fix_logname"
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         # update_transaction_filters was called
         mock_update_txn_filters.assert_called_once_with(fixture_cnf_dict)
@@ -286,7 +296,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("ec2_metadata_timeout") == 2222
         assert resulting_config.get("max_flush_wait_time") == 3
         assert resulting_config.get("max_transactions") == 3
-        assert resulting_config.get("logname") == "other-foo-bar"
+        assert resulting_config.get("logname") == "other-foo-bar_ext"
         assert resulting_config.get("trace_metrics") == 3
         assert resulting_config.get("token_bucket_capacity") == 3
         assert resulting_config.get("token_bucket_rate") == 3
@@ -343,6 +353,9 @@ class TestSolarWindsApmConfigCnfFile:
         mock_get_cnf_dict.configure_mock(
             return_value=fixture_cnf_dict
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.fix_logname"
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         # update_transaction_filters was called
         mock_update_txn_filters.assert_called_once_with(fixture_cnf_dict)
@@ -375,7 +388,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("collector") == "False"
         assert resulting_config.get("hostname_alias") == "False"
         assert resulting_config.get("trustedpath") == "False"
-        assert resulting_config.get("logname") == "False"
+        assert resulting_config.get("logname") == "False_ext"
         
         # Restore old collector
         if old_collector:
