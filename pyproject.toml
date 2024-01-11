@@ -1,6 +1,95 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = [
+  "setuptools >= 61.0",
+  "wheel >= 0.41"
+]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "solarwinds_apm"
+dynamic = ["version"]
+authors = [
+  {name = "SolarWinds, LLC", email = "SWO-support@solarwinds.com"}
+]
+maintainers = [
+  {name = "Tammy Baylis", email = "tammy.baylis@solarwinds.com"}
+]
+description = "OpenTelemetry custom distro to connect to SolarWinds"
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {file = "LICENSE"}
+keywords = [
+  "solarwinds_apm",
+  "appoptics_apm",
+  "traceview",
+  "tracelytics",
+  "oboe",
+  "liboboe",
+  "instrumentation",
+  "performance",
+  "opentelemetry",
+  "observability",
+]
+classifiers = [
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Typing :: Typed",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+]
+requires-python = ">=3.7"
+dependencies = [
+    'opentelemetry-api == 1.20.0',
+    'opentelemetry-sdk == 1.20.0',
+    'opentelemetry-instrumentation == 0.41b0',
+    'opentelemetry-instrumentation-logging == 0.41b0',
+]
+
+[project.urls]
+Homepage = "https://www.solarwinds.com/solarwinds-observability/use-cases/python-performance-monitoring"
+Download = "https://pypi.org/project/solarwinds-apm/"
+Documentation = "https://documentation.solarwinds.com/en/success_center/observability/content/configure/services/python/python.htm"
+Changelog = "https://documentation.solarwinds.com/en/success_center/observability/content/release_notes/python-release-notes.htm"
+
+[project.entry-points.opentelemetry_distro]
+solarwinds_distro = "solarwinds_apm.distro:SolarWindsDistro"
+
+[project.entry-points.opentelemetry_configurator]
+solarwinds_configurator = "solarwinds_apm.configurator:SolarWindsConfigurator"
+
+[project.entry-points.opentelemetry_propagator]
+solarwinds_propagator = "solarwinds_apm.propagator:SolarWindsPropagator"
+
+[project.entry-points.opentelemetry_traces_exporter]
+solarwinds_exporter = "solarwinds_apm.exporter:SolarWindsSpanExporter"
+
+[project.entry-points.opentelemetry_traces_sampler]
+solarwinds_sampler = "solarwinds_apm.sampler:ParentBasedSwSampler"
+
+[tool.setuptools]
+include-package-data = false
+packages = [
+  "solarwinds_apm",
+  "solarwinds_apm.api",
+  "solarwinds_apm.certs",
+  "solarwinds_apm.extension",
+  "solarwinds_apm.extension.bson",
+  "solarwinds_apm.trace",
+]
+
+[tool.setuptools.package-data]
+solarwinds_apm = [
+  "extension/liboboe.so",
+  "extension/VERSION",
+  "extension/bson/bson.h",
+  "extension/bson/platform_hacks.h",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "solarwinds_apm.version.__version__"}
 
 [tool.black]
 line-length = 79
