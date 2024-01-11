@@ -806,6 +806,30 @@ class TestSolarWindsApmConfig:
         assert test_config.get("log_type") == 4
         assert test_config.get("logname") == "some-file-path"
 
+    def test_update_logname_for_reporter_empty(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("logname", "")
+        test_config.update_logname_for_reporter()
+        assert test_config.get("logname") == ""
+
+    def test_update_logname_for_reporter_no_ext(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("logname", "/path/to/foo")
+        test_config.update_logname_for_reporter()
+        assert test_config.get("logname") == "/path/to/foo_ext"
+
+    def test_update_logname_for_reporter_ext(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("logname", "/path/to/foo.log")
+        test_config.update_logname_for_reporter()
+        assert test_config.get("logname") == "/path/to/foo_ext.log"
+
+    def test_update_logname_for_reporter_ext_multiple_dots(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("logname", "/path/to/foo.abc.def.xyz")
+        test_config.update_logname_for_reporter()
+        assert test_config.get("logname") == "/path/to/foo.abc.def_ext.xyz"
+
     def test_convert_to_bool_bool_true(self):
         test_config = apm_config.SolarWindsApmConfig()
         assert test_config.convert_to_bool(True)
