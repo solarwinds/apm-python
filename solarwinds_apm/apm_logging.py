@@ -208,10 +208,11 @@ def set_sw_log_type(log_type, logname=""):
 
     if log_type == ApmLoggingType.file_type() and logname:
         try:
+            # no rollover to match oboe logs
             file_hander = RotatingFileHandler(
                 filename=logname,
-                maxBytes=1000000,  # 1MB
-                backupCount=5,
+                maxBytes=0,
+                backupCount=0,
             )
             logger.addHandler(file_hander)
             # stop logging to stream
