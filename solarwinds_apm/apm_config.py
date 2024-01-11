@@ -489,7 +489,9 @@ class SolarWindsApmConfig:
                     "Could not create log file directory path from provided SW_APM_LOGNAME. Using default log settings."
                 )
                 self.__config["logname"] = ""
-                self.__config["log_type"] = apm_logging.ApmLoggingType.default_type()
+                self.__config[
+                    "log_type"
+                ] = apm_logging.ApmLoggingType.default_type()
 
     def update_log_type(
         self,
