@@ -104,7 +104,17 @@ class TestSolarWindsApmConfigCnfFile:
             return_value=fixture_cnf_dict
         )
         mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_logname"
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
         )
 
         # use key from env var (Python APM only uses key from here),
@@ -120,7 +130,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("collector") == "foo-bar"
         assert resulting_config.get("reporter") == "udp"
         assert resulting_config.get("debug_level") == 6
-        assert resulting_config.get("log_type") == 2  # because logname not none
         assert resulting_config.get("logname") == "foo-bar_ext"
         assert resulting_config.get("hostname_alias") == "foo-bar"
         assert resulting_config.get("trustedpath") == "foo-bar"
@@ -189,7 +198,17 @@ class TestSolarWindsApmConfigCnfFile:
             return_value=mostly_invalid_cnf_dict
         )
         mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_logname"
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
         )
         # use key from env var (Python APM only uses key from here),
         # agent enabled, nothing has errored
@@ -202,7 +221,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("trigger_trace") == 1
         assert resulting_config.get("reporter") == ""
         assert resulting_config.get("debug_level") == 2
-        assert resulting_config.get("log_type") == 2  # because logname not none
         assert resulting_config.get("events_flush_interval") == -1
         assert resulting_config.get("max_request_size_bytes") == -1
         assert resulting_config.get("ec2_metadata_timeout") == 1000
@@ -272,7 +290,17 @@ class TestSolarWindsApmConfigCnfFile:
             return_value=fixture_cnf_dict
         )
         mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_logname"
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         # update_transaction_filters was called
@@ -288,7 +316,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("collector") == "other-foo-bar"
         assert resulting_config.get("reporter") == "file"
         assert resulting_config.get("debug_level") == 5
-        assert resulting_config.get("log_type") == 2  # because logname not none
         assert resulting_config.get("hostname_alias") == "other-foo-bar"
         assert resulting_config.get("trustedpath") == "other-foo-bar"
         assert resulting_config.get("events_flush_interval") == 3
@@ -354,7 +381,17 @@ class TestSolarWindsApmConfigCnfFile:
             return_value=fixture_cnf_dict
         )
         mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_logname"
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         # update_transaction_filters was called
@@ -370,7 +407,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("trigger_trace") == 1
         assert resulting_config.get("reporter") == "udp"
         assert resulting_config.get("debug_level") == 6
-        assert resulting_config.get("log_type") == 2  # because logname not none
         assert resulting_config.get("events_flush_interval") == 2
         assert resulting_config.get("max_request_size_bytes") == 2
         assert resulting_config.get("ec2_metadata_timeout") == 1234

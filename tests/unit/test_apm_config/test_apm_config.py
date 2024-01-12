@@ -298,7 +298,7 @@ class TestSolarWindsApmConfig:
             )
         )
         mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_logname"
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
         )
 
         apm_config.SolarWindsApmConfig()
