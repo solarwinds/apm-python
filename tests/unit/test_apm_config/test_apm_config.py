@@ -298,7 +298,7 @@ class TestSolarWindsApmConfig:
             )
         )
         mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.fix_logname"
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_logname"
         )
 
         apm_config.SolarWindsApmConfig()
@@ -765,6 +765,86 @@ class TestSolarWindsApmConfig:
             "bar-service"
         )
         assert result == "valid_key_with:bar-service"
+
+    def test_update_log_settings(self, mocker):
+        mock_logname = mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_logname"
+        )
+        mock_log_type = mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_type"
+        )
+        # init includes update_log_settings()
+        apm_config.SolarWindsApmConfig()
+        mock_logname.assert_called_once()
+        mock_log_type.assert_called_once()
+
+    def test_update_logname_none(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
+        mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("logname", "")
+        test_config._set_config_value("log_type", 2)
+        test_config.update_logname()
+        mock_exists.assert_not_called()
+        mock_makedirs.assert_not_called()
+        assert test_config.get("logname") == ""
+        assert test_config.get("log_type") == 2
+
+    def test_update_logname_no_parent_path(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
+        mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("logname", "foo")
+        test_config._set_config_value("log_type", 2)
+        test_config.update_logname()
+        mock_exists.assert_not_called()
+        mock_makedirs.assert_not_called()
+        assert test_config.get("logname") == "foo"
+        assert test_config.get("log_type") == 2
+
+    def test_update_logname_path_exists(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=True)
+        mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("logname", "/path/to/foo")
+        test_config._set_config_value("log_type", 2)
+        test_config.update_logname()
+        mock_exists.assert_called_once_with("/path/to")
+        mock_makedirs.assert_not_called()
+        assert test_config.get("logname") == "/path/to/foo"
+        assert test_config.get("log_type") == 2
+
+    def test_update_logname_create_path(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
+        mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("logname", "/path/to/foo")
+        test_config._set_config_value("log_type", 2)
+        test_config.update_logname()
+        mock_exists.assert_called_once_with("/path/to")
+        mock_makedirs.assert_called_once_with("/path/to")
+        assert test_config.get("logname") == "/path/to/foo"
+        assert test_config.get("log_type") == 2
+
+    def test_update_logname_cannot_create_reset_settings(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
+        mock_makedirs = mocker.patch(
+            "solarwinds_apm.apm_config.os.makedirs",
+            side_effect=FileNotFoundError("mock error")
+        )
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("logname", "/path/to/foo")
+        test_config._set_config_value("log_type", 2)
+        test_config.update_logname()
+        mock_exists.assert_called_once_with("/path/to")
+        mock_makedirs.assert_called_once_with("/path/to")
+        assert test_config.get("logname") == ""
+        assert test_config.get("log_type") == 0
 
     def test_update_log_type_no_change(self):
         test_config = apm_config.SolarWindsApmConfig()

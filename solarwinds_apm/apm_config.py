@@ -136,14 +136,14 @@ class SolarWindsApmConfig:
             self.service_name,
         )
 
-        # Update and apply all logging settings
-        self.fix_logname()
-        self.update_log_type()
+        # Update and apply logging settings to Python logger
+        self.update_log_settings()
         apm_logging.set_sw_log_type(
             self.__config["log_type"],
             self.__config["logname"],
         )
         apm_logging.set_sw_log_level(self.__config["debug_level"])
+
         self.update_logname_for_reporter()
 
         # Calculate c-lib extension usage
@@ -470,7 +470,14 @@ class SolarWindsApmConfig:
         # Else no need to update service_key when not reporting
         return service_key
 
-    def fix_logname(
+    def update_log_settings(
+        self,
+    ) -> None:
+        """Update logname and log type"""
+        self.update_logname()
+        self.update_log_type()
+
+    def update_logname(
         self,
     ) -> None:
         """Checks SW_APM_LOGNAME path to file else fileHandler will fail.
@@ -478,20 +485,21 @@ class SolarWindsApmConfig:
         If not possible, switch to default log settings.
         """
         logname_path = os.path.dirname(self.__config["logname"])
-        if not os.path.exists(logname_path):
-            try:
-                os.makedirs(logname_path)
-                logger.debug(
-                    "Created directory path from provided SW_APM_LOGNAME."
-                )
-            except FileNotFoundError:
-                logger.error(
-                    "Could not create log file directory path from provided SW_APM_LOGNAME. Using default log settings."
-                )
-                self.__config["logname"] = ""
-                self.__config[
-                    "log_type"
-                ] = apm_logging.ApmLoggingType.default_type()
+        if logname_path:
+            if not os.path.exists(logname_path):
+                try:
+                    os.makedirs(logname_path)
+                    logger.debug(
+                        "Created directory path from provided SW_APM_LOGNAME."
+                    )
+                except FileNotFoundError:
+                    logger.error(
+                        "Could not create log file directory path from provided SW_APM_LOGNAME. Using default log settings."
+                    )
+                    self.__config["logname"] = ""
+                    self.__config[
+                        "log_type"
+                    ] = apm_logging.ApmLoggingType.default_type()
 
     def update_log_type(
         self,

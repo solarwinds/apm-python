@@ -104,7 +104,7 @@ class TestSolarWindsApmConfigCnfFile:
             return_value=fixture_cnf_dict
         )
         mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.fix_logname"
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_logname"
         )
 
         # use key from env var (Python APM only uses key from here),
@@ -189,7 +189,7 @@ class TestSolarWindsApmConfigCnfFile:
             return_value=mostly_invalid_cnf_dict
         )
         mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.fix_logname"
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_logname"
         )
         # use key from env var (Python APM only uses key from here),
         # agent enabled, nothing has errored
@@ -272,7 +272,7 @@ class TestSolarWindsApmConfigCnfFile:
             return_value=fixture_cnf_dict
         )
         mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.fix_logname"
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_logname"
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         # update_transaction_filters was called
@@ -354,7 +354,7 @@ class TestSolarWindsApmConfigCnfFile:
             return_value=fixture_cnf_dict
         )
         mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.fix_logname"
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_logname"
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         # update_transaction_filters was called
