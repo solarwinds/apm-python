@@ -111,7 +111,7 @@ class TestSetSwLog:
         mock_apm_logger.error.assert_not_called()
         mock_apm_logger.warning.assert_not_called()
 
-    def test_set_sw_log_type_no_logname(self, mocker):
+    def test_set_sw_log_type_no_log_filepath(self, mocker):
         mock_apm_logger, mock_rfhandler = self.get_mock_logger_and_rfhandler(mocker)
 
         apm_logging.set_sw_log_type(2, "")
@@ -134,7 +134,7 @@ class TestSetSwLog:
         mock_apm_logger.addHandler.assert_not_called()
         mock_apm_logger.removeHandler.assert_not_called()
         mock_apm_logger.error.assert_called_once_with(
-            "Could not write logs to file; please check configured SW_APM_LOGNAME."
+            "Could not write logs to file; please check configured SW_APM_LOG_FILEPATH."
         )
         mock_apm_logger.warning.assert_not_called()
 

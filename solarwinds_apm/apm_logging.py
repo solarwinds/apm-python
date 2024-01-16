@@ -189,7 +189,7 @@ def disable_logger(disable=True):
         logger.propagate = True
 
 
-def set_sw_log_type(log_type, logname=""):
+def set_sw_log_type(log_type, log_filepath=""):
     """Set the logging 'type' of the agent-internal logger.
 
     This function expects the log_type to be one of the integer
@@ -197,7 +197,7 @@ def set_sw_log_type(log_type, logname=""):
     If an invalid type has been provided, the logging handler will not be
     changed but a warning message will be emitted.
 
-    If logname is provided and log_type is file_type, logger stream handler
+    If log_filepath is provided and log_type is file_type, logger stream handler
     is swapped with a rotating file handler.
     """
     if not ApmLoggingType.is_valid_log_type(log_type):
@@ -206,11 +206,11 @@ def set_sw_log_type(log_type, logname=""):
         )
         return
 
-    if log_type == ApmLoggingType.file_type() and logname:
+    if log_type == ApmLoggingType.file_type() and log_filepath:
         try:
             # no rollover to match oboe logs
             file_hander = RotatingFileHandler(
-                filename=logname,
+                filename=log_filepath,
                 maxBytes=0,
                 backupCount=0,
             )
@@ -218,9 +218,9 @@ def set_sw_log_type(log_type, logname=""):
             # stop logging to stream
             logger.removeHandler(_stream_handler)
         except FileNotFoundError:
-            # path should be checked first by ApmConfig.update_logname
+            # path should be checked first by ApmConfig.update_log_filepath
             logger.error(
-                "Could not write logs to file; please check configured SW_APM_LOGNAME."
+                "Could not write logs to file; please check configured SW_APM_LOG_FILEPATH."
             )
 
 

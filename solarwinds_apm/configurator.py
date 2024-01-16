@@ -465,7 +465,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             "hostname_alias": apm_config.get("hostname_alias"),
             "log_type": apm_config.get("log_type"),
             "log_level": apm_config.get("debug_level"),
-            "log_file_path": apm_config.get("logname"),
+            "log_file_path": apm_config.get("log_filepath"),
             "max_transactions": apm_config.get("max_transactions"),
             "max_flush_wait_time": apm_config.get("max_flush_wait_time"),
             "events_flush_interval": apm_config.get("events_flush_interval"),

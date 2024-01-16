@@ -130,7 +130,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("collector") == "foo-bar"
         assert resulting_config.get("reporter") == "udp"
         assert resulting_config.get("debug_level") == 6
-        assert resulting_config.get("logname") == "foo-bar_ext"
+        assert resulting_config.get("log_filepath") == "foo-bar_ext"
         assert resulting_config.get("hostname_alias") == "foo-bar"
         assert resulting_config.get("trustedpath") == "foo-bar"
         assert resulting_config.get("events_flush_interval") == 2
@@ -174,7 +174,7 @@ class TestSolarWindsApmConfigCnfFile:
             "collector": False,
             "reporter": "not-ssl-or-anything",
             "debugLevel": "foo",
-            "logname": False,
+            "logFilepath": False,
             "serviceKey": "not-good-to-put-here-and-wont-be-used",
             "hostnameAlias": False,
             "trustedpath": False,
@@ -237,7 +237,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("collector") == "False"
         assert resulting_config.get("hostname_alias") == "False"
         assert resulting_config.get("trustedpath") == "False"
-        assert resulting_config.get("logname") == "False_ext"
+        assert resulting_config.get("log_filepath") == "False_ext"
 
         # update_transaction_filters was called
         mock_update_txn_filters.assert_called_once_with(mostly_invalid_cnf_dict)
@@ -264,7 +264,7 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_COLLECTOR": "other-foo-bar",
             "SW_APM_REPORTER": "file",
             "SW_APM_DEBUG_LEVEL": "5",
-            "SW_APM_LOGNAME": "other-foo-bar",
+            "SW_APM_LOG_FILEPATH": "other-foo-bar",
             "SW_APM_HOSTNAME_ALIAS": "other-foo-bar",
             "SW_APM_TRUSTEDPATH": "other-foo-bar",
             "SW_APM_EVENTS_FLUSH_INTERVAL": "3",
@@ -323,7 +323,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("ec2_metadata_timeout") == 2222
         assert resulting_config.get("max_flush_wait_time") == 3
         assert resulting_config.get("max_transactions") == 3
-        assert resulting_config.get("logname") == "other-foo-bar_ext"
+        assert resulting_config.get("log_filepath") == "other-foo-bar_ext"
         assert resulting_config.get("trace_metrics") == 3
         assert resulting_config.get("token_bucket_capacity") == 3
         assert resulting_config.get("token_bucket_rate") == 3
@@ -355,7 +355,7 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_COLLECTOR": "False",
             "SW_APM_REPORTER": "other-foo-bar",
             "SW_APM_DEBUG_LEVEL": "other-foo-bar",
-            "SW_APM_LOGNAME": "False",
+            "SW_APM_LOG_FILEPATH": "False",
             "SW_APM_HOSTNAME_ALIAS": "False",
             "SW_APM_TRUSTEDPATH": "False",
             "SW_APM_EVENTS_FLUSH_INTERVAL": "other-foo-bar",
@@ -424,7 +424,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("collector") == "False"
         assert resulting_config.get("hostname_alias") == "False"
         assert resulting_config.get("trustedpath") == "False"
-        assert resulting_config.get("logname") == "False_ext"
+        assert resulting_config.get("log_filepath") == "False_ext"
         
         # Restore old collector
         if old_collector:

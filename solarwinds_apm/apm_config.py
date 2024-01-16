@@ -97,7 +97,7 @@ class SolarWindsApmConfig:
             "reporter": "",  # the reporter mode, either 'udp' or 'ssl'.
             "log_type": apm_logging.ApmLoggingType.default_type(),
             "debug_level": apm_logging.ApmLoggingLevel.default_level(),
-            "logname": "",
+            "log_filepath": "",
             "service_key": "",
             "hostname_alias": "",
             "trustedpath": "",
@@ -140,11 +140,11 @@ class SolarWindsApmConfig:
         self.update_log_settings()
         apm_logging.set_sw_log_type(
             self.__config["log_type"],
-            self.__config["logname"],
+            self.__config["log_filepath"],
         )
         apm_logging.set_sw_log_level(self.__config["debug_level"])
 
-        self.update_logname_for_reporter()
+        self.update_log_filepath_for_reporter()
 
         # Calculate c-lib extension usage
         (
@@ -473,30 +473,30 @@ class SolarWindsApmConfig:
     def update_log_settings(
         self,
     ) -> None:
-        """Update logname and log type"""
-        self.update_logname()
+        """Update log_filepath and log type"""
+        self.update_log_filepath()
         self.update_log_type()
 
-    def update_logname(
+    def update_log_filepath(
         self,
     ) -> None:
-        """Checks SW_APM_LOGNAME path to file else fileHandler will fail.
+        """Checks SW_APM_LOG_FILEPATH path to file else fileHandler will fail.
         If invalid, create path to match Boost.log behaviour.
         If not possible, switch to default log settings.
         """
-        logname_path = os.path.dirname(self.__config["logname"])
-        if logname_path:
-            if not os.path.exists(logname_path):
+        log_filepath = os.path.dirname(self.__config["log_filepath"])
+        if log_filepath:
+            if not os.path.exists(log_filepath):
                 try:
-                    os.makedirs(logname_path)
+                    os.makedirs(log_filepath)
                     logger.debug(
-                        "Created directory path from provided SW_APM_LOGNAME."
+                        "Created directory path from provided SW_APM_LOG_FILEPATH."
                     )
                 except FileNotFoundError:
                     logger.error(
-                        "Could not create log file directory path from provided SW_APM_LOGNAME. Using default log settings."
+                        "Could not create log file directory path from provided SW_APM_LOG_FILEPATH. Using default log settings."
                     )
-                    self.__config["logname"] = ""
+                    self.__config["log_filepath"] = ""
                     self.__config[
                         "log_type"
                     ] = apm_logging.ApmLoggingType.default_type()
@@ -507,23 +507,27 @@ class SolarWindsApmConfig:
         """Updates agent log type depending on other configs.
 
         SW_APM_DEBUG_LEVEL -1 will set c-lib log_type to disabled (4).
-        SW_APM_LOGNAME not None will set c-lib log_type to file (2).
+        SW_APM_LOG_FILEPATH not None will set c-lib log_type to file (2).
         """
         if self.__config["debug_level"] == -1:
             self.__config[
                 "log_type"
             ] = apm_logging.ApmLoggingType.disabled_type()
-        elif self.__config["logname"]:
+        elif self.__config["log_filepath"]:
             self.__config["log_type"] = apm_logging.ApmLoggingType.file_type()
 
-    def update_logname_for_reporter(
+    def update_log_filepath_for_reporter(
         self,
     ) -> None:
-        """Updates logname for extension Reporter to avoid conflict"""
-        orig_logname = self.__config["logname"]
-        if orig_logname:
-            logname, logname_ext = os.path.splitext(orig_logname)
-            self.__config["logname"] = f"{logname}_ext{logname_ext}"
+        """Updates log_filepath for extension Reporter to avoid conflict"""
+        orig_log_filepath = self.__config["log_filepath"]
+        if orig_log_filepath:
+            log_filepath, log_filepath_ext = os.path.splitext(
+                orig_log_filepath
+            )
+            self.__config[
+                "log_filepath"
+            ] = f"{log_filepath}_ext{log_filepath_ext}"
 
     def _calculate_metric_format(self) -> int:
         """Return one of 1 (TransactionResponseTime only) or 2 (default; ResponseTime only). Note: 0 (both) is no longer supported. Based on collector URL which may have a port e.g. foo-collector.com:443"""
