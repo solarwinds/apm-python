@@ -218,7 +218,7 @@ def set_sw_log_type(log_type, logname=""):
             # stop logging to stream
             logger.removeHandler(_stream_handler)
         except FileNotFoundError:
-            # path should be checked first by ApmConfig.check_logname
+            # path should be checked first by ApmConfig.update_logname
             logger.error(
                 "Could not write logs to file; please check configured SW_APM_LOGNAME."
             )
