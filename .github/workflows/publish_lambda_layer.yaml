@@ -101,10 +101,11 @@ jobs:
             aws lambda list-layer-versions \
               --layer-name $LAYER_NAME \
               --query 'max_by(LayerVersions, &Version).Version'
+              --statement-id apm-python-get-version
           )
           aws lambda add-layer-version-permission \
             --layer-name $LAYER_NAME \
             --version-number $LAYER_VERSION \
             --principal '*' \
             --action lambda:GetLayerVersion
-            --statement-id apm-python-publish
+            --statement-id apm-python-add-permission
