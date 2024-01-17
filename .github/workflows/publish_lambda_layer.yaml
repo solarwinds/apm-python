@@ -90,3 +90,16 @@ jobs:
             --zip-file fileb://${{ inputs.artifact-name }} \
             --query 'LayerVersionArn' \
             --output text
+
+      - name: Make Lambda layer public
+        run: |
+          LAYER_VERSION=$(
+            aws lambda list-layer-versions \
+              --layer-name $LAYER_NAME \
+              --query 'max_by(LayerVersions, &Version).Version'
+          )
+          aws lambda add-layer-version-permission \
+            --layer-name $LAYER_NAME \
+            --version-number $LAYER_VERSION \
+            --principal '*' \
+            --action lambda:GetLayerVersion
