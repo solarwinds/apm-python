@@ -77,8 +77,7 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.LAMBDA_PUBLISHER_STAGING_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.LAMBDA_PUBLISHER_STAGING_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.LAMBDA_PUBLISHER_ARN }}
           aws-region: ${{ matrix.aws_region }}
 
       - name: Publish Lambda Layer
