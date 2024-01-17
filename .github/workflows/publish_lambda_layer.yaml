@@ -107,3 +107,4 @@ jobs:
             --version-number $LAYER_VERSION \
             --principal '*' \
             --action lambda:GetLayerVersion
+            --statement-id apm-python-publish
