@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SolarWinds c-lib 14.0.0 ([#259](https://github.com/solarwinds/apm-python/pull/259))
 - Upgraded workflow dependencies ([#263](https://github.com/solarwinds/apm-python/pull/263), [#264](https://github.com/solarwinds/apm-python/pull/264), [#265](https://github.com/solarwinds/apm-python/pull/265), [#266](https://github.com/solarwinds/apm-python/pull/266), [#271](https://github.com/solarwinds/apm-python/pull/271))
 - Move build configuration to pyproject.toml ([#273](https://github.com/solarwinds/apm-python/pull/273))
+- SolarWinds c-lib 14.0.1 ([#280](https://github.com/solarwinds/apm-python/pull/280))
 
 ### Removed
 - Removed unused mend/whitesource config ([#260](https://github.com/solarwinds/apm-python/pull/260))
