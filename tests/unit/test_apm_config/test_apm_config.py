@@ -297,6 +297,9 @@ class TestSolarWindsApmConfig:
                 mock_oboe_api_options_swig,
             )
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
 
         apm_config.SolarWindsApmConfig()
         mock_oboe_api_options_swig.assert_called_once()
@@ -763,45 +766,149 @@ class TestSolarWindsApmConfig:
         )
         assert result == "valid_key_with:bar-service"
 
+    def test_update_log_settings(self, mocker):
+        mock_log_filepath = mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_filepath"
+        )
+        mock_log_type = mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_type"
+        )
+        # init includes update_log_settings()
+        apm_config.SolarWindsApmConfig()
+        mock_log_filepath.assert_called_once()
+        mock_log_type.assert_called_once()
+
+    def test_update_log_filepath_none(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
+        mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "")
+        test_config._set_config_value("log_type", 2)
+        test_config.update_log_filepath()
+        mock_exists.assert_not_called()
+        mock_makedirs.assert_not_called()
+        assert test_config.get("log_filepath") == ""
+        assert test_config.get("log_type") == 2
+
+    def test_update_log_filepath_no_parent_path(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
+        mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "foo")
+        test_config._set_config_value("log_type", 2)
+        test_config.update_log_filepath()
+        mock_exists.assert_not_called()
+        mock_makedirs.assert_not_called()
+        assert test_config.get("log_filepath") == "foo"
+        assert test_config.get("log_type") == 2
+
+    def test_update_log_filepath_path_exists(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=True)
+        mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "/path/to/foo")
+        test_config._set_config_value("log_type", 2)
+        test_config.update_log_filepath()
+        mock_exists.assert_called_once_with("/path/to")
+        mock_makedirs.assert_not_called()
+        assert test_config.get("log_filepath") == "/path/to/foo"
+        assert test_config.get("log_type") == 2
+
+    def test_update_log_filepath_create_path(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
+        mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "/path/to/foo")
+        test_config._set_config_value("log_type", 2)
+        test_config.update_log_filepath()
+        mock_exists.assert_called_once_with("/path/to")
+        mock_makedirs.assert_called_once_with("/path/to")
+        assert test_config.get("log_filepath") == "/path/to/foo"
+        assert test_config.get("log_type") == 2
+
+    def test_update_log_filepath_cannot_create_reset_settings(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
+        mock_makedirs = mocker.patch(
+            "solarwinds_apm.apm_config.os.makedirs",
+            side_effect=FileNotFoundError("mock error")
+        )
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "/path/to/foo")
+        test_config._set_config_value("log_type", 2)
+        test_config.update_log_filepath()
+        mock_exists.assert_called_once_with("/path/to")
+        mock_makedirs.assert_called_once_with("/path/to")
+        assert test_config.get("log_filepath") == ""
+        assert test_config.get("log_type") == 0
+
     def test_update_log_type_no_change(self):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("debug_level", 2)
         test_config._set_config_value("log_type", 0)
-        test_config._set_config_value("logname", "")
+        test_config._set_config_value("log_filepath", "")
         test_config.update_log_type()
         assert test_config.get("debug_level") == 2
         assert test_config.get("log_type") == 0
-        assert test_config.get("logname") == ""
+        assert test_config.get("log_filepath") == ""
 
     def test_update_log_type_disabled(self):        
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("debug_level", -1)
         test_config._set_config_value("log_type", 0)
-        test_config._set_config_value("logname", "")
+        test_config._set_config_value("log_filepath", "")
         test_config.update_log_type()
         assert test_config.get("debug_level") == -1
         assert test_config.get("log_type") == 4
-        assert test_config.get("logname") == ""
+        assert test_config.get("log_filepath") == ""
 
-    def test_update_log_type_logname(self):
+    def test_update_log_type_log_filepath(self):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("debug_level", 1)
         test_config._set_config_value("log_type", 0)
-        test_config._set_config_value("logname", "some-file-path")
+        test_config._set_config_value("log_filepath", "some-file-path")
         test_config.update_log_type()
         assert test_config.get("debug_level") == 1
         assert test_config.get("log_type") == 2
-        assert test_config.get("logname") == "some-file-path"
+        assert test_config.get("log_filepath") == "some-file-path"
 
-    def test_update_log_type_logname_but_disabled(self):
+    def test_update_log_type_log_filepath_but_disabled(self):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("debug_level", -1)
         test_config._set_config_value("log_type", 0)
-        test_config._set_config_value("logname", "some-file-path")
+        test_config._set_config_value("log_filepath", "some-file-path")
         test_config.update_log_type()
         assert test_config.get("debug_level") == -1
         assert test_config.get("log_type") == 4
-        assert test_config.get("logname") == "some-file-path"
+        assert test_config.get("log_filepath") == "some-file-path"
+
+    def test_update_log_filepath_for_reporter_empty(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "")
+        test_config.update_log_filepath_for_reporter()
+        assert test_config.get("log_filepath") == ""
+
+    def test_update_log_filepath_for_reporter_no_ext(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "/path/to/foo")
+        test_config.update_log_filepath_for_reporter()
+        assert test_config.get("log_filepath") == "/path/to/foo_ext"
+
+    def test_update_log_filepath_for_reporter_ext(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "/path/to/foo.log")
+        test_config.update_log_filepath_for_reporter()
+        assert test_config.get("log_filepath") == "/path/to/foo_ext.log"
+
+    def test_update_log_filepath_for_reporter_ext_multiple_dots(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "/path/to/foo.abc.def.xyz")
+        test_config.update_log_filepath_for_reporter()
+        assert test_config.get("log_filepath") == "/path/to/foo.abc.def_ext.xyz"
 
     def test_convert_to_bool_bool_true(self):
         test_config = apm_config.SolarWindsApmConfig()

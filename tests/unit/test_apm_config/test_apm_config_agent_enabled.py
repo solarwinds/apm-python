@@ -33,6 +33,20 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_iter_entry_points.configure_mock(
             return_value=mock_points
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
+
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == ""
@@ -70,6 +84,20 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_get_cnf_dict.configure_mock(
             return_value=fixture_cnf_dict
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
+
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config.get("service_key") == "valid:key-will-be-used"
         assert resulting_config.agent_enabled
@@ -112,6 +140,20 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_get_cnf_dict.configure_mock(
             return_value=fixture_cnf_dict
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
+
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config.get("service_key") == "not-good-to-put-here:still-could-be-used"
         assert resulting_config.agent_enabled
@@ -137,6 +179,19 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_iter_entry_points.configure_mock(
             return_value=mock_points
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == ""
@@ -152,6 +207,19 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_points.__iter__.return_value = ["foo"]
         mock_iter_entry_points.configure_mock(
             return_value=mock_points
+        )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config._calculate_agent_enabled()
@@ -170,6 +238,19 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_iter_entry_points.configure_mock(
             return_value=mock_points
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == "key"
@@ -187,6 +268,19 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_iter_entry_points.configure_mock(
             return_value=mock_points
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == ""
@@ -203,6 +297,19 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_points.__iter__.return_value = ["foo"]
         mock_iter_entry_points.configure_mock(
             return_value=mock_points
+        )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config._calculate_agent_enabled()
@@ -231,6 +338,19 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_get_cnf_dict.configure_mock(
             return_value=fixture_cnf_dict_enabled_false
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config.agent_enabled
         assert resulting_config.service_name == ""
@@ -257,6 +377,19 @@ class TestSolarWindsApmConfigAgentEnabled:
         # cnf with "agentEnabled": False
         mock_get_cnf_dict.configure_mock(
             return_value=fixture_cnf_dict_enabled_false_mixed_case
+        )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config.agent_enabled
@@ -285,6 +418,19 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_get_cnf_dict.configure_mock(
             return_value=fixture_cnf_dict_enabled_false
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config.agent_enabled
         assert resulting_config.service_name == "key"
@@ -312,6 +458,20 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_get_cnf_dict.configure_mock(
             return_value=fixture_cnf_dict
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
+
         # cnf file fixture has "agentEnabled": True
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config.agent_enabled
@@ -332,6 +492,19 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_iter_entry_points.configure_mock(
             return_value=mock_points
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == "key"
@@ -341,6 +514,19 @@ class TestSolarWindsApmConfigAgentEnabled:
             "OTEL_PROPAGATORS": "tracecontext,baggage",
             "SW_APM_SERVICE_KEY": "valid:key",
         })
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == ""
@@ -350,6 +536,19 @@ class TestSolarWindsApmConfigAgentEnabled:
             "OTEL_PROPAGATORS": "solarwinds_propagator",
             "SW_APM_SERVICE_KEY": "valid:key",
         })
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == ""
@@ -359,6 +558,19 @@ class TestSolarWindsApmConfigAgentEnabled:
             "OTEL_PROPAGATORS": "solarwinds_propagator,tracecontext",
             "SW_APM_SERVICE_KEY": "valid:key",
         })
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == ""
@@ -368,6 +580,19 @@ class TestSolarWindsApmConfigAgentEnabled:
             "OTEL_PROPAGATORS": "tracecontext,solarwinds_propagator,baggage",
             "SW_APM_SERVICE_KEY": "valid:key",
         })
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == ""
@@ -377,6 +602,19 @@ class TestSolarWindsApmConfigAgentEnabled:
             "OTEL_PROPAGATORS": "tracecontext,baggage,solarwinds_propagator",
             "SW_APM_SERVICE_KEY": "valid:key",
         })
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == "key"
@@ -391,6 +629,19 @@ class TestSolarWindsApmConfigAgentEnabled:
         )
         mock_iter_entry_points.configure_mock(
             side_effect=StopIteration("mock error")
+        )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert not resulting_config._calculate_agent_enabled()
@@ -408,6 +659,19 @@ class TestSolarWindsApmConfigAgentEnabled:
         mock_points.__iter__.return_value = ["foo", "bar"]
         mock_iter_entry_points.configure_mock(
             return_value=mock_points
+        )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
+        )
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_type": mocker.Mock(),
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config._calculate_agent_enabled()
