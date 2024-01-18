@@ -6,11 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.1.0...HEAD)
 
-## [1.1.0.2](https://github.com/solarwinds/apm-python/releases/tag/rel-1.1.0) - 2024-01-09
+## [1.1.0.4](https://github.com/solarwinds/apm-python/releases/tag/rel-1.1.0) - 2024-01-09
 
 ### Added
 - Added configuration of transaction name in response_time metrics by lambda environment ([#257](https://github.com/solarwinds/apm-python/pull/257))
-- Added Dependabot config ([#261](https://github.com/solarwinds/apm-python/pull/261))
+- Added Dependabot config ([#261](https://github.com/solarwinds/apm-python/pull/261), [#270](https://github.com/solarwinds/apm-python/pull/270))
+- Added support for `SW_APM_LOG_FILEPATH` ([#275](https://github.com/solarwinds/apm-python/pull/275))
 
 ### Changed
 - Fixed unit tests ([#249](https://github.com/solarwinds/apm-python/pull/249))
@@ -18,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add API unit tests ([#256](https://github.com/solarwinds/apm-python/pull/256))
 - Refactor c-lib init ([#258](https://github.com/solarwinds/apm-python/pull/258))
 - SolarWinds c-lib 14.0.0 ([#259](https://github.com/solarwinds/apm-python/pull/259))
-- Upgraded workflow dependencies ([#263](https://github.com/solarwinds/apm-python/pull/263), [#264](https://github.com/solarwinds/apm-python/pull/264), [#265](https://github.com/solarwinds/apm-python/pull/265), [#266](https://github.com/solarwinds/apm-python/pull/266), [#271](https://github.com/solarwinds/apm-python/pull/271))
+- Upgraded workflow dependencies ([#262](https://github.com/solarwinds/apm-python/pull/262),[#263](https://github.com/solarwinds/apm-python/pull/263), [#264](https://github.com/solarwinds/apm-python/pull/264), [#265](https://github.com/solarwinds/apm-python/pull/265), [#266](https://github.com/solarwinds/apm-python/pull/266), [#271](https://github.com/solarwinds/apm-python/pull/271))
 - Move build configuration to pyproject.toml ([#273](https://github.com/solarwinds/apm-python/pull/273))
 - SolarWinds c-lib 14.0.1 ([#280](https://github.com/solarwinds/apm-python/pull/280))
 
