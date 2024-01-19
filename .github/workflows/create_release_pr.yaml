@@ -36,25 +36,7 @@ jobs:
             echo "FATAL ERROR: Release tag ${{ env.RELEASE_NAME }} already exists!"
             exit 1
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create release branch
-        run: git checkout -b release/${{ env.RELEASE_NAME }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Update agent version
-        run: sed -i -e "s/^__version__ = \".*\"$/__version__ = \"${{ env.RELEASE_VERSION }}\"/" solarwinds_apm/version.py
-      - name: Commit version.py
-        run: |
-          git add solarwinds_apm/version.py
-          git commit --message "Update agent version to ${{ env.RELEASE_VERSION }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push new release branch to remote repositories
-        run: git push origin release/${{ env.RELEASE_NAME }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Open draft Pull Request for version bump
-        run: gh pr create --draft --title "solarwinds-apm ${{ env.RELEASE_VERSION }}" --body "For PyPI release of solarwinds-apm ${{ env.RELEASE_VERSION }}. See also CHANGELOG.md."
+      - name: Create release branch draft pull request
+        run: cd .github/scripts && ./release_pr.sh ${{ env.RELEASE_VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
