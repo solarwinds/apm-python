@@ -25,7 +25,6 @@ echo "Pushing new version.py to branch '$branch_name'"
 gh api --method PUT /repos/solarwinds/apm-python/contents/solarwinds_apm/version.py \
     --field message="Update agent version to $version_number" \
     --field content="__version__ = '$version_number'" \
-    --field encoding="base64" \
     --field branch="$branch_name" \
     --field sha="$SHA"
 
