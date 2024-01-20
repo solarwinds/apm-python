@@ -5,7 +5,6 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
-import random
 from typing import TYPE_CHECKING
 
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
@@ -87,9 +86,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         # TODO add sw.service_name
         # https://swicloud.atlassian.net/browse/NH-67392
         # support ssa and conform to Otel proto common_pb2
-        meter_attrs = {
-            "sw.nonce": random.getrandbits(64) >> 1,
-        }
+        meter_attrs = {}
 
         # TODO add trace.service.requests, trace.service.errors
         # https://swicloud.atlassian.net/browse/NH-67392
