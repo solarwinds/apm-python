@@ -134,16 +134,6 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             return_value="foo",
         )
 
-        mock_random = mocker.patch(
-            "solarwinds_apm.trace.otlp_metrics_processor.random"
-        )
-        mock_random.configure_mock(
-            **{
-                # 4 >> 1 is 2
-                "getrandbits": mocker.Mock(return_value=4)
-            }
-        )
-
         mock_has_error = mocker.patch(
             "solarwinds_apm.trace.SolarWindsOTLPMetricsSpanProcessor.has_error"
         )
@@ -415,7 +405,6 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         mock_meters.response_time.record.assert_called_once_with(
             amount=123,
             attributes={
-                'sw.nonce': 2,
                 'sw.is_error': 'true',
                 'http.status_code': 'foo-code',
                 'http.method': 'foo-method',
@@ -443,7 +432,6 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         mock_meters.response_time.record.assert_called_once_with(
             amount=123,
             attributes={
-                'sw.nonce': 2,
                 'sw.is_error': 'false',
                 'http.status_code': 'foo-code',
                 'http.method': 'foo-method',
@@ -471,7 +459,6 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         mock_meters.response_time.record.assert_called_once_with(
             amount=123,
             attributes={
-                'sw.nonce': 2,
                 'sw.is_error': 'true',
                 'sw.transaction': 'foo'
             }
@@ -498,7 +485,6 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         mock_meters.response_time.record.assert_called_once_with(
             amount=123,
             attributes={
-                'sw.nonce': 2,
                 'sw.is_error': 'false',
                 'sw.transaction': 'foo'
             }

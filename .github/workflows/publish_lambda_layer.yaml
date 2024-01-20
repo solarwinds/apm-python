@@ -26,6 +26,10 @@ on:
         required: true
         type: string
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   publish_layer:
     runs-on: ubuntu-latest
@@ -77,8 +81,7 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.LAMBDA_PUBLISHER_STAGING_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.LAMBDA_PUBLISHER_STAGING_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.LAMBDA_PUBLISHER_ARN }}
           aws-region: ${{ matrix.aws_region }}
 
       - name: Publish Lambda Layer
@@ -91,3 +94,17 @@ jobs:
             --zip-file fileb://${{ inputs.artifact-name }} \
             --query 'LayerVersionArn' \
             --output text
+
+      - name: Make Lambda layer public
+        run: |
+          LAYER_VERSION=$(
+            aws lambda list-layer-versions \
+              --layer-name $LAYER_NAME \
+              --query 'max_by(LayerVersions, &Version).Version'
+          )
+          aws lambda add-layer-version-permission \
+            --layer-name $LAYER_NAME \
+            --version-number $LAYER_VERSION \
+            --principal '*' \
+            --action lambda:GetLayerVersion \
+            --statement-id apm-python-add-permission
