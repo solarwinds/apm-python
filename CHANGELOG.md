@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated lambda layer workflow ([#278](https://github.com/solarwinds/apm-python/pull/278))
 - Fixed release PR action ([#282](https://github.com/solarwinds/apm-python/pull/282))
 
+### Removed
+- Removed `sw.nonce` metrics attribute ([#284](https://github.com/solarwinds/apm-python/pull/284))
+- Removed todos ([#285](https://github.com/solarwinds/apm-python/pull/285))
+
 ## [1.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.1.0) - 2024-01-18
 
 ### Added
