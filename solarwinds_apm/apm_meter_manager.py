@@ -42,6 +42,10 @@ class SolarWindsMeterManager:
             unit="ms",
         )
 
+        self.test_tracecount = self.meter_request_counters.create_counter(
+            name="trace.service.test_tracecount"
+        )
+
         def consume_tracecount(
             options: CallbackOptions,
         ) -> Iterable[Observation]:

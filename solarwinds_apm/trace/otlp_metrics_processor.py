@@ -115,3 +115,14 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
             amount=span_time,
             attributes=meter_attrs,
         )
+
+        status, trace_count = self.oboe_settings_api.consumeTraceCount()
+        logger.debug(
+            "adding to test_tracecount with status %s, trace_count %s",
+            status,
+            trace_count,
+        )
+        self.apm_meters.test_tracecount.add(
+            trace_count,
+            {"status": status},
+        )
