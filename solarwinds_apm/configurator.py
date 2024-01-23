@@ -31,8 +31,11 @@ from opentelemetry.instrumentation.propagators import (
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics import Histogram, MeterProvider
+from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
+    PeriodicExportingMetricReader,
+)
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
@@ -375,6 +378,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             return
         environ_exporter_names = environ_exporter.split(",")
 
+        # Report histograms with delta aggregation e.g. response_time
+        temporality_delta = {Histogram: AggregationTemporality.DELTA}
         metric_readers = []
         for exporter_name in environ_exporter_names:
             exporter = None
@@ -384,7 +389,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                         "opentelemetry_metrics_exporter",
                         exporter_name,
                     )
-                ).load()()
+                ).load()(preferred_temporality=temporality_delta)
             except Exception as ex:
                 logger.exception("A exception was raised: %s", ex)
                 logger.exception(
