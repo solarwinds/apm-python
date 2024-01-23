@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
     from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
+    from solarwinds_apm.extension.oboe import OboeAPI
     from solarwinds_apm.trace.tnames import TransactionNames
 
 
@@ -29,6 +30,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         apm_txname_manager: "SolarWindsTxnNameManager",
         apm_config: "SolarWindsApmConfig",
         apm_meters: "SolarWindsMeterManager",
+        oboe_api: "OboeAPI",
     ) -> None:
         super().__init__(
             apm_txname_manager=apm_txname_manager,
@@ -39,6 +41,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         self.lambda_function_name = apm_config.lambda_function_name
 
         self.apm_meters = apm_meters
+        self.oboe_settings_api = oboe_api
 
     def calculate_otlp_transaction_name(
         self,

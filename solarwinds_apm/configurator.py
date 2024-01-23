@@ -141,6 +141,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_txname_manager,
                 apm_config,
                 apm_meters,
+                oboe_api,
             )
             self._configure_txnname_cleanup_span_processor(
                 apm_txname_manager,
@@ -260,6 +261,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
         apm_meters: SolarWindsMeterManager,
+        oboe_api: "OboeAPI",
     ) -> None:
         """Configure SolarWindsOTLPMetricsSpanProcessor and ForceFlushSpanProcessor.
         If no meters/instruments are initialized, the processor will
@@ -277,6 +279,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_txname_manager,
                 apm_config,
                 apm_meters,
+                oboe_api,
             )
         )
         trace.get_tracer_provider().add_span_processor(
