@@ -7,14 +7,16 @@
 import logging
 from typing import TYPE_CHECKING
 
+from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
+from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
     from solarwinds_apm.apm_config import SolarWindsApmConfig
-    from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
+    from solarwinds_apm.extension.oboe import OboeAPI
     from solarwinds_apm.trace.tnames import TransactionNames
 
 
@@ -22,13 +24,13 @@ logger = logging.getLogger(__name__)
 
 
 class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
-    """SolarWinds span processor for OTLP metrics recording"""
+    """SolarWinds span processor for OTLP metrics recording."""
 
     def __init__(
         self,
         apm_txname_manager: "SolarWindsTxnNameManager",
         apm_config: "SolarWindsApmConfig",
-        apm_meters: "SolarWindsMeterManager",
+        oboe_api: "OboeAPI",
     ) -> None:
         super().__init__(
             apm_txname_manager=apm_txname_manager,
@@ -38,7 +40,21 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         self.env_transaction_name = apm_config.get("transaction_name")
         self.lambda_function_name = apm_config.lambda_function_name
 
-        self.apm_meters = apm_meters
+        # TODO Add experimental trace flag, clean up
+        #      https://swicloud.atlassian.net/browse/NH-65067
+        #
+        if not apm_config.get("experimental").get("otel_collector") is True:
+            logger.debug(
+                "Experimental otel_collector flag not configured. Creating meter manager as no-op."
+            )
+            self.apm_meters = NoopMeterManager()
+        else:
+            self.apm_meters = SolarWindsMeterManager(
+                apm_config,
+                oboe_api,
+            )
+
+        self.oboe_settings_api = oboe_api
 
     def calculate_otlp_transaction_name(
         self,
