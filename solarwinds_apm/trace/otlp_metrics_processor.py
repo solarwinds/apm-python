@@ -54,8 +54,6 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
                 oboe_api,
             )
 
-        self.oboe_settings_api = oboe_api
-
     def calculate_otlp_transaction_name(
         self,
         tnames: "TransactionNames",
