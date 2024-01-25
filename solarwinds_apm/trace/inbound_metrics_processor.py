@@ -70,6 +70,7 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
             trans_name = tnames.custom_name
 
         is_span_http = self.is_span_http(span)
+        # convert from ns to microseconds
         span_time = self.calculate_span_time(
             span.start_time,
             span.end_time,
