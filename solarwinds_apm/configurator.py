@@ -8,6 +8,7 @@
 
 import importlib
 import logging
+import math
 import os
 import sys
 import time
@@ -396,7 +397,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "Creating PeriodicExportingMetricReader using %s",
                 exporter_name,
             )
-            reader = PeriodicExportingMetricReader(exporter)
+            reader = PeriodicExportingMetricReader(
+                exporter,
+                export_interval_millis=math.inf,
+            )
             metric_readers.append(reader)
 
         # Use configured Resource attributes then merge with
