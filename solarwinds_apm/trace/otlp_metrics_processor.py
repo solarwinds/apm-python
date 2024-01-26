@@ -138,26 +138,26 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
             attributes=meter_attrs,
         )
 
-        status, trace_count = self.oboe_settings_api.consumeTraceCount()
-        logger.debug(
-            "adding to test_tracecount with status %s, trace_count %s",
-            status,
-            trace_count,
-        )
-        self.apm_meters.test_tracecount.add(
-            trace_count,
-            {"status": status},
-        )
+        # status, trace_count = self.oboe_settings_api.consumeTraceCount()
+        # logger.debug(
+        #     "adding to test_tracecount with status %s, trace_count %s",
+        #     status,
+        #     trace_count,
+        # )
+        # self.apm_meters.test_tracecount.add(
+        #     trace_count,
+        #     {"status": status},
+        # )
 
-        status, sample_count = self.oboe_settings_api.consumeSampleCount()
-        logger.debug(
-            "adding to test_samplecount with status %s, sample_count %s",
-            status,
-            sample_count,
-        )
-        self.apm_meters.test_samplecount.add(
-            sample_count,
-            {"status": status},
-        )
+        # status, sample_count = self.oboe_settings_api.consumeSampleCount()
+        # logger.debug(
+        #     "adding to test_samplecount with status %s, sample_count %s",
+        #     status,
+        #     sample_count,
+        # )
+        # self.apm_meters.test_samplecount.add(
+        #     sample_count,
+        #     {"status": status},
+        # )
 
         # self.tammy_test_counter.add(1)
