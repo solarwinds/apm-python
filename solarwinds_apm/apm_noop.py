@@ -240,7 +240,7 @@ class OboeAPI:
     def __init__(self, *args, **kwargs):
         pass
 
-    def getTracingDecision(self):
+    def getTracingDecision(self, *args, **kwargs):
         return (
             0,
             0,
