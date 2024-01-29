@@ -98,7 +98,7 @@ class CustomBuildExt(build_ext):
 
 
 if not (python_version_supported() and os_supported()):
-    logger.warn(
+    logger.warning(
         "[SETUP] This package supports only Python 3.7 and above on Linux x86_64 or aarch64. "
         "Other platform or python versions may not work as expected.")
 
