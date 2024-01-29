@@ -124,10 +124,13 @@ ext_modules = [
     ),
 ]
 
+# Extra args in case old setuptools version
 setup(
+    name="solarwinds_apm",
     cmdclass={
         'build_ext': CustomBuildExt,
         'build_py': CustomBuild,
     },
     ext_modules=ext_modules,
+    python_requires='>=3.7',
 )
