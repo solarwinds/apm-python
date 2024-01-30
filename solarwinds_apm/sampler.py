@@ -410,9 +410,9 @@ class _SwSampler(Sampler):
             trace_state_no_response = W3CTransformer.remove_response_from_sw(
                 new_attr_trace_state
             )
-        attributes_dict[
-            self._SW_TRACESTATE_CAPTURE_KEY
-        ] = trace_state_no_response.to_header()
+        attributes_dict[self._SW_TRACESTATE_CAPTURE_KEY] = (
+            trace_state_no_response.to_header()
+        )
         return attributes_dict
 
     def calculate_attributes(
@@ -455,12 +455,12 @@ class _SwSampler(Sampler):
                 new_attributes[custom_key] = custom_value
 
         # Always (root or is_remote) set service entry internal KVs
-        new_attributes[
-            self._INTERNAL_BUCKET_CAPACITY
-        ] = f"{decision['bucket_cap']}"
-        new_attributes[
-            self._INTERNAL_BUCKET_RATE
-        ] = f"{decision['bucket_rate']}"
+        new_attributes[self._INTERNAL_BUCKET_CAPACITY] = (
+            f"{decision['bucket_cap']}"
+        )
+        new_attributes[self._INTERNAL_BUCKET_RATE] = (
+            f"{decision['bucket_rate']}"
+        )
 
         # sw.tracestate_parent_id is set if:
         #  1. the future span is the entry span of a service
@@ -470,9 +470,9 @@ class _SwSampler(Sampler):
             INTL_SWO_TRACESTATE_KEY, None
         )
         if sw_value and parent_span_context.is_remote:
-            new_attributes[
-                self._SW_TRACESTATE_ROOT_KEY
-            ] = W3CTransformer.span_id_from_sw(sw_value)
+            new_attributes[self._SW_TRACESTATE_ROOT_KEY] = (
+                W3CTransformer.span_id_from_sw(sw_value)
+            )
 
         new_attributes[self._INTERNAL_SAMPLE_RATE] = decision["rate"]
         new_attributes[self._INTERNAL_SAMPLE_SOURCE] = decision["source"]
