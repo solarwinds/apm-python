@@ -13,9 +13,8 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER
 )
 
-# from solarwinds_apm.distro import SolarWindsDistro
-# import solarwinds_apm.distro
 from solarwinds_apm import distro
+
 
 class TestDistro:
     def test__log_python_runtime(self, mocker):
@@ -93,6 +92,48 @@ class TestDistro:
         mock_py_vers.assert_called_once()
         mock_debug.assert_called_once()
         mock_warning.assert_called_once()
+
+    def test__log_runtime(self, mocker):
+        mock_apm_version = mocker.patch(
+            "solarwinds_apm.distro.apm_version",
+            "foo-version",
+        )
+        mock_sdk_version = mocker.patch(
+            "solarwinds_apm.distro.sdk_version",
+            "bar-version",
+        )
+        mock_inst_version = mocker.patch(
+            "solarwinds_apm.distro.inst_version",
+            "baz-version",
+        )
+        mock_logger = mocker.patch(
+            "solarwinds_apm.distro.logger"
+        )
+        mock_debug = mocker.Mock()
+        mock_logger.configure_mock(
+            **{
+                "debug": mock_debug,
+            }
+        )
+        mock_pytime = mock__log_pytime = mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro._log_python_runtime"
+        )
+
+        distro.SolarWindsDistro()._log_runtime()
+        mock_pytime.assert_called_once()
+        mock_debug.assert_has_calls(
+            [
+                mocker.call(
+                    "SolarWinds APM Python %s",
+                    "foo-version",
+                ),
+                mocker.call(
+                    "OpenTelemetry %s/%s",
+                    "bar-version",
+                    "baz-version",
+                ),
+            ]
+        )
 
     def test_configure_no_env(self, mocker):
         mocker.patch.dict(os.environ, {})
