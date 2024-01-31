@@ -7,27 +7,24 @@
 """Module to configure OpenTelemetry to work with SolarWinds backend"""
 
 import logging
-from os import environ
 import platform
 import sys
+from os import environ
 
 from opentelemetry.environment_variables import (
     OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
 )
-from opentelemetry.instrumentation.version import (
-    __version__ as inst_version,
-)
 from opentelemetry.instrumentation.distro import BaseDistro
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.logging.environment_variables import (
     OTEL_PYTHON_LOG_FORMAT,
 )
+from opentelemetry.instrumentation.version import __version__ as inst_version
 from opentelemetry.sdk.version import __version__ as sdk_version
 from pkg_resources import EntryPoint
 
-from solarwinds_apm.version import __version__ as apm_version
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_METRICS_EXPORTER_LAMBDA,
@@ -35,6 +32,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_DEFAULT_TRACES_EXPORTER_LAMBDA,
 )
+from solarwinds_apm.version import __version__ as apm_version
 
 logger = logging.getLogger(__name__)
 
