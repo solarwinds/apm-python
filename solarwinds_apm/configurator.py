@@ -652,9 +652,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         # liboboe adds key Hostname for us
         try:
-            version_keys[
-                "process.runtime.version"
-            ] = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
+            version_keys["process.runtime.version"] = (
+                f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
+            )
         except (AttributeError, IndexError) as ex:
             logger.warning("Could not retrieve Python version: %s", ex)
         version_keys["process.runtime.name"] = sys.implementation.name
@@ -662,9 +662,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         version_keys["process.executable.path"] = sys.executable
 
         version_keys["APM.Version"] = __version__
-        version_keys[
-            "APM.Extension.Version"
-        ] = apm_config.extension.Config.getVersionString()
+        version_keys["APM.Extension.Version"] = (
+            apm_config.extension.Config.getVersionString()
+        )
 
         version_keys = self._add_all_instrumented_python_framework_versions(
             version_keys
