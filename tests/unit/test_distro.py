@@ -94,15 +94,15 @@ class TestDistro:
         mock_warning.assert_called_once()
 
     def test__log_runtime(self, mocker):
-        mock_apm_version = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.apm_version",
             "foo-version",
         )
-        mock_sdk_version = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.sdk_version",
             "bar-version",
         )
-        mock_inst_version = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.inst_version",
             "baz-version",
         )
@@ -115,7 +115,7 @@ class TestDistro:
                 "debug": mock_debug,
             }
         )
-        mock_pytime = mock__log_pytime = mocker.patch(
+        mock_pytime = mocker.patch(
             "solarwinds_apm.distro.SolarWindsDistro._log_python_runtime"
         )
 
