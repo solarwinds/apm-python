@@ -41,18 +41,18 @@ class TestDistro:
         mock_logger = mocker.patch(
             "solarwinds_apm.distro.logger"
         )
-        mock_debug = mocker.Mock()
+        mock_info = mocker.Mock()
         mock_warning = mocker.Mock()
         mock_logger.configure_mock(
             **{
-                "debug": mock_debug,
+                "info": mock_info,
                 "warning": mock_warning,
             }
         )
 
         distro.SolarWindsDistro()._log_python_runtime()
         mock_py_vers.assert_called_once()
-        mock_debug.assert_called_once()
+        mock_info.assert_called_once()
         mock_warning.assert_not_called()
 
     def test__log_python_runtime_warning(self, mocker):
@@ -79,18 +79,18 @@ class TestDistro:
         mock_logger = mocker.patch(
             "solarwinds_apm.distro.logger"
         )
-        mock_debug = mocker.Mock()
+        mock_info = mocker.Mock()
         mock_warning = mocker.Mock()
         mock_logger.configure_mock(
             **{
-                "debug": mock_debug,
+                "info": mock_info,
                 "warning": mock_warning,
             }
         )
 
         distro.SolarWindsDistro()._log_python_runtime()
         mock_py_vers.assert_called_once()
-        mock_debug.assert_called_once()
+        mock_info.assert_called_once()
         mock_warning.assert_called_once()
 
     def test__log_runtime(self, mocker):
@@ -109,10 +109,10 @@ class TestDistro:
         mock_logger = mocker.patch(
             "solarwinds_apm.distro.logger"
         )
-        mock_debug = mocker.Mock()
+        mock_info = mocker.Mock()
         mock_logger.configure_mock(
             **{
-                "debug": mock_debug,
+                "info": mock_info,
             }
         )
         mock_pytime = mocker.patch(
@@ -121,7 +121,7 @@ class TestDistro:
 
         distro.SolarWindsDistro()._log_runtime()
         mock_pytime.assert_called_once()
-        mock_debug.assert_has_calls(
+        mock_info.assert_has_calls(
             [
                 mocker.call(
                     "SolarWinds APM Python %s",

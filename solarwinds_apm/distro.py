@@ -43,7 +43,7 @@ class SolarWindsDistro(BaseDistro):
     def _log_python_runtime(self):
         """Logs Python runtime info, with any warnings"""
         python_vers = platform.python_version()
-        logger.debug("Python %s", python_vers)
+        logger.info("Python %s", python_vers)
 
         # https://devguide.python.org/versions/
         if sys.version_info.major == 3 and sys.version_info.minor < 8:
@@ -55,9 +55,9 @@ class SolarWindsDistro(BaseDistro):
 
     def _log_runtime(self):
         """Logs APM Python runtime info (high debug level)"""
-        logger.debug("SolarWinds APM Python %s", apm_version)
+        logger.info("SolarWinds APM Python %s", apm_version)
         self._log_python_runtime()
-        logger.debug("OpenTelemetry %s/%s", sdk_version, inst_version)
+        logger.info("OpenTelemetry %s/%s", sdk_version, inst_version)
 
     def _configure(self, **kwargs):
         """Configure default OTel exporter and propagators"""
