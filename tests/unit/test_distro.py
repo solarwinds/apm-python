@@ -13,12 +13,131 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER
 )
 
-from solarwinds_apm.distro import SolarWindsDistro
+from solarwinds_apm import distro
+
 
 class TestDistro:
+    def test__log_python_runtime(self, mocker):
+        mock_plat = mocker.patch(
+            "solarwinds_apm.distro.platform"
+        )
+        mock_py_vers = mocker.Mock()
+        mock_plat.configure_mock(
+            **{
+                "python_version": mock_py_vers
+            }
+        )
+        mock_sys = mocker.patch(
+            "solarwinds_apm.distro.sys"
+        )
+        mock_version_info = mocker.Mock()
+        mock_version_info.configure_mock(
+            **{
+                "major": 3,
+                "minor": 8,
+            }
+        )
+        type(mock_sys).version_info = mock_version_info
+        mock_logger = mocker.patch(
+            "solarwinds_apm.distro.logger"
+        )
+        mock_info = mocker.Mock()
+        mock_warning = mocker.Mock()
+        mock_logger.configure_mock(
+            **{
+                "info": mock_info,
+                "warning": mock_warning,
+            }
+        )
+
+        distro.SolarWindsDistro()._log_python_runtime()
+        mock_py_vers.assert_called_once()
+        mock_info.assert_called_once()
+        mock_warning.assert_not_called()
+
+    def test__log_python_runtime_warning(self, mocker):
+        mock_plat = mocker.patch(
+            "solarwinds_apm.distro.platform"
+        )
+        mock_py_vers = mocker.Mock()
+        mock_plat.configure_mock(
+            **{
+                "python_version": mock_py_vers
+            }
+        )
+        mock_sys = mocker.patch(
+            "solarwinds_apm.distro.sys"
+        )
+        mock_version_info = mocker.Mock()
+        mock_version_info.configure_mock(
+            **{
+                "major": 3,
+                "minor": 7,
+            }
+        )
+        type(mock_sys).version_info = mock_version_info
+        mock_logger = mocker.patch(
+            "solarwinds_apm.distro.logger"
+        )
+        mock_info = mocker.Mock()
+        mock_warning = mocker.Mock()
+        mock_logger.configure_mock(
+            **{
+                "info": mock_info,
+                "warning": mock_warning,
+            }
+        )
+
+        distro.SolarWindsDistro()._log_python_runtime()
+        mock_py_vers.assert_called_once()
+        mock_info.assert_called_once()
+        mock_warning.assert_called_once()
+
+    def test__log_runtime(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.distro.apm_version",
+            "foo-version",
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.sdk_version",
+            "bar-version",
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.inst_version",
+            "baz-version",
+        )
+        mock_logger = mocker.patch(
+            "solarwinds_apm.distro.logger"
+        )
+        mock_info = mocker.Mock()
+        mock_logger.configure_mock(
+            **{
+                "info": mock_info,
+            }
+        )
+        mock_pytime = mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro._log_python_runtime"
+        )
+
+        distro.SolarWindsDistro()._log_runtime()
+        mock_pytime.assert_called_once()
+        mock_info.assert_has_calls(
+            [
+                mocker.call(
+                    "SolarWinds APM Python %s",
+                    "foo-version",
+                ),
+                mocker.call(
+                    "OpenTelemetry %s/%s",
+                    "bar-version",
+                    "baz-version",
+                ),
+            ]
+        )
+
     def test_configure_no_env(self, mocker):
         mocker.patch.dict(os.environ, {})
-        SolarWindsDistro()._configure()
+        distro.SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
         assert not os.environ.get(OTEL_METRICS_EXPORTER)
@@ -31,7 +150,7 @@ class TestDistro:
                     "OTEL_METRICS_EXPORTER": "baz"
                 }
         )
-        SolarWindsDistro()._configure()
+        distro.SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
         assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
@@ -45,7 +164,7 @@ class TestDistro:
             },
             clear=True
         )
-        SolarWindsDistro()._configure()
+        distro.SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_http"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_http"
@@ -60,14 +179,14 @@ class TestDistro:
                 "OTEL_METRICS_EXPORTER": "baz"
             }
         )
-        SolarWindsDistro()._configure()
+        distro.SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
         assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
 
     def test_configure_env_propagators(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_PROPAGATORS": "tracecontext,solarwinds_propagator,foobar"})
-        SolarWindsDistro()._configure()
+        distro.SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,solarwinds_propagator,foobar"
         assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
 
@@ -89,7 +208,7 @@ class TestDistro:
                 "load": mock_load
             }
         )
-        SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
         mock_instrument.assert_called_once_with(**{"foo": "bar"})  
 
     def test_load_instrumentor_enable_commenting(self, mocker):
@@ -118,7 +237,7 @@ class TestDistro:
             "solarwinds_apm.distro.SolarWindsDistro.detect_commenter_options",
             return_value="foo-options"
         )
-        SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
         mock_instrument.assert_called_once_with(
             commenter_options="foo-options",
             enable_commenter=True,
@@ -128,41 +247,41 @@ class TestDistro:
 
     def test_enable_commenter_none(self, mocker):
         mocker.patch.dict(os.environ, {})
-        assert SolarWindsDistro().enable_commenter() == False
+        assert distro.SolarWindsDistro().enable_commenter() == False
 
     def test_enable_commenter_non_bool_value(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_ENABLED": "foo"})
-        assert SolarWindsDistro().enable_commenter() == False
+        assert distro.SolarWindsDistro().enable_commenter() == False
 
     def test_enable_commenter_false(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_ENABLED": "false"})
-        assert SolarWindsDistro().enable_commenter() == False
+        assert distro.SolarWindsDistro().enable_commenter() == False
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_ENABLED": "False"})
-        assert SolarWindsDistro().enable_commenter() == False
+        assert distro.SolarWindsDistro().enable_commenter() == False
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_ENABLED": "faLsE"})
-        assert SolarWindsDistro().enable_commenter() == False
+        assert distro.SolarWindsDistro().enable_commenter() == False
 
     def test_enable_commenter_true(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_ENABLED": "true"})
-        assert SolarWindsDistro().enable_commenter() == True
+        assert distro.SolarWindsDistro().enable_commenter() == True
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_ENABLED": "True"})
-        assert SolarWindsDistro().enable_commenter() == True
+        assert distro.SolarWindsDistro().enable_commenter() == True
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_ENABLED": "tRuE"})
-        assert SolarWindsDistro().enable_commenter() == True
+        assert distro.SolarWindsDistro().enable_commenter() == True
 
     def test_detect_commenter_options_not_set(self, mocker):
         mocker.patch.dict(os.environ, {})
-        result = SolarWindsDistro().detect_commenter_options()
+        result = distro.SolarWindsDistro().detect_commenter_options()
         assert result == {}
 
     def test_detect_commenter_options_invalid_kv_ignored(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_OPTIONS": "invalid-kv,foo=bar"})
-        result = SolarWindsDistro().detect_commenter_options()
+        result = distro.SolarWindsDistro().detect_commenter_options()
         assert result == {}
 
     def test_detect_commenter_options_valid_kvs(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_OPTIONS": "foo=true,bar=FaLSe"})
-        result = SolarWindsDistro().detect_commenter_options()
+        result = distro.SolarWindsDistro().detect_commenter_options()
         assert result == {
             "foo": True,
             "bar": False,
@@ -175,13 +294,13 @@ class TestDistro:
                 "OTEL_SQLCOMMENTER_OPTIONS": "   foo   =   tRUe   , bar = falsE "
             }
         )
-        result = SolarWindsDistro().detect_commenter_options()
+        result = distro.SolarWindsDistro().detect_commenter_options()
         assert result.get("foo") == True
         assert result.get("bar") == False
 
     def test_detect_commenter_options_strip_mix(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_OPTIONS": "invalid-kv,   foo=TrUe   ,bar  =  faLSE,   baz=qux  "})
-        result = SolarWindsDistro().detect_commenter_options()
+        result = distro.SolarWindsDistro().detect_commenter_options()
         assert result.get("foo") == True
         assert result.get("bar") == False
         assert result.get("baz") is None

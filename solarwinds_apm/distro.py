@@ -7,6 +7,8 @@
 """Module to configure OpenTelemetry to work with SolarWinds backend"""
 
 import logging
+import platform
+import sys
 from os import environ
 
 from opentelemetry.environment_variables import (
@@ -19,6 +21,8 @@ from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.logging.environment_variables import (
     OTEL_PYTHON_LOG_FORMAT,
 )
+from opentelemetry.instrumentation.version import __version__ as inst_version
+from opentelemetry.sdk.version import __version__ as sdk_version
 from pkg_resources import EntryPoint
 
 from solarwinds_apm.apm_config import SolarWindsApmConfig
@@ -28,6 +32,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_DEFAULT_TRACES_EXPORTER_LAMBDA,
 )
+from solarwinds_apm.version import __version__ as apm_version
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +40,29 @@ logger = logging.getLogger(__name__)
 class SolarWindsDistro(BaseDistro):
     """OpenTelemetry Distro for SolarWinds reporting environment"""
 
+    def _log_python_runtime(self):
+        """Logs Python runtime info, with any warnings"""
+        python_vers = platform.python_version()
+        logger.info("Python %s", python_vers)
+
+        # https://devguide.python.org/versions/
+        if sys.version_info.major == 3 and sys.version_info.minor < 8:
+            logger.warning(
+                "Deprecation: Python %s is at end-of-life and support "
+                "by APM Python will be dropped in a future release. Please upgrade.",
+                python_vers,
+            )
+
+    def _log_runtime(self):
+        """Logs APM Python runtime info (high debug level)"""
+        logger.info("SolarWinds APM Python %s", apm_version)
+        self._log_python_runtime()
+        logger.info("OpenTelemetry %s/%s", sdk_version, inst_version)
+
     def _configure(self, **kwargs):
         """Configure default OTel exporter and propagators"""
+        self._log_runtime()
+
         is_lambda = SolarWindsApmConfig.calculate_is_lambda()
         if is_lambda:
             environ.setdefault(
