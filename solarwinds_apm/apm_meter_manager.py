@@ -67,7 +67,9 @@ class SolarWindsMeterManager:
         def consume_request_count(
             options: CallbackOptions,
         ) -> Iterable[Observation]:
-            status, request_count = self.oboe_settings_api.consumeRequestCount()
+            status, request_count = (
+                self.oboe_settings_api.consumeRequestCount()
+            )
             yield Observation(request_count, {"status": status})
 
         self.request_count = (
