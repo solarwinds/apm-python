@@ -4,6 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import math
 import os
 import pytest
 
@@ -144,11 +145,15 @@ class TestConfiguratorMetricsExporter:
             del os.environ["OTEL_METRICS_EXPORTER"]
 
         # Mock entry points
-        mock_exporter_class = mocker.MagicMock()
+        mock_exporter = mocker.Mock()
+        mock_exporter_class = mocker.Mock()
+        mock_exporter_class.configure_mock(return_value=mock_exporter)
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_exporter_class)
         mock_exporter_entry_point = mocker.Mock()
         mock_exporter_entry_point.configure_mock(
             **{
-                "load": mock_exporter_class
+                "load": mock_load,
             }
         )
         mock_points = iter([mock_exporter_entry_point])
@@ -193,6 +198,14 @@ class TestConfiguratorMetricsExporter:
             ]
         )
         mock_pemreader.assert_called_once()
+        mock_pemreader.assert_has_calls(
+            [
+                mocker.call(
+                    mock_exporter,
+                    export_interval_millis=math.inf,
+                )
+            ]
+        )
         trace_mocks.get_tracer_provider.assert_called_once()
         trace_mocks.get_tracer_provider().get_tracer.assert_called_once()
         mock_meterprovider.assert_called_once()
@@ -296,11 +309,15 @@ class TestConfiguratorMetricsExporter:
             del os.environ["OTEL_METRICS_EXPORTER"]
 
         # Mock entry points
-        mock_exporter_class = mocker.MagicMock()
+        mock_exporter = mocker.Mock()
+        mock_exporter_class = mocker.Mock()
+        mock_exporter_class.configure_mock(return_value=mock_exporter)
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_exporter_class)
         mock_exporter_entry_point = mocker.Mock()
         mock_exporter_entry_point.configure_mock(
             **{
-                "load": mock_exporter_class
+                "load": mock_load,
             }
         )
         mock_exporter_class_invalid = mocker.Mock()
@@ -375,6 +392,14 @@ class TestConfiguratorMetricsExporter:
         )
         # Called for the valid one
         mock_pemreader.assert_called_once()
+        mock_pemreader.assert_has_calls(
+            [
+                mocker.call(
+                    mock_exporter,
+                    export_interval_millis=math.inf,
+                )
+            ]
+        )
         # Rest not called at all
         trace_mocks.get_tracer_provider.assert_not_called()
         trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
