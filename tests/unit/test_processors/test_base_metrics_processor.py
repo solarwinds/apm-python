@@ -310,8 +310,18 @@ class TestSwBaseMetricsProcessor:
         assert 0 == processor.calculate_span_time(0, 1000)
         assert 0 == processor.calculate_span_time(1000, 0)
 
-    def test_calculate_span_time(self, mocker):
+    def test_calculate_span_time_default_1e3(self, mocker):
         processor = _SwBaseMetricsProcessor(
             mocker.Mock(),
         )
         assert 1 == processor.calculate_span_time(2000, 3000)
+
+    def test_calculate_span_time_1e6(self, mocker):
+        processor = _SwBaseMetricsProcessor(
+            mocker.Mock(),
+        )
+        assert 1 == processor.calculate_span_time(
+            2000000,
+            3000000,
+            1e6,
+        )

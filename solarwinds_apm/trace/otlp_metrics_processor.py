@@ -91,9 +91,11 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
             meter_attrs.update({"sw.is_error": "false"})
 
         is_span_http = self.is_span_http(span)
+        # convert from ns to milliseconds
         span_time = self.calculate_span_time(
             span.start_time,
             span.end_time,
+            1e6,
         )
 
         if is_span_http:
