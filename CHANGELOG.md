@@ -4,13 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.1.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.1.1...HEAD)
+
+### Changed
+- Updated OTLP metrics components initialization ([#289](https://github.com/solarwinds/apm-python/pull/289))
+
+
+## [1.1.1](https://github.com/solarwinds/apm-python/releases/tag/rel-1.1.1) - 2024-01-18
 
 ### Changed
 - Updated lambda layer workflow ([#278](https://github.com/solarwinds/apm-python/pull/278))
 - Fixed release PR action ([#282](https://github.com/solarwinds/apm-python/pull/282))
 - SolarWinds c-lib 14.0.2 ([#288](https://github.com/solarwinds/apm-python/pull/288))
-- Updated OTLP metrics components initialization ([#289](https://github.com/solarwinds/apm-python/pull/289))
+- Added environment logging ([#291](https://github.com/solarwinds/apm-python/pull/291))
+- Linting ([#292](https://github.com/solarwinds/apm-python/pull/292))
 
 ### Removed
 - Removed `sw.nonce` metrics attribute ([#284](https://github.com/solarwinds/apm-python/pull/284))

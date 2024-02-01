@@ -497,9 +497,9 @@ class SolarWindsApmConfig:
                         "Could not create log file directory path from provided SW_APM_LOG_FILEPATH. Using default log settings."
                     )
                     self.__config["log_filepath"] = ""
-                    self.__config[
-                        "log_type"
-                    ] = apm_logging.ApmLoggingType.default_type()
+                    self.__config["log_type"] = (
+                        apm_logging.ApmLoggingType.default_type()
+                    )
 
     def update_log_type(
         self,
@@ -510,9 +510,9 @@ class SolarWindsApmConfig:
         SW_APM_LOG_FILEPATH not None will set c-lib log_type to file (2).
         """
         if self.__config["debug_level"] == -1:
-            self.__config[
-                "log_type"
-            ] = apm_logging.ApmLoggingType.disabled_type()
+            self.__config["log_type"] = (
+                apm_logging.ApmLoggingType.disabled_type()
+            )
         elif self.__config["log_filepath"]:
             self.__config["log_type"] = apm_logging.ApmLoggingType.file_type()
 
@@ -525,9 +525,9 @@ class SolarWindsApmConfig:
             log_filepath, log_filepath_ext = os.path.splitext(
                 orig_log_filepath
             )
-            self.__config[
-                "log_filepath"
-            ] = f"{log_filepath}_ext{log_filepath_ext}"
+            self.__config["log_filepath"] = (
+                f"{log_filepath}_ext{log_filepath_ext}"
+            )
 
     def _calculate_metric_format(self) -> int:
         """Return one of 1 (TransactionResponseTime only) or 2 (default; ResponseTime only). Note: 0 (both) is no longer supported. Based on collector URL which may have a port e.g. foo-collector.com:443"""
