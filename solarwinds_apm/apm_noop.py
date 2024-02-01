@@ -217,12 +217,6 @@ class SolarWindsMeterManager:
         self.triggered_trace_count = NoOpObservableGauge(
             name="trace.service.triggered_trace_count"
         )
-        self.sample_rate = NoOpObservableGauge(
-            name="trace.service.sample_rate"
-        )
-        self.sample_source = NoOpObservableGauge(
-            name="trace.service.sample_source"
-        )
 
 
 class LoggingOptions:
