@@ -53,8 +53,6 @@ class TestApmMeterManager:
             "trace.service.tokenbucket_exhaustion_count": "consume_tokenbucket_exhaustion_count",
             "trace.service.through_trace_count": "consume_through_trace_count",
             "trace.service.triggered_trace_count": "consume_triggered_trace_count",
-            "trace.service.sample_rate": "get_last_used_sample_rate",
-            "trace.service.sample_source": "get_last_used_sample_source"
         }
 
         assert mock_histo.mock_calls == [

@@ -124,33 +124,3 @@ class SolarWindsMeterManager:
                 callbacks=[consume_triggered_trace_count],
             )
         )
-
-        def get_last_used_sample_rate(
-            options: CallbackOptions,
-        ) -> Iterable[Observation]:
-            (
-                status,
-                trace_count,
-            ) = self.oboe_settings_api.getLastUsedSampleRate()
-            yield Observation(trace_count, {"status": status})
-
-        self.sample_rate = self.meter_request_counters.create_observable_gauge(
-            name="trace.service.sample_rate",
-            callbacks=[get_last_used_sample_rate],
-        )
-
-        def get_last_used_sample_source(
-            options: CallbackOptions,
-        ) -> Iterable[Observation]:
-            (
-                status,
-                trace_count,
-            ) = self.oboe_settings_api.getLastUsedSampleSource()
-            yield Observation(trace_count, {"status": status})
-
-        self.sample_source = (
-            self.meter_request_counters.create_observable_gauge(
-                name="trace.service.sample_source",
-                callbacks=[get_last_used_sample_source],
-            )
-        )
