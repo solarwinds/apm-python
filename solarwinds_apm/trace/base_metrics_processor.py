@@ -90,9 +90,13 @@ class _SwBaseMetricsProcessor(SpanProcessor):
         self,
         start_time: int,
         end_time: int,
+        time_conversion: int = 1e3,
     ) -> int:
-        """Calculate span time in microseconds (us) using start and end time
-        in nanoseconds (ns). OTel span start/end_time are optional."""
+        """Calculate span time (via time_conversion e.g. 1e3, 1e6)
+        using start and end time in nanoseconds (ns). OTel span
+        start/end_time are optional."""
         if not start_time or not end_time:
             return 0
-        return int((end_time - start_time) // 1e3)
+        ms_start_time = int(start_time // time_conversion)
+        ms_end_time = int(end_time // time_conversion)
+        return ms_end_time - ms_start_time
