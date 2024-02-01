@@ -121,6 +121,7 @@ class TestConfiguratorMetricsExporter:
             test_configurator._configure_metrics_exporter(
                 mock_apmconfig_enabled_expt,
             )
+        
         mock_pemreader.assert_not_called()
         trace_mocks.get_tracer_provider.assert_not_called()
         trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
@@ -167,11 +168,29 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         get_resource_mocks(mocker)
         trace_mocks = get_trace_mocks(mocker)
+        mock_histogram = mocker.patch(
+            "solarwinds_apm.configurator.Histogram"
+        )
+        mock_agg_temp = mocker.patch(
+            "solarwinds_apm.configurator.AggregationTemporality"
+        )
+        mock_agg_temp.DELTA = "foo-delta"
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_metrics_exporter(
             mock_apmconfig_enabled_expt,
+        )
+        mock_exporter_entry_point.load.assert_called_once()
+        mock_exporter_entry_point.load.assert_has_calls(
+            [
+                mocker.call(),
+                mocker.call()(
+                    preferred_temporality={
+                        mock_histogram: "foo-delta"
+                    }
+                )
+            ]
         )
         mock_pemreader.assert_called_once()
         trace_mocks.get_tracer_provider.assert_called_once()
@@ -229,6 +248,13 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         get_resource_mocks(mocker)
         trace_mocks = get_trace_mocks(mocker)
+        mock_histogram = mocker.patch(
+            "solarwinds_apm.configurator.Histogram"
+        )
+        mock_agg_temp = mocker.patch(
+            "solarwinds_apm.configurator.AggregationTemporality"
+        )
+        mock_agg_temp.DELTA = "foo-delta"
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -240,6 +266,11 @@ class TestConfiguratorMetricsExporter:
         mock_iter_entry_points.assert_has_calls(
             [
                 mocker.call("opentelemetry_metrics_exporter", "invalid_exporter"),
+            ]
+        )
+        mock_exporter_entry_point_invalid.load.assert_has_calls(
+            [
+                mocker.call(),
             ]
         )
         # Not called at all
@@ -305,6 +336,13 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         get_resource_mocks(mocker)
         trace_mocks = get_trace_mocks(mocker)
+        mock_histogram = mocker.patch(
+            "solarwinds_apm.configurator.Histogram"
+        )
+        mock_agg_temp = mocker.patch(
+            "solarwinds_apm.configurator.AggregationTemporality"
+        )
+        mock_agg_temp.DELTA = "foo-delta"
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -316,6 +354,23 @@ class TestConfiguratorMetricsExporter:
             [
                 mocker.call("opentelemetry_metrics_exporter", "valid_exporter"),
                 mocker.call("opentelemetry_metrics_exporter", "invalid_exporter"),
+            ]
+        )
+        mock_exporter_entry_point.load.assert_called_once()
+        mock_exporter_entry_point.load.assert_has_calls(
+            [
+                mocker.call(),
+                mocker.call()(
+                    preferred_temporality={
+                        mock_histogram: "foo-delta"
+                    }
+                )
+            ]
+        )
+        mock_exporter_entry_point_invalid.load.assert_called_once()
+        mock_exporter_entry_point_invalid.load.assert_has_calls(
+            [
+                mocker.call(),
             ]
         )
         # Called for the valid one
