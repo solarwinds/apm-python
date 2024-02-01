@@ -13,8 +13,6 @@ class TestConfiguratorConfigure:
         mock_txn_name_manager_init,
         mock_fwkv_manager_init,
         mock_apmconfig_enabled,
-        mock_meter_manager_init,
-        mock_noop_meter_manager_init,
         mock_init_sw_reporter,
         mock_config_otel_components,
         mock_report_init,
@@ -26,9 +24,6 @@ class TestConfiguratorConfigure:
         mock_fwkv_manager_init.assert_called_once()
         mock_apmconfig_enabled.assert_called_once()
 
-        mock_noop_meter_manager_init.assert_called_once()
-        mock_meter_manager_init.assert_not_called()
-
         mock_init_sw_reporter.assert_called_once()
         mock_config_otel_components.assert_called_once()
         mock_report_init.assert_called_once()
@@ -39,8 +34,6 @@ class TestConfiguratorConfigure:
         mock_txn_name_manager_init,
         mock_fwkv_manager_init,
         mock_apmconfig_experimental_otelcol_init,
-        mock_meter_manager_init,
-        mock_noop_meter_manager_init,
         mock_init_sw_reporter,
         mock_config_otel_components,
         mock_report_init,
@@ -51,9 +44,6 @@ class TestConfiguratorConfigure:
         mock_txn_name_manager_init.assert_called_once()
         mock_fwkv_manager_init.assert_called_once()
         mock_apmconfig_experimental_otelcol_init.assert_called_once()
-
-        mock_meter_manager_init.assert_called_once()
-        mock_noop_meter_manager_init.assert_not_called()
         
         mock_init_sw_reporter.assert_called_once()
         mock_config_otel_components.assert_called_once()

@@ -13,7 +13,7 @@ import sys
 import time
 from typing import TYPE_CHECKING
 
-from opentelemetry import metrics, trace
+from opentelemetry import trace
 from opentelemetry.environment_variables import (
     OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
@@ -28,6 +28,7 @@ from opentelemetry.instrumentation.environment_variables import (
 from opentelemetry.instrumentation.propagators import (
     set_global_response_propagator,
 )
+from opentelemetry.metrics import set_meter_provider
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
@@ -49,8 +50,6 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_SUPPORT_EMAIL,
 )
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
-from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
-from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.response_propagator import (
@@ -89,26 +88,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config = SolarWindsApmConfig()
         oboe_api = apm_config.oboe_api
 
-        # TODO Add experimental trace flag, clean up
-        #      https://swicloud.atlassian.net/browse/NH-65067
-        if not apm_config.get("experimental").get("otel_collector") is True:
-            logger.debug(
-                "Experimental otel_collector flag not configured. Creating meter manager as no-op."
-            )
-            apm_meters = NoopMeterManager()
-        else:
-            apm_meters = SolarWindsMeterManager(
-                apm_config,
-                oboe_api,
-            )
-
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
             apm_txname_manager,
             apm_fwkv_manager,
             apm_config,
             reporter,
-            apm_meters,
             oboe_api,
         )
         # Report an status event after everything is done.
@@ -120,12 +105,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
         reporter: "Reporter",
-        apm_meters: SolarWindsMeterManager,
         oboe_api: "OboeAPI",
     ) -> None:
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(apm_config, oboe_api)
         if apm_config.agent_enabled:
+            # set MeterProvider first via metrics_exporter config
+            self._configure_metrics_exporter(apm_config)
             self._configure_service_entry_id_span_processor()
             self._configure_txnname_calculator_span_processor(
                 apm_txname_manager,
@@ -137,7 +123,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             self._configure_otlp_metrics_span_processors(
                 apm_txname_manager,
                 apm_config,
-                apm_meters,
+                oboe_api,
             )
             self._configure_txnname_cleanup_span_processor(
                 apm_txname_manager,
@@ -148,7 +134,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_fwkv_manager,
                 apm_config,
             )
-            self._configure_metrics_exporter(apm_config)
             self._configure_propagator()
             self._configure_response_propagator()
         else:
@@ -256,11 +241,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
-        apm_meters: SolarWindsMeterManager,
+        oboe_api: "OboeAPI",
     ) -> None:
-        """Configure SolarWindsOTLPMetricsSpanProcessor and ForceFlushSpanProcessor.
-        If no meters/instruments are initialized, the processor will
-        run but will not collect/flush OTLP metrics."""
+        """Configure SolarWindsOTLPMetricsSpanProcessor and ForceFlushSpanProcessor."""
         # TODO Add experimental trace flag, clean up
         #      https://swicloud.atlassian.net/browse/NH-65067
         if not apm_config.get("experimental").get("otel_collector") is True:
@@ -273,7 +256,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             SolarWindsOTLPMetricsSpanProcessor(
                 apm_txname_manager,
                 apm_config,
-                apm_meters,
+                oboe_api,
             )
         )
         trace.get_tracer_provider().add_span_processor(
@@ -415,7 +398,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             resource=sw_resource,
             metric_readers=metric_readers,
         )
-        metrics.set_meter_provider(provider)
+        set_meter_provider(provider)
 
     def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators, default or environment configured"""

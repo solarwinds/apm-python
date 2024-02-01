@@ -409,18 +409,6 @@ def mock_fwkv_manager_init(mocker):
         "solarwinds_apm.configurator.SolarWindsFrameworkKvManager"
     )
 
-@pytest.fixture(name="mock_meter_manager_init")
-def mock_meter_manager_init(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsMeterManager"
-    )
-
-@pytest.fixture(name="mock_noop_meter_manager_init")
-def mock_noop_meter_manager_init(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.NoopMeterManager"
-    )
-
 @pytest.fixture(name="mock_oboe_api_obj")
 def mock_oboe_api_obj(mocker):
     return mocker.Mock()

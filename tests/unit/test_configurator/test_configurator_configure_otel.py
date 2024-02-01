@@ -31,7 +31,6 @@ class TestConfiguratorConfigureOtelComponents:
             mock_fwkv_manager,
             mock_apmconfig_enabled,
             mock_extension.Reporter,
-            mock_meter_manager,
             mock_oboe_api_obj,
         )
 
@@ -43,7 +42,7 @@ class TestConfiguratorConfigureOtelComponents:
         mock_config_otlp_processors.assert_called_once_with(
             mock_txn_name_manager,
             mock_apmconfig_enabled, 
-            mock_meter_manager,
+            mock_oboe_api_obj,
         )
         mock_config_traces_exp.assert_called_once_with(
             mock_extension.Reporter,
@@ -79,7 +78,6 @@ class TestConfiguratorConfigureOtelComponents:
             mock_fwkv_manager,
             mock_apmconfig_disabled,
             mock_extension.Reporter,
-            mock_meter_manager,
             mock_oboe_api_obj,
         )
 
