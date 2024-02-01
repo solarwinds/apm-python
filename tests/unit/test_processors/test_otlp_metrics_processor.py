@@ -6,6 +6,9 @@
 
 from os import environ
 
+from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
+from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
+
 from solarwinds_apm.trace import SolarWindsOTLPMetricsSpanProcessor
 from solarwinds_apm.trace.tnames import TransactionNames
 
@@ -16,9 +19,10 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         mocker,
         outer_txn_retval="unused",
         lambda_function_name="unused",
+        inner_retval=True,
     ):
         mock_apm_config = mocker.Mock()
-        mock_get_inner = mocker.Mock(return_value=True)
+        mock_get_inner = mocker.Mock(return_value=inner_retval)
         mock_inner = mocker.Mock()
         mock_inner.configure_mock(
             **{
@@ -62,10 +66,27 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         assert processor.service_name == "foo-service"
         assert processor.env_transaction_name == "foo-env-txn-name"
         assert processor.lambda_function_name == "foo-lambda-name"
+        assert isinstance(processor.apm_meters, SolarWindsMeterManager)
 
     def test__init_not_experimental(self, mocker, mock_meter_manager):
-        # TODO
-        pass
+        mock_tx_mgr = mocker.Mock()
+        mock_oboe_api = mocker.Mock()
+        mock_apm_config = self.get_mock_apm_config(
+            mocker,
+            "foo-env-txn-name",
+            "foo-lambda-name",
+            False,
+        )
+        processor = SolarWindsOTLPMetricsSpanProcessor(
+            mock_tx_mgr,
+            mock_apm_config,
+            mock_oboe_api,
+        )
+        assert processor.apm_txname_manager == mock_tx_mgr
+        assert processor.service_name == "foo-service"
+        assert processor.env_transaction_name == "foo-env-txn-name"
+        assert processor.lambda_function_name == "foo-lambda-name"
+        assert isinstance(processor.apm_meters, NoopMeterManager)
 
     def test_calculate_otlp_transaction_name_custom(self, mocker, mock_meter_manager):
         mock_apm_config = self.get_mock_apm_config(mocker)
