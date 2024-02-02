@@ -4,13 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.1.1...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.2.0...HEAD)
+
+## [1.2.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.2.0) - 2024-02-01
 
 ### Changed
 - Updated OTLP metrics components initialization ([#289](https://github.com/solarwinds/apm-python/pull/289))
+- Fixed no-op function signature ([#295](https://github.com/solarwinds/apm-python/pull/295))
+- Set histogram preferred temporality to delta ([#296](https://github.com/solarwinds/apm-python/pull/296))
+- Set Periodic metric reading interval infinity ([#297](https://github.com/solarwinds/apm-python/pull/297))
+- Fixed response_time metrics for milliseconds ([#298](https://github.com/solarwinds/apm-python/pull/298))
+- Renamed local variables ([#300](https://github.com/solarwinds/apm-python/pull/300))
 
+### Removed
+- Removed meters for sample_rate, sample_source ([#299](https://github.com/solarwinds/apm-python/pull/299))
 
-## [1.1.1](https://github.com/solarwinds/apm-python/releases/tag/rel-1.1.1) - 2024-01-18
+## [1.1.1](https://github.com/solarwinds/apm-python/releases/tag/rel-1.1.1) - 2024-01-31
 
 ### Changed
 - Updated lambda layer workflow ([#278](https://github.com/solarwinds/apm-python/pull/278))
