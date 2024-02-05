@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.2.0...HEAD)
 
-## [1.2.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.2.0) - 2024-02-01
+## [1.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.2.0) - 2024-02-05
 
 ### Changed
 - Updated OTLP metrics components initialization ([#289](https://github.com/solarwinds/apm-python/pull/289))
