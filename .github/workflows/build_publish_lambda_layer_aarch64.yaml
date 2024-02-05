@@ -17,7 +17,7 @@ jobs:
       label: ${{ steps.launch.outputs.label }} # github runner label
       instance-id: ${{ steps.launch.outputs.instance-id }} # ec2 instance id
     steps:
-      - uses: getsentry/action-github-app-token@v2
+      - uses: getsentry/action-github-app-token@v3
         id: github-token
         with:
           app_id: ${{ vars.APPLICATION_ID }}
@@ -67,7 +67,7 @@ jobs:
       - build_layer_aarch64
     runs-on: ubuntu-latest
     steps:
-      - uses: getsentry/action-github-app-token@v2
+      - uses: getsentry/action-github-app-token@v3
         id: github-token
         with:
           app_id: ${{ vars.APPLICATION_ID }}
