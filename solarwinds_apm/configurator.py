@@ -59,8 +59,7 @@ from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
-from solarwinds_apm.trace import (
-    # ForceFlushSpanProcessor,
+from solarwinds_apm.trace import (  # ForceFlushSpanProcessor,
     ServiceEntryIdSpanProcessor,
     SolarWindsInboundMetricsSpanProcessor,
     SolarWindsOTLPMetricsSpanProcessor,
