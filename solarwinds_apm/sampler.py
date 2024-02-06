@@ -421,16 +421,21 @@ class _SwSampler(Sampler):
 
     def calculate_otlp_transaction_name(
         self,
+        span_name: str,
     ) -> str:
         """Calculate transaction name for OTLP trace following this order
         of decreasing precedence:
 
         1. SW_APM_TRANSACTION_NAME
         2. AWS_LAMBDA_FUNCTION_NAME
-        3. "unknown_service"
+        3. automated naming from span name
+        4. "unknown_service" backup, to match OpenTelemetry SDK Resource default
 
-        Note: spans at time of sampling decision/on_start will not
-        have access to SDK-set names, and spans at on_end are immutable.
+        Notes:
+        * Spans at time of sampling decision/on_start will not have access
+          to SDK-set names, nor all span attributes from instrumentors
+        * But they should have access to span `name`
+        * Spans at on_end are immutable
         """
         if self.env_transaction_name:
             return self.env_transaction_name
@@ -438,8 +443,9 @@ class _SwSampler(Sampler):
         if self.lambda_function_name:
             return self.lambda_function_name
 
-        # To match SDK Resource default
-        # https://github.com/open-telemetry/opentelemetry-python/blob/f5fb6b1353929cf8039b1d38f97450866357d901/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py#L175
+        if span_name:
+            return span_name
+
         return "unknown_service"
 
     def calculate_attributes(
@@ -493,7 +499,7 @@ class _SwSampler(Sampler):
         # TODO Add experimental trace flag, clean up
         #      https://swicloud.atlassian.net/browse/NH-65067
         new_attributes[INTL_SWO_TRANSACTION_ATTR_KEY] = (
-            self.calculate_otlp_transaction_name()
+            self.calculate_otlp_transaction_name(span_name)
         )
 
         # sw.tracestate_parent_id is set if:

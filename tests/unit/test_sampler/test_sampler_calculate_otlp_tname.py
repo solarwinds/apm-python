@@ -31,7 +31,7 @@ class Test_SwSampler_calculate_otlp_tname():
         )
         mock_oboe_api = mocker.Mock()
         sampler = _SwSampler(mock_apm_config, mock_oboe_api)
-        assert sampler.calculate_otlp_transaction_name() == "foo-txn"
+        assert sampler.calculate_otlp_transaction_name("foo-span") == "foo-txn"
 
     def test_calculate_otlp_name_lambda(self, mocker):
 
@@ -50,9 +50,9 @@ class Test_SwSampler_calculate_otlp_tname():
         )
         mock_oboe_api = mocker.Mock()
         sampler = _SwSampler(mock_apm_config, mock_oboe_api)
-        assert sampler.calculate_otlp_transaction_name() == "foo-lambda"
+        assert sampler.calculate_otlp_transaction_name("foo-span") == "foo-lambda"
 
-    def test_calculate_otlp_name_none(self, mocker):
+    def test_calculate_otlp_name_span_name(self, mocker):
 
         def config_get(param) -> Any:
             return None
@@ -69,4 +69,23 @@ class Test_SwSampler_calculate_otlp_tname():
         )
         mock_oboe_api = mocker.Mock()
         sampler = _SwSampler(mock_apm_config, mock_oboe_api)
-        assert sampler.calculate_otlp_transaction_name() == "unknown_service"
+        assert sampler.calculate_otlp_transaction_name("foo-span") == "foo-span"
+
+    def test_calculate_otlp_name_empty(self, mocker):
+
+        def config_get(param) -> Any:
+            return None
+
+        mock_get = mocker.Mock(
+            side_effect=config_get
+        )
+        mock_apm_config = mocker.Mock()
+        mock_apm_config.configure_mock(
+            **{
+                "get": mock_get,
+                "lambda_function_name": None,
+            }
+        )
+        mock_oboe_api = mocker.Mock()
+        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        assert sampler.calculate_otlp_transaction_name("") == "unknown_service"
