@@ -60,7 +60,7 @@ from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
 from solarwinds_apm.trace import (
-    ForceFlushSpanProcessor,
+    # ForceFlushSpanProcessor,
     ServiceEntryIdSpanProcessor,
     SolarWindsInboundMetricsSpanProcessor,
     SolarWindsOTLPMetricsSpanProcessor,
@@ -247,7 +247,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
         oboe_api: "OboeAPI",
     ) -> None:
-        """Configure SolarWindsOTLPMetricsSpanProcessor and ForceFlushSpanProcessor."""
+        """Configure SolarWindsOTLPMetricsSpanProcessor."""
         # TODO Add experimental trace flag, clean up
         #      https://swicloud.atlassian.net/browse/NH-65067
         if not apm_config.get("experimental").get("otel_collector") is True:
@@ -263,9 +263,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 oboe_api,
             )
         )
-        trace.get_tracer_provider().add_span_processor(
-            ForceFlushSpanProcessor(),
-        )
+        # trace.get_tracer_provider().add_span_processor(
+        #     ForceFlushSpanProcessor(),
+        # )
 
     def _configure_traces_exporter(
         self,
