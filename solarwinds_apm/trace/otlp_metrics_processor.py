@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
     from solarwinds_apm.extension.oboe import OboeAPI
-    from solarwinds_apm.trace.tnames import TransactionNames
 
 
 logger = logging.getLogger(__name__)
@@ -57,26 +56,28 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
 
     def calculate_otlp_transaction_name(
         self,
-        tnames: "TransactionNames",
+        span_name: str,
     ) -> str:
         """Calculate transaction name for OTLP metrics following this order
         of decreasing precedence:
 
-        1. custom SDK name
-        2. SW_APM_TRANSACTION_NAME
-        3. AWS_LAMBDA_FUNCTION_NAME
-        4. automated naming from span name, attributes
-        """
-        if tnames.custom_name:
-            return tnames.custom_name
+        1. SW_APM_TRANSACTION_NAME
+        2. AWS_LAMBDA_FUNCTION_NAME
+        3. automated naming from span name
+        4. "unknown_service" backup, to match OpenTelemetry SDK Resource default
 
+        See also _SwSampler.calculate_otlp_transaction_name
+        """
         if self.env_transaction_name:
             return self.env_transaction_name
 
         if self.lambda_function_name:
             return self.lambda_function_name
 
-        return tnames.trans_name
+        if span_name:
+            return span_name
+
+        return "unknown_service"
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports OTLP trace metrics"""
@@ -89,14 +90,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         ):
             return
 
-        tnames = self.get_tnames(span)
-        if not tnames:
-            logger.error(
-                "Could not get transaction name. Not recording otlp metrics."
-            )
-            return
-
-        trans_name = self.calculate_otlp_transaction_name(tnames)
+        trans_name = self.calculate_otlp_transaction_name(span.name)
 
         meter_attrs = {}
         has_error = self.has_error(span)
