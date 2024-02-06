@@ -7,6 +7,7 @@
 import logging
 from typing import TYPE_CHECKING
 
+from solarwinds_apm.apm_constants import INTL_SWO_TRANSACTION_ATTR_KEY
 from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
 from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
@@ -119,11 +120,11 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
                 {
                     self._HTTP_STATUS_CODE: status_code,
                     self._HTTP_METHOD: request_method,
-                    "sw.transaction": trans_name,
+                    INTL_SWO_TRANSACTION_ATTR_KEY: trans_name,
                 }
             )
         else:
-            meter_attrs.update({"sw.transaction": trans_name})
+            meter_attrs.update({INTL_SWO_TRANSACTION_ATTR_KEY: trans_name})
         self.apm_meters.response_time.record(
             amount=span_time,
             attributes=meter_attrs,
