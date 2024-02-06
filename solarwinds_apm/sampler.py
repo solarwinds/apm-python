@@ -31,6 +31,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_COMMA_W3C_SANITIZED,
     INTL_SWO_EQUALS_W3C_SANITIZED,
     INTL_SWO_TRACESTATE_KEY,
+    INTL_SWO_TRANSACTION_ATTR_KEY,
     INTL_SWO_X_OPTIONS_KEY,
     INTL_SWO_X_OPTIONS_RESPONSE_KEY,
 )
@@ -69,6 +70,9 @@ class _SwSampler(Sampler):
         oboe_api: "OboeAPI",
     ):
         self.apm_config = apm_config
+        # SW_APM_TRANSACTION_NAME and AWS_LAMBDA_FUNCTION_NAME
+        self.env_transaction_name = apm_config.get("transaction_name")
+        self.lambda_function_name = apm_config.lambda_function_name
         self.context = apm_config.extension.Context
 
         if self.apm_config.get("tracing_mode") is not None:
@@ -415,6 +419,29 @@ class _SwSampler(Sampler):
         )
         return attributes_dict
 
+    def calculate_otlp_transaction_name(
+        self,
+    ) -> str:
+        """Calculate transaction name for OTLP trace following this order
+        of decreasing precedence:
+
+        1. SW_APM_TRANSACTION_NAME
+        2. AWS_LAMBDA_FUNCTION_NAME
+        3. "unknown_service"
+
+        Note: spans at time of sampling decision/on_start will not
+        have access to SDK-set names, and spans at on_end are immutable.
+        """
+        if self.env_transaction_name:
+            return self.env_transaction_name
+
+        if self.lambda_function_name:
+            return self.lambda_function_name
+
+        # To match SDK Resource default
+        # https://github.com/open-telemetry/opentelemetry-python/blob/f5fb6b1353929cf8039b1d38f97450866357d901/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py#L175
+        return "unknown_service"
+
     def calculate_attributes(
         self,
         span_name: str,
@@ -460,6 +487,13 @@ class _SwSampler(Sampler):
         )
         new_attributes[self._INTERNAL_BUCKET_RATE] = (
             f"{decision['bucket_rate']}"
+        )
+
+        # Always (root or is_remote) set sw.transaction
+        # TODO Add experimental trace flag, clean up
+        #      https://swicloud.atlassian.net/browse/NH-65067
+        new_attributes[INTL_SWO_TRANSACTION_ATTR_KEY] = (
+            self.calculate_otlp_transaction_name()
         )
 
         # sw.tracestate_parent_id is set if:

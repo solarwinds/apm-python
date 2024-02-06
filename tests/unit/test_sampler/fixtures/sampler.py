@@ -12,6 +12,8 @@ def config_get(param) -> Any:
         return -1
     elif param == "transaction_filters":
         return []
+    elif param == "transaction_name":
+        return "foo-txn"
     else:
         return None
 
@@ -46,6 +48,7 @@ def fixture_swsampler(mocker):
             "get": mock_get,
             "extension": mock_extension,
             "is_lambda": False,
+            "lambda_function_name": "foo-lambda",
         }
     )
     return _SwSampler(mock_apm_config, mocker.Mock())

@@ -364,6 +364,7 @@ class Test_SwSampler_calculate_attributes():
             "SampleSource": -1,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
         })
 
     def test_decision_auth_ok_with_sw_keys_and_custom_keys_no_tt_signed(
@@ -387,6 +388,7 @@ class Test_SwSampler_calculate_attributes():
             "SampleSource": -1,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
         })
 
     def test_decision_auth_failed_with_sw_keys_and_custom_keys_no_tt_signed(
@@ -427,6 +429,7 @@ class Test_SwSampler_calculate_attributes():
             "TriggeredTrace": True,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
         })
 
     def test_decision_auth_failed_with_sw_keys_and_custom_keys_and_signed_tt(
@@ -467,6 +470,7 @@ class Test_SwSampler_calculate_attributes():
             "TriggeredTrace": True,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
         })
 
     def test_contd_decision_sw_keys_and_custom_keys_and_signed_tt(
@@ -491,6 +495,7 @@ class Test_SwSampler_calculate_attributes():
             "TriggeredTrace": True,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
         })
 
     def test_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
@@ -512,6 +517,7 @@ class Test_SwSampler_calculate_attributes():
             "BucketRate": "-1",
             "SampleRate": -1,
             "SampleSource": -1,
+            "sw.transaction": "foo-txn",
         })
 
     def test_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_signed(
@@ -533,6 +539,7 @@ class Test_SwSampler_calculate_attributes():
             "BucketRate": "-1",
             "SampleRate": -1,
             "SampleSource": -1,
+            "sw.transaction": "foo-txn",
         })
 
     def test_contd_decision_with_no_sw_keys_nor_custom_keys_with_unsigned_tt(
@@ -555,6 +562,7 @@ class Test_SwSampler_calculate_attributes():
             "SampleRate": -1,
             "SampleSource": -1,
             "TriggeredTrace": True,
+            "sw.transaction": "foo-txn",
         })
 
     def test_contd_decision_with_no_sw_keys_nor_custom_keys_with_signed_tt(
@@ -577,6 +585,7 @@ class Test_SwSampler_calculate_attributes():
             "SampleRate": -1,
             "SampleSource": -1,
             "TriggeredTrace": True,
+            "sw.transaction": "foo-txn",
         })
 
     def test_not_contd_decision_with_sw_keys_and_custom_keys_and_unsigned_tt(
@@ -601,6 +610,7 @@ class Test_SwSampler_calculate_attributes():
             "TriggeredTrace": True,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
         })
 
     def test_not_contd_decision_with_sw_keys_and_custom_keys_and_signed_tt(
@@ -625,6 +635,7 @@ class Test_SwSampler_calculate_attributes():
             "TriggeredTrace": True,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
         })
 
     def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_with_unsigned_tt(
@@ -647,6 +658,7 @@ class Test_SwSampler_calculate_attributes():
             "SampleRate": 1,
             "SampleSource": 1,
             "TriggeredTrace": True,
+            "sw.transaction": "foo-txn",
         })
 
     def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_with_signed_tt(
@@ -669,6 +681,7 @@ class Test_SwSampler_calculate_attributes():
             "SampleRate": 1,
             "SampleSource": 1,
             "TriggeredTrace": True,
+            "sw.transaction": "foo-txn",
         })
 
     def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
@@ -690,6 +703,7 @@ class Test_SwSampler_calculate_attributes():
             "BucketRate": "1",
             "SampleRate": 1,
             "SampleSource": 1,
+            "sw.transaction": "foo-txn",
         })
 
     def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_signed(
@@ -711,6 +725,7 @@ class Test_SwSampler_calculate_attributes():
             "BucketRate": "1",
             "SampleRate": 1,
             "SampleSource": 1,
+            "sw.transaction": "foo-txn",
         })
 
     def test_valid_parent_create_new_attrs_with_sw_keys_and_custom_keys_and_unsigned_tt(
@@ -738,6 +753,7 @@ class Test_SwSampler_calculate_attributes():
             "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
         })
 
     def test_valid_parent_create_new_attrs_with_sw_keys_and_custom_keys_and_signed_tt(
@@ -765,6 +781,7 @@ class Test_SwSampler_calculate_attributes():
             "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
         })
 
     def test_valid_parent_update_attrs_no_tracestate_capture_with_sw_keys_and_custom_keys_and_unsigned_tt(
@@ -921,4 +938,5 @@ class Test_SwSampler_calculate_attributes():
             "SampleSource": 6,
             "foo": "bar",
             "baz": "qux",
+            "sw.transaction": "foo-txn",
         })
