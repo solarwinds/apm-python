@@ -4,6 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+from typing import Any
+
 import pytest
 
 from opentelemetry.sdk.trace.sampling import (
@@ -199,11 +201,28 @@ def fixture_parent_span_context_valid_remote_no_tracestate():
 
 class Test_SwSampler():
     def test_init(self, mocker):
+        def config_get(param) -> Any:
+            if param == "transaction_name":
+                return "foo-txn"
+            else:
+                return "foo"
+
+        mock_get = mocker.Mock(
+            side_effect=config_get
+        )
         mock_apm_config = mocker.Mock()
+        mock_apm_config.configure_mock(
+            **{
+                "get": mock_get,
+                "lambda_function_name": "foo-lambda",
+            }
+        )
         mock_oboe_api = mocker.Mock()
         sampler = _SwSampler(mock_apm_config, mock_oboe_api)
         assert sampler.apm_config == mock_apm_config
         assert sampler.oboe_settings_api == mock_oboe_api
+        assert sampler.env_transaction_name == "foo-txn"
+        assert sampler.lambda_function_name == "foo-lambda"
 
     def test_calculate_liboboe_decision_is_lambda(
         self,

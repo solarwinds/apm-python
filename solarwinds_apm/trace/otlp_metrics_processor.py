@@ -7,6 +7,10 @@
 import logging
 from typing import TYPE_CHECKING
 
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_TRANSACTION_ATTR_KEY,
+    INTL_SWO_TRANSACTION_ATTR_MAX,
+)
 from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
 from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
@@ -17,7 +21,6 @@ if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
     from solarwinds_apm.extension.oboe import OboeAPI
-    from solarwinds_apm.trace.tnames import TransactionNames
 
 
 logger = logging.getLogger(__name__)
@@ -56,26 +59,28 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
 
     def calculate_otlp_transaction_name(
         self,
-        tnames: "TransactionNames",
+        span_name: str,
     ) -> str:
         """Calculate transaction name for OTLP metrics following this order
-        of decreasing precedence:
+        of decreasing precedence, truncated to 255 char:
 
-        1. custom SDK name
-        2. SW_APM_TRANSACTION_NAME
-        3. AWS_LAMBDA_FUNCTION_NAME
-        4. automated naming from span name, attributes
+        1. SW_APM_TRANSACTION_NAME
+        2. AWS_LAMBDA_FUNCTION_NAME
+        3. automated naming from span name
+        4. "unknown" backup, to match core lib
+
+        See also _SwSampler.calculate_otlp_transaction_name
         """
-        if tnames.custom_name:
-            return tnames.custom_name
-
         if self.env_transaction_name:
-            return self.env_transaction_name
+            return self.env_transaction_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
 
         if self.lambda_function_name:
-            return self.lambda_function_name
+            return self.lambda_function_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
 
-        return tnames.trans_name
+        if span_name:
+            return span_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
+
+        return "unknown"
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports OTLP trace metrics"""
@@ -88,14 +93,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         ):
             return
 
-        tnames = self.get_tnames(span)
-        if not tnames:
-            logger.error(
-                "Could not get transaction name. Not recording otlp metrics."
-            )
-            return
-
-        trans_name = self.calculate_otlp_transaction_name(tnames)
+        trans_name = self.calculate_otlp_transaction_name(span.name)
 
         meter_attrs = {}
         has_error = self.has_error(span)
@@ -119,11 +117,11 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
                 {
                     self._HTTP_STATUS_CODE: status_code,
                     self._HTTP_METHOD: request_method,
-                    "sw.transaction": trans_name,
+                    INTL_SWO_TRANSACTION_ATTR_KEY: trans_name,
                 }
             )
         else:
-            meter_attrs.update({"sw.transaction": trans_name})
+            meter_attrs.update({INTL_SWO_TRANSACTION_ATTR_KEY: trans_name})
         self.apm_meters.response_time.record(
             amount=span_time,
             attributes=meter_attrs,

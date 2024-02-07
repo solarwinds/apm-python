@@ -31,6 +31,8 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_COMMA_W3C_SANITIZED,
     INTL_SWO_EQUALS_W3C_SANITIZED,
     INTL_SWO_TRACESTATE_KEY,
+    INTL_SWO_TRANSACTION_ATTR_KEY,
+    INTL_SWO_TRANSACTION_ATTR_MAX,
     INTL_SWO_X_OPTIONS_KEY,
     INTL_SWO_X_OPTIONS_RESPONSE_KEY,
 )
@@ -69,6 +71,9 @@ class _SwSampler(Sampler):
         oboe_api: "OboeAPI",
     ):
         self.apm_config = apm_config
+        # SW_APM_TRANSACTION_NAME and AWS_LAMBDA_FUNCTION_NAME
+        self.env_transaction_name = apm_config.get("transaction_name")
+        self.lambda_function_name = apm_config.lambda_function_name
         self.context = apm_config.extension.Context
 
         if self.apm_config.get("tracing_mode") is not None:
@@ -415,6 +420,35 @@ class _SwSampler(Sampler):
         )
         return attributes_dict
 
+    def calculate_otlp_transaction_name(
+        self,
+        span_name: str,
+    ) -> str:
+        """Calculate transaction name for OTLP trace following this order
+        of decreasing precedence, truncated to 255 char:
+
+        1. SW_APM_TRANSACTION_NAME
+        2. AWS_LAMBDA_FUNCTION_NAME
+        3. automated naming from span name
+        4. "unknown" backup, to match core lib
+
+        Notes:
+        * Spans at time of sampling decision/on_start will not have access
+          to SDK-set names, nor all span attributes from instrumentors
+        * But they should have access to span `name`
+        * Spans at on_end are immutable
+        """
+        if self.env_transaction_name:
+            return self.env_transaction_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
+
+        if self.lambda_function_name:
+            return self.lambda_function_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
+
+        if span_name:
+            return span_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
+
+        return "unknown"
+
     def calculate_attributes(
         self,
         span_name: str,
@@ -461,6 +495,18 @@ class _SwSampler(Sampler):
         new_attributes[self._INTERNAL_BUCKET_RATE] = (
             f"{decision['bucket_rate']}"
         )
+
+        # If `experimental` and `otel_collector`,
+        # always (root or is_remote) set sw.transaction
+        # TODO Clean up use of experimental trace flag
+        #      https://swicloud.atlassian.net/browse/NH-65067
+        if self.apm_config.get("experimental").get("otel_collector") is True:
+            logger.debug(
+                "Experimental otel_collector flag configured. Setting sw.transaction on span."
+            )
+            new_attributes[INTL_SWO_TRANSACTION_ATTR_KEY] = (
+                self.calculate_otlp_transaction_name(span_name)
+            )
 
         # sw.tracestate_parent_id is set if:
         #  1. the future span is the entry span of a service
