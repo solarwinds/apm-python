@@ -16,6 +16,7 @@ INTL_SWO_OTEL_SCOPE_NAME = "otel.scope.name"
 INTL_SWO_OTEL_SCOPE_VERSION = "otel.scope.version"
 INTL_SWO_TRACESTATE_KEY = "sw"
 INTL_SWO_TRANSACTION_ATTR_KEY = "sw.transaction"
+INTL_SWO_TRANSACTION_ATTR_MAX = 255
 INTL_SWO_X_OPTIONS_KEY = "sw_xtraceoptions"
 INTL_SWO_X_OPTIONS_RESPONSE_KEY = "xtrace_options_response"
 INTL_SWO_DEFAULT_TRACES_EXPORTER = "solarwinds_exporter"

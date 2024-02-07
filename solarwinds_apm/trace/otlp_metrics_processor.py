@@ -7,7 +7,10 @@
 import logging
 from typing import TYPE_CHECKING
 
-from solarwinds_apm.apm_constants import INTL_SWO_TRANSACTION_ATTR_KEY
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_TRANSACTION_ATTR_KEY,
+    INTL_SWO_TRANSACTION_ATTR_MAX,
+)
 from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
 from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
@@ -59,7 +62,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         span_name: str,
     ) -> str:
         """Calculate transaction name for OTLP metrics following this order
-        of decreasing precedence:
+        of decreasing precedence, truncated to 255 char:
 
         1. SW_APM_TRANSACTION_NAME
         2. AWS_LAMBDA_FUNCTION_NAME
@@ -69,13 +72,13 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         See also _SwSampler.calculate_otlp_transaction_name
         """
         if self.env_transaction_name:
-            return self.env_transaction_name
+            return self.env_transaction_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
 
         if self.lambda_function_name:
-            return self.lambda_function_name
+            return self.lambda_function_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
 
         if span_name:
-            return span_name
+            return span_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
 
         return "unknown"
 

@@ -99,7 +99,30 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             mocker.Mock()
         ).calculate_otlp_transaction_name("foo-span")
 
+    def test_calculate_otlp_transaction_name_env_trans_truncated(self, mocker, mock_meter_manager):
+        mock_apm_config = self.get_mock_apm_config(
+            mocker,
+            "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo",
+        )
+        assert "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooo" == SolarWindsOTLPMetricsSpanProcessor(
+            mocker.Mock(),
+            mock_apm_config,
+            mocker.Mock()
+        ).calculate_otlp_transaction_name("foo-span")
+
     def test_calculate_otlp_transaction_name_env_lambda(self, mocker, mock_meter_manager):
+        mock_apm_config = self.get_mock_apm_config(
+            mocker,
+            outer_txn_retval=None,
+            lambda_function_name="foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo",
+        )
+        assert "foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooo" == SolarWindsOTLPMetricsSpanProcessor(
+            mocker.Mock(),
+            mock_apm_config,
+            mocker.Mock()
+        ).calculate_otlp_transaction_name("foo-span")
+
+    def test_calculate_otlp_transaction_name_env_lambda_truncated(self, mocker, mock_meter_manager):
         mock_apm_config = self.get_mock_apm_config(
             mocker,
             outer_txn_retval=None,
@@ -122,6 +145,18 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             mock_apm_config,
             mocker.Mock()
         ).calculate_otlp_transaction_name("foo-span")
+
+    def test_calculate_otlp_transaction_name_span_name_truncated(self, mocker, mock_meter_manager):
+        mock_apm_config = self.get_mock_apm_config(
+            mocker,
+            outer_txn_retval=None,
+            lambda_function_name=None,
+        )
+        assert "foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooooo" == SolarWindsOTLPMetricsSpanProcessor(
+            mocker.Mock(),
+            mock_apm_config,
+            mocker.Mock()
+        ).calculate_otlp_transaction_name("foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo")
 
     def test_calculate_otlp_transaction_name_empty(self, mocker, mock_meter_manager):
         mock_apm_config = self.get_mock_apm_config(

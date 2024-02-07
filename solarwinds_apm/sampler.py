@@ -32,6 +32,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_EQUALS_W3C_SANITIZED,
     INTL_SWO_TRACESTATE_KEY,
     INTL_SWO_TRANSACTION_ATTR_KEY,
+    INTL_SWO_TRANSACTION_ATTR_MAX,
     INTL_SWO_X_OPTIONS_KEY,
     INTL_SWO_X_OPTIONS_RESPONSE_KEY,
 )
@@ -424,7 +425,7 @@ class _SwSampler(Sampler):
         span_name: str,
     ) -> str:
         """Calculate transaction name for OTLP trace following this order
-        of decreasing precedence:
+        of decreasing precedence, truncated to 255 char:
 
         1. SW_APM_TRANSACTION_NAME
         2. AWS_LAMBDA_FUNCTION_NAME
@@ -438,13 +439,13 @@ class _SwSampler(Sampler):
         * Spans at on_end are immutable
         """
         if self.env_transaction_name:
-            return self.env_transaction_name
+            return self.env_transaction_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
 
         if self.lambda_function_name:
-            return self.lambda_function_name
+            return self.lambda_function_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
 
         if span_name:
-            return span_name
+            return span_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
 
         return "unknown"
 
