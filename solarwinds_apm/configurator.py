@@ -342,11 +342,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
     ) -> None:
         """Configure SolarWinds OTel metrics exporters, environment
-        configured if any, or none if agent disabled."""
-        if not apm_config.agent_enabled:
-            logger.error("Tracing disabled. Cannot set metrics exporter.")
-            return
-
+        configured if any."""
         if not apm_config.get("experimental").get("otel_collector") is True:
             logger.debug(
                 "Experimental otel_collector flag not configured. Not setting metrics exporter."
