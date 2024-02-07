@@ -495,12 +495,17 @@ class _SwSampler(Sampler):
             f"{decision['bucket_rate']}"
         )
 
-        # Always (root or is_remote) set sw.transaction
-        # TODO Add experimental trace flag, clean up
+        # If `experimental` and `otel_collector`,
+        # always (root or is_remote) set sw.transaction
+        # TODO Clean up use of experimental trace flag
         #      https://swicloud.atlassian.net/browse/NH-65067
-        new_attributes[INTL_SWO_TRANSACTION_ATTR_KEY] = (
-            self.calculate_otlp_transaction_name(span_name)
-        )
+        if self.apm_config.get("experimental").get("otel_collector") is True:
+            logger.debug(
+                "Experimental otel_collector flag configured. Setting sw.transaction on span."
+            )
+            new_attributes[INTL_SWO_TRANSACTION_ATTR_KEY] = (
+                self.calculate_otlp_transaction_name(span_name)
+            )
 
         # sw.tracestate_parent_id is set if:
         #  1. the future span is the entry span of a service

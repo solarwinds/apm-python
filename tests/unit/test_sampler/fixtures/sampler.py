@@ -19,10 +19,31 @@ def config_get(param) -> Any:
 
 @pytest.fixture(name="fixture_swsampler")
 def fixture_swsampler(mocker):
-    mock_apm_config = mocker.Mock()
-    mock_get = mocker.Mock(
-        side_effect=config_get
+    # mock `experimental` `otel_collector` when checked
+    mock_get_inner = mocker.Mock(return_value=True)
+    mock_inner = mocker.Mock()
+    mock_inner.configure_mock(
+        **{
+            "get": mock_get_inner,
+        }
     )
+    def outer_side_effect(param) -> Any:
+        if param == "tracing_mode":
+            return -1
+        elif param == "transaction_filters":
+            return []
+        elif param == "transaction_name":
+            return "foo-txn"
+        elif param == "experimental":
+            return mock_inner
+        else:
+            return None
+
+    mock_apm_config = mocker.Mock()
+    mock_get_outer = mocker.Mock(
+        side_effect=outer_side_effect
+    )
+
     mock_get_decisions = mocker.patch(
         "solarwinds_apm.extension.oboe.Context.getDecisions"
     )
@@ -45,7 +66,7 @@ def fixture_swsampler(mocker):
     mock_apm_config.configure_mock(
         **{
             "agent_enabled": True,
-            "get": mock_get,
+            "get": mock_get_outer,
             "extension": mock_extension,
             "is_lambda": False,
             "lambda_function_name": "foo-lambda",
