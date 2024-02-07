@@ -64,7 +64,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         1. SW_APM_TRANSACTION_NAME
         2. AWS_LAMBDA_FUNCTION_NAME
         3. automated naming from span name
-        4. "unknown_service" backup, to match OpenTelemetry SDK Resource default
+        4. "unknown" backup, to match core lib
 
         See also _SwSampler.calculate_otlp_transaction_name
         """
@@ -77,7 +77,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         if span_name:
             return span_name
 
-        return "unknown_service"
+        return "unknown"
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports OTLP trace metrics"""

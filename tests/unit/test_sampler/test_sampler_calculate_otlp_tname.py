@@ -88,4 +88,4 @@ class Test_SwSampler_calculate_otlp_tname():
         )
         mock_oboe_api = mocker.Mock()
         sampler = _SwSampler(mock_apm_config, mock_oboe_api)
-        assert sampler.calculate_otlp_transaction_name("") == "unknown_service"
+        assert sampler.calculate_otlp_transaction_name("") == "unknown"

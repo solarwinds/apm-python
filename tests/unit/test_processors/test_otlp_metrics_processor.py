@@ -129,7 +129,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             outer_txn_retval=None,
             lambda_function_name=None,
         )
-        assert "unknown_service" == SolarWindsOTLPMetricsSpanProcessor(
+        assert "unknown" == SolarWindsOTLPMetricsSpanProcessor(
             mocker.Mock(),
             mock_apm_config,
             mocker.Mock()

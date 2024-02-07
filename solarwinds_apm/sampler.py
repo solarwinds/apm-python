@@ -429,7 +429,7 @@ class _SwSampler(Sampler):
         1. SW_APM_TRANSACTION_NAME
         2. AWS_LAMBDA_FUNCTION_NAME
         3. automated naming from span name
-        4. "unknown_service" backup, to match OpenTelemetry SDK Resource default
+        4. "unknown" backup, to match core lib
 
         Notes:
         * Spans at time of sampling decision/on_start will not have access
@@ -446,7 +446,7 @@ class _SwSampler(Sampler):
         if span_name:
             return span_name
 
-        return "unknown_service"
+        return "unknown"
 
     def calculate_attributes(
         self,
