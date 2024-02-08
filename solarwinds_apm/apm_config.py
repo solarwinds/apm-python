@@ -130,11 +130,12 @@ class SolarWindsApmConfig:
             self.agent_enabled,
             otel_resource,
         )
-        self.__config["service_key"] = self._update_service_key_name(
-            self.agent_enabled,
-            self.__config["service_key"],
-            self.service_name,
-        )
+        if not self.is_lambda:
+            self.__config["service_key"] = self._update_service_key_name(
+                self.agent_enabled,
+                self.__config["service_key"],
+                self.service_name,
+            )
 
         # Update and apply logging settings to Python logger
         self.update_log_settings()
@@ -415,7 +416,39 @@ class SolarWindsApmConfig:
         logger.debug("agent_enabled: %s", agent_enabled)
         return agent_enabled
 
-    def _calculate_service_name(
+    def _calculate_service_name_lambda(
+        self,
+        agent_enabled: bool,
+        otel_resource: "Resource",
+    ) -> str:
+        """Calculate `service.name` by priority system (decreasing):
+        1. OTEL_SERVICE_NAME
+        2. AWS_LAMBDA_FUNCTION_NAME
+
+        Note: 1 is always set by the current otel-instrument lambda exec wrapper
+        if used. The wrapper also sets service_name as the function_name, if
+        former is not provided.
+
+        If otel-instrument did not do the above, the passed in OTel Resource
+        likely has a `service.name` already calculated by merging OTEL_SERVICE_NAME
+        / OTEL_RESOURCE_ATTRIBUTES with defaults.
+
+        We assume 2 is not none/empty because is_lambda check by caller should
+        be True.
+        """
+        otel_service_name = otel_resource.attributes.get("service.name", None)
+
+        if not otel_service_name:
+            return self.lambda_function_name
+
+        if otel_service_name == "unknown_service":
+            # OTEL_SERVICE_NAME was not set
+            # and otel-instrument did not wrap instrumentation
+            return self.lambda_function_name
+
+        return otel_service_name
+
+    def _calculate_service_name_apm_proto(
         self,
         agent_enabled: bool,
         otel_resource: "Resource",
@@ -454,6 +487,23 @@ class SolarWindsApmConfig:
             else:
                 service_name = otel_service_name
         return service_name
+
+    def _calculate_service_name(
+        self,
+        agent_enabled: bool,
+        otel_resource: "Resource",
+    ) -> str:
+        """Calculate service_name"""
+        if self.is_lambda:
+            return self._calculate_service_name_lambda(
+                agent_enabled,
+                otel_resource,
+            )
+
+        return self._calculate_service_name_apm_proto(
+            agent_enabled,
+            otel_resource,
+        )
 
     def _update_service_key_name(
         self,
