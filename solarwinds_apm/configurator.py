@@ -116,7 +116,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         if apm_config.agent_enabled:
             # set MeterProvider first via metrics_exporter config
             self._configure_metrics_exporter(apm_config)
+            # This processor only defines on_start
             self._configure_service_entry_id_span_processor()
+
+            # The txnname calculator span processor must be registered
+            # before the rest of the processors with defined on_end
             self._configure_txnname_calculator_span_processor(
                 apm_txname_manager,
             )
@@ -129,9 +133,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_config,
                 oboe_api,
             )
+            # The txnname cleanup span processor must be registered
+            # after the rest of the processors with defined on_end
             self._configure_txnname_cleanup_span_processor(
                 apm_txname_manager,
             )
+
             self._configure_traces_exporter(
                 reporter,
                 apm_txname_manager,
