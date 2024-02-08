@@ -262,7 +262,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             OTEL_METRICS_EXPORTER,
         )
         if not environ_exporter:
-            logger.debug("No OTEL_METRICS_EXPORTER set, skipping init of metrics processors")
+            logger.debug(
+                "No OTEL_METRICS_EXPORTER set, skipping init of metrics processors"
+            )
             return
 
         trace.get_tracer_provider().add_span_processor(
@@ -357,7 +359,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             OTEL_METRICS_EXPORTER,
         )
         if not environ_exporter:
-            logger.debug("No OTEL_METRICS_EXPORTER set, skipping init of metrics exporters")
+            logger.debug(
+                "No OTEL_METRICS_EXPORTER set, skipping init of metrics exporters"
+            )
             return
         environ_exporter_names = environ_exporter.split(",")
 

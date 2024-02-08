@@ -12,7 +12,6 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_TRANSACTION_ATTR_MAX,
 )
 from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
-from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 
 if TYPE_CHECKING:
