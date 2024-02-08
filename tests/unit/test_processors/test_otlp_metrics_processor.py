@@ -19,23 +19,10 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         mocker,
         outer_txn_retval="unused",
         lambda_function_name="unused",
-        inner_retval=True,
     ):
         mock_apm_config = mocker.Mock()
-        mock_get_inner = mocker.Mock(return_value=inner_retval)
-        mock_inner = mocker.Mock()
-        mock_inner.configure_mock(
-            **{
-                "get": mock_get_inner,
-            }
-        )
         def outer_side_effect(cnf_key):
-            if cnf_key == "experimental":
-                return mock_inner
-            # We mock this assuming processor does
-            # one outer `get` of 'transaction_name'
-            else:
-                return outer_txn_retval
+            return outer_txn_retval
 
         mock_get_outer = mocker.Mock(
             side_effect=outer_side_effect,
@@ -67,26 +54,6 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         assert processor.env_transaction_name == "foo-env-txn-name"
         assert processor.lambda_function_name == "foo-lambda-name"
         assert isinstance(processor.apm_meters, SolarWindsMeterManager)
-
-    def test__init_not_experimental(self, mocker, mock_meter_manager):
-        mock_tx_mgr = mocker.Mock()
-        mock_oboe_api = mocker.Mock()
-        mock_apm_config = self.get_mock_apm_config(
-            mocker,
-            "foo-env-txn-name",
-            "foo-lambda-name",
-            False,
-        )
-        processor = SolarWindsOTLPMetricsSpanProcessor(
-            mock_tx_mgr,
-            mock_apm_config,
-            mock_oboe_api,
-        )
-        assert processor.apm_txname_manager == mock_tx_mgr
-        assert processor.service_name == "foo-service"
-        assert processor.env_transaction_name == "foo-env-txn-name"
-        assert processor.lambda_function_name == "foo-lambda-name"
-        assert isinstance(processor.apm_meters, NoopMeterManager)
 
     def test_calculate_otlp_transaction_name_env_trans(self, mocker, mock_meter_manager):
         mock_apm_config = self.get_mock_apm_config(

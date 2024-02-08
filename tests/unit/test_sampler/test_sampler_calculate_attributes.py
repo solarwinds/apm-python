@@ -19,7 +19,10 @@ from .fixtures.parent_span_context import (
     fixture_parent_span_context_invalid,
     fixture_parent_span_context_valid_remote,
 )
-from .fixtures.sampler import fixture_swsampler
+from .fixtures.sampler import (
+    fixture_swsampler,
+    fixture_swsampler_is_lambda,
+)
 from .fixtures.span_id_from_sw import fixture_mock_span_id_from_sw
 from .fixtures.sw_from_span_and_decision import fixture_mock_sw_from_span_and_decision
 
@@ -364,7 +367,6 @@ class Test_SwSampler_calculate_attributes():
             "SampleSource": -1,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
-            "sw.transaction": "foo-txn",
         })
 
     def test_decision_auth_ok_with_sw_keys_and_custom_keys_no_tt_signed(
@@ -388,7 +390,6 @@ class Test_SwSampler_calculate_attributes():
             "SampleSource": -1,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
-            "sw.transaction": "foo-txn",
         })
 
     def test_decision_auth_failed_with_sw_keys_and_custom_keys_no_tt_signed(
@@ -429,7 +430,6 @@ class Test_SwSampler_calculate_attributes():
             "TriggeredTrace": True,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
-            "sw.transaction": "foo-txn",
         })
 
     def test_decision_auth_failed_with_sw_keys_and_custom_keys_and_signed_tt(
@@ -470,7 +470,6 @@ class Test_SwSampler_calculate_attributes():
             "TriggeredTrace": True,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
-            "sw.transaction": "foo-txn",
         })
 
     def test_contd_decision_sw_keys_and_custom_keys_and_signed_tt(
@@ -495,7 +494,6 @@ class Test_SwSampler_calculate_attributes():
             "TriggeredTrace": True,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
-            "sw.transaction": "foo-txn",
         })
 
     def test_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
@@ -517,7 +515,6 @@ class Test_SwSampler_calculate_attributes():
             "BucketRate": "-1",
             "SampleRate": -1,
             "SampleSource": -1,
-            "sw.transaction": "foo-txn",
         })
 
     def test_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_signed(
@@ -539,7 +536,6 @@ class Test_SwSampler_calculate_attributes():
             "BucketRate": "-1",
             "SampleRate": -1,
             "SampleSource": -1,
-            "sw.transaction": "foo-txn",
         })
 
     def test_contd_decision_with_no_sw_keys_nor_custom_keys_with_unsigned_tt(
@@ -562,7 +558,6 @@ class Test_SwSampler_calculate_attributes():
             "SampleRate": -1,
             "SampleSource": -1,
             "TriggeredTrace": True,
-            "sw.transaction": "foo-txn",
         })
 
     def test_contd_decision_with_no_sw_keys_nor_custom_keys_with_signed_tt(
@@ -585,7 +580,6 @@ class Test_SwSampler_calculate_attributes():
             "SampleRate": -1,
             "SampleSource": -1,
             "TriggeredTrace": True,
-            "sw.transaction": "foo-txn",
         })
 
     def test_not_contd_decision_with_sw_keys_and_custom_keys_and_unsigned_tt(
@@ -610,7 +604,6 @@ class Test_SwSampler_calculate_attributes():
             "TriggeredTrace": True,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
-            "sw.transaction": "foo-txn",
         })
 
     def test_not_contd_decision_with_sw_keys_and_custom_keys_and_signed_tt(
@@ -635,7 +628,6 @@ class Test_SwSampler_calculate_attributes():
             "TriggeredTrace": True,
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
-            "sw.transaction": "foo-txn",
         })
 
     def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_with_unsigned_tt(
@@ -658,7 +650,6 @@ class Test_SwSampler_calculate_attributes():
             "SampleRate": 1,
             "SampleSource": 1,
             "TriggeredTrace": True,
-            "sw.transaction": "foo-txn",
         })
 
     def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_with_signed_tt(
@@ -681,7 +672,6 @@ class Test_SwSampler_calculate_attributes():
             "SampleRate": 1,
             "SampleSource": 1,
             "TriggeredTrace": True,
-            "sw.transaction": "foo-txn",
         })
 
     def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
@@ -703,7 +693,6 @@ class Test_SwSampler_calculate_attributes():
             "BucketRate": "1",
             "SampleRate": 1,
             "SampleSource": 1,
-            "sw.transaction": "foo-txn",
         })
 
     def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_signed(
@@ -725,7 +714,6 @@ class Test_SwSampler_calculate_attributes():
             "BucketRate": "1",
             "SampleRate": 1,
             "SampleSource": 1,
-            "sw.transaction": "foo-txn",
         })
 
     def test_valid_parent_create_new_attrs_with_sw_keys_and_custom_keys_and_unsigned_tt(
@@ -753,7 +741,6 @@ class Test_SwSampler_calculate_attributes():
             "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
-            "sw.transaction": "foo-txn",
         })
 
     def test_valid_parent_create_new_attrs_with_sw_keys_and_custom_keys_and_signed_tt(
@@ -781,7 +768,6 @@ class Test_SwSampler_calculate_attributes():
             "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
             "SWKeys": "foo",
             "custom-foo": "awesome-bar",
-            "sw.transaction": "foo-txn",
         })
 
     def test_valid_parent_update_attrs_no_tracestate_capture_with_sw_keys_and_custom_keys_and_unsigned_tt(
@@ -925,6 +911,713 @@ class Test_SwSampler_calculate_attributes():
     ):
         """Represents manual SDK start_as_current_span with attributes at root"""
         assert fixture_swsampler.calculate_attributes(
+            span_name="foo",
+            attributes=attributes_no_tracestate,
+            decision=decision_record_and_sample_regular,
+            trace_state=None,
+            parent_span_context=INVALID_SPAN_CONTEXT,
+            xtraceoptions=mock_xtraceoptions_empty,
+        ) == MappingProxyType({
+            "BucketCapacity": "267.0",
+            "BucketRate": "14.7",
+            "SampleRate": 1000000,
+            "SampleSource": 6,
+            "foo": "bar",
+            "baz": "qux",
+        })
+
+class Test_SwSampler_is_lambda_calculate_attributes():
+    """
+    Separate _SwSampler.calculate_attributes tests for so many 
+    possible x-trace-options, x-trace-options-signature, decision cases
+
+    This time when is_lambda!
+    """
+    def test_init(self, mocker):
+        mock_apm_config = mocker.Mock()
+        mock_oboe_api = mocker.Mock()
+        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        assert sampler.apm_config == mock_apm_config
+        assert sampler.oboe_settings_api == mock_oboe_api
+
+    def test_decision_drop_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
+        self,
+        mocker,
+        fixture_swsampler_is_lambda,
+        decision_drop,
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=mocker.Mock(),
+            decision=decision_drop,
+            trace_state=mocker.Mock(),
+            parent_span_context=mocker.Mock(),
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
+        ) is None
+
+    def test_decision_drop_with_sw_keys_and_custom_keys_no_tt_unsigned(
+        self,
+        mocker,
+        fixture_swsampler_is_lambda,
+        decision_drop,
+        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=mocker.Mock(),
+            decision=decision_drop,
+            trace_state=mocker.Mock(),
+            parent_span_context=mocker.Mock(),
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
+        ) is None
+
+    def test_decision_drop_with_no_sw_keys_nor_custom_keys_nor_tt_signed(
+        self,
+        mocker,
+        fixture_swsampler_is_lambda,
+        decision_drop,
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_signed,
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=mocker.Mock(),
+            decision=decision_drop,
+            trace_state=mocker.Mock(),
+            parent_span_context=mocker.Mock(),
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_signed,
+        ) is None
+
+    def test_decision_drop_with_sw_keys_and_custom_keys_no_tt_signed(
+        self,
+        mocker,
+        fixture_swsampler_is_lambda,
+        decision_drop,
+        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=mocker.Mock(),
+            decision=decision_drop,
+            trace_state=mocker.Mock(),
+            parent_span_context=mocker.Mock(),
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
+        ) is None
+
+    def test_decision_record_only_with_custom_and_sw_keys_no_tt_unsigned(
+        self,
+        mocker,
+        fixture_swsampler_is_lambda,
+        decision_record_only_regular,
+        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=mocker.Mock(),
+            decision=decision_record_only_regular,
+            trace_state=mocker.Mock(),
+            parent_span_context=mocker.Mock(),
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
+        ) is None
+
+    def test_decision_record_only_with_custom_and_sw_keys_no_tt_signed(
+        self,
+        mocker,
+        fixture_swsampler_is_lambda,
+        decision_record_only_regular,
+        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=mocker.Mock(),
+            decision=decision_record_only_regular,
+            trace_state=mocker.Mock(),
+            parent_span_context=mocker.Mock(),
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
+        ) is None
+
+    def test_decision_record_and_sample_with_sw_keys_and_custom_keys_no_tt_unsigned(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_record_and_sample_unsigned_tt,
+        parent_span_context_invalid,
+        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_record_and_sample_unsigned_tt,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
+        ) == MappingProxyType({
+            "BucketCapacity": "6.0",
+            "BucketRate": "0.1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_decision_auth_ok_with_sw_keys_and_custom_keys_no_tt_signed(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_record_and_sample_signed_tt_auth_ok,
+        parent_span_context_invalid,
+        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_record_and_sample_signed_tt_auth_ok,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
+        ) == MappingProxyType({
+            "BucketCapacity": "6.0",
+            "BucketRate": "0.1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_decision_auth_failed_with_sw_keys_and_custom_keys_no_tt_signed(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_record_only_signed_tt_auth_failed,
+        parent_span_context_invalid,
+        mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_record_only_signed_tt_auth_failed,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
+        ) is None
+
+    def test_decision_auth_ok_with_sw_keys_and_custom_keys_and_signed_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_record_and_sample_signed_tt_auth_ok,
+        parent_span_context_invalid,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_record_and_sample_signed_tt_auth_ok,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+        ) == MappingProxyType({
+            "BucketCapacity": "6.0",
+            "BucketRate": "0.1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "TriggeredTrace": True,
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_decision_auth_failed_with_sw_keys_and_custom_keys_and_signed_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_record_only_signed_tt_auth_failed,
+        parent_span_context_invalid,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_record_only_signed_tt_auth_failed,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+        ) is None
+
+    def test_contd_decision_sw_keys_and_custom_keys_and_unsigned_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_continued,
+        parent_span_context_invalid,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_continued,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
+        ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "TriggeredTrace": True,
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_contd_decision_sw_keys_and_custom_keys_and_signed_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_continued,
+        parent_span_context_invalid,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_continued,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+        ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "TriggeredTrace": True,
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_continued,
+        parent_span_context_invalid,
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_continued,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
+        ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_signed(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_continued,
+        parent_span_context_invalid,
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_continued,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
+        ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_contd_decision_with_no_sw_keys_nor_custom_keys_with_unsigned_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_continued,
+        parent_span_context_invalid,
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_continued,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt,
+        ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "TriggeredTrace": True,
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_contd_decision_with_no_sw_keys_nor_custom_keys_with_signed_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_continued,
+        parent_span_context_invalid,
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_signed_tt
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_continued,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_signed_tt,
+        ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "TriggeredTrace": True,
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_not_contd_decision_with_sw_keys_and_custom_keys_and_unsigned_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_not_continued,
+        parent_span_context_invalid,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_not_continued,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
+        ) == MappingProxyType({
+            "BucketCapacity": "1",
+            "BucketRate": "1",
+            "SampleRate": 1,
+            "SampleSource": 1,
+            "TriggeredTrace": True,
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_not_contd_decision_with_sw_keys_and_custom_keys_and_signed_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_not_continued,
+        parent_span_context_invalid,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_not_continued,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+        ) == MappingProxyType({
+            "BucketCapacity": "1",
+            "BucketRate": "1",
+            "SampleRate": 1,
+            "SampleSource": 1,
+            "TriggeredTrace": True,
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_with_unsigned_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_not_continued,
+        parent_span_context_invalid,
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_not_continued,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt
+        ) == MappingProxyType({
+            "BucketCapacity": "1",
+            "BucketRate": "1",
+            "SampleRate": 1,
+            "SampleSource": 1,
+            "TriggeredTrace": True,
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_with_signed_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_not_continued,
+        parent_span_context_invalid,
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_signed_tt
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_not_continued,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_signed_tt
+        ) == MappingProxyType({
+            "BucketCapacity": "1",
+            "BucketRate": "1",
+            "SampleRate": 1,
+            "SampleSource": 1,
+            "TriggeredTrace": True,
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_unsigned(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_not_continued,
+        parent_span_context_invalid,
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_not_continued,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned
+        ) == MappingProxyType({
+            "BucketCapacity": "1",
+            "BucketRate": "1",
+            "SampleRate": 1,
+            "SampleSource": 1,
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_not_contd_decision_with_no_sw_keys_nor_custom_keys_nor_tt_signed(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_not_continued,
+        parent_span_context_invalid,
+        mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_signed
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_not_continued,
+            trace_state=None,
+            parent_span_context=parent_span_context_invalid,
+            xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_signed
+        ) == MappingProxyType({
+            "BucketCapacity": "1",
+            "BucketRate": "1",
+            "SampleRate": 1,
+            "SampleSource": 1,
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_valid_parent_create_new_attrs_with_sw_keys_and_custom_keys_and_unsigned_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_continued,
+        tracestate_with_sw_and_others,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_continued,
+            trace_state=tracestate_with_sw_and_others,
+            parent_span_context=parent_span_context_valid_remote,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
+        ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "TriggeredTrace": True,
+            "sw.tracestate_parent_id": "1111222233334444",
+            "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_valid_parent_create_new_attrs_with_sw_keys_and_custom_keys_and_signed_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        decision_continued,
+        tracestate_with_sw_and_others,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt
+    ):
+        assert fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=None,
+            decision=decision_continued,
+            trace_state=tracestate_with_sw_and_others,
+            parent_span_context=parent_span_context_valid_remote,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+        ) == MappingProxyType({
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "TriggeredTrace": True,
+            "sw.tracestate_parent_id": "1111222233334444",
+            "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+            "sw.transaction": "foo-txn",
+        })
+
+    def test_valid_parent_update_attrs_no_tracestate_capture_with_sw_keys_and_custom_keys_and_unsigned_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        attributes_no_tracestate,
+        decision_continued,
+        tracestate_with_sw_and_others,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
+    ):
+        result = fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=attributes_no_tracestate,
+            decision=decision_continued,
+            trace_state=tracestate_with_sw_and_others,
+            parent_span_context=parent_span_context_valid_remote,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
+        )
+        expected = MappingProxyType({
+            "foo": "bar",
+            "baz": "qux",
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "TriggeredTrace": True,
+            "sw.tracestate_parent_id": "1111222233334444",
+            "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+        })
+        for e_key, e_val in expected.items():
+            assert result.get(e_key) == e_val
+
+    def test_valid_parent_update_attrs_no_tracestate_capture_with_sw_keys_and_custom_keys_and_signed_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        attributes_no_tracestate,
+        decision_continued,
+        tracestate_with_sw_and_others,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt
+    ):
+        result = fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=attributes_no_tracestate,
+            decision=decision_continued,
+            trace_state=tracestate_with_sw_and_others,
+            parent_span_context=parent_span_context_valid_remote,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+        )
+        expected = MappingProxyType({
+            "foo": "bar",
+            "baz": "qux",
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "TriggeredTrace": True,
+            "sw.tracestate_parent_id": "1111222233334444",
+            "sw.w3c.tracestate": "foo=bar,sw=123,baz=qux",
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+        })
+        for e_key, e_val in expected.items():
+            assert result.get(e_key) == e_val
+
+    def test_valid_parent_update_attrs_tracestate_capture_with_sw_keys_and_custom_keys_and_unsigned_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        attributes_with_tracestate,
+        decision_continued,
+        tracestate_with_sw_and_others,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt
+    ):
+        result = fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=attributes_with_tracestate,
+            decision=decision_continued,
+            trace_state=tracestate_with_sw_and_others,
+            parent_span_context=parent_span_context_valid_remote,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
+        )
+        expected = MappingProxyType({
+            "foo": "bar",
+            "baz": "qux",
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "TriggeredTrace": True,
+            "sw.tracestate_parent_id": "1111222233334444",
+            "sw.w3c.tracestate": "sw=1111222233334444-01,some=other",
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+        })
+        for e_key, e_val in expected.items():
+            assert result.get(e_key) == e_val
+
+    def test_valid_parent_update_attrs_tracestate_capture_with_sw_keys_and_custom_keys_and_signed_tt(
+        self,
+        fixture_swsampler_is_lambda,
+        attributes_with_tracestate,
+        decision_continued,
+        tracestate_with_sw_and_others,
+        parent_span_context_valid_remote,
+        mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt
+    ):
+        result = fixture_swsampler_is_lambda.calculate_attributes(
+            span_name="foo",
+            attributes=attributes_with_tracestate,
+            decision=decision_continued,
+            trace_state=tracestate_with_sw_and_others,
+            parent_span_context=parent_span_context_valid_remote,
+            xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
+        )
+        expected = MappingProxyType({
+            "foo": "bar",
+            "baz": "qux",
+            "SWKeys": "foo",
+            "custom-foo": "awesome-bar",
+            "BucketCapacity": "-1",
+            "BucketRate": "-1",
+            "SampleRate": -1,
+            "SampleSource": -1,
+            "TriggeredTrace": True,
+            "sw.tracestate_parent_id": "1111222233334444",
+            "sw.w3c.tracestate": "sw=1111222233334444-01,some=other",
+        })
+        for e_key, e_val in expected.items():
+            assert result.get(e_key) == e_val
+
+    def test_no_parent_update_attrs_no_tracestate(
+        self,
+        fixture_swsampler_is_lambda,
+        attributes_no_tracestate,
+        decision_record_and_sample_regular,
+        mock_xtraceoptions_empty,
+    ):
+        """Represents manual SDK start_as_current_span with attributes at root"""
+        assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=attributes_no_tracestate,
             decision=decision_record_and_sample_regular,

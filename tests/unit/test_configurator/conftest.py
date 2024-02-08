@@ -260,31 +260,6 @@ def mock_apmconfig_enabled_reporter_settings(mocker):
     )
     return mock_apmconfig
 
-
-@pytest.fixture(name="mock_apmconfig_experimental_otelcol_init")
-def mock_apmconfig_experimental_otelcol_init(mocker):
-    mock_get_inner = mocker.Mock(return_value=True)
-    mock_inner = mocker.Mock()
-    mock_inner.configure_mock(
-        **{
-            "get": mock_get_inner,
-        }
-    )
-    mock_get_outer = mocker.Mock(return_value=mock_inner)
-
-    mock_apmconfig_obj = mocker.Mock()
-    mock_apmconfig_obj.configure_mock(
-        **{
-            "get": mock_get_outer,
-            "oboe_api": mocker.Mock(),
-        }
-    )
-    mock_apmconfig = mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsApmConfig",
-        return_value=mock_apmconfig_obj,
-    )
-    return mock_apmconfig
-
 # ==================================================================
 # Configurator APM Python extension mocks
 # ==================================================================

@@ -496,13 +496,11 @@ class _SwSampler(Sampler):
             f"{decision['bucket_rate']}"
         )
 
-        # If `experimental` and `otel_collector`,
+        # If is_lambda,
         # always (root or is_remote) set sw.transaction
-        # TODO Clean up use of experimental trace flag
-        #      https://swicloud.atlassian.net/browse/NH-65067
-        if self.apm_config.get("experimental").get("otel_collector") is True:
+        if self.apm_config.is_lambda is True:
             logger.debug(
-                "Experimental otel_collector flag configured. Setting sw.transaction on span."
+                "APM Python running in lambda. Setting sw.transaction on span."
             )
             new_attributes[INTL_SWO_TRANSACTION_ATTR_KEY] = (
                 self.calculate_otlp_transaction_name(span_name)
