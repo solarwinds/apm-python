@@ -124,7 +124,7 @@ class TestConfiguratorSpanProcessors:
     def test_configure_otlp_metrics_span_processors_exporters_not_set(
         self,
         mocker,
-        mock_apmconfig_enabled_expt,
+        mock_apmconfig_enabled,
         mock_txn_name_manager,
         mock_meter_manager,
     ):
@@ -150,7 +150,7 @@ class TestConfiguratorSpanProcessors:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_otlp_metrics_span_processors(
             mock_txn_name_manager,
-            mock_apmconfig_enabled_expt,
+            mock_apmconfig_enabled,
             mock_meter_manager,
         )
         trace_mocks.get_tracer_provider.assert_not_called()
@@ -165,7 +165,7 @@ class TestConfiguratorSpanProcessors:
     def test_configure_otlp_metrics_span_processors_exporters_set(
         self,
         mocker,
-        mock_apmconfig_enabled_expt,
+        mock_apmconfig_enabled,
         mock_txn_name_manager,
         mock_meter_manager,
     ):
@@ -191,7 +191,7 @@ class TestConfiguratorSpanProcessors:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_otlp_metrics_span_processors(
             mock_txn_name_manager,
-            mock_apmconfig_enabled_expt,
+            mock_apmconfig_enabled,
             mock_meter_manager,
         )
         trace_mocks.get_tracer_provider.assert_has_calls(
@@ -208,7 +208,7 @@ class TestConfiguratorSpanProcessors:
         )
         mock_otlp_processor.assert_called_once_with(
             mock_txn_name_manager,
-            mock_apmconfig_enabled_expt,
+            mock_apmconfig_enabled,
             mock_meter_manager,
         )
         mock_flush_processor.assert_called_once()
