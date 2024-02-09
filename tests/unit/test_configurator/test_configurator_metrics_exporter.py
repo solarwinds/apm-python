@@ -60,7 +60,7 @@ class TestConfiguratorMetricsExporter:
     def test_configure_metrics_exporter_none(
         self,
         mocker,
-        mock_apmconfig_enabled_expt,
+        mock_apmconfig_enabled,
         mock_pemreader,
         mock_meterprovider,
     ):
@@ -75,7 +75,7 @@ class TestConfiguratorMetricsExporter:
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_metrics_exporter(
-            mock_apmconfig_enabled_expt,
+            mock_apmconfig_enabled,
         )
         mock_pemreader.assert_not_called()
         trace_mocks.get_tracer_provider.assert_not_called()
@@ -89,7 +89,7 @@ class TestConfiguratorMetricsExporter:
     def test_configure_metrics_exporter_invalid(
         self,
         mocker,
-        mock_apmconfig_enabled_expt,
+        mock_apmconfig_enabled,
         mock_pemreader,
         mock_meterprovider,
     ):
@@ -120,7 +120,7 @@ class TestConfiguratorMetricsExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         with pytest.raises(Exception):
             test_configurator._configure_metrics_exporter(
-                mock_apmconfig_enabled_expt,
+                mock_apmconfig_enabled,
             )
         
         mock_pemreader.assert_not_called()
@@ -135,7 +135,7 @@ class TestConfiguratorMetricsExporter:
     def test_configure_metrics_exporter_valid(
         self,
         mocker,
-        mock_apmconfig_enabled_expt,
+        mock_apmconfig_enabled,
         mock_pemreader,
         mock_meterprovider,
     ):
@@ -184,7 +184,7 @@ class TestConfiguratorMetricsExporter:
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_metrics_exporter(
-            mock_apmconfig_enabled_expt,
+            mock_apmconfig_enabled,
         )
         mock_exporter_entry_point.load.assert_called_once()
         mock_exporter_entry_point.load.assert_has_calls(
@@ -217,7 +217,7 @@ class TestConfiguratorMetricsExporter:
     def test_configure_metrics_exporter_invalid_valid_mixed(
         self,
         mocker,
-        mock_apmconfig_enabled_expt,
+        mock_apmconfig_enabled,
         mock_pemreader,
         mock_meterprovider,
     ):
@@ -273,7 +273,7 @@ class TestConfiguratorMetricsExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         with pytest.raises(Exception):
             test_configurator._configure_metrics_exporter(
-                mock_apmconfig_enabled_expt,
+                mock_apmconfig_enabled,
             )
         # Only called once before exception
         mock_iter_entry_points.assert_has_calls(
@@ -299,7 +299,7 @@ class TestConfiguratorMetricsExporter:
     def test_configure_metrics_exporter_valid_invalid_mixed(
         self,
         mocker,
-        mock_apmconfig_enabled_expt,
+        mock_apmconfig_enabled,
         mock_pemreader,
         mock_meterprovider,
     ):
@@ -365,7 +365,7 @@ class TestConfiguratorMetricsExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         with pytest.raises(Exception):
             test_configurator._configure_metrics_exporter(
-                mock_apmconfig_enabled_expt,
+                mock_apmconfig_enabled,
             )
         mock_iter_entry_points.assert_has_calls(
             [

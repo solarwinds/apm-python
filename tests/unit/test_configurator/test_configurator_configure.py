@@ -27,24 +27,3 @@ class TestConfiguratorConfigure:
         mock_init_sw_reporter.assert_called_once()
         mock_config_otel_components.assert_called_once()
         mock_report_init.assert_called_once()
-
-    def test_configurator_configure_experimental(
-        self,
-        mocker,
-        mock_txn_name_manager_init,
-        mock_fwkv_manager_init,
-        mock_apmconfig_experimental_otelcol_init,
-        mock_init_sw_reporter,
-        mock_config_otel_components,
-        mock_report_init,
-    ):
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure()
-
-        mock_txn_name_manager_init.assert_called_once()
-        mock_fwkv_manager_init.assert_called_once()
-        mock_apmconfig_experimental_otelcol_init.assert_called_once()
-        
-        mock_init_sw_reporter.assert_called_once()
-        mock_config_otel_components.assert_called_once()
-        mock_report_init.assert_called_once()

@@ -109,25 +109,9 @@ def mock_meterprovider(mocker):
 def get_apmconfig_mocks(
     mocker,
     enabled=True,
-    exp_otel_col=True,
     is_lambda=False,
     md_is_valid=True,
 ):
-    mock_get_otelcol = mocker.Mock()
-    if exp_otel_col == True:
-        mock_get_otelcol.configure_mock(return_value=True)
-    else:
-        mock_get_otelcol.configure_mock(return_value=False)
-
-    mock_get_exp = mocker.Mock()
-    mock_get_exp.configure_mock(
-        return_value=mocker.Mock(
-            **{
-                "get": mock_get_otelcol
-            }
-        )
-    )
-
     # mock the extension that is linked to ApmConfig
     mock_ext_config = mocker.Mock()
     mock_ext_config.configure_mock(
@@ -179,7 +163,7 @@ def get_apmconfig_mocks(
     mock_apmconfig.configure_mock(
         **{
             "agent_enabled": enabled,
-            "get": mock_get_exp,
+            "get": mocker.Mock(),
             "service_name": "foo-service",
             "is_lambda": is_lambda,
             "extension": mock_ext,
@@ -195,7 +179,6 @@ def mock_apmconfig_disabled(mocker):
         get_apmconfig_mocks(
             mocker,
             enabled=False,
-            exp_otel_col=False,
         )
     )
 
@@ -205,7 +188,6 @@ def mock_apmconfig_enabled(mocker):
         "solarwinds_apm.configurator.SolarWindsApmConfig",
         get_apmconfig_mocks(
             mocker,
-            exp_otel_col=False,
         )
     )
 
@@ -215,16 +197,8 @@ def mock_apmconfig_enabled_md_invalid(mocker):
         "solarwinds_apm.configurator.SolarWindsApmConfig",
         get_apmconfig_mocks(
             mocker,
-            exp_otel_col=False,
             md_is_valid=False,
         )
-    )
-
-@pytest.fixture(name="mock_apmconfig_enabled_expt")
-def mock_apmconfig_enabled_expt(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsApmConfig",
-        get_apmconfig_mocks(mocker)
     )
 
 @pytest.fixture(name="mock_apmconfig_enabled_is_lambda")
@@ -257,31 +231,6 @@ def mock_apmconfig_enabled_reporter_settings(mocker):
             "service_name": "foo-service",
             "metric_format": "bar"
         }
-    )
-    return mock_apmconfig
-
-
-@pytest.fixture(name="mock_apmconfig_experimental_otelcol_init")
-def mock_apmconfig_experimental_otelcol_init(mocker):
-    mock_get_inner = mocker.Mock(return_value=True)
-    mock_inner = mocker.Mock()
-    mock_inner.configure_mock(
-        **{
-            "get": mock_get_inner,
-        }
-    )
-    mock_get_outer = mocker.Mock(return_value=mock_inner)
-
-    mock_apmconfig_obj = mocker.Mock()
-    mock_apmconfig_obj.configure_mock(
-        **{
-            "get": mock_get_outer,
-            "oboe_api": mocker.Mock(),
-        }
-    )
-    mock_apmconfig = mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsApmConfig",
-        return_value=mock_apmconfig_obj,
     )
     return mock_apmconfig
 

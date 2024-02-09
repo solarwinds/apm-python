@@ -19,14 +19,6 @@ def config_get(param) -> Any:
 
 @pytest.fixture(name="fixture_swsampler")
 def fixture_swsampler(mocker):
-    # mock `experimental` `otel_collector` when checked
-    mock_get_inner = mocker.Mock(return_value=True)
-    mock_inner = mocker.Mock()
-    mock_inner.configure_mock(
-        **{
-            "get": mock_get_inner,
-        }
-    )
     def outer_side_effect(param) -> Any:
         if param == "tracing_mode":
             return -1
@@ -34,8 +26,6 @@ def fixture_swsampler(mocker):
             return []
         elif param == "transaction_name":
             return "foo-txn"
-        elif param == "experimental":
-            return mock_inner
         else:
             return None
 
@@ -69,6 +59,53 @@ def fixture_swsampler(mocker):
             "get": mock_get_outer,
             "extension": mock_extension,
             "is_lambda": False,
+            "lambda_function_name": "foo-lambda",
+        }
+    )
+    return _SwSampler(mock_apm_config, mocker.Mock())
+
+@pytest.fixture(name="fixture_swsampler_is_lambda")
+def fixture_swsampler_is_lambda(mocker):
+    def outer_side_effect(param) -> Any:
+        if param == "tracing_mode":
+            return -1
+        elif param == "transaction_filters":
+            return []
+        elif param == "transaction_name":
+            return "foo-txn"
+        else:
+            return None
+
+    mock_apm_config = mocker.Mock()
+    mock_get_outer = mocker.Mock(
+        side_effect=outer_side_effect
+    )
+
+    mock_get_decisions = mocker.patch(
+        "solarwinds_apm.extension.oboe.Context.getDecisions"
+    )
+    mock_get_decisions.configure_mock(
+        # returns 11 values
+        return_value=list(range(11))
+    )
+    mock_context = mocker.Mock()
+    mock_context.configure_mock(
+        **{
+            "getDecisions": mock_get_decisions
+        }
+    )
+    mock_extension = mocker.Mock()
+    mock_extension.configure_mock(
+        **{
+            "Context": mock_context,
+        }
+    )
+    mock_apm_config.configure_mock(
+        **{
+            "agent_enabled": True,
+            "get": mock_get_outer,
+            "extension": mock_extension,
+            "is_lambda": True,
             "lambda_function_name": "foo-lambda",
         }
     )

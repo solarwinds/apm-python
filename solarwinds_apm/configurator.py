@@ -116,7 +116,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         if apm_config.agent_enabled:
             # set MeterProvider first via metrics_exporter config
             self._configure_metrics_exporter(apm_config)
+            # This processor only defines on_start
             self._configure_service_entry_id_span_processor()
+
+            # The txnname calculator span processor must be registered
+            # before the rest of the processors with defined on_end
             self._configure_txnname_calculator_span_processor(
                 apm_txname_manager,
             )
@@ -129,9 +133,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_config,
                 oboe_api,
             )
+            # The txnname cleanup span processor must be registered
+            # after the rest of the processors with defined on_end
             self._configure_txnname_cleanup_span_processor(
                 apm_txname_manager,
             )
+
             self._configure_traces_exporter(
                 reporter,
                 apm_txname_manager,
@@ -247,12 +254,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
         oboe_api: "OboeAPI",
     ) -> None:
-        """Configure SolarWindsOTLPMetricsSpanProcessor and ForceFlushSpanProcessor."""
-        # TODO Add experimental trace flag, clean up
-        #      https://swicloud.atlassian.net/browse/NH-65067
-        if not apm_config.get("experimental").get("otel_collector") is True:
+        """Configure SolarWindsOTLPMetricsSpanProcessor (including OTLP meters)
+        and ForceFlushSpanProcessor, if metrics exporters are configured and set up
+        i.e. by _configure_metrics_exporter"""
+        # SolarWindsDistro._configure does setdefault before this is called
+        environ_exporter = os.environ.get(
+            OTEL_METRICS_EXPORTER,
+        )
+        if not environ_exporter:
             logger.debug(
-                "Experimental otel_collector flag not configured. Not configuring OTLP metrics span processor."
+                "No OTEL_METRICS_EXPORTER set, skipping init of metrics processors"
             )
             return
 
@@ -341,24 +352,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure SolarWinds OTel metrics exporters, environment
-        configured if any, or none if agent disabled."""
-        if not apm_config.agent_enabled:
-            logger.error("Tracing disabled. Cannot set metrics exporter.")
-            return
-
-        if not apm_config.get("experimental").get("otel_collector") is True:
-            logger.debug(
-                "Experimental otel_collector flag not configured. Not setting metrics exporter."
-            )
-            return
-
+        """Configure SolarWinds OTel metrics exporters if any configured.
+        Links them to new metric readers and global MeterProvider."""
         # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
             OTEL_METRICS_EXPORTER,
         )
         if not environ_exporter:
-            logger.debug("No OTEL_METRICS_EXPORTER set, skipping init")
+            logger.debug(
+                "No OTEL_METRICS_EXPORTER set, skipping init of metrics exporters"
+            )
             return
         environ_exporter_names = environ_exporter.split(",")
 

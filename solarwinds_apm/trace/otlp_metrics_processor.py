@@ -12,7 +12,6 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_TRANSACTION_ATTR_MAX,
 )
 from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
-from solarwinds_apm.apm_noop import SolarWindsMeterManager as NoopMeterManager
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 
 if TYPE_CHECKING:
@@ -42,20 +41,10 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         # SW_APM_TRANSACTION_NAME and AWS_LAMBDA_FUNCTION_NAME
         self.env_transaction_name = apm_config.get("transaction_name")
         self.lambda_function_name = apm_config.lambda_function_name
-
-        # TODO Add experimental trace flag, clean up
-        #      https://swicloud.atlassian.net/browse/NH-65067
-        #
-        if not apm_config.get("experimental").get("otel_collector") is True:
-            logger.debug(
-                "Experimental otel_collector flag not configured. Creating meter manager as no-op."
-            )
-            self.apm_meters = NoopMeterManager()
-        else:
-            self.apm_meters = SolarWindsMeterManager(
-                apm_config,
-                oboe_api,
-            )
+        self.apm_meters = SolarWindsMeterManager(
+            apm_config,
+            oboe_api,
+        )
 
     def calculate_otlp_transaction_name(
         self,

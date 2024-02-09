@@ -72,7 +72,7 @@ class SolarWindsDistro(BaseDistro):
                 OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER_LAMBDA
             )
         else:
-            # If experimental flag set, users need to specify OTEL_METRICS_EXPORTER
+            # Users need to specify OTEL_METRICS_EXPORTER
             # or none will be loaded.
             environ.setdefault(
                 OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER

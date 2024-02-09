@@ -121,39 +121,21 @@ class TestConfiguratorSpanProcessors:
         if old_exporter:
             os.environ["OTEL_TRACES_EXPORTER"] = old_exporter
 
-    def test_configure_otlp_metrics_span_processors_missing_flag(
+    def test_configure_otlp_metrics_span_processors_exporters_not_set(
         self,
         mocker,
         mock_apmconfig_enabled,
         mock_txn_name_manager,
         mock_meter_manager,
     ):
-        trace_mocks = get_trace_mocks(mocker)
-        mock_otlp_processor = mocker.patch(
-            "solarwinds_apm.configurator.SolarWindsOTLPMetricsSpanProcessor"
-        )
-        mock_flush_processor = mocker.patch(
-            "solarwinds_apm.configurator.ForceFlushSpanProcessor"
-        )
+        # Save any exporters in os for later
+        old_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
+        if old_exporter:
+            del os.environ["OTEL_METRICS_EXPORTER"]
+        mocker.patch.dict(os.environ, {
+            "OTEL_METRICS_EXPORTER": "",
+        })
 
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_otlp_metrics_span_processors(
-            mock_txn_name_manager,
-            mock_apmconfig_enabled,
-            mock_meter_manager,
-        )       
-        trace_mocks.get_tracer_provider.assert_not_called()
-        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
-        mock_otlp_processor.assert_not_called()
-        mock_flush_processor.assert_not_called()
-
-    def test_configure_otlp_metrics_span_processors(
-        self,
-        mocker,
-        mock_apmconfig_enabled_expt,
-        mock_txn_name_manager,
-        mock_meter_manager,
-    ):
         trace_mocks = get_trace_mocks(mocker)
         mock_processor_instance = mocker.Mock()
         mock_otlp_processor = mocker.patch(
@@ -168,7 +150,48 @@ class TestConfiguratorSpanProcessors:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_otlp_metrics_span_processors(
             mock_txn_name_manager,
-            mock_apmconfig_enabled_expt,
+            mock_apmconfig_enabled,
+            mock_meter_manager,
+        )
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
+        mock_otlp_processor.assert_not_called()
+        mock_flush_processor.assert_not_called()
+
+        # Restore the os exporters
+        if old_exporter:
+            os.environ["OTEL_METRICS_EXPORTER"] = old_exporter
+
+    def test_configure_otlp_metrics_span_processors_exporters_set(
+        self,
+        mocker,
+        mock_apmconfig_enabled,
+        mock_txn_name_manager,
+        mock_meter_manager,
+    ):
+        # Save any exporters in os for later
+        old_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
+        if old_exporter:
+            del os.environ["OTEL_METRICS_EXPORTER"]
+        mocker.patch.dict(os.environ, {
+            "OTEL_METRICS_EXPORTER": "foo_exporter",
+        })
+
+        trace_mocks = get_trace_mocks(mocker)
+        mock_processor_instance = mocker.Mock()
+        mock_otlp_processor = mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsOTLPMetricsSpanProcessor",
+            return_value=mock_processor_instance,
+        )
+        mock_flush_processor = mocker.patch(
+            "solarwinds_apm.configurator.ForceFlushSpanProcessor",
+            return_value=mock_processor_instance,
+        )
+
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure_otlp_metrics_span_processors(
+            mock_txn_name_manager,
+            mock_apmconfig_enabled,
             mock_meter_manager,
         )
         trace_mocks.get_tracer_provider.assert_has_calls(
@@ -185,7 +208,11 @@ class TestConfiguratorSpanProcessors:
         )
         mock_otlp_processor.assert_called_once_with(
             mock_txn_name_manager,
-            mock_apmconfig_enabled_expt,
+            mock_apmconfig_enabled,
             mock_meter_manager,
         )
         mock_flush_processor.assert_called_once()
+
+        # Restore the os exporters
+        if old_exporter:
+            os.environ["OTEL_METRICS_EXPORTER"] = old_exporter
