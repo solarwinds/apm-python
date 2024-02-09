@@ -418,7 +418,6 @@ class SolarWindsApmConfig:
 
     def _calculate_service_name_lambda(
         self,
-        agent_enabled: bool,
         otel_resource: "Resource",
     ) -> str:
         """Calculate `service.name` by priority system (decreasing):
@@ -496,7 +495,6 @@ class SolarWindsApmConfig:
         """Calculate service_name"""
         if self.is_lambda:
             return self._calculate_service_name_lambda(
-                agent_enabled,
                 otel_resource,
             )
 
