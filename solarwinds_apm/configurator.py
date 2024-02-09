@@ -336,14 +336,18 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     INTL_SWO_SUPPORT_EMAIL,
                 )
                 raise
-            logger.debug(
-                "Setting trace with BatchSpanProcessor using %s",
-                exporter_name,
-            )
 
             if apm_config.is_lambda:
+                logger.debug(
+                    "Setting trace with SimpleSpanProcessor using %s",
+                    exporter_name,
+                )
                 span_processor = SimpleSpanProcessor(exporter)
             else:
+                logger.debug(
+                    "Setting trace with BatchSpanProcessor using %s",
+                    exporter_name,
+                )
                 span_processor = BatchSpanProcessor(exporter)
 
             trace.get_tracer_provider().add_span_processor(span_processor)
