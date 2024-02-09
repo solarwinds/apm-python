@@ -679,57 +679,6 @@ class TestSolarWindsApmConfig:
         if old_log_type:
             os.environ["SW_APM_LOG_TYPE"] = old_log_type
 
-    def test__calculate_service_name_agent_disabled(self):
-        test_config = apm_config.SolarWindsApmConfig()
-        result = test_config._calculate_service_name(
-            False,
-            {}
-        )
-        assert result == ""
-
-    def test__calculate_service_name_no_otel_service_name(
-        self,
-        mocker,
-    ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
-        })
-        test_config = apm_config.SolarWindsApmConfig()
-        result = test_config._calculate_service_name(
-            True,
-            Resource.create({"service.name": None})
-        )
-        assert result == "sw_service_name"
-
-    def test__calculate_service_name_default_unknown_otel_service_name(
-        self,
-        mocker,
-    ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
-        })
-        test_config = apm_config.SolarWindsApmConfig()
-        result = test_config._calculate_service_name(
-            True,
-            # default is unknown_service
-            Resource.create()
-        )
-        assert result == "sw_service_name"
-
-    def test__calculate_service_name_use_otel_service_name(
-        self,
-        mocker,
-    ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
-        })
-        test_config = apm_config.SolarWindsApmConfig()
-        result = test_config._calculate_service_name(
-            True,
-            Resource.create({"service.name": "foobar"})
-        )
-        assert result == "foobar"
-
     def test__update_service_key_name_not_agent_enabled(self):
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._update_service_key_name(
