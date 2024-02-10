@@ -337,8 +337,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
                 raise
 
-            logger.debug("Loaded exporter (%s) with endpoint %s", type(exporter), exporter._endpoint)
-
             if apm_config.is_lambda:
                 logger.debug(
                     "Setting trace with SimpleSpanProcessor using %s",
