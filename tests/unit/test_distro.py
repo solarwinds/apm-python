@@ -155,12 +155,24 @@ class TestDistro:
         assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
         assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
 
-    def test_configure_no_env_lambda(self, mocker):
+    def test_configure_no_env_non_otel_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
             {
-                "AWS_LAMBDA_FUNCTION_NAME": "foo",
-                "LAMBDA_TASK_ROOT": "bar"
+                "OTEL_EXPORTER_OTLP_PROTOCOL": "foo"
+            },
+            clear=True
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
+        assert os.environ.get(OTEL_METRICS_EXPORTER) is None
+
+    def test_configure_no_env_http(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf"
             },
             clear=True
         )
@@ -169,12 +181,38 @@ class TestDistro:
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_http"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_http"
 
-    def test_configure_env_exporter_lambda(self, mocker):
+    def test_configure_no_env_grpc(self, mocker):
         mocker.patch.dict(
             os.environ,
             {
-                "AWS_LAMBDA_FUNCTION_NAME": "foo",
-                "LAMBDA_TASK_ROOT": "bar",
+                "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc"
+            },
+            clear=True
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_grpc"
+        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_grpc"
+
+    def test_configure_env_exporter_http(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+                "OTEL_TRACES_EXPORTER": "foobar",
+                "OTEL_METRICS_EXPORTER": "baz"
+            }
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
+        assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
+
+    def test_configure_env_exporter_grpc(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
                 "OTEL_TRACES_EXPORTER": "foobar",
                 "OTEL_METRICS_EXPORTER": "baz"
             }

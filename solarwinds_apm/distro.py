@@ -22,17 +22,23 @@ from opentelemetry.instrumentation.logging.environment_variables import (
     OTEL_PYTHON_LOG_FORMAT,
 )
 from opentelemetry.instrumentation.version import __version__ as inst_version
+from opentelemetry.sdk.environment_variables import OTEL_EXPORTER_OTLP_PROTOCOL
 from opentelemetry.sdk.version import __version__ as sdk_version
 from pkg_resources import EntryPoint
 
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import (
-    INTL_SWO_DEFAULT_METRICS_EXPORTER_LAMBDA,
+    INTL_SWO_DEFAULT_OTLP_EXPORTER,
+    INTL_SWO_DEFAULT_OTLP_EXPORTER_GRPC,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
-    INTL_SWO_DEFAULT_TRACES_EXPORTER_LAMBDA,
 )
 from solarwinds_apm.version import __version__ as apm_version
+
+_EXPORTER_BY_OTLP_PROTOCOL = {
+    "grpc": INTL_SWO_DEFAULT_OTLP_EXPORTER_GRPC,
+    "http/protobuf": INTL_SWO_DEFAULT_OTLP_EXPORTER,
+}
 
 logger = logging.getLogger(__name__)
 
@@ -63,17 +69,22 @@ class SolarWindsDistro(BaseDistro):
         """Configure default OTel exporter and propagators"""
         self._log_runtime()
 
-        is_lambda = SolarWindsApmConfig.calculate_is_lambda()
-        if is_lambda:
+        otlp_protocol = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
+        if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
+            # If users set OTEL_EXPORTER_OTLP_PROTOCOL
+            # as one of Otel SDK's `http/protobuf` or `grpc`,
+            # then the matching exporters are mapped by default
             environ.setdefault(
-                OTEL_METRICS_EXPORTER, INTL_SWO_DEFAULT_METRICS_EXPORTER_LAMBDA
+                OTEL_METRICS_EXPORTER,
+                _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol],
             )
             environ.setdefault(
-                OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER_LAMBDA
+                OTEL_TRACES_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol]
             )
         else:
-            # Users need to specify OTEL_METRICS_EXPORTER
-            # or none will be loaded.
+            # Else users need to specify OTEL_METRICS_EXPORTER.
+            # Otherwise, no metrics will generated and no metrics exporter
+            # will be initialized.
             environ.setdefault(
                 OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER
             )
