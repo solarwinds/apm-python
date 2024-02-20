@@ -4,10 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.2.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.3.0...HEAD)
+
+## [1.3.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.3.0) - 2024-02-20
 
 ### Changed
 - Fixed release_pr script ([#302](https://github.com/solarwinds/apm-python/pull/302))
+- OTLP traces, metrics `sw.transaction` attribute with environment customization ([#307](https://github.com/solarwinds/apm-python/pull/307))
+- Fixed service key, service name usage ([#309](https://github.com/solarwinds/apm-python/pull/309))
+- Fixed exporter defaults based on protocol ([#310](https://github.com/solarwinds/apm-python/pull/310))
+- Updated workflow dependency ([#304](https://github.com/solarwinds/apm-python/pull/304))
+
+### Removed
+- Removed `experimental` config support ([#308](https://github.com/solarwinds/apm-python/pull/308))
 
 ## [1.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.2.0) - 2024-02-05
 
