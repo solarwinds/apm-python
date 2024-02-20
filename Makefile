@@ -213,8 +213,9 @@ aws-lambda: check-zip wrapper
 	@rm -rf ${target_dir}/nodeps
 	@echo -e "Copying OpenTelemetry lambda wrapper and entry script into target directory."
 	@cp lambda/otel_wrapper.py ${target_dir}/python/otel_wrapper.py
-	@cp lambda/otel-instrument ${target_dir}/otel-instrument
-	@chmod 755 ${target_dir}/otel-instrument
+	@mkdir ${target_dir}/solarwinds-apm/
+	@cp lambda/solarwinds-apm/wrapper ${target_dir}/solarwinds-apm/wrapper
+	@chmod 755 ${target_dir}/solarwinds-apm/wrapper
 	@echo -e "Removing unnecessary boto, six, setuptools, urllib3 installations"
 	@rm -rf ${target_dir}/python/boto*
 	@rm -rf ${target_dir}/python/six*
