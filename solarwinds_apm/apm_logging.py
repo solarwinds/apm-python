@@ -214,6 +214,10 @@ def set_sw_log_type(log_type, log_filepath=""):
                 maxBytes=0,
                 backupCount=0,
             )
+            file_formatter = logging.Formatter(
+                "%(asctime)s [ %(name)s %(levelname)-8s p#%(process)d.%(thread)d] %(message)s"
+            )
+            file_hander.setFormatter(file_formatter)
             logger.addHandler(file_hander)
             # stop logging to stream
             logger.removeHandler(_stream_handler)
