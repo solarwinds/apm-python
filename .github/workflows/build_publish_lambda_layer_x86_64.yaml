@@ -16,6 +16,11 @@ jobs:
       SW_APM_VERSION: ${{ steps.save-apm-python-version.outputs.SW_APM_VERSION }}
     steps:
     - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+      with:
+        repository: tammy-baylis-swi/opentelemetry-python-contrib
+        ref: build-lambda-handler-exceptions
+        path: contrib-custom
     - uses: ./.github/actions/package_lambda_solarwinds_apm_x86_64
     - name: Save APM Python Version for naming
       id: save-apm-python-version
