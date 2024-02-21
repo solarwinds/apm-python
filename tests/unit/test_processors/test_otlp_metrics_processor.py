@@ -142,7 +142,8 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         mocker,
         has_error=True,
         is_span_http=True,
-        get_retval=TransactionNames("foo", "bar")
+        get_retval=TransactionNames("foo", "bar"),
+        missing_http_attrs=False,
     ):
         mocker.patch(
             "solarwinds_apm.trace.SolarWindsOTLPMetricsSpanProcessor.calculate_otlp_transaction_name",
@@ -173,7 +174,10 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         mock_get_http_status_code = mocker.patch(
             "solarwinds_apm.trace.SolarWindsOTLPMetricsSpanProcessor.get_http_status_code"
         )
-        mock_get_http_status_code.configure_mock(return_value="foo-code")
+        if missing_http_attrs:
+            mock_get_http_status_code.configure_mock(return_value=0)
+        else:
+            mock_get_http_status_code.configure_mock(return_value=200)
 
         mock_apm_config = self.get_mock_apm_config(mocker)
 
@@ -201,13 +205,22 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         mock_oboe_api = mocker.Mock()
 
         mock_basic_span = mocker.Mock()
-        mock_basic_span.configure_mock(
-            **{
-                "attributes": {
-                    "http.method": "foo-method"
-                },
-            }
-        )
+        if missing_http_attrs:
+            mock_basic_span.configure_mock(
+                **{
+                    "attributes": {
+                        "http.method": None
+                    },
+                }
+            )
+        else:
+            mock_basic_span.configure_mock(
+                **{
+                    "attributes": {
+                        "http.method": "foo-method"
+                    },
+                }
+            )
 
         mock_response_time = mocker.Mock()
         mock_response_time.record = mocker.Mock()
@@ -295,7 +308,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': 'true',
-                        'http.status_code': 'foo-code',
+                        'http.status_code': 200,
                         'http.method': 'foo-method',
                         'sw.transaction': 'foo'
                     }
@@ -342,7 +355,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': 'true',
-                        'http.status_code': 'foo-code',
+                        'http.status_code': 200,
                         'http.method': 'foo-method',
                         'sw.transaction': 'foo'
                     }
@@ -389,7 +402,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': 'true',
-                        'http.status_code': 'foo-code',
+                        'http.status_code': 200,
                         'http.method': 'foo-method',
                         'sw.transaction': 'foo'
                     }
@@ -429,7 +442,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': 'true',
-                        'http.status_code': 'foo-code',
+                        'http.status_code': 200,
                         'http.method': 'foo-method',
                         'sw.transaction': 'foo'
                     }
@@ -500,7 +513,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': 'true',
-                        'http.status_code': 'foo-code',
+                        'http.status_code': 200,
                         'http.method': 'foo-method',
                         'sw.transaction': 'foo'
                     }
@@ -533,8 +546,40 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': 'false',
-                        'http.status_code': 'foo-code',
+                        'http.status_code': 200,
                         'http.method': 'foo-method',
+                        'sw.transaction': 'foo'
+                    }
+                )
+            ]
+        )
+
+    def test_on_end_is_span_http_no_status_code_no_method(self, mocker, mock_meter_manager):
+        mock_txname_manager, \
+            mock_apm_config, \
+            mock_oboe_api, \
+            mock_response_time, \
+            mock_basic_span = self.patch_for_on_end(
+                mocker,
+                has_error=True,
+                is_span_http=True,
+                missing_http_attrs=True,
+            )
+
+        processor = SolarWindsOTLPMetricsSpanProcessor(
+            mock_txname_manager,
+            mock_apm_config,
+            mock_oboe_api,
+        )
+        processor.on_end(mock_basic_span)
+
+        mock_response_time.record.assert_called_once()
+        mock_response_time.record.assert_has_calls(
+            [
+                mocker.call(
+                    amount=123,
+                    attributes={
+                        'sw.is_error': 'true',
                         'sw.transaction': 'foo'
                     }
                 )

@@ -99,18 +99,16 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
             1e6,
         )
 
+        meter_attrs.update({INTL_SWO_TRANSACTION_ATTR_KEY: trans_name})
         if is_span_http:
             status_code = self.get_http_status_code(span)
+            # UNAVAILABLE is zero
+            if status_code > 0:
+                meter_attrs.update({self._HTTP_STATUS_CODE: status_code})
             request_method = span.attributes.get(self._HTTP_METHOD, None)
-            meter_attrs.update(
-                {
-                    self._HTTP_STATUS_CODE: status_code,
-                    self._HTTP_METHOD: request_method,
-                    INTL_SWO_TRANSACTION_ATTR_KEY: trans_name,
-                }
-            )
-        else:
-            meter_attrs.update({INTL_SWO_TRANSACTION_ATTR_KEY: trans_name})
+            if request_method:
+                meter_attrs.update({self._HTTP_METHOD: request_method})
+
         self.apm_meters.response_time.record(
             amount=span_time,
             attributes=meter_attrs,
