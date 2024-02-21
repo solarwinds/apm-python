@@ -37,7 +37,7 @@ if [ -z "${OTEL_SERVICE_NAME}" ]; then
     export OTEL_SERVICE_NAME=$AWS_LAMBDA_FUNCTION_NAME;
 fi
 
-# Set faas.instance resource attribute to expose log stream name.
+# Set faas.instance resource attribute from the log stream name.
 # Currently we ignore any configured OTEL_RESOURCE_ATTRIBUTES.
 export OTEL_RESOURCE_ATTRIBUTES="faas.instance=$AWS_LAMBDA_LOG_STREAM_NAME";
 
