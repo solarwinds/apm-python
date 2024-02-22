@@ -307,7 +307,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': 'true',
+                        'sw.is_error': True,
                         'http.status_code': 200,
                         'http.method': 'foo-method',
                         'sw.transaction': 'foo'
@@ -354,7 +354,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': 'true',
+                        'sw.is_error': True,
                         'http.status_code': 200,
                         'http.method': 'foo-method',
                         'sw.transaction': 'foo'
@@ -401,7 +401,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': 'true',
+                        'sw.is_error': True,
                         'http.status_code': 200,
                         'http.method': 'foo-method',
                         'sw.transaction': 'foo'
@@ -441,7 +441,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': 'true',
+                        'sw.is_error': True,
                         'http.status_code': 200,
                         'http.method': 'foo-method',
                         'sw.transaction': 'foo'
@@ -512,7 +512,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': 'true',
+                        'sw.is_error': True,
                         'http.status_code': 200,
                         'http.method': 'foo-method',
                         'sw.transaction': 'foo'
@@ -545,7 +545,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': 'false',
+                        'sw.is_error': False,
                         'http.status_code': 200,
                         'http.method': 'foo-method',
                         'sw.transaction': 'foo'
@@ -579,7 +579,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': 'true',
+                        'sw.is_error': True,
                         'sw.transaction': 'foo'
                     }
                 )
@@ -610,7 +610,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': 'true',
+                        'sw.is_error': True,
                         'sw.transaction': 'foo'
                     }
                 )
@@ -642,7 +642,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': 'false',
+                        'sw.is_error': False,
                         'sw.transaction': 'foo'
                     }
                 )
