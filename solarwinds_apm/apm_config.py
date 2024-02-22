@@ -421,11 +421,11 @@ class SolarWindsApmConfig:
         1. OTEL_SERVICE_NAME
         2. AWS_LAMBDA_FUNCTION_NAME
 
-        Note: 1 is always set by the current otel-instrument lambda exec wrapper
-        if used. The wrapper also sets service_name as the function_name, if
+        Note: 1 is always set by the current lambda exec wrapper if used.
+        The wrapper also sets service_name as the function_name, if
         former is not provided.
 
-        If otel-instrument did not do the above, the passed in OTel Resource
+        If exec wrapper did not do the above, the passed in OTel Resource
         likely has a `service.name` already calculated by merging OTEL_SERVICE_NAME
         / OTEL_RESOURCE_ATTRIBUTES with defaults.
 
@@ -439,7 +439,7 @@ class SolarWindsApmConfig:
 
         if otel_service_name == "unknown_service":
             # OTEL_SERVICE_NAME was not set
-            # and otel-instrument did not wrap instrumentation
+            # and exec wrapper did not wrap instrumentation
             return self.lambda_function_name
 
         return otel_service_name
