@@ -16,6 +16,7 @@ from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
 )
+from opentelemetry.instrumentation._semconv import _OTEL_SEMCONV_STABILITY_OPT_IN_KEY
 from opentelemetry.instrumentation.distro import BaseDistro
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.logging.environment_variables import (
@@ -96,6 +97,10 @@ class SolarWindsDistro(BaseDistro):
             OTEL_PYTHON_LOG_FORMAT,
             "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s trace_flags=%(otelTraceSampled)02d resource.service.name=%(otelServiceName)s] - %(message)s",
         )
+
+        # APM Python always opts into newer Otel semconv
+        # for those upstream instrumentors using it
+        environ[_OTEL_SEMCONV_STABILITY_OPT_IN_KEY] = "http"
 
     def load_instrumentor(self, entry_point: EntryPoint, **kwargs):
         """Takes a collection of instrumentation entry points
