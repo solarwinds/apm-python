@@ -42,10 +42,12 @@ classifiers = [
 ]
 requires-python = ">=3.7"
 dependencies = [
-    'opentelemetry-api == 1.20.0',
-    'opentelemetry-sdk == 1.20.0',
-    'opentelemetry-instrumentation == 0.41b0',
-    'opentelemetry-instrumentation-logging == 0.41b0',
+    'opentelemetry-api == 1.22.0',
+    'opentelemetry-sdk == 1.22.0',
+    'opentelemetry-instrumentation-aiohttp-server@git+https://github.com/open-telemetry/opentelemetry-python-contrib.git@0.43b0hotfix#subdirectory=instrumentation/opentelemetry-instrumentation-aiohttp-server',
+    'opentelemetry-resource-detector-container@git+https://github.com/open-telemetry/opentelemetry-python-contrib.git@0.43b0hotfix#subdirectory=resource/opentelemetry-resource-detector-container',
+    'opentelemetry-instrumentation == 0.43b0',
+    'opentelemetry-instrumentation-logging == 0.43b0',
 ]
 
 [project.urls]
