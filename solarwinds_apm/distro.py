@@ -16,7 +16,9 @@ from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
 )
-from opentelemetry.instrumentation._semconv import _OTEL_SEMCONV_STABILITY_OPT_IN_KEY
+from opentelemetry.instrumentation._semconv import (
+    _OTEL_SEMCONV_STABILITY_OPT_IN_KEY,
+)
 from opentelemetry.instrumentation.distro import BaseDistro
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.logging.environment_variables import (
