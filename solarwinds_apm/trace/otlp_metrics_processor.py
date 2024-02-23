@@ -87,9 +87,9 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         meter_attrs = {}
         has_error = self.has_error(span)
         if has_error:
-            meter_attrs.update({"sw.is_error": "true"})
+            meter_attrs.update({"sw.is_error": True})
         else:
-            meter_attrs.update({"sw.is_error": "false"})
+            meter_attrs.update({"sw.is_error": False})
 
         is_span_http = self.is_span_http(span)
         # convert from ns to milliseconds
