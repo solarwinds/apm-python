@@ -1,4 +1,3 @@
-git+https://github.com/open-telemetry/opentelemetry-python-contrib.git@0.43b0hotfix#subdirectory=instrumentation/opentelemetry-instrumentation-aiohttp-server
 opentelemetry-util-http==0.43b0
 asgiref~=3.7
 opentelemetry-instrumentation-asgi==0.43b0
