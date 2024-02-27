@@ -2,8 +2,8 @@ opentelemetry-util-http==0.44b0
 asgiref~=3.7
 opentelemetry-instrumentation-asgi==0.44b0
 opentelemetry-instrumentation-asyncpg==0.44b0
+opentelemetry-instrumentation-aws-lambda==0.44b0
 opentelemetry-instrumentation-boto==0.44b0
-opentelemetry-instrumentation-botocore==0.44b0
 opentelemetry-instrumentation-celery==0.44b0
 opentelemetry-instrumentation-dbapi==0.44b0
 opentelemetry-instrumentation-django==0.44b0
