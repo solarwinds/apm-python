@@ -43,7 +43,7 @@ requires-python = ">=3.8"
 dependencies = [
     'opentelemetry-api == 1.23.0',
     'opentelemetry-sdk == 1.23.0',
-    'opentelemetry-instrumentation @ git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@comment-out-aiohttp-server-bootstrap-gen',
+    'opentelemetry-instrumentation @ git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@comment-out-aiohttp-server-bootstrap-gen#subdirectory=opentelemetry-instrumentation',
     'opentelemetry-instrumentation-logging == 0.44b0',
 ]
 
