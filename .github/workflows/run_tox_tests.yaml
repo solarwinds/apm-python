@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-minor: ["8", "9", "10"]
+        python-minor: ["8", "9", "10", "11"]
         apm-env: ["nh-staging", "ao-prod"]
     steps:
     - uses: actions/checkout@v4
