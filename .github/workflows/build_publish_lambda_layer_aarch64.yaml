@@ -9,6 +9,10 @@ name: Publish APM Python lambda layer for aarch64
 on:
   workflow_call:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   launch_arm64:
     name: Launch arm64 ec2 runners

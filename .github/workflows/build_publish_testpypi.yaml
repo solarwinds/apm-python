@@ -9,6 +9,10 @@ name: Publish to TestPyPi
 on:
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build_publish_sdist_and_x86_64:
     name: Build and publish sdist and x86_64

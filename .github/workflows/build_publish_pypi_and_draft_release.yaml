@@ -16,6 +16,10 @@ on:
 env:
   RELEASE_NAME: rel-${{ github.event.inputs.version }}
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   is_publishable:
     name: Check if version valid

@@ -30,6 +30,10 @@ env:
   SW_APM_SERVICE_KEY_PROD: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}
   SW_APM_SERVICE_KEY_STAGING: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   launch-arm64:
     runs-on: ubuntu-latest
