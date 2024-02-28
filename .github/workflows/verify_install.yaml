@@ -30,6 +30,10 @@ env:
   SW_APM_SERVICE_KEY_PROD: ${{ secrets.SW_APM_SERVICE_KEY_PROD }}
   SW_APM_SERVICE_KEY_STAGING: ${{ secrets.SW_APM_SERVICE_KEY_STAGING }}
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   launch-arm64:
     runs-on: ubuntu-latest
@@ -43,8 +47,7 @@ jobs:
           private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.API_CI_GHA_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.API_CI_GHA_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.EC2_RUNNER_ARN }}
           aws-region: us-east-1
       - id: launch
         uses: solarwinds/ec2-runner-action@main
@@ -266,8 +269,7 @@ jobs:
           private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.API_CI_GHA_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.API_CI_GHA_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.EC2_RUNNER_ARN }}
           aws-region: us-east-1
       - uses: solarwinds/ec2-runner-action@main
         with:
