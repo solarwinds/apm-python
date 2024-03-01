@@ -243,6 +243,10 @@ aws-lambda-custom: check-zip wrapper
 	mkdir -p ${target_dir}/python
 	@echo -e "Install upstream dependencies to include in layer"
 	@/opt/python/cp38-cp38/bin/pip3.8 install -t ${target_dir}/python -r lambda/requirements-custom.txt
+	@echo -e "Install other version-specific .so files for deps"
+	@set -e; for PYBIN in cp39-cp39 cp310-cp310 cp311-cp311; do /opt/python/$${PYBIN}/bin/pip install -t ${target_dir}/$${PYBIN} -r lambda/requirements-so.txt; done
+	@set -e; for PYBIN in cp39-cp39 cp310-cp310 cp311-cp311; do cp ${target_dir}/$${PYBIN}/charset_normalizer/*.so ${target_dir}/python/charset_normalizer/ && cp ${target_dir}/$${PYBIN}/grpc/_cython/*.so ${target_dir}/python/grpc/_cython/ && cp ${target_dir}/$${PYBIN}/wrapt/*.so ${target_dir}/python/wrapt/; done
+	@set -e; for PYBIN in cp39-cp39 cp310-cp310 cp311-cp311; do rm -rf ${target_dir}/$${PYBIN} ; done
 	@echo -e "Install upstream dependencies without deps to include in layer"
 	@/opt/python/cp38-cp38/bin/pip3.8 install -t ${target_dir}/nodeps -r lambda/requirements-nodeps.txt --no-deps
 	@echo "Contents of contrib-custom:"
