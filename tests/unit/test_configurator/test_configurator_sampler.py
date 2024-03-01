@@ -110,7 +110,6 @@ class TestConfiguratorSampler:
                 mocker.call(
                     {
                         "sw.apm.version": "1.2.3",
-                        "sw.data.module": "apm",
                         "service.name": "foo-service"
                     }
                 )
@@ -182,7 +181,6 @@ class TestConfiguratorSampler:
                 mocker.call(
                     {
                         "sw.apm.version": "1.2.3",
-                        "sw.data.module": "apm",
                         "service.name": "foo-service"
                     }
                 )
