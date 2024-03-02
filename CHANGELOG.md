@@ -4,7 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.3.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.4.0...HEAD)
+
+## [1.4.0.4](https://github.com/solarwinds/apm-python/releases/tag/rel-1.4.0) - 2024-03-01
+
+### Changed
+- SolarWinds c-lib 14.0.3 ([#316](https://github.com/solarwinds/apm-python/pull/316))
+- Update layer exec wrapper ([#317](https://github.com/solarwinds/apm-python/pull/317))
+- Non-empty `http.*` attributes on metrics ([#319](https://github.com/solarwinds/apm-python/pull/319))
+- Add formatter to RotatingFileHander ([#320](https://github.com/solarwinds/apm-python/pull/320))
+- Fixed `sw.is_error` attribute type ([#321](https://github.com/solarwinds/apm-python/pull/321))
+- Update CI role ([#324](https://github.com/solarwinds/apm-python/pull/324))
+
+### Removed
+- Remove ForceFlushSpanProcessor ([#312](https://github.com/solarwinds/apm-python/pull/312))
 
 ## [1.3.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.3.0) - 2024-02-20
 
