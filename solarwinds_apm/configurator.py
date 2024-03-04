@@ -181,6 +181,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 resource=Resource.create(
                     {
                         "sw.apm.version": __version__,
+                        "sw.data.module": "apm",
                         "service.name": apm_config.service_name,
                     }
                 ),
