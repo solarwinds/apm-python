@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.4.0...HEAD)
 
-## [1.4.0.4](https://github.com/solarwinds/apm-python/releases/tag/rel-1.4.0) - 2024-03-01
+## [1.4.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.4.0) - 2024-03-04
 
 ### Changed
 - SolarWinds c-lib 14.0.3 ([#316](https://github.com/solarwinds/apm-python/pull/316))
