@@ -229,7 +229,7 @@ aws-lambda: check-zip wrapper
 
 # Build APM Python AWS lambda layer as zip artifact
 # with extension compatible with current environment
-# (x86_64 OR aarch64) using custom AwsLambdaInstrumentor
+# (x86_64 OR aarch64) using custom contrib modules
 target_dir := "./tmp-lambda"
 aws-lambda-custom: export AWS_LAMBDA_FUNCTION_NAME = set-for-build
 aws-lambda-custom: export LAMBDA_TASK_ROOT = set-for-build
