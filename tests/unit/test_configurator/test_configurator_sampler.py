@@ -89,6 +89,12 @@ class TestConfiguratorSampler:
         resource_mocks = get_resource_mocks(mocker)
         trace_mocks = get_trace_mocks(mocker)
 
+        # Mock APM version
+        mocker.patch(
+            "solarwinds_apm.configurator.__version__",
+            "1.2.3",
+        )
+
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_sampler(
@@ -101,7 +107,13 @@ class TestConfiguratorSampler:
         resource_mocks.create.assert_has_calls(
             [
                 # service name from apmconfig fixture
-                mocker.call({"service.name": "foo-service"})
+                mocker.call(
+                    {
+                        "sw.apm.version": "1.2.3",
+                        "sw.data.module": "apm",
+                        "service.name": "foo-service"
+                    }
+                )
             ]
         )
         mock_tracerprovider.assert_called_once()
@@ -129,6 +141,12 @@ class TestConfiguratorSampler:
         # Mock Otel
         resource_mocks = get_resource_mocks(mocker)
         trace_mocks = get_trace_mocks(mocker)
+
+        # Mock APM version
+        mocker.patch(
+            "solarwinds_apm.configurator.__version__",
+            "1.2.3",
+        )
 
         # Mock sw sampler
         mock_sw_sampler = mocker.patch(
@@ -161,7 +179,13 @@ class TestConfiguratorSampler:
         resource_mocks.create.assert_has_calls(
             [
                 # service name from apmconfig fixture
-                mocker.call({"service.name": "foo-service"})
+                mocker.call(
+                    {
+                        "sw.apm.version": "1.2.3",
+                        "sw.data.module": "apm",
+                        "service.name": "foo-service"
+                    }
+                )
             ]
         )
         mock_tracerprovider.assert_called_once()
