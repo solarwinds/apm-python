@@ -116,7 +116,15 @@ class SolarWindsDistro(BaseDistro):
             # Note: Django ORM accepts options in settings.py
             # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
             kwargs["commenter_options"] = self.detect_commenter_options()
-        instrumentor: BaseInstrumentor = entry_point.load()
+        try:
+            instrumentor: BaseInstrumentor = entry_point.load()
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.error(
+                "Could not load instrumentor %s: %s",
+                entry_point.name,
+                ex,
+            )
+            return
         instrumentor().instrument(**kwargs)
 
     def enable_commenter(self) -> bool:
