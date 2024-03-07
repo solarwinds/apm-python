@@ -46,6 +46,9 @@ else
     export OTEL_RESOURCE_ATTRIBUTES="$LAMBDA_RESOURCE_ATTRIBUTES,$OTEL_RESOURCE_ATTRIBUTES";
 fi
 
+# Disable AWS context propagation by default
+export OTEL_LAMBDA_DISABLE_AWS_CONTEXT_PROPAGATION="true";
+
 # From OpenTelemetry Python:
 # - Use a wrapper because AWS Lambda's `python3 /var/runtime/bootstrap.py` will
 #   use `imp.load_module` to load the function from the `_HANDLER` environment
