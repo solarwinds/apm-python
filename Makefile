@@ -287,6 +287,27 @@ aws-lambda-custom: check-zip wrapper
 	@rm -rf ${target_dir} ./build
 	@echo -e "\nDone."
 
+# Build Python ORM AWS lambda layer as zip artifact
+# with py38 extensions compatible with current environment
+# (x86_64 OR aarch64)
+target_dir := "./tmp-lambda-orm"
+aws-lambda-orm: check-zip
+	@if [ -f ./dist/orm_lambda_${platform}.zip ]; then \
+		echo -e "Deleting old orm_lambda_${platform}.zip"; \
+		rm ./dist/orm_lambda_${platform}.zip; \
+	fi
+	rm -rf ${target_dir}
+	@echo -e "Creating target directory ${target_dir} for AWS Lambda layer artifacts."
+	mkdir -p ${target_dir}/python
+	@echo -e "Install ORM modules to include in layer"
+	@/opt/python/cp38-cp38/bin/pip3.8 install -t ${target_dir}/python -r lambda/requirements-orm.txt
+	@find ${target_dir}/python -type d -name '__pycache__' | xargs rm -rf
+	@echo -e "Preparing ORM layer archive"
+	@if [[ ! -d dist_orm ]]; then mkdir dist_orm; fi
+	@pushd ${target_dir} && zip -r ../dist_orm/orm_lambda_${platform}.zip . && popd
+	@rm -rf ${target_dir} ./build
+	@echo -e "\nDone."
+
 #----------------------------------------------------------------------------------------------------------------------#
 # recipes for local development
 #----------------------------------------------------------------------------------------------------------------------#
@@ -364,6 +385,7 @@ clean:
 	@find . -type d -name '*.ropeproject' | xargs rm -rf
 	@rm -rf build/
 	@rm -rf dist/
+	@rm -rf dist_orm/
 	@rm -rf *.egg*
 	@rm -f MANIFEST
 	@rm -rf docs/build/
