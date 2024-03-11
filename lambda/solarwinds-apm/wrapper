@@ -47,7 +47,9 @@ else
 fi
 
 # Disable AWS context propagation by default
-export OTEL_LAMBDA_DISABLE_AWS_CONTEXT_PROPAGATION="true";
+if [ -z "${OTEL_LAMBDA_DISABLE_AWS_CONTEXT_PROPAGATION}" ]; then
+    export OTEL_LAMBDA_DISABLE_AWS_CONTEXT_PROPAGATION="true";
+fi
 
 # From OpenTelemetry Python:
 # - Use a wrapper because AWS Lambda's `python3 /var/runtime/bootstrap.py` will
