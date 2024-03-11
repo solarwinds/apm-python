@@ -34,10 +34,13 @@ https://docs.python.org/3/library/imp.html#imp.load_module
 
 """
 
+import logging
 import os
 from importlib import import_module
 
 from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
+
+logger = logging.getLogger()
 
 
 def modify_module_name(module_name):
@@ -49,6 +52,10 @@ class HandlerError(Exception):
     pass
 
 
+logger.warning(
+    "Got OTEL_LAMBDA_DISABLE_AWS_CONTEXT_PROPAGATION %s",
+    os.environ.get("OTEL_LAMBDA_DISABLE_AWS_CONTEXT_PROPAGATION")
+)
 AwsLambdaInstrumentor().instrument()
 
 path = os.environ.get("ORIG_HANDLER")
