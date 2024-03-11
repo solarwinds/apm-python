@@ -132,6 +132,8 @@ class SolarWindsDistro(BaseDistro):
                 ex,
             )
             return
+        
+        logger.debug("Instrumenting %s with kwargs %s", entry_point.name, kwargs)
         instrumentor().instrument(**kwargs)
 
     def enable_commenter(self) -> bool:
