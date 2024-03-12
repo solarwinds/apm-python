@@ -116,13 +116,6 @@ class SolarWindsDistro(BaseDistro):
             # Note: Django ORM accepts options in settings.py
             # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
             kwargs["commenter_options"] = self.detect_commenter_options()
-
-        # Set disable for AwsLambdaInstrumentor. Assumes kwargs ignored
-        # if not implemented for current instrumentation library
-        kwargs["disable_aws_context_propagation"] = environ.get(
-            "OTEL_LAMBDA_DISABLE_AWS_CONTEXT_PROPAGATION"
-        )
-
         try:
             instrumentor: BaseInstrumentor = entry_point.load()
         except Exception as ex:  # pylint: disable=broad-except
