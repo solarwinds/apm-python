@@ -12,7 +12,7 @@ import math
 import os
 import sys
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
@@ -101,7 +101,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         )
         # Report reporter init status event after everything is done.
         init_event = self._create_init_event(reporter, apm_config)
-        self._report_init_event(reporter, init_event)
+        if init_event:
+            self._report_init_event(reporter, init_event)
+        else:
+            logger.error(
+                "There was an issue with generating the reporter init message."
+            )
 
     def _configure_otel_components(
         self,
@@ -615,11 +620,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
         layer: str = "Python",
         keys: dict = None,
-    ) -> "Event":
+    ) -> Any:
         """Create a Reporter init event if the reporter is ready."""
         if apm_config.is_lambda:
             logger.debug("Skipping init event in lambda")
-            return
+            return None
 
         reporter_ready = False
         if reporter.init_status in (
@@ -636,7 +641,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
             else:
                 logger.warning("Agent disabled. Not sending init message.")
-            return
+            return None
 
         version_keys = {}
         version_keys["__Init"] = True
@@ -680,7 +685,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             logger.warning(
                 "Warning: Could not generate Metadata for reporter init. Skipping init message."
             )
-            return
+            return None
         apm_config.extension.Context.set(md)
         evt = md.createEvent()
         evt.addInfo("Layer", layer)
