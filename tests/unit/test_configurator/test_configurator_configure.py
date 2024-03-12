@@ -7,7 +7,7 @@
 from solarwinds_apm import configurator
 
 class TestConfiguratorConfigure:
-    def test_configurator_configure(
+    def test_configurator_configure_init_success(
         self,
         mocker,
         mock_txn_name_manager_init,
@@ -15,6 +15,7 @@ class TestConfiguratorConfigure:
         mock_apmconfig_enabled,
         mock_init_sw_reporter,
         mock_config_otel_components,
+        mock_create_init,
         mock_report_init,
     ):
         test_configurator = configurator.SolarWindsConfigurator()
@@ -26,4 +27,39 @@ class TestConfiguratorConfigure:
 
         mock_init_sw_reporter.assert_called_once()
         mock_config_otel_components.assert_called_once()
+        mock_create_init.assert_called_once()
         mock_report_init.assert_called_once()
+
+    def test_configurator_configure_init_failure(
+        self,
+        mocker,
+        mock_txn_name_manager_init,
+        mock_fwkv_manager_init,
+        mock_apmconfig_enabled,
+        mock_init_sw_reporter,
+        mock_config_otel_components,
+        mock_create_init_fail,
+        mock_report_init,
+    ):
+        mock_log_error = mocker.Mock()
+        mock_logger = mocker.patch(
+            "solarwinds_apm.configurator.logger"
+        )
+        mock_logger.configure_mock(
+            **{
+                "error": mock_log_error,
+            }
+        )
+
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure()
+
+        mock_txn_name_manager_init.assert_called_once()
+        mock_fwkv_manager_init.assert_called_once()
+        mock_apmconfig_enabled.assert_called_once()
+
+        mock_init_sw_reporter.assert_called_once()
+        mock_config_otel_components.assert_called_once()
+        mock_create_init_fail.assert_called_once()
+        mock_report_init.assert_not_called()
+        mock_log_error.assert_called_once()

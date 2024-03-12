@@ -339,6 +339,19 @@ def mock_config_otel_components(mocker):
         "solarwinds_apm.configurator.SolarWindsConfigurator._configure_otel_components"
     )
 
+@pytest.fixture(name="mock_create_init")
+def mock_create_init(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._create_init_event"
+    )
+
+@pytest.fixture(name="mock_create_init_fail")
+def mock_create_init_fail(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._create_init_event",
+        return_value=None,
+    )
+
 @pytest.fixture(name="mock_report_init")
 def mock_report_init(mocker):
     return mocker.patch(
