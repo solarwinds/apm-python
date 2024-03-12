@@ -69,7 +69,7 @@ from solarwinds_apm.trace import (
 from solarwinds_apm.version import __version__
 
 if TYPE_CHECKING:
-    from solarwinds_apm.extension.oboe import OboeAPI, Reporter
+    from solarwinds_apm.extension.oboe import Event, OboeAPI, Reporter
 
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
@@ -99,8 +99,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             reporter,
             oboe_api,
         )
-        # Report an status event after everything is done.
-        self._report_init_event(reporter, apm_config)
+        # Report reporter init status event after everything is done.
+        init_event = self._create_init_event(reporter, apm_config)
+        self._report_init_event(reporter, init_event)
 
     def _configure_otel_components(
         self,
@@ -608,14 +609,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         return version_keys
 
     # pylint: disable=too-many-locals
-    def _report_init_event(
+    def _create_init_event(
         self,
         reporter: "Reporter",
         apm_config: SolarWindsApmConfig,
         layer: str = "Python",
         keys: dict = None,
-    ) -> None:
-        """Report the APM library's init message, when reporter ready."""
+    ) -> "Event":
+        """Create a Reporter init event if the reporter is ready."""
         if apm_config.is_lambda:
             logger.debug("Skipping init event in lambda")
             return
@@ -685,4 +686,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         evt.addInfo("Layer", layer)
         for ver_k, ver_v in version_keys.items():
             evt.addInfo(ver_k, ver_v)
-        reporter.sendStatus(evt)
+        return evt
+
+    def _report_init_event(
+        self,
+        reporter: "Reporter",
+        init_event: "Event",
+    ) -> None:
+        """Report the APM library's init event message and log its send status."""
+        status = reporter.sendStatus(init_event)
+        logger.info("Reporter initialized successfully: %s", status)
