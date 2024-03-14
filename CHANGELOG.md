@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.4.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.5.0...HEAD)
+
+## [1.5.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.5.0) - 2024-03-14
+
+### Added
+- Added more `sw` resource attributes to metrics ([#327](https://github.com/solarwinds/apm-python/pull/327))
+- Added default disabling of AWS context propagation ([#333](https://github.com/solarwinds/apm-python/pull/333))
+
+### Changed
+- Fixed grpcio ImportError if outside Python 3.8 ([#326](https://github.com/solarwinds/apm-python/pull/326))
+- Improve `load_instrumentor` error logging ([#332](https://github.com/solarwinds/apm-python/pull/332))
+- Fixed APM-proto reporter status logging ([#336](https://github.com/solarwinds/apm-python/pull/336))
 
 ## [1.4.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.4.0) - 2024-03-04
 
