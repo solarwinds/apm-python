@@ -103,6 +103,11 @@ class SolarWindsDistro(BaseDistro):
         on each one. This is a method override to pass additional
         arguments to each entry point.
         """
+        # Set new semconv opt-in if configured
+        opt_in = self.detect_semconv_opt_in()
+        if opt_in:
+            kwargs["sem_conv_opt_in_mode"] = opt_in
+
         # Set enable for sqlcommenter. Assumes kwargs ignored if not
         # implemented for current instrumentation library
         if self.enable_commenter():
@@ -157,3 +162,7 @@ class SolarWindsDistro(BaseDistro):
                     commenter_opts[opt_k.strip()] = opt_v_bool
 
         return commenter_opts
+
+    def detect_semconv_opt_in(self):
+        """Returns semconv opt-in config, if any"""
+        return environ.get("OTEL_SEMCONV_STABILITY_OPT_IN")
