@@ -92,7 +92,7 @@ jobs:
       - if: ${{ inputs.publish-dest == 'production' }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.LAMBDA_PUBLISHER_ARN_PRODUCTION }}
+          role-to-assume: ${{ secrets.LAMBDA_PUBLISHER_ARN_PROD }}
           aws-region: ${{ matrix.aws_region }}
 
       - name: Publish Lambda Layer
