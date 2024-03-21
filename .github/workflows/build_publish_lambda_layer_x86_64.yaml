@@ -4,10 +4,15 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-name: Publish APM Python lambda layer for x86_64
+name: "Workflow call: Publish APM Python lambda layer for x86_64"
 
 on:
   workflow_call:
+    inputs:
+      publish-dest:
+        description: 'Publish destination, one of: staging, production'
+        required: true
+        type: string
 
 jobs:
   build_layer_x86_64:
@@ -16,6 +21,11 @@ jobs:
       SW_APM_VERSION: ${{ steps.save-apm-python-version.outputs.SW_APM_VERSION }}
     steps:
     - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+      with:
+        repository: tammy-baylis-swi/opentelemetry-python-contrib
+        ref: build-lambda-handler-exceptions
+        path: contrib-custom
     - uses: ./.github/actions/package_lambda_solarwinds_apm_x86_64
     - name: Save APM Python Version for naming
       id: save-apm-python-version
@@ -35,4 +45,5 @@ jobs:
       component-version: ${{ needs.build_layer_x86_64.outputs.SW_APM_VERSION }}
       architecture: x86_64
       runtimes: "python3.7 python3.8 python3.9 python3.10 python3.11"
+      publish-dest: ${{ inputs.publish-dest }}
     secrets: inherit
