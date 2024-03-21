@@ -255,10 +255,6 @@ aws-lambda-custom: check-zip wrapper
 	@/opt/python/cp38-cp38/bin/pip3.8 install -t ${target_dir}/nodeps -r lambda/requirements-nodeps.txt --no-deps
 	@echo "Contents of contrib-custom:"
 	@ls -al contrib-custom/
-	@echo -e "Install opentelemetry-instrumentation from local to include in layer"
-	@/opt/python/cp38-cp38/bin/pip3.8 install -t ${target_dir}/nodeps -Ie contrib-custom/opentelemetry-instrumentation
-	@echo -e "Directly copying opentelemetry-instrumentation src files"
-	@cp -r contrib-custom/opentelemetry-instrumentation/src/opentelemetry/instrumentation/* ${target_dir}/nodeps/opentelemetry/instrumentation
 	@echo -e "Install aws-lambda instrumentor from local to include in layer"
 	@/opt/python/cp38-cp38/bin/pip3.8 install -t ${target_dir}/nodeps -Ie contrib-custom/instrumentation/opentelemetry-instrumentation-aws-lambda
 	@echo -e "Directly copying aws-lambda src files"
