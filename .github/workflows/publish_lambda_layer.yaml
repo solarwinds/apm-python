@@ -4,7 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-name: Publish Lambda Layer to staging
+name: "Workflow call: Publish Lambda Layer"
 
 on:
   workflow_call:
@@ -23,6 +23,10 @@ on:
         type: string
       runtimes:
         description: 'Space-delimited list of compatible runtimes'
+        required: true
+        type: string
+      publish-dest:
+        description: 'Publish destination, one of: staging, production'
         required: true
         type: string
 
@@ -79,9 +83,16 @@ jobs:
         with:
           name: ${{ inputs.artifact-name }}
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - if: ${{ inputs.publish-dest == 'staging' }}
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.LAMBDA_PUBLISHER_ARN }}
+          role-to-assume: ${{ secrets.LAMBDA_PUBLISHER_ARN_STAGING }}
+          aws-region: ${{ matrix.aws_region }}
+
+      - if: ${{ inputs.publish-dest == 'production' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.LAMBDA_PUBLISHER_ARN_PROD }}
           aws-region: ${{ matrix.aws_region }}
 
       - name: Publish Lambda Layer
