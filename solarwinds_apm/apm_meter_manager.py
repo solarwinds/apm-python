@@ -7,7 +7,8 @@
 import logging
 
 # TypeError: 'ABCMeta' object is not subscriptable
-# with this old import for callback signatures, with current Otel API
+# with this old import for callback signatures, with current Otel API.
+# So we keep this `typing` import until OTel is updated.
 # pylint:disable=deprecated-typing-alias
 from typing import TYPE_CHECKING, Iterable
 
