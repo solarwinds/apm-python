@@ -56,11 +56,6 @@ jobs:
           matrix: |
             amazonlinux:2023
             centos:8
-            python:3.7-alpine3.12
-            python:3.7-alpine3.13
-            python:3.7-alpine3.17
-            python:3.7-buster
-            python:3.7-bullseye
             python:3.8-alpine3.12
             python:3.8-alpine3.13
             python:3.8-buster
@@ -100,12 +95,6 @@ jobs:
     strategy:
       matrix:
         hostname:
-          - py3.7-alpine3.12
-          - py3.7-alpine3.13
-          - py3.7-alpine3.17
-          - py3.7-debian10
-          - py3.7-debian11
-          - py3.7-ubuntu18.04
           - py3.8-alpine3.12
           - py3.8-alpine3.13
           - py3.8-debian10
@@ -139,18 +128,6 @@ jobs:
           - x64
           - arm64
         include:
-          - hostname: py3.7-alpine3.12
-            image: python:3.7-alpine3.12
-          - hostname: py3.7-alpine3.13
-            image: python:3.7-alpine3.13
-          - hostname: py3.7-alpine3.17
-            image: python:3.7-alpine3.17
-          - hostname: py3.7-debian10
-            image: python:3.7-buster
-          - hostname: py3.7-debian11
-            image: python:3.7-bullseye
-          - hostname: py3.7-ubuntu18.04
-            image: ubuntu:18.04
           - hostname: py3.8-alpine3.12
             image: python:3.8-alpine3.12
           - hostname: py3.8-alpine3.13
@@ -210,12 +187,6 @@ jobs:
           - hostname: py3.11-ubuntu22.04
             image: ubuntu:22.04
         exclude:
-          - hostname: py3.7-alpine3.12
-            arch: arm64
-          - hostname: py3.7-alpine3.13
-            arch: arm64
-          - hostname: py3.7-alpine3.17
-            arch: arm64
           - hostname: py3.8-alpine3.12
             arch: arm64
           - hostname: py3.8-alpine3.13
