@@ -154,7 +154,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         return _format_baggage(baggage_kvs)
 
     # Note: this inherits deprecated `typing` use by OTel,
-    #       I think for compatibility with Python3.7 else TypeError
+    #       for compatibility with Python3.8 else TypeError
     @property
     def fields(
         self,

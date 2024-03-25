@@ -66,7 +66,7 @@ class TxnNameCalculatorProcessor(SpanProcessor):
             custom_name,
         )  # type: ignore
 
-    # Disable pylint for compatibility with Python3.7 else TypeError
+    # Disable pylint for compatibility with Python 3.8 else TypeError
     def calculate_transaction_names(
         self, span: "ReadableSpan"
     ) -> Tuple[Any, Any]:  # pylint: disable=deprecated-typing-alias

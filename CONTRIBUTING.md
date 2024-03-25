@@ -44,11 +44,11 @@ docker-compose run aarch64
 
 ### Regression Tests
 
-Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.7, 3.8, 3.9, and/or 3.10 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Testing can be run inside a build container which provides all dependencies and a compiled C-extension. Here is how to set up then run unit and integration tests locally:
+Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.8, 3.9, 3.10, and/or 3.11 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Testing can be run inside a build container which provides all dependencies and a compiled C-extension. Here is how to set up then run unit and integration tests locally:
 
 1. Create and run a Docker build container as described above.
 2. Inside the build container: `make wrapper`. This downloads the version of a C/C++ dependency defined in `extension/VERSION` from SolarWinds Cloud and builds SWIG bindings.
-3. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.7 against AO prod: `make tox OPTIONS="-e py37-nh-staging"`.
+3. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.9 against AO prod: `make tox OPTIONS="-e py39-nh-staging"`.
 4. (WARNING: slow!) To run all tests for all supported Python environments, as well as linting and formatting: `make tox`
 
 Other regular `tox` arguments can be included in `OPTIONS`. Some examples:

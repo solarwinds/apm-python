@@ -99,7 +99,7 @@ class CustomBuildExt(build_ext):
 
 if not (python_version_supported() and os_supported()):
     logger.warning(
-        "[SETUP] This package supports only Python 3.7 and above on Linux x86_64 or aarch64. "
+        "[SETUP] This package supports only Python 3.8 and above on Linux x86_64 or aarch64. "
         "Other platform or python versions may not work as expected.")
 
 ext_modules = [
@@ -132,5 +132,5 @@ setup(
         'build_py': CustomBuild,
     },
     ext_modules=ext_modules,
-    python_requires='>=3.7',
+    python_requires='>=3.8',
 )
