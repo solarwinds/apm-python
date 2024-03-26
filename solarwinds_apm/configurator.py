@@ -91,6 +91,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config = SolarWindsApmConfig()
         oboe_api = apm_config.oboe_api
 
+        # Reporter may be no-op e.g. disabled, lambda
         reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
             apm_txname_manager,
@@ -99,6 +100,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             reporter,
             oboe_api,
         )
+
+        if apm_config.is_lambda:
+            logger.debug("No init event in lambda")
+            return
+
         # Report reporter init status event after everything is done.
         init_event = self._create_init_event(reporter, apm_config)
         if init_event:
