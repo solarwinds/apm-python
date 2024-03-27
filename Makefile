@@ -231,13 +231,8 @@ aws-lambda: check-zip wrapper
 	@rm -rf ${target_dir} ./build
 	@echo -e "\nDone."
 
-# Build APM Python AWS lambda layer as zip artifact
-# with extension compatible with current environment
-# (x86_64 OR aarch64) using custom contrib modules
 target_dir := "./tmp-lambda"
-aws-lambda-custom: export AWS_LAMBDA_FUNCTION_NAME = set-for-build
-aws-lambda-custom: export LAMBDA_TASK_ROOT = set-for-build
-aws-lambda-custom: check-zip wrapper
+install-lambda-modules-custom:
 	@if [ -f ./dist/solarwinds_apm_lambda_${platform}.zip ]; then \
 		echo -e "Deleting old solarwinds_apm_lambda_${platform}.zip"; \
 		rm ./dist/solarwinds_apm_lambda_${platform}.zip; \
@@ -281,6 +276,18 @@ aws-lambda-custom: check-zip wrapper
 	@rm -rf ${target_dir}/python/six*
 	@rm -rf ${target_dir}/python/setuptools*
 	@rm -rf ${target_dir}/python/urllib3*
+
+check-lambda-modules-custom:
+	./lambda/check_lambda_modules.sh ${target_dir}
+
+# Build APM Python AWS lambda layer as zip artifact
+# with extension compatible with current environment
+# (x86_64 OR aarch64) using custom contrib modules
+target_dir := "./tmp-lambda"
+aws-lambda-custom: export AWS_LAMBDA_FUNCTION_NAME = set-for-build
+aws-lambda-custom: export LAMBDA_TASK_ROOT = set-for-build
+aws-lambda-custom: check-zip wrapper install-lambda-modules-custom check-lambda-modules-custom
+# aws-lambda-custom: check-lambda-modules-custom
 	@find ${target_dir}/python -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi
 	@pushd ${target_dir} && zip -r ../dist/solarwinds_apm_lambda_${platform}.zip . && popd
@@ -290,7 +297,7 @@ aws-lambda-custom: check-zip wrapper
 # Build Python ORM AWS lambda layer as zip artifact
 # with py38 extensions compatible with current environment
 # (x86_64 OR aarch64)
-target_dir := "./tmp-lambda-orm"
+target_dir := "./tmp-lambda"
 aws-lambda-orm: check-zip
 	@if [ -f ./dist/orm_lambda_${platform}.zip ]; then \
 		echo -e "Deleting old orm_lambda_${platform}.zip"; \
