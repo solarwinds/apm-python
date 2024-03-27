@@ -62,6 +62,8 @@ expected_otel_files="./python/opentelemetry/exporter/otlp/version.py
 found_otel_files=$(find ./python/opentelemetry/exporter ./python/opentelemetry/sdk ./python/opentelemetry/instrumentation/botocore -regextype sed -regex ".*/version.py")
 if [[ ! "$found_otel_files" =~ $expected_otel_files ]]; then
     echo "FAILED: Missing key opentelemetry dependency version files"
+    echo "Instead found:"
+    echo $found_otel_files
     exit 1
 fi
 
