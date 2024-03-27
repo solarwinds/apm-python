@@ -287,7 +287,6 @@ target_dir := "./tmp-lambda"
 aws-lambda-custom: export AWS_LAMBDA_FUNCTION_NAME = set-for-build
 aws-lambda-custom: export LAMBDA_TASK_ROOT = set-for-build
 aws-lambda-custom: check-zip wrapper install-lambda-modules-custom check-lambda-modules-custom
-# aws-lambda-custom: check-lambda-modules-custom
 	@find ${target_dir}/python -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi
 	@pushd ${target_dir} && zip -r ../dist/solarwinds_apm_lambda_${platform}.zip . && popd
