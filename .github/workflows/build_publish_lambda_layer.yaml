@@ -25,8 +25,8 @@ jobs:
       publish-dest: ${{ inputs.publish-dest }}
     secrets: inherit
 
-  # build_publish_layer_aarch64:
-  #   uses: ./.github/workflows/build_publish_lambda_layer_aarch64.yaml
-  #   with:
-  #     publish-dest: ${{ inputs.publish-dest }}
-  #   secrets: inherit
+  build_publish_layer_aarch64:
+    uses: ./.github/workflows/build_publish_lambda_layer_aarch64.yaml
+    with:
+      publish-dest: ${{ inputs.publish-dest }}
+    secrets: inherit
