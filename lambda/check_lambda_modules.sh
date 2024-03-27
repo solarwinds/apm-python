@@ -53,13 +53,13 @@ if [ ! -f "python/opentelemetry/instrumentation/aws_lambda/__init__.py" ]; then
     exit 1
 fi
 
-expected_otel_files="./python/opentelemetry/exporter/otlp/version.py
+expected_otel_files="./python/opentelemetry/exporter/otlp/proto/common/version.py
 ./python/opentelemetry/exporter/otlp/proto/grpc/version.py
-./python/opentelemetry/exporter/otlp/proto/common/version.py
 ./python/opentelemetry/exporter/otlp/proto/http/version.py
-./python/opentelemetry/sdk/version.py
-./python/opentelemetry/instrumentation/botocore/version.py"
-found_otel_files=$(find ./python/opentelemetry/exporter ./python/opentelemetry/sdk ./python/opentelemetry/instrumentation/botocore -regextype sed -regex ".*/version.py")
+./python/opentelemetry/exporter/otlp/version.py
+./python/opentelemetry/instrumentation/botocore/version.py
+./python/opentelemetry/sdk/version.py"
+found_otel_files=$(find ./python/opentelemetry/exporter ./python/opentelemetry/sdk ./python/opentelemetry/instrumentation/botocore -regextype sed -regex ".*/version.py" | sort -k1)
 if [[ ! "$found_otel_files" =~ $expected_otel_files ]]; then
     echo "FAILED: Missing key opentelemetry dependency version files"
     echo "Instead found:"
