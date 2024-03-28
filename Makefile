@@ -182,13 +182,8 @@ check-wheel-local:
 # Build and check the full Python agent distribution (sdist and wheels)
 package: sdist check-sdist-local manylinux-wheels check-wheel-local
 
-# Build APM Python AWS lambda layer as zip artifact
-# with extension compatible with current environment
-# (x86_64 OR aarch64)
 target_dir := "./tmp-lambda"
-aws-lambda: export AWS_LAMBDA_FUNCTION_NAME = set-for-build
-aws-lambda: export LAMBDA_TASK_ROOT = set-for-build
-aws-lambda: check-zip wrapper
+install-lambda-modules:
 	@if [ -f ./dist/solarwinds_apm_lambda_${platform}.zip ]; then \
 		echo -e "Deleting old solarwinds_apm_lambda_${platform}.zip"; \
 		rm ./dist/solarwinds_apm_lambda_${platform}.zip; \
@@ -226,6 +221,17 @@ aws-lambda: check-zip wrapper
 	@rm -rf ${target_dir}/python/setuptools*
 	@rm -rf ${target_dir}/python/urllib3*
 	@find ${target_dir}/python -type d -name '__pycache__' | xargs rm -rf
+
+check-lambda-modules:
+	./lambda/check_lambda_modules.sh ${target_dir}
+
+# Build APM Python AWS lambda layer as zip artifact
+# with extension compatible with current environment
+# (x86_64 OR aarch64)
+target_dir := "./tmp-lambda"
+aws-lambda: export AWS_LAMBDA_FUNCTION_NAME = set-for-build
+aws-lambda: export LAMBDA_TASK_ROOT = set-for-build
+aws-lambda: check-zip wrapper install-lambda-modules check-lambda-modules
 	@if [[ ! -d dist ]]; then mkdir dist; fi
 	@pushd ${target_dir} && zip -r ../dist/solarwinds_apm_lambda_${platform}.zip . && popd
 	@rm -rf ${target_dir} ./build
