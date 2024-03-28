@@ -32,7 +32,7 @@ expected_sw_extension_files="./python/solarwinds_apm/extension/VERSION
 ./python/solarwinds_apm/extension/bson/platform_hacks.h
 ./python/solarwinds_apm/extension/liboboe.so
 ./python/solarwinds_apm/extension/oboe.py"
-found_sw_extension_files=$(find ./python/solarwinds_apm/extension -not -path ./python/solarwinds_apm/extension -a -not -name '*.pyc' -a -not -name '__pycache__' | LC_ALL=C sort)
+found_sw_extension_files=$(find ./python/solarwinds_apm/extension -not -path ./python/solarwinds_apm/extension | LC_ALL=C sort)
 if [[ ! "$found_sw_extension_files" =~ $expected_sw_extension_files ]]; then
     echo "FAILED: Missing SolarWinds extension files"
     exit 1
