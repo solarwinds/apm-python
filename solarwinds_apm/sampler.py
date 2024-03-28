@@ -555,7 +555,7 @@ class _SwSampler(Sampler):
         return MappingProxyType(new_attributes)
 
     # Note: this inherits deprecated `typing` use by OTel,
-    #       I think for compatibility with Python3.7 else TypeError
+    #       for compatibility with Python3.8 else TypeError.
     def should_sample(
         self,
         parent_context: Optional[OtelContext],

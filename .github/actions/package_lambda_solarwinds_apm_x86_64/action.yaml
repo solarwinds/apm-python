@@ -13,6 +13,6 @@ runs:
   image: quay.io/pypa/manylinux_2_28_x86_64:latest
   entrypoint: 'make'
   args:
-    - 'aws-lambda'
+    - 'aws-lambda-custom'
   env:
     PLATFORM: x86_64

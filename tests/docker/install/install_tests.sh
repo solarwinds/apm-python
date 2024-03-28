@@ -55,10 +55,9 @@ function check_installation(){
     found_swig_files_inst=$(find . -not -path '.' -a -not -name '*.pyc' -a -not -name '__pycache__' | LC_ALL=C sort)
 
 
-    # in Python3.7, 3.8, 3.9 with https://bugs.python.org/issue21536, C-extensions are not linked 
-    # to libpython anymore, this leads to ldd not finding the symbols defined libpython3.(7|8|9).so
+    # in Python 3.8, 3.9 with https://bugs.python.org/issue21536, C-extensions are not linked 
+    # to libpython anymore, this leads to ldd not finding the symbols defined libpython3.(8|9).so
     sad_pythons=(
-        3.7
         3.8
         3.9
     )
