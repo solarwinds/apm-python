@@ -220,6 +220,7 @@ install-lambda-modules:
 	@rm -rf ${target_dir}/python/six*
 	@rm -rf ${target_dir}/python/setuptools*
 	@rm -rf ${target_dir}/python/urllib3*
+	@find ${target_dir}/python -type d -name '__pycache__' | xargs rm -rf
 
 check-lambda-modules:
 	./lambda/check_lambda_modules.sh ${target_dir}
@@ -231,7 +232,6 @@ target_dir := "./tmp-lambda"
 aws-lambda: export AWS_LAMBDA_FUNCTION_NAME = set-for-build
 aws-lambda: export LAMBDA_TASK_ROOT = set-for-build
 aws-lambda: check-zip wrapper install-lambda-modules check-lambda-modules
-	@find ${target_dir}/python -type d -name '__pycache__' | xargs rm -rf
 	@if [[ ! -d dist ]]; then mkdir dist; fi
 	@pushd ${target_dir} && zip -r ../dist/solarwinds_apm_lambda_${platform}.zip . && popd
 	@rm -rf ${target_dir} ./build
