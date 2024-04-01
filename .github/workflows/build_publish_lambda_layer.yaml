@@ -49,12 +49,14 @@ jobs:
       run: tox -e py3${{ matrix.python-minor }}-${{ matrix.apm-env }}
 
   build_publish_layer_x86_64:
+    needs: run_tox_tests
     uses: ./.github/workflows/build_publish_lambda_layer_x86_64.yaml
     with:
       publish-dest: ${{ inputs.publish-dest }}
     secrets: inherit
 
   build_publish_layer_aarch64:
+    needs: run_tox_tests
     uses: ./.github/workflows/build_publish_lambda_layer_aarch64.yaml
     with:
       publish-dest: ${{ inputs.publish-dest }}
