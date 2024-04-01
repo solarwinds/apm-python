@@ -19,6 +19,35 @@ on:
         - production
   
 jobs:
+  run_tox_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-minor: ["8", "9", "10", "11"]
+        apm-env: ["lambda"]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Checkout custom instrumentor
+      uses: actions/checkout@v4
+      with:
+        repository: tammy-baylis-swi/opentelemetry-python-contrib
+        ref: build-lambda-handler-exceptions
+        path: /code/solarwinds_apm/contrib-custom
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.${{ matrix.python-minor }}
+        cache: 'pip' # caching pip dependencies
+        cache-dependency-path: |
+          '**/dev-requirements.txt'
+          'lambda/tests/requirements.txt'
+    - name: Install tox
+      run: pip install tox
+    - name: Build extension
+      run: make wrapper
+    - name: Run tox
+      run: tox -e py3${{ matrix.python-minor }}-${{ matrix.apm-env }}
+
   build_publish_layer_x86_64:
     uses: ./.github/workflows/build_publish_lambda_layer_x86_64.yaml
     with:
