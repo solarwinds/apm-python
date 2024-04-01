@@ -1,3 +1,4 @@
-# Dependencies used in tests only
-opentelemetry-test-utils==0.44b0
-opentelemetry-instrumentation-aws-lambda==0.44b0
+opentelemetry-propagator-aws-xray == 1.0.1
+# This is a gross workaround to test on `custom` branch
+# when pyproject.toml doesn't install upstream deps
+opentelemetry-instrumentation-logging==0.44b0
