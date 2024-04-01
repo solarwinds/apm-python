@@ -24,7 +24,7 @@ jobs:
     strategy:
       matrix:
         python-minor: ["8", "9", "10", "11"]
-        apm-env: ["lambda"]
+        apm-env: ["lambda-gh"]
     steps:
     - uses: actions/checkout@v4
     - name: Checkout custom instrumentor
@@ -32,7 +32,7 @@ jobs:
       with:
         repository: tammy-baylis-swi/opentelemetry-python-contrib
         ref: build-lambda-handler-exceptions
-        path: /code/solarwinds_apm/contrib-custom
+        path: contrib-custom
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
