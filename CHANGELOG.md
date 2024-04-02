@@ -4,7 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.5.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.6.0...HEAD)
+
+## [1.6.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.6.0) - 2024-04-02
+
+### Added
+- Added layer production workflow ([#341](https://github.com/solarwinds/apm-python/pull/341))
+- Added `check_lambda_modules` before publish ([#346](https://github.com/solarwinds/apm-python/pull/346))
+
+### Changed
+- Upgraded layer asgiref 3.8 ([#343](https://github.com/solarwinds/apm-python/pull/343))
+- Fixed init event logging ([#345](https://github.com/solarwinds/apm-python/pull/345))
+- Upgraded layer grpcio 1.62.1 ([#351](https://github.com/solarwinds/apm-python/pull/351))
+- Upgraded c-lib 14.1.0 ([#352](https://github.com/solarwinds/apm-python/pull/352))
 
 ## [1.5.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.5.0) - 2024-03-18
 
