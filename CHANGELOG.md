@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.6.0...HEAD)
 
-## [1.6.0.4](https://github.com/solarwinds/apm-python/releases/tag/rel-1.6.0) - 2024-04-02
+## [1.6.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.6.0) - 2024-04-02
 
 ### Added
 - Added layer production workflow ([#341](https://github.com/solarwinds/apm-python/pull/341))
