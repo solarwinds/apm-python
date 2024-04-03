@@ -53,6 +53,11 @@ if [ ! -f "python/opentelemetry/instrumentation/aws_lambda/__init__.py" ]; then
     exit 1
 fi
 
+if [ ! -f "python/opentelemetry/instrumentation/logging/__init__.py" ]; then
+    echo "FAILED: Missing Logging instrumentor"
+    exit 1
+fi
+
 expected_otel_files="./python/opentelemetry/exporter/otlp/proto/common/version.py
 ./python/opentelemetry/exporter/otlp/proto/grpc/version.py
 ./python/opentelemetry/exporter/otlp/proto/http/version.py
