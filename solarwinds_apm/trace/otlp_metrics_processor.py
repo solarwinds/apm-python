@@ -6,7 +6,7 @@
 
 import logging
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from opentelemetry import context as context_api
 
