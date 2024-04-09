@@ -42,6 +42,7 @@ _EXPORTER_BY_OTLP_PROTOCOL = {
 }
 
 logger = logging.getLogger(__name__)
+# This startup component must always log
 if not logger.hasHandlers():
     logger.addHandler(_stream_handler)
 

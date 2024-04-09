@@ -74,6 +74,7 @@ if TYPE_CHECKING:
 
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
+# This startup component must always log
 if not logger.hasHandlers():
     logger.addHandler(_stream_handler)
 
