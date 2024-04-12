@@ -4,6 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import logging
 import os
 import pytest
 
@@ -17,6 +18,12 @@ from solarwinds_apm.apm_constants import (
 
 # pylint: disable=unused-import
 from .fixtures.env_vars import fixture_mock_env_vars
+
+@pytest.fixture
+def setup_caplog():
+    apm_logger = logging.getLogger("solarwinds_apm")
+    apm_logger.propagate = True
+
 
 class TestSolarWindsApmConfig:
     """
@@ -593,63 +600,63 @@ class TestSolarWindsApmConfig:
         assert "solarwinds_apm.extension.oboe.Context" in result
 
     # pylint:disable=unused-argument
-    def test_set_config_value_invalid_key(self, caplog, mock_env_vars):
+    def test_set_config_value_invalid_key(self, caplog, setup_caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("invalid_key", "foo")
         assert test_config.get("invalid_key", None) is None
         assert "Ignore invalid configuration key" in caplog.text
 
     # pylint:disable=unused-argument
-    def test_set_config_value_default_ec2(self, caplog, mock_env_vars):
+    def test_set_config_value_default_ec2(self, caplog, setup_caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("ec2_metadata_timeout", "9999")
         assert test_config.get("ec2_metadata_timeout") == 1000
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
-    def test_set_config_value_default_token_cap(self, caplog, mock_env_vars):
+    def test_set_config_value_default_token_cap(self, caplog, setup_caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("token_bucket_capacity", "9999")
         assert test_config.get("token_bucket_capacity") == -1
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
-    def test_set_config_value_default_token_rate(self, caplog, mock_env_vars):
+    def test_set_config_value_default_token_rate(self, caplog, setup_caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("token_bucket_rate", "9999")
         assert test_config.get("token_bucket_rate") == -1
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
-    def test_set_config_value_default_proxy(self, caplog, mock_env_vars):
+    def test_set_config_value_default_proxy(self, caplog, setup_caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("proxy", "not-valid-url")
         assert test_config.get("proxy") == ""
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
-    def test_set_config_value_default_tracing_mode(self, caplog, mock_env_vars):
+    def test_set_config_value_default_tracing_mode(self, caplog, setup_caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("tracing_mode", "not-valid-mode")
         assert test_config.get("tracing_mode") == -1
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
-    def test_set_config_value_default_trigger_trace(self, caplog, mock_env_vars):
+    def test_set_config_value_default_trigger_trace(self, caplog, setup_caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("trigger_trace", "not-valid-mode")
         assert test_config.get("trigger_trace") == 1
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
-    def test_set_config_value_default_reporter(self, caplog, mock_env_vars):
+    def test_set_config_value_default_reporter(self, caplog, setup_caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("reporter", "not-valid-mode")
         assert test_config.get("reporter") == ""
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
-    def test_set_config_value_default_debug_level(self, caplog, mock_env_vars):
+    def test_set_config_value_default_debug_level(self, caplog, setup_caplog, mock_env_vars):
         # Save any debug_level in os for later
         old_debug_level = os.environ.get("SW_APM_DEBUG_LEVEL", None)
         if old_debug_level:
@@ -665,6 +672,7 @@ class TestSolarWindsApmConfig:
     def test_set_config_value_default_log_type(
         self,
         caplog,
+        setup_caplog,
         mock_env_vars,
     ):
         # Save any log_type in os for later

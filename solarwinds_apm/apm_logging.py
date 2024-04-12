@@ -163,10 +163,10 @@ def _get_logger():
 
     _logger.setLevel(ApmLoggingLevel.logging_map[log_level])
 
+    _logger.propagate = False
     if log_level != ApmLoggingLevel.debug_levels["OBOE_DEBUG_DISABLE"]:
         _logger.addHandler(_stream_handler)
     else:
-        _logger.propagate = False
         _logger.addHandler(logging.NullHandler())
 
     return _logger
@@ -218,6 +218,7 @@ def set_sw_log_type(log_type, log_filepath=""):
                 "%(asctime)s [ %(name)s %(levelname)-8s p#%(process)d.%(thread)d] %(message)s"
             )
             file_hander.setFormatter(file_formatter)
+            logger.propagate = False
             logger.addHandler(file_hander)
             # stop logging to stream
             logger.removeHandler(_stream_handler)
