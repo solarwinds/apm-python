@@ -5,10 +5,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import logging
-import os
 from typing import TYPE_CHECKING
-
-from opentelemetry import context as context_api
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_TRANSACTION_ATTR_KEY,
@@ -18,7 +15,7 @@ from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 
 if TYPE_CHECKING:
-    from opentelemetry.sdk.trace import ReadableSpan, Span
+    from opentelemetry.sdk.trace import ReadableSpan
 
     from solarwinds_apm.apm_config import SolarWindsApmConfig
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
@@ -74,33 +71,9 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
 
         return "unknown"
 
-    def on_start(
-        self,
-        span: "Span",
-        parent_context: Optional[context_api.Context] = None,
-    ) -> None:
-        """Debug"""
-        logger.debug("on_start AWS_LAMBDA_FUNCTION_NAME: %s", os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
-
-        try:
-            logger.debug("on_start span: %s", span)
-            logger.debug("on_start span._name: %s", span._name)
-            logger.debug("on_start span._attributes: %s", span._attributes)
-        except Exception as exc:
-            logger.error("There was a problem with on_start: %s", exc)
-
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports OTLP trace metrics"""
         # Only calculate OTLP metrics for service entry spans
-        logger.debug("on_end AWS_LAMBDA_FUNCTION_NAME: %s", os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
-
-        try:
-            logger.debug("on_end span: %s", span)
-            logger.debug("on_end span._name: %s", span._name)
-            logger.debug("on_end span._attributes: %s", span._attributes)
-        except Exception as exc:
-            logger.error("There was a problem with on_end: %s", exc)
-
         parent_span_context = span.parent
         if (
             parent_span_context
