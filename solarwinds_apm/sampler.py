@@ -519,7 +519,9 @@ class _SwSampler(Sampler):
             )
 
         new_attributes[self._INTERNAL_SAMPLE_RATE] = liboboe_decision["rate"]
-        new_attributes[self._INTERNAL_SAMPLE_SOURCE] = liboboe_decision["source"]
+        new_attributes[self._INTERNAL_SAMPLE_SOURCE] = liboboe_decision[
+            "source"
+        ]
         logger.debug(
             "Set attributes with service entry internal KVs: %s",
             new_attributes,
