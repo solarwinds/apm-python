@@ -31,7 +31,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: tammy-baylis-swi/opentelemetry-python-contrib
-        ref: build-lambda-handler-exceptions
+        ref: custom-sw-build
         path: contrib-custom
     - name: Setup Python
       uses: actions/setup-python@v5
