@@ -7,6 +7,7 @@
 import pytest
 from types import MappingProxyType
 
+from opentelemetry.sdk.trace.sampling import Decision
 from opentelemetry.trace.span import (
     INVALID_SPAN_CONTEXT,
     TraceState
@@ -260,7 +261,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
-            decision=decision_drop,
+            liboboe_decision=decision_drop,
+            otel_decision=Decision.DROP,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
@@ -276,7 +278,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
-            decision=decision_drop,
+            liboboe_decision=decision_drop,
+            otel_decision=Decision.DROP,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
@@ -292,7 +295,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
-            decision=decision_drop,
+            liboboe_decision=decision_drop,
+            otel_decision=Decision.DROP,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_signed,
@@ -308,7 +312,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
-            decision=decision_drop,
+            liboboe_decision=decision_drop,
+            otel_decision=Decision.DROP,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
@@ -324,7 +329,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
-            decision=decision_record_only_regular,
+            liboboe_decision=decision_record_only_regular,
+            otel_decision=Decision.RECORD_ONLY,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
@@ -340,7 +346,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
-            decision=decision_record_only_regular,
+            liboboe_decision=decision_record_only_regular,
+            otel_decision=Decision.RECORD_ONLY,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
@@ -356,7 +363,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_record_and_sample_unsigned_tt,
+            liboboe_decision=decision_record_and_sample_unsigned_tt,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
@@ -379,7 +387,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_record_and_sample_signed_tt_auth_ok,
+            liboboe_decision=decision_record_and_sample_signed_tt_auth_ok,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
@@ -402,7 +411,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_record_only_signed_tt_auth_failed,
+            liboboe_decision=decision_record_only_signed_tt_auth_failed,
+            otel_decision=Decision.RECORD_ONLY,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
@@ -418,7 +428,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_record_and_sample_signed_tt_auth_ok,
+            liboboe_decision=decision_record_and_sample_signed_tt_auth_ok,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -442,7 +453,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_record_only_signed_tt_auth_failed,
+            liboboe_decision=decision_record_only_signed_tt_auth_failed,
+            otel_decision=Decision.RECORD_ONLY,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -458,7 +470,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
@@ -482,7 +495,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -506,7 +520,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
@@ -527,7 +542,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
@@ -548,7 +564,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt,
@@ -570,7 +587,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_signed_tt,
@@ -592,7 +610,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_not_continued,
+            liboboe_decision=decision_not_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
@@ -616,7 +635,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_not_continued,
+            liboboe_decision=decision_not_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -640,7 +660,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_not_continued,
+            liboboe_decision=decision_not_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt
@@ -662,7 +683,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_not_continued,
+            liboboe_decision=decision_not_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_signed_tt
@@ -684,7 +706,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_not_continued,
+            liboboe_decision=decision_not_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned
@@ -705,7 +728,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_not_continued,
+            liboboe_decision=decision_not_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_signed
@@ -727,7 +751,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
@@ -754,7 +779,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -782,7 +808,8 @@ class Test_SwSampler_calculate_attributes():
         result = fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=attributes_no_tracestate,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
@@ -815,7 +842,8 @@ class Test_SwSampler_calculate_attributes():
         result = fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=attributes_no_tracestate,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -848,7 +876,8 @@ class Test_SwSampler_calculate_attributes():
         result = fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=attributes_with_tracestate,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
@@ -881,7 +910,8 @@ class Test_SwSampler_calculate_attributes():
         result = fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=attributes_with_tracestate,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -913,7 +943,8 @@ class Test_SwSampler_calculate_attributes():
         assert fixture_swsampler.calculate_attributes(
             span_name="foo",
             attributes=attributes_no_tracestate,
-            decision=decision_record_and_sample_regular,
+            liboboe_decision=decision_record_and_sample_regular,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=INVALID_SPAN_CONTEXT,
             xtraceoptions=mock_xtraceoptions_empty,
@@ -950,7 +981,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
-            decision=decision_drop,
+            liboboe_decision=decision_drop,
+            otel_decision=Decision.DROP,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
@@ -966,7 +998,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
-            decision=decision_drop,
+            liboboe_decision=decision_drop,
+            otel_decision=Decision.DROP,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
@@ -982,7 +1015,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
-            decision=decision_drop,
+            liboboe_decision=decision_drop,
+            otel_decision=Decision.DROP,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_signed,
@@ -998,7 +1032,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
-            decision=decision_drop,
+            liboboe_decision=decision_drop,
+            otel_decision=Decision.DROP,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
@@ -1014,7 +1049,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
-            decision=decision_record_only_regular,
+            liboboe_decision=decision_record_only_regular,
+            otel_decision=Decision.RECORD_ONLY,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
@@ -1030,7 +1066,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=mocker.Mock(),
-            decision=decision_record_only_regular,
+            liboboe_decision=decision_record_only_regular,
+            otel_decision=Decision.RECORD_ONLY,
             trace_state=mocker.Mock(),
             parent_span_context=mocker.Mock(),
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
@@ -1046,7 +1083,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_record_and_sample_unsigned_tt,
+            liboboe_decision=decision_record_and_sample_unsigned_tt,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_unsigned,
@@ -1070,7 +1108,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_record_and_sample_signed_tt_auth_ok,
+            liboboe_decision=decision_record_and_sample_signed_tt_auth_ok,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
@@ -1094,7 +1133,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_record_only_signed_tt_auth_failed,
+            liboboe_decision=decision_record_only_signed_tt_auth_failed,
+            otel_decision=Decision.RECORD_ONLY,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_no_tt_signed,
@@ -1110,7 +1150,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_record_and_sample_signed_tt_auth_ok,
+            liboboe_decision=decision_record_and_sample_signed_tt_auth_ok,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -1135,7 +1176,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_record_only_signed_tt_auth_failed,
+            liboboe_decision=decision_record_only_signed_tt_auth_failed,
+            otel_decision=Decision.RECORD_ONLY,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -1151,7 +1193,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
@@ -1176,7 +1219,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -1201,7 +1245,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
@@ -1223,7 +1268,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned,
@@ -1245,7 +1291,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt,
@@ -1268,7 +1315,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_signed_tt,
@@ -1291,7 +1339,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_not_continued,
+            liboboe_decision=decision_not_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
@@ -1316,7 +1365,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_not_continued,
+            liboboe_decision=decision_not_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -1341,7 +1391,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_not_continued,
+            liboboe_decision=decision_not_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_unsigned_tt
@@ -1364,7 +1415,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_not_continued,
+            liboboe_decision=decision_not_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_with_signed_tt
@@ -1387,7 +1439,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_not_continued,
+            liboboe_decision=decision_not_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_unsigned
@@ -1409,7 +1462,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_not_continued,
+            liboboe_decision=decision_not_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=parent_span_context_invalid,
             xtraceoptions=mock_xtraceoptions_no_sw_keys_nor_custom_keys_nor_tt_signed
@@ -1432,7 +1486,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
@@ -1460,7 +1515,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=None,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -1489,7 +1545,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         result = fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=attributes_no_tracestate,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
@@ -1522,7 +1579,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         result = fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=attributes_no_tracestate,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -1555,7 +1613,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         result = fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=attributes_with_tracestate,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_unsigned_tt,
@@ -1588,7 +1647,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         result = fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=attributes_with_tracestate,
-            decision=decision_continued,
+            liboboe_decision=decision_continued,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=tracestate_with_sw_and_others,
             parent_span_context=parent_span_context_valid_remote,
             xtraceoptions=mock_xtraceoptions_sw_keys_and_custom_keys_and_signed_tt,
@@ -1620,7 +1680,8 @@ class Test_SwSampler_is_lambda_calculate_attributes():
         assert fixture_swsampler_is_lambda.calculate_attributes(
             span_name="foo",
             attributes=attributes_no_tracestate,
-            decision=decision_record_and_sample_regular,
+            liboboe_decision=decision_record_and_sample_regular,
+            otel_decision=Decision.RECORD_AND_SAMPLE,
             trace_state=None,
             parent_span_context=INVALID_SPAN_CONTEXT,
             xtraceoptions=mock_xtraceoptions_empty,

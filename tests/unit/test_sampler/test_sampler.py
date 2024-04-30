@@ -674,6 +674,7 @@ class Test_SwSampler():
             "foo",
             {"foo": "bar"},
             "my_decision",
+            Decision.RECORD_AND_SAMPLE,
             "my_trace_state",
             "my_span_context",
             expected_xto,
