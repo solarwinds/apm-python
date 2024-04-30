@@ -453,7 +453,8 @@ class _SwSampler(Sampler):
         self,
         span_name: str,
         attributes: Attributes,
-        decision: dict,
+        liboboe_decision: dict,
+        otel_decision: enum.Enum,
         trace_state: TraceState,
         parent_span_context: SpanContext,
         xtraceoptions: XTraceOptions,
@@ -462,7 +463,6 @@ class _SwSampler(Sampler):
         parent span context, xtraceoptions, and existing attributes."""
         logger.debug("Received attributes: %s", attributes)
         # Don't set attributes if not tracing
-        otel_decision = self.otel_decision_from_liboboe(decision)
         if not Decision.is_sampled(otel_decision):
             logger.debug(
                 "Trace decision not is_sampled - not setting attributes"
@@ -490,10 +490,10 @@ class _SwSampler(Sampler):
 
         # Always (root or is_remote) set service entry internal KVs
         new_attributes[self._INTERNAL_BUCKET_CAPACITY] = (
-            f"{decision['bucket_cap']}"
+            f"{liboboe_decision['bucket_cap']}"
         )
         new_attributes[self._INTERNAL_BUCKET_RATE] = (
-            f"{decision['bucket_rate']}"
+            f"{liboboe_decision['bucket_rate']}"
         )
 
         # If is_lambda,
@@ -518,8 +518,10 @@ class _SwSampler(Sampler):
                 W3CTransformer.span_id_from_sw(sw_value)
             )
 
-        new_attributes[self._INTERNAL_SAMPLE_RATE] = decision["rate"]
-        new_attributes[self._INTERNAL_SAMPLE_SOURCE] = decision["source"]
+        new_attributes[self._INTERNAL_SAMPLE_RATE] = liboboe_decision["rate"]
+        new_attributes[self._INTERNAL_SAMPLE_SOURCE] = liboboe_decision[
+            "source"
+        ]
         logger.debug(
             "Set attributes with service entry internal KVs: %s",
             new_attributes,
@@ -544,7 +546,7 @@ class _SwSampler(Sampler):
 
         new_attributes = self.add_tracestate_capture_to_attributes_dict(
             new_attributes,
-            decision,
+            liboboe_decision,
             trace_state,
             parent_span_context,
         )
@@ -586,6 +588,7 @@ class _SwSampler(Sampler):
         liboboe_decision = self.calculate_liboboe_decision(
             parent_span_context, name, kind, attributes, xtraceoptions
         )
+        otel_decision = self.otel_decision_from_liboboe(liboboe_decision)
 
         # Always calculate trace_state for propagation
         new_trace_state = self.calculate_trace_state(
@@ -595,11 +598,11 @@ class _SwSampler(Sampler):
             name,
             attributes,
             liboboe_decision,
+            otel_decision,
             new_trace_state,
             parent_span_context,
             xtraceoptions,
         )
-        otel_decision = self.otel_decision_from_liboboe(liboboe_decision)
 
         return SamplingResult(
             otel_decision,

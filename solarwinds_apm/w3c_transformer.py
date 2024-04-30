@@ -6,14 +6,10 @@
 
 """Provides functionality to transform OpenTelemetry Data to SolarWinds Observability data."""
 
-import logging
-
 from opentelemetry.sdk.trace import SpanContext
 from opentelemetry.trace.span import TraceState
 
 from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_RESPONSE_KEY
-
-logger = logging.getLogger(__name__)
 
 
 class W3CTransformer:
@@ -42,7 +38,7 @@ class W3CTransformer:
 
     @classmethod
     def traceparent_from_context(cls, span_context: SpanContext) -> str:
-        """Generates a liboboe W3C compatible trace_context from
+        """Maps a liboboe W3C compatible trace_context from
         provided OTel span context."""
         template = "-".join(
             [
@@ -56,11 +52,6 @@ class W3CTransformer:
             span_context.trace_id,
             span_context.span_id,
             span_context.trace_flags,
-        )
-        logger.debug(
-            "Generated traceparent %s from %s",
-            xtr,
-            span_context,
         )
         return xtr
 

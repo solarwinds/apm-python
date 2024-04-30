@@ -87,7 +87,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 if span.parent.is_remote:
                     self._add_info_transaction_name(span, evt)
             else:
-                # In OpenTelemrtry, there are no events with individual IDs, but only a span ID
+                # In OpenTelemetry, there are no events with individual IDs, but only a span ID
                 # and trace ID. Thus, the entry event needs to be generated such that it has the
                 # same op ID as the span ID of the OTel span.
                 logger.debug("Start a new trace %s", md.toString())
