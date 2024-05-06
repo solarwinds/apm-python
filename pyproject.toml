@@ -45,6 +45,12 @@ dependencies = [
     'opentelemetry-sdk == 1.24.0',
     'opentelemetry-instrumentation@git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@sw-upgrade-otel#subdirectory=opentelemetry-instrumentation',
     'opentelemetry-instrumentation-logging@git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@sw-upgrade-otel#subdirectory=instrumentation/opentelemetry-instrumentation-logging',
+    # TODO: Remove these explicit installs for early semconv upgrade testing
+    #       when we upgrade to latest release
+    'opentelemetry-semantic-conventions@git+https://github.com/tammy-baylis-swi/opentelemetry-python.git@sw-upgrade-otel#subdirectory=opentelemetry-semantic-conventions',
+    'opentelemetry-util-http@git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@sw-upgrade-otel#subdirectory=util/opentelemetry-util-http',
+    'opentelemetry-instrumentation-requests@git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@sw-upgrade-otel#subdirectory=instrumentation/opentelemetry-instrumentation-requests',
+    'opentelemetry-instrumentation-wsgi@git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@sw-upgrade-otel#subdirectory=instrumentation/opentelemetry-instrumentation-wsgi',
 ]
 
 [project.urls]
