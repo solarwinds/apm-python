@@ -166,7 +166,7 @@ class SolarWindsDistro(BaseDistro):
     def get_semconv_opt_in(self):
         """
         Always returns semconv config as opt-into new, stable HTTP only
-        
+
         See also:
         https://github.com/open-telemetry/opentelemetry-python-contrib/blob/0a231e57f9722e6101194c6b38695addf23ab950/opentelemetry-instrumentation/src/opentelemetry/instrumentation/_semconv.py#L93-L99
         """
