@@ -103,8 +103,8 @@ class SolarWindsDistro(BaseDistro):
         on each one. This is a method override to pass additional
         arguments to each entry point.
         """
-        # Set new semconv opt-in if configured
-        opt_in = self.detect_semconv_opt_in()
+        # Set new semconv opt-in
+        opt_in = self.get_semconv_opt_in()
         if opt_in:
             kwargs["sem_conv_opt_in_mode"] = opt_in
 
@@ -163,6 +163,15 @@ class SolarWindsDistro(BaseDistro):
 
         return commenter_opts
 
-    def detect_semconv_opt_in(self):
-        """Returns semconv opt-in config, if any"""
-        return environ.get("OTEL_SEMCONV_STABILITY_OPT_IN")
+    def get_semconv_opt_in(self):
+        """
+        Always returns semconv config as opt-into new, stable HTTP only
+        
+        See also:
+        https://github.com/open-telemetry/opentelemetry-python-contrib/blob/0a231e57f9722e6101194c6b38695addf23ab950/opentelemetry-instrumentation/src/opentelemetry/instrumentation/_semconv.py#L93-L99
+        """
+        # TODO: Support other signal types when available
+        #       https://swicloud.atlassian.net/browse/NH-79611
+        # return environ.get("OTEL_SEMCONV_STABILITY_OPT_IN")
+
+        return "http"

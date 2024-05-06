@@ -247,7 +247,14 @@ class TestDistro:
             }
         )
         distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
-        mock_instrument.assert_called_once_with(**{"foo": "bar"})  
+        mock_instrument.assert_called_once_with(
+            **{
+                "foo": "bar",
+                # TODO: Support other signal types when available
+                #       https://swicloud.atlassian.net/browse/NH-79611
+                "sem_conv_opt_in_mode": "http",
+            }
+        )  
 
     def test_load_instrumentor_enable_commenting(self, mocker):
         mock_instrument = mocker.Mock()
@@ -281,6 +288,9 @@ class TestDistro:
             enable_commenter=True,
             foo="bar",
             is_sql_commentor_enabled=True,
+            # TODO: Support other signal types when available
+            #       https://swicloud.atlassian.net/browse/NH-79611
+            sem_conv_opt_in_mode="http",
         )
 
     def test_enable_commenter_none(self, mocker):
@@ -342,3 +352,8 @@ class TestDistro:
         assert result.get("foo") == True
         assert result.get("bar") == False
         assert result.get("baz") is None
+
+    def test_get_semconv_opt_in(self):
+        # TODO: Support other signal types when available
+        #       https://swicloud.atlassian.net/browse/NH-79611
+        assert distro.SolarWindsDistro().get_semconv_opt_in() == "http"
