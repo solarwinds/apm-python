@@ -51,6 +51,7 @@ dependencies = [
     'opentelemetry-util-http@git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@sw-upgrade-otel#subdirectory=util/opentelemetry-util-http',
     'opentelemetry-instrumentation-requests@git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@sw-upgrade-otel#subdirectory=instrumentation/opentelemetry-instrumentation-requests',
     'opentelemetry-instrumentation-wsgi@git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@sw-upgrade-otel#subdirectory=instrumentation/opentelemetry-instrumentation-wsgi',
+    'opentelemetry-instrumentation-flask@git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@sw-upgrade-otel#subdirectory=instrumentation/opentelemetry-instrumentation-flask',
 ]
 
 [project.urls]
