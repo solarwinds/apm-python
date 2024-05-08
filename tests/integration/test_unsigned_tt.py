@@ -105,7 +105,7 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]
-        assert span_server.name == "/test_trace/"
+        assert span_server.name == "GET /test_trace/"
         assert span_server.kind == trace_api.SpanKind.SERVER
         assert span_client.name == "GET"
         assert span_client.kind == trace_api.SpanKind.CLIENT
@@ -424,7 +424,7 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]
-        assert span_server.name == "/test_trace/"
+        assert span_server.name == "GET /test_trace/"
         assert span_server.kind == trace_api.SpanKind.SERVER
         assert span_client.name == "GET"
         assert span_client.kind == trace_api.SpanKind.CLIENT
