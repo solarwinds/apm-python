@@ -97,17 +97,17 @@ class SolarWindsDistro(BaseDistro):
             "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s trace_flags=%(otelTraceSampled)02d resource.service.name=%(otelServiceName)s] - %(message)s",
         )
 
+        # TODO: Support other signal types when available
+        #       https://swicloud.atlassian.net/browse/NH-79611
+        # Always opt into new semconv for all instrumentors (if supported)
+        environ["OTEL_SEMCONV_STABILITY_OPT_IN"] = self.get_semconv_opt_in()
+
     def load_instrumentor(self, entry_point: EntryPoint, **kwargs):
         """Takes a collection of instrumentation entry points
         and activates them by instantiating and calling instrument()
         on each one. This is a method override to pass additional
         arguments to each entry point.
         """
-        # Set new semconv opt-in
-        opt_in = self.get_semconv_opt_in()
-        if opt_in:
-            kwargs["sem_conv_opt_in_mode"] = opt_in
-
         # Set enable for sqlcommenter. Assumes kwargs ignored if not
         # implemented for current instrumentation library
         if self.enable_commenter():
