@@ -246,8 +246,9 @@ class Test_SwSampler_calculate_attributes():
     """
     def test_init(self, mocker):
         mock_apm_config = mocker.Mock()
+        mock_reporter = mocker.Mock()
         mock_oboe_api = mocker.Mock()
-        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        sampler = _SwSampler(mock_apm_config, mock_reporter, mock_oboe_api)
         assert sampler.apm_config == mock_apm_config
         assert sampler.oboe_settings_api == mock_oboe_api
 
@@ -966,8 +967,9 @@ class Test_SwSampler_is_lambda_calculate_attributes():
     """
     def test_init(self, mocker):
         mock_apm_config = mocker.Mock()
+        mock_reporter = mocker.Mock()
         mock_oboe_api = mocker.Mock()
-        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        sampler = _SwSampler(mock_apm_config, mock_reporter, mock_oboe_api)
         assert sampler.apm_config == mock_apm_config
         assert sampler.oboe_settings_api == mock_oboe_api
 
