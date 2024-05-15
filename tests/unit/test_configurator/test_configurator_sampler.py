@@ -29,6 +29,7 @@ class TestConfiguratorSampler:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_sampler(
             mock_apmconfig_disabled,
+            mocker.Mock(),
             mock_oboe_api_obj,
         )
 
@@ -64,6 +65,7 @@ class TestConfiguratorSampler:
         with pytest.raises(Exception):
             test_configurator._configure_sampler(
                 mock_apmconfig_enabled,
+                mocker.Mock(),
                 mock_oboe_api_obj,
             )
 
@@ -99,6 +101,7 @@ class TestConfiguratorSampler:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_sampler(
             mock_apmconfig_enabled,
+            mocker.Mock(),
             mock_oboe_api_obj,
         )
 
@@ -164,6 +167,7 @@ class TestConfiguratorSampler:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_sampler(
             mock_apmconfig_enabled,
+            mocker.Mock(),
             mock_oboe_api_obj,
         )
 

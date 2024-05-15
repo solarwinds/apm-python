@@ -62,7 +62,7 @@ def fixture_swsampler(mocker):
             "lambda_function_name": "foo-lambda",
         }
     )
-    return _SwSampler(mock_apm_config, mocker.Mock())
+    return _SwSampler(mock_apm_config, mocker.Mock(), mocker.Mock())
 
 @pytest.fixture(name="fixture_swsampler_is_lambda")
 def fixture_swsampler_is_lambda(mocker):
@@ -109,7 +109,7 @@ def fixture_swsampler_is_lambda(mocker):
             "lambda_function_name": "foo-lambda",
         }
     )
-    return _SwSampler(mock_apm_config, mocker.Mock())
+    return _SwSampler(mock_apm_config, mocker.Mock(), mocker.Mock())
 
 
 # Sampler fixtures with Transaction Filters =================
@@ -167,4 +167,4 @@ def fixture_swsampler_txnfilters(mocker):
             "get": mock_get,
         }
     )
-    return _SwSampler(mock_apm_config, mocker.Mock())
+    return _SwSampler(mock_apm_config, mocker.Mock(), mocker.Mock())

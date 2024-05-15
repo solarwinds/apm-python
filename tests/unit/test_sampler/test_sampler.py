@@ -217,8 +217,9 @@ class Test_SwSampler():
                 "lambda_function_name": "foo-lambda",
             }
         )
+        mock_reporter = mocker.Mock()
         mock_oboe_api = mocker.Mock()
-        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        sampler = _SwSampler(mock_apm_config, mock_reporter, mock_oboe_api)
         assert sampler.apm_config == mock_apm_config
         assert sampler.oboe_settings_api == mock_oboe_api
         assert sampler.env_transaction_name == "foo-txn"
@@ -245,6 +246,7 @@ class Test_SwSampler():
                 "getTracingDecision": mock_get_tracing_decision
             }
         )
+        mock_reporter = mocker.Mock()
 
         mock_apm_config.configure_mock(
             **{
@@ -253,7 +255,7 @@ class Test_SwSampler():
                 "is_lambda": True,
             }
         )
-        test_sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        test_sampler = _SwSampler(mock_apm_config, mock_reporter, mock_oboe_api)
 
         result = test_sampler.calculate_liboboe_decision(
             parent_span_context_invalid,
@@ -721,7 +723,7 @@ class Test_SwSampler():
 
 class TestParentBasedSwSampler():
     def test_init(self, mocker):
-        sampler = ParentBasedSwSampler(mocker.Mock(), mocker.Mock())
+        sampler = ParentBasedSwSampler(mocker.Mock(), mocker.Mock(), mocker.Mock())
         assert type(sampler._root) == _SwSampler
         assert type(sampler._remote_parent_sampled) == _SwSampler
         assert type(sampler._remote_parent_not_sampled) == _SwSampler
