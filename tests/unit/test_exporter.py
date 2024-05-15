@@ -1293,3 +1293,5 @@ class Test_SolarWindsSpanExporter():
                 mock_span_context
             )
         mock_metadata.fromString.assert_called_once_with("foo")
+
+    # TODO test__normalize_attribute_value
