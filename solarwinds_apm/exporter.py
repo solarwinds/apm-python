@@ -102,6 +102,7 @@ class SolarWindsSpanExporter(SpanExporter):
             self._add_info_instrumentation_scope(span, evt)
             self._add_info_instrumented_framework(span, evt)
             for attr_k, attr_v in span.attributes.items():
+                attr_v = self._normalize_attribute_value(attr_v)
                 evt.addInfo(attr_k, attr_v)
             self.reporter.sendReport(evt, False)
 
@@ -282,6 +283,7 @@ class SolarWindsSpanExporter(SpanExporter):
                 "exception.message",
                 "exception.stacktrace",
             ):
+                attr_v = self._normalize_attribute_value(attr_v)
                 evt.addInfo(attr_k, attr_v)
         self.reporter.sendReport(evt, False)
 
@@ -289,6 +291,7 @@ class SolarWindsSpanExporter(SpanExporter):
         evt = self.context.createEvent(int(event.timestamp / 1000))
         evt.addInfo("Label", "info")
         for attr_k, attr_v in event.attributes.items():
+            attr_v = self._normalize_attribute_value(attr_v)
             evt.addInfo(attr_k, attr_v)
         self.reporter.sendReport(evt, False)
 
@@ -297,3 +300,10 @@ class SolarWindsSpanExporter(SpanExporter):
         return metadata.fromString(
             W3CTransformer.traceparent_from_context(span_context)
         )
+
+    @staticmethod
+    def _normalize_attribute_value(attr_v) -> Any:
+        """Otel Instrumentors may set attributes values as tuple, list, etc"""
+        if type(attr_v) not in [str, float, int, bool]:
+            attr_v = str(attr_v)
+        return attr_v
