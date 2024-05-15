@@ -101,10 +101,17 @@ class SolarWindsSpanExporter(SpanExporter):
             evt.addInfo("Language", "Python")
             self._add_info_instrumentation_scope(span, evt)
             self._add_info_instrumented_framework(span, evt)
+            logger.debug(
+                "Exporter span.attributes.items(): %s", span.attributes.items()
+            )
             for attr_k, attr_v in span.attributes.items():
+                logger.debug(
+                    "Doing exporter addInfo with: %s, %s", attr_k, attr_v
+                )
                 evt.addInfo(attr_k, attr_v)
             self.reporter.sendReport(evt, False)
 
+            logger.debug("span.events is: %s", span.events)
             for event in span.events:
                 if event.name == "exception":
                     self._report_exception_event(event)
@@ -276,6 +283,10 @@ class SolarWindsSpanExporter(SpanExporter):
             "Backtrace", event.attributes.get("exception.stacktrace", None)
         )
         # add remaining attributes, if any
+        logger.debug(
+            "Exception event event.attributes.items(): %s",
+            event.attributes.items(),
+        )
         for attr_k, attr_v in event.attributes.items():
             if attr_k not in (
                 "exception.type",
@@ -288,6 +299,9 @@ class SolarWindsSpanExporter(SpanExporter):
     def _report_info_event(self, event) -> None:
         evt = self.context.createEvent(int(event.timestamp / 1000))
         evt.addInfo("Label", "info")
+        logger.debug(
+            "Info event event.attributes.items(): %s", event.attributes.items()
+        )
         for attr_k, attr_v in event.attributes.items():
             evt.addInfo(attr_k, attr_v)
         self.reporter.sendReport(evt, False)
