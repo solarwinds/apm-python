@@ -314,7 +314,7 @@ class SolarWindsSpanExporter(SpanExporter):
         return metadata.fromString(
             W3CTransformer.traceparent_from_context(span_context)
         )
-    
+
     @staticmethod
     def _normalize_attribute_value(attr_v) -> Any:
         """Otel Instrumentors may set attributes values as tuple, list, etc"""
