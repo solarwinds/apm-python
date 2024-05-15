@@ -4,7 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.6.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.7.0...HEAD)
+
+## [1.7.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.7.0) - 2024-05-15
+
+### Changed
+- Fixed log duplication ([#357](https://github.com/solarwinds/apm-python/pull/357))
+- Refactored sampler ([#359](https://github.com/solarwinds/apm-python/pull/359))
+- Removed debug line ([#360](https://github.com/solarwinds/apm-python/pull/360))
+- Sampler inits with APM-proto exporter ([#366](https://github.com/solarwinds/apm-python/pull/366))
+- Fixed APM-proto export for non-scalar attribute types ([#367](https://github.com/solarwinds/apm-python/pull/367))
 
 ## [1.6.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.6.0) - 2024-04-02
 
