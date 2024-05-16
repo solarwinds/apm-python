@@ -1293,3 +1293,61 @@ class Test_SolarWindsSpanExporter():
                 mock_span_context
             )
         mock_metadata.fromString.assert_called_once_with("foo")
+
+    def test__normalize_attribute_value_str(self, exporter):
+        assert isinstance(
+            exporter._normalize_attribute_value("abc"),
+            str
+        )
+
+    def test__normalize_attribute_value_float(self, exporter):
+        assert isinstance(
+            exporter._normalize_attribute_value(0.123),
+            float
+        )
+
+    def test__normalize_attribute_value_int(self, exporter):
+        assert isinstance(
+            exporter._normalize_attribute_value(123),
+            int
+        )
+
+    def test__normalize_attribute_value_bool(self, exporter):
+        assert isinstance(
+            exporter._normalize_attribute_value(False),
+            bool
+        )
+
+    def test__normalize_attribute_value_tuple(self, exporter):
+        result = exporter._normalize_attribute_value(('tuple', 'with', 123, 1.23, False))
+        assert isinstance(result, str)
+        assert result == "('tuple', 'with', 123, 1.23, False)"
+
+    def test__normalize_attribute_value_list(self, exporter):
+        result = exporter._normalize_attribute_value(['list', 'with', 123, 1.23, False])
+        assert isinstance(result, str)
+        assert result == "['list', 'with', 123, 1.23, False]"
+
+    def test__normalize_attribute_value_dict(self, exporter):
+        result = exporter._normalize_attribute_value(
+            {
+                "a": 1,
+                2: 'b',
+                1.23: False,
+            }
+        )
+        assert isinstance(result, str)
+        assert result == "{'a': 1, 2: 'b', 1.23: False}"
+
+    def test__normalize_attribute_value_custom_obj(self, exporter):
+        
+        class SomeObject:
+            def __init__(self):
+                self.foo = "bar"
+
+            def __str__(self):
+                return f"SomeObject with foo={self.foo}"
+        
+        result = exporter._normalize_attribute_value(SomeObject())
+        assert isinstance(result, str)
+        assert result == "SomeObject with foo=bar"

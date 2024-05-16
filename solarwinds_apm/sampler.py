@@ -41,7 +41,7 @@ from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
-    from solarwinds_apm.extension.oboe import OboeAPI
+    from solarwinds_apm.extension.oboe import OboeAPI, Reporter
 
 logger = logging.getLogger(__name__)
 
@@ -68,9 +68,11 @@ class _SwSampler(Sampler):
     def __init__(
         self,
         apm_config: "SolarWindsApmConfig",
+        reporter: "Reporter",
         oboe_api: "OboeAPI",
     ):
         self.apm_config = apm_config
+        self.reporter = reporter
         # SW_APM_TRANSACTION_NAME and AWS_LAMBDA_FUNCTION_NAME
         self.env_transaction_name = apm_config.get("transaction_name")
         self.lambda_function_name = apm_config.lambda_function_name
@@ -622,6 +624,7 @@ class ParentBasedSwSampler(ParentBased):
     def __init__(
         self,
         apm_config: "SolarWindsApmConfig",
+        reporter: "Reporter",
         oboe_api: "OboeAPI",
     ):
         """
@@ -630,9 +633,11 @@ class ParentBasedSwSampler(ParentBased):
         Uses OTEL defaults if parent span is_local.
         """
         super().__init__(
-            root=_SwSampler(apm_config, oboe_api),
-            remote_parent_sampled=_SwSampler(apm_config, oboe_api),
-            remote_parent_not_sampled=_SwSampler(apm_config, oboe_api),
+            root=_SwSampler(apm_config, reporter, oboe_api),
+            remote_parent_sampled=_SwSampler(apm_config, reporter, oboe_api),
+            remote_parent_not_sampled=_SwSampler(
+                apm_config, reporter, oboe_api
+            ),
         )
 
     # should_sample defined by ParentBased

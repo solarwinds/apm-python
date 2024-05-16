@@ -29,8 +29,9 @@ class Test_SwSampler_calculate_otlp_tname():
                 "lambda_function_name": "foo-lambda",
             }
         )
+        mock_reporter = mocker.Mock()
         mock_oboe_api = mocker.Mock()
-        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        sampler = _SwSampler(mock_apm_config, mock_reporter, mock_oboe_api)
         assert sampler.calculate_otlp_transaction_name("foo-span") == "foo-txn"
 
     def test_calculate_otlp_name_env_var_truncated(self, mocker):
@@ -51,8 +52,9 @@ class Test_SwSampler_calculate_otlp_tname():
                 "lambda_function_name": "foo-lambda",
             }
         )
+        mock_reporter = mocker.Mock()
         mock_oboe_api = mocker.Mock()
-        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        sampler = _SwSampler(mock_apm_config, mock_reporter, mock_oboe_api)
         assert sampler.calculate_otlp_transaction_name("foo-span") == "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooo"
 
     def test_calculate_otlp_name_lambda(self, mocker):
@@ -70,8 +72,9 @@ class Test_SwSampler_calculate_otlp_tname():
                 "lambda_function_name": "foo-lambda",
             }
         )
+        mock_reporter = mocker.Mock()
         mock_oboe_api = mocker.Mock()
-        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        sampler = _SwSampler(mock_apm_config, mock_reporter, mock_oboe_api)
         assert sampler.calculate_otlp_transaction_name("foo-span") == "foo-lambda"
 
     def test_calculate_otlp_name_lambda_truncated(self, mocker):
@@ -89,8 +92,9 @@ class Test_SwSampler_calculate_otlp_tname():
                 "lambda_function_name": "foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo",
             }
         )
+        mock_reporter = mocker.Mock()
         mock_oboe_api = mocker.Mock()
-        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        sampler = _SwSampler(mock_apm_config, mock_reporter, mock_oboe_api)
         assert sampler.calculate_otlp_transaction_name("foo-span") == "foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooo"
 
     def test_calculate_otlp_name_span_name(self, mocker):
@@ -108,8 +112,9 @@ class Test_SwSampler_calculate_otlp_tname():
                 "lambda_function_name": None,
             }
         )
+        mock_reporter = mocker.Mock()
         mock_oboe_api = mocker.Mock()
-        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        sampler = _SwSampler(mock_apm_config, mock_reporter, mock_oboe_api)
         assert sampler.calculate_otlp_transaction_name("foo-span") == "foo-span"
 
     def test_calculate_otlp_name_span_name_truncated(self, mocker):
@@ -127,8 +132,9 @@ class Test_SwSampler_calculate_otlp_tname():
                 "lambda_function_name": None,
             }
         )
+        mock_reporter = mocker.Mock()
         mock_oboe_api = mocker.Mock()
-        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        sampler = _SwSampler(mock_apm_config, mock_reporter, mock_oboe_api)
         assert sampler.calculate_otlp_transaction_name(
             "foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo"
         ) == "foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooooo"
@@ -148,6 +154,7 @@ class Test_SwSampler_calculate_otlp_tname():
                 "lambda_function_name": None,
             }
         )
+        mock_reporter = mocker.Mock()
         mock_oboe_api = mocker.Mock()
-        sampler = _SwSampler(mock_apm_config, mock_oboe_api)
+        sampler = _SwSampler(mock_apm_config, mock_reporter, mock_oboe_api)
         assert sampler.calculate_otlp_transaction_name("") == "unknown"

@@ -123,7 +123,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         oboe_api: "OboeAPI",
     ) -> None:
         """Configure OTel sampler, exporter, propagator, response propagator"""
-        self._configure_sampler(apm_config, oboe_api)
+        self._configure_sampler(
+            apm_config,
+            reporter,
+            oboe_api,
+        )
         if apm_config.agent_enabled:
             # set MeterProvider first via metrics_exporter config
             self._configure_metrics_exporter(apm_config)
@@ -165,6 +169,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_sampler(
         self,
         apm_config: SolarWindsApmConfig,
+        reporter: "Reporter",
         oboe_api: "OboeAPI",
     ) -> None:
         """Always configure SolarWinds OTel sampler, or none if disabled"""
@@ -177,7 +182,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "solarwinds_apm",
                 "opentelemetry_traces_sampler",
                 self._DEFAULT_SW_TRACES_SAMPLER,
-            )(apm_config, oboe_api)
+            )(apm_config, reporter, oboe_api)
         except Exception as ex:
             logger.exception("A exception was raised: %s", ex)
             logger.exception(
