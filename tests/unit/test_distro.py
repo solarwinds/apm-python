@@ -141,6 +141,7 @@ class TestDistro:
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
         assert not os.environ.get(OTEL_METRICS_EXPORTER)
+        assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_env_exporter(self, mocker):
         mocker.patch.dict(
@@ -154,6 +155,7 @@ class TestDistro:
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
         assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
+        assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_no_env_non_otel_protocol(self, mocker):
         mocker.patch.dict(
@@ -167,6 +169,7 @@ class TestDistro:
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
         assert os.environ.get(OTEL_METRICS_EXPORTER) is None
+        assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_no_env_http(self, mocker):
         mocker.patch.dict(
@@ -180,6 +183,7 @@ class TestDistro:
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_http"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_http"
+        assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_no_env_grpc(self, mocker):
         mocker.patch.dict(
@@ -193,6 +197,7 @@ class TestDistro:
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_grpc"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_grpc"
+        assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_env_exporter_http(self, mocker):
         mocker.patch.dict(
@@ -207,6 +212,7 @@ class TestDistro:
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
         assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
+        assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_env_exporter_grpc(self, mocker):
         mocker.patch.dict(
@@ -221,12 +227,14 @@ class TestDistro:
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
         assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
+        assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_env_propagators(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_PROPAGATORS": "tracecontext,solarwinds_propagator,foobar"})
         distro.SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,solarwinds_propagator,foobar"
         assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
+        assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_load_instrumentor_no_commenting(self, mocker):
         mock_instrument = mocker.Mock()
@@ -247,7 +255,11 @@ class TestDistro:
             }
         )
         distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
-        mock_instrument.assert_called_once_with(**{"foo": "bar"})  
+        mock_instrument.assert_called_once_with(
+            **{
+                "foo": "bar",
+            }
+        )  
 
     def test_load_instrumentor_enable_commenting(self, mocker):
         mock_instrument = mocker.Mock()
@@ -342,3 +354,7 @@ class TestDistro:
         assert result.get("foo") == True
         assert result.get("bar") == False
         assert result.get("baz") is None
+
+    def test_get_semconv_opt_in(self):
+        # TODO: Support other signal types when available
+        assert distro.SolarWindsDistro().get_semconv_opt_in() == "http"

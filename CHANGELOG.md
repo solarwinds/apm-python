@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sampler inits with APM-proto exporter ([#366](https://github.com/solarwinds/apm-python/pull/366))
 - Fixed APM-proto export for non-scalar attribute types ([#367](https://github.com/solarwinds/apm-python/pull/367))
 
+### Changed
+- OpenTelemetry API/SDK and instrumentation 1.25.0/0.46b0 ([#364](https://github.com/solarwinds/apm-python/pull/364))
+
 ## [1.6.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.6.0) - 2024-04-02
 
 ### Added
