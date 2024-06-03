@@ -357,5 +357,4 @@ class TestDistro:
 
     def test_get_semconv_opt_in(self):
         # TODO: Support other signal types when available
-        #       https://swicloud.atlassian.net/browse/NH-79611
         assert distro.SolarWindsDistro().get_semconv_opt_in() == "http"

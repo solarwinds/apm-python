@@ -98,7 +98,6 @@ class SolarWindsDistro(BaseDistro):
         )
 
         # TODO: Support other signal types when available
-        #       https://swicloud.atlassian.net/browse/NH-79611
         # Always opt into new semconv for all instrumentors (if supported)
         environ["OTEL_SEMCONV_STABILITY_OPT_IN"] = self.get_semconv_opt_in()
 
@@ -171,7 +170,6 @@ class SolarWindsDistro(BaseDistro):
         https://github.com/open-telemetry/opentelemetry-python-contrib/blob/0a231e57f9722e6101194c6b38695addf23ab950/opentelemetry-instrumentation/src/opentelemetry/instrumentation/_semconv.py#L93-L99
         """
         # TODO: Support other signal types when available
-        #       https://swicloud.atlassian.net/browse/NH-79611
         # return environ.get("OTEL_SEMCONV_STABILITY_OPT_IN")
 
         return "http"
