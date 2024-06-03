@@ -27,12 +27,6 @@ jobs:
         apm-env: ["lambda"]
     steps:
     - uses: actions/checkout@v4
-    - name: Checkout custom instrumentor
-      uses: actions/checkout@v4
-      with:
-        repository: tammy-baylis-swi/opentelemetry-python-contrib
-        ref: build-lambda-handler-exceptions
-        path: /code/solarwinds_apm/contrib-custom
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
