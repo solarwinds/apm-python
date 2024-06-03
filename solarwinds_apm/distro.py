@@ -97,6 +97,10 @@ class SolarWindsDistro(BaseDistro):
             "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s trace_flags=%(otelTraceSampled)02d resource.service.name=%(otelServiceName)s] - %(message)s",
         )
 
+        # TODO: Support other signal types when available
+        # Always opt into new semconv for all instrumentors (if supported)
+        environ["OTEL_SEMCONV_STABILITY_OPT_IN"] = self.get_semconv_opt_in()
+
     def load_instrumentor(self, entry_point: EntryPoint, **kwargs):
         """Takes a collection of instrumentation entry points
         and activates them by instantiating and calling instrument()
@@ -157,3 +161,15 @@ class SolarWindsDistro(BaseDistro):
                     commenter_opts[opt_k.strip()] = opt_v_bool
 
         return commenter_opts
+
+    def get_semconv_opt_in(self):
+        """
+        Always returns semconv config as opt-into new, stable HTTP only
+
+        See also:
+        https://github.com/open-telemetry/opentelemetry-python-contrib/blob/0a231e57f9722e6101194c6b38695addf23ab950/opentelemetry-instrumentation/src/opentelemetry/instrumentation/_semconv.py#L93-L99
+        """
+        # TODO: Support other signal types when available
+        # return environ.get("OTEL_SEMCONV_STABILITY_OPT_IN")
+
+        return "http"
