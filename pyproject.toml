@@ -41,10 +41,10 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    'opentelemetry-api == 1.24.0',
-    'opentelemetry-sdk == 1.24.0',
-    'opentelemetry-instrumentation@git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@sw-upgrade-otel#subdirectory=opentelemetry-instrumentation',
-    'opentelemetry-instrumentation-logging@git+https://github.com/tammy-baylis-swi/opentelemetry-python-contrib.git@sw-upgrade-otel#subdirectory=instrumentation/opentelemetry-instrumentation-logging',
+    'opentelemetry-api == 1.20.0',
+    'opentelemetry-sdk == 1.20.0',
+    'opentelemetry-instrumentation == 0.41b0',
+    'opentelemetry-instrumentation-logging == 0.41b0',
 ]
 
 [project.urls]
