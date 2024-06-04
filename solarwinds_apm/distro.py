@@ -53,9 +53,9 @@ class SolarWindsDistro(BaseDistro):
 
         # https://devguide.python.org/versions/
         if sys.version_info.major == 3 and sys.version_info.minor < 8:
-            logger.warning(
-                "Deprecation: Python %s is at end-of-life and support "
-                "by APM Python will be dropped in a future release. Please upgrade.",
+            logger.error(
+                "Obsolete: Python %s is at end-of-life and support "
+                "by APM Python and OpenTelemetry has been dropped. Please upgrade.",
                 python_vers,
             )
 

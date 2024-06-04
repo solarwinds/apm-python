@@ -80,18 +80,18 @@ class TestDistro:
             "solarwinds_apm.distro.logger"
         )
         mock_info = mocker.Mock()
-        mock_warning = mocker.Mock()
+        mock_error = mocker.Mock()
         mock_logger.configure_mock(
             **{
                 "info": mock_info,
-                "warning": mock_warning,
+                "error": mock_error,
             }
         )
 
         distro.SolarWindsDistro()._log_python_runtime()
         mock_py_vers.assert_called_once()
         mock_info.assert_called_once()
-        mock_warning.assert_called_once()
+        mock_error.assert_called_once()
 
     def test__log_runtime(self, mocker):
         mocker.patch(
