@@ -49,10 +49,10 @@ class Test_semconv_trace:
     def test_get_url_attrs__neither(self):
         attributes = {}
         scheme, host, port, target = get_url_attrs(attributes)
-        assert scheme == None
-        assert host == None
-        assert port == None
-        assert target == None
+        assert scheme is None
+        assert host is None
+        assert port is None
+        assert target is None
 
     def test_get_url_attrs__prefer_new(self):
         attributes = {
