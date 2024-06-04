@@ -51,14 +51,6 @@ class SolarWindsDistro(BaseDistro):
         python_vers = platform.python_version()
         logger.info("Python %s", python_vers)
 
-        # https://devguide.python.org/versions/
-        if sys.version_info.major == 3 and sys.version_info.minor < 8:
-            logger.warning(
-                "Deprecation: Python %s is at end-of-life and support "
-                "by APM Python will be dropped in a future release. Please upgrade.",
-                python_vers,
-            )
-
     def _log_runtime(self):
         """Logs APM Python runtime info (high debug level)"""
         logger.info("SolarWinds APM Python %s", apm_version)
