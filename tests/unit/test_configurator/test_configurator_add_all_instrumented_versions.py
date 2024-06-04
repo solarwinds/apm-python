@@ -168,7 +168,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
     ):
         self.set_up_mocks(
             mocker=mocker,
-            entry_point_name="aiohttp_client",
+            entry_point_name="aiohttp-client",
             module_name="aiohttp",
         )
 
