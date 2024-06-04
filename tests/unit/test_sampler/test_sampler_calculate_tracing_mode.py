@@ -36,7 +36,7 @@ class Test_SwSampler_construct_url():
         assert fixture_swsampler.construct_url({"net.host.port": "bar"}) == ""
         assert fixture_swsampler.construct_url({"http.target": "bar"}) == ""
 
-    def test_construct_url_all_attrs(
+    def test_construct_url_all_attrs_old(
         self,
         fixture_swsampler,
     ):
@@ -49,7 +49,7 @@ class Test_SwSampler_construct_url():
             }
         ) == "foo://bar:baz/qux"
 
-    def test_construct_url_all_attrs_except_port(
+    def test_construct_url_all_attrs_old_except_port(
         self,
         fixture_swsampler,
     ):
@@ -61,6 +61,55 @@ class Test_SwSampler_construct_url():
             }
         ) == "foo://bar/qux"
 
+    def test_construct_url_all_attrs_new_from_path(
+        self,
+        fixture_swsampler,
+    ):
+        assert fixture_swsampler.construct_url(
+            {
+                "url.scheme": "foo",
+                "server.address": "bar",
+                "server.port": "baz",
+                "url.path": "/qux"
+            }
+        ) == "foo://bar:baz/qux"
+
+    def test_construct_url_all_attrs_new_from_query(
+        self,
+        fixture_swsampler,
+    ):
+        assert fixture_swsampler.construct_url(
+            {
+                "url.scheme": "foo",
+                "server.address": "bar",
+                "server.port": "baz",
+                "url.query": "/qux"
+            }
+        ) == "foo://bar:baz/qux"
+
+    def test_construct_url_all_attrs_new_from_path_except_port(
+        self,
+        fixture_swsampler,
+    ):
+        assert fixture_swsampler.construct_url(
+            {
+                "url.scheme": "foo",
+                "server.address": "bar",
+                "url.path": "/qux"
+            }
+        ) == "foo://bar/qux"
+
+    def test_construct_url_all_attrs_new_from_query_except_port(
+        self,
+        fixture_swsampler,
+    ):
+        assert fixture_swsampler.construct_url(
+            {
+                "url.scheme": "foo",
+                "server.address": "bar",
+                "url.query": "/qux"
+            }
+        ) == "foo://bar/qux"
 
 class Test_SwSampler_calculate_tracing_mode():
     def test_calculate_tracing_mode_no_filters(
