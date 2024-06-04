@@ -10,6 +10,7 @@ import importlib
 import logging
 import math
 import os
+import platform
 import sys
 import time
 from typing import TYPE_CHECKING, Any
@@ -83,6 +84,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     # Cannot set as env default because not part of OTel Python _KNOWN_SAMPLERS
     # https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-sdk/src/opentelemetry/sdk/trace/sampling.py#L364-L380
     _DEFAULT_SW_TRACES_SAMPLER = "solarwinds_sampler"
+    _STDLIB_PKGS = ["asyncio", "threading"]
 
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
@@ -583,8 +585,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     importlib.import_module(entry_point_name)
 
                 # some Python frameworks don't have top-level __version__
-                # and elasticsearch gives a version as (8, 5, 3) not 8.5.3
-                if entry_point_name == "elasticsearch":
+                if entry_point_name in self._STDLIB_PKGS:
+                    logger.debug(
+                        "Using Python version for library %s because part of Python standard library in Python 3.8+",
+                        entry_point.name,
+                    )
+                    version_keys[instr_key] = platform.python_version()
+                # elasticsearch gives a version as (8, 5, 3) not 8.5.3
+                elif entry_point_name == "elasticsearch":
                     version_tuple = sys.modules[entry_point_name].__version__
                     version_keys[instr_key] = ".".join(
                         [str(d) for d in version_tuple]
