@@ -35,7 +35,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_X_OPTIONS_KEY,
     INTL_SWO_X_OPTIONS_RESPONSE_KEY,
 )
-from solarwinds_apm.semconv.trace import get_new_or_old_url_attrs
+from solarwinds_apm.semconv.trace import get_url_attrs
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
@@ -101,7 +101,7 @@ class _SwSampler(Sampler):
         # Upstream OTel instrumentation libraries are individually updating
         # to implement support of HTTP semconv opt-in, so APM Python checks both
         # https://github.com/open-telemetry/opentelemetry-python-contrib/issues/936
-        scheme, host, port, target = get_new_or_old_url_attrs(attributes)
+        scheme, host, port, target = get_url_attrs(attributes)
 
         if scheme and host and target and port:
             url = f"{scheme}://{host}:{port}{target}"

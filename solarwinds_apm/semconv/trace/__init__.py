@@ -13,7 +13,7 @@ from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.util.types import Attributes
 
 
-def get_new_or_old_url_attrs(
+def get_url_attrs(
     attributes: Attributes = None,
 ) -> (Any, Any, Any, Any):
     """Returns URL scheme, host, target, port from span attributes. Order of precedence is new semconv > old semconv > none"""
