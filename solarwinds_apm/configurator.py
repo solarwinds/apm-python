@@ -545,11 +545,23 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             try:
                 conflict = get_dist_dependency_conflicts(entry_point.dist)
                 if conflict:
-                    logger.warning(
-                        "Version lookup for library %s skipped due to conflict: %s",
-                        entry_point.name,
-                        conflict,
-                    )
+                    # TODO Unnecessary tortoiseorm bootstrap will be fixed upstream
+                    # https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2409
+                    if (
+                        "tortoise-orm" in conflict.required
+                        and conflict.found is None
+                    ):
+                        logger.debug(
+                            "Version lookup for library %s skipped due to known pydantic/tortoiseorm bootstrap conflice: %s",
+                            entry_point.name,
+                            conflict,
+                        )
+                    else:
+                        logger.warning(
+                            "Version lookup for library %s skipped due to conflict: %s",
+                            entry_point.name,
+                            conflict,
+                        )
                     continue
             except Exception as ex:  # pylint: disable=broad-except
                 logger.warning(
