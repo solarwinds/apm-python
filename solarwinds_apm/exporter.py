@@ -165,8 +165,8 @@ class SolarWindsSpanExporter(SpanExporter):
             and "opentelemetry.instrumentation" in instr_scope_name
         ):
             framework = instr_scope_name.split(".")[2]
-            # Some OTel instrumentation libraries are named not exactly
-            # the same as the instrumented libraries!
+            # Some OTel instrumentation scope names are not exactly
+            # the same as their corresponding instrumented libraries
             # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
             if framework == "aiohttp_client":
                 framework = "aiohttp"

@@ -573,8 +573,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
             # Set up Instrumented Library Versions KVs with several special cases
             entry_point_name = entry_point.name
-            # Some OTel instrumentation libraries are named not exactly
-            # the same as the instrumented libraries!
+            # Some OTel instrumentation library entry point names are not exactly
+            # the same as their corresponding instrumented libraries
             # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
             if entry_point_name == "aiohttp-client":
                 entry_point_name = "aiohttp"
