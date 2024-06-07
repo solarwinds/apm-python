@@ -578,6 +578,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
             if entry_point_name == "aiohttp-client":
                 entry_point_name = "aiohttp"
+            elif entry_point_name == "aio-pika":
+                entry_point_name = "aio_pika"
             elif "grpc_" in entry_point_name:
                 entry_point_name = "grpc"
             elif entry_point_name == "system_metrics":
