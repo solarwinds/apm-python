@@ -170,6 +170,8 @@ class SolarWindsSpanExporter(SpanExporter):
             # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
             if framework == "aiohttp_client":
                 framework = "aiohttp"
+            elif framework == "aiohttp_server":
+                framework = "aiohttp"
             elif framework == "system_metrics":
                 framework = "psutil"
             elif framework == "tortoiseorm":
