@@ -591,7 +591,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             elif entry_point_name == "tortoiseorm":
                 entry_point_name = "tortoise"
 
-            instr_key = f"Python.{entry_point_name.capitalize()}.Version"
+            # Remove any underscores and convert to UpperCamelCase
+            # e.g. aio_pika becomes Python.AioPika.Version
+            middle = "".join(
+                part.capitalize() for part in entry_point_name.split("_")
+            )
+            instr_key = f"Python.{middle}.Version"
             try:
                 # There is no mysql version, but mysql.connector version
                 if entry_point_name == "mysql":
