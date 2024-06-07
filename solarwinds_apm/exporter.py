@@ -171,7 +171,7 @@ class SolarWindsSpanExporter(SpanExporter):
             if framework == "aiohttp_client":
                 framework = "aiohttp"
             # Both client/server instrumentors instrument `aiohttp`
-            # so key is potentiall overwritten, not duplicated
+            # so key is potentially overwritten, not duplicated
             elif framework == "aiohttp_server":
                 framework = "aiohttp"
             elif framework == "system_metrics":
