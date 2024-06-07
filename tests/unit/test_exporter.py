@@ -961,7 +961,7 @@ class Test_SolarWindsSpanExporter():
             cached_version="foo.bar",
         )
 
-    def test__add_info_instrumented_framework_aiohttp(
+    def test__add_info_instrumented_framework_aiohttp_client(
         self,
         mocker,
         mock_event,
@@ -984,6 +984,33 @@ class Test_SolarWindsSpanExporter():
             mock_create_event,
             mock_sys_modules,
             "opentelemetry.instrumentation.aiohttp_client",
+            "Python.aiohttp.Version",
+            "4.5.6",
+        )
+
+    def test__add_info_instrumented_framework_aiohttp_server(
+        self,
+        mocker,
+        mock_event,
+        mock_create_event,
+    ):
+        # mock module and sys.modules
+        mock_module = mocker.Mock()
+        mock_module.configure_mock(
+            **{
+                "__version__": "4.5.6"
+            }
+        )
+        mock_sys_modules = {
+            "aiohttp": mock_module
+        }
+
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.aiohttp_server",
             "Python.aiohttp.Version",
             "4.5.6",
         )
