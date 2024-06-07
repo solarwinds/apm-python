@@ -1123,6 +1123,68 @@ class Test_SolarWindsSpanExporter():
             "4.5.6",
         )
 
+    def test__add_info_instrumented_framework_asyncio(
+        self,
+        mocker,
+        mock_event,
+        mock_create_event,
+    ):
+        # Mock Python version
+        mock_plat = mocker.patch(
+            "solarwinds_apm.exporter.platform"
+        )
+        mock_py_vers = mocker.Mock(
+            return_value="3.9.123"
+        )
+        mock_plat.configure_mock(
+            **{
+                "python_version": mock_py_vers
+            }
+        )
+
+        mock_sys_modules = mocker.Mock()
+
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.asyncio",
+            "Python.asyncio.Version",
+            "3.9.123",
+        )  
+
+    def test__add_info_instrumented_framework_threading(
+        self,
+        mocker,
+        mock_event,
+        mock_create_event,
+    ):
+        # Mock Python version
+        mock_plat = mocker.patch(
+            "solarwinds_apm.exporter.platform"
+        )
+        mock_py_vers = mocker.Mock(
+            return_value="3.9.123"
+        )
+        mock_plat.configure_mock(
+            **{
+                "python_version": mock_py_vers
+            }
+        )
+
+        mock_sys_modules = mocker.Mock()
+
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.threading",
+            "Python.threading.Version",
+            "3.9.123",
+        )  
+
     def test__add_info_instrumented_framework_elasticsearch(
         self,
         mocker,

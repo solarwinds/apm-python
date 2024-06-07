@@ -307,6 +307,62 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         assert "Python.Mysql.Version" in test_versions
         assert test_versions["Python.Mysql.Version"] == "foo-version"
 
+    def test_add_all_instr_versions_stdlib_asyncio(
+        self,
+        mocker,
+    ):
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="asyncio",
+            module_name="unused",
+        )
+        # Also mock Python version
+        mock_plat = mocker.patch(
+            "solarwinds_apm.configurator.platform"
+        )
+        mock_py_vers = mocker.Mock(
+            return_value="3.9.123"
+        )
+        mock_plat.configure_mock(
+            **{
+                "python_version": mock_py_vers
+            }
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.Asyncio.Version" in test_versions
+        assert test_versions["Python.Asyncio.Version"] == "3.9.123"  
+
+    def test_add_all_instr_versions_stdlib_threading(
+        self,
+        mocker,
+    ):
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="threading",
+            module_name="unused",
+        )
+        # Also mock Python version
+        mock_plat = mocker.patch(
+            "solarwinds_apm.configurator.platform"
+        )
+        mock_py_vers = mocker.Mock(
+            return_value="3.9.123"
+        )
+        mock_plat.configure_mock(
+            **{
+                "python_version": mock_py_vers
+            }
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.Threading.Version" in test_versions
+        assert test_versions["Python.Threading.Version"] == "3.9.123"  
+
     def test_add_all_instr_versions_elasticsearch(
         self,
         mocker,

@@ -243,7 +243,7 @@ class SolarWindsSpanExporter(SpanExporter):
                     )
                     version_str = platform.python_version()
                 # elasticsearch gives a version as (8, 5, 3) not 8.5.3
-                if framework == "elasticsearch":
+                elif framework == "elasticsearch":
                     version_tuple = sys.modules[framework].__version__
                     version_str = ".".join([str(d) for d in version_tuple])
                 elif framework == "mysql":
