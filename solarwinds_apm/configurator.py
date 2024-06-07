@@ -578,6 +578,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
             if entry_point_name == "aiohttp-client":
                 entry_point_name = "aiohttp"
+            # Both client/server instrumentors instrument `aiohttp`
+            # so key is potentiall overwritten, not duplicated
             elif entry_point_name == "aiohttp-server":
                 entry_point_name = "aiohttp"
             elif entry_point_name == "aio-pika":

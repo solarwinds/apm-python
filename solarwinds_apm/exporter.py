@@ -170,6 +170,8 @@ class SolarWindsSpanExporter(SpanExporter):
             # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
             if framework == "aiohttp_client":
                 framework = "aiohttp"
+            # Both client/server instrumentors instrument `aiohttp`
+            # so key is potentiall overwritten, not duplicated
             elif framework == "aiohttp_server":
                 framework = "aiohttp"
             elif framework == "system_metrics":
