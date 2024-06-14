@@ -11,6 +11,7 @@ __pycache__/
 build/
 develop-eggs/
 dist/
+dist_orm/
 downloads/
 eggs/
 .eggs/
@@ -28,6 +29,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 log.txt
+tmp-lambda/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

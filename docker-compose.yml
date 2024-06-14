@@ -11,6 +11,7 @@ version: '2.4'
 services:
   x86_64:
     image: quay.io/pypa/manylinux_2_28_x86_64
+    user: root
     stdin_open: true
     tty: true
     network_mode: host
@@ -19,6 +20,7 @@ services:
     volumes:
       - ./:/code/solarwinds_apm
       - ../solarwinds-apm-liboboe/:/code/solarwinds-apm-liboboe
+      - ../opentelemetry-python-contrib/:/code/solarwinds_apm/contrib-custom/
     working_dir: /code/solarwinds_apm
     entrypoint: ["/bin/bash", "-c"]
     command: 
@@ -27,10 +29,13 @@ services:
        # twine to upload to TestPyPi
        # tox for automated tests
        python3.8 -m pip install boto3 twine tox
+       # update wrapper permissions for local testing in docker
+       chmod 755 /code/solarwinds_apm/lambda/solarwinds-apm/wrapper
        /bin/bash
 
   aarch64:
     image: quay.io/pypa/manylinux_2_28_aarch64
+    user: root
     stdin_open: true
     tty: true
     network_mode: host
@@ -39,6 +44,7 @@ services:
     volumes:
       - ./:/code/solarwinds_apm
       - ../solarwinds-apm-liboboe/:/code/solarwinds-apm-liboboe
+      - ../opentelemetry-python-contrib/:/code/solarwinds_apm/contrib-custom/
     working_dir: /code/solarwinds_apm
     entrypoint: ["/bin/bash", "-c"]
     command: 
@@ -47,4 +53,6 @@ services:
        # twine to upload to TestPyPi
        # tox for automated tests
        python3.8 -m pip install boto3 twine tox
+       # update wrapper permissions for local testing in docker
+       chmod 755 /code/solarwinds_apm/lambda/solarwinds-apm/wrapper
        /bin/bash

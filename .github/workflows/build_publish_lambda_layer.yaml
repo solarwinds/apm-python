@@ -24,9 +24,15 @@ jobs:
     strategy:
       matrix:
         python-minor: ["8", "9", "10", "11"]
-        apm-env: ["lambda"]
+        apm-env: ["lambda-gh"]
     steps:
     - uses: actions/checkout@v4
+    - name: Checkout custom instrumentor
+      uses: actions/checkout@v4
+      with:
+        repository: tammy-baylis-swi/opentelemetry-python-contrib
+        ref: custom-sw-build
+        path: contrib-custom
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
