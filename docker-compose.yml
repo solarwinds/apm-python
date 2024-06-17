@@ -6,8 +6,6 @@
 
 # Build development environments (manylinux x86 or aarch, 64-bit)
 # to locally build and publish solarwinds_apm Python APM library
-version: '2.4'
-
 services:
   x86_64:
     image: quay.io/pypa/manylinux_2_28_x86_64
