@@ -10,6 +10,7 @@ import importlib
 import logging
 import math
 import os
+import platform
 import sys
 import time
 from typing import TYPE_CHECKING, Any
@@ -83,6 +84,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     # Cannot set as env default because not part of OTel Python _KNOWN_SAMPLERS
     # https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-sdk/src/opentelemetry/sdk/trace/sampling.py#L364-L380
     _DEFAULT_SW_TRACES_SAMPLER = "solarwinds_sampler"
+    _STDLIB_PKGS = ["asyncio", "threading"]
 
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
@@ -543,11 +545,23 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             try:
                 conflict = get_dist_dependency_conflicts(entry_point.dist)
                 if conflict:
-                    logger.warning(
-                        "Version lookup for library %s skipped due to conflict: %s",
-                        entry_point.name,
-                        conflict,
-                    )
+                    # TODO Unnecessary tortoiseorm bootstrap will be fixed upstream
+                    # https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2409
+                    if (
+                        "tortoise-orm" in conflict.required
+                        and conflict.found is None
+                    ):
+                        logger.debug(
+                            "Version lookup for library %s skipped due to known pydantic/tortoiseorm bootstrap conflice: %s",
+                            entry_point.name,
+                            conflict,
+                        )
+                    else:
+                        logger.warning(
+                            "Version lookup for library %s skipped due to conflict: %s",
+                            entry_point.name,
+                            conflict,
+                        )
                     continue
             except Exception as ex:  # pylint: disable=broad-except
                 logger.warning(
@@ -559,11 +573,17 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
             # Set up Instrumented Library Versions KVs with several special cases
             entry_point_name = entry_point.name
-            # Some OTel instrumentation libraries are named not exactly
-            # the same as the instrumented libraries!
+            # Some OTel instrumentation library entry point names are not exactly
+            # the same as their corresponding instrumented libraries
             # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
-            if entry_point_name == "aiohttp_client":
+            if entry_point_name == "aiohttp-client":
                 entry_point_name = "aiohttp"
+            # Both client/server instrumentors instrument `aiohttp`
+            # so key is potentially overwritten, not duplicated
+            elif entry_point_name == "aiohttp-server":
+                entry_point_name = "aiohttp"
+            elif entry_point_name == "aio-pika":
+                entry_point_name = "aio_pika"
             elif "grpc_" in entry_point_name:
                 entry_point_name = "grpc"
             elif entry_point_name == "system_metrics":
@@ -571,7 +591,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             elif entry_point_name == "tortoiseorm":
                 entry_point_name = "tortoise"
 
-            instr_key = f"Python.{entry_point_name.capitalize()}.Version"
+            # Remove any underscores and convert to UpperCamelCase
+            # e.g. aio_pika becomes Python.AioPika.Version
+            middle = "".join(
+                part.capitalize() for part in entry_point_name.split("_")
+            )
+            instr_key = f"Python.{middle}.Version"
             try:
                 # There is no mysql version, but mysql.connector version
                 if entry_point_name == "mysql":
@@ -583,8 +608,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     importlib.import_module(entry_point_name)
 
                 # some Python frameworks don't have top-level __version__
-                # and elasticsearch gives a version as (8, 5, 3) not 8.5.3
-                if entry_point_name == "elasticsearch":
+                if entry_point_name in self._STDLIB_PKGS:
+                    logger.debug(
+                        "Using Python version for library %s because part of Python standard library in Python 3.8+",
+                        entry_point.name,
+                    )
+                    version_keys[instr_key] = platform.python_version()
+                # elasticsearch gives a version as (8, 5, 3) not 8.5.3
+                elif entry_point_name == "elasticsearch":
                     version_tuple = sys.modules[entry_point_name].__version__
                     version_keys[instr_key] = ".".join(
                         [str(d) for d in version_tuple]

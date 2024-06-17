@@ -17,6 +17,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         module_version="foo-version",
         conflicts=None,
         conflicts_exception=False,
+        conflicts_tortoise=False,
         importlib_exception=False,
     ):
         # (1) Mock importlib
@@ -52,7 +53,21 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         )
 
         # (3) Mock otel dep conflicts
-        if not conflicts_exception:
+        if conflicts_tortoise:
+            # TODO Unnecessary tortoiseorm bootstrap will be fixed upstream
+            # https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2409
+            mock_conflict_tortoise = mocker.Mock()
+            mock_conflict_tortoise.configure_mock(
+                **{
+                    "required": "tortoise-orm",
+                    "found": None,
+                }
+            )
+            mocker.patch(
+                "solarwinds_apm.configurator.get_dist_dependency_conflicts",
+                return_value=mock_conflict_tortoise,
+            )  
+        elif not conflicts_exception:
             mocker.patch(
                 "solarwinds_apm.configurator.get_dist_dependency_conflicts",
                 return_value=conflicts,
@@ -114,6 +129,24 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         if old_disabled:
             os.environ["OTEL_PYTHON_DISABLED_INSTRUMENTATIONS"] = old_disabled
 
+    def test_add_all_instr_versions_special_skip_tortoise_none(
+        self,
+        mocker,
+    ):
+        # TODO Unnecessary tortoiseorm bootstrap will be fixed upstream
+        # https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2409
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="tortoiseorm",
+            module_name="tortoise",
+            conflicts_tortoise=True,
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.Tortoise.Version" not in test_versions
+
     def test_add_all_instr_versions_skip_dependency_conflict(
         self,
         mocker,
@@ -168,7 +201,7 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
     ):
         self.set_up_mocks(
             mocker=mocker,
-            entry_point_name="aiohttp_client",
+            entry_point_name="aiohttp-client",
             module_name="aiohttp",
         )
 
@@ -177,6 +210,38 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         assert test_versions["foo"] == "bar"
         assert "Python.Aiohttp.Version" in test_versions
         assert test_versions["Python.Aiohttp.Version"] == "foo-version"
+
+    def test_add_all_instr_versions_aiohttp_server(
+        self,
+        mocker,
+    ):
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="aiohttp-server",
+            module_name="aiohttp",
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.Aiohttp.Version" in test_versions
+        assert test_versions["Python.Aiohttp.Version"] == "foo-version"
+
+    def test_add_all_instr_versions_aiopika(
+        self,
+        mocker,
+    ):
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="aio-pika",
+            module_name="aio_pika",
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.AioPika.Version" in test_versions
+        assert test_versions["Python.AioPika.Version"] == "foo-version"
 
     def test_add_all_instr_versions_grpc(
         self,
@@ -241,6 +306,62 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         assert test_versions["foo"] == "bar"
         assert "Python.Mysql.Version" in test_versions
         assert test_versions["Python.Mysql.Version"] == "foo-version"
+
+    def test_add_all_instr_versions_stdlib_asyncio(
+        self,
+        mocker,
+    ):
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="asyncio",
+            module_name="unused",
+        )
+        # Also mock Python version
+        mock_plat = mocker.patch(
+            "solarwinds_apm.configurator.platform"
+        )
+        mock_py_vers = mocker.Mock(
+            return_value="3.9.123"
+        )
+        mock_plat.configure_mock(
+            **{
+                "python_version": mock_py_vers
+            }
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.Asyncio.Version" in test_versions
+        assert test_versions["Python.Asyncio.Version"] == "3.9.123"  
+
+    def test_add_all_instr_versions_stdlib_threading(
+        self,
+        mocker,
+    ):
+        self.set_up_mocks(
+            mocker=mocker,
+            entry_point_name="threading",
+            module_name="unused",
+        )
+        # Also mock Python version
+        mock_plat = mocker.patch(
+            "solarwinds_apm.configurator.platform"
+        )
+        mock_py_vers = mocker.Mock(
+            return_value="3.9.123"
+        )
+        mock_plat.configure_mock(
+            **{
+                "python_version": mock_py_vers
+            }
+        )
+
+        # Test!
+        test_versions = configurator.SolarWindsConfigurator()._add_all_instrumented_python_framework_versions({"foo": "bar"})
+        assert test_versions["foo"] == "bar"
+        assert "Python.Threading.Version" in test_versions
+        assert test_versions["Python.Threading.Version"] == "3.9.123"  
 
     def test_add_all_instr_versions_elasticsearch(
         self,
