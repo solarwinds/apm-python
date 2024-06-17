@@ -76,6 +76,8 @@ packages = [
   "solarwinds_apm.certs",
   "solarwinds_apm.extension",
   "solarwinds_apm.extension.bson",
+  "solarwinds_apm.semconv",
+  "solarwinds_apm.semconv.trace",
   "solarwinds_apm.trace",
 ]
 
