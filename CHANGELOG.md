@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-1.7.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-2.0.0...HEAD)
+
+## [2.0.0.2](https://github.com/solarwinds/apm-python/releases/tag/rel-2.0.0) - 2024-06-18
+
+### Changed
+- Upgraded OpenTelemetry API/SDK and instrumentation 1.25.0/0.46b0 ([#364](https://github.com/solarwinds/apm-python/pull/364), [#375](https://github.com/solarwinds/apm-python/pull/375/files), [#376](https://github.com/solarwinds/apm-python/pull/376), [#377](https://github.com/solarwinds/apm-python/pull/377), [#380](https://github.com/solarwinds/apm-python/pull/380))
+- Fixed version lookups at APM startup ([#378](https://github.com/solarwinds/apm-python/pull/378))
+- Upgraded c-lib 15.0.1 ([#379](https://github.com/solarwinds/apm-python/pull/379))
+
+### Removed
+- Removed docker-compose version keys ([#381](https://github.com/solarwinds/apm-python/pull/381))
 
 ## [1.7.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.7.0) - 2024-05-16
 
@@ -14,9 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed debug line ([#360](https://github.com/solarwinds/apm-python/pull/360))
 - Sampler inits with APM-proto exporter ([#366](https://github.com/solarwinds/apm-python/pull/366))
 - Fixed APM-proto export for non-scalar attribute types ([#367](https://github.com/solarwinds/apm-python/pull/367))
-
-### Changed
-- OpenTelemetry API/SDK and instrumentation 1.25.0/0.46b0 ([#364](https://github.com/solarwinds/apm-python/pull/364))
 
 ## [1.6.0](https://github.com/solarwinds/apm-python/releases/tag/rel-1.6.0) - 2024-04-02
 
