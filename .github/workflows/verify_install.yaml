@@ -38,8 +38,18 @@ jobs:
   checkout-apm:
     name: Checkout and mount APM repo
     runs-on: ubuntu-latest
+    container:
+      image: python:3.9-buster
+      volumes:
+        - /github/home:/foo-bar
     steps:
       - uses: actions/checkout@v4
+      - name: Also do a touch
+        shell: bash
+        run: |
+          pwd
+          touch testy.txt
+          ls -alh .
 
   test-mount:
     name: Test mount
@@ -49,10 +59,10 @@ jobs:
     container:
       image: python:3.9-buster
       volumes:
-        - ${{ github.workspace }}:/apm-python
+        - /foo-bar:/baz-qux
     steps:
-      - name: ls
+      - name: Testing
         shell: bash
         run: |
-          ls -alh /apm-python
-          ls -alh .
+          pwd
+          ls -alh /baz-qux
