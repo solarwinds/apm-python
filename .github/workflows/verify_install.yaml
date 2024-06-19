@@ -120,29 +120,6 @@ jobs:
             image: python:3.11-alpine3.16
           - hostname: py3.11-alpine3.17
             image: python:3.11-alpine3.17
-        exclude:
-          - hostname: py3.8-alpine3.12
-            arch: arm64
-          - hostname: py3.8-alpine3.13
-            arch: arm64           
-          - hostname: py3.9-alpine3.12
-            arch: arm64
-          - hostname: py3.9-alpine3.13
-            arch: arm64
-          - hostname: py3.9-alpine3.16
-            arch: arm64
-          - hostname: py3.9-alpine3.17
-            arch: arm64
-          - hostname: py3.10-alpine3.13
-            arch: arm64
-          - hostname: py3.10-alpine3.16
-            arch: arm64
-          - hostname: py3.10-alpine3.17
-            arch: arm64
-          - hostname: py3.11-alpine3.16
-            arch: arm64
-          - hostname: py3.11-alpine3.17
-            arch: arm64
     container:
       image: "${{ matrix.image }}"
       options: --hostname "${{ matrix.hostname }}"
