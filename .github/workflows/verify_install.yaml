@@ -131,6 +131,7 @@ jobs:
             image: ubuntu:20.04
           - hostname: py3.11-ubuntu22.04
             image: ubuntu:22.04
+        # Note: JavaScript Actions (checkout) in Alpine only supported in x64
         exclude:
           - hostname: py3.8-alpine3.12
             arch: arm64
