@@ -36,7 +36,6 @@ permissions:
 
 jobs:
   launch-arm64:
-    name: Launch EC2 runners for Alpine tests
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.launch.outputs.matrix }}
@@ -55,17 +54,31 @@ jobs:
         with:
           action: launch
           matrix: |
+            amazonlinux:2023
+            centos:8
             python:3.8-alpine3.12
             python:3.8-alpine3.13
+            python:3.8-buster
+            python:3.8-bullseye
             python:3.9-alpine3.12
             python:3.9-alpine3.13
             python:3.9-alpine3.16
             python:3.9-alpine3.17
+            python:3.9-buster
+            python:3.9-bullseye
             python:3.10-alpine3.13
             python:3.10-alpine3.16
             python:3.10-alpine3.17
+            python:3.10-buster
+            python:3.10-bullseye
             python:3.11-alpine3.16
             python:3.11-alpine3.17
+            python:3.11-buster
+            python:3.11-bullseye
+            registry.fedoraproject.org/f33/python3
+            ubuntu:18.04
+            ubuntu:20.04
+            ubuntu:22.04
           github-token: ${{ steps.github-token.outputs.token }}
           runner-user: github
           runner-directory: /gh
@@ -75,8 +88,7 @@ jobs:
           subnet-id: subnet-0fd499f8a50e41807
           security-group-ids: sg-0fd8d8cd6effda4a5
 
-  install-tests-alpine:
-    name: Run Alpine smoke tests
+  install-tests:
     needs:
       - launch-arm64
     runs-on: ${{ matrix.arch == 'arm64' && fromJSON(needs.launch-arm64.outputs.matrix)[matrix.image].label || 'ubuntu-latest' }}
@@ -85,15 +97,33 @@ jobs:
         hostname:
           - py3.8-alpine3.12
           - py3.8-alpine3.13
+          - py3.8-debian10
+          - py3.8-debian11
+          - py3.8-ubuntu18.04
+          - py3.8-ubuntu20.04
           - py3.9-alpine3.12
           - py3.9-alpine3.13
           - py3.9-alpine3.16
           - py3.9-alpine3.17
+          - py3.9-centos8
+          - py3.9-debian10
+          - py3.9-debian11
+          - py3.9-rhel8
+          - py3.9-ubuntu20.04
           - py3.10-alpine3.13
           - py3.10-alpine3.16
           - py3.10-alpine3.17
+          - py3.10-amazon2023
+          - py3.10-debian10
+          - py3.10-debian11
+          - py3.10-ubuntu20.04
+          - py3.10-ubuntu22.04
           - py3.11-alpine3.16
           - py3.11-alpine3.17
+          - py3.11-debian10
+          - py3.11-debian11
+          - py3.11-ubuntu20.04
+          - py3.11-ubuntu22.04
         arch:
           - x64
           - arm64
@@ -102,6 +132,14 @@ jobs:
             image: python:3.8-alpine3.12
           - hostname: py3.8-alpine3.13
             image: python:3.8-alpine3.13
+          - hostname: py3.8-debian10
+            image: python:3.8-buster
+          - hostname: py3.8-debian11
+            image: python:3.8-bullseye
+          - hostname: py3.8-ubuntu18.04
+            image: ubuntu:18.04
+          - hostname: py3.8-ubuntu20.04
+            image: ubuntu:20.04
           - hostname: py3.9-alpine3.12
             image: python:3.9-alpine3.12
           - hostname: py3.9-alpine3.13
@@ -110,16 +148,44 @@ jobs:
             image: python:3.9-alpine3.16
           - hostname: py3.9-alpine3.17
             image: python:3.9-alpine3.17
+          - hostname: py3.9-centos8
+            image: centos:8
+          - hostname: py3.9-debian10
+            image: python:3.9-buster
+          - hostname: py3.9-debian11
+            image: python:3.9-bullseye
+          - hostname: py3.9-rhel8
+            image: registry.fedoraproject.org/f33/python3
+          - hostname: py3.9-ubuntu20.04
+            image: ubuntu:20.04
           - hostname: py3.10-alpine3.13
             image: python:3.10-alpine3.13
           - hostname: py3.10-alpine3.16
             image: python:3.10-alpine3.16
           - hostname: py3.10-alpine3.17
             image: python:3.10-alpine3.17
+          - hostname: py3.10-amazon2023
+            image: amazonlinux:2023
+          - hostname: py3.10-debian10
+            image: python:3.10-buster
+          - hostname: py3.10-debian11
+            image: python:3.10-bullseye
+          - hostname: py3.10-ubuntu20.04
+            image: ubuntu:20.04
+          - hostname: py3.10-ubuntu22.04
+            image: ubuntu:22.04
           - hostname: py3.11-alpine3.16
             image: python:3.11-alpine3.16
           - hostname: py3.11-alpine3.17
             image: python:3.11-alpine3.17
+          - hostname: py3.11-debian10
+            image: python:3.11-buster
+          - hostname: py3.11-debian11
+            image: python:3.11-bullseye
+          - hostname: py3.11-ubuntu20.04
+            image: ubuntu:20.04
+          - hostname: py3.11-ubuntu22.04
+            image: ubuntu:22.04
         exclude:
           - hostname: py3.8-alpine3.12
             arch: arm64
@@ -147,7 +213,12 @@ jobs:
       image: "${{ matrix.image }}"
       options: --hostname "${{ matrix.hostname }}"
     steps:
-      - uses: actions/checkout@v4
+      - if: ${{ matrix.image == 'amazonlinux:2023' }}
+        run: yum install -y tar gzip
+      - if: ${{ matrix.image == 'ubuntu:18.04' }}
+        uses: actions/checkout@v3
+      - if: ${{ matrix.image != 'ubuntu:18.04' }}
+        uses: actions/checkout@v4
       - name: Setup and run install test
         working-directory: ./tests/docker/install
         run: ./_helper_run_install_tests.sh
@@ -156,11 +227,10 @@ jobs:
           MODE: ${{ github.event.inputs.install-registry }}
 
   terminate-arm64:
-    name: Terminate EC2 runners
     if: ${{ always() }}
     needs:
       - launch-arm64
-      - install-tests-alpine
+      - install-tests
     runs-on: ubuntu-latest
     steps:
       - uses: getsentry/action-github-app-token@v3
