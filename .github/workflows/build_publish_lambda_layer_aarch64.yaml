@@ -20,7 +20,8 @@ permissions:
 
 jobs:
   build_layer_aarch64:
-    runs-on: apm-arm-runner
+    runs-on:
+      group: apm-arm-runner
     outputs:
       SW_APM_VERSION: ${{ steps.save-apm-python-version.outputs.SW_APM_VERSION }}
     steps:
