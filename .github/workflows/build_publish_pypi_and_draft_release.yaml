@@ -60,13 +60,13 @@ jobs:
       - name: Install Twine
         run: pip install --upgrade --no-cache-dir --prefer-binary twine
       - name: Check distribution artifacts
-        run: /gh/.local/bin/twine check dist/*
+        run: twine check dist/*
       - name: Publish aarch64 wheels to TestPyPi
         env:
           TWINE_NON_INTERACTIVE: 1
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.SW_APM_PYPI_UPLOAD_TOKEN }}
-        run: /gh/.local/bin/twine upload dist/*.whl
+        run: twine upload dist/*.whl
 
   create_release:
     name: Create draft release
