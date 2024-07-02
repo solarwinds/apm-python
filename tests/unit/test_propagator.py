@@ -193,6 +193,72 @@ class TestSolarWindsPropagator():
             ),
         ])
 
+    def test_inject_empty_baggage_no_sw(self, mocker):
+        self.mock_otel_context(mocker, True)
+        mock_baggage_header = ""
+        mock_get = mocker.Mock(return_value=mock_baggage_header)
+        mock_del = mocker.Mock()
+        mock_carrier = mocker.Mock()
+        mock_carrier.configure_mock(
+            **{
+                "get": mock_get,
+                "__delitem__": mock_del,
+            }
+        )
+
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        # carrier does not delete kv
+        mock_del.assert_not_called()
+        # setter not called for empty baggage; only called once for tracestate earlier
+        assert call(mock_carrier, 'baggage', mock_baggage_header) not in mock_set.mock_calls
+        mock_set.assert_called_once()
+
+    def test_inject_empty_baggage_with_sw(self, mocker):
+        self.mock_otel_context(mocker, True)
+        mock_baggage_header = "sw-current-trace-entry-span-id=some-id"
+        mock_get = mocker.Mock(return_value=mock_baggage_header)
+        mock_del = mocker.Mock()
+        mock_carrier = mocker.Mock()
+        mock_carrier.configure_mock(
+            **{
+                "get": mock_get,
+                "__delitem__": mock_del,
+            }
+        )
+
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        # carrier deletes empty kv
+        mock_del.assert_has_calls([
+            call("baggage")
+        ])
+        # setter not called for empty baggage; only called once for tracestate earlier
+        assert call(mock_carrier, 'baggage', mock_baggage_header) not in mock_set.mock_calls
+        mock_set.assert_called_once()
+
     def test_inject_existing_baggage_no_sw(self, mocker):
         self.mock_otel_context(mocker, True)
         mock_carrier = {

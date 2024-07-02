@@ -123,7 +123,16 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             baggage_header = self.remove_custom_naming_baggage_header(
                 baggage_header,
             )
-            setter.set(carrier, self._BAGGAGE_HEADER_NAME, baggage_header)
+            # Re-inject if sanitized baggage non-empty
+            if baggage_header != "":
+                setter.set(
+                    carrier,
+                    self._BAGGAGE_HEADER_NAME,
+                    baggage_header,
+                )
+            # Or, remove baggage from carrier to prevent empty header
+            else:
+                del carrier[self._BAGGAGE_HEADER_NAME]
 
     def remove_custom_naming_baggage_header(
         self,
