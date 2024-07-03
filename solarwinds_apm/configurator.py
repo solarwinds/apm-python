@@ -16,10 +16,14 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from opentelemetry import trace
+from opentelemetry._logs import set_logger_provider
 from opentelemetry.environment_variables import (
     OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
+)
+from opentelemetry.exporter.otlp.proto.http._log_exporter import (
+    OTLPLogExporter,
 )
 from opentelemetry.instrumentation.dependencies import (
     get_dist_dependency_conflicts,
@@ -34,6 +38,8 @@ from opentelemetry.metrics import set_meter_provider
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.metrics import Histogram, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -162,6 +168,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_fwkv_manager,
                 apm_config,
             )
+            self._configure_logs_exporter(apm_config)
             self._configure_propagator()
             self._configure_response_propagator()
         else:
@@ -436,6 +443,34 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             metric_readers=metric_readers,
         )
         set_meter_provider(provider)
+
+    def _configure_logs_exporter(
+        self,
+        apm_config: SolarWindsApmConfig,
+    ) -> None:
+        """Configure experimental OTel OTLP logs exporter if opted in.
+        Links to new global LoggerProvider."""
+        logger_provider = LoggerProvider(
+            resource=Resource.create(
+                {
+                    "sw.apm.version": __version__,
+                    "sw.data.module": "apm",
+                    "service.name": apm_config.service_name,
+                }
+            ),
+        )
+        set_logger_provider(logger_provider)
+        # TODO configurable HTTP or gRPC or other
+        log_exporter = OTLPLogExporter()
+        logger_provider.add_log_record_processor(
+            BatchLogRecordProcessor(log_exporter)
+        )
+        log_handler = LoggingHandler(
+            level=logging.NOTSET,
+            logger_provider=logger_provider,
+        )
+        # Attach OTLP handler to root logger
+        logging.getLogger().addHandler(log_handler)
 
     def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators, default or environment configured"""
