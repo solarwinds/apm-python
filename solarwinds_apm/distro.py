@@ -12,6 +12,7 @@ import sys
 from os import environ
 
 from opentelemetry.environment_variables import (
+    OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
@@ -22,7 +23,10 @@ from opentelemetry.instrumentation.logging.environment_variables import (
     OTEL_PYTHON_LOG_FORMAT,
 )
 from opentelemetry.instrumentation.version import __version__ as inst_version
-from opentelemetry.sdk.environment_variables import OTEL_EXPORTER_OTLP_PROTOCOL
+from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+    OTEL_EXPORTER_OTLP_PROTOCOL,
+)
 from opentelemetry.sdk.version import __version__ as sdk_version
 from pkg_resources import EntryPoint
 
@@ -81,6 +85,19 @@ class SolarWindsDistro(BaseDistro):
             environ.setdefault(
                 OTEL_TRACES_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol]
             )
+
+            # If not in lambda environment, also map logs exporter
+            # and opt into OTLP log formatting by default
+            # (if protocol set)
+            if not SolarWindsApmConfig.calculate_is_lambda():
+                environ.setdefault(
+                    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+                    "true",
+                )
+                environ.setdefault(
+                    OTEL_LOGS_EXPORTER,
+                    _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol],
+                )
         else:
             # Else users need to specify OTEL_METRICS_EXPORTER.
             # Otherwise, no metrics will generated and no metrics exporter

@@ -18,12 +18,10 @@ from typing import TYPE_CHECKING, Any
 from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.environment_variables import (
+    OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
-)
-from opentelemetry.exporter.otlp.proto.http._log_exporter import (
-    OTLPLogExporter,
 )
 from opentelemetry.instrumentation.dependencies import (
     get_dist_dependency_conflicts,
@@ -39,7 +37,13 @@ from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
-from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+from opentelemetry.sdk._logs.export import (
+    BatchLogRecordProcessor,
+    SimpleLogRecordProcessor,
+)
+from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+)
 from opentelemetry.sdk.metrics import Histogram, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -448,29 +452,78 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure experimental OTel OTLP logs exporter if opted in.
+        """Configure OTel OTLP logs exporter if any configured.
         Links to new global LoggerProvider."""
+        environ_exporter = os.environ.get(
+            OTEL_LOGS_EXPORTER,
+        )
+        if not environ_exporter:
+            logger.debug(
+                "No OTEL_LOGS_EXPORTER set, skipping init of logs exporters"
+            )
+            return
+
+        environ_exporter_names = environ_exporter.split(",")
+
+        # Use configured Resource attributes then merge with
+        # custom service.name and sw.trace_span_mode
+        resource = trace.get_tracer_provider().get_tracer(__name__).resource
+        sw_resource = Resource.create(
+            {
+                "sw.apm.version": __version__,
+                "sw.data.module": "apm",
+                "service.name": apm_config.service_name,
+            }
+        ).merge(resource)
+
         logger_provider = LoggerProvider(
-            resource=Resource.create(
-                {
-                    "sw.apm.version": __version__,
-                    "sw.data.module": "apm",
-                    "service.name": apm_config.service_name,
-                }
-            ),
+            resource=sw_resource,
         )
         set_logger_provider(logger_provider)
-        # TODO configurable HTTP or gRPC or other
-        log_exporter = OTLPLogExporter()
-        logger_provider.add_log_record_processor(
-            BatchLogRecordProcessor(log_exporter)
+
+        for exporter_name in environ_exporter_names:
+            exporter = None
+            try:
+                exporter = next(
+                    iter_entry_points(
+                        "opentelemetry_logs_exporter", exporter_name
+                    )
+                ).load()()
+            except Exception as ex:
+                logger.exception("A exception was raised: %s", ex)
+                logger.exception(
+                    "Failed to load configured OTEL_LOGS_EXPORTER. "
+                    "Please reinstall or contact %s.",
+                    INTL_SWO_SUPPORT_EMAIL,
+                )
+                raise
+
+            if apm_config.is_lambda:
+                logger.debug(
+                    "Setting logs with SimpleLogRecordProcessor using %s",
+                    exporter_name,
+                )
+                logs_processor = SimpleLogRecordProcessor(exporter)
+            else:
+                logger.debug(
+                    "Setting logs with BatchLogRecordProcessor using %s",
+                    exporter_name,
+                )
+                logs_processor = BatchLogRecordProcessor(exporter)
+
+            logger_provider.add_log_record_processor(logs_processor)
+
+        # TODO move this up? or keep here
+        otlp_log_enabled = os.environ.get(
+            _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
         )
-        log_handler = LoggingHandler(
-            level=logging.NOTSET,
-            logger_provider=logger_provider,
-        )
-        # Attach OTLP handler to root logger
-        logging.getLogger().addHandler(log_handler)
+        if str(otlp_log_enabled).lower() in {"true", "1"}:
+            log_handler = LoggingHandler(
+                level=logging.NOTSET,
+                logger_provider=logger_provider,
+            )
+            # Attach OTLP handler to root logger
+            logging.getLogger().addHandler(log_handler)
 
     def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators, default or environment configured"""
