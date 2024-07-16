@@ -105,8 +105,6 @@ class SolarWindsApmConfig:
             "max_flush_wait_time": -1,
             "max_transactions": -1,
             "trace_metrics": -1,
-            "token_bucket_capacity": -1,  # always unset
-            "token_bucket_rate": -1,  # always unset
             "bufsize": -1,
             "histogram_precision": -1,
             "reporter_file_single": 0,
@@ -860,14 +858,6 @@ class SolarWindsApmConfig:
                 if timeout not in range(0, 3001):
                     raise ValueError
                 self.__config[key] = timeout
-            elif keys == ["token_bucket_capacity"]:
-                logger.warning(
-                    "Local token bucket capacity configuration is not supported by APM Python. Ignoring."
-                )
-            elif keys == ["token_bucket_rate"]:
-                logger.warning(
-                    "Local token bucket rate configuration is not supported by APM Python. Ignoring."
-                )
             elif keys == ["proxy"]:
                 if not isinstance(val, str) or not val.startswith("http://"):
                     raise ValueError
