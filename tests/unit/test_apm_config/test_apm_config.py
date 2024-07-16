@@ -616,16 +616,16 @@ class TestSolarWindsApmConfig:
     # pylint:disable=unused-argument
     def test_set_config_value_default_token_cap(self, caplog, setup_caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("token_bucket_capacity", "9999")
+        test_config._set_config_value("token_bucket_capacity", "5")
         assert test_config.get("token_bucket_capacity") == -1
-        assert "Ignore config option" in caplog.text
+        assert "Local token bucket capacity configuration is not supported" in caplog.text
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_token_rate(self, caplog, setup_caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("token_bucket_rate", "9999")
+        test_config._set_config_value("token_bucket_rate", "2")
         assert test_config.get("token_bucket_rate") == -1
-        assert "Ignore config option" in caplog.text
+        assert "Local token bucket rate configuration is not supported" in caplog.text
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_proxy(self, caplog, setup_caplog, mock_env_vars):
