@@ -139,8 +139,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("max_flush_wait_time") == 2
         assert resulting_config.get("max_transactions") == 2
         assert resulting_config.get("trace_metrics") == 2
-        assert resulting_config.get("token_bucket_capacity") == 2
-        assert resulting_config.get("token_bucket_rate") == 2
         assert resulting_config.get("bufsize") == 2
         assert resulting_config.get("histogram_precision") == 2
         assert resulting_config.get("reporter_file_single") == 2
@@ -227,8 +225,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("max_flush_wait_time") == -1
         assert resulting_config.get("max_transactions") == -1
         assert resulting_config.get("trace_metrics") == -1
-        assert resulting_config.get("token_bucket_capacity") == -1
-        assert resulting_config.get("token_bucket_rate") == -1
         assert resulting_config.get("bufsize") == -1
         assert resulting_config.get("histogram_precision") == -1
         assert resulting_config.get("reporter_file_single") == 0
@@ -273,8 +269,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_MAX_FLUSH_WAIT_TIME": "3",
             "SW_APM_MAX_TRANSACTIONS": "3",  
             "SW_APM_TRACE_METRICS": "3",
-            "SW_APM_TOKEN_BUCKET_CAPACITY": "3",
-            "SW_APM_TOKEN_BUCKET_RATE": "3",
             "SW_APM_BUFSIZE": "3",
             "SW_APM_HISTOGRAM_PRECISION": "3",
             "SW_APM_REPORTER_FILE_SINGLE": "3",
@@ -325,8 +319,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("max_transactions") == 3
         assert resulting_config.get("log_filepath") == "other-foo-bar_ext"
         assert resulting_config.get("trace_metrics") == 3
-        assert resulting_config.get("token_bucket_capacity") == 3
-        assert resulting_config.get("token_bucket_rate") == 3
         assert resulting_config.get("bufsize") == 3
         assert resulting_config.get("histogram_precision") == 3
         assert resulting_config.get("reporter_file_single") == 3
@@ -364,8 +356,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_MAX_FLUSH_WAIT_TIME": "other-foo-bar",
             "SW_APM_MAX_TRANSACTIONS": "other-foo-bar",
             "SW_APM_TRACE_METRICS": "other-foo-bar",
-            "SW_APM_TOKEN_BUCKET_CAPACITY": "other-foo-bar",
-            "SW_APM_TOKEN_BUCKET_RATE": "other-foo-bar",
             "SW_APM_BUFSIZE": "other-foo-bar",
             "SW_APM_HISTOGRAM_PRECISION": "other-foo-bar",
             "SW_APM_REPORTER_FILE_SINGLE": "other-foo-bar",
@@ -413,8 +403,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("max_flush_wait_time") == 2
         assert resulting_config.get("max_transactions") == 2
         assert resulting_config.get("trace_metrics") == 2
-        assert resulting_config.get("token_bucket_capacity") == 2
-        assert resulting_config.get("token_bucket_rate") == 2
         assert resulting_config.get("bufsize") == 2
         assert resulting_config.get("histogram_precision") == 2
         assert resulting_config.get("reporter_file_single") == 2
@@ -425,7 +413,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("hostname_alias") == "False"
         assert resulting_config.get("trustedpath") == "False"
         assert resulting_config.get("log_filepath") == "False_ext"
-        
+
         # Restore old collector
         if old_collector:
             os.environ["SW_APM_COLLECTOR"] = old_collector
