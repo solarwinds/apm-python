@@ -5,3 +5,4 @@ opentelemetry-instrumentation-aws-lambda==0.46b0
 # AWS Lambda runtime for Python does not include these
 packaging
 jaraco.text
+platformdirs
