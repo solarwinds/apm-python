@@ -2,7 +2,6 @@ opentelemetry-exporter-otlp==1.25.0
 opentelemetry-exporter-otlp-proto-grpc==1.25.0
 opentelemetry-exporter-otlp-proto-http==1.25.0
 opentelemetry-instrumentation-aws-lambda==0.46b0
-# AWS Lambda runtime for Python does not include these
 packaging
 jaraco.text
 platformdirs
