@@ -673,6 +673,66 @@ class TestSolarWindsApmConfig:
         if old_log_type:
             os.environ["SW_APM_LOG_TYPE"] = old_log_type
 
+    def test_set_config_value_default_export_logs_enabled(
+        self,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config.get("export_logs_enabled") == True
+
+    def test_set_config_value_ignore_export_logs_enabled(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        # Save any export_logs_enabled in os for later
+        old_expt_logs = os.environ.get("SW_APM_EXPORT_LOGS_ENABLED", None)
+        if old_expt_logs:
+            del os.environ["SW_APM_EXPORT_LOGS_ENABLED"]
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_logs_enabled", "not-valid")
+        assert test_config.get("export_logs_enabled") == True
+        assert "Ignore config option" in caplog.text
+        # Restore old debug_level
+        if old_expt_logs:
+            os.environ["SW_APM_EXPORT_LOGS_ENABLED"] = old_expt_logs
+
+    def test_set_config_value_set_export_logs_enabled_false(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        # Save any export_logs_enabled in os for later
+        old_expt_logs = os.environ.get("SW_APM_EXPORT_LOGS_ENABLED", None)
+        if old_expt_logs:
+            del os.environ["SW_APM_EXPORT_LOGS_ENABLED"]
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_logs_enabled", "false")
+        assert test_config.get("export_logs_enabled") == False
+        assert "Ignore config option" not in caplog.text
+        # Restore old debug_level
+        if old_expt_logs:
+            os.environ["SW_APM_EXPORT_LOGS_ENABLED"] = old_expt_logs
+
+    def test_set_config_value_set_export_logs_enabled_true(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        # Save any export_logs_enabled in os for later
+        old_expt_logs = os.environ.get("SW_APM_EXPORT_LOGS_ENABLED", None)
+        if old_expt_logs:
+            del os.environ["SW_APM_EXPORT_LOGS_ENABLED"]
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_logs_enabled", "true")
+        assert test_config.get("export_logs_enabled") == True
+        assert "Ignore config option" not in caplog.text
+        # Restore old debug_level
+        if old_expt_logs:
+            os.environ["SW_APM_EXPORT_LOGS_ENABLED"] = old_expt_logs
+
     def test__update_service_key_name_not_agent_enabled(self):
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._update_service_key_name(

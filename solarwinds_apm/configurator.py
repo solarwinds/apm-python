@@ -452,8 +452,27 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure OTel OTLP logs exporter if any configured.
+        """Configure OTel OTLP logs exporter if enabled.
+        Settings precedence: OTEL_* > SW_APM_EXPORT_LOGS_ENABLED.
         Links to new global LoggerProvider."""
+        otel_ev = os.environ.get(
+            _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+        )
+        otlp_log_enabled = SolarWindsApmConfig.convert_to_bool(otel_ev)
+        if otlp_log_enabled is False:
+            logger.debug(
+                "_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED false. Skipping init of logs exporters"
+            )
+            return
+
+        sw_enabled = apm_config.get("export_logs_enabled")
+        if sw_enabled is False:
+            logger.debug(
+                "APM logs exports disabled. Skipping init of logs exporters"
+            )
+            return
+
+        # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
             OTEL_LOGS_EXPORTER,
         )
@@ -513,17 +532,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
             logger_provider.add_log_record_processor(logs_processor)
 
-        # TODO move this up? or keep here
-        otlp_log_enabled = os.environ.get(
-            _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+        # Create and attach OTLP handler to root logger
+        log_handler = LoggingHandler(
+            level=logging.NOTSET,
+            logger_provider=logger_provider,
         )
-        if str(otlp_log_enabled).lower() in {"true", "1"}:
-            log_handler = LoggingHandler(
-                level=logging.NOTSET,
-                logger_provider=logger_provider,
-            )
-            # Attach OTLP handler to root logger
-            logging.getLogger().addHandler(log_handler)
+        logging.getLogger().addHandler(log_handler)
 
     def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators, default or environment configured"""
