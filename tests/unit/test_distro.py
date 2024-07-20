@@ -8,9 +8,14 @@ import os
 import pytest
 
 from opentelemetry.environment_variables import (
+    OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER
+)
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
 )
 
 from solarwinds_apm import distro
@@ -134,6 +139,13 @@ class TestDistro:
                 ),
             ]
         )
+
+    def test_configure_set_otlp_log_defaults(self, mocker):
+        mocker.patch.dict(os.environ, {})
+        distro.SolarWindsDistro()._configure()
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL) == "http/protobuf"
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT) == "http://otel-collector:4318"
+        assert os.environ.get(OTEL_LOGS_EXPORTER) == "otlp_proto_http"
 
     def test_configure_no_env(self, mocker):
         mocker.patch.dict(os.environ, {})
