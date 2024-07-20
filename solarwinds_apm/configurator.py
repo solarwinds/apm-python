@@ -462,7 +462,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         sw_enabled = apm_config.get("export_logs_enabled")
         if otlp_log_enabled is False:
             logger.debug(
-                "_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED false. Skipping init of logs exporters"
+                "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED false. Skipping init of logs exporters"
             )
             return
 
