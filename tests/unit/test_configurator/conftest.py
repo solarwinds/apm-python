@@ -90,6 +90,18 @@ def mock_pemreader(mocker):
         "solarwinds_apm.configurator.PeriodicExportingMetricReader",
     )
 
+@pytest.fixture(name="mock_blprocessor")
+def mock_blprocessor(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.BatchLogRecordProcessor",
+    )
+
+@pytest.fixture(name="mock_slprocessor")
+def mock_slprocessor(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SimpleLogRecordProcessor",
+    )
+
 @pytest.fixture(name="mock_tracerprovider")
 def mock_tracerprovider(mocker):
     return mocker.patch(
@@ -102,6 +114,18 @@ def mock_meterprovider(mocker):
         "solarwinds_apm.configurator.MeterProvider",
     )
 
+@pytest.fixture(name="mock_loggerprovider")
+def mock_loggerprovider(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.LoggerProvider",
+    )
+
+@pytest.fixture(name="mock_logginghandler")
+def mock_logginghandler(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.LoggingHandler",
+    )
+
 # ==================================================================
 # Configurator APM Python ApmConfig mocks
 # ==================================================================
@@ -111,6 +135,7 @@ def get_apmconfig_mocks(
     enabled=True,
     is_lambda=False,
     md_is_valid=True,
+    export_logs_enabled=True,
 ):
     # mock the extension that is linked to ApmConfig
     mock_ext_config = mocker.Mock()
@@ -168,6 +193,7 @@ def get_apmconfig_mocks(
             "is_lambda": is_lambda,
             "extension": mock_ext,
             "oboe_api": mocker.Mock(),
+            "export_logs_enabled": export_logs_enabled,
         }
     )
     return mock_apmconfig
@@ -208,6 +234,26 @@ def mock_apmconfig_enabled_is_lambda(mocker):
         get_apmconfig_mocks(
             mocker,
             is_lambda=True,
+        )
+    )
+
+@pytest.fixture(name="mock_apmconfig_logs_enabled_false")
+def mock_apmconfig_logs_enabled_false(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsApmConfig",
+        get_apmconfig_mocks(
+            mocker,
+            export_logs_enabled=False
+        )
+    )
+
+@pytest.fixture(name="mock_apmconfig_logs_enabled_none")
+def mock_apmconfig_logs_enabled_none(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsApmConfig",
+        get_apmconfig_mocks(
+            mocker,
+            export_logs_enabled=None
         )
     )
 
