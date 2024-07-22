@@ -315,6 +315,12 @@ def mock_config_metrics_exp(mocker):
         "solarwinds_apm.configurator.SolarWindsConfigurator._configure_metrics_exporter"
     )
 
+@pytest.fixture(name="mock_config_logs_exp")
+def mock_config_logs_exp(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_logs_exporter"
+    )
+
 @pytest.fixture(name="mock_config_propagator")
 def mock_config_propagator(mocker):
     return mocker.patch(
