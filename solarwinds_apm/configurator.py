@@ -466,9 +466,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             return
 
-        # If otel_ev is None, True/true, or an invalid value (i.e. just not False)
-        # then sw_enabled determines logs export setup
-        if sw_enabled is False:
+        # If otel_ev is True, ignore sw_enabled.
+        # If otel_ev is None (unset or could not convert to bool)
+        # then sw_enabled determines logs export setup.
+        if not otlp_log_enabled and sw_enabled is False:
             logger.debug(
                 "APM logs exports disabled. Skipping init of logs exporters"
             )
