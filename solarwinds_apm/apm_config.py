@@ -111,7 +111,7 @@ class SolarWindsApmConfig:
             "proxy": "",
             "transaction_filters": [],
             "transaction_name": None,
-            "export_logs_enabled": True,
+            "export_logs_enabled": False,
         }
         self.is_lambda = self.calculate_is_lambda()
         self.lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")

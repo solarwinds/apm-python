@@ -677,7 +677,7 @@ class TestSolarWindsApmConfig:
         self,
     ):
         test_config = apm_config.SolarWindsApmConfig()
-        assert test_config.get("export_logs_enabled") == True
+        assert test_config.get("export_logs_enabled") == False
 
     def test_set_config_value_ignore_export_logs_enabled(
         self,
@@ -691,7 +691,7 @@ class TestSolarWindsApmConfig:
             del os.environ["SW_APM_EXPORT_LOGS_ENABLED"]
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("export_logs_enabled", "not-valid")
-        assert test_config.get("export_logs_enabled") == True
+        assert test_config.get("export_logs_enabled") == False
         assert "Ignore config option" in caplog.text
         # Restore old debug_level
         if old_expt_logs:
@@ -715,6 +715,24 @@ class TestSolarWindsApmConfig:
         if old_expt_logs:
             os.environ["SW_APM_EXPORT_LOGS_ENABLED"] = old_expt_logs
 
+    def test_set_config_value_set_export_logs_enabled_false_mixed_case(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        # Save any export_logs_enabled in os for later
+        old_expt_logs = os.environ.get("SW_APM_EXPORT_LOGS_ENABLED", None)
+        if old_expt_logs:
+            del os.environ["SW_APM_EXPORT_LOGS_ENABLED"]
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_logs_enabled", "fALsE")
+        assert test_config.get("export_logs_enabled") == False
+        assert "Ignore config option" not in caplog.text
+        # Restore old debug_level
+        if old_expt_logs:
+            os.environ["SW_APM_EXPORT_LOGS_ENABLED"] = old_expt_logs
+
     def test_set_config_value_set_export_logs_enabled_true(
         self,
         caplog,
@@ -727,6 +745,24 @@ class TestSolarWindsApmConfig:
             del os.environ["SW_APM_EXPORT_LOGS_ENABLED"]
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("export_logs_enabled", "true")
+        assert test_config.get("export_logs_enabled") == True
+        assert "Ignore config option" not in caplog.text
+        # Restore old debug_level
+        if old_expt_logs:
+            os.environ["SW_APM_EXPORT_LOGS_ENABLED"] = old_expt_logs
+
+    def test_set_config_value_set_export_logs_enabled_true_mixed_case(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        # Save any export_logs_enabled in os for later
+        old_expt_logs = os.environ.get("SW_APM_EXPORT_LOGS_ENABLED", None)
+        if old_expt_logs:
+            del os.environ["SW_APM_EXPORT_LOGS_ENABLED"]
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_logs_enabled", "tRUe")
         assert test_config.get("export_logs_enabled") == True
         assert "Ignore config option" not in caplog.text
         # Restore old debug_level
