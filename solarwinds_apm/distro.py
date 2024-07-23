@@ -25,6 +25,7 @@ from opentelemetry.instrumentation.logging.environment_variables import (
 from opentelemetry.instrumentation.version import __version__ as inst_version
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
 )
@@ -70,14 +71,37 @@ class SolarWindsDistro(BaseDistro):
         self._log_python_runtime()
         logger.info("OpenTelemetry %s/%s", sdk_version, inst_version)
 
+    def _get_token_from_service_key(self):
+        """Return token portion of service_key if set, else None"""
+        service_key = environ.get("SW_APM_SERVICE_KEY")
+        if not service_key:
+            logger.debug("Missing service key")
+            return None
+        # Key must be at least one char + ":" + at least one other char
+        key_parts = [p for p in service_key.split(":") if len(p) > 0]
+        if len(key_parts) != 2:
+            logger.debug("Incorrect service key format")
+            return None
+        return key_parts[0]
+
     def _configure(self, **kwargs):
         """Configure default OTel exporter and propagators"""
         self._log_runtime()
 
-        # Set defaults for OTLP logs export by HTTP to local otelcollector
+        # Set defaults for OTLP logs export by HTTP to SWO
+        header_token = self._get_token_from_service_key()
+        if not header_token:
+            logger.debug(
+                "Setting OTLP logging defaults without valid SWO token"
+            )
+        environ.setdefault(
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+            f"authorization=Bearer%20{header_token}",
+        )
         environ.setdefault(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL, "http/protobuf")
         environ.setdefault(
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, "http://otel-collector:4318"
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+            "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs",
         )
         environ.setdefault(
             OTEL_LOGS_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL["http/protobuf"]

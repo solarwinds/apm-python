@@ -15,6 +15,7 @@ from opentelemetry.environment_variables import (
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
 )
 
@@ -140,12 +141,54 @@ class TestDistro:
             ]
         )
 
-    def test_configure_set_otlp_log_defaults(self, mocker):
+    def test__get_token_from_service_key_missing(self, mocker):
         mocker.patch.dict(os.environ, {})
+        assert distro.SolarWindsDistro()._get_token_from_service_key() is None
+
+    def test__get_token_from_service_key_bad_format(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "missing-service-name"
+            }
+        )
+        assert distro.SolarWindsDistro()._get_token_from_service_key() is None
+
+    def test__get_token_from_service_key_ok(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar-name"
+            }
+        )
+        assert distro.SolarWindsDistro()._get_token_from_service_key() == "foo-token"
+
+    def test_configure_set_otlp_log_defaults(self, mocker):
+        # Save any env vars for later just in case
+        old_otel_ev = os.environ.get("OTEL_EXPORTER_OTLP_LOGS_HEADERS", None)
+        if old_otel_ev:
+            del os.environ["OTEL_EXPORTER_OTLP_LOGS_HEADERS"]
+        old_key = os.environ.get("SW_APM_SERVICE_KEY", None)
+        if old_key:
+            del os.environ["SW_APM_SERVICE_KEY"]
+
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar-name"
+            }
+        )
         distro.SolarWindsDistro()._configure()
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) == f"authorization=Bearer%20foo-token"
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL) == "http/protobuf"
-        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT) == "http://otel-collector:4318"
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT) == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs"
         assert os.environ.get(OTEL_LOGS_EXPORTER) == "otlp_proto_http"
+
+        # Restore old env vars
+        if old_key:
+            os.environ["SW_APM_SERVICE_KEY"] = old_key
+        if old_otel_ev:
+            os.environ["OTEL_EXPORTER_OTLP_LOGS_HEADERS"] = old_otel_ev
 
     def test_configure_no_env(self, mocker):
         mocker.patch.dict(os.environ, {})
