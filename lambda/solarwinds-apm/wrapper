@@ -31,17 +31,6 @@ export PYTHONPATH="$LAMBDA_RUNTIME_DIR:$PYTHONPATH";
 if [ -z "${OTEL_EXPORTER_OTLP_PROTOCOL}" ]; then
     export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 fi
-# Default OTLP logs export for APM Python in lambda is through otelcollector, 
-# and Otel SDK precedence is logs/trace/metrics-specific > general
-if [ -z "${OTEL_EXPORTER_OTLP_LOGS_PROTOCOL}" ]; then
-    export OTEL_EXPORTER_OTLP_LOGS_PROTOCOL=http/protobuf
-fi
-if [ -z "${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT}" ]; then
-    export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel-collector:4318/v1/logs
-fi
-if [ -z "${OTEL_LOGS_EXPORTER}" ]; then
-    export OTEL_LOGS_EXPORTER=otlp_proto_http
-fi
 
 # Lambda function is default service name
 if [ -z "${OTEL_SERVICE_NAME}" ]; then
