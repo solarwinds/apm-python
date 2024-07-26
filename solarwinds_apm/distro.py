@@ -100,7 +100,12 @@ class SolarWindsDistro(BaseDistro):
         )
         environ.setdefault(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL, "http/protobuf")
 
-        if not SolarWindsApmConfig.calculate_is_lambda():
+        if SolarWindsApmConfig.calculate_is_lambda():
+            environ.setdefault(
+                OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+                "http://0.0.0.0:4318/v1/logs",
+            )
+        else:
             environ.setdefault(
                 OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
                 "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs",
