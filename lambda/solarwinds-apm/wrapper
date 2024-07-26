@@ -28,6 +28,7 @@ export PYTHONPATH="$LAMBDA_LAYER_PKGS_DIR:$PYTHONPATH";
 export PYTHONPATH="$LAMBDA_RUNTIME_DIR:$PYTHONPATH";
 
 # Default OTEL_EXPORTER_OTLP_PROTOCOL for APM Python in lambda
+# for all of logs/trace/metrics is HTTP
 if [ -z "${OTEL_EXPORTER_OTLP_PROTOCOL}" ]; then
     export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 fi

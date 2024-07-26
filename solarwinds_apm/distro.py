@@ -99,10 +99,13 @@ class SolarWindsDistro(BaseDistro):
             f"authorization=Bearer%20{header_token}",
         )
         environ.setdefault(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL, "http/protobuf")
-        environ.setdefault(
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
-            "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs",
-        )
+
+        if not SolarWindsApmConfig.calculate_is_lambda():
+            environ.setdefault(
+                OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+                "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs",
+            )
+
         environ.setdefault(
             OTEL_LOGS_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL["http/protobuf"]
         )
