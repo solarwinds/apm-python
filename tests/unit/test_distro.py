@@ -23,6 +23,26 @@ from solarwinds_apm import distro
 
 
 class TestDistro:
+    @pytest.fixture(autouse=True)
+    def before_and_after_each(self):
+        # Save any env vars for later just in case
+        # Save any env vars for later just in case
+        old_otel_ev = os.environ.get("OTEL_EXPORTER_OTLP_LOGS_HEADERS", None)
+        if old_otel_ev:
+            del os.environ["OTEL_EXPORTER_OTLP_LOGS_HEADERS"]
+        old_key = os.environ.get("SW_APM_SERVICE_KEY", None)
+        if old_key:
+            del os.environ["SW_APM_SERVICE_KEY"]
+
+        # Wait for test
+        yield
+
+        # Restore old env vars
+        if old_key:
+            os.environ["SW_APM_SERVICE_KEY"] = old_key
+        if old_otel_ev:
+            os.environ["OTEL_EXPORTER_OTLP_LOGS_HEADERS"] = old_otel_ev
+
     def test__log_python_runtime(self, mocker):
         mock_plat = mocker.patch(
             "solarwinds_apm.distro.platform"
@@ -164,14 +184,6 @@ class TestDistro:
         assert distro.SolarWindsDistro()._get_token_from_service_key() == "foo-token"
 
     def test_configure_set_otlp_log_defaults(self, mocker):
-        # Save any env vars for later just in case
-        old_otel_ev = os.environ.get("OTEL_EXPORTER_OTLP_LOGS_HEADERS", None)
-        if old_otel_ev:
-            del os.environ["OTEL_EXPORTER_OTLP_LOGS_HEADERS"]
-        old_key = os.environ.get("SW_APM_SERVICE_KEY", None)
-        if old_key:
-            del os.environ["SW_APM_SERVICE_KEY"]
-
         mocker.patch.dict(
             os.environ,
             {
@@ -183,12 +195,6 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL) == "http/protobuf"
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT) == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs"
         assert os.environ.get(OTEL_LOGS_EXPORTER) == "otlp_proto_http"
-
-        # Restore old env vars
-        if old_key:
-            os.environ["SW_APM_SERVICE_KEY"] = old_key
-        if old_otel_ev:
-            os.environ["OTEL_EXPORTER_OTLP_LOGS_HEADERS"] = old_otel_ev
 
     def test_configure_no_env(self, mocker):
         mocker.patch.dict(os.environ, {})
