@@ -22,6 +22,7 @@ class TestConfiguratorConfigureOtelComponents:
         mock_config_otlp_processors,
         mock_config_traces_exp,
         mock_config_metrics_exp,
+        mock_config_logs_exp,
         mock_config_propagator,
         mock_config_response_propagator,
     ):
@@ -51,6 +52,7 @@ class TestConfiguratorConfigureOtelComponents:
             mock_apmconfig_enabled,
         )
         mock_config_metrics_exp.assert_called_once_with(mock_apmconfig_enabled)
+        mock_config_logs_exp.assert_called_once_with(mock_apmconfig_enabled)
         mock_config_propagator.assert_called_once()
         mock_config_response_propagator.assert_called_once()
 
@@ -69,6 +71,7 @@ class TestConfiguratorConfigureOtelComponents:
         mock_config_otlp_processors,
         mock_config_traces_exp,
         mock_config_metrics_exp,
+        mock_config_logs_exp,
         mock_config_propagator,
         mock_config_response_propagator,
     ):
@@ -86,5 +89,6 @@ class TestConfiguratorConfigureOtelComponents:
         mock_config_otlp_processors.assert_not_called()
         mock_config_traces_exp.assert_not_called()
         mock_config_metrics_exp.assert_not_called()
+        mock_config_logs_exp.assert_not_called()
         mock_config_propagator.assert_not_called()
         mock_config_response_propagator.assert_not_called()

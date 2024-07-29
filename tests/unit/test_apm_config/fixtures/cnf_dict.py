@@ -24,6 +24,7 @@ def fixture_cnf_dict():
         "reporterFileSingle": 2,
         "logTraceId": "always",
         "proxy": "http://foo-bar",
+        "exportLogsEnabled": True,
     }
 
 @pytest.fixture
@@ -50,6 +51,7 @@ def fixture_cnf_dict_enabled_false():
         "reporterFileSingle": 2,
         "logTraceId": "always",
         "proxy": "http://foo-bar",
+        "exportLogsEnabled": False,
     }
 
 @pytest.fixture
@@ -75,4 +77,5 @@ def fixture_cnf_dict_enabled_false_mixed_case():
         "histogramPrecision": 2,
         "reporterFileSingle": 2,
         "proxy": "http://foo-bar",
+        "exportLogsEnabled": "fALsE",
     }

@@ -111,6 +111,7 @@ class SolarWindsApmConfig:
             "proxy": "",
             "transaction_filters": [],
             "transaction_name": None,
+            "export_logs_enabled": False,
         }
         self.is_lambda = self.calculate_is_lambda()
         self.lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
@@ -899,6 +900,11 @@ class SolarWindsApmConfig:
                     raise ValueError
                 self.__config[key] = val
             elif keys == ["transaction_name"]:
+                self.__config[key] = val
+            elif keys == ["export_logs_enabled"]:
+                val = self.convert_to_bool(val)
+                if val not in (True, False):
+                    raise ValueError
                 self.__config[key] = val
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):

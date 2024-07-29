@@ -32,6 +32,55 @@ class TestSolarWindsApmConfig:
     SW_APM_AGENT_ENABLED is optional.
     """
 
+    @pytest.fixture(autouse=True)
+    def before_and_after_each(self):
+        # Save any env vars for later just in case
+        old_service_key = os.environ.get("SW_APM_SERVICE_KEY", None)
+        if old_service_key:
+            del os.environ["SW_APM_SERVICE_KEY"]
+        old_env_lambda_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+        if old_env_lambda_name:
+            del os.environ["AWS_LAMBDA_FUNCTION_NAME"]
+        old_env_trans_name = os.environ.get("SW_APM_TRANSACTION_NAME")
+        if old_env_trans_name:
+            del os.environ["SW_APM_TRANSACTION_NAME"]
+        old_debug_level = os.environ.get("SW_APM_DEBUG_LEVEL")
+        if old_debug_level:
+            del os.environ["SW_APM_DEBUG_LEVEL"]
+        old_log_type = os.environ.get("SW_APM_LOG_TYPE")
+        if old_log_type:
+            del os.environ["SW_APM_LOG_TYPE"]
+        old_collector = os.environ.get("SW_APM_COLLECTOR", None)
+        if old_collector:
+            del os.environ["SW_APM_COLLECTOR"]
+        old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
+        if old_trustedpath:
+            del os.environ["SW_APM_TRUSTEDPATH"]
+        old_expt_logs = os.environ.get("SW_APM_EXPORT_LOGS_ENABLED", None)
+        if old_expt_logs:
+            del os.environ["SW_APM_EXPORT_LOGS_ENABLED"]
+
+        # Wait for test
+        yield
+
+        # Restore old env vars
+        if old_service_key:
+            os.environ["SW_APM_SERVICE_KEY"] = old_service_key
+        if old_env_lambda_name:
+            os.environ["AWS_LAMBDA_FUNCTION_NAME"] = old_env_lambda_name
+        if old_env_trans_name:
+            os.environ["SW_APM_TRANSACTION_NAME"] = old_env_trans_name
+        if old_debug_level:
+            os.environ["SW_APM_DEBUG_LEVEL"] = old_debug_level
+        if old_log_type:
+            os.environ["SW_APM_LOG_TYPE"] = old_log_type
+        if old_collector:
+            os.environ["SW_APM_COLLECTOR"] = old_collector
+        if old_trustedpath:
+            os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
+        if old_expt_logs:
+            os.environ["SW_APM_EXPORT_LOGS_ENABLED"] = old_expt_logs
+
     def _mock_service_key(self, mocker, service_key):
         mocker.patch.dict(os.environ, {
             "SW_APM_SERVICE_KEY": service_key,
@@ -163,14 +212,6 @@ class TestSolarWindsApmConfig:
         assert test_config.get("service_key") == "service_key_with:sw_service_name"
 
     def test__init_custom_transction_names_env_vars(self, mocker):
-        # save any env vars for later
-        old_env_lambda_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
-        if old_env_lambda_name:
-            del os.environ["AWS_LAMBDA_FUNCTION_NAME"]
-        old_env_trans_name = os.environ.get("SW_APM_TRANSACTION_NAME")
-        if old_env_trans_name:
-            del os.environ["SW_APM_TRANSACTION_NAME"]
-
         mocker.patch.dict(
             os.environ,
             {
@@ -182,12 +223,6 @@ class TestSolarWindsApmConfig:
         config = apm_config.SolarWindsApmConfig()
         assert config.lambda_function_name == "foo-lambda"
         assert config.get("transaction_name") == "foo-trans-name"
-
-        # restore env vars
-        if old_env_lambda_name:
-            os.environ["AWS_LAMBDA_FUNCTION_NAME"] = old_env_lambda_name
-        if old_env_trans_name:
-            os.environ["SW_APM_TRANSACTION_NAME"] = old_env_trans_name
 
     def test__init_oboe_api_and_options_defaults(self, mocker):
         mock_level = mocker.PropertyMock()
@@ -221,13 +256,6 @@ class TestSolarWindsApmConfig:
         mock_oboe_api_swig.assert_called_once()
 
     def test__init_oboe_api_and_options_configured_invalid(self, mocker):
-        # Save any debug_level, log_type env var for later
-        old_debug_level = os.environ.get("SW_APM_DEBUG_LEVEL")
-        if old_debug_level:
-            del os.environ["SW_APM_DEBUG_LEVEL"]
-        old_log_type = os.environ.get("SW_APM_LOG_TYPE")
-        if old_log_type:
-            del os.environ["SW_APM_LOG_TYPE"]
         mocker.patch.dict(os.environ, {
             "SW_APM_DEBUG_LEVEL": "not-valid",
             "SW_APM_LOG_TYPE": "nor-this",
@@ -263,20 +291,8 @@ class TestSolarWindsApmConfig:
         mock_type.assert_called_once_with(0)
         mock_oboe_api_swig.assert_called_once()
 
-        # restore debug_level, log_type
-        if old_debug_level:
-            os.environ["SW_APM_DEBUG_LEVEL"] = old_debug_level
-        if old_log_type:
-            os.environ["SW_APM_LOG_TYPE"] = old_log_type
-
     def test__init_oboe_api_and_options_configured_valid(self, mocker):
         # Save any debug_level, log_type env var for later
-        old_debug_level = os.environ.get("SW_APM_DEBUG_LEVEL")
-        if old_debug_level:
-            del os.environ["SW_APM_DEBUG_LEVEL"]
-        old_log_type = os.environ.get("SW_APM_LOG_TYPE")
-        if old_log_type:
-            del os.environ["SW_APM_LOG_TYPE"]
         mocker.patch.dict(os.environ, {
             "SW_APM_DEBUG_LEVEL": "6",
             "SW_APM_LOG_TYPE": "1",
@@ -314,21 +330,8 @@ class TestSolarWindsApmConfig:
         mock_type.assert_called_once_with(1)
         mock_oboe_api_swig.assert_called_once()
 
-        # restore debug_level, log_type
-        if old_debug_level:
-            os.environ["SW_APM_DEBUG_LEVEL"] = old_debug_level
-        if old_log_type:
-            os.environ["SW_APM_LOG_TYPE"] = old_log_type
-
     def test_calculate_metric_format_no_collector(self, mocker):
-        # Save any collector in os for later
-        old_collector = os.environ.get("SW_APM_COLLECTOR", None)
-        if old_collector:
-            del os.environ["SW_APM_COLLECTOR"]
         assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 2
-        # Restore old collector
-        if old_collector:
-            os.environ["SW_APM_COLLECTOR"] = old_collector
 
     def test_calculate_metric_format_not_ao(self, mocker):
         mocker.patch.dict(os.environ, {
@@ -356,37 +359,15 @@ class TestSolarWindsApmConfig:
 
     def test_calculate_certificates_no_collector(self):
         # Save any collector and trustedpath in os for later
-        old_collector = os.environ.get("SW_APM_COLLECTOR", None)
-        if old_collector:
-            del os.environ["SW_APM_COLLECTOR"]
-        old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
-        if old_trustedpath:
-            del os.environ["SW_APM_TRUSTEDPATH"]
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == ""
-        # Restore old collector and trustedpath
-        if old_collector:
-            os.environ["SW_APM_COLLECTOR"] = old_collector
-        if old_trustedpath:
-            os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
 
     def test_calculate_certificates_not_ao(self, mocker):
-        # Save any trustedpath in os for later
-        old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
-        if old_trustedpath:
-            del os.environ["SW_APM_TRUSTEDPATH"]
         mocker.patch.dict(os.environ, {
             "SW_APM_COLLECTOR": "foo-collector-not-ao"
         })
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == ""
-        # Restore old trustedpath
-        if old_trustedpath:
-            os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
 
     def test_calculate_certificates_ao_prod_no_trustedpath(self, mocker):
-        # Save any trustedpath in os for later
-        old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
-        if old_trustedpath:
-            del os.environ["SW_APM_TRUSTEDPATH"]
         mocker.patch.dict(os.environ, {
             "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR
         })
@@ -395,15 +376,8 @@ class TestSolarWindsApmConfig:
         )
         mock_get_public_cert.configure_mock(return_value="foo")
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
-        # Restore old trustedpath
-        if old_trustedpath:
-            os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
 
     def test_calculate_certificates_ao_staging_no_trustedpath(self, mocker):
-        # Save any trustedpath in os for later
-        old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
-        if old_trustedpath:
-            del os.environ["SW_APM_TRUSTEDPATH"]
         mocker.patch.dict(os.environ, {
             "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR
         })
@@ -412,15 +386,8 @@ class TestSolarWindsApmConfig:
         )
         mock_get_public_cert.configure_mock(return_value="foo")
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
-        # Restore old trustedpath
-        if old_trustedpath:
-            os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
 
     def test_calculate_certificates_ao_prod_with_port_no_trustedpath(self, mocker):
-        # Save any trustedpath in os for later
-        old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
-        if old_trustedpath:
-            del os.environ["SW_APM_TRUSTEDPATH"]
         mocker.patch.dict(os.environ, {
             "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR)
         })
@@ -429,9 +396,6 @@ class TestSolarWindsApmConfig:
         )
         mock_get_public_cert.configure_mock(return_value="foo")
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
-        # Restore old trustedpath
-        if old_trustedpath:
-            os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
 
     def test_calculate_certificates_not_ao_trustedpath_file_missing(self, mocker):
         """Non-AO collector, trustedpath set, but file missing --> use empty string"""
@@ -518,9 +482,6 @@ class TestSolarWindsApmConfig:
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "bar"
 
     def test_mask_service_key_no_key_empty_default(self, mocker):
-        old_service_key = os.environ.get("SW_APM_SERVICE_KEY", None)
-        if old_service_key:
-            del os.environ["SW_APM_SERVICE_KEY"]
         mock_iter_entry_points = mocker.patch(
             "solarwinds_apm.apm_config.iter_entry_points"
         )
@@ -530,9 +491,6 @@ class TestSolarWindsApmConfig:
             return_value=mock_points
         )
         assert apm_config.SolarWindsApmConfig().mask_service_key() == ""
-        # Restore that service key
-        if old_service_key:
-            os.environ["SW_APM_SERVICE_KEY"] = old_service_key
 
     def test_mask_service_key_empty_key(self, mocker):
         self._mock_service_key(mocker, "")
@@ -643,35 +601,80 @@ class TestSolarWindsApmConfig:
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_debug_level(self, caplog, setup_caplog, mock_env_vars):
-        # Save any debug_level in os for later
-        old_debug_level = os.environ.get("SW_APM_DEBUG_LEVEL", None)
-        if old_debug_level:
-            del os.environ["SW_APM_DEBUG_LEVEL"]
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("debug_level", "not-valid-level")
         assert test_config.get("debug_level") == 2
         assert "Ignore config option" in caplog.text
-        # Restore old debug_level
-        if old_debug_level:
-            os.environ["SW_APM_DEBUG_LEVEL"] = old_debug_level
-
     def test_set_config_value_default_log_type(
         self,
         caplog,
         setup_caplog,
         mock_env_vars,
     ):
-        # Save any log_type in os for later
-        old_log_type = os.environ.get("SW_APM_LOG_TYPE", None)
-        if old_log_type:
-            del os.environ["SW_APM_LOG_TYPE"]
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("log_type", "not-valid-level")
         assert test_config.get("log_type") == 0
         assert "Ignore config option" in caplog.text
-        # Restore old debug_level
-        if old_log_type:
-            os.environ["SW_APM_LOG_TYPE"] = old_log_type
+
+    def test_set_config_value_default_export_logs_enabled(
+        self,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config.get("export_logs_enabled") == False
+
+    def test_set_config_value_ignore_export_logs_enabled(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_logs_enabled", "not-valid")
+        assert test_config.get("export_logs_enabled") == False
+        assert "Ignore config option" in caplog.text
+    def test_set_config_value_set_export_logs_enabled_false(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_logs_enabled", "false")
+        assert test_config.get("export_logs_enabled") == False
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_set_export_logs_enabled_false_mixed_case(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_logs_enabled", "fALsE")
+        assert test_config.get("export_logs_enabled") == False
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_set_export_logs_enabled_true(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_logs_enabled", "true")
+        assert test_config.get("export_logs_enabled") == True
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_set_export_logs_enabled_true_mixed_case(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_logs_enabled", "tRUe")
+        assert test_config.get("export_logs_enabled") == True
+        assert "Ignore config option" not in caplog.text
 
     def test__update_service_key_name_not_agent_enabled(self):
         test_config = apm_config.SolarWindsApmConfig()
