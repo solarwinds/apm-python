@@ -90,19 +90,16 @@ class SolarWindsDistro(BaseDistro):
 
         # Set defaults for OTLP logs export by HTTP to SWO
         header_token = self._get_token_from_service_key()
-
         environ.setdefault(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL, "http/protobuf")
+        environ.setdefault(
+            OTEL_LOGS_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL["http/protobuf"]
+        )
+        environ.setdefault(
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+            "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs",
+        )
 
-        if SolarWindsApmConfig.calculate_is_lambda():
-            environ.setdefault(
-                OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
-                "http://0.0.0.0:4318/v1/logs",
-            )
-        else:
-            environ.setdefault(
-                OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
-                "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs",
-            )
+        if not SolarWindsApmConfig.calculate_is_lambda():
             if not header_token:
                 logger.debug(
                     "Setting OTLP logging defaults without valid SWO token"
@@ -111,10 +108,6 @@ class SolarWindsDistro(BaseDistro):
                 OTEL_EXPORTER_OTLP_LOGS_HEADERS,
                 f"authorization=Bearer%20{header_token}",
             )
-
-        environ.setdefault(
-            OTEL_LOGS_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL["http/protobuf"]
-        )
 
         otlp_protocol = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
         if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
