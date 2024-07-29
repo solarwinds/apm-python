@@ -96,12 +96,6 @@ def mock_blprocessor(mocker):
         "solarwinds_apm.configurator.BatchLogRecordProcessor",
     )
 
-@pytest.fixture(name="mock_slprocessor")
-def mock_slprocessor(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SimpleLogRecordProcessor",
-    )
-
 @pytest.fixture(name="mock_tracerprovider")
 def mock_tracerprovider(mocker):
     return mocker.patch(
