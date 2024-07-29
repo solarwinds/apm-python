@@ -32,6 +32,7 @@ export PYTHONPATH="$LAMBDA_RUNTIME_DIR:$PYTHONPATH";
 if [ -z "${OTEL_EXPORTER_OTLP_PROTOCOL}" ]; then
     export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 fi
+# Set default for LOGS specifically because of regular default
 if [ -z "${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT}" ]; then
     export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://0.0.0.0:4318/v1/logs
 fi
