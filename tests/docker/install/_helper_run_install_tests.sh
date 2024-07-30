@@ -94,16 +94,32 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             TZ=America
             ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-            apt-get install -y \
-                "python$python_version" \
-                "python$python_version-distutils" \
-                "python$python_version-dev" \
-                python3-setuptools \
-                build-essential \
-                unzip \
-                wget \
-                curl
-            update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
+            if [ "$python_version" = "3.12" ]; then
+                # py3.12 not currently on main apt repo for ubuntu 22 so use deadsnakes
+                apt-get install -y software-properties-common
+                add-apt-repository ppa:deadsnakes/ppa -y
+                apt-get install -y \
+                    python3 \
+                    python3-distutils \
+                    python3-dev \
+                    python3-setuptools \
+                    build-essential \
+                    unzip \
+                    wget \
+                    curl
+                update-alternatives --install /usr/bin/python python "/usr/bin/python3" 1
+            else
+                apt-get install -y \
+                    "python$python_version" \
+                    "python$python_version-distutils" \
+                    "python$python_version-dev" \
+                    python3-setuptools \
+                    build-essential \
+                    unzip \
+                    wget \
+                    curl
+                update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
+            fi
 
         else
             echo "ERROR: Testing on Ubuntu <18.04 not supported."

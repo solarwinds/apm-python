@@ -144,7 +144,7 @@ function check_agent_startup(){
 }
 
 function install_test_app_dependencies(){
-    pip install flask requests
+    pip install --ignore-installed flask requests
     opentelemetry-bootstrap --action=install
 }
 
