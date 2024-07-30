@@ -62,8 +62,8 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             apt-get update -y
             TZ=America
             ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-            if [ "$python_version" = "3.10" ] || [ "$python_version" = "3.11" ]; then
-                # py3.10,3.11 not currently on main apt repo for ubuntu 18/20 so use deadsnakes
+            if [ "$python_version" = "3.10" ] || [ "$python_version" = "3.11" ] || [ "$python_version" = "3.12" ]; then
+                # py3.10,3.11 not currently on main apt repo for ubuntu 20 so use deadsnakes
                 apt-get install -y software-properties-common
                 add-apt-repository ppa:deadsnakes/ppa -y
                 apt-get install -y \
