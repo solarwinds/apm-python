@@ -73,8 +73,8 @@ jobs:
           - py3.11-ubuntu22.04
           - py3.12-alpine3.19
           - py3.12-alpine3.20
-          - py3.12-debian10
           - py3.12-debian11
+          - py3.12-debian12
           - py3.12-ubuntu20.04
           - py3.12-ubuntu22.04
         arch:
@@ -143,10 +143,10 @@ jobs:
             image: python:3.12-alpine3.19
           - hostname: py3.12-alpine3.20
             image: python:3.12-alpine3.20
-          - hostname: py3.12-debian10
-            image: python:3.12-buster
           - hostname: py3.12-debian11
             image: python:3.12-bullseye
+          - hostname: py3.12-debian12
+            image: python:3.12-bookworm
           - hostname: py3.12-ubuntu20.04
             image: ubuntu:20.04
           - hostname: py3.12-ubuntu22.04
