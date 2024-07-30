@@ -71,6 +71,12 @@ jobs:
           - py3.11-debian11
           - py3.11-ubuntu20.04
           - py3.11-ubuntu22.04
+          - py3.12-alpine3.16
+          - py3.12-alpine3.17
+          - py3.12-debian10
+          - py3.12-debian11
+          - py3.12-ubuntu20.04
+          - py3.12-ubuntu22.04
         arch:
           - x64
           - arm64
@@ -133,6 +139,18 @@ jobs:
             image: ubuntu:20.04
           - hostname: py3.11-ubuntu22.04
             image: ubuntu:22.04
+          - hostname: py3.12-alpine3.16
+            image: python:3.12-alpine3.16
+          - hostname: py3.12-alpine3.17
+            image: python:3.12-alpine3.17
+          - hostname: py3.12-debian10
+            image: python:3.12-buster
+          - hostname: py3.12-debian11
+            image: python:3.12-bullseye
+          - hostname: py3.12-ubuntu20.04
+            image: ubuntu:20.04
+          - hostname: py3.12-ubuntu22.04
+            image: ubuntu:22.04
         # Note: JavaScript Actions (checkout) in Alpine only supported in x64
         exclude:
           - hostname: py3.8-alpine3.12
@@ -156,6 +174,10 @@ jobs:
           - hostname: py3.11-alpine3.16
             arch: arm64
           - hostname: py3.11-alpine3.17
+            arch: arm64
+          - hostname: py3.12-alpine3.16
+            arch: arm64
+          - hostname: py3.12-alpine3.17
             arch: arm64
     container:
       image: "${{ matrix.image }}"

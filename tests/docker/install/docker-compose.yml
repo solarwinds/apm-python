@@ -257,3 +257,49 @@ services:
     << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
+
+  #--------------------------------------------------------------------
+  # Python 3.12
+  #--------------------------------------------------------------------
+
+  py3.12-install-debian10:
+    hostname: "py3.12-debian10"
+    image: "python:3.12-buster"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.12-install-debian11:
+    hostname: "py3.12-debian11"
+    image: "python:3.12-bullseye"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.12-install-ubuntu20.04:
+    hostname: "py3.12-ubuntu20.04"
+    image: "ubuntu:20.04"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.12-install-ubuntu22.04:
+    hostname: "py3.12-ubuntu22.04"
+    image: "ubuntu:22.04"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.12-install-alpine3.16:
+    hostname: "py3.12-alpine3.16"
+    image: "python:3.12-alpine3.16"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.12-install-alpine3.17:
+    hostname: "py3.12-alpine3.17"
+    image: "python:3.12-alpine3.17"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
