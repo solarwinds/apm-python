@@ -341,7 +341,7 @@ class TestSolarWindsApmConfig:
             "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_logs_enabled"
         )
 
-        config = apm_config.SolarWindsApmConfig()
+        apm_config.SolarWindsApmConfig()
         mock_metric_format.assert_called_once()
         mock_certs.assert_called_once()
         mock_logs_enabled.assert_called_once()
