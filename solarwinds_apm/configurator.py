@@ -37,10 +37,7 @@ from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
-from opentelemetry.sdk._logs.export import (
-    BatchLogRecordProcessor,
-    SimpleLogRecordProcessor,
-)
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
 )
@@ -520,18 +517,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
                 raise
 
-            if apm_config.is_lambda:
-                logger.debug(
-                    "Setting logs with SimpleLogRecordProcessor using %s",
-                    exporter_name,
-                )
-                logs_processor = SimpleLogRecordProcessor(exporter)
-            else:
-                logger.debug(
-                    "Setting logs with BatchLogRecordProcessor using %s",
-                    exporter_name,
-                )
-                logs_processor = BatchLogRecordProcessor(exporter)
+            logger.debug(
+                "Setting logs with BatchLogRecordProcessor using %s",
+                exporter_name,
+            )
+            logs_processor = BatchLogRecordProcessor(exporter)
 
             logger_provider.add_log_record_processor(logs_processor)
 
