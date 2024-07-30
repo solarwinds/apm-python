@@ -71,8 +71,8 @@ jobs:
           - py3.11-debian11
           - py3.11-ubuntu20.04
           - py3.11-ubuntu22.04
-          - py3.12-alpine3.16
-          - py3.12-alpine3.17
+          - py3.12-alpine3.19
+          - py3.12-alpine3.20
           - py3.12-debian10
           - py3.12-debian11
           - py3.12-ubuntu20.04
@@ -139,10 +139,10 @@ jobs:
             image: ubuntu:20.04
           - hostname: py3.11-ubuntu22.04
             image: ubuntu:22.04
-          - hostname: py3.12-alpine3.16
-            image: python:3.12-alpine3.16
-          - hostname: py3.12-alpine3.17
-            image: python:3.12-alpine3.17
+          - hostname: py3.12-alpine3.19
+            image: python:3.12-alpine3.19
+          - hostname: py3.12-alpine3.20
+            image: python:3.12-alpine3.20
           - hostname: py3.12-debian10
             image: python:3.12-buster
           - hostname: py3.12-debian11
@@ -175,9 +175,9 @@ jobs:
             arch: arm64
           - hostname: py3.11-alpine3.17
             arch: arm64
-          - hostname: py3.12-alpine3.16
+          - hostname: py3.12-alpine3.19
             arch: arm64
-          - hostname: py3.12-alpine3.17
+          - hostname: py3.12-alpine3.20
             arch: arm64
     container:
       image: "${{ matrix.image }}"
