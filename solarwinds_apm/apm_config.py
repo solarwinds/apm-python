@@ -165,8 +165,10 @@ class SolarWindsApmConfig:
         self.context.setTracingMode(self.__config["tracing_mode"])
         self.context.setTriggerMode(self.__config["trigger_trace"])
 
+        # (Re-)Calculate config if AppOptics
         self.metric_format = self._calculate_metric_format()
         self.certificates = self._calculate_certificates()
+        self.__config["export_logs_enabled"] = self._calculate_logs_enabled()
 
         logger.debug("Set ApmConfig as: %s", self)
 
@@ -611,6 +613,21 @@ class SolarWindsApmConfig:
                     "No such file at specified trustedpath. Using default certificate."
                 )
         return certs
+
+    def _calculate_logs_enabled(self) -> bool:
+        """Return if export of logs telemetry enabled, based on collector.
+        Always False if AO collector, else use current config."""
+        host = self.get("collector")
+        if host:
+            if (
+                INTL_SWO_AO_COLLECTOR in host
+                or INTL_SWO_AO_STG_COLLECTOR in host
+            ):
+                logger.warning(
+                    "AO collector detected. Defaulting to disabled logs export."
+                )
+                return False
+        return self.get("export_logs_enabled")
 
     def mask_service_key(self) -> str:
         """Return masked service key except first 4 and last 4 chars"""
