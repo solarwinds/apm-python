@@ -76,11 +76,14 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                     curl
                 update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
             else
+                # Install utils
                 apt-get install -y \
                     build-essential \
                     unzip \
                     wget \
                     curl
+                #
+                update-alternatives --install /usr/bin/python python "/usr/bin/python3" 1
             fi
         else
             echo "ERROR: Testing on Ubuntu <18.04 not supported."
