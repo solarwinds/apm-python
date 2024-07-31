@@ -76,18 +76,13 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                     curl
                 update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
             else
-	            # Not currently on main apt repo for ubuntu so use deadsnakes
-	            apt-get install -y software-properties-common
-	            add-apt-repository ppa:deadsnakes/ppa -y
-	            apt-get install -y \
-	                python3 \
-	                python3-distutils \
-	                python3-dev \
-	                python3-setuptools \
-	                build-essential \
-	                unzip \
-	                wget \
-	                curl
+                # Install utils
+                apt-get install -y \
+                    build-essential \
+                    unzip \
+                    wget \
+                    curl
+                #
                 update-alternatives --install /usr/bin/python python "/usr/bin/python3" 1
             fi
         else
