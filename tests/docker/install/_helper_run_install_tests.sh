@@ -65,6 +65,9 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
             if [ "$python_version" = "3.12" ]; then
+	            apt-get install -y software-properties-common
+                add-apt-repository ppa:deadsnakes/ppa -y
+
                 # distuils was removed from Python 3.12
                 # https://docs.python.org/3/whatsnew/3.12.html
                 # pip is installed as apt-get package
