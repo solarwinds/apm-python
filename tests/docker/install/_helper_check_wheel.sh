@@ -137,7 +137,7 @@ function check_wheel(){
         echo "Installing Python agent from wheel"
         if [ "$hostname" = "py3.12-ubuntu24.04" ]; then
             # PEP 668: Python 3.12 packages installed on Ubuntu "externally managed"
-            pip install --break-system-packages -I "$tested_wheel"
+            pip install --break-system-packages --no-cache-dir --use-deprecated=legacy-resolver -I "$tested_wheel"
         else
             pip install -I "$tested_wheel"
         fi
