@@ -9,6 +9,8 @@
 # stop on error
 set -e
 
+hostname=$(cat /etc/hostname)
+
 # get test mode
 TEST_MODES=(
     "local"
@@ -111,7 +113,12 @@ function check_sdist(){
         exit 0
     else
         echo "Installing Python agent from source"
-        pip install -I "$1"
+        if [ "$hostname" = "py3.12-ubuntu24.04" ]; then
+            # PEP 668: Python 3.12 packages installed on Ubuntu "externally managed"
+            pip install --break-system-packages -I "$1"
+        else
+            pip install -I "$1"
+        fi
     fi
 }
 

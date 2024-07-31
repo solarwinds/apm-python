@@ -9,6 +9,8 @@
 # stop on error
 set -e
 
+hostname=$(cat /etc/hostname)
+
 # get test mode
 TEST_MODES=(
     "local"
@@ -144,7 +146,13 @@ function check_agent_startup(){
 }
 
 function install_test_app_dependencies(){
-    pip install --ignore-installed flask requests
+    # PEP 668: Python 3.12 packages installed on Ubuntu "externally managed"
+    if [ "$hostname" = "py3.12-ubuntu24.04" ]; then
+        pip install --break-system-packages --ignore-installed flask requests
+    else
+        pip install --ignore-installed flask requests
+    fi
+    opentelemetry-bootstrap --action=install
 }
 
 function run_instrumented_server_and_client(){
