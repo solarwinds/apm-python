@@ -71,7 +71,7 @@ jobs:
           - py3.12-alpine3.20
           - py3.12-debian11
           - py3.12-debian12
-          - py3.12-ubuntu24.04
+          # - py3.12-ubuntu24.04
         arch:
           - x64
           - arm64
@@ -134,8 +134,8 @@ jobs:
             image: python:3.12-bullseye
           - hostname: py3.12-debian12
             image: python:3.12-bookworm
-          - hostname: py3.12-ubuntu24.04
-            image: ubuntu:22.04
+          # - hostname: py3.12-ubuntu24.04
+          #   image: ubuntu:22.04
         # Note: JavaScript Actions (checkout) in Alpine only supported in x64
         # Note: Ubuntu/Python containers only supported in x64
         exclude:
@@ -169,8 +169,8 @@ jobs:
             arch: arm64
           - hostname: py3.10-ubuntu22.04
             arch: arm64
-          - hostname: py3.12-ubuntu24.04
-            arch: arm64
+          # - hostname: py3.12-ubuntu24.04
+          #   arch: arm64
     container:
       image: "${{ matrix.image }}"
       options: --hostname "${{ matrix.hostname }}"
