@@ -66,7 +66,7 @@ services:
 
   py3.8-install-ubuntu20.04:
     hostname: "py3.8-ubuntu20.04"
-    image: "ubuntu/python:3.8-20.04_stable"
+    image: "ubuntu:20.04"
     << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
@@ -172,7 +172,7 @@ services:
 
   py3.10-install-ubuntu22.04:
     hostname: "py3.10-ubuntu22.04"
-    image: "ubuntu/python:3.10-22.04_stable"
+    image: "ubuntu:22.04"
     << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
@@ -250,7 +250,7 @@ services:
 
   py3.12-install-ubuntu24.04:
     hostname: "py3.12-ubuntu24.04"
-    image: "ubuntu/python:3.12-24.04_edge"
+    image: "ubuntu:24.04"
     << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
