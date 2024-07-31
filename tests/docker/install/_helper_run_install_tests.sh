@@ -60,11 +60,11 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
     elif grep Ubuntu /etc/os-release; then
         ubuntu_version=$(grep VERSION_ID /etc/os-release | sed 's/VERSION_ID="//' | sed 's/"//')
         if [ "$ubuntu_version" = "18.04" ] || [ "$ubuntu_version" = "20.04" ] || [ "$ubuntu_version" = "22.04" ] || [ "$ubuntu_version" = "24.04" ]; then
+            apt-get update -y
+            TZ=America
+            ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
             if [ "$hostname" = "py3.8-ubuntu18.04" ]; then
                 # Install Python 3.8 into this particular container
-                apt-get update -y
-                TZ=America
-                ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
                 apt-get install -y \
                     "python$python_version" \
                     "python$python_version-distutils" \
@@ -76,7 +76,11 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                     curl
                 update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
             else
-                echo "Host image has Python"
+                apt-get install -y \
+                    build-essential \
+                    unzip \
+                    wget \
+                    curl
             fi
         else
             echo "ERROR: Testing on Ubuntu <18.04 not supported."
