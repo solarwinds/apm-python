@@ -63,8 +63,24 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             apt-get update -y
             TZ=America
             ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-            if [ "$hostname" = "py3.8-ubuntu18.04" ]; then
-                # Install Python 3.8 into this particular container
+
+            if [ "$python_version" = "3.12" ]; then
+                # distuils was removed from Python 3.12
+                # https://docs.python.org/3/whatsnew/3.12.html
+                # pip is installed as apt-get package
+                apt-get install -y \
+                    "python$python_version" \
+                    "python$python_version-dev" \
+                    python3-pip \
+                    python3-setuptools \
+                    build-essential \
+                    unzip \
+                    wget \
+                    curl
+
+                update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
+
+            else
                 apt-get install -y \
                     "python$python_version" \
                     "python$python_version-distutils" \
@@ -75,30 +91,19 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                     wget \
                     curl
                 update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
-            else
-                # Install utils
-                apt-get install -y \
-                    build-essential \
-                    unzip \
-                    wget \
-                    curl
-                # Debug
-                echo "!!!"
-                ls /usr/bin
-                whereis python
-                whereis python3
+
+                # Make sure we don't install py3.6's pip on ubuntu
+                # Official get-pip documentation:
+                # https://pip.pypa.io/en/stable/installation/#get-pip-py
+                wget https://bootstrap.pypa.io/get-pip.py
+                python get-pip.py
+                pip install --upgrade pip >/dev/null
             fi
+
         else
             echo "ERROR: Testing on Ubuntu <18.04 not supported."
             exit 1
         fi
-
-        # Make sure we don't install py3.6's pip on ubuntu
-        # Official get-pip documentation:
-        # https://pip.pypa.io/en/stable/installation/#get-pip-py
-        wget https://bootstrap.pypa.io/get-pip.py
-        python get-pip.py
-        pip install --upgrade pip >/dev/null
 
     elif grep "Amazon Linux" /etc/os-release; then
         yum update -y
