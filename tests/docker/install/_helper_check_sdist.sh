@@ -111,8 +111,7 @@ function check_sdist(){
         exit 0
     else
         echo "Installing Python agent from source"
-        # PEP 668: Python 3.12 packages installed on Ubuntu "externally managed"
-        pip install --break-system-packages -I "$1"
+        pip install -I "$1"
     fi
 }
 

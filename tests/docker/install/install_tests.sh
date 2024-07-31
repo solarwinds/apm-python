@@ -144,9 +144,7 @@ function check_agent_startup(){
 }
 
 function install_test_app_dependencies(){
-    # PEP 668: Python 3.12 packages installed on Ubuntu "externally managed"
-    pip install --break-system-packages --ignore-installed flask requests
-    opentelemetry-bootstrap --action=install
+    pip install --ignore-installed flask requests
 }
 
 function run_instrumented_server_and_client(){

@@ -133,8 +133,7 @@ function check_wheel(){
         exit 0
     else
         echo "Installing Python agent from wheel"
-        # PEP 668: Python 3.12 packages installed on Ubuntu "externally managed"
-        pip install --break-system-packages -I "$tested_wheel"
+        pip install -I "$tested_wheel"
     fi
 }
 
