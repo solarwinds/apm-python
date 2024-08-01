@@ -56,21 +56,21 @@ jobs:
           - py3.9-debian10
           - py3.9-debian11
           - py3.9-rhel8
-          - py3.9-ubuntu20.04
           - py3.10-alpine3.13
           - py3.10-alpine3.16
           - py3.10-alpine3.17
           - py3.10-amazon2023
           - py3.10-debian10
           - py3.10-debian11
-          - py3.10-ubuntu20.04
           - py3.10-ubuntu22.04
           - py3.11-alpine3.16
           - py3.11-alpine3.17
           - py3.11-debian10
           - py3.11-debian11
-          - py3.11-ubuntu20.04
-          - py3.11-ubuntu22.04
+          - py3.12-alpine3.19
+          - py3.12-alpine3.20
+          - py3.12-debian11
+          - py3.12-debian12
         arch:
           - x64
           - arm64
@@ -103,8 +103,6 @@ jobs:
             image: python:3.9-bullseye
           - hostname: py3.9-rhel8
             image: registry.fedoraproject.org/f33/python3
-          - hostname: py3.9-ubuntu20.04
-            image: ubuntu:20.04
           - hostname: py3.10-alpine3.13
             image: python:3.10-alpine3.13
           - hostname: py3.10-alpine3.16
@@ -117,8 +115,6 @@ jobs:
             image: python:3.10-buster
           - hostname: py3.10-debian11
             image: python:3.10-bullseye
-          - hostname: py3.10-ubuntu20.04
-            image: ubuntu:20.04
           - hostname: py3.10-ubuntu22.04
             image: ubuntu:22.04
           - hostname: py3.11-alpine3.16
@@ -129,10 +125,14 @@ jobs:
             image: python:3.11-buster
           - hostname: py3.11-debian11
             image: python:3.11-bullseye
-          - hostname: py3.11-ubuntu20.04
-            image: ubuntu:20.04
-          - hostname: py3.11-ubuntu22.04
-            image: ubuntu:22.04
+          - hostname: py3.12-alpine3.19
+            image: python:3.12-alpine3.19
+          - hostname: py3.12-alpine3.20
+            image: python:3.12-alpine3.20
+          - hostname: py3.12-debian11
+            image: python:3.12-bullseye
+          - hostname: py3.12-debian12
+            image: python:3.12-bookworm
         # Note: JavaScript Actions (checkout) in Alpine only supported in x64
         exclude:
           - hostname: py3.8-alpine3.12
@@ -156,6 +156,10 @@ jobs:
           - hostname: py3.11-alpine3.16
             arch: arm64
           - hostname: py3.11-alpine3.17
+            arch: arm64
+          - hostname: py3.12-alpine3.19
+            arch: arm64
+          - hostname: py3.12-alpine3.20
             arch: arm64
     container:
       image: "${{ matrix.image }}"
