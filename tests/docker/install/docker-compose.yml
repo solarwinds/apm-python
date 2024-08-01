@@ -248,13 +248,6 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.12-install-ubuntu24.04:
-    hostname: "py3.12-ubuntu24.04"
-    image: "ubuntu:24.04"
-    << : [*command-install-test, *workdir, *volumes-codebase]
-    environment:
-      << : *envvars-install-test
-
   py3.12-install-alpine3.19:
     hostname: "py3.12-alpine3.19"
     image: "python:3.12-alpine3.19"
