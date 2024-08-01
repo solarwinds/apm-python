@@ -72,16 +72,11 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 # https://docs.python.org/3/whatsnew/3.12.html
                 # pip is installed as apt-get package
                 apt-get install -y \
-                    "python$python_version" \
-                    "python$python_version-dev" \
-                    python3-pip \
-                    python3-setuptools \
+                    python3.12-full \
                     build-essential \
                     unzip \
                     wget \
                     curl
-
-                update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
 
             else
                 apt-get install -y \
