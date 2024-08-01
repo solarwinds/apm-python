@@ -27,7 +27,7 @@ python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
 pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
 echo "Installing test dependencies for Python $python_version on $pretty_name"
 # setup dependencies quietly
-# {
+{
     if grep Alpine /etc/os-release; then
         # test deps
         apk add bash
@@ -125,7 +125,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             exit 1
         fi
     fi
-# } >/dev/null
+} >/dev/null
 
 # run tests using bash so we can use pipefail
 bash -c "set -o pipefail && ./install_tests.sh 2>&1"
