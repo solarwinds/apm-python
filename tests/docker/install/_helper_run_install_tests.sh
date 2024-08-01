@@ -18,7 +18,6 @@
 # stop on error
 set -e
 
-hostname=$(cat /etc/hostname)
 # get Python version from container hostname, e.g. "3.10"
 python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')
 # no-dot Python version, e.g. "310"
@@ -63,42 +62,23 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             apt-get update -y
             TZ=America
             ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+            apt-get install -y \
+                "python$python_version" \
+                "python$python_version-distutils" \
+                "python$python_version-dev" \
+                python3-setuptools \
+                build-essential \
+                unzip \
+                wget \
+                curl
+            update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
 
-            if [ "$python_version" = "3.12" ]; then
-	            apt-get install -y software-properties-common
-                add-apt-repository ppa:deadsnakes/ppa -y
-
-                # distuils was removed from Python 3.12
-                # https://docs.python.org/3/whatsnew/3.12.html
-                # pip is installed as apt-get package
-                apt-get install -y \
-                    python3.12-full \
-                    build-essential \
-                    unzip \
-                    wget \
-                    curl
-
-                update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
-
-            else
-                apt-get install -y \
-                    "python$python_version" \
-                    "python$python_version-distutils" \
-                    "python$python_version-dev" \
-                    python3-setuptools \
-                    build-essential \
-                    unzip \
-                    wget \
-                    curl
-                update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
-
-                # Make sure we don't install py3.6's pip on ubuntu
-                # Official get-pip documentation:
-                # https://pip.pypa.io/en/stable/installation/#get-pip-py
-                wget https://bootstrap.pypa.io/get-pip.py
-                python get-pip.py
-                pip install --upgrade pip >/dev/null
-            fi
+            # Make sure we don't install py3.6's pip on ubuntu
+            # Official get-pip documentation:
+            # https://pip.pypa.io/en/stable/installation/#get-pip-py
+            wget https://bootstrap.pypa.io/get-pip.py
+            python get-pip.py
+            pip install --upgrade pip >/dev/null
 
         else
             echo "ERROR: Testing on Ubuntu <18.04 not supported."
