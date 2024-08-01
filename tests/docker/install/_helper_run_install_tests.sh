@@ -78,6 +78,8 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                     wget \
                     curl
 
+                update-alternatives --install /usr/bin/python python "/usr/bin/python$python_version" 1
+
             else
                 apt-get install -y \
                     "python$python_version" \
