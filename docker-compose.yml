@@ -37,6 +37,8 @@ services:
     volumes:
       - ./:/code/solarwinds_apm
       - ../solarwinds-apm-liboboe/:/code/solarwinds-apm-liboboe
+      - ../opentelemetry-python-contrib/:/code/opentelemetry-python-contrib
+      - ../opentelemetry-python/:/code/opentelemetry-python
     working_dir: /code/solarwinds_apm
     entrypoint: ["/bin/bash", "-c"]
     command: 

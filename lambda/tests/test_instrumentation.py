@@ -177,6 +177,8 @@ class TestAwsLambdaInstrumentor(TestBase):
         )
 
     def test_active_tracing(self):
+        # Patch default propagation
+        
         test_env_patch = mock.patch.dict(
             "os.environ",
             {
@@ -220,6 +222,8 @@ class TestAwsLambdaInstrumentor(TestBase):
         )
         self.assertEqual(parent_context.span_id, MOCK_XRAY_PARENT_SPAN_ID)
         self.assertTrue(parent_context.is_remote)
+
+        self.assertTrue(False)  # always fail to always log
 
         test_env_patch.stop()
 
