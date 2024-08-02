@@ -53,13 +53,20 @@ if [ ! -f "python/opentelemetry/instrumentation/aws_lambda/__init__.py" ]; then
     exit 1
 fi
 
+# SDK version could be .py file (<py312) or directory (py312)
+expected_otel_sdk="./python/opentelemetry/sdk/version"
+found_otel_sdk=$(grep -r "version" ./python/opentelemetry/sdk)
+if [[ ! "$found_otel_files" =~ $expected_otel_files ]]; then
+    echo "FAILED: Missing opentelemetry SDK"
+    exit 1
+fi
+
 expected_otel_files="./python/opentelemetry/exporter/otlp/proto/common/version.py
 ./python/opentelemetry/exporter/otlp/proto/grpc/version.py
 ./python/opentelemetry/exporter/otlp/proto/http/version.py
 ./python/opentelemetry/exporter/otlp/version.py
-./python/opentelemetry/instrumentation/botocore/version.py
-./python/opentelemetry/sdk/version.py"
-found_otel_files=$(find ./python/opentelemetry/exporter ./python/opentelemetry/sdk ./python/opentelemetry/instrumentation/botocore -regextype sed -regex ".*/version.py" | sort -k1)
+./python/opentelemetry/instrumentation/botocore/version.py"
+found_otel_files=$(find ./python/opentelemetry/exporter ./python/opentelemetry/instrumentation/botocore -regextype sed -regex ".*/version.py" | sort -k1)
 if [[ ! "$found_otel_files" =~ $expected_otel_files ]]; then
     echo "FAILED: Missing key opentelemetry dependency version files"
     exit 1
