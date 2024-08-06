@@ -18,6 +18,9 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.instrumentation.distro import BaseDistro
+from opentelemetry.instrumentation.environment_variables import (
+    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
+)
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.logging.environment_variables import (
     OTEL_PYTHON_LOG_FORMAT,
@@ -138,6 +141,17 @@ class SolarWindsDistro(BaseDistro):
         # TODO: Support other signal types when available
         # Always opt into new semconv for all instrumentors (if supported)
         environ["OTEL_SEMCONV_STABILITY_OPT_IN"] = self.get_semconv_opt_in()
+
+        # TODO: Bootstrapping and auto-instrumentation ideally
+        # should not load instrumentor nor instrument AWS Lambda if not in lambda
+        if not SolarWindsApmConfig.calculate_is_lambda():
+            # If user has set OTEL_PYTHON_DISABLED_INSTRUMENTATIONS
+            # then they will need to add "aws-lambda" to the list
+            # else instrumentor Version Lookups for attributes may fail
+            environ.setdefault(
+                OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
+                "aws-lambda",
+            )
 
     def load_instrumentor(self, entry_point: EntryPoint, **kwargs):
         """Takes a collection of instrumentation entry points
