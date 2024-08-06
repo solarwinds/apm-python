@@ -53,7 +53,6 @@ if [ ! -f "python/opentelemetry/instrumentation/aws_lambda/__init__.py" ]; then
     exit 1
 fi
 
-# SDK version could be .py file (<py312) or directory (py312)
 expected_otel_sdk="./python/opentelemetry/sdk/version"
 found_otel_sdk=$(grep -r "version" ./python/opentelemetry/sdk)
 if [[ ! "$found_otel_files" =~ $expected_otel_files ]]; then
