@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-2.2.0...HEAD)
 
-## [2.2.0.2](https://github.com/solarwinds/apm-python/releases/tag/rel-2.2.0) - 2024-08-01
+## [2.2.0.3](https://github.com/solarwinds/apm-python/releases/tag/rel-2.2.0) - 2024-08-06
 
 ### Added
 - Added OTLP logs export support ([#393](https://github.com/solarwinds/apm-python/pull/393), [#394](https://github.com/solarwinds/apm-python/pull/394), [#400](https://github.com/solarwinds/apm-python/pull/400))
@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Upgraded OpenTelemetry API/SDK and instrumentation 1.26.0/0.47b0 ([#398](https://github.com/solarwinds/apm-python/pull/398))
+- Distro does setdefault to disable AwsLambdaInstrumentor if outside Lambda ([#405](https://github.com/solarwinds/apm-python/pull/405))
 
 ## [2.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-2.1.0) - 2024-07-17
 
