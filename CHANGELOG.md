@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-2.2.0...HEAD)
 
-## [2.2.0.4](https://github.com/solarwinds/apm-python/releases/tag/rel-2.2.0) - 2024-08-08
+## [2.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-2.2.0) - 2024-08-12
 
 ### Added
 - Added OTLP logs export support ([#393](https://github.com/solarwinds/apm-python/pull/393), [#394](https://github.com/solarwinds/apm-python/pull/394), [#400](https://github.com/solarwinds/apm-python/pull/400))
