@@ -4,7 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-2.1.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-2.2.0...HEAD)
+
+## [2.2.0.4](https://github.com/solarwinds/apm-python/releases/tag/rel-2.2.0) - 2024-08-08
+
+### Added
+- Added OTLP logs export support ([#393](https://github.com/solarwinds/apm-python/pull/393), [#394](https://github.com/solarwinds/apm-python/pull/394), [#400](https://github.com/solarwinds/apm-python/pull/400))
+- Added Python 3.12 support ([#401](https://github.com/solarwinds/apm-python/pull/401), [#406](https://github.com/solarwinds/apm-python/pull/406))
+
+### Changed
+- Upgraded OpenTelemetry API/SDK and instrumentation 1.26.0/0.47b0 ([#398](https://github.com/solarwinds/apm-python/pull/398), [#406](https://github.com/solarwinds/apm-python/pull/406))
+- Distro does setdefault to disable AwsLambdaInstrumentor if outside Lambda ([#405](https://github.com/solarwinds/apm-python/pull/405))
+
+### Reverted
+- Reverted upgrade OpenTelemetry API/SDK and instrumentation 1.26.0/0.47b0 because of FastAPI instrumentation bug it introduces ([#406](https://github.com/solarwinds/apm-python/pull/406))
+- Reverted add of Python 3.12 support because of revert of API/SDK upgrade ([#406](https://github.com/solarwinds/apm-python/pull/406))
 
 ## [2.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-2.1.0) - 2024-07-17
 
