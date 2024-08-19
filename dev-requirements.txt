@@ -1,4 +1,4 @@
-opentelemetry-test-utils==0.46b0
+opentelemetry-test-utils==0.47b0
 opentelemetry-instrumentation-flask==0.46b0
 opentelemetry-instrumentation-requests==0.46b0
 pytest
