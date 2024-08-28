@@ -26,41 +26,53 @@ jobs:
       run: |
         echo "SW_APM_VERSION=$(grep __version__ ./solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')" >> $GITHUB_OUTPUT
 
-  build_publish_sdist_and_x86_64:
-    name: Build and publish sdist and x86_64
+  build_sdist_and_x86_64:
+    name: Build sdist and x86_64
+    needs: get_apm_python_version
     runs-on: ubuntu-latest
+    outputs:
+      artifact-name: scan-x86_64-${{ needs.get_apm_python_version.outputs.SW_APM_VERSION }}.zip
     steps:
     - uses: actions/checkout@v4
-    - name: Build x86_64
+    - name: Build sdist and x86_64
       uses: ./.github/actions/package_solarwinds_apm_x86_64
+    - name: Package sdist and wheels for upload
+      run: zip -r scan-x86_64-${{ needs.get_apm_python_version.outputs.SW_APM_VERSION }}.zip dist/*
+    - uses: actions/upload-artifact@v4
+      name: Save zip for RL scan
+      with:
+        name: scan-x86_64-${{ needs.get_apm_python_version.outputs.SW_APM_VERSION }}.zip
+        path: scan-x86_64-${{ needs.get_apm_python_version.outputs.SW_APM_VERSION }}.zip
+
+  scan_sdist_and_x86_64:
+    name: RL scan aarch64 build
+    needs:
+      - get_apm_python_version
+      - build_sdist_and_x86_64
+    uses: ./.github/workflows/reversinglabs_scan.yaml
+    with:
+      artifact-name: ${{ needs.build_sdist_and_x86_64.outputs.artifact-name }}
+      package-name: apm-python-pypi-sdist-x86_64
+      version: ${{ needs.get_apm_python_version.outputs.SW_APM_VERSION }}
+    secrets: inherit
+
+  publish_sdist_and_x86_64:
+    name: Publish sdist and x86_64 to TestPyPI
+    needs:
+      - build_sdist_and_x86_64
+      - scan_sdist_and_x86_64
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ needs.build_sdist_and_x86_64.outputs.artifact-name }}
+    - name: Unzip artifact with dist
+      run: unzip ${{ needs.build_sdist_and_x86_64.outputs.artifact-name }}
     - name: Install Twine
       run: pip install --upgrade --no-cache-dir --prefer-binary twine
     - name: Check distribution artifacts
       run: twine check dist/*
-    - name: Get APM Python version
-      id: get-apm-version
-      run: |
-        APM_VERSION=$(grep __version__ solarwinds_apm/version.py | cut -d= -f 2 | tr -d ' "')
-        echo "apm_version=$APM_VERSION" >> $GITHUB_OUTPUT
-    - name: Package sdist and wheels for RL scan
-      run: zip -r scan.zip dist/*
-    - name: ReversingLabs scan
-      id: rl-scan
-      env:
-        RLPORTAL_ACCESS_TOKEN: ${{ secrets.RLPORTAL_ACCESS_TOKEN }}
-      uses: reversinglabs/gh-action-rl-scanner-cloud-only@v1
-      with:
-        artifact-to-scan: scan.zip
-        rl-verbose: true
-        rl-portal-server: solarwinds
-        rl-portal-org: SolarWinds
-        rl-portal-group: "SaaS-Agents-SWO"
-        rl-package-url: apm-python/apm-python-pypi-sdist-x86_64@${{ steps.get-apm-version.outputs.apm_version }}
-    - name: Report RL scan status
-      if: success() || failure()
-      run: |
-        echo "The status is: '${{ steps.rl-scan.outputs.status }}'"
-        echo "The description is: '${{ steps.rl-scan.outputs.description }}'"
     - name: Publish sdist and x86_64 wheels to TestPyPi
       env:
         TWINE_NON_INTERACTIVE: 1
