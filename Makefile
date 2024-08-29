@@ -215,10 +215,9 @@ install-lambda-modules:
 	@mkdir ${target_dir}/solarwinds-apm/
 	@cp lambda/solarwinds-apm/wrapper ${target_dir}/solarwinds-apm/wrapper
 	@chmod 755 ${target_dir}/solarwinds-apm/wrapper
-	@echo -e "Removing unnecessary boto, six, setuptools, urllib3 installations"
+	@echo -e "Removing unnecessary boto, six, urllib3 installations"
 	@rm -rf ${target_dir}/python/boto*
 	@rm -rf ${target_dir}/python/six*
-	@rm -rf ${target_dir}/python/setuptools*
 	@rm -rf ${target_dir}/python/urllib3*
 	@find ${target_dir}/python -type d -name '__pycache__' | xargs rm -rf
 
