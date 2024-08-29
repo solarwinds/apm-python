@@ -41,7 +41,7 @@ jobs:
     # Outputs artifact-name
     uses: ./.github/workflows/build_x86_64.yaml
     with:
-      version: ${{ needs.get_apm_python_version.outputs.SW_APM_VERSION }}
+      version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
   
   scan_sdist_and_x86_64:
     name: RL scan aarch64 build
@@ -52,7 +52,7 @@ jobs:
     with:
       artifact-name: ${{ needs.build_sdist_and_x86_64.outputs.artifact-name }}
       package-name: apm-python-pypi-sdist-x86_64
-      version: ${{ needs.get_apm_python_version.outputs.SW_APM_VERSION }}
+      version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
     secrets: inherit
 
   publish_sdist_and_x86_64:
@@ -71,7 +71,7 @@ jobs:
     # Outputs artifact-name
     uses: ./.github/workflows/build_aarch64.yaml
     with:
-      version: ${{ needs.get_apm_python_version.outputs.SW_APM_VERSION }}
+      version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
 
   scan_aarch64:
     name: RL scan aarch64 build
@@ -82,7 +82,7 @@ jobs:
     with:
       artifact-name: ${{ needs.build_aarch64.outputs.artifact-name }}
       package-name: apm-python-pypi-aarch64
-      version: ${{ needs.get_apm_python_version.outputs.SW_APM_VERSION }}
+      version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
     secrets: inherit
 
   publish_aarch64:
