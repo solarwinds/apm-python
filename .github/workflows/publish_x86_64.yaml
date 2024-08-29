@@ -40,11 +40,11 @@ jobs:
           TWINE_REPOSITORY: testpypi
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
-        run: twine upload dist/*
+        run: twine upload --verbose dist/*
       - if: ${{ inputs.repository-name == 'pypi' }}
         name: Publish sdist and x86_64 wheels to PyPI
         env:
           TWINE_NON_INTERACTIVE: 1
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.SW_APM_PYPI_UPLOAD_TOKEN }}
-        run: twine upload dist/*
+        run: twine upload --verbose dist/*
