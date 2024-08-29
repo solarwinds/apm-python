@@ -1,0 +1,37 @@
+# © 2024 SolarWinds Worldwide, LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+name: Build sdist and x86_64
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+        description: 'APM Python version, e.g. 2.1.0'
+    outputs:
+      artifact-name:
+        description: 'Name of zip archive of sdist and wheels'
+        value: ${{ jobs.build_sdist_and_x86_64.outputs.artifact-name }}
+
+jobs:
+  build_sdist_and_x86_64:
+    name: Build sdist and x86_64
+    runs-on: ubuntu-latest
+    outputs:
+        artifact-name: scan-x86_64-${{ inputs.version }}.zip
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build sdist and x86_64
+      uses: ./.github/actions/package_solarwinds_apm_x86_64
+    - name: Package sdist and wheels for upload
+      run: zip -r scan-x86_64-${{ inputs.version }}.zip dist/*
+    - uses: actions/upload-artifact@v4
+      name: Upload zip for scan and publish
+      with:
+        name: scan-x86_64-${{ inputs.version }}.zip
+        path: scan-x86_64-${{ inputs.version }}.zip

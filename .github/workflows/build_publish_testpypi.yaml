@@ -14,41 +14,69 @@ permissions:
   contents: read
 
 jobs:
-  build_publish_sdist_and_x86_64:
-    name: Build and publish sdist and x86_64
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Build x86_64
-      uses: ./.github/actions/package_solarwinds_apm_x86_64
-    - name: Install Twine
-      run: pip install --upgrade --no-cache-dir --prefer-binary twine
-    - name: Check distribution artifacts
-      run: twine check dist/*
-    - name: Publish sdist and x86_64 wheels to TestPyPi
-      env:
-        TWINE_NON_INTERACTIVE: 1
-        TWINE_REPOSITORY: testpypi
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
-      run: twine upload dist/*
+  get_apm_python_version:
+    name: Get APM Python version
+    # Outputs sw-apm-version
+    uses: ./.github/workflows/get_apm_python_version.yaml
 
-  build_publish_aarch64:
-    name: Build and publish aarch64
-    runs-on:
-      group: apm-arm-runner
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build aarch64
-        uses: ./.github/actions/package_solarwinds_apm_aarch64
-      - name: Install Twine
-        run: pip install --upgrade --no-cache-dir --prefer-binary twine
-      - name: Check distribution artifacts
-        run: twine check dist/*
-      - name: Publish aarch64 wheels to TestPyPi
-        env:
-          TWINE_NON_INTERACTIVE: 1
-          TWINE_REPOSITORY: testpypi
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
-        run: twine upload dist/*.whl
+  build_sdist_and_x86_64:
+    name: Build sdist and x86_64
+    needs: get_apm_python_version
+    # Outputs artifact-name
+    uses: ./.github/workflows/build_x86_64.yaml
+    with:
+      version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
+
+  scan_sdist_and_x86_64:
+    name: RL scan sdist and x86_64 build
+    needs:
+      - get_apm_python_version
+      - build_sdist_and_x86_64
+    uses: ./.github/workflows/reversinglabs_scan.yaml
+    with:
+      artifact-name: ${{ needs.build_sdist_and_x86_64.outputs.artifact-name }}
+      package-name: apm-python-pypi-sdist-x86_64
+      version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
+    secrets: inherit
+
+  publish_sdist_and_x86_64:
+    name: Publish sdist and x86_64 to TestPyPI
+    needs:
+      - build_sdist_and_x86_64
+      - scan_sdist_and_x86_64
+    uses: ./.github/workflows/publish_x86_64.yaml
+    with:
+      artifact-name: ${{ needs.build_sdist_and_x86_64.outputs.artifact-name }}
+      repository-name: testpypi
+    secrets: inherit
+
+  build_aarch64:
+    name: Build aarch64
+    needs: get_apm_python_version
+    # Outputs artifact-name
+    uses: ./.github/workflows/build_aarch64.yaml
+    with:
+      version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
+
+  scan_aarch64:
+    name: RL scan aarch64 build
+    needs:
+      - get_apm_python_version
+      - build_aarch64
+    uses: ./.github/workflows/reversinglabs_scan.yaml
+    with:
+      artifact-name: ${{ needs.build_aarch64.outputs.artifact-name }}
+      package-name: apm-python-pypi-aarch64
+      version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
+    secrets: inherit
+
+  publish_aarch64:
+    name: Publish aarch64 to TestPyPI
+    needs:
+      - build_aarch64
+      - scan_aarch64
+    uses: ./.github/workflows/publish_aarch64.yaml
+    with:
+      artifact-name: ${{ needs.build_aarch64.outputs.artifact-name }}
+      repository-name: testpypi
+    secrets: inherit
