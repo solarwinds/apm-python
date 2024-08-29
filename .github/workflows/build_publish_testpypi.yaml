@@ -48,6 +48,7 @@ jobs:
     with:
       artifact-name: ${{ needs.build_sdist_and_x86_64.outputs.artifact-name }}
       repository-name: testpypi
+    secrets: inherit
 
   build_aarch64:
     name: Build aarch64
@@ -78,3 +79,4 @@ jobs:
     with:
       artifact-name: ${{ needs.build_aarch64.outputs.artifact-name }}
       repository-name: testpypi
+    secrets: inherit
