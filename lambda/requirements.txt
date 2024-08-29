@@ -5,3 +5,4 @@ opentelemetry-instrumentation-aws-lambda==0.48b0
 packaging
 jaraco.text
 platformdirs
+setuptools
