@@ -34,7 +34,7 @@ jobs:
       - name: Check distribution artifacts
         run: twine check dist/*
       - if: ${{ inputs.repository-name == 'testpypi' }}
-        name: Publish sdist and x86_64 wheels to TestPyPI
+        name: Publish aarch64 wheels to TestPyPI
         env:
           TWINE_NON_INTERACTIVE: 1
           TWINE_REPOSITORY: testpypi
@@ -42,7 +42,7 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
         run: twine upload dist/*.whl
       - if: ${{ inputs.repository-name == 'pypi' }}
-        name: Publish sdist and x86_64 wheels to PyPI
+        name: Publish aarch64 wheels to PyPI
         env:
           TWINE_NON_INTERACTIVE: 1
           TWINE_USERNAME: __token__
