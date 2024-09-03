@@ -48,6 +48,7 @@ jobs:
       artifact-name: ${{ needs.build_layer_aarch64.outputs.artifact-name }}
       package-name: apm-python-lambda-aarch64
       version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
+      rl-submit-only: true
     secrets: inherit
 
   publish-layer:

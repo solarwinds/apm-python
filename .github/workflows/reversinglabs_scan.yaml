@@ -21,6 +21,10 @@ on:
         type: string
         required: true
         description: 'RL package version on Portal'
+      rl-submit-only:
+        type: string
+        required: true
+        description: 'RL config to submit-only'
   
 
 permissions:
@@ -35,7 +39,22 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
-      - name: Scan artifact on the Portal
+      - if: ${{ inputs.rl-submit-only == 'true' }}
+        name: Scan artifact on the Portal (rl-submit-only)
+        id: rl-scan-submit-only
+        env:
+          RLPORTAL_ACCESS_TOKEN: ${{ secrets.RLPORTAL_ACCESS_TOKEN }}
+        uses: reversinglabs/gh-action-rl-scanner-cloud-only@v1
+        with:
+          artifact-to-scan: ${{ inputs.artifact-name }}
+          rl-submit-only: true
+          rl-verbose: true
+          rl-portal-server: solarwinds
+          rl-portal-org: SolarWinds
+          rl-portal-group: "SaaS-Agents-SWO"
+          rl-package-url: apm-python/${{ inputs.package-name }}@${{ inputs.version }}
+      - if: ${{ inputs.rl-submit-only == 'false' }}
+        name: Scan artifact on the Portal
         id: rl-scan
         env:
           RLPORTAL_ACCESS_TOKEN: ${{ secrets.RLPORTAL_ACCESS_TOKEN }}
