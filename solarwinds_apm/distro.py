@@ -18,9 +18,6 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.instrumentation.distro import BaseDistro
-from opentelemetry.instrumentation.environment_variables import (
-    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
-)
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.logging.environment_variables import (
     OTEL_PYTHON_LOG_FORMAT,
@@ -100,15 +97,16 @@ class SolarWindsDistro(BaseDistro):
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
             "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs",
         )
-        header_token = self._get_token_from_service_key()
-        if not header_token:
-            logger.debug(
-                "Setting OTLP logging defaults without valid SWO token"
+        if not SolarWindsApmConfig.calculate_is_lambda():
+            header_token = self._get_token_from_service_key()
+            if not header_token:
+                logger.debug("Setting OTLP logging defaults without SWO token")
+            environ.setdefault(
+                OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+                f"authorization=Bearer%20{header_token}",
             )
-        environ.setdefault(
-            OTEL_EXPORTER_OTLP_LOGS_HEADERS,
-            f"authorization=Bearer%20{header_token}",
-        )
+        else:
+            logger.debug("Skipping logs_headers defaults in lambda.")
 
         otlp_protocol = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
         if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
@@ -141,17 +139,6 @@ class SolarWindsDistro(BaseDistro):
         # TODO: Support other signal types when available
         # Always opt into new semconv for all instrumentors (if supported)
         environ["OTEL_SEMCONV_STABILITY_OPT_IN"] = self.get_semconv_opt_in()
-
-        # TODO: Bootstrapping and auto-instrumentation ideally
-        # should not load instrumentor nor instrument AWS Lambda if not in lambda
-        if not SolarWindsApmConfig.calculate_is_lambda():
-            # If user has set OTEL_PYTHON_DISABLED_INSTRUMENTATIONS
-            # then they will need to add "aws-lambda" to the list
-            # else instrumentor Version Lookups for attributes may fail
-            environ.setdefault(
-                OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
-                "aws-lambda",
-            )
 
     def load_instrumentor(self, entry_point: EntryPoint, **kwargs):
         """Takes a collection of instrumentation entry points

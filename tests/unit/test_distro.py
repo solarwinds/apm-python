@@ -13,9 +13,6 @@ from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER
 )
-from opentelemetry.instrumentation.environment_variables import (
-    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
-)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
@@ -199,6 +196,21 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT) == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs"
         assert os.environ.get(OTEL_LOGS_EXPORTER) == "otlp_proto_http"
 
+    def test_configure_set_otlp_log_defaults_lambda(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar-name",
+                "AWS_LAMBDA_FUNCTION_NAME": "foo",
+                "LAMBDA_TASK_ROOT": "foo",
+            }
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL) == "http/protobuf"
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT) == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs"
+        assert os.environ.get(OTEL_LOGS_EXPORTER) == "otlp_proto_http"
+
     def test_configure_no_env(self, mocker):
         mocker.patch.dict(os.environ, {})
         distro.SolarWindsDistro()._configure()
@@ -299,15 +311,6 @@ class TestDistro:
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,solarwinds_propagator,foobar"
         assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
-
-    def test_configure_env_disabled_instrumentations_default(self):
-        distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_PYTHON_DISABLED_INSTRUMENTATIONS] == "aws-lambda"
-
-    def test_configure_env_disabled_instrumentations_user_set(self, mocker):
-        mocker.patch.dict(os.environ, {"OTEL_PYTHON_DISABLED_INSTRUMENTATIONS": "foo-bar,only"})
-        distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_PYTHON_DISABLED_INSTRUMENTATIONS] == "foo-bar,only"
 
     def test_load_instrumentor_no_commenting(self, mocker):
         mock_instrument = mocker.Mock()
