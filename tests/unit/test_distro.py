@@ -196,6 +196,21 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT) == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs"
         assert os.environ.get(OTEL_LOGS_EXPORTER) == "otlp_proto_http"
 
+    def test_configure_set_otlp_log_defaults_lambda(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar-name",
+                "AWS_LAMBDA_FUNCTION_NAME": "foo",
+                "LAMBDA_TASK_ROOT": "foo",
+            }
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL) == "http/protobuf"
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT) == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs"
+        assert os.environ.get(OTEL_LOGS_EXPORTER) == "otlp_proto_http"
+
     def test_configure_no_env(self, mocker):
         mocker.patch.dict(os.environ, {})
         distro.SolarWindsDistro()._configure()

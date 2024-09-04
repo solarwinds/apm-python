@@ -97,15 +97,16 @@ class SolarWindsDistro(BaseDistro):
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
             "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs",
         )
-        header_token = self._get_token_from_service_key()
-        if not header_token:
-            logger.debug(
-                "Setting OTLP logging defaults without valid SWO token"
+        if not SolarWindsApmConfig.calculate_is_lambda():
+            header_token = self._get_token_from_service_key()
+            if not header_token:
+                logger.debug("Setting OTLP logging defaults without SWO token")
+            environ.setdefault(
+                OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+                f"authorization=Bearer%20{header_token}",
             )
-        environ.setdefault(
-            OTEL_EXPORTER_OTLP_LOGS_HEADERS,
-            f"authorization=Bearer%20{header_token}",
-        )
+        else:
+            logger.debug("Skipping logs_headers defaults in lambda.")
 
         otlp_protocol = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
         if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
