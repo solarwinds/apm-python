@@ -13,9 +13,6 @@ from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER
 )
-from opentelemetry.instrumentation.environment_variables import (
-    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
-)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
@@ -314,15 +311,6 @@ class TestDistro:
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,solarwinds_propagator,foobar"
         assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
-
-    def test_configure_env_disabled_instrumentations_default(self):
-        distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_PYTHON_DISABLED_INSTRUMENTATIONS] == "aws-lambda"
-
-    def test_configure_env_disabled_instrumentations_user_set(self, mocker):
-        mocker.patch.dict(os.environ, {"OTEL_PYTHON_DISABLED_INSTRUMENTATIONS": "foo-bar,only"})
-        distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_PYTHON_DISABLED_INSTRUMENTATIONS] == "foo-bar,only"
 
     def test_load_instrumentor_no_commenting(self, mocker):
         mock_instrument = mocker.Mock()
