@@ -57,11 +57,18 @@ expected_otel_files="./python/opentelemetry/exporter/otlp/proto/common/version.p
 ./python/opentelemetry/exporter/otlp/proto/grpc/version.py
 ./python/opentelemetry/exporter/otlp/proto/http/version.py
 ./python/opentelemetry/exporter/otlp/version.py
-./python/opentelemetry/instrumentation/botocore/version.py
-./python/opentelemetry/sdk/version.py"
-found_otel_files=$(find ./python/opentelemetry/exporter ./python/opentelemetry/sdk ./python/opentelemetry/instrumentation/botocore -regextype sed -regex ".*/version.py" | sort -k1)
+./python/opentelemetry/instrumentation/botocore/version.py"
+found_otel_files=$(find ./python/opentelemetry/exporter ./python/opentelemetry/instrumentation/botocore -regextype sed -regex ".*/version.py" | sort -k1)
 if [[ ! "$found_otel_files" =~ $expected_otel_files ]]; then
     echo "FAILED: Missing key opentelemetry dependency version files"
+    exit 1
+fi
+
+# An additional check for those packages now following PEP 420
+expected_otel_files_pep420="./python/opentelemetry/sdk/version/__init__.py"
+found_otel_files_pep420=$(find ./python/opentelemetry/sdk -regextype sed -regex ".*/version/__init__.py" | sort -k1)
+if [[ ! "$found_otel_files_pep420" =~ $expected_otel_files_pep420 ]]; then
+    echo "FAILED: Missing key opentelemetry dependency version files (PEP 420)"
     exit 1
 fi
 
