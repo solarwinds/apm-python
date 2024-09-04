@@ -4,7 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-2.2.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.0.0...HEAD)
+
+## [3.0.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.0.0) - 2024-09-04
+
+### Added
+- Added Python 3.12 support ([#422](https://github.com/solarwinds/apm-python/pull/422))
+- Added ReversingLabs scan before publishes ([#420](https://github.com/solarwinds/apm-python/pull/420))
+
+### Changed
+- Upgraded OpenTelemetry API/SDK and instrumentation 1.27.0/0.48b0 ([#422](https://github.com/solarwinds/apm-python/pull/422))
+- Skip logs_headers setdefault in lambda ([#425](https://github.com/solarwinds/apm-python/pull/425))
+
+### Reverted
+- Reverted distro doing setdefault to disable AwsLambdaInstrumentor if outside Lambda, because of update in Otel 1.27.0/0.48b0 ([#422](https://github.com/solarwinds/apm-python/pull/422))
 
 ## [2.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-2.2.0) - 2024-08-12
 
