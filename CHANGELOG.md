@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.0.0...HEAD)
 
-## [3.0.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.0.0) - 2024-09-04
+## [3.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.0.0) - 2024-09-04
 
 ### Added
 - Added Python 3.12 support ([#422](https://github.com/solarwinds/apm-python/pull/422))
