@@ -30,7 +30,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_PROTOCOL,
 )
 from opentelemetry.sdk.version import __version__ as sdk_version
-from pkg_resources import EntryPoint
 
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import (
@@ -39,6 +38,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
 )
+from solarwinds_apm.util.importlib_metadata import EntryPoint
 from solarwinds_apm.version import __version__ as apm_version
 
 _EXPORTER_BY_OTLP_PROTOCOL = {

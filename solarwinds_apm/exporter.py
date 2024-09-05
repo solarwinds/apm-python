@@ -18,7 +18,6 @@ from typing import Any
 
 from opentelemetry.sdk.trace.export import SpanExporter
 from opentelemetry.trace import SpanKind
-from pkg_resources import get_distribution
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX,
@@ -26,6 +25,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_OTEL_SCOPE_VERSION,
     INTL_SWO_SUPPORT_EMAIL,
 )
+from solarwinds_apm.util.importlib_metadata import version
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
@@ -251,7 +251,7 @@ class SolarWindsSpanExporter(SpanExporter):
                         f"{framework}.connector"
                     ].__version__
                 elif framework == "pyramid":
-                    version_str = get_distribution(framework).version
+                    version_str = version(framework)
                 elif framework == "sqlite3":
                     version_str = sys.modules[framework].sqlite_version
                 elif framework == "tornado":

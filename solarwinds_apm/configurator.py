@@ -52,7 +52,10 @@ from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     SimpleSpanProcessor,
 )
-from pkg_resources import get_distribution, iter_entry_points, load_entry_point
+
+# TODO remove this pkg_resources dependency; see below
+# in _add_all_instrumented_python_framework_versions
+from pkg_resources import iter_entry_points
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
@@ -74,6 +77,7 @@ from solarwinds_apm.trace import (
     TxnNameCalculatorProcessor,
     TxnNameCleanupProcessor,
 )
+from solarwinds_apm.util.importlib_metadata import entry_points, version
 from solarwinds_apm.version import __version__
 
 if TYPE_CHECKING:
@@ -188,11 +192,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             trace.set_tracer_provider(trace.NoOpTracerProvider())
             return
         try:
-            sampler = load_entry_point(
-                "solarwinds_apm",
-                "opentelemetry_traces_sampler",
-                self._DEFAULT_SW_TRACES_SAMPLER,
-            )(apm_config, reporter, oboe_api)
+            sampler = next(
+                iter(
+                    entry_points(
+                        group="opentelemetry_traces_sampler",
+                        name=self._DEFAULT_SW_TRACES_SAMPLER,
+                    )
+                )
+            ).load()(apm_config, reporter, oboe_api)
         except Exception as ex:
             logger.exception("A exception was raised: %s", ex)
             logger.exception(
@@ -336,11 +343,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             exporter = None
             try:
                 if exporter_name == INTL_SWO_DEFAULT_TRACES_EXPORTER:
-                    exporter = load_entry_point(
-                        "solarwinds_apm",
-                        "opentelemetry_traces_exporter",
-                        exporter_name,
-                    )(
+                    exporter = next(
+                        iter(
+                            entry_points(
+                                group="opentelemetry_traces_exporter",
+                                name=exporter_name,
+                            )
+                        )
+                    ).load()(
                         reporter,
                         apm_txname_manager,
                         apm_fwkv_manager,
@@ -348,8 +358,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     )
                 else:
                     exporter = next(
-                        iter_entry_points(
-                            "opentelemetry_traces_exporter", exporter_name
+                        iter(
+                            entry_points(
+                                group="opentelemetry_traces_exporter",
+                                name=exporter_name,
+                            )
                         )
                     ).load()()
             except Exception as ex:
@@ -403,9 +416,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             exporter = None
             try:
                 exporter = next(
-                    iter_entry_points(
-                        "opentelemetry_metrics_exporter",
-                        exporter_name,
+                    iter(
+                        entry_points(
+                            group="opentelemetry_metrics_exporter",
+                            name=exporter_name,
+                        )
                     )
                 ).load()(preferred_temporality=temporality_delta)
             except Exception as ex:
@@ -504,8 +519,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             exporter = None
             try:
                 exporter = next(
-                    iter_entry_points(
-                        "opentelemetry_logs_exporter", exporter_name
+                    iter(
+                        entry_points(
+                            group="opentelemetry_logs_exporter",
+                            name=exporter_name,
+                        )
                     )
                 ).load()()
             except Exception as ex:
@@ -547,8 +565,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             try:
                 propagators.append(
                     next(
-                        iter_entry_points(
-                            "opentelemetry_propagator", propagator_name
+                        iter(
+                            entry_points(
+                                group="opentelemetry_propagator",
+                                name=propagator_name,
+                            )
                         )
                     ).load()()
                 )
@@ -638,6 +659,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 continue
 
             try:
+                # Current Otel method assumes pkg_resources.DistInfoDistribution
+                # whose methods/attributes differ from importlib_metadata.PathDistribution
+                # So we keep this until auto-instrumentation is updated
+                # https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2181/
+                # TODO remove this pkg_resources dependency
                 conflict = get_dist_dependency_conflicts(entry_point.dist)
                 if conflict:
                     # TODO Unnecessary tortoiseorm bootstrap will be fixed upstream
@@ -720,9 +746,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                         f"{entry_point_name}.connector"
                     ].__version__
                 elif entry_point_name == "pyramid":
-                    version_keys[instr_key] = get_distribution(
-                        entry_point_name
-                    ).version
+                    version_keys[instr_key] = version(entry_point_name)
                 elif entry_point_name == "sqlite3":
                     version_keys[instr_key] = sys.modules[
                         entry_point_name
