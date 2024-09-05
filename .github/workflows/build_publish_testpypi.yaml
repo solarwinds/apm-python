@@ -37,6 +37,7 @@ jobs:
       artifact-name: ${{ needs.build_sdist_and_x86_64.outputs.artifact-name }}
       package-name: apm-python-pypi-sdist-x86_64
       version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
+      rl-submit-only: false
     secrets: inherit
 
   publish_sdist_and_x86_64:
@@ -68,6 +69,7 @@ jobs:
       artifact-name: ${{ needs.build_aarch64.outputs.artifact-name }}
       package-name: apm-python-pypi-aarch64
       version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
+      rl-submit-only: false
     secrets: inherit
 
   publish_aarch64:
