@@ -68,15 +68,15 @@ The unit and integration tests are also run on GitHub with the [Run tox tests](h
 Code formatting and linting are run using `black`, `isort`, `flake8`, and `pylint` via [tox](https://tox.readthedocs.io). First, create and run a Docker build container as described above. Then use the container to run formatting and linting in one of these ways:
 
 ```
-# Run formatting and linting tools,
+# Run formatting and linting tools for Python 3.12,
 # without trying to fix issues:
 ./run_docker_dev.sh
-make tox OPTIONS="-e lint -- --check-only"
+make tox OPTIONS="-e py312-lint -- --check-only"
 
-# Run formatting and linting tools,
+# Run formatting and linting tools for Python 3.8,
 # and automatically fix issues if possible:
 ./run_docker_dev.sh
-make tox OPTIONS="-e lint"
+make tox OPTIONS="-e py38-lint"
 ```
 
 Remotely, CodeQL can be run on GitHub with the [CodeQL Analysis](https://github.com/solarwinds/apm-python/actions/workflows/codeql_analysis.yaml) workflow.
