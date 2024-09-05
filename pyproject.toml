@@ -82,6 +82,7 @@ packages = [
   "solarwinds_apm.semconv",
   "solarwinds_apm.semconv.trace",
   "solarwinds_apm.trace",
+  "solarwinds_apm.util",
 ]
 
 [tool.setuptools.package-data]
