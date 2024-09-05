@@ -17,12 +17,15 @@ on:
 jobs:
   run_tox_lint_format:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-minor: ["8", "9", "10", "11", "12"]
     steps:
     - uses: actions/checkout@v4
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
-        python-version: 3.9
+        python-version: 3.${{ matrix.python-minor }}
         cache: 'pip' # caching pip dependencies
         cache-dependency-path: '**/dev-requirements.txt'
     - name: Install tox
@@ -30,4 +33,4 @@ jobs:
     - name: Build extension
       run: make wrapper
     - name: Run tox lint
-      run: tox -e lint -- --check-only
+      run: tox -e py3${{ matrix.python-minor }}-lint -- --check-only

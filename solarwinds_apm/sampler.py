@@ -9,6 +9,9 @@
 The custom sampler will fetch sampling configurations for the SolarWinds backend.
 """
 
+# TODO: Remove when Python < 3.10 support dropped
+from __future__ import annotations
+
 import enum
 import logging
 from types import MappingProxyType
@@ -148,7 +151,7 @@ class _SwSampler(Sampler):
         name: str,
         kind: SpanKind = None,
         attributes: Attributes = None,
-        xtraceoptions: Optional[XTraceOptions] = None,
+        xtraceoptions: XTraceOptions | None = None,
     ) -> dict:
         """Calculates oboe trace decision based on parent span context and APM config."""
         tracestring = None
@@ -363,7 +366,7 @@ class _SwSampler(Sampler):
         self,
         decision: dict,
         parent_span_context: SpanContext,
-        xtraceoptions: Optional[XTraceOptions] = None,
+        xtraceoptions: XTraceOptions | None = None,
     ) -> TraceState:
         """Calculates trace_state based on x-trace-options if provided -- for non-existent or remote parent spans only."""
         # No valid parent i.e. root span, or parent is remote
@@ -561,6 +564,7 @@ class _SwSampler(Sampler):
     #       for compatibility with Python3.8 else TypeError.
     def should_sample(
         self,
+        # pylint: disable=consider-alternative-union-syntax
         parent_context: Optional[OtelContext],
         trace_id: int,
         name: str,

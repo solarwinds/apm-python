@@ -4,6 +4,9 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+# TODO: Remove when Python < 3.10 support dropped
+from __future__ import annotations
+
 import logging
 import typing
 from re import split
@@ -40,7 +43,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
     def extract(
         self,
         carrier: textmap.CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
         """Extracts sw trace options and signature from carrier into OTel
@@ -66,7 +69,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
     def inject(
         self,
         carrier: textmap.CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         setter: textmap.Setter = textmap.default_setter,
     ) -> None:
         """Injects valid sw tracestate from carrier into carrier for HTTP request, to get
