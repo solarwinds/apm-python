@@ -48,10 +48,7 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
-    BatchSpanProcessor,
-    SimpleSpanProcessor,
-)
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from pkg_resources import get_distribution, iter_entry_points, load_entry_point
 
 from solarwinds_apm import apm_logging
@@ -364,18 +361,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
                 raise
 
-            if apm_config.is_lambda:
-                logger.debug(
-                    "Setting trace with SimpleSpanProcessor using %s",
-                    exporter_name,
-                )
-                span_processor = SimpleSpanProcessor(exporter)
-            else:
-                logger.debug(
-                    "Setting trace with BatchSpanProcessor using %s",
-                    exporter_name,
-                )
-                span_processor = BatchSpanProcessor(exporter)
+            logger.debug(
+                "Setting trace with BatchSpanProcessor using %s",
+                exporter_name,
+            )
+            span_processor = BatchSpanProcessor(exporter)
 
             trace.get_tracer_provider().add_span_processor(span_processor)
 
