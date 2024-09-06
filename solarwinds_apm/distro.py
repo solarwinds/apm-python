@@ -24,6 +24,7 @@ from opentelemetry.instrumentation.logging.environment_variables import (
 )
 from opentelemetry.instrumentation.version import __version__ as inst_version
 from opentelemetry.sdk.environment_variables import (
+    OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
@@ -85,7 +86,9 @@ class SolarWindsDistro(BaseDistro):
         return key_parts[0]
 
     def _configure(self, **kwargs):
-        """Configure default OTel exporter and propagators"""
+        """Configure default OTel exporter and propagators.
+
+        All defaults have lower precedence then user environment values."""
         self._log_runtime()
 
         # Set defaults for OTLP logs export by HTTP to SWO
@@ -107,6 +110,13 @@ class SolarWindsDistro(BaseDistro):
             )
         else:
             logger.debug("Skipping logs_headers defaults in lambda.")
+
+        # Set small default for BatchSpanProcessor timeout if lambda
+        if SolarWindsApmConfig.calculate_is_lambda():
+            environ.setdefault(
+                OTEL_BSP_EXPORT_TIMEOUT,
+                "0",
+            )
 
         otlp_protocol = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
         if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
