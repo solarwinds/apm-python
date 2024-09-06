@@ -78,12 +78,6 @@ def mock_bsprocessor(mocker):
         "solarwinds_apm.configurator.BatchSpanProcessor",
     )
 
-@pytest.fixture(name="mock_ssprocessor")
-def mock_ssprocessor(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SimpleSpanProcessor",
-    )
-
 @pytest.fixture(name="mock_pemreader")
 def mock_pemreader(mocker):
     return mocker.patch(

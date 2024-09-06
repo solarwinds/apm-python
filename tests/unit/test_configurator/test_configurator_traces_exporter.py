@@ -182,7 +182,6 @@ class TestConfiguratorTracesExporter:
         mock_fwkv_manager,
         mock_apmconfig_enabled_is_lambda,
         mock_bsprocessor,
-        mock_ssprocessor,
     ):
         # Save any EXPORTER env var for later
         old_traces_exporter = os.environ.get("OTEL_TRACES_EXPORTER", None)
@@ -222,8 +221,7 @@ class TestConfiguratorTracesExporter:
             mock_fwkv_manager,
             mock_apmconfig_enabled_is_lambda,
         )
-        mock_bsprocessor.assert_not_called()
-        mock_ssprocessor.assert_called_once()
+        mock_bsprocessor.assert_called_once()
         trace_mocks.get_tracer_provider.assert_called_once()
         trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
         
