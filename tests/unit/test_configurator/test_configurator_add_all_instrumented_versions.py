@@ -384,16 +384,10 @@ class TestConfiguratorAddAllInstrumentedFrameworkVersions:
         self,
         mocker,
     ):
-        # mock get_distribution
-        mock_dist = mocker.Mock()
-        mock_dist.configure_mock(
-            **{
-                "version": "foo-version"
-            }
-        )
+        # mock util version
         mocker.patch(
-            "solarwinds_apm.configurator.get_distribution",
-            return_value=mock_dist,
+            "solarwinds_apm.configurator.version",
+            return_value="foo-version",
         )
 
         self.set_up_mocks(

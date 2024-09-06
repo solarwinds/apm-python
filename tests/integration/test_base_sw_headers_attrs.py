@@ -73,8 +73,8 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         # Based on auto_instrumentation run() and sitecustomize.py
         # Load OTel env vars entry points
         argument_otel_environment_variable = {}
-        for entry_point in iter_entry_points(
-            "opentelemetry_environment_variables"
+        for entry_point in entry_points(
+            group="opentelemetry_environment_variables"
         ):
             environment_variable_module = entry_point.load()
             for attribute in dir(environment_variable_module):
