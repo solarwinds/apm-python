@@ -146,6 +146,13 @@ class SolarWindsDistro(BaseDistro):
         on each one. This is a method override to pass additional
         arguments to each entry point.
         """
+        # If we're in Lambda environment, then we skip loading
+        # AwsLambdaInstrumentor because we assume the wrapper
+        # has done it for us already
+        if entry_point.name == "aws-lambda":
+            if SolarWindsApmConfig.calculate_is_lambda():
+                return
+
         # Set enable for sqlcommenter. Assumes kwargs ignored if not
         # implemented for current instrumentation library
         if self.enable_commenter():
