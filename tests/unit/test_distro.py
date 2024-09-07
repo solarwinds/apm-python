@@ -14,6 +14,7 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER
 )
 from opentelemetry.sdk.environment_variables import (
+    OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
@@ -210,6 +211,22 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL) == "http/protobuf"
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT) == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs"
         assert os.environ.get(OTEL_LOGS_EXPORTER) == "otlp_proto_http"
+
+    def test_configure_set_bsp_timeout_default_lambda(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "AWS_LAMBDA_FUNCTION_NAME": "foo",
+                "LAMBDA_TASK_ROOT": "foo",
+            }
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_BSP_EXPORT_TIMEOUT] == "0"
+
+    def test_configure_set_bsp_timeout_default_not_lambda(self, mocker):
+        mocker.patch.dict(os.environ, {})
+        distro.SolarWindsDistro()._configure()
+        assert os.environ.get(OTEL_BSP_EXPORT_TIMEOUT) is None
 
     def test_configure_no_env(self, mocker):
         mocker.patch.dict(os.environ, {})
