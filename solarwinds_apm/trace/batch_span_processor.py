@@ -6,11 +6,14 @@
 
 
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.trace import get_tracer_provider
 
 
 class SolarWindsBatchSpanProcessor(BatchSpanProcessor):
     """Subclasses Otel Python BatchSpanProcessor to force_flush at shutdown"""
 
     def shutdown(self) -> None:
-        self.force_flush(timeout_millis=500)
+        # Force flush spans that have not yet been processed
+        logger.warning("Performing TracerProvider force_flush of traces")
+        get_tracer_provider().force_flush()
         super().shutdown()
