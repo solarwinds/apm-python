@@ -111,11 +111,11 @@ class SolarWindsDistro(BaseDistro):
         else:
             logger.debug("Skipping logs_headers defaults in lambda.")
 
-        # Set small default for BatchSpanProcessor timeout if lambda
+        # Set 500ms default for BatchSpanProcessor timeout if lambda
         if SolarWindsApmConfig.calculate_is_lambda():
             environ.setdefault(
                 OTEL_BSP_EXPORT_TIMEOUT,
-                "0",
+                "500",
             )
 
         otlp_protocol = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
