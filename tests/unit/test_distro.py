@@ -221,7 +221,7 @@ class TestDistro:
             }
         )
         distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_BSP_EXPORT_TIMEOUT] == "500"
+        assert os.environ[OTEL_BSP_EXPORT_TIMEOUT] == "250"
 
     def test_configure_set_bsp_timeout_default_not_lambda(self, mocker):
         mocker.patch.dict(os.environ, {})
