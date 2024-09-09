@@ -12,5 +12,5 @@ class SolarWindsBatchSpanProcessor(BatchSpanProcessor):
     """Subclasses Otel Python BatchSpanProcessor to force_flush at shutdown"""
 
     def shutdown(self) -> None:
-        self.force_flush()
+        self.force_flush(timeout_millis=500)
         super().shutdown()
