@@ -312,6 +312,72 @@ class TestDistro:
         assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
+    def test_load_instrumentor_aws_lambda_not_lambda_env(self, mocker):
+        mock_apm_config = mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig"
+        )
+        mock_apm_config.configure_mock(
+            **{
+                "calculate_is_lambda": mocker.Mock(return_value=False)
+            }
+        )
+
+        mock_instrument = mocker.Mock()
+        mock_instrumentor = mocker.Mock()
+        mock_instrumentor.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "instrument": mock_instrument
+                }
+            )
+        )
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_instrumentor)
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "load": mock_load,
+                "name": "aws-lambda",
+            }
+        )
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        mock_instrument.assert_called_once_with(
+            **{
+                "foo": "bar",
+            }
+        )  
+
+    def test_load_instrumentor_aws_lambda_lambda_env(self, mocker):
+        mock_apm_config = mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig"
+        )
+        mock_apm_config.configure_mock(
+            **{
+                "calculate_is_lambda": mocker.Mock(return_value=True)
+            }
+        )
+
+        mock_instrument = mocker.Mock()
+        mock_instrumentor = mocker.Mock()
+        mock_instrumentor.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "instrument": mock_instrument
+                }
+            )
+        )
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_instrumentor)
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "load": mock_load,
+                "name": "aws-lambda",
+            }
+        )
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        mock_instrument.assert_not_called()
+
     def test_load_instrumentor_no_commenting(self, mocker):
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
