@@ -75,7 +75,7 @@ def mock_composite_propagator(mocker):
 @pytest.fixture(name="mock_bsprocessor")
 def mock_bsprocessor(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.BatchSpanProcessor",
+        "solarwinds_apm.configurator.SolarWindsBatchSpanProcessor",
     )
 
 @pytest.fixture(name="mock_pemreader")
