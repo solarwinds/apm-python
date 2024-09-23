@@ -673,7 +673,7 @@ class SolarWindsApmConfig:
             "context": self.context,
             "service_name": self.service_name,
         }
-        return f"{apm_config}"
+        return json.dumps(apm_config)
 
     def __setitem__(self, key: str, value: str) -> None:
         """Refresh the configurations in liboboe global struct while user changes settings."""
