@@ -7,6 +7,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import argparse
+import os
 import subprocess
 import sys
 
@@ -15,6 +16,7 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Lint and format everything, autofixing if possible.")
     parser.add_argument("--check-only", action="store_true")
     parser.add_argument("--allowexitcodes", action="append", default=[0])
+    parser.add_argument("--rcfile", type=str)
     parser.set_defaults(parser=parser)
     parser.set_defaults(func=lint_and_format)
     return parser.parse_args(args)
@@ -47,10 +49,25 @@ def lint_and_format(args):
         args.allowexitcodes,
     )
 
-    run_subprocess(
-        ("pylint", "--ignore", "solarwinds_apm/extension", "solarwinds_apm"),
-        args.allowexitcodes,
-    )
+    # pylint 3.3.0 is not available for py38, nor is `too-many-positional-argument`
+    # so we give it a different pylintrc file for now
+    # TODO update pylint disable when drop py38 support
+    if "py38" in os.getenv('TOX_ENV_NAME'):
+        run_subprocess(
+            (
+                "pylint",
+                "--rcfile=.pylintrc_py38",
+                "--ignore",
+                "solarwinds_apm/extension",
+                "solarwinds_apm",
+            ),
+            args.allowexitcodes,
+        ) 
+    else:
+        run_subprocess(
+            ("pylint", "--ignore", "solarwinds_apm/extension", "solarwinds_apm"),
+            args.allowexitcodes,
+        )
 
     print("Done.")
 

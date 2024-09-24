@@ -144,7 +144,8 @@ class _SwSampler(Sampler):
         logger.debug("Using global tracing_mode as %s", self.tracing_mode)
         return self.tracing_mode
 
-    # pylint: disable=too-many-locals,too-many-positional-arguments
+    # TODO update pylint disable when drop py38 support
+    # pylint: disable=too-many-locals
     def calculate_liboboe_decision(
         self,
         parent_span_context: SpanContext,
