@@ -171,7 +171,7 @@ class SolarWindsDistro(BaseDistro):
             kwargs["commenter_options"] = self.detect_commenter_options()
 
             logger.warning(
-                "(Blanket) Enabling sqlcommenter for %s with kwargs",
+                "(Blanket) Enabling sqlcommenter for %s with kwargs %s",
                 entry_point.name,
                 kwargs,
             )
@@ -200,7 +200,7 @@ class SolarWindsDistro(BaseDistro):
                 kwargs["commenter_options"] = self.detect_commenter_options()
 
                 logger.warning(
-                    "(Individually) Enabling sqlcommenter for %s with kwargs",
+                    "(Individually) Enabling sqlcommenter for %s with kwargs %s",
                     entry_point.name,
                     kwargs,
                 )
