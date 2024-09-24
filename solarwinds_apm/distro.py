@@ -153,9 +153,12 @@ class SolarWindsDistro(BaseDistro):
             if SolarWindsApmConfig.calculate_is_lambda():
                 return
 
-        # Set enable for sqlcommenter. Assumes kwargs ignored if not
-        # implemented for current instrumentation library
+        # If OTEL_SQLCOMMENTER_ENABLED=true, enable for all that support it
         if self.enable_commenter():
+            # Assumes kwargs ignored if not implemented for current
+            # instrumentation library
+            # TODO: this and the `else` should set kwargs the same way
+
             # instrumentation for Flask ORM, sqlalchemy, psycopg2
             kwargs["enable_commenter"] = True
             # instrumentation for Django ORM
@@ -166,6 +169,42 @@ class SolarWindsDistro(BaseDistro):
             # Note: Django ORM accepts options in settings.py
             # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
             kwargs["commenter_options"] = self.detect_commenter_options()
+
+            logger.warning(
+                "(Blanket) Enabling sqlcommenter for %s with kwargs",
+                entry_point.name,
+                kwargs,
+            )
+
+        else:
+            # This function is called for every individual instrumentor
+            # by upstream sitecustomize
+            entry_point_setting = self.enable_commenter_settings().get(
+                entry_point.name
+            )
+            if entry_point_setting:
+                if entry_point.name in {
+                    "flask",
+                    "psycopg",
+                    "psycopg2",
+                    "sqlalchemy",
+                }:
+                    kwargs["enable_commenter"] = True
+                if entry_point.name == "django":
+                    kwargs["is_sql_commentor_enabled"] = True
+
+                # Assumes can be empty and any KVs not used
+                # by current library are ignored
+                # Note: Django ORM accepts options in settings.py
+                # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
+                kwargs["commenter_options"] = self.detect_commenter_options()
+
+                logger.warning(
+                    "(Individually) Enabling sqlcommenter for %s with kwargs",
+                    entry_point.name,
+                    kwargs,
+                )
+
         try:
             instrumentor: BaseInstrumentor = entry_point.load()
         except Exception as ex:  # pylint: disable=broad-except
@@ -185,6 +224,35 @@ class SolarWindsDistro(BaseDistro):
         if enable_commenter.lower() == "true":
             return True
         return False
+
+    def enable_commenter_settings(self) -> dict:
+        """Return a map of which instrumentors will have sqlcomment enabled,
+        if implemented. Default is False for each instrumentor.
+
+        Expects OTEL_SQLCOMMENTER_ENABLED as a comma-separate string of kvs
+        paired by equals signs, e.g. 'django=true,sqlalchemy=false'"""
+
+        env_commenter_items = environ.get("OTEL_SQLCOMMENTER_ENABLED", "")
+        env_commenter_map = {
+            "django": False,
+            "flask": False,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+        if env_commenter_items:
+            for item in env_commenter_items.split(","):
+                try:
+                    key, value = item.split("=", maxsplit=1)
+                except ValueError as exc:
+                    logger.warning(
+                        "Invalid sqlcommenter key value at pair %s: %s",
+                        item,
+                        exc,
+                    )
+                    continue
+                env_commenter_map[key.strip()] = value.strip()
 
     def detect_commenter_options(self):
         """Returns commenter options dict parsed from environment, if any"""
