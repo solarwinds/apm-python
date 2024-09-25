@@ -185,10 +185,10 @@ class TestConfiguratorLogsExporter:
         mock_logginghandler,
     ):
         # Mock entry points
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
         )
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             side_effect=StopIteration("mock error")
         )
 
@@ -236,10 +236,10 @@ class TestConfiguratorLogsExporter:
             }
         )
         mock_points = iter([mock_exporter_entry_point])
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
         )
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=mock_points
         )
 

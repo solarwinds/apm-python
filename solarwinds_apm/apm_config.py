@@ -18,7 +18,6 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.sdk.resources import Resource
-from pkg_resources import iter_entry_points
 
 import solarwinds_apm.apm_noop as noop_extension
 from solarwinds_apm import apm_logging
@@ -34,6 +33,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
 from solarwinds_apm.certs.ao_issuer_ca import get_public_cert
+from solarwinds_apm.util.importlib_metadata import entry_points
 
 logger = logging.getLogger(__name__)
 
@@ -387,9 +387,11 @@ class SolarWindsApmConfig:
                         != INTL_SWO_DEFAULT_TRACES_EXPORTER
                     ):
                         next(
-                            iter_entry_points(
-                                "opentelemetry_traces_exporter",
-                                environ_exporter_name,
+                            iter(
+                                entry_points(
+                                    group="opentelemetry_traces_exporter",
+                                    name=environ_exporter_name,
+                                )
                             )
                         )
                 except StopIteration:
