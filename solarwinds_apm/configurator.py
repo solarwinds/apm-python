@@ -123,6 +123,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "There was an issue with generating the reporter init message."
             )
 
+    # TODO update pylint disable when drop py38 support
     def _configure_otel_components(
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
