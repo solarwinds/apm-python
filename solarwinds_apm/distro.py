@@ -170,35 +170,37 @@ class SolarWindsDistro(BaseDistro):
             # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
             kwargs["commenter_options"] = self.detect_commenter_options()
 
+            # TODO should be debug
             logger.warning(
                 "(Blanket) Enabling sqlcommenter for %s with kwargs %s",
                 entry_point.name,
                 kwargs,
             )
 
-        else:
+        elif entry_point.name in {
+            "flask",
+            "psycopg",
+            "psycopg2",
+            "sqlalchemy",
+        }:
             # This function is called for every individual instrumentor
             # by upstream sitecustomize
             entry_point_setting = self.enable_commenter_settings().get(
                 entry_point.name
             )
-            if entry_point_setting:
-                if entry_point.name in {
-                    "flask",
-                    "psycopg",
-                    "psycopg2",
-                    "sqlalchemy",
-                }:
-                    kwargs["enable_commenter"] = True
+
+            if entry_point_setting is True:
                 if entry_point.name == "django":
                     kwargs["is_sql_commentor_enabled"] = True
+                else:
+                    kwargs["enable_commenter"] = True
+                    # Note: Django ORM accepts options in settings.py instead
+                    # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
+                    kwargs["commenter_options"] = (
+                        self.detect_commenter_options()
+                    )
 
-                # Assumes can be empty and any KVs not used
-                # by current library are ignored
-                # Note: Django ORM accepts options in settings.py
-                # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
-                kwargs["commenter_options"] = self.detect_commenter_options()
-
+                # TODO should be debug
                 logger.warning(
                     "(Individually) Enabling sqlcommenter for %s with kwargs %s",
                     entry_point.name,
@@ -252,7 +254,12 @@ class SolarWindsDistro(BaseDistro):
                         exc,
                     )
                     continue
-                env_commenter_map[key.strip()] = value.strip()
+
+                env_v_bool = SolarWindsApmConfig.convert_to_bool(value.strip())
+                if env_v_bool is not None:
+                    env_commenter_map[key.strip()] = env_v_bool
+
+        return env_commenter_map
 
     def detect_commenter_options(self):
         """Returns commenter options dict parsed from environment, if any"""
