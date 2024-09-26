@@ -45,6 +45,13 @@ _EXPORTER_BY_OTLP_PROTOCOL = {
     "grpc": INTL_SWO_DEFAULT_OTLP_EXPORTER_GRPC,
     "http/protobuf": INTL_SWO_DEFAULT_OTLP_EXPORTER,
 }
+_SQLCOMMENTERS = [
+    "django",
+    "flask",
+    "psycopg",
+    "psycopg2",
+    "sqlalchemy",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -177,12 +184,7 @@ class SolarWindsDistro(BaseDistro):
                 kwargs,
             )
 
-        elif entry_point.name in {
-            "flask",
-            "psycopg",
-            "psycopg2",
-            "sqlalchemy",
-        }:
+        elif entry_point.name in _SQLCOMMENTERS:
             # This function is called for every individual instrumentor
             # by upstream sitecustomize
             entry_point_setting = self.enable_commenter_settings().get(
@@ -220,8 +222,6 @@ class SolarWindsDistro(BaseDistro):
 
     def enable_commenter(self) -> bool:
         """Enable sqlcommenter feature, if implemented"""
-        # TODO: Update if changed in OTel spec:
-        # https://github.com/open-telemetry/opentelemetry-specification/issues/3560
         enable_commenter = environ.get("OTEL_SQLCOMMENTER_ENABLED", "")
         if enable_commenter.lower() == "true":
             logger.warning(
@@ -234,18 +234,16 @@ class SolarWindsDistro(BaseDistro):
         """Return a map of which instrumentors will have sqlcomment enabled,
         if implemented. Default is False for each instrumentor.
 
-        Expects OTEL_SQLCOMMENTER_ENABLED as a comma-separate string of kvs
-        paired by equals signs, e.g. 'django=true,sqlalchemy=false'"""
+        Expects SW_APM_ENABLED_SQLCOMMENT as a comma-separate string of kvs
+        paired by equals signs, e.g. 'django=true,sqlalchemy=false'. Keys for
+        instrumentors that currently support sqlcommenting upstream are:
+        django, flask, psycopg, psycopg2, sqlalchemy.
 
-        env_commenter_items = environ.get("OTEL_SQLCOMMENTER_ENABLED", "")
-        env_commenter_map = {
-            "django": False,
-            "flask": False,
-            "psycopg": False,
-            "psycopg2": False,
-            "sqlalchemy": False,
-        }
-
+        OTEL_SQLCOMMENTER_ENABLED (deprecated) takes precedence over
+        SW_APM_ENABLED_SQLCOMMENT until support for OTEL_SQLCOMMENTER_ENABLED
+        is removed."""
+        env_commenter_items = environ.get("SW_APM_ENABLED_SQLCOMMENT", "")
+        env_commenter_map = {instr: False for instr in _SQLCOMMENTERS}
         if env_commenter_items:
             for item in env_commenter_items.split(","):
                 try:
