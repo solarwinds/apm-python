@@ -461,6 +461,107 @@ class TestDistro:
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_ENABLED": "tRuE"})
         assert distro.SolarWindsDistro().enable_commenter() == True
 
+    def test_enable_commenter_settings_none(self, mocker):
+        mocker.patch.dict(os.environ, {})
+        assert distro.SolarWindsDistro().enable_commenter_settings() == {
+            "django": False,
+            "flask": False,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_enable_commenter_settings_invalid_just_a_comma(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": ","})
+        assert distro.SolarWindsDistro().enable_commenter_settings() == {
+            "django": False,
+            "flask": False,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_enable_commenter_settings_invalid_missing_equals_sign_single_val(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django"})
+        assert distro.SolarWindsDistro().enable_commenter_settings() == {
+            "django": False,
+            "flask": False,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_enable_commenter_settings_invalid_missing_equals_sign_multiple_first(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django,flask=true"})
+        assert distro.SolarWindsDistro().enable_commenter_settings() == {
+            "django": False,
+            "flask": True,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_enable_commenter_settings_invalid_missing_equals_sign_multiple_last(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "flask=true,django"})
+        assert distro.SolarWindsDistro().enable_commenter_settings() == {
+            "django": False,
+            "flask": True,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_enable_commenter_settings_valid_ignored_values(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django=true,flask=foobar,psycopg=123"})
+        assert distro.SolarWindsDistro().enable_commenter_settings() == {
+            "django": True,
+            "flask": False,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_enable_commenter_settings_valid_mixed_case(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django=tRuE,flask=TrUe"})
+        assert distro.SolarWindsDistro().enable_commenter_settings() == {
+            "django": True,
+            "flask": True,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_enable_commenter_settings_valid_whitespace_stripped(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django=  true  ,flask=  true  "})
+        assert distro.SolarWindsDistro().enable_commenter_settings() == {
+            "django": True,
+            "flask": True,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_enable_commenter_settings_valid_update_existing(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django=true,flask=true,psycopg=true,psycopg2=true,sqlalchemy=true"})
+        assert distro.SolarWindsDistro().enable_commenter_settings() == {
+            "django": True,
+            "flask": True,
+            "psycopg": True,
+            "psycopg2": True,
+            "sqlalchemy": True,
+        }
+
+    def test_enable_commenter_settings_valid_add_new(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "flask=true,foobar=true"})
+        assert distro.SolarWindsDistro().enable_commenter_settings() == {
+            "django": False,
+            "flask": True,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+            "foobar": True,
+        }
+
     def test_detect_commenter_options_not_set(self, mocker):
         mocker.patch.dict(os.environ, {})
         result = distro.SolarWindsDistro().detect_commenter_options()
