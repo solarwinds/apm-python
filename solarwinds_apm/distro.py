@@ -224,6 +224,9 @@ class SolarWindsDistro(BaseDistro):
         # https://github.com/open-telemetry/opentelemetry-specification/issues/3560
         enable_commenter = environ.get("OTEL_SQLCOMMENTER_ENABLED", "")
         if enable_commenter.lower() == "true":
+            logger.warning(
+                "Deprecated: OTEL_SQLCOMMENTER_ENABLED support will be removed in a future release. Please use SW_APM_ENABLED_SQLCOMMENT instead."
+            )
             return True
         return False
 
