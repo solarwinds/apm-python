@@ -816,7 +816,7 @@ class TestDistro:
             "sqlalchemy": True,
         }
 
-    def test_enable_commenter_settings_valid_add_new(self, mocker):
+    def test_enable_commenter_settings_valid_ignores_if_not_on_list(self, mocker):
         mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "flask=true,foobar=true"})
         assert distro.SolarWindsDistro().enable_commenter_settings() == {
             "django": False,
@@ -824,7 +824,6 @@ class TestDistro:
             "psycopg": False,
             "psycopg2": False,
             "sqlalchemy": False,
-            "foobar": True,
         }
 
     def test_detect_commenter_options_not_set(self, mocker):

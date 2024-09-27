@@ -151,7 +151,14 @@ class SolarWindsDistro(BaseDistro):
         """Takes a collection of instrumentation entry points
         and activates them by instantiating and calling instrument()
         on each one. This is a method override to pass additional
-        arguments to each entry point.
+        arguments to each entry point. This function is called for every
+        individual instrumentor by upstream sitecustomize.
+
+        For enabling sqlcommenting:
+        - OTEL_SQLCOMMENTER_ENABLED is deprecated
+        - All instrumentors enabled if OTEL_SQLCOMMENTER_ENABLED=true
+        - If OTEL_SQLCOMMENTER_ENABLED=false, SW_APM_ENABLED_SQLCOMMENT enables
+          individual instrumentors (each is false by default)
         """
         # If we're in Lambda environment, then we skip loading
         # AwsLambdaInstrumentor because we assume the wrapper
@@ -160,19 +167,17 @@ class SolarWindsDistro(BaseDistro):
             if SolarWindsApmConfig.calculate_is_lambda():
                 return
 
-        # If OTEL_SQLCOMMENTER_ENABLED=true, enable for all that support it
+        # If OTEL_SQLCOMMENTER_ENABLED=true, set `enable` for all instrumentors.
+        # Assumes sqlcommenting kwargs are ignored if sqlcommenting is not implemented
+        # for the current instrumentation library.
         if self.enable_commenter():
-            # Assumes kwargs ignored if not implemented for current
-            # instrumentation library
-
-            # instrumentation for Flask ORM, sqlalchemy, psycopg2
+            # For Flask ORM, sqlalchemy, psycopg2
             kwargs["enable_commenter"] = True
-            # instrumentation for Django ORM
+            # For Django ORM
             kwargs["is_sql_commentor_enabled"] = True
 
-            # Assumes can be empty and any KVs not used
-            # by current library are ignored
-            # Note: Django ORM accepts options in settings.py
+            # Assumes this value can be empty
+            # Note: Django ORM reads options in settings.py instead
             # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
             kwargs["commenter_options"] = self.detect_commenter_options()
 
@@ -183,23 +188,20 @@ class SolarWindsDistro(BaseDistro):
             )
 
         elif entry_point.name in _SQLCOMMENTERS:
-            # This function is called for every individual instrumentor
-            # by upstream sitecustomize
             entry_point_setting = self.enable_commenter_settings().get(
                 entry_point.name
             )
-
             if entry_point_setting is True:
                 if entry_point.name == "django":
                     kwargs["is_sql_commentor_enabled"] = True
                 else:
                     kwargs["enable_commenter"] = True
-                    # Note: Django ORM accepts options in settings.py instead
+                    # Assumes this value can be empty
+                    # Note: Django ORM reads options in settings.py instead
                     # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
                     kwargs["commenter_options"] = (
                         self.detect_commenter_options()
                     )
-
                 logger.debug(
                     "Enabling sqlcommenter for %s with %s",
                     entry_point.name,
@@ -234,10 +236,7 @@ class SolarWindsDistro(BaseDistro):
         Expects SW_APM_ENABLED_SQLCOMMENT as a comma-separate string of kvs
         paired by equals signs, e.g. 'django=true,sqlalchemy=false'. Keys for
         instrumentors that currently support sqlcommenting upstream are:
-        django, flask, psycopg, psycopg2, sqlalchemy.
-
-        SW_APM_ENABLED_SQLCOMMENT takes precedence over OTEL_SQLCOMMENTER_ENABLED
-        (deprecated) until support for OTEL_SQLCOMMENTER_ENABLED is removed."""
+        django, flask, psycopg, psycopg2, sqlalchemy."""
         env_commenter_items = environ.get("SW_APM_ENABLED_SQLCOMMENT", "")
         env_commenter_map = {instr: False for instr in _SQLCOMMENTERS}
         if env_commenter_items:
@@ -252,9 +251,12 @@ class SolarWindsDistro(BaseDistro):
                     )
                     continue
 
-                env_v_bool = SolarWindsApmConfig.convert_to_bool(value.strip())
-                if env_v_bool is not None:
-                    env_commenter_map[key.strip()] = env_v_bool
+                if key in _SQLCOMMENTERS:
+                    env_v_bool = SolarWindsApmConfig.convert_to_bool(
+                        value.strip()
+                    )
+                    if env_v_bool is not None:
+                        env_commenter_map[key.strip()] = env_v_bool
 
         return env_commenter_map
 
