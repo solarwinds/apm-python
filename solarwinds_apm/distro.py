@@ -164,7 +164,6 @@ class SolarWindsDistro(BaseDistro):
         if self.enable_commenter():
             # Assumes kwargs ignored if not implemented for current
             # instrumentation library
-            # TODO: this and the `else` should set kwargs the same way
 
             # instrumentation for Flask ORM, sqlalchemy, psycopg2
             kwargs["enable_commenter"] = True
@@ -177,9 +176,8 @@ class SolarWindsDistro(BaseDistro):
             # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
             kwargs["commenter_options"] = self.detect_commenter_options()
 
-            # TODO should be debug
-            logger.warning(
-                "(Blanket) Enabling sqlcommenter for %s with kwargs %s",
+            logger.debug(
+                "(Deprecated) Enabling sqlcommenter for %s with %s",
                 entry_point.name,
                 kwargs,
             )
@@ -202,9 +200,8 @@ class SolarWindsDistro(BaseDistro):
                         self.detect_commenter_options()
                     )
 
-                # TODO should be debug
-                logger.warning(
-                    "(Individually) Enabling sqlcommenter for %s with kwargs %s",
+                logger.debug(
+                    "Enabling sqlcommenter for %s with %s",
                     entry_point.name,
                     kwargs,
                 )
@@ -239,9 +236,8 @@ class SolarWindsDistro(BaseDistro):
         instrumentors that currently support sqlcommenting upstream are:
         django, flask, psycopg, psycopg2, sqlalchemy.
 
-        OTEL_SQLCOMMENTER_ENABLED (deprecated) takes precedence over
-        SW_APM_ENABLED_SQLCOMMENT until support for OTEL_SQLCOMMENTER_ENABLED
-        is removed."""
+        SW_APM_ENABLED_SQLCOMMENT takes precedence over OTEL_SQLCOMMENTER_ENABLED
+        (deprecated) until support for OTEL_SQLCOMMENTER_ENABLED is removed."""
         env_commenter_items = environ.get("SW_APM_ENABLED_SQLCOMMENT", "")
         env_commenter_map = {instr: False for instr in _SQLCOMMENTERS}
         if env_commenter_items:
