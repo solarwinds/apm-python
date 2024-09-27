@@ -831,12 +831,12 @@ class TestDistro:
         result = distro.SolarWindsDistro().detect_commenter_options()
         assert result == {}
 
-    def test_detect_commenter_options_invalid_kv_ignored(self, mocker):
+    def test_detect_commenter_options_invalid_kv_ignored_deprecated(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_OPTIONS": "invalid-kv,foo=bar"})
         result = distro.SolarWindsDistro().detect_commenter_options()
         assert result == {}
 
-    def test_detect_commenter_options_valid_kvs(self, mocker):
+    def test_detect_commenter_options_valid_kvs_deprecated(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_OPTIONS": "foo=true,bar=FaLSe"})
         result = distro.SolarWindsDistro().detect_commenter_options()
         assert result == {
@@ -844,7 +844,7 @@ class TestDistro:
             "bar": False,
         }
 
-    def test_detect_commenter_options_strip_whitespace_ok(self, mocker):
+    def test_detect_commenter_options_strip_whitespace_ok_deprecated(self, mocker):
         mocker.patch.dict(
             os.environ,
             {
@@ -855,8 +855,51 @@ class TestDistro:
         assert result.get("foo") == True
         assert result.get("bar") == False
 
-    def test_detect_commenter_options_strip_mix(self, mocker):
+    def test_detect_commenter_options_strip_mix_deprecated(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_OPTIONS": "invalid-kv,   foo=TrUe   ,bar  =  faLSE,   baz=qux  "})
+        result = distro.SolarWindsDistro().detect_commenter_options()
+        assert result.get("foo") == True
+        assert result.get("bar") == False
+        assert result.get("baz") is None
+
+    def test_detect_commenter_options_strip_mix_deprecated_and_new(self, mocker):
+        mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_OPTIONS": "invalid-kv,   foo=TrUe   ,bar  =  faLSE,   baz=qux  "})
+        mocker.patch.dict(os.environ, {"SW_APM_OPTIONS_SQLCOMMENT": "invalid-kv,   foofoo=TrUe   ,barbar  =  faLSE,   bazbaz=qux  "})
+        result = distro.SolarWindsDistro().detect_commenter_options()
+        assert result.get("foo") == True
+        assert result.get("bar") == False
+        assert result.get("baz") is None
+        # SW_APM_OPTIONS_SQLCOMMENT is not used
+        assert result.get("foofoo") is None
+        assert result.get("barbar") is None
+        assert result.get("bazbaz") is None
+
+    def test_detect_commenter_options_invalid_kv_ignored(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_OPTIONS_SQLCOMMENT": "invalid-kv,foo=bar"})
+        result = distro.SolarWindsDistro().detect_commenter_options()
+        assert result == {}
+
+    def test_detect_commenter_options_valid_kvs(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_OPTIONS_SQLCOMMENT": "foo=true,bar=FaLSe"})
+        result = distro.SolarWindsDistro().detect_commenter_options()
+        assert result == {
+            "foo": True,
+            "bar": False,
+        }
+
+    def test_detect_commenter_options_strip_whitespace_ok(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_OPTIONS_SQLCOMMENT": "   foo   =   tRUe   , bar = falsE "
+            }
+        )
+        result = distro.SolarWindsDistro().detect_commenter_options()
+        assert result.get("foo") == True
+        assert result.get("bar") == False
+
+    def test_detect_commenter_options_strip_mix(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_OPTIONS_SQLCOMMENT": "invalid-kv,   foo=TrUe   ,bar  =  faLSE,   baz=qux  "})
         result = distro.SolarWindsDistro().detect_commenter_options()
         assert result.get("foo") == True
         assert result.get("bar") == False

@@ -259,24 +259,39 @@ class SolarWindsDistro(BaseDistro):
         return env_commenter_map
 
     def detect_commenter_options(self):
-        """Returns commenter options dict parsed from environment, if any"""
+        """Returns commenter options dict parsed from environment, if any
+
+        OTEL_SQLCOMMENTER_OPTIONS is deprecated (along with OTEL_SQLCOMMENTER_ENABLED).
+        Users should update to use SW_APM_OPTIONS_SQLCOMMENT instead"""
         commenter_opts = {}
-        commenter_opts_env = environ.get("OTEL_SQLCOMMENTER_OPTIONS")
-        if commenter_opts_env:
-            for opt_item in commenter_opts_env.split(","):
-                opt_k = ""
-                opt_v = ""
-                try:
-                    opt_k, opt_v = opt_item.split("=", maxsplit=1)
-                except ValueError as exc:
-                    logger.warning(
-                        "Invalid key-value pair for sqlcommenter option %s: %s",
-                        opt_item,
-                        exc,
-                    )
-                opt_v_bool = SolarWindsApmConfig.convert_to_bool(opt_v.strip())
-                if opt_v_bool is not None:
-                    commenter_opts[opt_k.strip()] = opt_v_bool
+        commenter_opts_env_depr = environ.get("OTEL_SQLCOMMENTER_OPTIONS")
+        commenter_opts_env = environ.get("SW_APM_OPTIONS_SQLCOMMENT")
+
+        opt_items = []
+        if commenter_opts_env_depr:
+            logger.warning(
+                "Deprecated: OTEL_SQLCOMMENTER_OPTIONS support will be removed in a future release. Please use SW_APM_OPTIONS_SQLCOMMENT instead."
+            )
+            opt_items = commenter_opts_env_depr.split(",")
+        elif commenter_opts_env:
+            opt_items = commenter_opts_env.split(",")
+        else:
+            return commenter_opts
+
+        for opt_item in opt_items:
+            opt_k = ""
+            opt_v = ""
+            try:
+                opt_k, opt_v = opt_item.split("=", maxsplit=1)
+            except ValueError as exc:
+                logger.warning(
+                    "Invalid key-value pair for sqlcommenter option %s: %s",
+                    opt_item,
+                    exc,
+                )
+            opt_v_bool = SolarWindsApmConfig.convert_to_bool(opt_v.strip())
+            if opt_v_bool is not None:
+                commenter_opts[opt_k.strip()] = opt_v_bool
 
         return commenter_opts
 
