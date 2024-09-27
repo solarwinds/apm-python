@@ -478,7 +478,52 @@ class TestDistro:
             foo="bar",
         )
 
-    def test_load_instrumentor_enable_commenting_all_and_individual(self, mocker):
+    def test_load_instrumentor_enable_commenting_all_false_and_individual_false(self, mocker):
+        mock_instrument = mocker.Mock()
+        mock_instrumentor = mocker.Mock()
+        mock_instrumentor.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "instrument": mock_instrument
+                }
+            )
+        )
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_instrumentor)
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "name": "foo-instrumentor",
+                "load": mock_load,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro._SQLCOMMENTERS",
+            [
+                "foo-instrumentor"
+            ]
+        )   
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.enable_commenter",
+            return_value=False
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.enable_commenter_settings",
+            return_value={
+                "foo-instrumentor": False,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.detect_commenter_options",
+            return_value="foo-options"
+        )
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        # Commenting still enabled for individual even if catch-all is False
+        mock_instrument.assert_called_once_with(
+            foo="bar",
+        )
+
+    def test_load_instrumentor_enable_commenting_all_false_and_individual_true(self, mocker):
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -522,6 +567,54 @@ class TestDistro:
         mock_instrument.assert_called_once_with(
             commenter_options="foo-options",
             enable_commenter=True,
+            foo="bar",
+        )
+
+    def test_load_instrumentor_enable_commenting_all_true_and_individual_false(self, mocker):
+        mock_instrument = mocker.Mock()
+        mock_instrumentor = mocker.Mock()
+        mock_instrumentor.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "instrument": mock_instrument
+                }
+            )
+        )
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_instrumentor)
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "name": "foo-instrumentor",
+                "load": mock_load,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro._SQLCOMMENTERS",
+            [
+                "foo-instrumentor"
+            ]
+        )   
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.enable_commenter",
+            return_value=True
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.enable_commenter_settings",
+            return_value={
+                "foo-instrumentor": False,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.detect_commenter_options",
+            return_value="foo-options"
+        )
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        # Commenting enabled with all kwargs because catch-all true
+        mock_instrument.assert_called_once_with(
+            commenter_options="foo-options",
+            enable_commenter=True,
+            is_sql_commentor_enabled=True,
             foo="bar",
         )
 
