@@ -158,7 +158,7 @@ class SolarWindsDistro(BaseDistro):
         - OTEL_SQLCOMMENTER_ENABLED is deprecated
         - All instrumentors enabled if OTEL_SQLCOMMENTER_ENABLED=true
         - If OTEL_SQLCOMMENTER_ENABLED=false, SW_APM_ENABLED_SQLCOMMENT enables
-          individual instrumentors (each is false by default)
+          individual instrumentors if in _SQLCOMMENTERS (each is false by default)
         """
         # If we're in Lambda environment, then we skip loading
         # AwsLambdaInstrumentor because we assume the wrapper
@@ -188,7 +188,7 @@ class SolarWindsDistro(BaseDistro):
             )
 
         elif entry_point.name in _SQLCOMMENTERS:
-            entry_point_setting = self.enable_commenter_settings().get(
+            entry_point_setting = self.get_enable_commenter_env_map().get(
                 entry_point.name
             )
             if entry_point_setting is True:
@@ -229,14 +229,12 @@ class SolarWindsDistro(BaseDistro):
             return True
         return False
 
-    def enable_commenter_settings(self) -> dict:
+    def get_enable_commenter_env_map(self) -> dict:
         """Return a map of which instrumentors will have sqlcomment enabled,
-        if implemented. Default is False for each instrumentor.
+        if implemented. Default is False for each instrumentor in _SQLCOMMENTERS.
 
-        Expects SW_APM_ENABLED_SQLCOMMENT as a comma-separate string of kvs
-        paired by equals signs, e.g. 'django=true,sqlalchemy=false'. Keys for
-        instrumentors that currently support sqlcommenting upstream are:
-        django, flask, psycopg, psycopg2, sqlalchemy."""
+        Reads env SW_APM_ENABLED_SQLCOMMENT as a comma-separated string of KVs
+        paired by equals signs, e.g. 'django=true,sqlalchemy=false'."""
         env_commenter_items = environ.get("SW_APM_ENABLED_SQLCOMMENT", "")
         env_commenter_map = {instr: False for instr in _SQLCOMMENTERS}
         if env_commenter_items:
