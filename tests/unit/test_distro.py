@@ -378,7 +378,7 @@ class TestDistro:
         distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
         mock_instrument.assert_not_called()
 
-    def test_load_instrumentor_no_commenting(self, mocker):
+    def test_load_instrumentor_no_commenting_configured(self, mocker):
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -403,7 +403,7 @@ class TestDistro:
             }
         )  
 
-    def test_load_instrumentor_enable_commenting(self, mocker):
+    def test_load_instrumentor_enable_commenting_all_only(self, mocker):
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -437,6 +437,271 @@ class TestDistro:
             is_sql_commentor_enabled=True,
         )
 
+    def test_load_instrumentor_enable_commenting_individual_only_not_on_list(self, mocker):
+        mock_instrument = mocker.Mock()
+        mock_instrumentor = mocker.Mock()
+        mock_instrumentor.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "instrument": mock_instrument
+                }
+            )
+        )
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_instrumentor)
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "name": "not-on-list",
+                "load": mock_load,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro._SQLCOMMENTERS",
+            [
+                "this-is-on-the-list"
+            ]
+        )       
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.get_enable_commenter_env_map",
+            return_value={
+                "not-on-list": True,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.detect_commenter_options",
+            return_value="foo-options"
+        )
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        # Commenting not enabled because not on list
+        mock_instrument.assert_called_once_with(
+            foo="bar",
+        )
+
+    def test_load_instrumentor_enable_commenting_all_false_and_individual_false(self, mocker):
+        mock_instrument = mocker.Mock()
+        mock_instrumentor = mocker.Mock()
+        mock_instrumentor.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "instrument": mock_instrument
+                }
+            )
+        )
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_instrumentor)
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "name": "foo-instrumentor",
+                "load": mock_load,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro._SQLCOMMENTERS",
+            [
+                "foo-instrumentor"
+            ]
+        )   
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.enable_commenter",
+            return_value=False
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.get_enable_commenter_env_map",
+            return_value={
+                "foo-instrumentor": False,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.detect_commenter_options",
+            return_value="foo-options"
+        )
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        # Commenting still enabled for individual even if catch-all is False
+        mock_instrument.assert_called_once_with(
+            foo="bar",
+        )
+
+    def test_load_instrumentor_enable_commenting_all_false_and_individual_true(self, mocker):
+        mock_instrument = mocker.Mock()
+        mock_instrumentor = mocker.Mock()
+        mock_instrumentor.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "instrument": mock_instrument
+                }
+            )
+        )
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_instrumentor)
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "name": "foo-instrumentor",
+                "load": mock_load,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro._SQLCOMMENTERS",
+            [
+                "foo-instrumentor"
+            ]
+        )   
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.enable_commenter",
+            return_value=False
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.get_enable_commenter_env_map",
+            return_value={
+                "foo-instrumentor": True,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.detect_commenter_options",
+            return_value="foo-options"
+        )
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        # Commenting still enabled for individual even if catch-all is False
+        mock_instrument.assert_called_once_with(
+            commenter_options="foo-options",
+            enable_commenter=True,
+            foo="bar",
+        )
+
+    def test_load_instrumentor_enable_commenting_all_true_and_individual_false(self, mocker):
+        mock_instrument = mocker.Mock()
+        mock_instrumentor = mocker.Mock()
+        mock_instrumentor.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "instrument": mock_instrument
+                }
+            )
+        )
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_instrumentor)
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "name": "foo-instrumentor",
+                "load": mock_load,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro._SQLCOMMENTERS",
+            [
+                "foo-instrumentor"
+            ]
+        )   
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.enable_commenter",
+            return_value=True
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.get_enable_commenter_env_map",
+            return_value={
+                "foo-instrumentor": False,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.detect_commenter_options",
+            return_value="foo-options"
+        )
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        # Commenting enabled with all kwargs because catch-all true
+        mock_instrument.assert_called_once_with(
+            commenter_options="foo-options",
+            enable_commenter=True,
+            is_sql_commentor_enabled=True,
+            foo="bar",
+        )
+
+    def test_load_instrumentor_enable_commenting_individual_only_not_django(self, mocker):
+        mock_instrument = mocker.Mock()
+        mock_instrumentor = mocker.Mock()
+        mock_instrumentor.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "instrument": mock_instrument
+                }
+            )
+        )
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_instrumentor)
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "name": "foo-instrumentor",
+                "load": mock_load,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro._SQLCOMMENTERS",
+            [
+                "foo-instrumentor"
+            ]
+        )       
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.get_enable_commenter_env_map",
+            return_value={
+                "foo-instrumentor": True,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.detect_commenter_options",
+            return_value="foo-options"
+        )
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        mock_instrument.assert_called_once_with(
+            commenter_options="foo-options",
+            enable_commenter=True,
+            foo="bar",
+        )
+
+    def test_load_instrumentor_enable_commenting_individual_only_django(self, mocker):
+        mock_instrument = mocker.Mock()
+        mock_instrumentor = mocker.Mock()
+        mock_instrumentor.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "instrument": mock_instrument
+                }
+            )
+        )
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_instrumentor)
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "name": "django",
+                "load": mock_load,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro._SQLCOMMENTERS",
+            [
+                "django"
+            ]
+        )       
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.get_enable_commenter_env_map",
+            return_value={
+                "django": True,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsDistro.detect_commenter_options",
+            return_value="foo-options"
+        )
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        # No commenter_options because Django reads settings.py instead
+        mock_instrument.assert_called_once_with(
+            is_sql_commentor_enabled=True,
+            foo="bar",
+        )
+
     def test_enable_commenter_none(self, mocker):
         mocker.patch.dict(os.environ, {})
         assert distro.SolarWindsDistro().enable_commenter() == False
@@ -461,17 +726,117 @@ class TestDistro:
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_ENABLED": "tRuE"})
         assert distro.SolarWindsDistro().enable_commenter() == True
 
+    def test_get_enable_commenter_env_map_none(self, mocker):
+        mocker.patch.dict(os.environ, {})
+        assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
+            "django": False,
+            "flask": False,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_get_enable_commenter_env_map_invalid_just_a_comma(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": ","})
+        assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
+            "django": False,
+            "flask": False,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_get_enable_commenter_env_map_invalid_missing_equals_sign_single_val(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django"})
+        assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
+            "django": False,
+            "flask": False,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_get_enable_commenter_env_map_invalid_missing_equals_sign_multiple_first(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django,flask=true"})
+        assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
+            "django": False,
+            "flask": True,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_get_enable_commenter_env_map_invalid_missing_equals_sign_multiple_last(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "flask=true,django"})
+        assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
+            "django": False,
+            "flask": True,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_get_enable_commenter_env_map_valid_ignored_values(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django=true,flask=foobar,psycopg=123"})
+        assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
+            "django": True,
+            "flask": False,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_get_enable_commenter_env_map_valid_mixed_case(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django=tRuE,flask=TrUe"})
+        assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
+            "django": True,
+            "flask": True,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_get_enable_commenter_env_map_valid_whitespace_stripped(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django=  true  ,flask=  true  "})
+        assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
+            "django": True,
+            "flask": True,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
+    def test_get_enable_commenter_env_map_valid_update_existing(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django=true,flask=true,psycopg=true,psycopg2=true,sqlalchemy=true"})
+        assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
+            "django": True,
+            "flask": True,
+            "psycopg": True,
+            "psycopg2": True,
+            "sqlalchemy": True,
+        }
+
+    def test_get_enable_commenter_env_map_valid_ignores_if_not_on_list(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "flask=true,foobar=true"})
+        assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
+            "django": False,
+            "flask": True,
+            "psycopg": False,
+            "psycopg2": False,
+            "sqlalchemy": False,
+        }
+
     def test_detect_commenter_options_not_set(self, mocker):
         mocker.patch.dict(os.environ, {})
         result = distro.SolarWindsDistro().detect_commenter_options()
         assert result == {}
 
-    def test_detect_commenter_options_invalid_kv_ignored(self, mocker):
+    def test_detect_commenter_options_invalid_kv_ignored_deprecated(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_OPTIONS": "invalid-kv,foo=bar"})
         result = distro.SolarWindsDistro().detect_commenter_options()
         assert result == {}
 
-    def test_detect_commenter_options_valid_kvs(self, mocker):
+    def test_detect_commenter_options_valid_kvs_deprecated(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_OPTIONS": "foo=true,bar=FaLSe"})
         result = distro.SolarWindsDistro().detect_commenter_options()
         assert result == {
@@ -479,7 +844,7 @@ class TestDistro:
             "bar": False,
         }
 
-    def test_detect_commenter_options_strip_whitespace_ok(self, mocker):
+    def test_detect_commenter_options_strip_whitespace_ok_deprecated(self, mocker):
         mocker.patch.dict(
             os.environ,
             {
@@ -490,8 +855,51 @@ class TestDistro:
         assert result.get("foo") == True
         assert result.get("bar") == False
 
-    def test_detect_commenter_options_strip_mix(self, mocker):
+    def test_detect_commenter_options_strip_mix_deprecated(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_OPTIONS": "invalid-kv,   foo=TrUe   ,bar  =  faLSE,   baz=qux  "})
+        result = distro.SolarWindsDistro().detect_commenter_options()
+        assert result.get("foo") == True
+        assert result.get("bar") == False
+        assert result.get("baz") is None
+
+    def test_detect_commenter_options_strip_mix_deprecated_and_new(self, mocker):
+        mocker.patch.dict(os.environ, {"OTEL_SQLCOMMENTER_OPTIONS": "invalid-kv,   foo=TrUe   ,bar  =  faLSE,   baz=qux  "})
+        mocker.patch.dict(os.environ, {"SW_APM_OPTIONS_SQLCOMMENT": "invalid-kv,   foofoo=TrUe   ,barbar  =  faLSE,   bazbaz=qux  "})
+        result = distro.SolarWindsDistro().detect_commenter_options()
+        assert result.get("foo") == True
+        assert result.get("bar") == False
+        assert result.get("baz") is None
+        # SW_APM_OPTIONS_SQLCOMMENT is not used
+        assert result.get("foofoo") is None
+        assert result.get("barbar") is None
+        assert result.get("bazbaz") is None
+
+    def test_detect_commenter_options_invalid_kv_ignored(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_OPTIONS_SQLCOMMENT": "invalid-kv,foo=bar"})
+        result = distro.SolarWindsDistro().detect_commenter_options()
+        assert result == {}
+
+    def test_detect_commenter_options_valid_kvs(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_OPTIONS_SQLCOMMENT": "foo=true,bar=FaLSe"})
+        result = distro.SolarWindsDistro().detect_commenter_options()
+        assert result == {
+            "foo": True,
+            "bar": False,
+        }
+
+    def test_detect_commenter_options_strip_whitespace_ok(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_OPTIONS_SQLCOMMENT": "   foo   =   tRUe   , bar = falsE "
+            }
+        )
+        result = distro.SolarWindsDistro().detect_commenter_options()
+        assert result.get("foo") == True
+        assert result.get("bar") == False
+
+    def test_detect_commenter_options_strip_mix(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_OPTIONS_SQLCOMMENT": "invalid-kv,   foo=TrUe   ,bar  =  faLSE,   baz=qux  "})
         result = distro.SolarWindsDistro().detect_commenter_options()
         assert result.get("foo") == True
         assert result.get("bar") == False

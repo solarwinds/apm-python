@@ -45,6 +45,13 @@ _EXPORTER_BY_OTLP_PROTOCOL = {
     "grpc": INTL_SWO_DEFAULT_OTLP_EXPORTER_GRPC,
     "http/protobuf": INTL_SWO_DEFAULT_OTLP_EXPORTER,
 }
+_SQLCOMMENTERS = [
+    "django",
+    "flask",
+    "psycopg",
+    "psycopg2",
+    "sqlalchemy",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +151,14 @@ class SolarWindsDistro(BaseDistro):
         """Takes a collection of instrumentation entry points
         and activates them by instantiating and calling instrument()
         on each one. This is a method override to pass additional
-        arguments to each entry point.
+        arguments to each entry point. This function is called for every
+        individual instrumentor by upstream sitecustomize.
+
+        For enabling sqlcommenting:
+        - OTEL_SQLCOMMENTER_ENABLED is deprecated
+        - All instrumentors enabled if OTEL_SQLCOMMENTER_ENABLED=true
+        - If OTEL_SQLCOMMENTER_ENABLED=false, SW_APM_ENABLED_SQLCOMMENT enables
+          individual instrumentors if in _SQLCOMMENTERS (each is false by default)
         """
         # If we're in Lambda environment, then we skip loading
         # AwsLambdaInstrumentor because we assume the wrapper
@@ -153,19 +167,47 @@ class SolarWindsDistro(BaseDistro):
             if SolarWindsApmConfig.calculate_is_lambda():
                 return
 
-        # Set enable for sqlcommenter. Assumes kwargs ignored if not
-        # implemented for current instrumentation library
+        # If OTEL_SQLCOMMENTER_ENABLED=true, set `enable` for all instrumentors.
+        # Assumes sqlcommenting kwargs are ignored if sqlcommenting is not implemented
+        # for the current instrumentation library.
         if self.enable_commenter():
-            # instrumentation for Flask ORM, sqlalchemy, psycopg2
+            # For Flask ORM, sqlalchemy, psycopg2
             kwargs["enable_commenter"] = True
-            # instrumentation for Django ORM
+            # For Django ORM
             kwargs["is_sql_commentor_enabled"] = True
 
-            # Assumes can be empty and any KVs not used
-            # by current library are ignored
-            # Note: Django ORM accepts options in settings.py
+            # Assumes this value can be empty
+            # Note: Django ORM reads options in settings.py instead
             # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
             kwargs["commenter_options"] = self.detect_commenter_options()
+
+            logger.debug(
+                "(Deprecated) Enabling sqlcommenter for %s with %s",
+                entry_point.name,
+                kwargs,
+            )
+
+        elif entry_point.name in _SQLCOMMENTERS:
+            entry_point_setting = self.get_enable_commenter_env_map().get(
+                entry_point.name
+            )
+            if entry_point_setting is True:
+                if entry_point.name == "django":
+                    kwargs["is_sql_commentor_enabled"] = True
+                else:
+                    kwargs["enable_commenter"] = True
+                    # Assumes this value can be empty
+                    # Note: Django ORM reads options in settings.py instead
+                    # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
+                    kwargs["commenter_options"] = (
+                        self.detect_commenter_options()
+                    )
+                logger.debug(
+                    "Enabling sqlcommenter for %s with %s",
+                    entry_point.name,
+                    kwargs,
+                )
+
         try:
             instrumentor: BaseInstrumentor = entry_point.load()
         except Exception as ex:  # pylint: disable=broad-except
@@ -179,32 +221,77 @@ class SolarWindsDistro(BaseDistro):
 
     def enable_commenter(self) -> bool:
         """Enable sqlcommenter feature, if implemented"""
-        # TODO: Update if changed in OTel spec:
-        # https://github.com/open-telemetry/opentelemetry-specification/issues/3560
         enable_commenter = environ.get("OTEL_SQLCOMMENTER_ENABLED", "")
         if enable_commenter.lower() == "true":
+            logger.warning(
+                "Deprecated: OTEL_SQLCOMMENTER_ENABLED support will be removed in a future release. Please use SW_APM_ENABLED_SQLCOMMENT instead."
+            )
             return True
         return False
 
-    def detect_commenter_options(self):
-        """Returns commenter options dict parsed from environment, if any"""
-        commenter_opts = {}
-        commenter_opts_env = environ.get("OTEL_SQLCOMMENTER_OPTIONS")
-        if commenter_opts_env:
-            for opt_item in commenter_opts_env.split(","):
-                opt_k = ""
-                opt_v = ""
+    def get_enable_commenter_env_map(self) -> dict:
+        """Return a map of which instrumentors will have sqlcomment enabled,
+        if implemented. Default is False for each instrumentor in _SQLCOMMENTERS.
+
+        Reads env SW_APM_ENABLED_SQLCOMMENT as a comma-separated string of KVs
+        paired by equals signs, e.g. 'django=true,sqlalchemy=false'."""
+        env_commenter_items = environ.get("SW_APM_ENABLED_SQLCOMMENT", "")
+        env_commenter_map = {instr: False for instr in _SQLCOMMENTERS}
+        if env_commenter_items:
+            for item in env_commenter_items.split(","):
                 try:
-                    opt_k, opt_v = opt_item.split("=", maxsplit=1)
+                    key, value = item.split("=", maxsplit=1)
                 except ValueError as exc:
                     logger.warning(
-                        "Invalid key-value pair for sqlcommenter option %s: %s",
-                        opt_item,
+                        "Invalid sqlcommenter key value at pair %s: %s",
+                        item,
                         exc,
                     )
-                opt_v_bool = SolarWindsApmConfig.convert_to_bool(opt_v.strip())
-                if opt_v_bool is not None:
-                    commenter_opts[opt_k.strip()] = opt_v_bool
+                    continue
+
+                if key in _SQLCOMMENTERS:
+                    env_v_bool = SolarWindsApmConfig.convert_to_bool(
+                        value.strip()
+                    )
+                    if env_v_bool is not None:
+                        env_commenter_map[key.strip()] = env_v_bool
+
+        return env_commenter_map
+
+    def detect_commenter_options(self):
+        """Returns commenter options dict parsed from environment, if any
+
+        OTEL_SQLCOMMENTER_OPTIONS is deprecated (along with OTEL_SQLCOMMENTER_ENABLED).
+        Users should update to use SW_APM_OPTIONS_SQLCOMMENT instead"""
+        commenter_opts = {}
+        commenter_opts_env_depr = environ.get("OTEL_SQLCOMMENTER_OPTIONS")
+        commenter_opts_env = environ.get("SW_APM_OPTIONS_SQLCOMMENT")
+
+        opt_items = []
+        if commenter_opts_env_depr:
+            logger.warning(
+                "Deprecated: OTEL_SQLCOMMENTER_OPTIONS support will be removed in a future release. Please use SW_APM_OPTIONS_SQLCOMMENT instead."
+            )
+            opt_items = commenter_opts_env_depr.split(",")
+        elif commenter_opts_env:
+            opt_items = commenter_opts_env.split(",")
+        else:
+            return commenter_opts
+
+        for opt_item in opt_items:
+            opt_k = ""
+            opt_v = ""
+            try:
+                opt_k, opt_v = opt_item.split("=", maxsplit=1)
+            except ValueError as exc:
+                logger.warning(
+                    "Invalid key-value pair for sqlcommenter option %s: %s",
+                    opt_item,
+                    exc,
+                )
+            opt_v_bool = SolarWindsApmConfig.convert_to_bool(opt_v.strip())
+            if opt_v_bool is not None:
+                commenter_opts[opt_k.strip()] = opt_v_bool
 
         return commenter_opts
 
