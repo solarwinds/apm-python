@@ -6,11 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.1.0...HEAD)
 
-## [3.1.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.1.0) - 2024-10-01
+## [3.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.1.0) - 2024-10-01
 
 ### Added
 - Added linting for all supported Python versions ([#428](https://github.com/solarwinds/apm-python/pull/428))
-- Added support for `SW_APM_ENABLED_SQLCOMMENT`, `SW_APM_OPTIONS_SQLCOMMENT`([#434](https://github.com/solarwinds/apm-python/pull/434))
+- Added support for `SW_APM_ENABLED_SQLCOMMENT`, `SW_APM_OPTIONS_SQLCOMMENT`([#434](https://github.com/solarwinds/apm-python/pull/434), [#437](https://github.com/solarwinds/apm-python/pull/437))
 
 ### Changed
 - Fixed AwsLambdaInstrumentor loading in Lambda environment ([#430](https://github.com/solarwinds/apm-python/pull/430))
