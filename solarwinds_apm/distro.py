@@ -249,12 +249,13 @@ class SolarWindsDistro(BaseDistro):
                     )
                     continue
 
-                if key in _SQLCOMMENTERS:
+                instrumentor_name = key.strip().lower()
+                if instrumentor_name in _SQLCOMMENTERS:
                     env_v_bool = SolarWindsApmConfig.convert_to_bool(
                         value.strip()
                     )
                     if env_v_bool is not None:
-                        env_commenter_map[key.strip()] = env_v_bool
+                        env_commenter_map[instrumentor_name] = env_v_bool
 
         return env_commenter_map
 

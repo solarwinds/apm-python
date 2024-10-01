@@ -787,7 +787,7 @@ class TestDistro:
         }
 
     def test_get_enable_commenter_env_map_valid_mixed_case(self, mocker):
-        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django=tRuE,flask=TrUe"})
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "dJAnGO=tRuE,FlaSK=TrUe"})
         assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
             "django": True,
             "flask": True,
@@ -797,7 +797,7 @@ class TestDistro:
         }
 
     def test_get_enable_commenter_env_map_valid_whitespace_stripped(self, mocker):
-        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django=  true  ,flask=  true  "})
+        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django  =  true  ,  flask=  true  "})
         assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
             "django": True,
             "flask": True,
