@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.0.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.1.0...HEAD)
+
+## [3.1.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.1.0) - 2024-10-01
+
+### Added
+- Added linting for all supported Python versions ([#428](https://github.com/solarwinds/apm-python/pull/428))
+- Added support for `SW_APM_ENABLED_SQLCOMMENT`, `SW_APM_OPTIONS_SQLCOMMENT`([#434](https://github.com/solarwinds/apm-python/pull/434))
+
+### Changed
+- Fixed AwsLambdaInstrumentor loading in Lambda environment ([#430](https://github.com/solarwinds/apm-python/pull/430))
+- Fixed code style ([#433](https://github.com/solarwinds/apm-python/pull/433))
+- Deprecated `OTEL_SQLCOMMENTER_ENABLED`, `OTEL_SQLCOMMENTER_OPTIONS` ([#434](https://github.com/solarwinds/apm-python/pull/434))
 
 ## [3.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.0.0) - 2024-09-04
 
