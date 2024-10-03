@@ -437,11 +437,19 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "Creating PeriodicExportingMetricReader using %s",
                 exporter_name,
             )
-            # Inf interval to not invoke periodic collection
-            reader = PeriodicExportingMetricReader(
-                exporter,
-                export_interval_millis=math.inf,
-            )
+
+            reader = None
+            if apm_config.is_lambda:
+                # Inf interval to not invoke periodic collection
+                reader = PeriodicExportingMetricReader(
+                    exporter,
+                    export_interval_millis=math.inf,
+                )
+            else:
+                # Use default interval 60s else OTEL_METRIC_EXPORT_INTERVAL
+                reader = PeriodicExportingMetricReader(
+                    exporter,
+                )
             metric_readers.append(reader)
 
         # Use configured Resource attributes then merge with
