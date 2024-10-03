@@ -59,6 +59,9 @@ class TestSolarWindsApmConfig:
         old_expt_logs = os.environ.get("SW_APM_EXPORT_LOGS_ENABLED", None)
         if old_expt_logs:
             del os.environ["SW_APM_EXPORT_LOGS_ENABLED"]
+        old_expt_metrics = os.environ.get("SW_APM_EXPORT_METRICS_ENABLED", None)
+        if old_expt_metrics:
+            del os.environ["SW_APM_EXPORT_METRICS_ENABLED"]
 
         # Wait for test
         yield
@@ -80,6 +83,8 @@ class TestSolarWindsApmConfig:
             os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
         if old_expt_logs:
             os.environ["SW_APM_EXPORT_LOGS_ENABLED"] = old_expt_logs
+        if old_expt_metrics:
+            os.environ["SW_APM_EXPORT_METRICS_ENABLED"] = old_expt_metrics
 
     def _mock_service_key(self, mocker, service_key):
         mocker.patch.dict(os.environ, {
@@ -546,6 +551,55 @@ class TestSolarWindsApmConfig:
         })
         assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
 
+    def test_calculate_metrics_enabled_no_collector_enabled(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": "",
+            "SW_APM_EXPORT_METRICS_ENABLED": "true",
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == True
+
+    def test_calculate_metrics_enabled_no_collector_disabled(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": "",
+            "SW_APM_EXPORT_METRICS_ENABLED": "false",
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
+
+    def test_calculate_metrics_enabled_not_ao_enabled(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": "some-other-collector",
+            "SW_APM_EXPORT_METRICS_ENABLED": "true",
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == True
+
+    def test_calculate_metrics_enabled_not_ao_disabled(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": "some-other-collector",
+            "SW_APM_EXPORT_METRICS_ENABLED": "false",
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
+
+    def test_calculate_metrics_enabled_ao_prod(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR,
+            "SW_APM_EXPORT_METRICS_ENABLED": "true",
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
+
+    def test_calculate_metrics_enabled_ao_staging(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR,
+            "SW_APM_EXPORT_METRICS_ENABLED": "true",
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
+
+    def test_calculate_metrics_enabled_ao_prod_with_port(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR),
+            "SW_APM_EXPORT_METRICS_ENABLED": "true",
+        })
+        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
+
     def test_mask_service_key_no_key_empty_default(self, mocker):
         mock_iter_entry_points = mocker.patch(
             "solarwinds_apm.apm_config.iter_entry_points"
@@ -739,6 +793,75 @@ class TestSolarWindsApmConfig:
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("export_logs_enabled", "tRUe")
         assert test_config.get("export_logs_enabled") == True
+        assert "Ignore config option" not in caplog.text
+
+    def test__update_service_key_name_not_agent_enabled(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._update_service_key_name(
+            False,
+            "foo",
+            "bar"
+        )
+        assert result == "foo"
+
+    def test_set_config_value_default_export_metrics_enabled(
+        self,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config.get("export_metrics_enabled") == False
+
+    def test_set_config_value_ignore_export_metrics_enabled(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_metrics_enabled", "not-valid")
+        assert test_config.get("export_metrics_enabled") == False
+        assert "Ignore config option" in caplog.text
+    def test_set_config_value_set_export_metrics_enabled_false(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_metrics_enabled", "false")
+        assert test_config.get("export_metrics_enabled") == False
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_set_export_metrics_enabled_false_mixed_case(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_metrics_enabled", "fALsE")
+        assert test_config.get("export_metrics_enabled") == False
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_set_export_metrics_enabled_true(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_metrics_enabled", "true")
+        assert test_config.get("export_metrics_enabled") == True
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_set_export_metrics_enabled_true_mixed_case(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("export_metrics_enabled", "tRUe")
+        assert test_config.get("export_metrics_enabled") == True
         assert "Ignore config option" not in caplog.text
 
     def test__update_service_key_name_not_agent_enabled(self):
