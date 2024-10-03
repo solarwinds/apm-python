@@ -179,17 +179,23 @@ def get_apmconfig_mocks(
         }
     )
 
+    def get_side_effect(param):
+        if param == "export_metrics_enabled":
+            return export_metrics_enabled
+        elif param == "export_logs_enabled":
+            return export_logs_enabled
+        else:
+            return "foo"
+
     mock_apmconfig = mocker.Mock()
     mock_apmconfig.configure_mock(
         **{
             "agent_enabled": enabled,
-            "get": mocker.Mock(),
+            "get": mocker.Mock(side_effect=get_side_effect),
             "service_name": "foo-service",
             "is_lambda": is_lambda,
             "extension": mock_ext,
             "oboe_api": mocker.Mock(),
-            "export_logs_enabled": export_logs_enabled,
-            "export_metrics_enabled": export_metrics_enabled,
         }
     )
     return mock_apmconfig

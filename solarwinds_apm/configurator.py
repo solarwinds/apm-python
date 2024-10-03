@@ -395,7 +395,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             return
 
-        if apm_config.get("export_metrics_enabled") is False:
+        if not apm_config.get("export_metrics_enabled"):
             logger.debug(
                 "APM OTLP metrics export disabled. Skipping init of metrics exporters"
             )
