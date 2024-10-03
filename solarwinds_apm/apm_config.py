@@ -112,6 +112,7 @@ class SolarWindsApmConfig:
             "transaction_filters": [],
             "transaction_name": None,
             "export_logs_enabled": False,
+            "export_metrics_enabled": False,
         }
         self.is_lambda = self.calculate_is_lambda()
         self.lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
@@ -169,6 +170,9 @@ class SolarWindsApmConfig:
         self.metric_format = self._calculate_metric_format()
         self.certificates = self._calculate_certificates()
         self.__config["export_logs_enabled"] = self._calculate_logs_enabled()
+        self.__config["export_metrics_enabled"] = (
+            self._calculate_metrics_enabled()
+        )
 
         logger.debug("Set ApmConfig as: %s", self)
 
@@ -629,6 +633,21 @@ class SolarWindsApmConfig:
                 return False
         return self.get("export_logs_enabled")
 
+    def _calculate_metrics_enabled(self) -> bool:
+        """Return if export of metrics telemetry enabled, based on collector.
+        Always False if AO collector, else use current config."""
+        host = self.get("collector")
+        if host:
+            if (
+                INTL_SWO_AO_COLLECTOR in host
+                or INTL_SWO_AO_STG_COLLECTOR in host
+            ):
+                logger.warning(
+                    "AO collector detected. Defaulting to disabled OTLP metrics export."
+                )
+                return False
+        return self.get("export_metrics_enabled")
+
     def mask_service_key(self) -> str:
         """Return masked service key except first 4 and last 4 chars"""
         service_key = self.__config.get("service_key")
@@ -918,7 +937,7 @@ class SolarWindsApmConfig:
                 self.__config[key] = val
             elif keys == ["transaction_name"]:
                 self.__config[key] = val
-            elif keys == ["export_logs_enabled"]:
+            elif keys in [["export_logs_enabled"], ["export_metrics_enabled"]]:
                 val = self.convert_to_bool(val)
                 if val not in (True, False):
                     raise ValueError

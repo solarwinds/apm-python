@@ -36,11 +36,10 @@ class TestConfiguratorMetricsExporter:
         trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
         mock_meterprovider.assert_not_called()
 
-
-    def test_configure_metrics_exporter_flag_not_set(
+    def test_configure_metrics_exporter_sw_enabled_false(
         self,
         mocker,
-        mock_apmconfig_enabled,
+        mock_apmconfig_metrics_enabled_false,
         mock_pemreader,
         mock_meterprovider,
     ):
@@ -50,7 +49,7 @@ class TestConfiguratorMetricsExporter:
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_metrics_exporter(
-            mock_apmconfig_enabled,
+            mock_apmconfig_metrics_enabled_false,
         )
         mock_pemreader.assert_not_called()
         trace_mocks.get_tracer_provider.assert_not_called()

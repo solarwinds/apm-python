@@ -27,13 +27,20 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
+    OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_METRICS_HEADERS,
+    OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+    OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
 )
 from opentelemetry.sdk.version import __version__ as sdk_version
 from pkg_resources import EntryPoint
 
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import (
+    INTL_SWO_DEFAULT_OTLP_COLLECTOR,
     INTL_SWO_DEFAULT_OTLP_EXPORTER,
     INTL_SWO_DEFAULT_OTLP_EXPORTER_GRPC,
     INTL_SWO_DEFAULT_PROPAGATORS,
@@ -91,53 +98,96 @@ class SolarWindsDistro(BaseDistro):
             return None
         return key_parts[0]
 
-    def _configure(self, **kwargs):
-        """Configure default OTel exporter and propagators"""
-        self._log_runtime()
-
-        # Set defaults for OTLP logs export by HTTP to SWO
-        environ.setdefault(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL, "http/protobuf")
+    def _configure_logs_export_env_defaults(self, header_token, otlp_protocol):
+        """Configure env defaults for OTLP logs signal export by HTTP to SWO"""
+        environ.setdefault(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL, otlp_protocol)
         environ.setdefault(
-            OTEL_LOGS_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL["http/protobuf"]
+            OTEL_LOGS_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol]
         )
         environ.setdefault(
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
-            "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs",
+            f"{INTL_SWO_DEFAULT_OTLP_COLLECTOR}/v1/logs",
         )
-        if not SolarWindsApmConfig.calculate_is_lambda():
-            header_token = self._get_token_from_service_key()
-            if not header_token:
-                logger.debug("Setting OTLP logging defaults without SWO token")
+        if header_token:
             environ.setdefault(
                 OTEL_EXPORTER_OTLP_LOGS_HEADERS,
                 f"authorization=Bearer%20{header_token}",
             )
-        else:
-            logger.debug("Skipping logs_headers defaults in lambda.")
 
-        otlp_protocol = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
-        if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
-            # If users set OTEL_EXPORTER_OTLP_PROTOCOL
-            # as one of Otel SDK's `http/protobuf` or `grpc`,
-            # then the matching exporters are mapped by default
+    def _configure_metrics_export_env_defaults(
+        self, header_token, otlp_protocol
+    ):
+        """Configure env defaults for OTLP metrics signal export by HTTP to SWO"""
+        environ.setdefault(OTEL_EXPORTER_OTLP_METRICS_PROTOCOL, otlp_protocol)
+        environ.setdefault(
+            OTEL_METRICS_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol]
+        )
+        environ.setdefault(
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+            f"{INTL_SWO_DEFAULT_OTLP_COLLECTOR}/v1/metrics",
+        )
+        if header_token:
             environ.setdefault(
-                OTEL_METRICS_EXPORTER,
-                _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol],
+                OTEL_EXPORTER_OTLP_METRICS_HEADERS,
+                f"authorization=Bearer%20{header_token}",
+            )
+
+    def _configure_traces_export_env_defaults(
+        self, header_token, otlp_protocol
+    ):
+        """Configure env defaults for OTLP traces signal export by APM protocol
+        to SWO, else follow provided OTLP protocol"""
+        if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
+            environ.setdefault(
+                OTEL_EXPORTER_OTLP_TRACES_PROTOCOL, otlp_protocol
             )
             environ.setdefault(
                 OTEL_TRACES_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol]
             )
+            environ.setdefault(
+                OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+                f"{INTL_SWO_DEFAULT_OTLP_COLLECTOR}/v1/traces",
+            )
+            if header_token:
+                environ.setdefault(
+                    OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+                    f"authorization=Bearer%20{header_token}",
+                )
         else:
-            # Else users need to specify OTEL_METRICS_EXPORTER.
-            # Otherwise, no metrics will generated and no metrics exporter
-            # will be initialized.
             environ.setdefault(
                 OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER
             )
 
+    def _configure(self, **kwargs):
+        """Configure default OTel exporters and propagators"""
+        self._log_runtime()
+
+        header_token = None
+        if not SolarWindsApmConfig.calculate_is_lambda():
+            header_token = self._get_token_from_service_key()
+            if not header_token:
+                logger.debug("Setting OTLP export defaults without SWO token")
+        else:
+            logger.debug("Skipping OTLP export headers setdefaults in lambda.")
+
+        # If users set OTEL_EXPORTER_OTLP_PROTOCOL
+        # as one of Otel SDK's `http/protobuf` or `grpc`,
+        # then the matching exporters are mapped
+        otlp_protocol = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
+        # For traces, the default is SWO APM - see helper
+        self._configure_traces_export_env_defaults(header_token, otlp_protocol)
+        # For metrics and logs, the default is `http/protobuf`
+        if otlp_protocol not in _EXPORTER_BY_OTLP_PROTOCOL:
+            otlp_protocol = "http/protobuf"
+        self._configure_logs_export_env_defaults(header_token, otlp_protocol)
+        self._configure_metrics_export_env_defaults(
+            header_token, otlp_protocol
+        )
+
         environ.setdefault(
             OTEL_PROPAGATORS, ",".join(INTL_SWO_DEFAULT_PROPAGATORS)
         )
+        # Default for LoggingInstrumentor
         environ.setdefault(
             OTEL_PYTHON_LOG_FORMAT,
             "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s trace_flags=%(otelTraceSampled)02d resource.service.name=%(otelServiceName)s] - %(message)s",

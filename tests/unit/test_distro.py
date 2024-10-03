@@ -216,7 +216,8 @@ class TestDistro:
         distro.SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
-        assert not os.environ.get(OTEL_METRICS_EXPORTER)
+        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_http"
+        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp_proto_http"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_env_exporter(self, mocker):
@@ -244,7 +245,8 @@ class TestDistro:
         distro.SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_TRACES_EXPORTER] == "solarwinds_exporter"
-        assert os.environ.get(OTEL_METRICS_EXPORTER) is None
+        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_http"
+        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp_proto_http"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_no_env_http(self, mocker):
