@@ -35,9 +35,12 @@ export SW_APM_EXPORT_METRICS_ENABLED=true
 if [ -z "${OTEL_EXPORTER_OTLP_PROTOCOL}" ]; then
     export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 fi
-# Set default for LOGS specifically because of regular default
+# Set default endpoints for LOGS and METRICS else would use regular SWO defaults
 if [ -z "${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT}" ]; then
     export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://0.0.0.0:4318/v1/logs
+fi
+if [ -z "${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT}" ]; then
+    export OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://0.0.0.0:4318/v1/metrics
 fi
 
 # Lambda function is default service name
