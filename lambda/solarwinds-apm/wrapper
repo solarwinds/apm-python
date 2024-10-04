@@ -27,6 +27,9 @@ export LAMBDA_LAYER_PKGS_DIR="/opt/python";
 export PYTHONPATH="$LAMBDA_LAYER_PKGS_DIR:$PYTHONPATH";
 export PYTHONPATH="$LAMBDA_RUNTIME_DIR:$PYTHONPATH";
 
+# Need to opt into OTLP traces exporter, always for lambda
+export OTEL_TRACES_EXPORTER=otlp_proto_http
+
 # Need to opt into OTLP metrics export, always for lambda
 export SW_APM_EXPORT_METRICS_ENABLED=true
 
@@ -35,12 +38,15 @@ export SW_APM_EXPORT_METRICS_ENABLED=true
 if [ -z "${OTEL_EXPORTER_OTLP_PROTOCOL}" ]; then
     export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 fi
-# Set default endpoints for LOGS and METRICS else would use regular SWO defaults
-if [ -z "${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT}" ]; then
-    export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://0.0.0.0:4318/v1/logs
+# Set default endpoints for traces, metrics, and logs else would use regular SWO defaults
+if [ -z "${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT}" ]; then
+    export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://0.0.0.0:4318/v1/traces
 fi
 if [ -z "${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT}" ]; then
     export OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://0.0.0.0:4318/v1/metrics
+fi
+if [ -z "${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT}" ]; then
+    export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://0.0.0.0:4318/v1/logs
 fi
 
 # Lambda function is default service name
