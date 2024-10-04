@@ -10,6 +10,7 @@ import logging
 import platform
 import sys
 from os import environ
+from typing import Any
 
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
@@ -98,7 +99,11 @@ class SolarWindsDistro(BaseDistro):
             return None
         return key_parts[0]
 
-    def _configure_logs_export_env_defaults(self, header_token, otlp_protocol):
+    def _configure_logs_export_env_defaults(
+        self,
+        header_token: str,
+        otlp_protocol: str,
+    ) -> None:
         """Configure env defaults for OTLP logs signal export by HTTP or gRPC to SWO"""
         if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
             environ.setdefault(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL, otlp_protocol)
@@ -120,8 +125,10 @@ class SolarWindsDistro(BaseDistro):
             )
 
     def _configure_metrics_export_env_defaults(
-        self, header_token, otlp_protocol
-    ):
+        self,
+        header_token: str,
+        otlp_protocol: str,
+    ) -> None:
         """Configure env defaults for OTLP metrics signal export by HTTP or gRPC to SWO"""
         if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
             environ.setdefault(
@@ -146,8 +153,10 @@ class SolarWindsDistro(BaseDistro):
             )
 
     def _configure_traces_export_env_defaults(
-        self, header_token, otlp_protocol
-    ):
+        self,
+        header_token: str,
+        otlp_protocol: Any = None,
+    ) -> None:
         """Configure env defaults for OTLP traces signal export by APM protocol
         to SWO, else follow provided OTLP protocol (HTTP or gRPC)"""
         if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
