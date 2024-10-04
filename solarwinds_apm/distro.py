@@ -99,7 +99,7 @@ class SolarWindsDistro(BaseDistro):
         return key_parts[0]
 
     def _configure_logs_export_env_defaults(self, header_token, otlp_protocol):
-        """Configure env defaults for OTLP logs signal export by HTTP to SWO"""
+        """Configure env defaults for OTLP logs signal export by HTTP or gRPC to SWO"""
         if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
             environ.setdefault(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL, otlp_protocol)
             environ.setdefault(
@@ -122,7 +122,7 @@ class SolarWindsDistro(BaseDistro):
     def _configure_metrics_export_env_defaults(
         self, header_token, otlp_protocol
     ):
-        """Configure env defaults for OTLP metrics signal export by HTTP to SWO"""
+        """Configure env defaults for OTLP metrics signal export by HTTP or gRPC to SWO"""
         if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
             environ.setdefault(
                 OTEL_EXPORTER_OTLP_METRICS_PROTOCOL, otlp_protocol
@@ -149,7 +149,7 @@ class SolarWindsDistro(BaseDistro):
         self, header_token, otlp_protocol
     ):
         """Configure env defaults for OTLP traces signal export by APM protocol
-        to SWO, else follow provided OTLP protocol"""
+        to SWO, else follow provided OTLP protocol (HTTP or gRPC)"""
         if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
             environ.setdefault(
                 OTEL_EXPORTER_OTLP_TRACES_PROTOCOL, otlp_protocol
