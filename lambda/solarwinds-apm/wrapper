@@ -27,7 +27,7 @@ export LAMBDA_LAYER_PKGS_DIR="/opt/python";
 export PYTHONPATH="$LAMBDA_LAYER_PKGS_DIR:$PYTHONPATH";
 export PYTHONPATH="$LAMBDA_RUNTIME_DIR:$PYTHONPATH";
 
-# Need to opt into OTLP metrics export
+# Need to opt into OTLP metrics export, always for lambda
 export SW_APM_EXPORT_METRICS_ENABLED=true
 
 # Default OTEL_EXPORTER_OTLP_PROTOCOL for APM Python in lambda
