@@ -307,6 +307,16 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT) == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/metrics"
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) == "authorization=Bearer%20foo-token"
 
+    def test__configure_traces_export_env_defaults_none_protocol(self, mocker):
+        distro.SolarWindsDistro()._configure_traces_export_env_defaults(
+            "foo-token",
+            None,
+        )
+        assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_PROTOCOL) is None
+        assert os.environ.get(OTEL_TRACES_EXPORTER) == "solarwinds_exporter"
+        assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) is None
+        assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
+
     def test__configure_traces_export_env_defaults_invalid_protocol(self, mocker):
         distro.SolarWindsDistro()._configure_traces_export_env_defaults(
             "foo-token",
