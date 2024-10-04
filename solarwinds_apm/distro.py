@@ -100,36 +100,49 @@ class SolarWindsDistro(BaseDistro):
 
     def _configure_logs_export_env_defaults(self, header_token, otlp_protocol):
         """Configure env defaults for OTLP logs signal export by HTTP to SWO"""
-        environ.setdefault(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL, otlp_protocol)
-        environ.setdefault(
-            OTEL_LOGS_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol]
-        )
-        environ.setdefault(
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
-            f"{INTL_SWO_DEFAULT_OTLP_COLLECTOR}/v1/logs",
-        )
-        if header_token:
+        if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
+            environ.setdefault(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL, otlp_protocol)
             environ.setdefault(
-                OTEL_EXPORTER_OTLP_LOGS_HEADERS,
-                f"authorization=Bearer%20{header_token}",
+                OTEL_LOGS_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol]
+            )
+            environ.setdefault(
+                OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+                f"{INTL_SWO_DEFAULT_OTLP_COLLECTOR}/v1/logs",
+            )
+            if header_token:
+                environ.setdefault(
+                    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+                    f"authorization=Bearer%20{header_token}",
+                )
+        else:
+            logger.debug(
+                "Tried to setdefault for OTLP logs with invalid protocol. Skipping."
             )
 
     def _configure_metrics_export_env_defaults(
         self, header_token, otlp_protocol
     ):
         """Configure env defaults for OTLP metrics signal export by HTTP to SWO"""
-        environ.setdefault(OTEL_EXPORTER_OTLP_METRICS_PROTOCOL, otlp_protocol)
-        environ.setdefault(
-            OTEL_METRICS_EXPORTER, _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol]
-        )
-        environ.setdefault(
-            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
-            f"{INTL_SWO_DEFAULT_OTLP_COLLECTOR}/v1/metrics",
-        )
-        if header_token:
+        if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
             environ.setdefault(
-                OTEL_EXPORTER_OTLP_METRICS_HEADERS,
-                f"authorization=Bearer%20{header_token}",
+                OTEL_EXPORTER_OTLP_METRICS_PROTOCOL, otlp_protocol
+            )
+            environ.setdefault(
+                OTEL_METRICS_EXPORTER,
+                _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol],
+            )
+            environ.setdefault(
+                OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+                f"{INTL_SWO_DEFAULT_OTLP_COLLECTOR}/v1/metrics",
+            )
+            if header_token:
+                environ.setdefault(
+                    OTEL_EXPORTER_OTLP_METRICS_HEADERS,
+                    f"authorization=Bearer%20{header_token}",
+                )
+        else:
+            logger.debug(
+                "Tried to setdefault for OTLP metrics with invalid protocol. Skipping."
             )
 
     def _configure_traces_export_env_defaults(
@@ -154,6 +167,9 @@ class SolarWindsDistro(BaseDistro):
                     f"authorization=Bearer%20{header_token}",
                 )
         else:
+            logger.debug(
+                "Called to setdefault for OTLP traces with empty or invalid protocol. Defaulting to SolarWinds exporter."
+            )
             environ.setdefault(
                 OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER
             )
