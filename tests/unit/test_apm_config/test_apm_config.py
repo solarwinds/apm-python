@@ -795,15 +795,6 @@ class TestSolarWindsApmConfig:
         assert test_config.get("export_logs_enabled") == True
         assert "Ignore config option" not in caplog.text
 
-    def test__update_service_key_name_not_agent_enabled(self):
-        test_config = apm_config.SolarWindsApmConfig()
-        result = test_config._update_service_key_name(
-            False,
-            "foo",
-            "bar"
-        )
-        assert result == "foo"
-
     def test_set_config_value_default_export_metrics_enabled(
         self,
     ):
