@@ -27,11 +27,10 @@ export LAMBDA_LAYER_PKGS_DIR="/opt/python";
 export PYTHONPATH="$LAMBDA_LAYER_PKGS_DIR:$PYTHONPATH";
 export PYTHONPATH="$LAMBDA_RUNTIME_DIR:$PYTHONPATH";
 
-# Need to opt into OTLP traces exporter, always for lambda
-export OTEL_TRACES_EXPORTER=otlp_proto_http
-
-# Need to opt into OTLP metrics export, always for lambda
-export SW_APM_EXPORT_METRICS_ENABLED=true
+# Default opt into OTLP metrics export in lambda
+if [ -z "${SW_APM_EXPORT_METRICS_ENABLED}" ]; then
+    export SW_APM_EXPORT_METRICS_ENABLED=true
+fi
 
 # Default OTEL_EXPORTER_OTLP_PROTOCOL for APM Python in lambda
 # for all of logs/trace/metrics is HTTP through otelcollector
