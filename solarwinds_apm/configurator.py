@@ -313,13 +313,15 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure SolarWinds OTel span exporters, defaults or environment
-        configured, or none if agent disabled.
+        """Configure traces exporters if agent enabled.
+        Links to global TracerProvider.
 
         Initialization of SolarWinds exporter requires a liboboe reporter
-        Note: if reporter is no-op, the SW exporter will not export spans."""
+        If `reporter` is no-op, the SW exporter will not export spans."""
         if not apm_config.agent_enabled:
-            logger.error("Tracing disabled. Cannot set trace exporter.")
+            logger.error(
+                "APM Python library disabled. Cannot set traces exporters."
+            )
             return
 
         # SolarWindsDistro._configure does setdefault before this is called
@@ -384,8 +386,21 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure SolarWinds OTel metrics exporters if any configured.
-        Links them to new metric readers and global MeterProvider."""
+        """Configure OTel OTLP metrics exporters if enabled and agent enabled.
+        Settings precedence: OTEL_* > SW_APM_EXPORT_METRICS_ENABLED.
+        Links to new metric readers and global MeterProvider."""
+        if not apm_config.agent_enabled:
+            logger.error(
+                "APM Python library disabled. Cannot set metrics exporters."
+            )
+            return
+
+        if not apm_config.get("export_metrics_enabled"):
+            logger.debug(
+                "APM OTLP metrics export disabled. Skipping init of metrics exporters"
+            )
+            return
+
         # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
             OTEL_METRICS_EXPORTER,
@@ -422,11 +437,19 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "Creating PeriodicExportingMetricReader using %s",
                 exporter_name,
             )
-            # Inf interval to not invoke periodic collection
-            reader = PeriodicExportingMetricReader(
-                exporter,
-                export_interval_millis=math.inf,
-            )
+
+            reader = None
+            if apm_config.is_lambda:
+                # Inf interval to not invoke periodic collection
+                reader = PeriodicExportingMetricReader(
+                    exporter,
+                    export_interval_millis=math.inf,
+                )
+            else:
+                # Use default interval 60s else OTEL_METRIC_EXPORT_INTERVAL
+                reader = PeriodicExportingMetricReader(
+                    exporter,
+                )
             metric_readers.append(reader)
 
         # Use configured Resource attributes then merge with
@@ -450,9 +473,15 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure OTel OTLP logs exporter if enabled.
+        """Configure OTel OTLP logs exporters if enabled and agent enabled.
         Settings precedence: OTEL_* > SW_APM_EXPORT_LOGS_ENABLED.
         Links to new global LoggerProvider."""
+        if not apm_config.agent_enabled:
+            logger.error(
+                "APM Python library disabled. Cannot set logs exporters."
+            )
+            return
+
         otel_ev = os.environ.get(
             _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
         )
@@ -469,7 +498,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         # then sw_enabled determines logs export setup.
         if not otlp_log_enabled and sw_enabled is False:
             logger.debug(
-                "APM logs exports disabled. Skipping init of logs exporters"
+                "APM OTLP logs export disabled. Skipping init of logs exporters"
             )
             return
 

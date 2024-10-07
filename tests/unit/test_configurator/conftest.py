@@ -130,6 +130,7 @@ def get_apmconfig_mocks(
     is_lambda=False,
     md_is_valid=True,
     export_logs_enabled=True,
+    export_metrics_enabled=True,
 ):
     # mock the extension that is linked to ApmConfig
     mock_ext_config = mocker.Mock()
@@ -178,16 +179,23 @@ def get_apmconfig_mocks(
         }
     )
 
+    def get_side_effect(param):
+        if param == "export_metrics_enabled":
+            return export_metrics_enabled
+        elif param == "export_logs_enabled":
+            return export_logs_enabled
+        else:
+            return "foo"
+
     mock_apmconfig = mocker.Mock()
     mock_apmconfig.configure_mock(
         **{
             "agent_enabled": enabled,
-            "get": mocker.Mock(),
+            "get": mocker.Mock(side_effect=get_side_effect),
             "service_name": "foo-service",
             "is_lambda": is_lambda,
             "extension": mock_ext,
             "oboe_api": mocker.Mock(),
-            "export_logs_enabled": export_logs_enabled,
         }
     )
     return mock_apmconfig
@@ -248,6 +256,26 @@ def mock_apmconfig_logs_enabled_none(mocker):
         get_apmconfig_mocks(
             mocker,
             export_logs_enabled=None
+        )
+    )
+
+@pytest.fixture(name="mock_apmconfig_metrics_enabled_false")
+def mock_apmconfig_metrics_enabled_false(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsApmConfig",
+        get_apmconfig_mocks(
+            mocker,
+            export_metrics_enabled=False,
+        )
+    )
+
+@pytest.fixture(name="mock_apmconfig_metrics_enabled_none")
+def mock_apmconfig_metrics_enabled_none(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsApmConfig",
+        get_apmconfig_mocks(
+            mocker,
+            export_metrics_enabled=None,
         )
     )
 

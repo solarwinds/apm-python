@@ -40,6 +40,27 @@ class TestConfiguratorLogsExporter:
         if old_otel_ev:
             os.environ[_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED] = old_otel_ev
 
+    def test_configure_logs_exporter_disabled(
+        self,
+        mocker,
+        mock_apmconfig_disabled,
+        mock_blprocessor,
+        mock_loggerprovider,
+        mock_logginghandler,
+    ):
+        trace_mocks = get_trace_mocks(mocker)
+
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure_logs_exporter(
+            mock_apmconfig_disabled,
+        )
+
+        trace_mocks.get_tracer_provider.assert_not_called()
+        trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
+        mock_loggerprovider.assert_not_called()
+        mock_blprocessor.assert_not_called()
+        mock_logginghandler.assert_not_called()
+
     def test_configure_logs_exporter_otel_false_sw_any(
         self,
         mocker,
