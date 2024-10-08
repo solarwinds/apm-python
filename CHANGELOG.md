@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.2.0...HEAD)
 
-## [3.2.0.2](https://github.com/solarwinds/apm-python/releases/tag/rel-3.2.0) - 2024-10-07
+## [3.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.2.0) - 2024-10-08
 
 ### Added
 - Added support for `SW_APM_EXPORT_METRICS_ENABLED` ([#439](https://github.com/solarwinds/apm-python/pull/439))
