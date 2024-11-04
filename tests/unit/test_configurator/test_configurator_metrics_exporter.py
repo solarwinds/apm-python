@@ -327,7 +327,6 @@ class TestConfiguratorMetricsExporter:
             del os.environ["OTEL_METRICS_EXPORTER"]
 
         # Mock entry points
-        mock_exporter_class = mocker.MagicMock()
         mock_exporter_entry_point = mocker.Mock()
         mock_exporter_class_invalid = mocker.Mock()
         mock_exporter_class_invalid.configure_mock(
@@ -361,7 +360,7 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         get_resource_mocks(mocker)
         trace_mocks = get_trace_mocks(mocker)
-        mock_histogram = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.configurator.Histogram"
         )
         mock_agg_temp = mocker.patch(
