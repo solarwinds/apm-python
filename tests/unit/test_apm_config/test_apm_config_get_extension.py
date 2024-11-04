@@ -9,11 +9,6 @@ import sys
 
 from solarwinds_apm import apm_config
 import solarwinds_apm.apm_noop as NoopExtension
-from solarwinds_apm.apm_noop import (
-    Context as NoopContext,
-    OboeAPI as NoopOboeApi,
-    OboeAPIOptions as NoopOboeApiOptions,
-)
 from solarwinds_apm.extension import oboe as Extension
 from solarwinds_apm.extension.oboe import (
     Context,
@@ -21,9 +16,12 @@ from solarwinds_apm.extension.oboe import (
     OboeAPIOptions,
 )
 
-
 # pylint: disable=unused-import
 from .fixtures.env_vars import fixture_mock_env_vars
+
+NoopContext = NoopExtension.Context
+NoopOboeApi = NoopExtension.OboeAPI
+NoopOboeApiOptions = NoopExtension.OboeAPIOptions
 
 
 real_import = builtins.__import__
