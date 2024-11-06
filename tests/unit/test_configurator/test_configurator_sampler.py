@@ -83,7 +83,7 @@ class TestConfiguratorSampler:
         mock_tracerprovider,
     ):
         # Mock entry points
-        mock_load_entry_point = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.configurator.load_entry_point"
         )
 

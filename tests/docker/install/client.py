@@ -30,7 +30,7 @@ def request_server(attempts=10):
         ))
         logger.debug("Response headers from Flask server:")
         logger.debug(resp.headers)
-    except:
+    except Exception:
         logger.debug("Server not responding. Will try up to {} more times".format(attempts))
         attempts -= 1
         if attempts > 0:
@@ -38,6 +38,8 @@ def request_server(attempts=10):
             request_server(attempts)
         else:
             sys.exit("ERROR: No response from instrumented test server after several attempts.")
+    except (KeyboardInterrupt, SystemExit) as exc:
+        logger.debug("Exiting with: {e}".format(e=exc))
 
 
 if __name__ == "__main__":

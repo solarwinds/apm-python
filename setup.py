@@ -33,8 +33,22 @@ def is_alpine_distro():
             releases = [l[:-1] for l in releases]
         if 'NAME="Alpine Linux"' in releases:
             return True
-    except Exception:
-        pass
+    except (FileNotFoundError, IsADirectoryError) as ecp:
+        logger.info(
+            "[SETUP] Could not find /etc/os-release file. "
+            "Assuming distro not Alpine: {e}".format(e=ecp))
+    except PermissionError as ecp:
+        logger.info(
+            "[SETUP] Permission denied for /etc/os-release. "
+            "Assuming distro not Alpine: {e}".format(e=ecp))
+    except (IOError, ValueError) as ecp:
+        logger.info(
+            "[SETUP] Could not open or read /etc/os-release file. "
+            "Assuming distro not Alpine: {e}".format(e=ecp))
+    except Exception as ecp:
+        logger.info(
+            "[SETUP] Something went wrong at is_alpine_distro. "
+            "Assuming distro not Alpine:: {e}".format(e=ecp))
 
     return False
 

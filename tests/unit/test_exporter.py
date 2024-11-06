@@ -627,7 +627,6 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        pass
         # mock liboboe event
         mock_event, mock_add_info, _ \
              = configure_event_mocks(
