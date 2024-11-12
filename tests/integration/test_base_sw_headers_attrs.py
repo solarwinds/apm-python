@@ -5,10 +5,6 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import os
-from pkg_resources import (
-    iter_entry_points,
-    load_entry_point
-)
 import re
 
 import flask
@@ -26,6 +22,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 )
 from opentelemetry.test.globals_test import reset_trace_globals
 from opentelemetry.test.test_base import TestBase
+from opentelemetry.util._importlib_metadata import entry_points
 
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.configurator import SolarWindsConfigurator
@@ -76,8 +73,10 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         # Based on auto_instrumentation run() and sitecustomize.py
         # Load OTel env vars entry points
         argument_otel_environment_variable = {}
-        for entry_point in iter_entry_points(
-            "opentelemetry_environment_variables"
+        for entry_point in iter(
+            entry_points(
+                group="opentelemetry_environment_variables"
+            )
         ):
             environment_variable_module = entry_point.load()
             for attribute in dir(environment_variable_module):
@@ -102,11 +101,10 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         # This is done because set_tracer_provider cannot override the
         # current tracer provider. Has to be done here.
         reset_trace_globals()
-        sampler = load_entry_point(
-            "solarwinds_apm",
-            "opentelemetry_traces_sampler",
-            configurator._DEFAULT_SW_TRACES_SAMPLER
-        )(apm_config, reporter, OboeAPI())
+        sampler = next(iter(entry_points(
+            group="opentelemetry_traces_sampler",
+            name=configurator._DEFAULT_SW_TRACES_SAMPLER,
+        ))).load()(apm_config, reporter, OboeAPI())
         self.tracer_provider = TracerProvider(sampler=sampler)
         # Set InMemorySpanExporter for testing
         # We do NOT use SolarWindsSpanExporter

@@ -1301,16 +1301,10 @@ class Test_SolarWindsSpanExporter():
         mock_sys_modules = {
             "pyramid": mocker.Mock()
         }
-        # also mock get_distribution for pyramid for actual version check
-        mock_dist = mocker.Mock()
-        mock_dist.configure_mock(
-            **{
-                "version": "4.5.6"
-            }
-        )
+        # also mock util version for pyramid for actual version check
         mocker.patch(
-            "solarwinds_apm.exporter.get_distribution",
-            return_value=mock_dist
+            "solarwinds_apm.exporter.version",
+            return_value="4.5.6",
         )
         self.mock_and_assert_addinfo_for_instrumented_framework(
             mocker,
