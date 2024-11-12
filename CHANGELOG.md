@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.2.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.3.0...HEAD)
+
+## [3.3.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.3.0) - 2024-11-12
+
+### Changed
+- Fixed CodeQL warnings ([#445](https://github.com/solarwinds/apm-python/pull/445), [#446](https://github.com/solarwinds/apm-python/pull/446))
+- Upgraded OpenTelemetry API/SDK and instrumentation 1.28.1/0.49b1, remove `pkg_resources` usage ([#450](https://github.com/solarwinds/apm-python/pull/450))
 
 ## [3.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.2.0) - 2024-10-08
 
