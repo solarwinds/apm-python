@@ -38,21 +38,30 @@ class TestConfiguratorPropagators:
                 mock_propagator_entry_point,
             ]
         )
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
         )
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=mock_points
         )
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_propagator()
-        mock_iter_entry_points.assert_has_calls(
+        mock_entry_points.assert_has_calls(
             [
-                mocker.call("opentelemetry_propagator", "tracecontext"),
-                mocker.call("opentelemetry_propagator","baggage"),
-                mocker.call("opentelemetry_propagator", "solarwinds_propagator"),
+                mocker.call(
+                    group="opentelemetry_propagator",
+                    name="tracecontext",
+                ),
+                mocker.call(
+                    group="opentelemetry_propagator",
+                    name="baggage"
+                ),
+                mocker.call(
+                    group="opentelemetry_propagator",
+                    name="solarwinds_propagator",
+                ),
             ]
         )
         mock_composite_propagator.assert_called_once()
@@ -74,10 +83,10 @@ class TestConfiguratorPropagators:
             del os.environ["OTEL_PROPAGATORS"]
 
         # Mock entry points
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.iter_entry_points"
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.apm_config.entry_points"
         )
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             side_effect=StopIteration("mock error")
         )
         mocker.patch.dict(
@@ -91,9 +100,12 @@ class TestConfiguratorPropagators:
         test_configurator = configurator.SolarWindsConfigurator()
         with pytest.raises(Exception):
             test_configurator._configure_propagator()
-            mock_iter_entry_points.assert_has_calls(
+            mock_entry_points.assert_has_calls(
                 [
-                    mocker.call("opentelemetry_propagator", "invalid_propagator"),
+                    mocker.call(
+                        group="opentelemetry_propagator",
+                        name="invalid_propagator"
+                    ),
                 ]
             )
         mock_composite_propagator.assert_not_called()
@@ -127,10 +139,10 @@ class TestConfiguratorPropagators:
                 mock_propagator_entry_point,
             ]
         )
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
         )
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=mock_points
         )
 
@@ -144,9 +156,12 @@ class TestConfiguratorPropagators:
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_propagator()
-        mock_iter_entry_points.assert_has_calls(
+        mock_entry_points.assert_has_calls(
             [
-                mocker.call("opentelemetry_propagator", "valid_propagator"),
+                mocker.call(
+                    group="opentelemetry_propagator",
+                    name="valid_propagator"
+                ),
             ]
         )
         mock_composite_propagator.assert_called_once()
@@ -182,10 +197,10 @@ class TestConfiguratorPropagators:
                 Exception("mock error invalid propagator")
             ]
         )
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
         )
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=mock_points
         )
 
@@ -200,10 +215,16 @@ class TestConfiguratorPropagators:
         test_configurator = configurator.SolarWindsConfigurator()
         with pytest.raises(Exception):
             test_configurator._configure_propagator()
-        mock_iter_entry_points.assert_has_calls(
+        mock_entry_points.assert_has_calls(
             [
-                mocker.call("opentelemetry_propagator", "valid_propagator"),
-                mocker.call("opentelemetry_propagator", "invalid_propagator"),
+                mocker.call(
+                    group="opentelemetry_propagator", 
+                    name="valid_propagator",
+                ),
+                mocker.call(
+                    group="opentelemetry_propagator",
+                    name="invalid_propagator",
+                ),
             ]
         )
         mock_composite_propagator.assert_not_called()
