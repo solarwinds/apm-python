@@ -191,6 +191,8 @@ install-lambda-modules:
 	rm -rf ${target_dir}
 	@echo -e "Creating target directory ${target_dir} for AWS Lambda layer artifacts."
 	mkdir -p ${target_dir}/python
+	@echo -e "Install setuptools"
+	@set -e; for PYBIN in cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311 cp312-cp312; do /opt/python/$${PYBIN}/bin/pip install setuptools; done
 	@echo -e "Install upstream dependencies to include in layer"
 	@set -e; for PYBIN in cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311 cp312-cp312; do /opt/python/$${PYBIN}/bin/pip install -t ${target_dir}/python -r lambda/requirements.txt; done
 	@echo -e "Install other version-specific .so files for deps"
