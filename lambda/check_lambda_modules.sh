@@ -53,22 +53,23 @@ if [ ! -f "python/opentelemetry/instrumentation/aws_lambda/__init__.py" ]; then
     exit 1
 fi
 
-expected_otel_files="./python/opentelemetry/exporter/otlp/proto/common/version.py
-./python/opentelemetry/exporter/otlp/proto/grpc/version.py
-./python/opentelemetry/exporter/otlp/proto/http/version.py
-./python/opentelemetry/exporter/otlp/version.py
-./python/opentelemetry/instrumentation/botocore/version.py"
-found_otel_files=$(find ./python/opentelemetry/exporter ./python/opentelemetry/instrumentation/botocore -regextype sed -regex ".*/version.py" | sort -k1)
+expected_otel_files="./python/opentelemetry/instrumentation/botocore/version.py
+./python/opentelemetry/instrumentation/logging/version.py"
+found_otel_files=$(find ./python/opentelemetry/instrumentation/botocore ./python/opentelemetry/instrumentation/logging -regextype sed -regex ".*/version.py" | sort -k1)
 if [[ ! "$found_otel_files" =~ $expected_otel_files ]]; then
-    echo "FAILED: Missing key opentelemetry dependency version files"
+    echo "FAILED: Missing key OpenTelemetry instrumentor dependency files"
     exit 1
 fi
 
-# An additional check for those packages now following PEP 420
-expected_otel_files_pep420="./python/opentelemetry/sdk/version/__init__.py"
-found_otel_files_pep420=$(find ./python/opentelemetry/sdk -regextype sed -regex ".*/version/__init__.py" | sort -k1)
+# These packages also follow PEP 420 better
+expected_otel_files_pep420="./python/opentelemetry/exporter/otlp/proto/common/version/__init__.py
+./python/opentelemetry/exporter/otlp/proto/grpc/version/__init__.py
+./python/opentelemetry/exporter/otlp/proto/http/version/__init__.py
+./python/opentelemetry/exporter/otlp/version/__init__.py
+./python/opentelemetry/sdk/version/__init__.py"
+found_otel_files_pep420=$(find ./python/opentelemetry/exporter ./python/opentelemetry/sdk -regextype sed -regex ".*/version/__init__.py" | sort -k1)
 if [[ ! "$found_otel_files_pep420" =~ $expected_otel_files_pep420 ]]; then
-    echo "FAILED: Missing key opentelemetry dependency version files (PEP 420)"
+    echo "FAILED: Missing key OpenTelemetry SDK and/or exporter dependency files"
     exit 1
 fi
 
