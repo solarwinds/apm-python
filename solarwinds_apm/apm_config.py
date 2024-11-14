@@ -18,7 +18,7 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.sdk.resources import Resource
-from pkg_resources import iter_entry_points
+from opentelemetry.util._importlib_metadata import entry_points
 
 import solarwinds_apm.apm_noop as noop_extension
 from solarwinds_apm import apm_logging
@@ -391,9 +391,12 @@ class SolarWindsApmConfig:
                         != INTL_SWO_DEFAULT_TRACES_EXPORTER
                     ):
                         next(
-                            iter_entry_points(
-                                "opentelemetry_traces_exporter",
-                                environ_exporter_name,
+                            iter(
+                                # pylint: disable=too-many-function-args
+                                entry_points(
+                                    group="opentelemetry_traces_exporter",
+                                    name=environ_exporter_name,
+                                )
                             )
                         )
                 except StopIteration:

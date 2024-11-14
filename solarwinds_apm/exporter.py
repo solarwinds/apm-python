@@ -18,7 +18,7 @@ from typing import Any
 
 from opentelemetry.sdk.trace.export import SpanExporter
 from opentelemetry.trace import SpanKind
-from pkg_resources import get_distribution
+from opentelemetry.util._importlib_metadata import version
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX,
@@ -251,7 +251,7 @@ class SolarWindsSpanExporter(SpanExporter):
                         f"{framework}.connector"
                     ].__version__
                 elif framework == "pyramid":
-                    version_str = get_distribution(framework).version
+                    version_str = version(framework)
                 elif framework == "sqlite3":
                     version_str = sys.modules[framework].sqlite_version
                 elif framework == "tornado":

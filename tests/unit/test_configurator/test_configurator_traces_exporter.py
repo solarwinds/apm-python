@@ -84,10 +84,10 @@ class TestConfiguratorTracesExporter:
             del os.environ["OTEL_TRACES_EXPORTER"]
 
         # Mock entry points
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.iter_entry_points"
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.apm_config.entry_points"
         )
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             side_effect=StopIteration("mock error")
         )
         mocker.patch.dict(
@@ -142,10 +142,10 @@ class TestConfiguratorTracesExporter:
             }
         )
         mock_points = iter([mock_exporter_entry_point])
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
         )
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=mock_points
         )
         mocker.patch.dict(
@@ -198,10 +198,10 @@ class TestConfiguratorTracesExporter:
             }
         )
         mock_points = iter([mock_exporter_entry_point])
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
         )
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=mock_points
         )
         mocker.patch.dict(
@@ -271,10 +271,10 @@ class TestConfiguratorTracesExporter:
                 mock_exporter_entry_point,
             ]
         )
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
         )
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=mock_points
         )
 
@@ -298,9 +298,12 @@ class TestConfiguratorTracesExporter:
                 mock_apmconfig_enabled,
             )
         # Only called once before exception
-        mock_iter_entry_points.assert_has_calls(
+        mock_entry_points.assert_has_calls(
             [
-                mocker.call("opentelemetry_traces_exporter", "invalid_exporter"),
+                mocker.call(
+                    group="opentelemetry_traces_exporter",
+                    name="invalid_exporter",
+                ),
             ]
         )
         # Not called at all
@@ -351,10 +354,10 @@ class TestConfiguratorTracesExporter:
                 mock_exporter_entry_point_invalid,
             ]
         )
-        mock_iter_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.iter_entry_points"
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
         )
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=mock_points
         )
 
@@ -377,10 +380,16 @@ class TestConfiguratorTracesExporter:
                 mock_fwkv_manager,
                 mock_apmconfig_enabled,
             )
-        mock_iter_entry_points.assert_has_calls(
+        mock_entry_points.assert_has_calls(
             [
-                mocker.call("opentelemetry_traces_exporter", "valid_exporter"),
-                mocker.call("opentelemetry_traces_exporter", "invalid_exporter"),
+                mocker.call(
+                    group="opentelemetry_traces_exporter",
+                    name="valid_exporter",
+                ),
+                mocker.call(
+                    group="opentelemetry_traces_exporter",
+                    name="invalid_exporter",
+                ),
             ]
         )
         # Ends up called once for the valid exporter

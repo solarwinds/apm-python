@@ -49,10 +49,10 @@ class TestConfiguratorSampler:
         mock_tracerprovider,
     ):
         # Mock entry points
-        mock_load_entry_point = mocker.patch(
-            "solarwinds_apm.configurator.load_entry_point"
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
         )
-        mock_load_entry_point.configure_mock(
+        mock_entry_points.configure_mock(
             side_effect=Exception("mock error")
         )
 
@@ -83,8 +83,17 @@ class TestConfiguratorSampler:
         mock_tracerprovider,
     ):
         # Mock entry points
-        mocker.patch(
-            "solarwinds_apm.configurator.load_entry_point"
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "load": mocker.Mock()
+            }
+        )
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
+        )
+        mock_entry_points.configure_mock(
+            return_value=[mock_entry_point]
         )
 
         # Mock Otel
@@ -137,8 +146,17 @@ class TestConfiguratorSampler:
             del os.environ["OTEL_TRACES_SAMPLER"]
 
         # Mock entry points
-        mock_load_entry_point = mocker.patch(
-            "solarwinds_apm.configurator.load_entry_point"
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "load": mocker.Mock()
+            }
+        )
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
+        )
+        mock_entry_points.configure_mock(
+            return_value=[mock_entry_point]
         )
 
         # Mock Otel
@@ -172,10 +190,9 @@ class TestConfiguratorSampler:
         )
 
         # sampler loaded was solarwinds_sampler, not configured foo_sampler
-        mock_load_entry_point.assert_called_once_with(
-            "solarwinds_apm",
-            "opentelemetry_traces_sampler",
-            "solarwinds_sampler",
+        mock_entry_points.assert_called_once_with(
+            group="opentelemetry_traces_sampler",
+            name="solarwinds_sampler",
         )
 
         # tracer_provider set with new resource using configured service_name
