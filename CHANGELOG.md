@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.3.0...HEAD)
 
-## [3.3.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.3.0) - 2024-11-12
+## [3.3.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.3.0) - 2024-11-14
 
 ### Changed
 - Fixed CodeQL warnings ([#445](https://github.com/solarwinds/apm-python/pull/445), [#446](https://github.com/solarwinds/apm-python/pull/446))
