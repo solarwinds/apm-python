@@ -21,7 +21,7 @@ opentelemetry-instrumentation-pymemcache==0.49b1
 opentelemetry-instrumentation-pymongo==0.49b1
 opentelemetry-instrumentation-pymysql==0.49b1
 opentelemetry-instrumentation-pyramid==0.49b1
-opentelemetry-instrumentation-redis==0.49b1
+opentelemetry-instrumentation-redis==0.49b2
 opentelemetry-instrumentation-requests==0.49b1
 opentelemetry-instrumentation-sqlalchemy==0.49b1
 opentelemetry-instrumentation-sqlite3==0.49b1
