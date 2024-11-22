@@ -4,9 +4,7 @@ updates:
 - package-ecosystem: pip
   directory: "/"
   schedule:
-    interval: daily
-    time: "11:00"
-    timezone: "America/Vancouver"
+    interval: weekly
 
   groups:
     otel-core:
