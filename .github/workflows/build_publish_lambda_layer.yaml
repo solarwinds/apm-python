@@ -34,7 +34,7 @@ jobs:
         cache: 'pip' # caching pip dependencies
         cache-dependency-path: |
           '**/dev-requirements.txt'
-          'lambda/testing/requirements.txt'
+          'lambda/tests/requirements.txt'
     - name: Install tox
       run: pip install tox
     - name: Build extension
