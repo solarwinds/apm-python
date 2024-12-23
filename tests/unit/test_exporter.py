@@ -48,6 +48,13 @@ def get_mock_spans(mocker, valid_parent=False):
             "version": "foo.bar.baz",
         }
     )
+    mock_status = mocker.Mock()
+    mock_status.configure_mock(
+        **{
+            "status_code": "foo-code",
+            "description": "foo-bar-baz",
+        }
+    )
     mock_span = mocker.Mock()
     mock_span_context = mocker.Mock()
     mock_span_context.configure_mock(
@@ -69,6 +76,7 @@ def get_mock_spans(mocker, valid_parent=False):
             mock_exception_event,
         ],
         "instrumentation_scope": mock_instrumentation_scope,
+        "status": mock_status,
     }
     mock_parent = None
     if valid_parent:
@@ -365,6 +373,8 @@ class Test_SolarWindsSpanExporter():
             mocker.call(solarwinds_apm.exporter.SolarWindsSpanExporter._SW_SPAN_NAME, "foo"),
             mocker.call(solarwinds_apm.exporter.SolarWindsSpanExporter._SW_SPAN_KIND, FooNum.FOO.name),
             mocker.call("Language", "Python"),
+            mocker.call("otel.status_code", "foo-code"),
+            mocker.call("otel.status_description", "foo-bar-baz"),
             mocker.call("foo", "bar"),
             mocker.call("Layer", "FOO:foo"),
         ])
@@ -422,7 +432,16 @@ class Test_SolarWindsSpanExporter():
         mock_add_info_instr_fwork,
         mock_md,
         mock_spans_root
-    ):       
+    ):
+        mock_statuscode = mocker.patch(
+            "solarwinds_apm.exporter.StatusCode"
+        )
+        mock_statuscode.configure_mock(
+            **{
+                "ERROR": "foo-code",
+                "OK": "bar-code",
+            }
+        )
         mock_build_md = mocker.patch(
             "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
             return_value=mock_md
@@ -461,6 +480,15 @@ class Test_SolarWindsSpanExporter():
         mock_md,
         mock_spans_parent_valid
     ):
+        mock_statuscode = mocker.patch(
+            "solarwinds_apm.exporter.StatusCode"
+        )
+        mock_statuscode.configure_mock(
+            **{
+                "ERROR": "foo-code",
+                "OK": "bar-code",
+            }
+        )
         mock_build_md = mocker.patch(
             "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
             return_value=mock_md

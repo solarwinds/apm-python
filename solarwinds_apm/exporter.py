@@ -17,13 +17,15 @@ import sys
 from typing import Any
 
 from opentelemetry.sdk.trace.export import SpanExporter
-from opentelemetry.trace import SpanKind
+from opentelemetry.trace import SpanKind, StatusCode
 from opentelemetry.util._importlib_metadata import version
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX,
     INTL_SWO_OTEL_SCOPE_NAME,
     INTL_SWO_OTEL_SCOPE_VERSION,
+    INTL_SWO_OTEL_STATUS_CODE,
+    INTL_SWO_OTEL_STATUS_DESCRIPTION,
     INTL_SWO_SUPPORT_EMAIL,
 )
 from solarwinds_apm.w3c_transformer import W3CTransformer
@@ -102,6 +104,7 @@ class SolarWindsSpanExporter(SpanExporter):
             evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
             evt.addInfo("Language", "Python")
             self._add_info_instrumentation_scope(span, evt)
+            self._add_info_status(span, evt)
             self._add_info_instrumented_framework(span, evt)
             for attr_k, attr_v in span.attributes.items():
                 attr_v = self._normalize_attribute_value(attr_v)
@@ -151,6 +154,18 @@ class SolarWindsSpanExporter(SpanExporter):
         else:
             evt.addInfo(
                 INTL_SWO_OTEL_SCOPE_VERSION, span.instrumentation_scope.version
+            )
+
+    def _add_info_status(self, span, evt) -> None:
+        """Add info from span status, if exists"""
+        # "OK" or "ERROR". Not set if "UNSET"
+        if span.status.status_code in [StatusCode.ERROR, StatusCode.OK]:
+            evt.addInfo(INTL_SWO_OTEL_STATUS_CODE, span.status.status_code)
+
+        # Only set if has value
+        if span.status.description:
+            evt.addInfo(
+                INTL_SWO_OTEL_STATUS_DESCRIPTION, span.status.description
             )
 
     # pylint: disable=too-many-branches,too-many-statements
