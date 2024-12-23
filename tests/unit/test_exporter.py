@@ -726,6 +726,177 @@ class Test_SolarWindsSpanExporter():
             mocker.call("otel.scope.version", "bar"),
         ])
 
+    def mock_span_status(self, mocker):
+        # mock status code
+        mock_statuscode = mocker.patch(
+            "solarwinds_apm.exporter.StatusCode"
+        )
+        mock_statuscode.configure_mock(
+            **{
+                "ERROR": "error-code",
+                "OK": "ok-code",
+                "UNSET": "uh-oh-unset",
+            }
+        )
+
+    def test___add_info_status_none(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        self.mock_span_status(mocker)
+
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock otel span with status
+        mock_status = mocker.Mock()
+        mock_status.configure_mock(
+            **{
+                "status_code": None,
+                "description": None,
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "status": mock_status,
+            }
+        )
+
+        exporter._add_info_status(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_not_called()
+
+    def test___add_info_status_unset_code(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        self.mock_span_status(mocker)
+
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock otel span with status
+        mock_status = mocker.Mock()
+        mock_status.configure_mock(
+            **{
+                "status_code": "uh-oh-unset",
+                "description": None,
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "status": mock_status,
+            }
+        )
+
+        exporter._add_info_status(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_not_called()
+
+    def test___add_info_status_ok_code(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        self.mock_span_status(mocker)
+
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock otel span with status
+        mock_status = mocker.Mock()
+        mock_status.configure_mock(
+            **{
+                "status_code": "ok-code",
+                "description": "blah blah blah",
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "status": mock_status,
+            }
+        )
+
+        exporter._add_info_status(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_has_calls([
+            mocker.call("otel.status_code", "ok-code"),
+            mocker.call("otel.status_description", "blah blah blah"),
+        ])
+
+    def test___add_info_status_error_code(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        self.mock_span_status(mocker)
+
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock otel span with status
+        mock_status = mocker.Mock()
+        mock_status.configure_mock(
+            **{
+                "status_code": "error-code",
+                "description": "blah blah blah",
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "status": mock_status,
+            }
+        )
+
+        exporter._add_info_status(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_has_calls([
+            mocker.call("otel.status_code", "error-code"),
+            mocker.call("otel.status_description", "blah blah blah"),
+        ])
+
     def mock_and_assert_addinfo_for_instrumented_framework(
         self,
         mocker,
