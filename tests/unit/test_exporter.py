@@ -738,7 +738,7 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        mock_statuscode = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.exporter.StatusCode",
             return_value=MockStatus,
         )
@@ -820,7 +820,7 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        mock_statuscode = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.exporter.StatusCode",
             return_value=MockStatus,
         )
@@ -864,7 +864,7 @@ class Test_SolarWindsSpanExporter():
         mock_event,
         mock_create_event,
     ):
-        mock_statuscode = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.exporter.StatusCode",
             return_value=MockStatus,
         )
