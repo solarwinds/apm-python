@@ -158,9 +158,14 @@ class SolarWindsSpanExporter(SpanExporter):
 
     def _add_info_status(self, span, evt) -> None:
         """Add info from span status, if exists"""
-        # "OK" or "ERROR". Not set if "UNSET"
-        if span.status.status_code in [StatusCode.ERROR, StatusCode.OK]:
-            evt.addInfo(INTL_SWO_OTEL_STATUS_CODE, span.status.status_code)
+        # Only set if not "UNSET", e.g. "OK", "ERROR"
+        if (
+            span.status.status_code
+            and span.status.status_code != StatusCode.UNSET
+        ):
+            evt.addInfo(
+                INTL_SWO_OTEL_STATUS_CODE, span.status.status_code.name
+            )
 
         # Only set if has value
         if span.status.description:
