@@ -12,10 +12,15 @@ import solarwinds_apm.exporter
 import solarwinds_apm.extension.oboe
 
 
-# Little helper =====================================================
+# Little helpers =====================================================
 
 class FooNum(Enum):
     FOO = "foo"
+
+class MockStatus(Enum):
+    UNSET = 0
+    OK = 1
+    ERROR = 2
 
 
 # Mock Fixtures =====================================================
@@ -48,6 +53,13 @@ def get_mock_spans(mocker, valid_parent=False):
             "version": "foo.bar.baz",
         }
     )
+    mock_status = mocker.Mock()
+    mock_status.configure_mock(
+        **{
+            "status_code": FooNum.FOO,
+            "description": "foo-bar-baz",
+        }
+    )
     mock_span = mocker.Mock()
     mock_span_context = mocker.Mock()
     mock_span_context.configure_mock(
@@ -69,6 +81,7 @@ def get_mock_spans(mocker, valid_parent=False):
             mock_exception_event,
         ],
         "instrumentation_scope": mock_instrumentation_scope,
+        "status": mock_status,
     }
     mock_parent = None
     if valid_parent:
@@ -365,6 +378,8 @@ class Test_SolarWindsSpanExporter():
             mocker.call(solarwinds_apm.exporter.SolarWindsSpanExporter._SW_SPAN_NAME, "foo"),
             mocker.call(solarwinds_apm.exporter.SolarWindsSpanExporter._SW_SPAN_KIND, FooNum.FOO.name),
             mocker.call("Language", "Python"),
+            mocker.call("otel.status_code", "FOO"),
+            mocker.call("otel.status_description", "foo-bar-baz"),
             mocker.call("foo", "bar"),
             mocker.call("Layer", "FOO:foo"),
         ])
@@ -422,7 +437,16 @@ class Test_SolarWindsSpanExporter():
         mock_add_info_instr_fwork,
         mock_md,
         mock_spans_root
-    ):       
+    ):
+        mock_statuscode = mocker.patch(
+            "solarwinds_apm.exporter.StatusCode"
+        )
+        mock_statuscode.configure_mock(
+            **{
+                "ERROR": "foo-code",
+                "OK": "bar-code",
+            }
+        )
         mock_build_md = mocker.patch(
             "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
             return_value=mock_md
@@ -461,6 +485,15 @@ class Test_SolarWindsSpanExporter():
         mock_md,
         mock_spans_parent_valid
     ):
+        mock_statuscode = mocker.patch(
+            "solarwinds_apm.exporter.StatusCode"
+        )
+        mock_statuscode.configure_mock(
+            **{
+                "ERROR": "foo-code",
+                "OK": "bar-code",
+            }
+        )
         mock_build_md = mocker.patch(
             "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
             return_value=mock_md
@@ -696,6 +729,176 @@ class Test_SolarWindsSpanExporter():
         mock_add_info.assert_has_calls([
             mocker.call("otel.scope.name", "foo"),
             mocker.call("otel.scope.version", "bar"),
+        ])
+
+    def test___add_info_status_none(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        mocker.patch(
+            "solarwinds_apm.exporter.StatusCode",
+            return_value=MockStatus,
+        )
+
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock otel span with status
+        mock_status = mocker.Mock()
+        mock_status.configure_mock(
+            **{
+                "status_code": None,
+                "description": None,
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "status": mock_status,
+            }
+        )
+
+        exporter._add_info_status(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_not_called()
+
+    def test___add_info_status_unset_code(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        mock_statuscode = mocker.patch(
+            "solarwinds_apm.exporter.StatusCode",
+            return_value=MockStatus,
+        )
+
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock otel span with status
+        mock_status = mocker.Mock()
+        mock_status.configure_mock(
+            **{
+                "status_code": mock_statuscode.UNSET,
+                "description": None,
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "status": mock_status,
+            }
+        )
+
+        exporter._add_info_status(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_not_called()
+
+    def test___add_info_status_ok_code(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        mocker.patch(
+            "solarwinds_apm.exporter.StatusCode",
+            return_value=MockStatus,
+        )
+
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock otel span with status
+        mock_status = mocker.Mock()
+        mock_status.configure_mock(
+            **{
+                "status_code": MockStatus.OK,
+                "description": "blah blah blah",
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "status": mock_status,
+            }
+        )
+
+        exporter._add_info_status(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_has_calls([
+            mocker.call("otel.status_code", "OK"),
+            mocker.call("otel.status_description", "blah blah blah"),
+        ])
+
+    def test___add_info_status_error_code(
+        self,
+        mocker,
+        exporter,
+        mock_event,
+        mock_create_event,
+    ):
+        mocker.patch(
+            "solarwinds_apm.exporter.StatusCode",
+            return_value=MockStatus,
+        )
+
+        # mock liboboe event
+        mock_event, mock_add_info, _ \
+             = configure_event_mocks(
+                mocker,
+                mock_event,
+                mock_create_event,
+                True,
+             )
+        # mock otel span with status
+        mock_status = mocker.Mock()
+        mock_status.configure_mock(
+            **{
+                "status_code": MockStatus.ERROR,
+                "description": "blah blah blah",
+            }
+        )
+        test_span = mocker.Mock()
+        test_span.configure_mock(
+            **{
+                "status": mock_status,
+            }
+        )
+
+        exporter._add_info_status(
+            test_span,
+            mock_event,
+        )
+        mock_add_info.assert_has_calls([
+            mocker.call("otel.status_code", "ERROR"),
+            mocker.call("otel.status_description", "blah blah blah"),
         ])
 
     def mock_and_assert_addinfo_for_instrumented_framework(
