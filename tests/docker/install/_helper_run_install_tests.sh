@@ -58,7 +58,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
     
     elif grep Ubuntu /etc/os-release; then
         ubuntu_version=$(grep VERSION_ID /etc/os-release | sed 's/VERSION_ID="//' | sed 's/"//')
-        if [ "$ubuntu_version" = "18.04" ] || [ "$ubuntu_version" = "20.04" ] || [ "$ubuntu_version" = "22.04" ] || [ "$ubuntu_version" = "24.04" ]; then
+        if [ "$ubuntu_version" = "20.04" ] || [ "$ubuntu_version" = "22.04" ] || [ "$ubuntu_version" = "24.04" ]; then
             apt-get update -y
             TZ=America
             ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -81,7 +81,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             pip install --upgrade pip >/dev/null
 
         else
-            echo "ERROR: Testing on Ubuntu <18.04 not supported."
+            echo "ERROR: Testing on Ubuntu <20.04 not supported."
             exit 1
         fi
 

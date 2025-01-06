@@ -164,10 +164,7 @@ jobs:
     steps:
       - if: ${{ matrix.image == 'amazonlinux:2023' }}
         run: yum install -y tar gzip
-      - if: ${{ matrix.image == 'ubuntu:18.04' }}
-        uses: actions/checkout@v3
-      - if: ${{ matrix.image != 'ubuntu:18.04' }}
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - name: Setup and run install test
         working-directory: ./tests/docker/install
         run: ./_helper_run_install_tests.sh
