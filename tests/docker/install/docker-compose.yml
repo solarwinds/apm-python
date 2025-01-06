@@ -57,13 +57,6 @@ services:
     environment:
       << : *envvars-install-test
 
-  py3.8-install-ubuntu18.04:
-    hostname: "py3.8-ubuntu18.04"
-    image: "ubuntu:18.04"
-    << : [*command-install-test, *workdir, *volumes-codebase]
-    environment:
-      << : *envvars-install-test
-
   py3.8-install-ubuntu20.04:
     hostname: "py3.8-ubuntu20.04"
     image: "ubuntu:20.04"
