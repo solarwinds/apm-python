@@ -17,7 +17,7 @@ ADD requirements.txt .
 
 RUN mkdir workspace && pip install --target workspace -r requirements.txt
 
-FROM python:3.11-alpine AS build-musl
+FROM python:3.11-alpine3.16 AS build-musl
 
 WORKDIR /operator-build
 
