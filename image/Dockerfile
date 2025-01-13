@@ -11,6 +11,9 @@
 #   used and must be availabe in the image.
 FROM python:3.11 AS build
 
+RUN cat /etc/os-release
+RUN python --version
+
 WORKDIR /operator-build
 
 ADD requirements.txt .
@@ -18,6 +21,9 @@ ADD requirements.txt .
 RUN mkdir workspace && pip install --target workspace -r requirements.txt
 
 FROM python:3.11-alpine3.16 AS build-musl
+
+RUN cat /etc/os-release
+RUN python --version
 
 WORKDIR /operator-build
 
