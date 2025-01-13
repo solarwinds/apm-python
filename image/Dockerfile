@@ -23,7 +23,7 @@ WORKDIR /operator-build
 
 ADD requirements.txt .
 
-RUN apk add gcc python3-dev musl-dev linux-headers
+RUN apk add g++ gcc python3-dev musl-dev linux-headers
 RUN mkdir workspace && pip install --target workspace -r requirements.txt
 
 FROM busybox
