@@ -112,22 +112,9 @@ class CustomBuildExt(build_ext):
 
 
 if not (python_version_supported() and os_supported()):
-    is_linux = sys.platform.startswith('linux')
-    is_x86_64_or_aarch64 = platform.machine() in ["x86_64", "aarch64"]
     logger.warning(
         "[SETUP] This package supports only Python 3.8 and above on Linux x86_64 or aarch64. "
-        "Other platform or python versions may not work as expected. "
-        "python_version_supported: %s, "
-        "major: %s, minor: %s, "
-        "os_supported: %s, "
-        "is_linux: %s, is_x86_64_or_aarch64: %s",
-        python_version_supported(),
-        sys.version_info[0],
-        sys.version_info[1],
-        os_supported(),
-        is_linux,
-        is_x86_64_or_aarch64,
-        )
+        "Other platform or python versions may not work as expected.")
 
 ext_modules = [
     Extension(
