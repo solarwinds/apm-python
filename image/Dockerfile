@@ -18,7 +18,7 @@ WORKDIR /operator-build
 
 ADD requirements.txt .
 
-RUN mkdir workspace && pip install --prefer-binary --target workspace -r requirements.txt
+RUN mkdir workspace && pip install --only-binary :all: --target workspace -r requirements.txt
 
 FROM python:3.11-alpine3.16 AS build-musl
 
@@ -30,7 +30,7 @@ WORKDIR /operator-build
 ADD requirements.txt .
 
 RUN apk add g++ gcc python3-dev musl-dev linux-headers
-RUN mkdir workspace && pip install --prefer-binary --target workspace -r requirements.txt
+RUN mkdir workspace && pip install --only-binary :all: --target workspace -r requirements.txt
 
 FROM busybox
 
