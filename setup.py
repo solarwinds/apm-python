@@ -115,7 +115,7 @@ if not (python_version_supported() and os_supported()):
     is_linux = sys.platform.startswith('linux')
     is_x86_64_or_aarch64 = platform.machine() in ["x86_64", "aarch64"]
     logger.warning(
-        "[SETUP] This package supports only Python 3.8 and above on Linux x86_64 or aarch64. "
+        "!!! [SETUP] This package supports only Python 3.8 and above on Linux x86_64 or aarch64. "
         "Other platform or python versions may not work as expected. "
         "python_version_supported: %s, "
         "major: %s, minor: %s, "
