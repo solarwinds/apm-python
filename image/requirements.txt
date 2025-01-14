@@ -1,8 +1,11 @@
-solarwinds_apm==3.3.2
-# opentelemetry-distro==0.49b2
+# Install most APM Python deps
+opentelemetry-api==1.28.2
+opentelemetry-sdk==1.28.2
+opentelemetry-instrumentation==0.49b2
+
 # We don't use the distro[otlp] option which automatically includes exporters since gRPC is not appropriate for
 # injected auto-instrumentation, where it has a strict dependency on the OS / Python version the artifact is built for.
-# opentelemetry-exporter-otlp-proto-http==1.28.2
+opentelemetry-exporter-otlp-proto-http==1.28.2
 opentelemetry-exporter-prometheus==0.49b2
 
 opentelemetry-propagator-b3==1.28.2
@@ -37,7 +40,7 @@ opentelemetry-instrumentation-grpc==0.49b2
 opentelemetry-instrumentation-httpx==0.49b2
 opentelemetry-instrumentation-jinja2==0.49b2
 opentelemetry-instrumentation-kafka-python==0.49b2
-# opentelemetry-instrumentation-logging==0.49b2
+opentelemetry-instrumentation-logging==0.49b2
 opentelemetry-instrumentation-mysql==0.49b2
 opentelemetry-instrumentation-mysqlclient==0.49b2
 opentelemetry-instrumentation-pika==0.49b2

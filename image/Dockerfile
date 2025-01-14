@@ -11,26 +11,26 @@
 #   used and must be availabe in the image.
 FROM python:3.11 AS build
 
-RUN cat /etc/os-release
-RUN python --version
-
 WORKDIR /operator-build
 
+ADD requirements-nodeps.txt .
 ADD requirements.txt .
 
-RUN mkdir workspace && pip install --target workspace -r requirements.txt
+RUN mkdir workspace
+RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
+RUN pip install --target workspace -r requirements.txt
 
 FROM python:3.11-alpine3.16 AS build-musl
 
-RUN cat /etc/os-release
-RUN python --version
-
 WORKDIR /operator-build
 
+ADD requirements-nodeps.txt .
 ADD requirements.txt .
 
 RUN apk add g++ gcc python3-dev musl-dev linux-headers
-RUN mkdir workspace && pip install --target workspace -r requirements.txt
+RUN mkdir workspace
+RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
+RUN pip install --target workspace -r requirements.txt
 
 FROM busybox
 
