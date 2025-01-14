@@ -20,7 +20,7 @@ RUN mkdir workspace
 RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 RUN pip install --target workspace -r requirements.txt
 
-FROM python:3.11-alpine3.16 AS build-musl
+FROM python:3.11-alpine AS build-musl
 
 WORKDIR /operator-build
 
