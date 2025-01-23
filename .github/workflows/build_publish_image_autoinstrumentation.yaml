@@ -1,9 +1,6 @@
 name: "Publish APM Python Auto-Instrumentation"
 
 on:
-  push:
-    branches:
-      - NH-90480-add-operator-image
   workflow_dispatch:
 
 permissions:
