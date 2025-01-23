@@ -697,7 +697,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                         and conflict.found is None
                     ):
                         logger.debug(
-                            "Version lookup for library %s skipped due to known pydantic/tortoiseorm bootstrap conflice: %s",
+                            "Version lookup for library %s skipped due to known pydantic/tortoiseorm bootstrap conflict: %s",
                             entry_point.name,
                             conflict,
                         )
