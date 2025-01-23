@@ -17,32 +17,32 @@ FROM python:3.8 AS build-38
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps.txt
+RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 
 FROM python:3.9 AS build-39
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps.txt
+RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 
 FROM python:3.10 AS build-310
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps.txt
+RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 
 FROM python:3.11 AS build-311
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps.txt
+RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 
 FROM python:3.12 AS build-312
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
 ADD requirements.txt .
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps.txt
+RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 RUN pip install --target workspace -r requirements.txt
 
 
@@ -51,28 +51,28 @@ WORKDIR /operator-build
 ADD requirements-nodeps.txt .
 RUN apk add g++ gcc python3-dev musl-dev linux-headers
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps.txt
+RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 
 FROM python:3.9-alpine AS build-musl-39
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
 RUN apk add g++ gcc python3-dev musl-dev linux-headers
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps.txt
+RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 
 FROM python:3.10-alpine AS build-musl-310
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
 RUN apk add g++ gcc python3-dev musl-dev linux-headers
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps.txt
+RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 
 FROM python:3.11-alpine AS build-musl-311
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
 RUN apk add g++ gcc python3-dev musl-dev linux-headers
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps.txt
+RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 
 FROM python:3.12-alpine AS build-musl-312
 WORKDIR /operator-build
@@ -80,7 +80,7 @@ ADD requirements-nodeps.txt .
 ADD requirements.txt .
 RUN apk add g++ gcc python3-dev musl-dev linux-headers
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps.txt
+RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 RUN pip install --target workspace -r requirements.txt
 
 FROM busybox

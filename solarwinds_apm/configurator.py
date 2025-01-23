@@ -15,8 +15,6 @@ import sys
 import time
 from typing import TYPE_CHECKING, Any
 
-from packaging.requirements import Requirement
-
 from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.environment_variables import (
@@ -689,25 +687,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 )
                 continue
 
-            logger.debug("framework_versions for")
-            logger.debug("entry_point.name: %s", entry_point.name)
-            logger.debug("entry_point.dist: %s", entry_point.dist)
-            logger.debug(
-                "entry_point.dist.requires: %s, type %s",
-                entry_point.dist.requires,
-                type(entry_point.dist.requires),
-            )
-            if type(entry_point.dist.requires) == Requirement:
-                extra = "extra"
-                instruments = "instruments"
-                instruments_marker = {extra: instruments}
-                logger.debug(
-                    "entry_point.dist.requires.marker.evaluate to: %s",
-                    entry_point.dist.requires.marker.evaluate(
-                        instruments_marker
-                    ),
-                )
-
             try:
                 conflict = get_dist_dependency_conflicts(entry_point.dist)
                 if conflict:
@@ -734,9 +713,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     "Version conflict check of %s failed, so skipping: %s",
                     entry_point.name,
                     ex,
-                )
-                logging.warning(
-                    "exc_info: %s", type(ex).__name__, exc_info=True
                 )
                 continue
 

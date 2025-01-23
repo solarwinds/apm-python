@@ -71,7 +71,6 @@ solarwinds_exporter = "solarwinds_apm.exporter:SolarWindsSpanExporter"
 solarwinds_sampler = "solarwinds_apm.sampler:ParentBasedSwSampler"
 
 [tool.setuptools]
-license-files = ["LICENSE"]
 include-package-data = false
 packages = [
   "solarwinds_apm",
