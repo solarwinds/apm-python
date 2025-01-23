@@ -29,6 +29,8 @@ jobs:
           name: ${{ inputs.artifact-name }}
       - name: Unzip artifact with dist
         run: unzip ${{ inputs.artifact-name }}
+      - name: Update Packaging
+        run: pip install --upgrade pip && pip install --upgrade packaging
       - name: Install Twine
         run: pip install --upgrade --no-cache-dir --prefer-binary twine
       - name: Check distribution artifacts
