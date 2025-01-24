@@ -50,6 +50,9 @@ jobs:
           build-args: version=${{ env.VERSION }}
           tags: ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }},${{ github.repository_owner }}/autoinstrumentation-python:latest
 
+      - name: List Docker images
+        run: docker images
+
       - name: Save Docker image as tar file
         run: docker save -o autoinstrumentation-python-${{ env.VERSION }}.tar ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}
 
@@ -104,6 +107,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           build-args: version=${{ env.VERSION }}
           tags: ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }},ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:latest
+
+      - name: List Docker images
+        run: docker images
 
       - name: Save Docker image as tar file
         run: docker save -o autoinstrumentation-python-${{ env.VERSION }}.tar ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}
