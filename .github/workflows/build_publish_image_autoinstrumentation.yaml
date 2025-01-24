@@ -38,13 +38,30 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build image
         uses: docker/build-push-action@v6
         with:
-          push: true
+          push: false
           context: image
           platforms: linux/amd64,linux/arm64
           build-args: version=${{ env.VERSION }}
+          tags: ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }},${{ github.repository_owner }}/autoinstrumentation-python:latest
+
+      - name: Set artifact name
+        run: echo "artifact-name=${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}" >> $GITHUB_ENV
+
+      - name: RL scan image
+        uses: ./.github/workflows/reversinglabs_scan.yaml
+        with:
+          artifact-name: ${{ env.artifact-name }}
+          package-name: apm-python-autoinstrumentation-image-ghcr
+          version: ${{ env.VERSION }}
+          rl-submit-only: true
+
+      - name: Push image
+        uses: docker/build-push-action@v6
+        with:
+          push: true
           tags: ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }},${{ github.repository_owner }}/autoinstrumentation-python:latest
 
   ghcr_io:
@@ -68,11 +85,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build image
         uses: docker/build-push-action@v6
         with:
-          push: true
+          push: false
           context: image
           platforms: linux/amd64,linux/arm64
           build-args: version=${{ env.VERSION }}
+          tags: ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }},ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:latest
+
+      - name: Set artifact name
+        run: echo "artifact-name=ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}" >> $GITHUB_ENV
+
+      - name: RL scan image
+        uses: ./.github/workflows/reversinglabs_scan.yaml
+        with:
+          artifact-name: ${{ env.artifact-name }}
+          package-name: apm-python-autoinstrumentation-image-ghcr
+          version: ${{ env.VERSION }}
+          rl-submit-only: true
+
+      - name: Push image
+        uses: docker/build-push-action@v6
+        with:
+          push: true
           tags: ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }},ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:latest
