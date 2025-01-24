@@ -30,6 +30,20 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_CI_USER }}
           password: ${{ secrets.DOCKER_HUB_CI_PASSWORD }}
 
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ github.repository_owner }}/autoinstrumentation-python
+          tags: |
+            type=raw,value=${{ env.VERSION }}
+            type=raw,value=latest
+          labels: |
+            maintainer=swo-librarians
+            org.opencontainers.image.title=apm-python
+            org.opencontainers.image.description=Solarwinds OTEL distro Python agent
+            org.opencontainers.image.vendor=SolarWinds Worldwide, LLC
+
       - name: Login to GitHub Package Registry
         uses: docker/login-action@v3
         if: ${{ github.event_name == 'push' }}
@@ -45,7 +59,27 @@ jobs:
           context: image
           platforms: linux/amd64,linux/arm64
           build-args: version=${{ env.VERSION }}
-          tags: ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }},${{ github.repository_owner }}/autoinstrumentation-python:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Analyze for critical and high CVEs - local Dockerfile
+        id: docker-scout-cves
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: "fs://./"
+          platform: "linux/amd64"
+          ignore-base: true
+          only-package-types: pip
+
+      - name: Analyze for critical and high CVEs - tagged image
+        id: docker-scout-image-cves
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: ${{ steps.meta.outputs.tags[0] }}
+          platform: "linux/amd64"
+  
 
   ghcr_io:
     runs-on: ubuntu-latest
