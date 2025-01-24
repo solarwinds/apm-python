@@ -658,7 +658,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     ) -> dict:
         """Updates version_keys with versions of Python frameworks that have been
         instrumented with installed (bootstrapped) OTel instrumentation libraries.
-        Borrowed from opentelemetry-instrumentation sitecustomize.
+        Borrowed from opentelemetry-instrumentation sitecustomize. Intended for
+        creating init event.
 
         Example output:
         {
@@ -697,20 +698,20 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                         and conflict.found is None
                     ):
                         logger.debug(
-                            "Version lookup for library %s skipped due to known pydantic/tortoiseorm bootstrap conflice: %s",
+                            "Init event version lookup for library %s skipped due to known pydantic/tortoiseorm bootstrap conflict: %s",
                             entry_point.name,
                             conflict,
                         )
                     else:
-                        logger.warning(
-                            "Version lookup for library %s skipped due to conflict: %s",
+                        logger.debug(
+                            "Init event version lookup for library %s skipped due to conflict: %s",
                             entry_point.name,
                             conflict,
                         )
                     continue
             except Exception as ex:  # pylint: disable=broad-except
-                logger.warning(
-                    "Version conflict check of %s failed, so skipping: %s",
+                logger.debug(
+                    "Init event version conflict check of %s failed, so skipping: %s",
                     entry_point.name,
                     ex,
                 )
