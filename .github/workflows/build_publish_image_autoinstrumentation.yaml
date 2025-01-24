@@ -53,13 +53,18 @@ jobs:
       - name: Set artifact name
         run: echo "artifact-name=${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}" >> $GITHUB_ENV
 
-      - name: RL scan image
-        uses: ./.github/workflows/reversinglabs_scan.yaml
+      - name: RL scan image (rl-submit-only)
+        env:
+          RLPORTAL_ACCESS_TOKEN: ${{ secrets.RLPORTAL_ACCESS_TOKEN }}
+        uses: reversinglabs/gh-action-rl-scanner-cloud-only@v1
         with:
-          artifact-name: ${{ env.artifact-name }}
-          package-name: apm-python-autoinstrumentation-image-ghcr
-          version: ${{ env.VERSION }}
+          artifact-to-scan: ${{ env.artifact-name }}
           rl-submit-only: true
+          rl-verbose: true
+          rl-portal-server: solarwinds
+          rl-portal-org: SolarWinds
+          rl-portal-group: "SaaS-Agents-SWO"
+          rl-package-url: apm-python/apm-python-autoinstrumentation-image-ghcr@${{ env.VERSION }}
 
       - name: Push image
         uses: docker/build-push-action@v6
@@ -100,13 +105,18 @@ jobs:
       - name: Set artifact name
         run: echo "artifact-name=ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}" >> $GITHUB_ENV
 
-      - name: RL scan image
-        uses: ./.github/workflows/reversinglabs_scan.yaml
+      - name: RL scan image (rl-submit-only)
+        env:
+          RLPORTAL_ACCESS_TOKEN: ${{ secrets.RLPORTAL_ACCESS_TOKEN }}
+        uses: reversinglabs/gh-action-rl-scanner-cloud-only@v1
         with:
-          artifact-name: ${{ env.artifact-name }}
-          package-name: apm-python-autoinstrumentation-image-ghcr
-          version: ${{ env.VERSION }}
+          artifact-to-scan: ${{ env.artifact-name }}
           rl-submit-only: true
+          rl-verbose: true
+          rl-portal-server: solarwinds
+          rl-portal-org: SolarWinds
+          rl-portal-group: "SaaS-Agents-SWO"
+          rl-package-url: apm-python/apm-python-autoinstrumentation-image-ghcr@${{ env.VERSION }}
 
       - name: Push image
         uses: docker/build-push-action@v6
