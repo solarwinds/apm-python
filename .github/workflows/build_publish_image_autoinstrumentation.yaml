@@ -1,6 +1,9 @@
 name: "Publish APM Python Auto-Instrumentation"
 
 on:
+  push:
+    branches:
+      - NH-100388-image-rl-scan
   workflow_dispatch:
 
 permissions:
