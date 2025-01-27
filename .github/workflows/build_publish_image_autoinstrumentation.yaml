@@ -7,9 +7,6 @@
 name: "Publish APM Python Auto-Instrumentation"
 
 on:
-  push:
-    branches:
-      - NH-100298-docker-scout-autoinst-image
   workflow_dispatch:
 
 permissions:
