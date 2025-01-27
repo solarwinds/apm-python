@@ -50,6 +50,9 @@ jobs:
           build-args: version=${{ env.VERSION }}
           tags: ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }},${{ github.repository_owner }}/autoinstrumentation-python:latest
 
+      - name: Wait for image to be available in registry
+        run: sleep 30
+
       - name: Pull image from registry
         run: docker pull ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}
 
@@ -104,6 +107,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           build-args: version=${{ env.VERSION }}
           tags: ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }},ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:latest
+
+      - name: Wait for image to be available in registry
+        run: sleep 30
 
       - name: Pull image from registry
         run: docker pull ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}
