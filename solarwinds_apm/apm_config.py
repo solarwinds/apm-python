@@ -127,12 +127,11 @@ class SolarWindsApmConfig:
             self.agent_enabled,
             otel_resource,
         )
-        if not self.is_lambda:
-            self.__config["service_key"] = self._update_service_key_name(
-                self.agent_enabled,
-                self.__config["service_key"],
-                self.service_name,
-            )
+        self.__config["service_key"] = self._update_service_key_name(
+            self.agent_enabled,
+            self.__config["service_key"],
+            self.service_name,
+        )
 
         # Update and apply logging settings to Python logger
         self.update_log_settings()
@@ -516,8 +515,15 @@ class SolarWindsApmConfig:
     ) -> str:
         """Update service key with service name"""
         if agent_enabled and service_key and service_name:
-            # Only update if service_name and service_key exist and non-empty.
-            # When agent_enabled, assume service_key is formatted correctly.
+            # Only update if service_name and service_key exist and non-empty,
+            # and service_key in correct format.
+            key_parts = service_key.split(":")
+            if len(key_parts) < 2:
+                logger.debug(
+                    "Service key is not in the correct format to update its own service name. Skipping."
+                )
+                return service_key
+
             return ":".join([service_key.split(":")[0], service_name])
 
         # Else no need to update service_key when not reporting
