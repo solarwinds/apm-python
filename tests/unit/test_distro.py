@@ -52,6 +52,9 @@ class TestDistro:
         if old_otel_ev_lh:
             del os.environ["OTEL_EXPORTER_OTLP_LOGS_HEADERS"]
         old_key = os.environ.get("SW_APM_SERVICE_KEY", None)
+        old_otel_ev_proto = os.environ.get("OTEL_EXPORTER_OTLP_PROTOCOL", None)
+        if old_otel_ev_proto:
+            del os.environ["OTEL_EXPORTER_OTLP_PROTOCOL"]
         old_otel_ev_tp = os.environ.get("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL", None)
         if old_otel_ev_tp: 
             del os.environ["OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"]
@@ -93,6 +96,8 @@ class TestDistro:
             os.environ["OTEL_EXPORTER_OTLP_METRICS_HEADERS"] = old_otel_ev_mh
         if old_otel_ev_lh:
             os.environ["OTEL_EXPORTER_OTLP_LOGS_HEADERS"] = old_otel_ev_lh
+        if old_otel_ev_proto:
+            os.environ["OTEL_EXPORTER_OTLP_PROTOCOL"] = old_otel_ev_proto
         if old_otel_ev_tp:
             os.environ["OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"] = old_otel_ev_tp
         if old_otel_ev_mp:
