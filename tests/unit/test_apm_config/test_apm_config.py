@@ -891,6 +891,43 @@ class TestSolarWindsApmConfig:
         )
         assert result == "valid_key_with:bar-service"
 
+    def test__update_service_key_name_agent_enabled_and_service_name_ok_but_service_key_missing(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._update_service_key_name(
+            True,
+            None,
+            "bar-service"
+        )
+        assert result == None
+
+    def test__update_service_key_name_agent_enabled_and_service_name_ok_but_service_key_empty(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._update_service_key_name(
+            True,
+            "",
+            "bar-service"
+        )
+        assert result == ""
+
+    def test__update_service_key_name_agent_enabled_and_service_name_ok_but_service_key_no_delimiter(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._update_service_key_name(
+            True,
+            "weird-key-no-delimiter",
+            "bar-service"
+        )
+        assert result == "weird-key-no-delimiter"
+
+    def test__update_service_key_name_agent_enabled_and_service_name_ok_service_key_multiple_delimiter(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._update_service_key_name(
+            True,
+            "weird-key:with:2-delimiters",
+            "bar-service"
+        )
+        # Updates everything after first delim
+        assert result == "weird-key:bar-service"
+
     def test_update_log_settings(self, mocker):
         mock_log_filepath = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_filepath"
