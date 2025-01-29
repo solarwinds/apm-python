@@ -401,8 +401,9 @@ class TestDistro:
         )
         distro.SolarWindsDistro()._configure()
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
-        assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
-        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        # Still get set for metrics and logs
+        assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) == f"authorization=Bearer%20foo-token"
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) == f"authorization=Bearer%20foo-token"
 
     def test_configure_set_otlp_header_defaults_lambda_invalid_protocol(self, mocker):
         mocker.patch.dict(
@@ -416,8 +417,9 @@ class TestDistro:
         )
         distro.SolarWindsDistro()._configure()
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
-        assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
-        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        # Still get set for metrics and logs
+        assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) == f"authorization=Bearer%20foo-token"
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) == f"authorization=Bearer%20foo-token"
 
     def test_configure_set_otlp_header_defaults_lambda_valid_protocol(self, mocker):
         mocker.patch.dict(
@@ -430,9 +432,10 @@ class TestDistro:
             }
         )
         distro.SolarWindsDistro()._configure()
-        assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
-        assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
-        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        # Still get set traces, metrics, logs
+        assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) == f"authorization=Bearer%20foo-token"
+        assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) == f"authorization=Bearer%20foo-token"
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) == f"authorization=Bearer%20foo-token"
 
     def test_configure_no_env(self, mocker):
         mocker.patch.dict(os.environ, {})
