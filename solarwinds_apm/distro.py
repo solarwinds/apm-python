@@ -187,13 +187,9 @@ class SolarWindsDistro(BaseDistro):
         """Configure default OTel exporters and propagators"""
         self._log_runtime()
 
-        header_token = None
-        if not SolarWindsApmConfig.calculate_is_lambda():
-            header_token = self._get_token_from_service_key()
-            if not header_token:
-                logger.debug("Setting OTLP export defaults without SWO token")
-        else:
-            logger.debug("Skipping OTLP export headers setdefaults in lambda.")
+        header_token = self._get_token_from_service_key()
+        if not header_token:
+            logger.debug("Setting OTLP export defaults without SWO token")
 
         # If users set OTEL_EXPORTER_OTLP_PROTOCOL
         # as one of Otel SDK's `http/protobuf` or `grpc`,
