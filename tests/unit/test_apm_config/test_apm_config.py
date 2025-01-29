@@ -898,7 +898,7 @@ class TestSolarWindsApmConfig:
             None,
             "bar-service"
         )
-        assert result == None
+        assert result is None
 
     def test__update_service_key_name_agent_enabled_and_service_name_ok_but_service_key_empty(self):
         test_config = apm_config.SolarWindsApmConfig()
