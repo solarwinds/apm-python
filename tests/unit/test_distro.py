@@ -352,6 +352,18 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/traces"
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) == "authorization=Bearer%20foo-token"
 
+    def test_configure_set_otlp_header_defaults_not_lambda_no_header_token(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "",
+            }
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
+        assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+
     def test_configure_set_otlp_header_defaults_not_lambda_no_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
@@ -389,6 +401,20 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) == f"authorization=Bearer%20foo-token"
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) == f"authorization=Bearer%20foo-token"
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) == f"authorization=Bearer%20foo-token"
+
+    def test_configure_set_otlp_header_defaults_lambda_no_header_token(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "",
+                "AWS_LAMBDA_FUNCTION_NAME": "foo",
+                "LAMBDA_TASK_ROOT": "foo",
+            }
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
+        assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
+        assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
 
     def test_configure_set_otlp_header_defaults_lambda_no_protocol(self, mocker):
         mocker.patch.dict(
