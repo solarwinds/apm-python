@@ -248,16 +248,16 @@ class SolarWindsApmConfig:
     @classmethod
     def calculate_is_legacy(cls) -> bool:
         """Checks if agent is running in a legacy environment.
+        Invalid boolean values are ignored.
         Order of precedence: Environment Variable > config file > default False
         """
         is_legacy = False
         cnf_dict = cls.get_cnf_dict()
         if cnf_dict:
-            is_legacy = cls.convert_to_bool(cnf_dict.get("legacy", is_legacy))
-        is_legacy = cls.convert_to_bool(
-            os.environ.get("SW_APM_LEGACY", is_legacy)
-        )
-        return is_legacy
+            cnf_legacy = cls.convert_to_bool(cnf_dict.get("legacy"))
+            is_legacy = cnf_legacy if cnf_legacy is not None else is_legacy
+        env_legacy = cls.convert_to_bool(os.environ.get("SW_APM_LEGACY"))
+        return env_legacy if env_legacy is not None else is_legacy
 
     @classmethod
     def calculate_is_lambda(cls) -> bool:

@@ -17,6 +17,10 @@ class TestSolarWindsApmConfigIsLegacy:
         )
         assert SolarWindsApmConfig.calculate_is_legacy() is False
 
+    def test_calculate_is_legacy_with_env_var_not_boolean(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_LEGACY": "foo-bar"})
+        assert SolarWindsApmConfig.calculate_is_legacy() is False
+
     def test_calculate_is_legacy_with_env_var_false(self, mocker):
         mocker.patch.dict(os.environ, {"SW_APM_LEGACY": "false"})
         assert SolarWindsApmConfig.calculate_is_legacy() is False
@@ -24,6 +28,13 @@ class TestSolarWindsApmConfigIsLegacy:
     def test_calculate_is_legacy_with_env_var_true(self, mocker):
         mocker.patch.dict(os.environ, {"SW_APM_LEGACY": "true"})
         assert SolarWindsApmConfig.calculate_is_legacy() is True
+
+    def test_calculate_is_legacy_with_config_not_boolean(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict",
+            return_value={"legacy": "foo-bar"},
+        )
+        assert SolarWindsApmConfig.calculate_is_legacy() is False
 
     def test_calculate_is_legacy_with_config_false(self, mocker):
         mocker.patch(
@@ -38,6 +49,14 @@ class TestSolarWindsApmConfigIsLegacy:
             return_value={"legacy": "true"},
         )
         assert SolarWindsApmConfig.calculate_is_legacy() is True
+
+    def test_calculate_is_legacy_with_config_not_bool_env_var_not_bool(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_LEGACY": "foo-bar"})
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict",
+            return_value={"legacy": "foo-bar"},
+        )
+        assert SolarWindsApmConfig.calculate_is_legacy() is False
 
     def test_calculate_is_legacy_with_config_false_env_var_false(self, mocker):
         mocker.patch.dict(os.environ, {"SW_APM_LEGACY": "false"})
@@ -55,6 +74,14 @@ class TestSolarWindsApmConfigIsLegacy:
         )
         assert SolarWindsApmConfig.calculate_is_legacy() is True
 
+    def test_calculate_is_legacy_with_config_not_bool_env_var_true(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_LEGACY": "true"})
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict",
+            return_value={"legacy": "foo-bar"},
+        )
+        assert SolarWindsApmConfig.calculate_is_legacy() is True
+
     def test_calculate_is_legacy_with_config_true_env_var_false(self, mocker):
         mocker.patch.dict(os.environ, {"SW_APM_LEGACY": "false"})
         mocker.patch(
@@ -62,6 +89,14 @@ class TestSolarWindsApmConfigIsLegacy:
             return_value={"legacy": "true"},
         )
         assert SolarWindsApmConfig.calculate_is_legacy() is False
+
+    def test_calculate_is_legacy_with_config_true_env_var_not_bool(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_LEGACY": "foo-bar"})
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict",
+            return_value={"legacy": "true"},
+        )
+        assert SolarWindsApmConfig.calculate_is_legacy() is True
 
     def test_calculate_is_legacy_with_config_true_env_var_true(self, mocker):
         mocker.patch.dict(os.environ, {"SW_APM_LEGACY": "true"})
