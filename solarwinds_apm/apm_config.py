@@ -246,6 +246,20 @@ class SolarWindsApmConfig:
         )
 
     @classmethod
+    def calculate_is_legacy(cls) -> bool:
+        """Checks if agent is running in a legacy environment.
+        Invalid boolean values are ignored.
+        Order of precedence: Environment Variable > config file > default False
+        """
+        is_legacy = False
+        cnf_dict = cls.get_cnf_dict()
+        if cnf_dict:
+            cnf_legacy = cls.convert_to_bool(cnf_dict.get("legacy"))
+            is_legacy = cnf_legacy if cnf_legacy is not None else is_legacy
+        env_legacy = cls.convert_to_bool(os.environ.get("SW_APM_LEGACY"))
+        return env_legacy if env_legacy is not None else is_legacy
+
+    @classmethod
     def calculate_is_lambda(cls) -> bool:
         """Checks if agent is running in an AWS Lambda environment."""
         if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") and os.environ.get(
@@ -730,13 +744,14 @@ class SolarWindsApmConfig:
         )
         return value if value is not None else default
 
-    def get_cnf_dict(self) -> Any:
+    @classmethod
+    def get_cnf_dict(cls) -> Any:
         """Load Python dict from confg file (json), if any"""
         cnf_filepath = os.environ.get("SW_APM_CONFIG_FILE")
         cnf_dict = None
 
         if not cnf_filepath:
-            cnf_filepath = self._CONFIG_FILE_DEFAULT
+            cnf_filepath = cls._CONFIG_FILE_DEFAULT
             if not os.path.isfile(cnf_filepath):
                 logger.debug("No config file at %s; skipping", cnf_filepath)
                 return cnf_dict
