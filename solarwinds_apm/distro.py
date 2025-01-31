@@ -163,6 +163,7 @@ class SolarWindsDistro(BaseDistro):
 
         # setdefaults for OTLP export if protocol is unset or valid,
         # with the exception of OTEL_TRACES_EXPORTER if legacy.
+        # Does not setdefaults if invalid protocol.
         # All values can still be configured by user (SolarWindsApmConfig).
         environ.setdefault(
             OTEL_EXPORTER_OTLP_PROTOCOL,
@@ -200,8 +201,8 @@ class SolarWindsDistro(BaseDistro):
                 )
 
             else:
-                logger.debug(
-                    "Invalid OTLP export protocol. Skipping setting of default export configuration."
+                logger.warning(
+                    "Invalid OTLP export protocol configured. Skipping setting of default export configuration."
                 )
 
     def load_instrumentor(self, entry_point: EntryPoint, **kwargs):
