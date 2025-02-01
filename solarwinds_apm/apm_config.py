@@ -113,6 +113,7 @@ class SolarWindsApmConfig:
             "transaction_name": None,
             "export_logs_enabled": False,
             "export_metrics_enabled": False,
+            "legacy": False,
         }
         self.is_lambda = self.calculate_is_lambda()
         self.lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
@@ -961,7 +962,11 @@ class SolarWindsApmConfig:
                 self.__config[key] = val
             elif keys == ["transaction_name"]:
                 self.__config[key] = val
-            elif keys in [["export_logs_enabled"], ["export_metrics_enabled"]]:
+            elif keys in [
+                ["export_logs_enabled"],
+                ["export_metrics_enabled"],
+                ["legacy"],
+            ]:
                 val = self.convert_to_bool(val)
                 if val not in (True, False):
                     raise ValueError

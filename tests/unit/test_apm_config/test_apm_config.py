@@ -62,6 +62,9 @@ class TestSolarWindsApmConfig:
         old_expt_metrics = os.environ.get("SW_APM_EXPORT_METRICS_ENABLED", None)
         if old_expt_metrics:
             del os.environ["SW_APM_EXPORT_METRICS_ENABLED"]
+        old_legacy = os.environ.get("SW_APM_LEGACY", None)
+        if old_legacy:
+            del os.environ["SW_APM_LEGACY"]
 
         # Wait for test
         yield
@@ -85,6 +88,8 @@ class TestSolarWindsApmConfig:
             os.environ["SW_APM_EXPORT_LOGS_ENABLED"] = old_expt_logs
         if old_expt_metrics:
             os.environ["SW_APM_EXPORT_METRICS_ENABLED"] = old_expt_metrics
+        if old_legacy:
+            os.environ["SW_APM_LEGACY"] = old_legacy
 
     def _mock_service_key(self, mocker, service_key):
         mocker.patch.dict(os.environ, {
@@ -853,6 +858,67 @@ class TestSolarWindsApmConfig:
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("export_metrics_enabled", "tRUe")
         assert test_config.get("export_metrics_enabled") == True
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_default_legacy(
+        self,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config.get("legacy") == False
+
+    def test_set_config_value_ignore_legacy(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("legacy", "not-valid")
+        assert test_config.get("legacy") == False
+        assert "Ignore config option" in caplog.text
+
+    def test_set_config_value_set_legacy_false(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("legacy", "false")
+        assert test_config.get("legacy") == False
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_set_legacy_false_mixed_case(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("legacy", "fALsE")
+        assert test_config.get("legacy") == False
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_set_legacy_true(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("legacy", "true")
+        assert test_config.get("legacy") == True
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_set_legacy_true_mixed_case(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("legacy", "tRUe")
+        assert test_config.get("legacy") == True
         assert "Ignore config option" not in caplog.text
 
     def test__update_service_key_name_not_agent_enabled(self):
