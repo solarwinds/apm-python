@@ -808,10 +808,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         keys: dict = None,
     ) -> Any:
         """Create a Reporter init event if the reporter is ready."""
-        if apm_config.get("legacy") is False:
-            logger.debug("Skipping init event outside legacy mode")
-            return None
-
         reporter_ready = False
         if reporter.init_status in (
             OboeReporterCode.OBOE_INIT_OK,

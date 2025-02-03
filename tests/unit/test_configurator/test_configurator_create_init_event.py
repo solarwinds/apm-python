@@ -9,35 +9,6 @@ from solarwinds_apm import configurator
 from .fixtures.trace import get_trace_mocks
 
 class TestConfiguratorCreateInitEvent:
-    def test_configurator_create_init_is_lambda(
-        self,
-        mocker,
-        mock_sys,
-        mock_apm_version,
-        mock_fw_versions,
-        mock_extension,
-        mock_apmconfig_enabled_is_lambda,
-    ):
-        trace_mocks = get_trace_mocks(mocker)
-
-        test_configurator = configurator.SolarWindsConfigurator()
-        result = test_configurator._create_init_event(
-            mock_extension.Reporter,
-            mock_apmconfig_enabled_is_lambda,
-        )
-
-        assert result is None
-
-        # Otel and APM methods not called
-        trace_mocks.get_tracer_provider().get_tracer().resource.attributes.items.assert_not_called()
-        mock_fw_versions.assert_not_called()
-
-        # Extension methods not called
-        mock_apmconfig_enabled_is_lambda.extension.Config.getVersionString.assert_not_called()
-        assert mocker.call(True,) not in mock_apmconfig_enabled_is_lambda.extension.Metadata.makeRandom.mock_calls
-        mock_apmconfig_enabled_is_lambda.extension.Context.set.assert_not_called()
-        mock_apmconfig_enabled_is_lambda.extension.Metadata.makeRandom().createEvent().addInfo.assert_not_called()
-
     def test_configurator_create_init_bad_init_status_disabled(
         self,
         mocker,
