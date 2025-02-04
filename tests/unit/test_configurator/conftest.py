@@ -239,6 +239,7 @@ def mock_apmconfig_enabled_md_invalid(mocker):
         get_apmconfig_mocks(
             mocker,
             md_is_valid=False,
+            legacy=True,
         )
     )
 
