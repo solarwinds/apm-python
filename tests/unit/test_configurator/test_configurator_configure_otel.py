@@ -94,7 +94,7 @@ class TestConfiguratorConfigureOtelComponents:
             mock_apmconfig_enabled_legacy,
         )
         mock_config_metrics_exp.assert_not_called()
-        mock_config_logs_exp.assert_called_once_with(mock_apmconfig_enabled_legacy)
+        mock_config_logs_exp.assert_not_called()
         mock_config_propagator.assert_called_once()
         mock_config_response_propagator.assert_called_once()
 

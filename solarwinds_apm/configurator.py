@@ -159,6 +159,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     apm_config,
                     oboe_api,
                 )
+
+                self._configure_logs_exporter(apm_config)
             else:
                 # Export APM metrics by APM-proto
                 self._configure_inbound_metrics_span_processor(
@@ -178,7 +180,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_fwkv_manager,
                 apm_config,
             )
-            self._configure_logs_exporter(apm_config)
 
         else:
             # Warning: This may still set OTEL_PROPAGATORS if set because OTel API defaults
