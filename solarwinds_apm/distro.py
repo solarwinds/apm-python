@@ -22,7 +22,10 @@ from opentelemetry.instrumentation.logging.environment_variables import (
     OTEL_PYTHON_LOG_FORMAT,
 )
 from opentelemetry.instrumentation.version import __version__ as inst_version
-from opentelemetry.sdk.environment_variables import OTEL_EXPORTER_OTLP_PROTOCOL
+from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+    OTEL_EXPORTER_OTLP_PROTOCOL,
+)
 from opentelemetry.sdk.version import __version__ as sdk_version
 from opentelemetry.util._importlib_metadata import EntryPoint
 
@@ -191,13 +194,19 @@ class SolarWindsDistro(BaseDistro):
                         header_token, otlp_protocol
                     )
 
-                # We do OTLP export setdefault if legacy or not
-                # in case SW_APM_EXPORT_METRICS_ENABLED
+                # We do OTLP export setdefault if legacy too
+                # in case SW_APM_EXPORT_(METRICS|LOGS)_ENABLED
                 self._configure_logs_export_otlp_env_defaults(
                     header_token, otlp_protocol
                 )
                 self._configure_metrics_export_otlp_env_defaults(
                     header_token, otlp_protocol
+                )
+
+                # APM Python enables logging auto-instrumentation by default
+                environ.setdefault(
+                    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+                    "true",
                 )
 
             else:
