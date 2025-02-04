@@ -709,11 +709,12 @@ class SolarWindsApmConfig:
 
     def __str__(self) -> str:
         """String representation of ApmConfig is config with masked service key,
-        plus agent_enabled and context"""
+        plus agent_enabled and context and OboeAPI"""
         apm_config = {
             "__config": self._config_mask_service_key(),
             "agent_enabled": self.agent_enabled,
             "context": str(self.context),
+            "oboe_api": str(self.oboe_api),
             "service_name": self.service_name,
         }
         return json.dumps(apm_config)
