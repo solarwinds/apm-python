@@ -222,6 +222,17 @@ def mock_apmconfig_enabled(mocker):
         )
     )
 
+@pytest.fixture(name="mock_apmconfig_enabled_metrics_logs_false")
+def mock_apmconfig_enabled_metrics_logs_false(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsApmConfig",
+        get_apmconfig_mocks(
+            mocker,
+            export_logs_enabled=False,
+            export_metrics_enabled=False,
+        )
+    )
+
 @pytest.fixture(name="mock_apmconfig_enabled_legacy")
 def mock_apmconfig_enabled_legacy(mocker):
     return mocker.patch(
