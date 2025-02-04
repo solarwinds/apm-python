@@ -157,6 +157,18 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     apm_txname_manager,
                     apm_config,
                 )
+                # While in legacy mode, user can also opt into exporting
+                # metrics and logs by OTLP.
+                # Default values are set by SolarWindsDistro; user can customize.
+                if apm_config.get("export_metrics_enabled") is True:
+                    self._configure_metrics_exporter(apm_config)
+                    self._configure_otlp_metrics_span_processors(
+                        apm_txname_manager,
+                        apm_config,
+                        oboe_api,
+                    )
+                if apm_config.get("export_logs_enabled") is True:
+                    self._configure_logs_exporter(apm_config)
             else:
                 # Export APM metrics, logs by OTLP.
                 # Default values are set by SolarWindsDistro; user can customize.

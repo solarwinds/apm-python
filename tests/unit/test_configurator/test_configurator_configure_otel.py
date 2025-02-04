@@ -98,6 +98,59 @@ class TestConfiguratorConfigureOtelComponents:
         mock_config_propagator.assert_called_once()
         mock_config_response_propagator.assert_called_once()
 
+    def test_configure_otel_components_agent_enabled_legacy_opt_in_metrics_logs(
+        self,
+        mocker,
+        mock_txn_name_manager,
+        mock_fwkv_manager,
+        mock_meter_manager,
+        mock_extension,
+        mock_apmconfig_enabled_legacy_opt_in_metrics_logs,
+        mock_oboe_api_obj_legacy,
+
+        mock_config_serviceentryid_processor,
+        mock_config_inbound_processor,
+        mock_config_otlp_processors,
+        mock_config_traces_exp,
+        mock_config_metrics_exp,
+        mock_config_logs_exp,
+        mock_config_propagator,
+        mock_config_response_propagator,
+    ):
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure_otel_components(
+            mock_txn_name_manager,
+            mock_fwkv_manager,
+            mock_apmconfig_enabled_legacy_opt_in_metrics_logs,
+            mock_extension.Reporter,
+            mock_oboe_api_obj_legacy,
+        )
+
+        mock_config_serviceentryid_processor.assert_called_once()
+        mock_config_inbound_processor.assert_called_once_with(
+            mock_txn_name_manager,
+            mock_apmconfig_enabled_legacy_opt_in_metrics_logs,
+        )
+        mock_config_otlp_processors.assert_called_once_with(
+            mock_txn_name_manager,
+            mock_apmconfig_enabled_legacy_opt_in_metrics_logs,
+            mock_oboe_api_obj_legacy, 
+        )
+        mock_config_traces_exp.assert_called_once_with(
+            mock_extension.Reporter,
+            mock_txn_name_manager,
+            mock_fwkv_manager,
+            mock_apmconfig_enabled_legacy_opt_in_metrics_logs,
+        )
+        mock_config_metrics_exp.assert_called_once_with(
+            mock_apmconfig_enabled_legacy_opt_in_metrics_logs
+        )
+        mock_config_logs_exp.assert_called_once_with(
+            mock_apmconfig_enabled_legacy_opt_in_metrics_logs
+        )
+        mock_config_propagator.assert_called_once()
+        mock_config_response_propagator.assert_called_once()
+
     def test_configure_otel_components_agent_disabled_non_legacy(
         self,
         mocker,
