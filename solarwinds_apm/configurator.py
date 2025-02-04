@@ -158,7 +158,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     apm_config,
                 )
                 # While in legacy mode, user can also opt into exporting
-                # metrics and logs by OTLP.
+                # Otel instrumentor metrics and logs by OTLP.
                 # Default values are set by SolarWindsDistro; user can customize.
                 if apm_config.get("export_metrics_enabled") is True:
                     self._configure_metrics_exporter(apm_config)
