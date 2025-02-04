@@ -7,7 +7,7 @@
 from solarwinds_apm import configurator
 
 class TestConfiguratorConfigureOtelComponents:
-    def test_configure_otel_components_agent_enabled(
+    def test_configure_otel_components_agent_enabled_non_legacy(
         self,
         mocker,
         mock_txn_name_manager,
@@ -15,7 +15,7 @@ class TestConfiguratorConfigureOtelComponents:
         mock_meter_manager,
         mock_extension,
         mock_apmconfig_enabled,
-        mock_oboe_api_obj,
+        mock_oboe_api_obj_non_legacy,
 
         mock_config_serviceentryid_processor,
         mock_config_inbound_processor,
@@ -32,18 +32,15 @@ class TestConfiguratorConfigureOtelComponents:
             mock_fwkv_manager,
             mock_apmconfig_enabled,
             mock_extension.Reporter,
-            mock_oboe_api_obj,
+            mock_oboe_api_obj_non_legacy,
         )
 
         mock_config_serviceentryid_processor.assert_called_once()
-        mock_config_inbound_processor.assert_called_once_with(
-            mock_txn_name_manager,
-            mock_apmconfig_enabled,
-        )
+        mock_config_inbound_processor.assert_not_called()
         mock_config_otlp_processors.assert_called_once_with(
             mock_txn_name_manager,
             mock_apmconfig_enabled, 
-            mock_oboe_api_obj,
+            mock_oboe_api_obj_non_legacy,
         )
         mock_config_traces_exp.assert_called_once_with(
             mock_extension.Reporter,
@@ -56,7 +53,52 @@ class TestConfiguratorConfigureOtelComponents:
         mock_config_propagator.assert_called_once()
         mock_config_response_propagator.assert_called_once()
 
-    def test_configure_otel_components_agent_disabled(
+    def test_configure_otel_components_agent_enabled_legacy(
+        self,
+        mocker,
+        mock_txn_name_manager,
+        mock_fwkv_manager,
+        mock_meter_manager,
+        mock_extension,
+        mock_apmconfig_enabled_legacy,
+        mock_oboe_api_obj_legacy,
+
+        mock_config_serviceentryid_processor,
+        mock_config_inbound_processor,
+        mock_config_otlp_processors,
+        mock_config_traces_exp,
+        mock_config_metrics_exp,
+        mock_config_logs_exp,
+        mock_config_propagator,
+        mock_config_response_propagator,
+    ):
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure_otel_components(
+            mock_txn_name_manager,
+            mock_fwkv_manager,
+            mock_apmconfig_enabled_legacy,
+            mock_extension.Reporter,
+            mock_oboe_api_obj_legacy,
+        )
+
+        mock_config_serviceentryid_processor.assert_called_once()
+        mock_config_inbound_processor.assert_called_once_with(
+            mock_txn_name_manager,
+            mock_apmconfig_enabled_legacy,
+        )
+        mock_config_otlp_processors.assert_not_called()
+        mock_config_traces_exp.assert_called_once_with(
+            mock_extension.Reporter,
+            mock_txn_name_manager,
+            mock_fwkv_manager,
+            mock_apmconfig_enabled_legacy,
+        )
+        mock_config_metrics_exp.assert_not_called()
+        mock_config_logs_exp.assert_called_once_with(mock_apmconfig_enabled_legacy)
+        mock_config_propagator.assert_called_once()
+        mock_config_response_propagator.assert_called_once()
+
+    def test_configure_otel_components_agent_disabled_non_legacy(
         self,
         mocker,
         mock_txn_name_manager,
@@ -64,7 +106,7 @@ class TestConfiguratorConfigureOtelComponents:
         mock_meter_manager,
         mock_extension,
         mock_apmconfig_disabled,
-        mock_oboe_api_obj,
+        mock_oboe_api_obj_non_legacy,
 
         mock_config_serviceentryid_processor,
         mock_config_inbound_processor,
@@ -81,7 +123,44 @@ class TestConfiguratorConfigureOtelComponents:
             mock_fwkv_manager,
             mock_apmconfig_disabled,
             mock_extension.Reporter,
-            mock_oboe_api_obj,
+            mock_oboe_api_obj_non_legacy,
+        )
+
+        mock_config_serviceentryid_processor.assert_not_called()
+        mock_config_inbound_processor.assert_not_called()
+        mock_config_otlp_processors.assert_not_called()
+        mock_config_traces_exp.assert_not_called()
+        mock_config_metrics_exp.assert_not_called()
+        mock_config_logs_exp.assert_not_called()
+        mock_config_propagator.assert_not_called()
+        mock_config_response_propagator.assert_not_called()
+
+    def test_configure_otel_components_agent_disabled_legacy(
+        self,
+        mocker,
+        mock_txn_name_manager,
+        mock_fwkv_manager,
+        mock_meter_manager,
+        mock_extension,
+        mock_apmconfig_disabled,
+        mock_oboe_api_obj_legacy,
+
+        mock_config_serviceentryid_processor,
+        mock_config_inbound_processor,
+        mock_config_otlp_processors,
+        mock_config_traces_exp,
+        mock_config_metrics_exp,
+        mock_config_logs_exp,
+        mock_config_propagator,
+        mock_config_response_propagator,
+    ):
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure_otel_components(
+            mock_txn_name_manager,
+            mock_fwkv_manager,
+            mock_apmconfig_disabled,
+            mock_extension.Reporter,
+            mock_oboe_api_obj_legacy,
         )
 
         mock_config_serviceentryid_processor.assert_not_called()

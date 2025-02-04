@@ -15,37 +15,11 @@ from .fixtures.resource import get_resource_mocks
 from .fixtures.trace import get_trace_mocks
 
 class TestConfiguratorSampler:
-    def test_configure_sampler_disabled(
-        self,
-        mocker,
-        mock_apmconfig_disabled,
-        mock_oboe_api_obj,
-        mock_tracerprovider,
-    ):
-        # Mock Otel
-        resource_mocks = get_resource_mocks(mocker)
-        trace_mocks = get_trace_mocks(mocker)
-
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_sampler(
-            mock_apmconfig_disabled,
-            mocker.Mock(),
-            mock_oboe_api_obj,
-        )
-
-        # sets tracer_provider with noop
-        trace_mocks.NoOpTracerProvider.assert_called_once()
-        trace_mocks.set_tracer_provider.assert_called_once()
-        
-        # resource and real provider not used
-        resource_mocks.create.assert_not_called()
-        mock_tracerprovider.assert_not_called()  
-
     def test_configure_sampler_error(
         self,
         mocker,
         mock_apmconfig_enabled,
-        mock_oboe_api_obj,
+        mock_oboe_api_obj_legacy,
         mock_tracerprovider,
     ):
         # Mock entry points
@@ -66,7 +40,7 @@ class TestConfiguratorSampler:
             test_configurator._configure_sampler(
                 mock_apmconfig_enabled,
                 mocker.Mock(),
-                mock_oboe_api_obj,
+                mock_oboe_api_obj_legacy,
             )
 
         # no tracer_provider is set
@@ -79,7 +53,7 @@ class TestConfiguratorSampler:
         self,
         mocker,
         mock_apmconfig_enabled,
-        mock_oboe_api_obj,
+        mock_oboe_api_obj_legacy,
         mock_tracerprovider,
     ):
         # Mock entry points
@@ -111,7 +85,7 @@ class TestConfiguratorSampler:
         test_configurator._configure_sampler(
             mock_apmconfig_enabled,
             mocker.Mock(),
-            mock_oboe_api_obj,
+            mock_oboe_api_obj_legacy,
         )
 
         # tracer_provider set with new resource using configured service_name
@@ -137,7 +111,7 @@ class TestConfiguratorSampler:
         self,
         mocker,
         mock_apmconfig_enabled,
-        mock_oboe_api_obj,
+        mock_oboe_api_obj_legacy,
         mock_tracerprovider,
     ):
         # Save any SAMPLER env var for later
@@ -186,7 +160,7 @@ class TestConfiguratorSampler:
         test_configurator._configure_sampler(
             mock_apmconfig_enabled,
             mocker.Mock(),
-            mock_oboe_api_obj,
+            mock_oboe_api_obj_legacy,
         )
 
         # sampler loaded was solarwinds_sampler, not configured foo_sampler

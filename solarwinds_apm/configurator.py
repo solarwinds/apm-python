@@ -132,32 +132,40 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         reporter: "Reporter",
         oboe_api: "OboeAPI",
     ) -> None:
-        """Configure OTel sampler, exporter, propagator, response propagator"""
-        self._configure_sampler(
-            apm_config,
-            reporter,
-            oboe_api,
-        )
+        """Configure OTel sampler, exporter, propagator, response propagator
+        depending on agent enabled status and legacy mode."""
         if apm_config.agent_enabled:
-            # set MeterProvider first via metrics_exporter config
-            self._configure_metrics_exporter(apm_config)
+            self._configure_sampler(
+                apm_config,
+                reporter,
+                oboe_api,
+            )
+            self._configure_propagator()
+            self._configure_response_propagator()
+
             # This processor only defines on_start
             self._configure_service_entry_id_span_processor()
-
             # The txnname calculator span processor must be registered
             # before the rest of the processors with defined on_end
             self._configure_txnname_calculator_span_processor(
                 apm_txname_manager,
             )
-            self._configure_inbound_metrics_span_processor(
-                apm_txname_manager,
-                apm_config,
-            )
-            self._configure_otlp_metrics_span_processors(
-                apm_txname_manager,
-                apm_config,
-                oboe_api,
-            )
+
+            if apm_config.get("legacy") is False:
+                # Export APM metrics by OTLP
+                self._configure_metrics_exporter(apm_config)
+                self._configure_otlp_metrics_span_processors(
+                    apm_txname_manager,
+                    apm_config,
+                    oboe_api,
+                )
+            else:
+                # Export APM metrics by APM-proto
+                self._configure_inbound_metrics_span_processor(
+                    apm_txname_manager,
+                    apm_config,
+                )
+
             # The txnname cleanup span processor must be registered
             # after the rest of the processors with defined on_end
             self._configure_txnname_cleanup_span_processor(
@@ -171,11 +179,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_config,
             )
             self._configure_logs_exporter(apm_config)
-            self._configure_propagator()
-            self._configure_response_propagator()
+
         else:
-            # Warning: This may still set OTEL_PROPAGATORS if set because OTel API
-            logger.error("Tracing disabled. Not setting propagators.")
+            # Warning: This may still set OTEL_PROPAGATORS if set because OTel API defaults
+            logger.warning(
+                "Tracing disabled. Skipping setup of all telemetry processors and exporters; using no-op tracer."
+            )
+            trace.set_tracer_provider(trace.NoOpTracerProvider())
 
     def _configure_sampler(
         self,
@@ -183,11 +193,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         reporter: "Reporter",
         oboe_api: "OboeAPI",
     ) -> None:
-        """Always configure SolarWinds OTel sampler, or none if disabled"""
-        if not apm_config.agent_enabled:
-            logger.error("Tracing disabled. Using OTel no-op tracer provider.")
-            trace.set_tracer_provider(trace.NoOpTracerProvider())
-            return
+        """Configure SolarWinds OTel sampler"""
         try:
             sampler = next(
                 iter(
@@ -316,17 +322,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure traces exporters if agent enabled.
-        Links to global TracerProvider.
+        """Configure traces exporters. Links to global TracerProvider.
 
         Initialization of SolarWinds exporter requires a liboboe reporter
         If `reporter` is no-op, the SW exporter will not export spans."""
-        if not apm_config.agent_enabled:
-            logger.error(
-                "APM Python library disabled. Cannot set traces exporters."
-            )
-            return
-
         # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
             OTEL_TRACES_EXPORTER,
@@ -396,15 +395,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure OTel OTLP metrics exporters if enabled and agent enabled.
+        """Configure OTel OTLP metrics exporters if enabled.
         Settings precedence: OTEL_* > SW_APM_EXPORT_METRICS_ENABLED.
         Links to new metric readers and global MeterProvider."""
-        if not apm_config.agent_enabled:
-            logger.error(
-                "APM Python library disabled. Cannot set metrics exporters."
-            )
-            return
-
         if not apm_config.get("export_metrics_enabled"):
             logger.debug(
                 "APM OTLP metrics export disabled. Skipping init of metrics exporters"
@@ -485,15 +478,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure OTel OTLP logs exporters if enabled and agent enabled.
+        """Configure OTel OTLP logs exporters if enabled.
         Settings precedence: OTEL_* > SW_APM_EXPORT_LOGS_ENABLED.
         Links to new global LoggerProvider."""
-        if not apm_config.agent_enabled:
-            logger.error(
-                "APM Python library disabled. Cannot set logs exporters."
-            )
-            return
-
         otel_ev = os.environ.get(
             _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
         )
