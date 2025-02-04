@@ -151,29 +151,25 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_txname_manager,
             )
 
-            if apm_config.get("legacy") is False:
-                # Export APM metrics by OTLP
+            if apm_config.get("legacy") is True:
+                # Export APM metrics by APM-proto.
+                self._configure_inbound_metrics_span_processor(
+                    apm_txname_manager,
+                    apm_config,
+                )
+            else:
+                # Export APM metrics, logs by OTLP.
+                # Default values are set by SolarWindsDistro; user can customize.
                 self._configure_metrics_exporter(apm_config)
                 self._configure_otlp_metrics_span_processors(
                     apm_txname_manager,
                     apm_config,
                     oboe_api,
                 )
-
                 self._configure_logs_exporter(apm_config)
-            else:
-                # Export APM metrics by APM-proto
-                self._configure_inbound_metrics_span_processor(
-                    apm_txname_manager,
-                    apm_config,
-                )
 
-            # The txnname cleanup span processor must be registered
-            # after the rest of the processors with defined on_end
-            self._configure_txnname_cleanup_span_processor(
-                apm_txname_manager,
-            )
-
+            # Export traces by OTLP or APM-proto depending on OTEL_TRACES_EXPORTER.
+            # Default values are set by SolarWindsDistro; user can customize.
             self._configure_traces_exporter(
                 reporter,
                 apm_txname_manager,
@@ -181,8 +177,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_config,
             )
 
+            # The txnname cleanup span processor must be registered
+            # after the rest of the processors with defined on_end
+            self._configure_txnname_cleanup_span_processor(
+                apm_txname_manager,
+            )
+
         else:
-            # Warning: This may still set OTEL_PROPAGATORS if set because OTel API defaults
             logger.warning(
                 "Tracing disabled. Skipping setup of all telemetry processors and exporters; using no-op tracer."
             )
