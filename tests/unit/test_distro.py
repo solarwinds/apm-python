@@ -112,6 +112,31 @@ class TestDistro:
             os.environ["OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"] = old_otel_ev_le
 
 
+    def test_new_initializes_class_variables(self, mocker):
+        mock_get_cnf_dict = mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.get_cnf_dict",
+            return_value={"foo": "bar"},
+        )
+        mock_calculate_is_legacy = mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_is_legacy", return_value="baz",
+        )
+        mock_calculate_metrics_enabled = mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled", return_value="qux",
+        )
+        mock_calculate_logs_enabled = mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled", return_value="quxx",
+        )
+
+        instance = distro.SolarWindsDistro()
+        assert instance._cnf_dict == {"foo": "bar"}
+        assert instance._is_legacy is "baz"
+        assert instance._instrumentor_metrics_enabled is "qux"
+        assert instance._instrumentor_logs_enabled is "quxx"
+        mock_get_cnf_dict.assert_called_once()
+        mock_calculate_is_legacy.assert_called_once_with({"foo": "bar"})
+        mock_calculate_metrics_enabled.assert_called_once_with({"foo": "bar"})
+        mock_calculate_logs_enabled.assert_called_once_with({"foo": "bar"})
+
     def test__log_python_runtime(self, mocker):
         mock_plat = mocker.patch(
             "solarwinds_apm.distro.platform"
