@@ -44,7 +44,7 @@ class TestApmConfigGetExtensionComponents:
         assert res3 == NoopOboeApi
         assert res4 == NoopOboeApiOptions
 
-    def test__get_extension_components_cannot_import(
+    def test__get_extension_components_non_legacy_cannot_import(
         self,
         mock_env_vars,
         monkeypatch,
@@ -57,7 +57,7 @@ class TestApmConfigGetExtensionComponents:
         assert res3 == NoopOboeApi
         assert res4 == NoopOboeApiOptions
 
-    def test__get_extension_components_is_lambda_cannot_import(
+    def test__get_extension_components_legacy_cannot_import(
         self,
         mock_env_vars,
         monkeypatch,
@@ -70,21 +70,21 @@ class TestApmConfigGetExtensionComponents:
         assert res3 == NoopOboeApi
         assert res4 == NoopOboeApiOptions
 
-    def test__get_extension_components_is_lambda(
+    def test__get_extension_components_enabled_non_legacy(
         self,
         mock_env_vars,
     ):
-        res1, res2, res3, res4 = apm_config.SolarWindsApmConfig()._get_extension_components(True, True)
+        res1, res2, res3, res4 = apm_config.SolarWindsApmConfig()._get_extension_components(True, False)
         assert res1 == NoopExtension
         assert res2 == NoopContext
         assert res3 == OboeAPI
         assert res4 == OboeAPIOptions
 
-    def test__get_extension_components_enabled(
+    def test__get_extension_components_legacy(
         self,
         mock_env_vars,
     ):
-        res1, res2, res3, res4 = apm_config.SolarWindsApmConfig()._get_extension_components(True, False)
+        res1, res2, res3, res4 = apm_config.SolarWindsApmConfig()._get_extension_components(True, True)
         assert res1 == Extension
         assert res2 == Context
         assert res3 == NoopOboeApi

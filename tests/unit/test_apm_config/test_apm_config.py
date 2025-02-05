@@ -718,7 +718,7 @@ class TestSolarWindsApmConfig:
         self._mock_service_key(mocker, "valid-and-long:key")
         assert apm_config.SolarWindsApmConfig()._config_mask_service_key().get("service_key") == "vali...long:key"
 
-    def test_str(
+    def test_str_non_legacy(
         self,
         mocker,
         mock_env_vars,
@@ -727,7 +727,23 @@ class TestSolarWindsApmConfig:
         result = str(apm_config.SolarWindsApmConfig())
         assert "vali...long:key" in result
         assert "agent_enabled" in result
+        assert "solarwinds_apm.apm_noop.Context" in result
+        assert "solarwinds_apm.extension.oboe.OboeAPI" in result
+
+    def test_str_legacy(
+        self,
+        mocker,
+        mock_env_vars,
+    ):
+        self._mock_service_key(mocker, "valid-and-long:key")
+        mocker.patch.dict(os.environ, {
+            "SW_APM_LEGACY": "true",
+        })
+        result = str(apm_config.SolarWindsApmConfig())
+        assert "vali...long:key" in result
+        assert "agent_enabled" in result
         assert "solarwinds_apm.extension.oboe.Context" in result
+        assert "solarwinds_apm.apm_noop.OboeAPI" in result
 
     # pylint:disable=unused-argument
     def test_set_config_value_invalid_key(self, caplog, setup_caplog, mock_env_vars):

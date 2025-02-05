@@ -229,6 +229,15 @@ class TestSolarWindsApmConfigAgentEnabled:
                 "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
             }
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
+            return_value=(
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+            )
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == "key"
@@ -262,6 +271,15 @@ class TestSolarWindsApmConfigAgentEnabled:
                 "set_sw_log_level": mocker.Mock(),
                 "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
             }
+        )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
+            return_value=(
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+            )
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config._calculate_agent_enabled()
@@ -444,6 +462,15 @@ class TestSolarWindsApmConfigAgentEnabled:
                 "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
             }
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
+            return_value=(
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+            )
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config.agent_enabled
         assert resulting_config.service_name == "key"
@@ -521,6 +548,15 @@ class TestSolarWindsApmConfigAgentEnabled:
                 "set_sw_log_level": mocker.Mock(),
                 "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
             }
+        )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
+            return_value=(
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+            )
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config._calculate_agent_enabled()
@@ -636,6 +672,15 @@ class TestSolarWindsApmConfigAgentEnabled:
                 "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
             }
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
+            return_value=(
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+            )
+        )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == "key"
@@ -701,6 +746,15 @@ class TestSolarWindsApmConfigAgentEnabled:
                 "set_sw_log_level": mocker.Mock(),
                 "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
             }
+        )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
+            return_value=(
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+            )
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config._calculate_agent_enabled()
