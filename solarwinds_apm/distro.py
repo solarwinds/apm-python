@@ -57,11 +57,21 @@ class SolarWindsDistro(BaseDistro):
     """OpenTelemetry Distro for SolarWinds reporting environment"""
 
     _cnf_dict = None
+    _is_legacy = None
+    _instrumentor_metrics_enabled = None
+    _instrumentor_logs_enabled = None
 
     def __new__(cls, *args, **kwargs):
-        # Maintain singleton pattern and cache config dict
-        if cls._cnf_dict is None:
-            cls._cnf_dict = SolarWindsApmConfig.get_cnf_dict()
+        # Maintain singleton pattern and cache SW APM user config
+        # for Distro lifecycle at auto-instrumentation
+        cls._cnf_dict = SolarWindsApmConfig.get_cnf_dict()
+        cls._is_legacy = SolarWindsApmConfig.calculate_is_legacy(cls._cnf_dict)
+        cls._instrumentor_metrics_enabled = (
+            SolarWindsApmConfig.calculate_metrics_enabled(cls._cnf_dict)
+        )
+        cls._instrumentor_logs_enabled = (
+            SolarWindsApmConfig.calculate_logs_enabled(cls._cnf_dict)
+        )
         return super().__new__(cls, *args, **kwargs)
 
     def _log_python_runtime(self):
@@ -182,8 +192,6 @@ class SolarWindsDistro(BaseDistro):
         # Protocol is the above default or what user has set
         otlp_protocol = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
 
-        is_legacy = SolarWindsApmConfig.calculate_is_legacy(self._cnf_dict)
-
         if otlp_protocol:
             if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
                 header_token = self._get_token_from_service_key()
@@ -192,7 +200,7 @@ class SolarWindsDistro(BaseDistro):
                         "Setting OTLP export defaults without SWO token"
                     )
 
-                if is_legacy:
+                if self._is_legacy:
                     environ.setdefault(
                         OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER
                     )
@@ -288,12 +296,9 @@ class SolarWindsDistro(BaseDistro):
         # Otel instrumentor-based metrics/logs export if supported.
         # Assumes kwargs are ignored if not implemented
         # for the current instrumentation library.
-        if (
-            SolarWindsApmConfig.calculate_metrics_enabled(self._cnf_dict)
-            is False
-        ):
+        if self._instrumentor_metrics_enabled is False:
             kwargs["meter_provider"] = NoOpMeterProvider()
-        if SolarWindsApmConfig.calculate_logs_enabled(self._cnf_dict) is False:
+        if self._instrumentor_logs_enabled is False:
             kwargs["logger_provider"] = NoOpLoggerProvider()
 
         try:
