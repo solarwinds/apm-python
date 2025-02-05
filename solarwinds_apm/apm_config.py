@@ -4,6 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+# pylint: disable=too-many-lines
+
 import json
 import logging
 import os
@@ -169,10 +171,6 @@ class SolarWindsApmConfig:
         # (Re-)Calculate config if AppOptics
         self.metric_format = self._calculate_metric_format()
         self.certificates = self._calculate_certificates()
-        self.__config["export_logs_enabled"] = self._calculate_logs_enabled()
-        self.__config["export_metrics_enabled"] = (
-            self._calculate_metrics_enabled()
-        )
 
         logger.debug("Set ApmConfig as: %s", self)
 
@@ -278,6 +276,58 @@ class SolarWindsApmConfig:
             )
             return True
         return False
+
+    # TODO Make cnf_dict required
+    @classmethod
+    def calculate_logs_enabled(
+        cls,
+        cnf_dict: dict = None,
+    ) -> bool:
+        """Return if export of instrumentor logs telemetry enabled.
+        Invalid boolean values are ignored.
+        Order of precedence: Environment Variable > config file > default True.
+        Optional cnf_dict is presumably already from a config file, else a call
+        to get_cnf_dict() is made for a fresh read."""
+        logs_enabled = True
+        if cnf_dict is None:
+            cnf_dict = cls.get_cnf_dict()
+        if cnf_dict:
+            cnf_enabled = cls.convert_to_bool(
+                cnf_dict.get("export_logs_enabled")
+            )
+            logs_enabled = (
+                cnf_enabled if cnf_enabled is not None else logs_enabled
+            )
+        env_enabled = cls.convert_to_bool(
+            os.environ.get("SW_APM_EXPORT_LOGS_ENABLED")
+        )
+        return env_enabled if env_enabled is not None else logs_enabled
+
+    # TODO Make cnf_dict required
+    @classmethod
+    def calculate_metrics_enabled(
+        cls,
+        cnf_dict: dict = None,
+    ) -> bool:
+        """Return if export of instrumentor metrics telemetry enabled.
+        Invalid boolean values are ignored.
+        Order of precedence: Environment Variable > config file > default True.
+        Optional cnf_dict is presumably already from a config file, else a call
+        to get_cnf_dict() is made for a fresh read."""
+        metrics_enabled = True
+        if cnf_dict is None:
+            cnf_dict = cls.get_cnf_dict()
+        if cnf_dict:
+            cnf_enabled = cls.convert_to_bool(
+                cnf_dict.get("export_metrics_enabled")
+            )
+            metrics_enabled = (
+                cnf_enabled if cnf_enabled is not None else metrics_enabled
+            )
+        env_enabled = cls.convert_to_bool(
+            os.environ.get("SW_APM_EXPORT_metrics_ENABLED")
+        )
+        return env_enabled if env_enabled is not None else metrics_enabled
 
     def _calculate_agent_enabled_platform(self) -> bool:
         """Checks if agent is enabled/disabled based on platform"""
@@ -648,36 +698,6 @@ class SolarWindsApmConfig:
                     "No such file at specified trustedpath. Using default certificate."
                 )
         return certs
-
-    def _calculate_logs_enabled(self) -> bool:
-        """Return if export of logs telemetry enabled, based on collector.
-        Always False if AO collector, else use current config."""
-        host = self.get("collector")
-        if host:
-            if (
-                INTL_SWO_AO_COLLECTOR in host
-                or INTL_SWO_AO_STG_COLLECTOR in host
-            ):
-                logger.warning(
-                    "AO collector detected. Defaulting to disabled logs export."
-                )
-                return False
-        return self.get("export_logs_enabled")
-
-    def _calculate_metrics_enabled(self) -> bool:
-        """Return if export of metrics telemetry enabled, based on collector.
-        Always False if AO collector, else use current config."""
-        host = self.get("collector")
-        if host:
-            if (
-                INTL_SWO_AO_COLLECTOR in host
-                or INTL_SWO_AO_STG_COLLECTOR in host
-            ):
-                logger.warning(
-                    "AO collector detected. Defaulting to disabled OTLP metrics export."
-                )
-                return False
-        return self.get("export_metrics_enabled")
 
     def mask_service_key(self) -> str:
         """Return masked service key except first 4 and last 4 chars"""
