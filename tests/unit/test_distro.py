@@ -1085,6 +1085,14 @@ class TestDistro:
         mock_instrument.assert_not_called()
 
     def test_load_instrumentor_no_commenting_configured(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
+            return_value=True,
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
+            return_value=True,
+        )
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -1110,6 +1118,14 @@ class TestDistro:
         )  
 
     def test_load_instrumentor_enable_commenting_all_only(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
+            return_value=True,
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
+            return_value=True,
+        )
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -1144,6 +1160,14 @@ class TestDistro:
         )
 
     def test_load_instrumentor_enable_commenting_individual_only_not_on_list(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
+            return_value=True,
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
+            return_value=True,
+        )
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -1185,6 +1209,14 @@ class TestDistro:
         )
 
     def test_load_instrumentor_enable_commenting_all_false_and_individual_false(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
+            return_value=True,
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
+            return_value=True,
+        )
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -1230,6 +1262,14 @@ class TestDistro:
         )
 
     def test_load_instrumentor_enable_commenting_all_false_and_individual_true(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
+            return_value=True,
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
+            return_value=True,
+        )
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -1277,6 +1317,14 @@ class TestDistro:
         )
 
     def test_load_instrumentor_enable_commenting_all_true_and_individual_false(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
+            return_value=True,
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
+            return_value=True,
+        )
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -1325,6 +1373,14 @@ class TestDistro:
         )
 
     def test_load_instrumentor_enable_commenting_individual_only_not_django(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
+            return_value=True,
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
+            return_value=True,
+        )
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -1367,6 +1423,14 @@ class TestDistro:
         )
 
     def test_load_instrumentor_enable_commenting_individual_only_django(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
+            return_value=True,
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
+            return_value=True,
+        )
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -1406,6 +1470,82 @@ class TestDistro:
         mock_instrument.assert_called_once_with(
             is_sql_commentor_enabled=True,
             foo="bar",
+        )
+
+    def test_load_instrumentor_metrics_logs_enabled(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
+            return_value=True,
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
+            return_value=True,
+        )
+        mock_instrument = mocker.Mock()
+        mock_instrumentor = mocker.Mock()
+        mock_instrumentor.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "instrument": mock_instrument
+                }
+            )
+        )
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_instrumentor)
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "name": "foo-instrumentor",
+                "load": mock_load,
+            }
+        )
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        # No meter_provider, log_provider set
+        mock_instrument.assert_called_once_with(
+            foo="bar",
+        )
+
+    def test_load_instrumentor_metrics_logs_disabled(self, mocker):
+        mock_nmp = mocker.patch(
+            "solarwinds_apm.distro.NoOpMeterProvider",
+            return_value="noop"
+        )
+        mock_nlp = mocker.patch(
+            "solarwinds_apm.distro.NoOpLoggerProvider",
+            return_value="noop"
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
+            return_value=False,
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
+            return_value=False,
+        )
+        mock_instrument = mocker.Mock()
+        mock_instrumentor = mocker.Mock()
+        mock_instrumentor.configure_mock(
+            return_value=mocker.Mock(
+                **{
+                    "instrument": mock_instrument
+                }
+            )
+        )
+        mock_load = mocker.Mock()
+        mock_load.configure_mock(return_value=mock_instrumentor)
+        mock_entry_point = mocker.Mock()
+        mock_entry_point.configure_mock(
+            **{
+                "name": "foo-instrumentor",
+                "load": mock_load,
+            }
+        )
+        distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
+        # meter_provider, log_provider set as no-op
+        mock_instrument.assert_called_once_with(
+            foo="bar",
+            meter_provider="noop",
+            logger_provider="noop",
         )
 
     def test_enable_commenter_none(self, mocker):
