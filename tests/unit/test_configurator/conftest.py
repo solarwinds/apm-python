@@ -459,9 +459,37 @@ def mock_fwkv_manager_init(mocker):
         "solarwinds_apm.configurator.SolarWindsFrameworkKvManager"
     )
 
-@pytest.fixture(name="mock_oboe_api_obj")
-def mock_oboe_api_obj(mocker):
-    return mocker.Mock()
+@pytest.fixture(name="mock_oboe_api_obj_non_legacy")
+def mock_oboe_api_obj_non_legacy(mocker):
+    def get_side_effect(param):
+        if param == "legacy":
+            return False
+        else:
+            return "not mocked"
+
+    mock_apmconfig = mocker.Mock()
+    mock_apmconfig.configure_mock(
+        **{
+            "get": mocker.Mock(side_effect=get_side_effect),
+        }
+    )
+    return mock_apmconfig
+
+@pytest.fixture(name="mock_oboe_api_obj_legacy")
+def mock_oboe_api_obj_legacy(mocker):
+    def get_side_effect(param):
+        if param == "legacy":
+            return True
+        else:
+            return "not mocked"
+
+    mock_apmconfig = mocker.Mock()
+    mock_apmconfig.configure_mock(
+        **{
+            "get": mocker.Mock(side_effect=get_side_effect),
+        }
+    )
+    return mock_apmconfig
 
 
 # ==================================================================
