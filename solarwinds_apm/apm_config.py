@@ -335,7 +335,7 @@ class SolarWindsApmConfig:
                 cnf_enabled if cnf_enabled is not None else metrics_enabled
             )
         env_enabled = cls.convert_to_bool(
-            os.environ.get("SW_APM_EXPORT_metrics_ENABLED")
+            os.environ.get("SW_APM_EXPORT_METRICS_ENABLED")
         )
         return env_enabled if env_enabled is not None else metrics_enabled
 
