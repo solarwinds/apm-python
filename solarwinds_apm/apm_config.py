@@ -281,14 +281,19 @@ class SolarWindsApmConfig:
     @classmethod
     def calculate_logs_enabled(
         cls,
+        is_legacy: bool = False,
         cnf_dict: dict = None,
     ) -> bool:
         """Return if export of instrumentor logs telemetry enabled.
         Invalid boolean values are ignored.
-        Order of precedence: Environment Variable > config file > default True.
+        Order of precedence: Environment Variable > config file > default.
+        Default is True is not legacy, False if legacy.
         Optional cnf_dict is presumably already from a config file, else a call
         to get_cnf_dict() is made for a fresh read."""
-        logs_enabled = True
+        if is_legacy:
+            logs_enabled = False
+        else:
+            logs_enabled = True
         if cnf_dict is None:
             cnf_dict = cls.get_cnf_dict()
         if cnf_dict:
@@ -307,14 +312,19 @@ class SolarWindsApmConfig:
     @classmethod
     def calculate_metrics_enabled(
         cls,
+        is_legacy: bool = False,
         cnf_dict: dict = None,
     ) -> bool:
         """Return if export of instrumentor metrics telemetry enabled.
         Invalid boolean values are ignored.
-        Order of precedence: Environment Variable > config file > default True.
+        Order of precedence: Environment Variable > config file > default.
+        Default is True is not legacy, False if legacy.
         Optional cnf_dict is presumably already from a config file, else a call
         to get_cnf_dict() is made for a fresh read."""
-        metrics_enabled = True
+        if is_legacy:
+            metrics_enabled = False
+        else:
+            metrics_enabled = True
         if cnf_dict is None:
             cnf_dict = cls.get_cnf_dict()
         if cnf_dict:
