@@ -491,6 +491,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED)
             is False
         ):
+            # TODO (NH-101363): Change to configure stdlib handler not exporter
             logger.debug(
                 "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED false. Skipping init of logs exporters"
             )
