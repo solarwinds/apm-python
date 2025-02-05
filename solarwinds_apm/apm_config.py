@@ -244,7 +244,6 @@ class SolarWindsApmConfig:
             noop_extension.OboeAPIOptions,
         )
 
-    # TODO Make cnf_dict required
     @classmethod
     def calculate_is_legacy(
         cls,
@@ -277,7 +276,6 @@ class SolarWindsApmConfig:
             return True
         return False
 
-    # TODO Make cnf_dict required
     @classmethod
     def calculate_logs_enabled(
         cls,
@@ -308,7 +306,6 @@ class SolarWindsApmConfig:
         )
         return env_enabled if env_enabled is not None else logs_enabled
 
-    # TODO Make cnf_dict required
     @classmethod
     def calculate_metrics_enabled(
         cls,
