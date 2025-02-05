@@ -246,14 +246,21 @@ class SolarWindsApmConfig:
             noop_extension.OboeAPIOptions,
         )
 
+    # TODO Make cnf_dict required
     @classmethod
-    def calculate_is_legacy(cls) -> bool:
+    def calculate_is_legacy(
+        cls,
+        cnf_dict: dict = None,
+    ) -> bool:
         """Checks if agent is running in a legacy environment.
         Invalid boolean values are ignored.
-        Order of precedence: Environment Variable > config file > default False
+        Order of precedence: Environment Variable > config file > default False.
+        Optional cnf_dict is presumably already from a config file, else a call
+        to get_cnf_dict() is made for a fresh read.
         """
         is_legacy = False
-        cnf_dict = cls.get_cnf_dict()
+        if cnf_dict is None:
+            cnf_dict = cls.get_cnf_dict()
         if cnf_dict:
             cnf_legacy = cls.convert_to_bool(cnf_dict.get("legacy"))
             is_legacy = cnf_legacy if cnf_legacy is not None else is_legacy

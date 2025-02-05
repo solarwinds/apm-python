@@ -57,6 +57,14 @@ logger = logging.getLogger(__name__)
 class SolarWindsDistro(BaseDistro):
     """OpenTelemetry Distro for SolarWinds reporting environment"""
 
+    _cnf_dict = None
+
+    def __new__(cls, *args, **kwargs):
+        # Maintain singleton pattern and cache config dict
+        if cls._cnf_dict is None:
+            cls._cnf_dict = SolarWindsApmConfig.get_cnf_dict()
+        return super().__new__(cls, *args, **kwargs)
+
     def _log_python_runtime(self):
         """Logs Python runtime info, with any warnings"""
         python_vers = platform.python_version()
@@ -175,7 +183,7 @@ class SolarWindsDistro(BaseDistro):
         # Protocol is the above default or what user has set
         otlp_protocol = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
 
-        is_legacy = SolarWindsApmConfig.calculate_is_legacy()
+        is_legacy = SolarWindsApmConfig.calculate_is_legacy(self._cnf_dict)
 
         if otlp_protocol:
             if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
