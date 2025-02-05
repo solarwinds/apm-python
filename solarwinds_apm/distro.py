@@ -24,10 +24,7 @@ from opentelemetry.instrumentation.logging.environment_variables import (
 )
 from opentelemetry.instrumentation.version import __version__ as inst_version
 from opentelemetry.metrics import NoOpMeterProvider
-from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
-    OTEL_EXPORTER_OTLP_PROTOCOL,
-)
+from opentelemetry.sdk.environment_variables import OTEL_EXPORTER_OTLP_PROTOCOL
 from opentelemetry.sdk.version import __version__ as sdk_version
 from opentelemetry.util._importlib_metadata import EntryPoint
 
@@ -213,11 +210,12 @@ class SolarWindsDistro(BaseDistro):
                     header_token, otlp_protocol
                 )
 
-                # APM Python enables logging auto-instrumentation by default
-                environ.setdefault(
-                    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
-                    "true",
-                )
+                # TODO (NH-101363): APM Python enables logging auto-instrumentation
+                # by default to configure logging stdlib handler
+                # environ.setdefault(
+                #     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+                #     "true",
+                # )
 
             else:
                 logger.warning(
