@@ -4,6 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import logging
 import os
 
 from opentelemetry import metrics as metrics_api
@@ -26,7 +27,7 @@ from solarwinds_apm.extension.oboe import (
     OboeAPI,
 )
 from solarwinds_apm.apm_noop import (
-    OboeAPI as NoOpOboeAPI,
+    Reporter as NoOpReporter,
 )
 
 from ..test_base_sw import TestBaseSw
