@@ -39,3 +39,6 @@ class TestBaseSwHeadersAndAttributesLegacy(TestBaseSwHeadersAndAttributes):
     and span attributes calculation from decision and headers,
     in legacy mode.
     """
+
+    def setUp(self):
+        super().setUp(is_legacy=True)
