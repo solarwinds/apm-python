@@ -10,7 +10,7 @@ import json
 from opentelemetry import trace as trace_api
 from unittest import mock
 
-from .test_base_sw_headers_attrs_legacy import TestBaseSwLegacy
+from .test_base_sw_legacy import TestBaseSwLegacy
 
 
 class TestXtraceoptionsValidation(TestBaseSwLegacy):
