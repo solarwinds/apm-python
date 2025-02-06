@@ -98,9 +98,11 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         assert os.environ["OTEL_PROPAGATORS"] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ["OTEL_SEMCONV_STABILITY_OPT_IN"] == "http"
         assert os.environ["OTEL_EXPORTER_OTLP_PROTOCOL"] == "http/protobuf"
+        assert os.environ["OTEL_METRICS_EXPORTER"] == "otlp_proto_http"
         assert os.environ["OTEL_EXPORTER_OTLP_METRICS_PROTOCOL"] == "http/protobuf"
         assert os.environ["OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"] == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/metrics"
         assert os.environ["OTEL_EXPORTER_OTLP_METRICS_HEADERS"] == "authorization=Bearer%20foo"
+        assert os.environ["OTEL_LOGS_EXPORTER"] == "otlp_proto_http"
         assert os.environ["OTEL_EXPORTER_OTLP_LOGS_PROTOCOL"] == "http/protobuf"
         assert os.environ["OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"] == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs"
         assert os.environ["OTEL_EXPORTER_OTLP_LOGS_HEADERS"] == "authorization=Bearer%20foo"
@@ -109,6 +111,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
             # In legacy, traces exporter default is APM-proto
             assert os.environ["OTEL_TRACES_EXPORTER"] == "solarwinds_exporter"
         else:
+            assert os.environ["OTEL_TRACES_EXPORTER"] == "otlp_proto_http"
             assert os.environ["OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"] == "http/protobuf"
             assert os.environ["OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"] == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/traces"
             assert os.environ["OTEL_EXPORTER_OTLP_TRACES_HEADERS"] == "authorization=Bearer%20foo"
@@ -212,6 +215,24 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         """Teardown called after each test scenario"""
         del self.client
         self.memory_exporter.clear()
-        for env_key in ["SW_APM_SERVICE_KEY", "SW_APM_LEGACY"]:
+        for env_key in [
+            "SW_APM_SERVICE_KEY",
+            "SW_APM_LEGACY",
+            "OTEL_SEMCONV_STABILITY_OPT_IN",
+            "OTEL_PROPAGATORS",
+            "OTEL_EXPORTER_OTLP_PROTOCOL",
+            "OTEL_TRACES_EXPORTER",
+            "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL",
+            "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+            "OTEL_EXPORTER_OTLP_TRACES_HEADERS",
+            "OTEL_METRICS_EXPORTER",
+            "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL",
+            "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT",
+            "OTEL_EXPORTER_OTLP_METRICS_HEADERS",
+            "OTEL_LOGS_EXPORTER",
+            "OTEL_EXPORTER_OTLP_LOGS_PROTOCOL",
+            "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT",
+            "OTEL_EXPORTER_OTLP_LOGS_HEADERS",
+        ]:
             if os.environ.get(env_key):
                 del os.environ[env_key]
