@@ -13,49 +13,24 @@ import requests
 from werkzeug.test import Client
 from werkzeug.wrappers import Response
 
-from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.propagate import get_global_textmap
-from opentelemetry.sdk._logs import (
-    LoggerProvider,
-    LoggingHandler,
-)
-from opentelemetry.sdk._logs.export import (
-    InMemoryLogExporter,
-    SimpleLogRecordProcessor,
-)
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
-from opentelemetry.test.globals_test import (
-    reset_logging_globals,
-    reset_metrics_globals,
-    reset_trace_globals,
-)
+from opentelemetry.test.globals_test import reset_trace_globals
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.util._importlib_metadata import entry_points
 
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro
-from solarwinds_apm.extension.oboe import (
-    OboeAPI,
-    Reporter,
-)
-from solarwinds_apm.apm_noop import (
-    OboeAPI as NoOpOboeAPI,
-    Reporter as NoOpReporter,
-)
 from solarwinds_apm.propagator import SolarWindsPropagator
 from solarwinds_apm.sampler import ParentBasedSwSampler
-
-from .utils.exporter import InMemoryMetricExporter
 
 class TestBaseSw(TestBase):
     """
@@ -102,16 +77,11 @@ class TestBaseSw(TestBase):
                     argument = re.sub(r"OTEL_(PYTHON_)?", "", attribute).lower()
                     argument_otel_environment_variable[argument] = attribute
 
-    def _setup_env_vars(self, is_legacy=False):
+    def _setup_env_vars(self):
         # Set APM service key - not valid, but we mock liboboe anyway
         os.environ["SW_APM_SERVICE_KEY"] = "foo:bar"
-        if is_legacy:
-            # Set APM to legacy mode
-            os.environ["SW_APM_LEGACY"] = "true"
-        else:
-            os.environ["SW_APM_LEGACY"] = "false"
 
-    def _assert_defaults(self, is_legacy=False):
+    def _assert_defaults(self):
         # Confirm default environment was set by Distro
         assert os.environ["OTEL_PROPAGATORS"] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ["OTEL_SEMCONV_STABILITY_OPT_IN"] == "http"
@@ -125,35 +95,19 @@ class TestBaseSw(TestBase):
         assert os.environ["OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"] == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs"
         assert os.environ["OTEL_EXPORTER_OTLP_LOGS_HEADERS"] == "authorization=Bearer%20foo"
 
-        if is_legacy:
-            # In legacy, traces exporter default is APM-proto
-            assert os.environ["OTEL_TRACES_EXPORTER"] == "solarwinds_exporter"
-        else:
-            assert os.environ["OTEL_TRACES_EXPORTER"] == "otlp_proto_http"
-            assert os.environ["OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"] == "http/protobuf"
-            assert os.environ["OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"] == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/traces"
-            assert os.environ["OTEL_EXPORTER_OTLP_TRACES_HEADERS"] == "authorization=Bearer%20foo"
-
-    def _assert_reporter(self, reporter, is_legacy=False):
-        if is_legacy:
-            assert isinstance(reporter, Reporter)
-        else:
-            assert isinstance(reporter, NoOpReporter)
+    def _assert_reporter(self, reporter):
+        raise NotImplementedError("Please implement this test helper")
 
     def _setup_test_traces_export(
         self,
         apm_config,
         configurator,
         reporter,
-        is_legacy=False
+        oboe_api,
     ):
         # This is done because set_tracer_provider cannot override the
         # current tracer provider. Has to be done here.
         reset_trace_globals()
-        if is_legacy:
-            oboe_api = NoOpOboeAPI()
-        else:
-            oboe_api = OboeAPI()
         sampler = next(iter(entry_points(
             group="opentelemetry_traces_sampler",
             name=configurator._DEFAULT_SW_TRACES_SAMPLER,
@@ -168,34 +122,6 @@ class TestBaseSw(TestBase):
         )
         trace_api.set_tracer_provider(self.tracer_provider)
         self.tracer = self.tracer_provider.get_tracer(__name__)
-
-    def _setup_test_metrics_export(self):
-        reset_metrics_globals()
-        # Set InMemory exporter for testing generated telemetry
-        # instead of SolarWinds/OTLP exporter
-        self.memory_metric_exporter = InMemoryMetricExporter()
-        reader = PeriodicExportingMetricReader(
-            self.memory_metric_exporter,
-            export_interval_millis=100,
-        )
-        self.meter_provider = MeterProvider(metric_readers=[reader])
-        metrics_api.set_meter_provider(self.meter_provider)
-
-    def _setup_test_logs_export(self):
-        reset_logging_globals()
-        self.logger_provider = LoggerProvider()
-
-        # Set InMemory exporter for testing generated telemetry
-        # instead of SolarWinds/OTLP exporter
-        self.memory_log_exporter = InMemoryLogExporter()
-        self.logger_provider.add_log_record_processor(
-            SimpleLogRecordProcessor(self.memory_log_exporter)
-        )
-        logger = logging.getLogger("default_level")
-        logger.propagate = False
-        logger.addHandler(
-            LoggingHandler(logger_provider=self.logger_provider)
-        )
 
     def _setup_app_endpoints(self):
         # pylint: disable=no-member
@@ -219,15 +145,15 @@ class TestBaseSw(TestBase):
         self._setup_app_endpoints()
         self.client = Client(self.app, Response)
 
-    def setUp(self, is_legacy=False):
+    def setUp(self):
         """Set up called before each test scenario"""
         self._setup_entrypoints()
-        self._setup_env_vars(is_legacy)
+        self._setup_env_vars()
 
         # Load Distro
         SolarWindsDistro().configure()
 
-        self._assert_defaults(is_legacy)
+        self._assert_defaults()
 
         # Load Configurator to Configure SW custom SDK components
         # except use TestBase InMemorySpanExporter
@@ -236,23 +162,16 @@ class TestBaseSw(TestBase):
 
         # Reporter fully functional if legacy
         reporter = configurator._initialize_solarwinds_reporter(apm_config)
-        self._assert_reporter(reporter, is_legacy)
+        self._assert_reporter(reporter)
 
         configurator._configure_propagator()
         configurator._configure_response_propagator()
-        self._setup_test_traces_export(apm_config, configurator, reporter, is_legacy)
-        if is_legacy is False:
-            self._setup_test_metrics_export()
-            self._setup_test_logs_export()
-
-        # Make sure SW propagators, sampler were set
         propagators = get_global_textmap()._propagators
         assert len(propagators) == 3
         assert isinstance(propagators[2], SolarWindsPropagator)
-        assert isinstance(trace_api.get_tracer_provider().sampler, ParentBasedSwSampler)
 
-        # Finish setup by running Flask app instrumented with APM Python
-        self._setup_instrumented_app()
+        self._setup_test_traces_export(apm_config, configurator, reporter)
+        assert isinstance(trace_api.get_tracer_provider().sampler, ParentBasedSwSampler)
 
     def tearDown(self):
         """Teardown called after each test scenario"""
