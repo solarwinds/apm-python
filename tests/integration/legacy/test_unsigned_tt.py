@@ -10,10 +10,10 @@ import json
 from opentelemetry import trace as trace_api
 from unittest import mock
 
-from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
+from .test_base_sw_headers_attrs_legacy import TestBaseSwHeadersAndAttributesLegacy
 
 
-class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
+class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributesLegacy):
     """
     Test class for unsigned requests, with or without trigger tracing,
     without traceparent nor tracestate headers.

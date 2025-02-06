@@ -10,10 +10,10 @@ import json
 from opentelemetry import trace as trace_api
 from unittest import mock
 
-from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
+from .test_base_sw_headers_attrs_legacy import TestBaseSwHeadersAndAttributesLegacy
 
 
-class TestScenario8(TestBaseSwHeadersAndAttributes):
+class TestScenario8(TestBaseSwHeadersAndAttributesLegacy):
     """
     Test class for continuing tracing decision OR trigger tracing with input headers
     for traceparent, tracestate, and trigger tracing.

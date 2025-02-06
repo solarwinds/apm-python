@@ -61,7 +61,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
             "tracestate": resp.request.headers["tracestate"],
             "incoming-headers": incoming_headers,
         }
-    
+
     def _setup_endpoints(self):
         # pylint: disable=no-member
         self.app.route("/test_trace/")(self._test_trace)
