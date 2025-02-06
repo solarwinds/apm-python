@@ -10,9 +10,9 @@ import json
 from opentelemetry import trace as trace_api
 from unittest import mock
 
-from .test_base_sw_headers_attrs_legacy import TestBaseSwHeadersAndAttributesLegacy
+from .test_base_sw_headers_attrs_legacy import TestBaseSwLegacy
 
-class TestScenario1(TestBaseSwHeadersAndAttributesLegacy):
+class TestScenario1(TestBaseSwLegacy):
     """
     Test class for starting a new tracing decision with no input headers.
     """

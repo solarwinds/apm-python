@@ -10,10 +10,10 @@ import json
 from opentelemetry import trace as trace_api
 from unittest import mock
 
-from .test_base_sw_headers_attrs_legacy import TestBaseSwHeadersAndAttributesLegacy
+from .test_base_sw_headers_attrs_legacy import TestBaseSwLegacy
 
 
-class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributesLegacy):
+class TestXtraceoptionsValidation(TestBaseSwLegacy):
     """
     Test class for x-trace-options header validation as part of unsigned requests.
 

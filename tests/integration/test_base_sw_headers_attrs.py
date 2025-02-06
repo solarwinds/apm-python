@@ -57,7 +57,7 @@ from solarwinds_apm.sampler import ParentBasedSwSampler
 
 from .utils.exporter import InMemoryMetricExporter
 
-class TestBaseSwHeadersAndAttributes(TestBase):
+class TestBaseSw(TestBase):
     """
     Base class for testing SolarWinds custom distro header propagation
     and span attributes calculation from decision and headers.
