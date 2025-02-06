@@ -131,7 +131,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributesLegacy):
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
 
         # Verify spans exported: service entry + outgoing request (child with local parent)
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]
@@ -313,7 +313,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributesLegacy):
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 0
 
     def test_sampled_both_trace_context_and_xtraceoptions_valid_without_tt(self):
@@ -429,7 +429,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributesLegacy):
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
 
         # Verify spans exported: service entry + outgoing request (child with local parent)
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]
@@ -611,7 +611,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributesLegacy):
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 0
 
     def test_sampled_invalid_trace_context_and_valid_unsigned_with_tt(self):
@@ -700,7 +700,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributesLegacy):
         assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]
@@ -855,5 +855,5 @@ class TestScenario8(TestBaseSwHeadersAndAttributesLegacy):
         assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 0

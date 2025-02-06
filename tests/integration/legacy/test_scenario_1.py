@@ -88,7 +88,7 @@ class TestScenario1(TestBaseSwHeadersAndAttributesLegacy):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]

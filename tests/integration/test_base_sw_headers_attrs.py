@@ -4,6 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import logging
 import os
 import re
 
@@ -12,15 +13,31 @@ import requests
 from werkzeug.test import Client
 from werkzeug.wrappers import Response
 
+from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.propagate import get_global_textmap
-from opentelemetry.sdk.trace import TracerProvider, export
+from opentelemetry.sdk._logs import (
+    LoggerProvider,
+    LoggingHandler,
+)
+from opentelemetry.sdk._logs.export import (
+    InMemoryLogExporter,
+    SimpleLogRecordProcessor,
+)
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
-from opentelemetry.test.globals_test import reset_trace_globals
+from opentelemetry.test.globals_test import (
+    reset_logging_globals,
+    reset_metrics_globals,
+    reset_trace_globals,
+)
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.util._importlib_metadata import entry_points
 
@@ -38,6 +55,7 @@ from solarwinds_apm.apm_noop import (
 from solarwinds_apm.propagator import SolarWindsPropagator
 from solarwinds_apm.sampler import ParentBasedSwSampler
 
+from .utils.exporter import InMemoryMetricExporter
 
 class TestBaseSwHeadersAndAttributes(TestBase):
     """
@@ -122,7 +140,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         else:
             assert isinstance(reporter, NoOpReporter)
 
-    def _setup_tracerprovider(
+    def _setup_test_traces_export(
         self,
         apm_config,
         configurator,
@@ -136,22 +154,48 @@ class TestBaseSwHeadersAndAttributes(TestBase):
             oboe_api = NoOpOboeAPI()
         else:
             oboe_api = OboeAPI()
-
         sampler = next(iter(entry_points(
             group="opentelemetry_traces_sampler",
             name=configurator._DEFAULT_SW_TRACES_SAMPLER,
         ))).load()(apm_config, reporter, oboe_api)
         self.tracer_provider = TracerProvider(sampler=sampler)
 
-    def _setup_exporters(self, is_legacy=False):
-        # Set InMemorySpanExporter for testing
-        # We do NOT use SolarWindsSpanExporter
-        self.memory_exporter = InMemorySpanExporter()
-        span_processor = export.SimpleSpanProcessor(self.memory_exporter)
-        self.tracer_provider.add_span_processor(span_processor)
+        # Set InMemory exporter for testing generated telemetry
+        # instead of SolarWinds/OTLP exporter
+        self.memory_span_exporter = InMemorySpanExporter()
+        self.tracer_provider.add_span_processor(
+            SimpleSpanProcessor(self.memory_span_exporter)
+        )
         trace_api.set_tracer_provider(self.tracer_provider)
         self.tracer = self.tracer_provider.get_tracer(__name__)
-        # TODO metricsexporter, logsexporter
+
+    def _setup_test_metrics_export(self):
+        reset_metrics_globals()
+        # Set InMemory exporter for testing generated telemetry
+        # instead of SolarWinds/OTLP exporter
+        self.memory_metric_exporter = InMemoryMetricExporter()
+        reader = PeriodicExportingMetricReader(
+            self.memory_metric_exporter,
+            export_interval_millis=100,
+        )
+        self.meter_provider = MeterProvider(metric_readers=[reader])
+        metrics_api.set_meter_provider(self.meter_provider)
+
+    def _setup_test_logs_export(self):
+        reset_logging_globals()
+        self.logger_provider = LoggerProvider()
+
+        # Set InMemory exporter for testing generated telemetry
+        # instead of SolarWinds/OTLP exporter
+        self.memory_log_exporter = InMemoryLogExporter()
+        self.logger_provider.add_log_record_processor(
+            SimpleLogRecordProcessor(self.memory_log_exporter)
+        )
+        logger = logging.getLogger("default_level")
+        logger.propagate = False
+        logger.addHandler(
+            LoggingHandler(logger_provider=self.logger_provider)
+        )
 
     def _setup_app_endpoints(self):
         # pylint: disable=no-member
@@ -196,11 +240,10 @@ class TestBaseSwHeadersAndAttributes(TestBase):
 
         configurator._configure_propagator()
         configurator._configure_response_propagator()
-
-        self._setup_tracerprovider(apm_config, configurator, reporter, is_legacy)
-        # TODO setup meterprovider, loggerprovider
-        self._setup_exporters(is_legacy)
-        # TODO assert exporters
+        self._setup_test_traces_export(apm_config, configurator, reporter, is_legacy)
+        if is_legacy is False:
+            self._setup_test_metrics_export()
+            self._setup_test_logs_export()
 
         # Make sure SW propagators, sampler were set
         propagators = get_global_textmap()._propagators
@@ -214,7 +257,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
     def tearDown(self):
         """Teardown called after each test scenario"""
         del self.client
-        self.memory_exporter.clear()
+        self.memory_span_exporter.clear()
         for env_key in [
             "SW_APM_SERVICE_KEY",
             "SW_APM_LEGACY",
