@@ -41,11 +41,9 @@ class TestBaseSwOtlp(TestBaseSw):
 
     @staticmethod
     def _test_trace():
+        # Add logs for LoggingHandler else no logs from instrumentors alone
         logger = logging.getLogger("foo-logger")
         logger.warning("My foo log!")
-        meter = metrics_api.get_meter_provider().get_meter("foo-meter")
-        counter = meter.create_counter("foo-counter")
-        counter.add(10, {"foo-label": "bar-value"})
         return TestBaseSw._test_trace()
 
     def _setup_env_vars(self):

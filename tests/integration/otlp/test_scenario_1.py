@@ -137,7 +137,34 @@ class TestScenario1(TestBaseSwOtlp):
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
 
-        # TODO: check metrics
+        # We expect server metrics from Flask server instrumentation
+        metric_data = self.metric_reader.get_metrics_data()
+        metrics = metric_data.resource_metrics[0].scope_metrics[0].metrics
+        self.assertEqual(len(metrics), 2)
+        active_requests = metrics[0]
+        self.assertEqual(
+            active_requests.name,
+            "http.server.active_requests",
+        )
+        self.assertEqual(
+            active_requests.data.data_points[0].attributes,
+            {"http.request.method": "GET", "url.scheme": "http"},
+        )
+        request_duration = metrics[1]
+        self.assertEqual(
+            request_duration.name,
+            "http.server.request.duration",
+        )
+        self.assertEqual(
+            request_duration.data.data_points[0].attributes,
+            {
+                "http.request.method": "GET",
+                "url.scheme": "http",
+                "network.protocol.version": "1.1",
+                "http.response.status_code": 200,
+                "http.route": "/test_trace/"
+            },
+        )
 
         finished_logs = self.memory_log_exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 1)
