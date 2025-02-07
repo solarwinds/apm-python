@@ -40,6 +40,12 @@ class TestBaseSwOtlp(TestBaseSw):
     in OTLP mode.
     """
 
+    @staticmethod
+    def _test_trace():
+        logger = logging.getLogger("foo-logger")
+        logger.warning("My foo log!")
+        return TestBaseSw._test_trace()
+
     def _setup_env_vars(self):
         super()._setup_env_vars()
         os.environ["SW_APM_LEGACY"] = "false"
@@ -90,7 +96,7 @@ class TestBaseSwOtlp(TestBaseSw):
         self.logger_provider.add_log_record_processor(
             SimpleLogRecordProcessor(self.memory_log_exporter)
         )
-        logger = logging.getLogger("default_level")
+        logger = logging.getLogger("foo-logger")
         logger.propagate = False
         logger.addHandler(
             LoggingHandler(logger_provider=self.logger_provider)

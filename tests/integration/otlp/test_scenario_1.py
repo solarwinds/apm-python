@@ -6,9 +6,10 @@
 
 import re
 import json
+from unittest import mock
 
 from opentelemetry import trace as trace_api
-from unittest import mock
+from opentelemetry._logs import SeverityNumber
 
 from .test_base_sw_otlp import TestBaseSwOtlp
 
@@ -135,3 +136,17 @@ class TestScenario1(TestBaseSwOtlp):
         # is stored in the test app's response body (new_span_id).
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
+
+        # TODO: check metrics
+
+        finished_logs = self.memory_log_exporter.get_finished_logs()
+        self.assertEqual(len(finished_logs), 1)
+        warning_log_record = finished_logs[0].log_record
+        self.assertEqual(warning_log_record.body, "My foo log!")
+        self.assertEqual(warning_log_record.severity_text, "WARN")
+        self.assertEqual(
+            warning_log_record.severity_number, SeverityNumber.WARN
+        )
+        self.assertEqual(
+            finished_logs[0].instrumentation_scope.name, "foo-logger"
+        )
