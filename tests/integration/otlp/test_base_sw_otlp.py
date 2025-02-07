@@ -17,7 +17,7 @@ from opentelemetry.sdk._logs.export import (
     SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.test.globals_test import (
     reset_logging_globals,
     reset_metrics_globals,
@@ -31,7 +31,6 @@ from solarwinds_apm.apm_noop import (
 )
 
 from ..test_base_sw import TestBaseSw
-from ..utils.exporter import InMemoryMetricExporter
 
 class TestBaseSwOtlp(TestBaseSw):
     """
@@ -44,6 +43,9 @@ class TestBaseSwOtlp(TestBaseSw):
     def _test_trace():
         logger = logging.getLogger("foo-logger")
         logger.warning("My foo log!")
+        meter = metrics_api.get_meter_provider().get_meter("foo-meter")
+        counter = meter.create_counter("foo-counter")
+        counter.add(10, {"foo-label": "bar-value"})
         return TestBaseSw._test_trace()
 
     def _setup_env_vars(self):
@@ -74,17 +76,14 @@ class TestBaseSwOtlp(TestBaseSw):
             oboe_api,
         )
 
-    def _setup_test_metrics_export(self):
+    def _setup_test_metrics_reader(self):
         reset_metrics_globals()
-        # Set InMemory exporter for testing generated telemetry
-        # instead of SolarWinds/OTLP exporter
-        self.memory_metric_exporter = InMemoryMetricExporter()
-        reader = PeriodicExportingMetricReader(
-            self.memory_metric_exporter,
-            export_interval_millis=100,
+        # Set InMemory reader instead of exporter
+        self.metric_reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(
+            metric_readers=[self.metric_reader],
         )
-        self.meter_provider = MeterProvider(metric_readers=[reader])
-        metrics_api.set_meter_provider(self.meter_provider)
+        metrics_api.set_meter_provider(meter_provider)
 
     def _setup_test_logs_export(self):
         reset_logging_globals()
@@ -104,7 +103,7 @@ class TestBaseSwOtlp(TestBaseSw):
 
     def setUp(self):
         super().setUp()
-        self._setup_test_metrics_export()
+        self._setup_test_metrics_reader()
         self._setup_test_logs_export()
 
         # Finish setup by running Flask app instrumented with APM Python
