@@ -18,10 +18,6 @@ from opentelemetry.sdk._logs.export import (
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
-from opentelemetry.test.globals_test import (
-    reset_logging_globals,
-    reset_metrics_globals,
-)
 
 from solarwinds_apm.extension.oboe import (
     OboeAPI,
@@ -75,7 +71,6 @@ class TestBaseSwOtlp(TestBaseSw):
         )
 
     def _setup_test_metrics_reader(self):
-        reset_metrics_globals()
         # Set InMemory reader instead of exporter
         self.metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(
@@ -84,7 +79,6 @@ class TestBaseSwOtlp(TestBaseSw):
         metrics_api.set_meter_provider(meter_provider)
 
     def _setup_test_logs_export(self):
-        reset_logging_globals()
         self.logger_provider = LoggerProvider()
 
         # Set InMemory exporter for testing generated telemetry

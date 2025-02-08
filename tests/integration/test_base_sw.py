@@ -21,15 +21,21 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
-from opentelemetry.test.globals_test import reset_trace_globals
+from opentelemetry.test.globals_test import (
+    reset_logging_globals,
+    reset_metrics_globals,
+    reset_trace_globals,
+)
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.util._importlib_metadata import entry_points
 
 from solarwinds_apm.apm_config import SolarWindsApmConfig
+from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro
 from solarwinds_apm.propagator import SolarWindsPropagator
 from solarwinds_apm.sampler import ParentBasedSwSampler
+from solarwinds_apm.trace import SolarWindsOTLPMetricsSpanProcessor
 
 class TestBaseSw(TestBase):
     """
@@ -104,9 +110,6 @@ class TestBaseSw(TestBase):
         reporter,
         oboe_api,
     ):
-        # This is done because set_tracer_provider cannot override the
-        # current tracer provider. Has to be done here.
-        reset_trace_globals()
         sampler = next(iter(entry_points(
             group="opentelemetry_traces_sampler",
             name=configurator._DEFAULT_SW_TRACES_SAMPLER,
@@ -121,6 +124,16 @@ class TestBaseSw(TestBase):
         )
         trace_api.set_tracer_provider(self.tracer_provider)
         self.tracer = self.tracer_provider.get_tracer(__name__)
+
+        # Manually set up SW OTLP metrics generation
+        self.sw_otlp_span_proc = SolarWindsOTLPMetricsSpanProcessor(
+                SolarWindsTxnNameManager(),
+                apm_config,
+                oboe_api,
+            )
+        self.tracer_provider.add_span_processor(
+            self.sw_otlp_span_proc
+        )
 
     def _setup_app_endpoints(self):
         # pylint: disable=no-member
@@ -168,6 +181,12 @@ class TestBaseSw(TestBase):
         propagators = get_global_textmap()._propagators
         assert len(propagators) == 3
         assert isinstance(propagators[2], SolarWindsPropagator)
+
+        # This is done because set_*_provider cannot override the
+        # current tracer/meter/logger provider. Has to be done here.
+        reset_trace_globals()
+        reset_metrics_globals()
+        reset_logging_globals()
 
         self._setup_test_traces_export(apm_config, configurator, reporter)
         assert isinstance(trace_api.get_tracer_provider().sampler, ParentBasedSwSampler)
