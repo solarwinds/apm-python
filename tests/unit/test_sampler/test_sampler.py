@@ -225,6 +225,60 @@ class Test_SwSampler():
         assert sampler.env_transaction_name == "foo-txn"
         assert sampler.lambda_function_name == "foo-lambda"
 
+    def test_calculate_liboboe_decision_not_legacy(
+        self,
+        mocker,
+        parent_span_context_invalid,
+        mock_xtraceoptions_signed_tt,
+    ):
+        mock_apm_config = mocker.Mock()
+        mock_get = mocker.Mock(
+            side_effect=config_get
+        )
+        mock_get_tracing_decision = mocker.Mock()
+        mock_get_tracing_decision.configure_mock(
+            # returns 11 values
+            return_value=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        )
+        mock_oboe_api = mocker.Mock()
+        mock_oboe_api.configure_mock(
+            **{
+                "getTracingDecision": mock_get_tracing_decision
+            }
+        )
+        mock_reporter = mocker.Mock()
+
+        mock_apm_config.configure_mock(
+            **{
+                "agent_enabled": True,
+                "get": mock_get,
+                "is_lambda": False,
+            }
+        )
+        test_sampler = _SwSampler(mock_apm_config, mock_reporter, mock_oboe_api)
+
+        result = test_sampler.calculate_liboboe_decision(
+            parent_span_context_invalid,
+            'foo',
+            None,
+            {'foo': 'bar'},
+            mock_xtraceoptions_signed_tt,
+        )
+        mock_get_tracing_decision.assert_called_once()
+        assert result == {
+            "do_metrics": 0,
+            "do_sample": 1,
+            "rate": 2,
+            "source": 3,
+            "bucket_rate": 4,
+            "bucket_cap": 5,
+            "decision_type": 6,
+            "auth": 7,
+            "status_msg": 8,
+            "auth_msg": 9,
+            "status": 10,
+        }
+
     def test_calculate_liboboe_decision_is_lambda(
         self,
         mocker,
