@@ -8,7 +8,6 @@ import re
 import json
 
 from opentelemetry import trace as trace_api
-from opentelemetry._logs import SeverityNumber
 from unittest import mock
 
 from .test_base_sw_otlp import TestBaseSwOtlp
@@ -172,107 +171,10 @@ class TestScenario4(TestBaseSwOtlp):
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
 
-        # Server metrics from test app Flask instrumentation
-        metric_data = self.metric_reader.get_metrics_data()
-        metrics = metric_data.resource_metrics[0].scope_metrics[0].metrics
-        self.assertEqual(len(metrics), 2)
-        active_requests = metrics[0]
-        self.assertEqual(
-            active_requests.name,
-            "http.server.active_requests",
-        )
-        self.assertEqual(
-            active_requests.data.data_points[0].attributes,
-            {"http.request.method": "GET", "url.scheme": "http"},
-        )
-        request_duration = metrics[1]
-        self.assertEqual(
-            request_duration.name,
-            "http.server.request.duration",
-        )
-        self.assertEqual(
-            request_duration.data.data_points[0].attributes,
-            {
-                "http.request.method": "GET",
-                "url.scheme": "http",
-                "network.protocol.version": "1.1",
-                "http.response.status_code": 200,
-                "http.route": "/test_trace/"
-            },
-        )
-
-        # Client metrics from test app Requests instrumentation
-        metric_data = self.metric_reader.get_metrics_data()
-        metrics = metric_data.resource_metrics[0].scope_metrics[1].metrics
-        self.assertEqual(len(metrics), 1)
-        request_duration = metrics[0]
-        self.assertEqual(
-            request_duration.name,
-            "http.client.request.duration",
-        )
-        self.assertEqual(
-            request_duration.data.data_points[0].attributes,
-            {
-                "http.request.method": "GET",
-                "server.address": "postman-echo.com",
-                "http.response.status_code": 200,
-                "network.protocol.version": "1.1",
-            },
-        )
-
-        # SW response time metrics
-        metric_data = self.metric_reader.get_metrics_data()
-        scope = metric_data.resource_metrics[0].scope_metrics[2].scope
-        self.assertEqual(
-            scope.name,
-            "sw.apm.request.metrics",
-        )
-        metrics = metric_data.resource_metrics[0].scope_metrics[2].metrics
-        self.assertEqual(len(metrics), 1)
-        response_time = metrics[0]
-        self.assertEqual(
-            response_time.name,
-            "trace.service.response_time",
-        )
-        self.assertEqual(
-            response_time.data.data_points[0].attributes,
-            {
-                "sw.is_error": False,
-                "sw.transaction": "GET /test_trace/"
-            },
-        )
-        self.assertEqual(
-            response_time.data.aggregation_temporality,
-            2,  # cumulative
-        )
-
-        # SW request count metrics
-        metric_data = self.metric_reader.get_metrics_data()
-        scope = metric_data.resource_metrics[0].scope_metrics[3].scope
-        self.assertEqual(
-            scope.name,
-            "sw.apm.sampling.metrics",
-        )
-        metrics = metric_data.resource_metrics[0].scope_metrics[3].metrics
-        self.assertEqual(len(metrics), 6)
-        self.assertEqual(metrics[0].name, "trace.service.tracecount")
-        self.assertEqual(metrics[1].name, "trace.service.samplecount")
-        self.assertEqual(metrics[2].name, "trace.service.request_count")
-        self.assertEqual(metrics[3].name, "trace.service.tokenbucket_exhaustion_count")
-        self.assertEqual(metrics[4].name, "trace.service.through_trace_count")
-        self.assertEqual(metrics[5].name, "trace.service.triggered_trace_count")
-
-        finished_logs = self.memory_log_exporter.get_finished_logs()
-        self.assertEqual(len(finished_logs), 1)
-        warning_log_record = finished_logs[0].log_record
-        self.assertEqual(warning_log_record.body, "My foo log!")
-        self.assertEqual(warning_log_record.severity_text, "WARN")
-        self.assertEqual(
-            warning_log_record.severity_number, SeverityNumber.WARN
-        )
-        self.assertEqual(
-            finished_logs[0].instrumentation_scope.name, "foo-logger"
-        )
+        self.assertFlaskMetrics()
+        self.assertRequestsMetrics()
+        self.assertApmMetrics()
+        self.assertLogs()
 
     def test_scenario_4_not_sampled(self):
         """
@@ -369,103 +271,7 @@ class TestScenario4(TestBaseSwOtlp):
         spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 0
 
-        # Server metrics from test app Flask instrumentation
-        metric_data = self.metric_reader.get_metrics_data()
-        metrics = metric_data.resource_metrics[0].scope_metrics[0].metrics
-        self.assertEqual(len(metrics), 2)
-        active_requests = metrics[0]
-        self.assertEqual(
-            active_requests.name,
-            "http.server.active_requests",
-        )
-        self.assertEqual(
-            active_requests.data.data_points[0].attributes,
-            {"http.request.method": "GET", "url.scheme": "http"},
-        )
-        request_duration = metrics[1]
-        self.assertEqual(
-            request_duration.name,
-            "http.server.request.duration",
-        )
-        self.assertEqual(
-            request_duration.data.data_points[0].attributes,
-            {
-                "http.request.method": "GET",
-                "url.scheme": "http",
-                "network.protocol.version": "1.1",
-                "http.response.status_code": 200,
-                "http.route": "/test_trace/"
-            },
-        )
-
-        # Client metrics from test app Requests instrumentation
-        metric_data = self.metric_reader.get_metrics_data()
-        metrics = metric_data.resource_metrics[0].scope_metrics[1].metrics
-        self.assertEqual(len(metrics), 1)
-        request_duration = metrics[0]
-        self.assertEqual(
-            request_duration.name,
-            "http.client.request.duration",
-        )
-        self.assertEqual(
-            request_duration.data.data_points[0].attributes,
-            {
-                "http.request.method": "GET",
-                "server.address": "postman-echo.com",
-                "network.protocol.version": "1.1",
-            },
-        )
-
-        # SW response time metrics
-        metric_data = self.metric_reader.get_metrics_data()
-        scope = metric_data.resource_metrics[0].scope_metrics[2].scope
-        self.assertEqual(
-            scope.name,
-            "sw.apm.request.metrics",
-        )
-        metrics = metric_data.resource_metrics[0].scope_metrics[2].metrics
-        self.assertEqual(len(metrics), 1)
-        response_time = metrics[0]
-        self.assertEqual(
-            response_time.name,
-            "trace.service.response_time",
-        )
-        self.assertEqual(
-            response_time.data.data_points[0].attributes,
-            {
-                "sw.is_error": False,
-                "sw.transaction": "GET /test_trace/"
-            },
-        )
-        self.assertEqual(
-            response_time.data.aggregation_temporality,
-            2,  # cumulative
-        )
-
-        # SW request count metrics
-        metric_data = self.metric_reader.get_metrics_data()
-        scope = metric_data.resource_metrics[0].scope_metrics[3].scope
-        self.assertEqual(
-            scope.name,
-            "sw.apm.sampling.metrics",
-        )
-        metrics = metric_data.resource_metrics[0].scope_metrics[3].metrics
-        self.assertEqual(len(metrics), 6)
-        self.assertEqual(metrics[0].name, "trace.service.tracecount")
-        self.assertEqual(metrics[1].name, "trace.service.samplecount")
-        self.assertEqual(metrics[2].name, "trace.service.request_count")
-        self.assertEqual(metrics[3].name, "trace.service.tokenbucket_exhaustion_count")
-        self.assertEqual(metrics[4].name, "trace.service.through_trace_count")
-        self.assertEqual(metrics[5].name, "trace.service.triggered_trace_count")
-
-        finished_logs = self.memory_log_exporter.get_finished_logs()
-        self.assertEqual(len(finished_logs), 1)
-        warning_log_record = finished_logs[0].log_record
-        self.assertEqual(warning_log_record.body, "My foo log!")
-        self.assertEqual(warning_log_record.severity_text, "WARN")
-        self.assertEqual(
-            warning_log_record.severity_number, SeverityNumber.WARN
-        )
-        self.assertEqual(
-            finished_logs[0].instrumentation_scope.name, "foo-logger"
-        )
+        self.assertFlaskMetrics()
+        self.assertRequestsMetrics(status_code=False)
+        self.assertApmMetrics()
+        self.assertLogs()
