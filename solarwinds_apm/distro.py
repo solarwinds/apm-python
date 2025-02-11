@@ -67,6 +67,11 @@ class SolarWindsDistro(BaseDistro):
         cls._cnf_dict = SolarWindsApmConfig.get_cnf_dict()
         cls._is_lambda = SolarWindsApmConfig.calculate_is_lambda()
         cls._is_legacy = SolarWindsApmConfig.calculate_is_legacy(cls._cnf_dict)
+        if cls._is_lambda and cls._is_legacy:
+            logger.warning(
+                "Legacy mode not supported in Lambda. Ignoring legacy config."
+            )
+
         cls._instrumentor_metrics_enabled = (
             SolarWindsApmConfig.calculate_metrics_enabled(cls._cnf_dict)
         )
