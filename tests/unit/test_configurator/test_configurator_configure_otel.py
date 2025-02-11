@@ -183,11 +183,7 @@ class TestConfiguratorConfigureOtelComponents:
             mock_txn_name_manager,
             mock_apmconfig_enabled_legacy_opt_in_metrics_logs,
         )
-        mock_config_otlp_processors.assert_called_once_with(
-            mock_txn_name_manager,
-            mock_apmconfig_enabled_legacy_opt_in_metrics_logs,
-            mock_oboe_api_obj_legacy, 
-        )
+        mock_config_otlp_processors.assert_not_called()
         mock_config_traces_exp.assert_called_once_with(
             mock_extension.Reporter,
             mock_txn_name_manager,
