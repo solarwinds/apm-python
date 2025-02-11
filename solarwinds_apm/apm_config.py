@@ -279,19 +279,14 @@ class SolarWindsApmConfig:
     @classmethod
     def calculate_logs_enabled(
         cls,
-        is_legacy: bool = False,
         cnf_dict: dict = None,
     ) -> bool:
         """Return if export of instrumentor logs telemetry enabled.
         Invalid boolean values are ignored.
-        Order of precedence: Environment Variable > config file > default.
-        Default is True is not legacy, False if legacy.
+        Order of precedence: Environment Variable > config file > default (False).
         Optional cnf_dict is presumably already from a config file, else a call
         to get_cnf_dict() is made for a fresh read."""
-        if is_legacy:
-            logs_enabled = False
-        else:
-            logs_enabled = True
+        logs_enabled = False
         if cnf_dict is None:
             cnf_dict = cls.get_cnf_dict()
         if cnf_dict:
