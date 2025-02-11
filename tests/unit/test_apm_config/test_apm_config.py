@@ -24,6 +24,11 @@ def setup_caplog():
     apm_logger = logging.getLogger("solarwinds_apm")
     apm_logger.propagate = True
 
+@pytest.fixture
+def setup_caplog_debug():
+    apm_logger = logging.getLogger("solarwinds_apm")
+    apm_logger.propagate = True
+    apm_logger.setLevel(logging.DEBUG)
 
 class TestSolarWindsApmConfig:
     """
@@ -382,6 +387,40 @@ class TestSolarWindsApmConfig:
         apm_config.SolarWindsApmConfig()
         mock_metric_format.assert_called_once()
         mock_certs.assert_called_once()
+
+    def test__init_lambda_true_and_legacy_true_resets_legacy(self, mocker, caplog, setup_caplog_debug):
+        mocker.patch.dict(os.environ, {
+            "AWS_LAMBDA_FUNCTION_NAME": "foo",
+            "LAMBDA_TASK_ROOT": "bar",
+            "SW_APM_LEGACY": "true",
+        })
+        result = apm_config.SolarWindsApmConfig()
+        assert result.is_lambda is True
+        assert result.get("legacy") is False
+        assert "Ignoring legacy config." in caplog.text
+
+    def test__init_lambda_true_and_legacy_false(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "AWS_LAMBDA_FUNCTION_NAME": "foo",
+            "LAMBDA_TASK_ROOT": "bar",
+            "SW_APM_LEGACY": "false",
+        })
+        result = apm_config.SolarWindsApmConfig()
+        assert result.is_lambda is True
+        assert result.get("legacy") is False
+
+    def test__init_lambda_false_and_legacy_true(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_LEGACY": "true",
+        })
+        result = apm_config.SolarWindsApmConfig()
+        assert result.is_lambda is False
+        assert result.get("legacy") is True
+
+    def test__init_lambda_false_and_legacy_false(self, mocker):
+        result = apm_config.SolarWindsApmConfig()
+        assert result.is_lambda is False
+        assert result.get("legacy") is False
 
     def test_calculate_metric_format_no_collector(self, mocker):
         assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 2
