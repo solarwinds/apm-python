@@ -207,6 +207,15 @@ class TestSolarWindsApmConfigCnfFile:
         mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
         )
+        mocker.patch(
+            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
+            return_value=(
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+                mocker.Mock(),
+            )
+        )
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )

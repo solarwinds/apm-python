@@ -161,7 +161,7 @@ class SolarWindsApmConfig:
             oboe_api_options_swig,
         ) = self._get_extension_components(
             self.agent_enabled,
-            self.is_lambda,
+            self.__config["legacy"],
         )
 
         # Create OboeAPI options using extension and __config
@@ -184,12 +184,12 @@ class SolarWindsApmConfig:
     def _get_extension_components(
         self,
         agent_enabled: bool,
-        is_lambda: bool,
+        is_legacy: bool,
     ) -> None:
-        """Returns c-lib extension or noop components based on agent_enabled, is_lambda.
+        """Returns c-lib extension or noop components based on agent_enabled, is_legacy.
 
-        agent_enabled T, is_lambda F -> c-lib extension, c-lib Context, no-op settings API, no-op API options
-        agent_enabled T, is_lambda T -> no-op extension, no-op Context, c-lib settings API, c-lib API options
+        agent_enabled T, is_legacy F (default) -> no-op extension, no-op Context, c-lib settings API, c-lib API options
+        agent_enabled T, is_legacy T -> c-lib extension, c-lib Context, no-op settings API, no-op API options
         agent_enabled F              -> all no-op
         """
         if not agent_enabled:
@@ -218,37 +218,37 @@ class SolarWindsApmConfig:
                 noop_extension.OboeAPIOptions,
             )
 
-        if is_lambda:
-            try:
-                # pylint: disable=import-outside-toplevel,no-name-in-module
-                from solarwinds_apm.extension.oboe import OboeAPI as oboe_api
-                from solarwinds_apm.extension.oboe import (
-                    OboeAPIOptions as api_options,
-                )
-            except ImportError as err:
-                logger.warning(
-                    "Could not import API in lambda mode. Please contact %s. Tracing disabled: %s",
-                    INTL_SWO_SUPPORT_EMAIL,
-                    err,
-                )
-                return (
-                    noop_extension,
-                    noop_extension.Context,
-                    noop_extension.OboeAPI,
-                    noop_extension.OboeAPIOptions,
-                )
+        if is_legacy:
+            return (
+                c_extension,
+                c_extension.Context,
+                noop_extension.OboeAPI,
+                noop_extension.OboeAPIOptions,
+            )
+
+        try:
+            # pylint: disable=import-outside-toplevel,no-name-in-module
+            from solarwinds_apm.extension.oboe import OboeAPI as oboe_api
+            from solarwinds_apm.extension.oboe import (
+                OboeAPIOptions as api_options,
+            )
+        except ImportError as err:
+            logger.warning(
+                "Could not import extension API. Please contact %s. Tracing disabled: %s",
+                INTL_SWO_SUPPORT_EMAIL,
+                err,
+            )
             return (
                 noop_extension,
                 noop_extension.Context,
-                oboe_api,
-                api_options,
+                noop_extension.OboeAPI,
+                noop_extension.OboeAPIOptions,
             )
-
         return (
-            c_extension,
-            c_extension.Context,
-            noop_extension.OboeAPI,
-            noop_extension.OboeAPIOptions,
+            noop_extension,
+            noop_extension.Context,
+            oboe_api,
+            api_options,
         )
 
     @classmethod
@@ -286,19 +286,14 @@ class SolarWindsApmConfig:
     @classmethod
     def calculate_logs_enabled(
         cls,
-        is_legacy: bool = False,
         cnf_dict: dict = None,
     ) -> bool:
         """Return if export of instrumentor logs telemetry enabled.
         Invalid boolean values are ignored.
-        Order of precedence: Environment Variable > config file > default.
-        Default is True is not legacy, False if legacy.
+        Order of precedence: Environment Variable > config file > default (False).
         Optional cnf_dict is presumably already from a config file, else a call
         to get_cnf_dict() is made for a fresh read."""
-        if is_legacy:
-            logs_enabled = False
-        else:
-            logs_enabled = True
+        logs_enabled = False
         if cnf_dict is None:
             cnf_dict = cls.get_cnf_dict()
         if cnf_dict:
@@ -750,11 +745,12 @@ class SolarWindsApmConfig:
 
     def __str__(self) -> str:
         """String representation of ApmConfig is config with masked service key,
-        plus agent_enabled and context"""
+        plus agent_enabled and context and OboeAPI"""
         apm_config = {
             "__config": self._config_mask_service_key(),
             "agent_enabled": self.agent_enabled,
             "context": str(self.context),
+            "oboe_api": str(self.oboe_api),
             "service_name": self.service_name,
         }
         return json.dumps(apm_config)
