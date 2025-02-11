@@ -308,19 +308,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
         oboe_api: "OboeAPI",
     ) -> None:
-        """Configure SolarWindsOTLPMetricsSpanProcessor (including OTLP meters)
-        if metrics exporters are configured and set up i.e. by _configure_metrics_exporter
-        """
-        # SolarWindsDistro._configure does setdefault before this is called
-        environ_exporter = os.environ.get(
-            OTEL_METRICS_EXPORTER,
-        )
-        if not environ_exporter:
-            logger.debug(
-                "No OTEL_METRICS_EXPORTER set, skipping init of metrics processors"
-            )
-            return
-
+        """Configure SolarWindsOTLPMetricsSpanProcessor with APM OTLP meters"""
         trace.get_tracer_provider().add_span_processor(
             SolarWindsOTLPMetricsSpanProcessor(
                 apm_txname_manager,
