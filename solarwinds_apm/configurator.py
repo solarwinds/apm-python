@@ -157,8 +157,15 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     apm_txname_manager,
                     apm_config,
                 )
+                # While in legacy mode, user can also opt into exporting
+                # Otel instrumentor metrics and logs by OTLP.
+                # Default values are set by SolarWindsDistro; user can customize.
+                if apm_config.get("export_metrics_enabled") is True:
+                    self._configure_metrics_exporter(apm_config)
+                if apm_config.get("export_logs_enabled") is True:
+                    self._configure_logs_exporter(apm_config)
             else:
-                # Export APM metrics, logs by OTLP.
+                # Export APM and Otel instrumentor metrics, logs by OTLP.
                 # Default values are set by SolarWindsDistro; user can customize.
                 self._configure_metrics_exporter(apm_config)
                 self._configure_otlp_metrics_span_processors(
@@ -296,19 +303,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
         oboe_api: "OboeAPI",
     ) -> None:
-        """Configure SolarWindsOTLPMetricsSpanProcessor (including OTLP meters)
-        if metrics exporters are configured and set up i.e. by _configure_metrics_exporter
-        """
-        # SolarWindsDistro._configure does setdefault before this is called
-        environ_exporter = os.environ.get(
-            OTEL_METRICS_EXPORTER,
-        )
-        if not environ_exporter:
-            logger.debug(
-                "No OTEL_METRICS_EXPORTER set, skipping init of metrics processors"
-            )
-            return
-
+        """Configure SolarWindsOTLPMetricsSpanProcessor with APM OTLP meters"""
         trace.get_tracer_provider().add_span_processor(
             SolarWindsOTLPMetricsSpanProcessor(
                 apm_txname_manager,
@@ -397,15 +392,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure OTel OTLP metrics exporters if enabled.
-        Settings precedence: OTEL_* > SW_APM_EXPORT_METRICS_ENABLED.
-        Links to new metric readers and global MeterProvider."""
-        if not apm_config.get("export_metrics_enabled"):
-            logger.debug(
-                "APM OTLP metrics export disabled. Skipping init of metrics exporters"
-            )
-            return
-
+        """Configures OTel OTLP metrics exporter(s). Links to new metric
+        readers and global MeterProvider."""
         # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
             OTEL_METRICS_EXPORTER,
@@ -480,26 +468,15 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure OTel OTLP logs exporters if enabled.
-        Settings precedence: OTEL_* > SW_APM_EXPORT_LOGS_ENABLED.
-        Links to new global LoggerProvider."""
-        otel_ev = os.environ.get(
-            _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
-        )
-        otlp_log_enabled = SolarWindsApmConfig.convert_to_bool(otel_ev)
-        sw_enabled = apm_config.get("export_logs_enabled")
-        if otlp_log_enabled is False:
+        """Configures OTel OTLP logs exporter(s), unless OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+        is set to false i.e. by user. Links to new global LoggerProvider."""
+        if (
+            os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED)
+            is False
+        ):
+            # TODO (NH-101363): Change to configure stdlib handler not exporter
             logger.debug(
                 "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED false. Skipping init of logs exporters"
-            )
-            return
-
-        # If otel_ev is True, ignore sw_enabled.
-        # If otel_ev is None (unset or could not convert to bool)
-        # then sw_enabled determines logs export setup.
-        if not otlp_log_enabled and sw_enabled is False:
-            logger.debug(
-                "APM OTLP logs export disabled. Skipping init of logs exporters"
             )
             return
 

@@ -12,6 +12,7 @@ import sys
 from os import environ
 from typing import Any
 
+from opentelemetry._logs import NoOpLoggerProvider
 from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
@@ -22,6 +23,7 @@ from opentelemetry.instrumentation.logging.environment_variables import (
     OTEL_PYTHON_LOG_FORMAT,
 )
 from opentelemetry.instrumentation.version import __version__ as inst_version
+from opentelemetry.metrics import NoOpMeterProvider
 from opentelemetry.sdk.environment_variables import OTEL_EXPORTER_OTLP_PROTOCOL
 from opentelemetry.sdk.version import __version__ as sdk_version
 from opentelemetry.util._importlib_metadata import EntryPoint
@@ -53,6 +55,24 @@ logger = logging.getLogger(__name__)
 
 class SolarWindsDistro(BaseDistro):
     """OpenTelemetry Distro for SolarWinds reporting environment"""
+
+    _cnf_dict = None
+    _is_legacy = None
+    _instrumentor_metrics_enabled = None
+    _instrumentor_logs_enabled = None
+
+    def __new__(cls, *args, **kwargs):
+        # Maintain singleton pattern and cache SW APM user config
+        # for Distro lifecycle at auto-instrumentation
+        cls._cnf_dict = SolarWindsApmConfig.get_cnf_dict()
+        cls._is_legacy = SolarWindsApmConfig.calculate_is_legacy(cls._cnf_dict)
+        cls._instrumentor_metrics_enabled = (
+            SolarWindsApmConfig.calculate_metrics_enabled(cls._cnf_dict)
+        )
+        cls._instrumentor_logs_enabled = (
+            SolarWindsApmConfig.calculate_logs_enabled(cls._cnf_dict)
+        )
+        return super().__new__(cls, *args, **kwargs)
 
     def _log_python_runtime(self):
         """Logs Python runtime info, with any warnings"""
@@ -172,8 +192,6 @@ class SolarWindsDistro(BaseDistro):
         # Protocol is the above default or what user has set
         otlp_protocol = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
 
-        is_legacy = SolarWindsApmConfig.calculate_is_legacy()
-
         if otlp_protocol:
             if otlp_protocol in _EXPORTER_BY_OTLP_PROTOCOL:
                 header_token = self._get_token_from_service_key()
@@ -182,7 +200,7 @@ class SolarWindsDistro(BaseDistro):
                         "Setting OTLP export defaults without SWO token"
                     )
 
-                if is_legacy:
+                if self._is_legacy:
                     environ.setdefault(
                         OTEL_TRACES_EXPORTER, INTL_SWO_DEFAULT_TRACES_EXPORTER
                     )
@@ -191,14 +209,21 @@ class SolarWindsDistro(BaseDistro):
                         header_token, otlp_protocol
                     )
 
-                # We do OTLP export setdefault if legacy or not
-                # in case SW_APM_EXPORT_METRICS_ENABLED
+                # We do OTLP export setdefault if legacy too
+                # in case SW_APM_EXPORT_(METRICS|LOGS)_ENABLED
                 self._configure_logs_export_otlp_env_defaults(
                     header_token, otlp_protocol
                 )
                 self._configure_metrics_export_otlp_env_defaults(
                     header_token, otlp_protocol
                 )
+
+                # TODO (NH-101363): APM Python enables logging auto-instrumentation
+                # by default to configure logging stdlib handler
+                # environ.setdefault(
+                #     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+                #     "true",
+                # )
 
             else:
                 logger.warning(
@@ -265,6 +290,16 @@ class SolarWindsDistro(BaseDistro):
                     entry_point.name,
                     kwargs,
                 )
+
+        # If SW_APM_EXPORT_(METRICS|LOGS)_ENABLED is set to false,
+        # then we load the instrumentor with NoOp providers to disable
+        # Otel instrumentor-based metrics/logs export if supported.
+        # Assumes kwargs are ignored if not implemented
+        # for the current instrumentation library.
+        if self._instrumentor_metrics_enabled is False:
+            kwargs["meter_provider"] = NoOpMeterProvider()
+        if self._instrumentor_logs_enabled is False:
+            kwargs["logger_provider"] = NoOpLoggerProvider()
 
         try:
             instrumentor: BaseInstrumentor = entry_point.load()

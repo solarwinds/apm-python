@@ -379,14 +379,9 @@ class TestSolarWindsApmConfig:
         mock_certs = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_certificates"
         )
-        mock_logs_enabled = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_logs_enabled"
-        )
-
         apm_config.SolarWindsApmConfig()
         mock_metric_format.assert_called_once()
         mock_certs.assert_called_once()
-        mock_logs_enabled.assert_called_once()
 
     def test_calculate_metric_format_no_collector(self, mocker):
         assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 2
@@ -538,104 +533,6 @@ class TestSolarWindsApmConfig:
         )
         mock_get_public_cert.configure_mock(return_value="foo")
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "bar"
-
-    def test_calculate_logs_enabled_no_collector_enabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "",
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == True
-
-    def test_calculate_logs_enabled_no_collector_disabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "",
-            "SW_APM_EXPORT_LOGS_ENABLED": "false",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_logs_enabled_not_ao_enabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "some-other-collector",
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == True
-
-    def test_calculate_logs_enabled_not_ao_disabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "some-other-collector",
-            "SW_APM_EXPORT_LOGS_ENABLED": "false",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_logs_enabled_ao_prod(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR,
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_logs_enabled_ao_staging(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR,
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_logs_enabled_ao_prod_with_port(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR),
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_metrics_enabled_no_collector_enabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "",
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == True
-
-    def test_calculate_metrics_enabled_no_collector_disabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "",
-            "SW_APM_EXPORT_METRICS_ENABLED": "false",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
-    def test_calculate_metrics_enabled_not_ao_enabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "some-other-collector",
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == True
-
-    def test_calculate_metrics_enabled_not_ao_disabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "some-other-collector",
-            "SW_APM_EXPORT_METRICS_ENABLED": "false",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
-    def test_calculate_metrics_enabled_ao_prod(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR,
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
-    def test_calculate_metrics_enabled_ao_staging(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR,
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
-    def test_calculate_metrics_enabled_ao_prod_with_port(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR),
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
 
     def test_mask_service_key_no_key_empty_default(self, mocker):
         mock_entry_points = mocker.patch(

@@ -61,7 +61,7 @@ class TestConfiguratorLogsExporter:
         mock_blprocessor.assert_not_called()
         mock_logginghandler.assert_not_called()
 
-    def test_configure_logs_exporter_otel_false_sw_any(
+    def test_configure_logs_exporter_otel_false(
         self,
         mocker,
         mock_apmconfig_enabled,
@@ -88,7 +88,7 @@ class TestConfiguratorLogsExporter:
         mock_blprocessor.assert_not_called()
         mock_logginghandler.assert_not_called()
 
-    def test_configure_logs_exporter_otel_none_sw_false(
+    def test_configure_logs_exporter_otel_none(
         self,
         mocker,
         mock_apmconfig_logs_enabled_false,
@@ -115,61 +115,7 @@ class TestConfiguratorLogsExporter:
         mock_blprocessor.assert_not_called()
         mock_logginghandler.assert_not_called()
 
-    def test_configure_logs_exporter_otel_true_sw_false(
-        self,
-        mocker,
-        mock_apmconfig_logs_enabled_false,
-        mock_blprocessor,
-        mock_loggerprovider,
-        mock_logginghandler,
-    ):
-        mocker.patch.dict(
-            os.environ,
-            {
-                _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: "true"
-            }
-        )
-        trace_mocks = get_trace_mocks(mocker)
-
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_logs_exporter(
-            mock_apmconfig_logs_enabled_false,
-        )
-
-        trace_mocks.get_tracer_provider.assert_not_called()
-        trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
-        mock_loggerprovider.assert_not_called()
-        mock_blprocessor.assert_not_called()
-        mock_logginghandler.assert_not_called()
-
-    def test_configure_logs_exporter_otel_true_sw_none(
-        self,
-        mocker,
-        mock_apmconfig_logs_enabled_none,
-        mock_blprocessor,
-        mock_loggerprovider,
-        mock_logginghandler,
-    ):
-        mocker.patch.dict(
-            os.environ,
-            {
-                _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: "true"
-            }
-        )
-        trace_mocks = get_trace_mocks(mocker)
-
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_logs_exporter(
-            mock_apmconfig_logs_enabled_none,
-        )
-
-        trace_mocks.get_tracer_provider.assert_not_called()
-        trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
-        mock_loggerprovider.assert_not_called()
-        mock_blprocessor.assert_not_called()
-        mock_logginghandler.assert_not_called()
-
-    def test_configure_logs_exporter_otel_true_sw_true_no_exporter(
+    def test_configure_logs_exporter_otel_true_no_exporter(
         self,
         mocker,
         mock_apmconfig_enabled,
@@ -197,7 +143,7 @@ class TestConfiguratorLogsExporter:
         mock_blprocessor.assert_not_called()
         mock_logginghandler.assert_not_called()
 
-    def test_configure_logs_exporter_otel_true_sw_true_invalid_exporter(
+    def test_configure_logs_exporter_otel_true_invalid_exporter(
         self,
         mocker,
         mock_apmconfig_enabled,
@@ -236,7 +182,7 @@ class TestConfiguratorLogsExporter:
         mock_blprocessor.assert_not_called()
         mock_logginghandler.assert_not_called()
 
-    def test_configure_logs_exporter_otel_true_sw_true_not_lambda(
+    def test_configure_logs_exporter_otel_true_valid_exporter(
         self,
         mocker,
         mock_apmconfig_enabled,
