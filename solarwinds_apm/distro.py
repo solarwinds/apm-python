@@ -65,7 +65,14 @@ class SolarWindsDistro(BaseDistro):
         # Maintain singleton pattern and cache SW APM user config
         # for Distro lifecycle at auto-instrumentation
         cls._cnf_dict = SolarWindsApmConfig.get_cnf_dict()
+        cls._is_lambda = SolarWindsApmConfig.calculate_is_lambda()
         cls._is_legacy = SolarWindsApmConfig.calculate_is_legacy(cls._cnf_dict)
+        if cls._is_lambda is True and cls._is_legacy is True:
+            logger.warning(
+                "Legacy mode not supported in Lambda. Ignoring legacy config."
+            )
+            cls._is_legacy = False
+
         cls._instrumentor_metrics_enabled = (
             SolarWindsApmConfig.calculate_metrics_enabled(cls._cnf_dict)
         )
@@ -247,7 +254,7 @@ class SolarWindsDistro(BaseDistro):
         # AwsLambdaInstrumentor because we assume the wrapper
         # has done it for us already
         if entry_point.name == "aws-lambda":
-            if SolarWindsApmConfig.calculate_is_lambda():
+            if self._is_lambda:
                 return
 
         # If OTEL_SQLCOMMENTER_ENABLED=true, set `enable` for all instrumentors.

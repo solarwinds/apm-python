@@ -125,6 +125,13 @@ class SolarWindsApmConfig:
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
 
+        if self.is_lambda is True and self.__config["legacy"] is True:
+            # Debug because a Warning was already logged by Distro
+            logger.debug(
+                "Legacy mode not supported in Lambda. Ignoring legacy config."
+            )
+            self.__config["legacy"] = False
+
         self.agent_enabled = self._calculate_agent_enabled()
         self.service_name = self._calculate_service_name(
             self.agent_enabled,
