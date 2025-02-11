@@ -9,7 +9,7 @@ import json
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry._logs import SeverityNumber
+
 
 from .test_base_sw_otlp import TestBaseSwOtlp
 

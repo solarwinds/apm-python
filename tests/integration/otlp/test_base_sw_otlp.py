@@ -62,6 +62,7 @@ class TestBaseSwOtlp(TestBaseSw):
         apm_config,
         configurator,
         reporter,
+        oboe_api = None,
     ):
         oboe_api = OboeAPI()
         super()._setup_test_traces_export(

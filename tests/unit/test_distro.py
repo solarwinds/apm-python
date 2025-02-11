@@ -123,7 +123,7 @@ class TestDistro:
             "solarwinds_apm.distro.SolarWindsApmConfig.get_cnf_dict",
             return_value={"foo": "bar"},
         )
-        mock_calculate_is_lambda = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_is_lambda", return_value="thud",
         )
         mock_calculate_is_legacy = mocker.patch(
@@ -138,20 +138,20 @@ class TestDistro:
 
         instance = distro.SolarWindsDistro()
         assert instance._cnf_dict == {"foo": "bar"}
-        assert instance._is_lambda is "thud"
-        assert instance._is_legacy is "baz"
-        assert instance._instrumentor_metrics_enabled is "qux"
-        assert instance._instrumentor_logs_enabled is "quxx"
+        assert instance._is_lambda == "thud"
+        assert instance._is_legacy == "baz"
+        assert instance._instrumentor_metrics_enabled == "qux"
+        assert instance._instrumentor_logs_enabled == "quxx"
         mock_get_cnf_dict.assert_called_once()
         mock_calculate_is_legacy.assert_called_once_with({"foo": "bar"})
         mock_calculate_metrics_enabled.assert_called_once_with({"foo": "bar"})
         mock_calculate_logs_enabled.assert_called_once_with({"foo": "bar"})
 
     def test_new_lambda_true_and_legacy_true_resets_legacy(self, mocker, caplog, setup_caplog):
-        mock_calculate_is_lambda = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_is_lambda", return_value=True,
         )
-        mock_calculate_is_legacy = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_is_legacy", return_value=True,
         )
         instance = distro.SolarWindsDistro()
@@ -160,10 +160,10 @@ class TestDistro:
         assert "Ignoring legacy config." in caplog.text
 
     def test_new_lambda_true_and_legacy_false(self, mocker):
-        mock_calculate_is_lambda = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_is_lambda", return_value=True,
         )
-        mock_calculate_is_legacy = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_is_legacy", return_value=False,
         )
         instance = distro.SolarWindsDistro()
@@ -171,10 +171,10 @@ class TestDistro:
         assert instance._is_legacy is False
 
     def test_new_lambda_false_and_legacy_true(self, mocker):
-        mock_calculate_is_lambda = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_is_lambda", return_value=False,
         )
-        mock_calculate_is_legacy = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_is_legacy", return_value=True,
         )
         instance = distro.SolarWindsDistro()
@@ -182,10 +182,10 @@ class TestDistro:
         assert instance._is_legacy is True
 
     def test_new_lambda_false_and_legacy_false(self, mocker):
-        mock_calculate_is_lambda = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_is_lambda", return_value=False,
         )
-        mock_calculate_is_legacy = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_is_legacy", return_value=False,
         )
         instance = distro.SolarWindsDistro()
@@ -1586,11 +1586,11 @@ class TestDistro:
         )
 
     def test_load_instrumentor_metrics_logs_disabled(self, mocker):
-        mock_nmp = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.NoOpMeterProvider",
             return_value="noop"
         )
-        mock_nlp = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.NoOpLoggerProvider",
             return_value="noop"
         )
