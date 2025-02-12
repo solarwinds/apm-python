@@ -753,52 +753,9 @@ class TestSolarWindsApmConfig:
         mock_env_vars,
     ):
         test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "not-valid")
+        test_config._set_config_value("export_logs_enabled", "any")
         assert test_config.get("export_logs_enabled") == False
-        assert "Ignore config option" in caplog.text
-    def test_set_config_value_set_export_logs_enabled_false(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "false")
-        assert test_config.get("export_logs_enabled") == False
-        assert "Ignore config option" not in caplog.text
-
-    def test_set_config_value_set_export_logs_enabled_false_mixed_case(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "fALsE")
-        assert test_config.get("export_logs_enabled") == False
-        assert "Ignore config option" not in caplog.text
-
-    def test_set_config_value_set_export_logs_enabled_true(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "true")
-        assert test_config.get("export_logs_enabled") == True
-        assert "Ignore config option" not in caplog.text
-
-    def test_set_config_value_set_export_logs_enabled_true_mixed_case(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "tRUe")
-        assert test_config.get("export_logs_enabled") == True
-        assert "Ignore config option" not in caplog.text
+        assert "SW_APM_EXPORT_LOGS_ENABLED is no longer supported." in caplog.text
 
     def test_set_config_value_default_export_metrics_enabled(
         self,

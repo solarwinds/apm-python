@@ -132,20 +132,15 @@ class TestDistro:
         mock_calculate_metrics_enabled = mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled", return_value="qux",
         )
-        mock_calculate_logs_enabled = mocker.patch(
-            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled", return_value="quxx",
-        )
 
         instance = distro.SolarWindsDistro()
         assert instance._cnf_dict == {"foo": "bar"}
         assert instance._is_lambda == "thud"
         assert instance._is_legacy == "baz"
         assert instance._instrumentor_metrics_enabled == "qux"
-        assert instance._instrumentor_logs_enabled == "quxx"
         mock_get_cnf_dict.assert_called_once()
         mock_calculate_is_legacy.assert_called_once_with({"foo": "bar"})
         mock_calculate_metrics_enabled.assert_called_once_with({"foo": "bar"})
-        mock_calculate_logs_enabled.assert_called_once_with({"foo": "bar"})
 
     def test_new_lambda_true_and_legacy_true_resets_legacy(self, mocker, caplog, setup_caplog):
         mocker.patch(
@@ -1169,10 +1164,6 @@ class TestDistro:
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
             return_value=True,
         )
-        mocker.patch(
-            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
-            return_value=True,
-        )
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -1200,10 +1191,6 @@ class TestDistro:
     def test_load_instrumentor_enable_commenting_all_only(self, mocker):
         mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
-            return_value=True,
-        )
-        mocker.patch(
-            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
             return_value=True,
         )
         mock_instrument = mocker.Mock()
@@ -1242,10 +1229,6 @@ class TestDistro:
     def test_load_instrumentor_enable_commenting_individual_only_not_on_list(self, mocker):
         mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
-            return_value=True,
-        )
-        mocker.patch(
-            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
             return_value=True,
         )
         mock_instrument = mocker.Mock()
@@ -1291,10 +1274,6 @@ class TestDistro:
     def test_load_instrumentor_enable_commenting_all_false_and_individual_false(self, mocker):
         mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
-            return_value=True,
-        )
-        mocker.patch(
-            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
             return_value=True,
         )
         mock_instrument = mocker.Mock()
@@ -1346,10 +1325,6 @@ class TestDistro:
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
             return_value=True,
         )
-        mocker.patch(
-            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
-            return_value=True,
-        )
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -1399,10 +1374,6 @@ class TestDistro:
     def test_load_instrumentor_enable_commenting_all_true_and_individual_false(self, mocker):
         mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
-            return_value=True,
-        )
-        mocker.patch(
-            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
             return_value=True,
         )
         mock_instrument = mocker.Mock()
@@ -1457,10 +1428,6 @@ class TestDistro:
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
             return_value=True,
         )
-        mocker.patch(
-            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
-            return_value=True,
-        )
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -1505,10 +1472,6 @@ class TestDistro:
     def test_load_instrumentor_enable_commenting_individual_only_django(self, mocker):
         mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
-            return_value=True,
-        )
-        mocker.patch(
-            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
             return_value=True,
         )
         mock_instrument = mocker.Mock()
@@ -1557,10 +1520,6 @@ class TestDistro:
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
             return_value=True,
         )
-        mocker.patch(
-            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
-            return_value=True,
-        )
         mock_instrument = mocker.Mock()
         mock_instrumentor = mocker.Mock()
         mock_instrumentor.configure_mock(
@@ -1591,15 +1550,7 @@ class TestDistro:
             return_value="noop"
         )
         mocker.patch(
-            "solarwinds_apm.distro.NoOpLoggerProvider",
-            return_value="noop"
-        )
-        mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
-            return_value=False,
-        )
-        mocker.patch(
-            "solarwinds_apm.distro.SolarWindsApmConfig.calculate_logs_enabled",
             return_value=False,
         )
         mock_instrument = mocker.Mock()
@@ -1625,7 +1576,6 @@ class TestDistro:
         mock_instrument.assert_called_once_with(
             foo="bar",
             meter_provider="noop",
-            logger_provider="noop",
         )
 
     def test_enable_commenter_none(self, mocker):

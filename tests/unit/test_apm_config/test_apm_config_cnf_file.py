@@ -147,7 +147,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("histogram_precision") == 2
         assert resulting_config.get("reporter_file_single") == 2
         assert resulting_config.get("proxy") == "http://foo-bar"
-        assert resulting_config.get("export_logs_enabled") == True
+        assert resulting_config.get("export_logs_enabled") == False
         assert resulting_config.get("legacy") == True
 
         # update_transaction_filters was called
@@ -345,7 +345,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("histogram_precision") == 3
         assert resulting_config.get("reporter_file_single") == 3
         assert resulting_config.get("proxy") == "http://other-foo-bar"
-        assert resulting_config.get("export_logs_enabled") == True
+        assert resulting_config.get("export_logs_enabled") == False
         assert resulting_config.get("legacy") == True
 
         # Restore old collector
@@ -433,7 +433,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("histogram_precision") == 2
         assert resulting_config.get("reporter_file_single") == 2
         assert resulting_config.get("proxy") == "http://foo-bar"
-        assert resulting_config.get("export_logs_enabled") == True
+        assert resulting_config.get("export_logs_enabled") == False
         assert resulting_config.get("legacy") == True
 
         # These are still valid, so env_var > cnf_file

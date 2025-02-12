@@ -284,31 +284,6 @@ class SolarWindsApmConfig:
         return False
 
     @classmethod
-    def calculate_logs_enabled(
-        cls,
-        cnf_dict: dict = None,
-    ) -> bool:
-        """Return if export of instrumentor logs telemetry enabled.
-        Invalid boolean values are ignored.
-        Order of precedence: Environment Variable > config file > default (False).
-        Optional cnf_dict is presumably already from a config file, else a call
-        to get_cnf_dict() is made for a fresh read."""
-        logs_enabled = False
-        if cnf_dict is None:
-            cnf_dict = cls.get_cnf_dict()
-        if cnf_dict:
-            cnf_enabled = cls.convert_to_bool(
-                cnf_dict.get("export_logs_enabled")
-            )
-            logs_enabled = (
-                cnf_enabled if cnf_enabled is not None else logs_enabled
-            )
-        env_enabled = cls.convert_to_bool(
-            os.environ.get("SW_APM_EXPORT_LOGS_ENABLED")
-        )
-        return env_enabled if env_enabled is not None else logs_enabled
-
-    @classmethod
     def calculate_metrics_enabled(
         cls,
         is_legacy: bool = False,
@@ -1000,7 +975,6 @@ class SolarWindsApmConfig:
             elif keys == ["transaction_name"]:
                 self.__config[key] = val
             elif keys in [
-                ["export_logs_enabled"],
                 ["export_metrics_enabled"],
                 ["legacy"],
             ]:
@@ -1008,6 +982,12 @@ class SolarWindsApmConfig:
                 if val not in (True, False):
                     raise ValueError
                 self.__config[key] = val
+            elif keys == ["export_logs_enabled"]:
+                logger.warning(
+                    "SW_APM_EXPORT_LOGS_ENABLED is no longer supported. Please configure "
+                    "Otel Logger SDK using OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED."
+                )
+                val = False
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
                     val = self.convert_to_bool(val)

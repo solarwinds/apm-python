@@ -162,8 +162,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 # Default values are set by SolarWindsDistro; user can customize.
                 if apm_config.get("export_metrics_enabled") is True:
                     self._configure_metrics_exporter(apm_config)
-                if apm_config.get("export_logs_enabled") is True:
-                    self._configure_logs_exporter(apm_config)
+                self._configure_logs_exporter(apm_config)
             else:
                 # Export APM and Otel instrumentor metrics, logs by OTLP.
                 # Default values are set by SolarWindsDistro; user can customize.
