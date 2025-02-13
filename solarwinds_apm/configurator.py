@@ -16,7 +16,10 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from opentelemetry import trace
-from opentelemetry._logs import set_logger_provider
+from opentelemetry._logs import (
+    get_logger_provider,
+    set_logger_provider,
+)
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
@@ -175,6 +178,17 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
             # Always setup logs exporter
             self._configure_logs_exporter(apm_config)
+
+            # If enabled, emit log event telemetry
+            if (
+                SolarWindsApmConfig.convert_to_bool(
+                    os.environ.get(
+                        _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+                    )
+                )
+                is True
+            ):
+                self._configure_logs_handler()
 
             # Export traces by OTLP or APM-proto depending on OTEL_TRACES_EXPORTER.
             # Default values are set by SolarWindsDistro; user can customize.
@@ -469,18 +483,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configures OTel OTLP logs exporter(s), unless OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
-        is set to false i.e. by user. Links to new global LoggerProvider."""
-        if (
-            os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED)
-            is False
-        ):
-            # TODO (NH-101363): Change to configure stdlib handler not exporter
-            logger.debug(
-                "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED false. Skipping init of logs exporters"
-            )
-            return
-
+        """Configures OTel OTLP logs exporter(s). Links to new global LoggerProvider."""
         # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
             OTEL_LOGS_EXPORTER,
@@ -537,7 +540,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
             logger_provider.add_log_record_processor(logs_processor)
 
-        # Create and attach OTLP handler to root logger
+    def _configure_logs_handler(self) -> None:
+        """Create and attach Otel LoggingHandler to emit log event telemetry"""
+        logger.debug("Attaching OTel handler to root logger.")
+        logger_provider = get_logger_provider()
         log_handler = LoggingHandler(
             level=logging.NOTSET,
             logger_provider=logger_provider,
