@@ -113,7 +113,6 @@ class SolarWindsApmConfig:
             "proxy": "",
             "transaction_filters": [],
             "transaction_name": None,
-            "export_logs_enabled": False,
             "export_metrics_enabled": False,
             "legacy": False,
         }
@@ -983,6 +982,7 @@ class SolarWindsApmConfig:
                     raise ValueError
                 self.__config[key] = val
             elif keys == ["export_logs_enabled"]:
+                # TODO: Remove in NH-101930
                 logger.warning(
                     "SW_APM_EXPORT_LOGS_ENABLED is no longer supported. Please configure "
                     "Otel Logger SDK using OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED."

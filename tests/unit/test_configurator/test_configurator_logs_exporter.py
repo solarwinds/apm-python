@@ -91,7 +91,7 @@ class TestConfiguratorLogsExporter:
     def test_configure_logs_exporter_otel_none(
         self,
         mocker,
-        mock_apmconfig_logs_enabled_false,
+        mock_apmconfig_enabled,
         mock_blprocessor,
         mock_loggerprovider,
         mock_logginghandler,
@@ -106,7 +106,7 @@ class TestConfiguratorLogsExporter:
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_logs_exporter(
-            mock_apmconfig_logs_enabled_false,
+            mock_apmconfig_enabled,
         )
 
         trace_mocks.get_tracer_provider.assert_not_called()

@@ -158,11 +158,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     apm_config,
                 )
                 # While in legacy mode, user can also opt into exporting
-                # Otel instrumentor metrics and logs by OTLP.
+                # Otel instrumentor metrics by OTLP.
                 # Default values are set by SolarWindsDistro; user can customize.
                 if apm_config.get("export_metrics_enabled") is True:
                     self._configure_metrics_exporter(apm_config)
-                self._configure_logs_exporter(apm_config)
+
             else:
                 # Export APM and Otel instrumentor metrics, logs by OTLP.
                 # Default values are set by SolarWindsDistro; user can customize.
@@ -172,7 +172,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     apm_config,
                     oboe_api,
                 )
-                self._configure_logs_exporter(apm_config)
+
+            # Always setup logs exporter
+            self._configure_logs_exporter(apm_config)
 
             # Export traces by OTLP or APM-proto depending on OTEL_TRACES_EXPORTER.
             # Default values are set by SolarWindsDistro; user can customize.

@@ -1515,7 +1515,7 @@ class TestDistro:
             foo="bar",
         )
 
-    def test_load_instrumentor_metrics_logs_enabled(self, mocker):
+    def test_load_instrumentor_metrics_enabled(self, mocker):
         mocker.patch(
             "solarwinds_apm.distro.SolarWindsApmConfig.calculate_metrics_enabled",
             return_value=True,
