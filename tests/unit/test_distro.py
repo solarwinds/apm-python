@@ -15,6 +15,7 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER
 )
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
@@ -83,6 +84,9 @@ class TestDistro:
         old_otel_ev_th = os.environ.get("OTEL_EXPORTER_OTLP_TRACES_HEADERS", None)
         if old_otel_ev_th:
             del os.environ["OTEL_EXPORTER_OTLP_TRACES_HEADERS"]
+        old_otel_log = os.environ.get("OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED")
+        if old_otel_log:
+            del os.environ["OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"]
 
         # Wait for test
         yield
@@ -116,6 +120,8 @@ class TestDistro:
             os.environ["OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"] = old_otel_ev_me
         if old_otel_ev_le:
             os.environ["OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"] = old_otel_ev_le
+        if old_otel_log:
+            os.environ["OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"] = old_otel_log
 
 
     def test_new_initializes_class_variables(self, mocker):
@@ -518,6 +524,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_env_exporter(self, mocker):
         mocker.patch.dict(
@@ -546,6 +553,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_invalid_protocol_not_legacy(self, mocker):
         mocker.patch.dict(
@@ -571,6 +579,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) is None
 
     def test_configure_no_env_no_protocol_is_legacy_no_token(self, mocker):
         mocker.patch.dict(
@@ -596,6 +605,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_invalid_protocol_is_legacy_no_token(self, mocker):
         mocker.patch.dict(
@@ -625,6 +635,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) is None
 
     def test_configure_no_env_valid_protocol_http_is_legacy_no_token(self, mocker):
         mocker.patch.dict(
@@ -651,6 +662,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_valid_protocol_grpc_is_legacy_no_token(self, mocker):
         mocker.patch.dict(
@@ -677,6 +689,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_no_protocol_is_legacy_invalid_token(self, mocker):
         mocker.patch.dict(
@@ -703,6 +716,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_invalid_protocol_is_legacy_invalid_token(self, mocker):
         mocker.patch.dict(
@@ -733,6 +747,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) is None
 
     def test_configure_no_env_valid_protocol_http_is_legacy_invalid_token(self, mocker):
         mocker.patch.dict(
@@ -760,6 +775,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_valid_protocol_grpc_is_legacy_invalid_token(self, mocker):
         mocker.patch.dict(
@@ -787,6 +803,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_no_protocol_is_legacy_valid_token(self, mocker):
         mocker.patch.dict(
@@ -814,6 +831,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT) == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs"
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) == f"authorization=Bearer%20foo-token"
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) == f"authorization=Bearer%20foo-token"
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_invalid_protocol_is_legacy_valid_token(self, mocker):
         mocker.patch.dict(
@@ -844,6 +862,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) is None
 
     def test_configure_no_env_valid_protocol_http_is_legacy_valid_token(self, mocker):
         mocker.patch.dict(
@@ -872,6 +891,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT) == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs"
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) == f"authorization=Bearer%20foo-token"
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) == f"authorization=Bearer%20foo-token"
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_valid_protocol_grpc_is_legacy_valid_token(self, mocker):
         mocker.patch.dict(
@@ -900,6 +920,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT) == "https://otel.collector.na-01.cloud.solarwinds.com:443/v1/logs"
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) == f"authorization=Bearer%20foo-token"
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) == f"authorization=Bearer%20foo-token"
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_valid_protocol_http_missing_token(self, mocker):
         mocker.patch.dict(
@@ -925,6 +946,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_valid_protocol_http_with_invalid_token(self, mocker):
         mocker.patch.dict(
@@ -951,6 +973,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_valid_protocol_http_with_valid_token(self, mocker):
         mocker.patch.dict(
@@ -976,6 +999,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) == "authorization=Bearer%20foo-token"
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) == "authorization=Bearer%20foo-token"
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) == "authorization=Bearer%20foo-token"
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_valid_protocol_grpc_missing_token(self, mocker):
         mocker.patch.dict(
@@ -1001,6 +1025,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_valid_protocol_grpc_with_invalid_token(self, mocker):
         mocker.patch.dict(
@@ -1027,6 +1052,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) is None
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) is None
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_no_env_valid_protocol_grpc_with_valid_token(self, mocker):
         mocker.patch.dict(
@@ -1052,6 +1078,7 @@ class TestDistro:
         assert os.environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS) == "authorization=Bearer%20foo-token"
         assert os.environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS) == "authorization=Bearer%20foo-token"
         assert os.environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS) == "authorization=Bearer%20foo-token"
+        assert os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED) == "false"
 
     def test_configure_env_exporter_and_valid_protocol_http(self, mocker):
         mocker.patch.dict(
