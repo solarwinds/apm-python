@@ -61,9 +61,6 @@ class TestSolarWindsApmConfig:
         old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
         if old_trustedpath:
             del os.environ["SW_APM_TRUSTEDPATH"]
-        old_expt_logs = os.environ.get("SW_APM_EXPORT_LOGS_ENABLED", None)
-        if old_expt_logs:
-            del os.environ["SW_APM_EXPORT_LOGS_ENABLED"]
         old_expt_metrics = os.environ.get("SW_APM_EXPORT_METRICS_ENABLED", None)
         if old_expt_metrics:
             del os.environ["SW_APM_EXPORT_METRICS_ENABLED"]
@@ -89,8 +86,6 @@ class TestSolarWindsApmConfig:
             os.environ["SW_APM_COLLECTOR"] = old_collector
         if old_trustedpath:
             os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
-        if old_expt_logs:
-            os.environ["SW_APM_EXPORT_LOGS_ENABLED"] = old_expt_logs
         if old_expt_metrics:
             os.environ["SW_APM_EXPORT_METRICS_ENABLED"] = old_expt_metrics
         if old_legacy:
@@ -740,12 +735,7 @@ class TestSolarWindsApmConfig:
         assert test_config.get("log_type") == 0
         assert "Ignore config option" in caplog.text
 
-    def test_set_config_value_default_export_logs_enabled(
-        self,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        assert test_config.get("export_logs_enabled") == False
-
+    # TODO: Remove in NH-101930
     def test_set_config_value_ignore_export_logs_enabled(
         self,
         caplog,
@@ -753,52 +743,9 @@ class TestSolarWindsApmConfig:
         mock_env_vars,
     ):
         test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "not-valid")
-        assert test_config.get("export_logs_enabled") == False
-        assert "Ignore config option" in caplog.text
-    def test_set_config_value_set_export_logs_enabled_false(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "false")
-        assert test_config.get("export_logs_enabled") == False
-        assert "Ignore config option" not in caplog.text
-
-    def test_set_config_value_set_export_logs_enabled_false_mixed_case(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "fALsE")
-        assert test_config.get("export_logs_enabled") == False
-        assert "Ignore config option" not in caplog.text
-
-    def test_set_config_value_set_export_logs_enabled_true(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "true")
-        assert test_config.get("export_logs_enabled") == True
-        assert "Ignore config option" not in caplog.text
-
-    def test_set_config_value_set_export_logs_enabled_true_mixed_case(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "tRUe")
-        assert test_config.get("export_logs_enabled") == True
-        assert "Ignore config option" not in caplog.text
+        test_config._set_config_value("export_logs_enabled", "any")
+        assert test_config.get("export_logs_enabled") is None
+        assert "SW_APM_EXPORT_LOGS_ENABLED is no longer supported." in caplog.text
 
     def test_set_config_value_default_export_metrics_enabled(
         self,

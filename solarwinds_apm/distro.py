@@ -12,7 +12,6 @@ import sys
 from os import environ
 from typing import Any
 
-from opentelemetry._logs import NoOpLoggerProvider
 from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER,
@@ -59,7 +58,6 @@ class SolarWindsDistro(BaseDistro):
     _cnf_dict = None
     _is_legacy = None
     _instrumentor_metrics_enabled = None
-    _instrumentor_logs_enabled = None
 
     def __new__(cls, *args, **kwargs):
         # Maintain singleton pattern and cache SW APM user config
@@ -75,9 +73,6 @@ class SolarWindsDistro(BaseDistro):
 
         cls._instrumentor_metrics_enabled = (
             SolarWindsApmConfig.calculate_metrics_enabled(cls._cnf_dict)
-        )
-        cls._instrumentor_logs_enabled = (
-            SolarWindsApmConfig.calculate_logs_enabled(cls._cnf_dict)
         )
         return super().__new__(cls, *args, **kwargs)
 
@@ -298,15 +293,13 @@ class SolarWindsDistro(BaseDistro):
                     kwargs,
                 )
 
-        # If SW_APM_EXPORT_(METRICS|LOGS)_ENABLED is set to false,
+        # If SW_APM_EXPORT_METRICS_ENABLED is set to false,
         # then we load the instrumentor with NoOp providers to disable
-        # Otel instrumentor-based metrics/logs export if supported.
+        # Otel instrumentor-based metrics export if supported.
         # Assumes kwargs are ignored if not implemented
         # for the current instrumentation library.
         if self._instrumentor_metrics_enabled is False:
             kwargs["meter_provider"] = NoOpMeterProvider()
-        if self._instrumentor_logs_enabled is False:
-            kwargs["logger_provider"] = NoOpLoggerProvider()
 
         try:
             instrumentor: BaseInstrumentor = entry_point.load()

@@ -94,11 +94,12 @@ class TestConfiguratorConfigureOtelComponents:
             mock_fwkv_manager,
             mock_apmconfig_enabled_metrics_logs_false,
         )
-        # If SW_APM_EXPORT_(METRICS|LOGS) is False while non-legacy,
-        # metrics/logs exporters are still configured for APM telemetry
+        # If SW_APM_EXPORT_METRICS is False while non-legacy,
+        # metrics exporters are still configured for APM telemetry
         mock_config_metrics_exp.assert_called_once_with(
             mock_apmconfig_enabled_metrics_logs_false
         )
+        # Logs exporters always set
         mock_config_logs_exp.assert_called_once_with(
             mock_apmconfig_enabled_metrics_logs_false
         )
@@ -146,7 +147,9 @@ class TestConfiguratorConfigureOtelComponents:
             mock_apmconfig_enabled_legacy,
         )
         mock_config_metrics_exp.assert_not_called()
-        mock_config_logs_exp.assert_not_called()
+        mock_config_logs_exp.assert_called_once_with(
+            mock_apmconfig_enabled_legacy
+        )
         mock_config_propagator.assert_called_once()
         mock_config_response_propagator.assert_called_once()
 

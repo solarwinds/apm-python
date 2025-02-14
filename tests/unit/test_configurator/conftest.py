@@ -129,7 +129,6 @@ def get_apmconfig_mocks(
     enabled=True,
     is_lambda=False,
     md_is_valid=True,
-    export_logs_enabled=True,
     export_metrics_enabled=True,
     legacy=False,
 ):
@@ -183,8 +182,6 @@ def get_apmconfig_mocks(
     def get_side_effect(param):
         if param == "export_metrics_enabled":
             return export_metrics_enabled
-        elif param == "export_logs_enabled":
-            return export_logs_enabled
         elif param == "legacy":
             return legacy
         else:
@@ -228,7 +225,6 @@ def mock_apmconfig_enabled_metrics_logs_false(mocker):
         "solarwinds_apm.configurator.SolarWindsApmConfig",
         get_apmconfig_mocks(
             mocker,
-            export_logs_enabled=False,
             export_metrics_enabled=False,
         )
     )
@@ -239,7 +235,6 @@ def mock_apmconfig_enabled_legacy(mocker):
         "solarwinds_apm.configurator.SolarWindsApmConfig",
         get_apmconfig_mocks(
             mocker,
-            export_logs_enabled=False,
             export_metrics_enabled=False,
             legacy=True,
         )
@@ -251,7 +246,6 @@ def mock_apmconfig_enabled_legacy_opt_in_metrics_logs(mocker):
         "solarwinds_apm.configurator.SolarWindsApmConfig",
         get_apmconfig_mocks(
             mocker,
-            export_logs_enabled=True,
             export_metrics_enabled=True,
             legacy=True,
         )
@@ -275,26 +269,6 @@ def mock_apmconfig_enabled_is_lambda(mocker):
         get_apmconfig_mocks(
             mocker,
             is_lambda=True,
-        )
-    )
-
-@pytest.fixture(name="mock_apmconfig_logs_enabled_false")
-def mock_apmconfig_logs_enabled_false(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsApmConfig",
-        get_apmconfig_mocks(
-            mocker,
-            export_logs_enabled=False
-        )
-    )
-
-@pytest.fixture(name="mock_apmconfig_logs_enabled_none")
-def mock_apmconfig_logs_enabled_none(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsApmConfig",
-        get_apmconfig_mocks(
-            mocker,
-            export_logs_enabled=None
         )
     )
 

@@ -147,7 +147,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("histogram_precision") == 2
         assert resulting_config.get("reporter_file_single") == 2
         assert resulting_config.get("proxy") == "http://foo-bar"
-        assert resulting_config.get("export_logs_enabled") == True
         assert resulting_config.get("legacy") == True
 
         # update_transaction_filters was called
@@ -247,7 +246,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("histogram_precision") == -1
         assert resulting_config.get("reporter_file_single") == 0
         assert resulting_config.get("proxy") == ""
-        assert resulting_config.get("export_logs_enabled") == False
         assert resulting_config.get("legacy") == False
         # Meanwhile these are pretty open
         assert resulting_config.get("collector") == "False"
@@ -293,7 +291,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_HISTOGRAM_PRECISION": "3",
             "SW_APM_REPORTER_FILE_SINGLE": "3",
             "SW_APM_PROXY": "http://other-foo-bar",
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
             "SW_APM_LEGACY": "true",
         })
         mock_update_txn_filters = mocker.patch(
@@ -345,7 +342,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("histogram_precision") == 3
         assert resulting_config.get("reporter_file_single") == 3
         assert resulting_config.get("proxy") == "http://other-foo-bar"
-        assert resulting_config.get("export_logs_enabled") == True
         assert resulting_config.get("legacy") == True
 
         # Restore old collector
@@ -384,7 +380,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_HISTOGRAM_PRECISION": "other-foo-bar",
             "SW_APM_REPORTER_FILE_SINGLE": "other-foo-bar",
             "SW_APM_PROXY": "other-foo-bar",
-            "SW_APM_EXPORT_LOGS_ENABLED": "not-a-bool",
             "SW_APM_LEGACY": "not-a-bool",
         })
         mock_update_txn_filters = mocker.patch(
@@ -433,7 +428,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("histogram_precision") == 2
         assert resulting_config.get("reporter_file_single") == 2
         assert resulting_config.get("proxy") == "http://foo-bar"
-        assert resulting_config.get("export_logs_enabled") == True
         assert resulting_config.get("legacy") == True
 
         # These are still valid, so env_var > cnf_file
