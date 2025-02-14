@@ -33,6 +33,7 @@ opentelemetry-instrumentation-boto3sqs==0.51b0
 opentelemetry-instrumentation-botocore==0.51b0
 opentelemetry-instrumentation-cassandra==0.51b0
 opentelemetry-instrumentation-celery==0.51b0
+opentelemetry-instrumentation-click==0.51b0
 opentelemetry-instrumentation-confluent-kafka==0.51b0
 opentelemetry-instrumentation-dbapi==0.51b0
 opentelemetry-instrumentation-django==0.51b0
