@@ -791,6 +791,7 @@ class TestDistro:
         mock_instrument.assert_called_once_with(
             commenter_options="foo-options",
             enable_commenter=True,
+            enable_attribute_commenter=True,
             foo="bar",
         )
 
@@ -833,6 +834,7 @@ class TestDistro:
         mock_instrument.assert_called_once_with(
             commenter_options="foo-options",
             enable_commenter=True,
+            enable_attribute_commenter=True,
             foo="bar",
         )
 
@@ -875,6 +877,7 @@ class TestDistro:
         # No commenter_options because Django reads settings.py instead
         mock_instrument.assert_called_once_with(
             is_sql_commentor_enabled=True,
+            enable_attribute_commenter=True,
             foo="bar",
         )
 

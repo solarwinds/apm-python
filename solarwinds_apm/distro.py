@@ -226,7 +226,9 @@ class SolarWindsDistro(BaseDistro):
         individual instrumentor by upstream sitecustomize.
 
         For enabling sqlcommenting, SW_APM_ENABLED_SQLCOMMENT enables
-        individual instrumentors if in _SQLCOMMENTERS (each is false by default)
+        individual instrumentors if in _SQLCOMMENTERS (each is false by default).
+        APM Python also sets enable_attribute_commenter=True by default;
+        can be opted out with SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE=false.
         """
         # If we're in Lambda environment, then we skip loading
         # AwsLambdaInstrumentor because we assume the wrapper
@@ -250,6 +252,17 @@ class SolarWindsDistro(BaseDistro):
                     kwargs["commenter_options"] = (
                         self.detect_commenter_options()
                     )
+
+                if (
+                    SolarWindsApmConfig.convert_to_bool(
+                        environ.get(
+                            "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE", "true"
+                        )
+                    )
+                    is True
+                ):
+                    kwargs["enable_attribute_commenter"] = True
+
                 logger.debug(
                     "Enabling sqlcommenter for %s with %s",
                     entry_point.name,
