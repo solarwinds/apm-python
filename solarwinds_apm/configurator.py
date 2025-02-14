@@ -16,10 +16,7 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from opentelemetry import trace
-from opentelemetry._logs import (
-    get_logger_provider,
-    set_logger_provider,
-)
+from opentelemetry._logs import get_logger_provider, set_logger_provider
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
