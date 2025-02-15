@@ -329,7 +329,7 @@ class SolarWindsDistro(BaseDistro):
 
         parse_env_items("SW_APM_ENABLED_SQLCOMMENT", "enable_commenter")
         parse_env_items(
-            "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE", "enable_commenter_attribute"
+            "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE", "enable_attribute_commenter"
         )
         return env_commenter_map
 
