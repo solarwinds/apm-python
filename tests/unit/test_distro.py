@@ -754,6 +754,7 @@ class TestDistro:
         distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
         mock_instrument.assert_called_once_with(
             foo="bar",
+            # If passed without enable_commenter=True, this does nothing
             enable_attribute_commenter=True,
         )
 
