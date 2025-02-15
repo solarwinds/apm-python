@@ -699,7 +699,7 @@ class TestDistro:
             return_value={
                 "not-on-list": {
                     "enable_commenter": True,
-                    "enable_attribute_commenter": True,
+                    "enable_attribute_commenter": False,
                 }
             }
         )
@@ -788,7 +788,7 @@ class TestDistro:
             return_value={
                 "foo-instrumentor": {
                     "enable_commenter": True,
-                    "enable_attribute_commenter": True,
+                    "enable_attribute_commenter": False,
                 }
             }
         )
@@ -797,11 +797,9 @@ class TestDistro:
             return_value="foo-options"
         )
         distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
-        # Commenting still enabled for individual even if catch-all is False
         mock_instrument.assert_called_once_with(
             commenter_options="foo-options",
             enable_commenter=True,
-            enable_attribute_commenter=True,
             foo="bar",
         )
 
@@ -835,7 +833,7 @@ class TestDistro:
             return_value={
                 "foo-instrumentor": {
                     "enable_commenter": True,
-                    "enable_attribute_commenter": True,
+                    "enable_attribute_commenter": False,
                 }
             }
         )
@@ -847,7 +845,6 @@ class TestDistro:
         mock_instrument.assert_called_once_with(
             commenter_options="foo-options",
             enable_commenter=True,
-            enable_attribute_commenter=True,
             foo="bar",
         )
 
@@ -881,7 +878,7 @@ class TestDistro:
             return_value={
                 "django": {
                     "enable_commenter": True,
-                    "enable_attribute_commenter": True,
+                    "enable_attribute_commenter": False,
                 }
             }
         )
@@ -893,7 +890,6 @@ class TestDistro:
         # No commenter_options because Django reads settings.py instead
         mock_instrument.assert_called_once_with(
             is_sql_commentor_enabled=True,
-            enable_attribute_commenter=True,
             foo="bar",
         )
 
