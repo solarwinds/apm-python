@@ -7,7 +7,7 @@
 from solarwinds_apm import configurator
 
 class TestConfiguratorConfigure:
-    def test_configurator_configure_init_lambda(
+    def test_configurator_configure_init_non_legacy(
         self,
         mocker,
         mock_txn_name_manager_init,
@@ -19,7 +19,9 @@ class TestConfiguratorConfigure:
     ):
         mock_apmconfig = mocker.Mock(
             **{
-                "is_lambda": True,
+                "is_lambda": False,
+                # This mocks legacy=False
+                "get": mocker.Mock(return_value=False),
             }
         )
         apmconfig_init = mocker.patch(
@@ -38,7 +40,40 @@ class TestConfiguratorConfigure:
         mock_create_init.assert_not_called()
         mock_report_init.assert_not_called()
 
-    def test_configurator_configure_init_success(
+    def test_configurator_configure_init_lambda(
+        self,
+        mocker,
+        mock_txn_name_manager_init,
+        mock_fwkv_manager_init,
+        mock_init_sw_reporter,
+        mock_config_otel_components,
+        mock_create_init,
+        mock_report_init,
+    ):
+        mock_apmconfig = mocker.Mock(
+            **{
+                "is_lambda": True,
+                # This mocks legacy=False
+                "get": mocker.Mock(return_value=False),
+            }
+        )
+        apmconfig_init = mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsApmConfig",
+            return_value=mock_apmconfig,
+        )
+
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure()
+
+        mock_txn_name_manager_init.assert_called_once()
+        mock_fwkv_manager_init.assert_called_once()
+        apmconfig_init.assert_called_once()
+        mock_init_sw_reporter.assert_called_once()
+        mock_config_otel_components.assert_called_once()
+        mock_create_init.assert_not_called()
+        mock_report_init.assert_not_called()
+
+    def test_configurator_configure_legacy_init_success(
         self,
         mocker,
         mock_txn_name_manager_init,
@@ -69,7 +104,7 @@ class TestConfiguratorConfigure:
         mock_create_init.assert_called_once()
         mock_report_init.assert_called_once()
 
-    def test_configurator_configure_init_failure(
+    def test_configurator_configure_legacy_init_failure(
         self,
         mocker,
         mock_txn_name_manager_init,

@@ -4,6 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+# pylint: disable=too-many-lines
+
 import json
 import logging
 import os
@@ -111,8 +113,8 @@ class SolarWindsApmConfig:
             "proxy": "",
             "transaction_filters": [],
             "transaction_name": None,
-            "export_logs_enabled": False,
             "export_metrics_enabled": False,
+            "legacy": False,
         }
         self.is_lambda = self.calculate_is_lambda()
         self.lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
@@ -121,6 +123,13 @@ class SolarWindsApmConfig:
         self.update_with_env_var()
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
+
+        if self.is_lambda is True and self.__config["legacy"] is True:
+            # Debug because a Warning was already logged by Distro
+            logger.debug(
+                "Legacy mode not supported in Lambda. Ignoring legacy config."
+            )
+            self.__config["legacy"] = False
 
         self.agent_enabled = self._calculate_agent_enabled()
         self.service_name = self._calculate_service_name(
@@ -151,7 +160,7 @@ class SolarWindsApmConfig:
             oboe_api_options_swig,
         ) = self._get_extension_components(
             self.agent_enabled,
-            self.is_lambda,
+            self.__config["legacy"],
         )
 
         # Create OboeAPI options using extension and __config
@@ -168,22 +177,18 @@ class SolarWindsApmConfig:
         # (Re-)Calculate config if AppOptics
         self.metric_format = self._calculate_metric_format()
         self.certificates = self._calculate_certificates()
-        self.__config["export_logs_enabled"] = self._calculate_logs_enabled()
-        self.__config["export_metrics_enabled"] = (
-            self._calculate_metrics_enabled()
-        )
 
         logger.debug("Set ApmConfig as: %s", self)
 
     def _get_extension_components(
         self,
         agent_enabled: bool,
-        is_lambda: bool,
+        is_legacy: bool,
     ) -> None:
-        """Returns c-lib extension or noop components based on agent_enabled, is_lambda.
+        """Returns c-lib extension or noop components based on agent_enabled, is_legacy.
 
-        agent_enabled T, is_lambda F -> c-lib extension, c-lib Context, no-op settings API, no-op API options
-        agent_enabled T, is_lambda T -> no-op extension, no-op Context, c-lib settings API, c-lib API options
+        agent_enabled T, is_legacy F (default) -> no-op extension, no-op Context, c-lib settings API, c-lib API options
+        agent_enabled T, is_legacy T -> c-lib extension, c-lib Context, no-op settings API, no-op API options
         agent_enabled F              -> all no-op
         """
         if not agent_enabled:
@@ -212,38 +217,58 @@ class SolarWindsApmConfig:
                 noop_extension.OboeAPIOptions,
             )
 
-        if is_lambda:
-            try:
-                # pylint: disable=import-outside-toplevel,no-name-in-module
-                from solarwinds_apm.extension.oboe import OboeAPI as oboe_api
-                from solarwinds_apm.extension.oboe import (
-                    OboeAPIOptions as api_options,
-                )
-            except ImportError as err:
-                logger.warning(
-                    "Could not import API in lambda mode. Please contact %s. Tracing disabled: %s",
-                    INTL_SWO_SUPPORT_EMAIL,
-                    err,
-                )
-                return (
-                    noop_extension,
-                    noop_extension.Context,
-                    noop_extension.OboeAPI,
-                    noop_extension.OboeAPIOptions,
-                )
+        if is_legacy:
+            return (
+                c_extension,
+                c_extension.Context,
+                noop_extension.OboeAPI,
+                noop_extension.OboeAPIOptions,
+            )
+
+        try:
+            # pylint: disable=import-outside-toplevel,no-name-in-module
+            from solarwinds_apm.extension.oboe import OboeAPI as oboe_api
+            from solarwinds_apm.extension.oboe import (
+                OboeAPIOptions as api_options,
+            )
+        except ImportError as err:
+            logger.warning(
+                "Could not import extension API. Please contact %s. Tracing disabled: %s",
+                INTL_SWO_SUPPORT_EMAIL,
+                err,
+            )
             return (
                 noop_extension,
                 noop_extension.Context,
-                oboe_api,
-                api_options,
+                noop_extension.OboeAPI,
+                noop_extension.OboeAPIOptions,
             )
-
         return (
-            c_extension,
-            c_extension.Context,
-            noop_extension.OboeAPI,
-            noop_extension.OboeAPIOptions,
+            noop_extension,
+            noop_extension.Context,
+            oboe_api,
+            api_options,
         )
+
+    @classmethod
+    def calculate_is_legacy(
+        cls,
+        cnf_dict: dict = None,
+    ) -> bool:
+        """Checks if agent is running in a legacy environment.
+        Invalid boolean values are ignored.
+        Order of precedence: Environment Variable > config file > default False.
+        Optional cnf_dict is presumably already from a config file, else a call
+        to get_cnf_dict() is made for a fresh read.
+        """
+        is_legacy = False
+        if cnf_dict is None:
+            cnf_dict = cls.get_cnf_dict()
+        if cnf_dict:
+            cnf_legacy = cls.convert_to_bool(cnf_dict.get("legacy"))
+            is_legacy = cnf_legacy if cnf_legacy is not None else is_legacy
+        env_legacy = cls.convert_to_bool(os.environ.get("SW_APM_LEGACY"))
+        return env_legacy if env_legacy is not None else is_legacy
 
     @classmethod
     def calculate_is_lambda(cls) -> bool:
@@ -256,6 +281,36 @@ class SolarWindsApmConfig:
             )
             return True
         return False
+
+    @classmethod
+    def calculate_metrics_enabled(
+        cls,
+        is_legacy: bool = False,
+        cnf_dict: dict = None,
+    ) -> bool:
+        """Return if export of instrumentor metrics telemetry enabled.
+        Invalid boolean values are ignored.
+        Order of precedence: Environment Variable > config file > default.
+        Default is True is not legacy, False if legacy.
+        Optional cnf_dict is presumably already from a config file, else a call
+        to get_cnf_dict() is made for a fresh read."""
+        if is_legacy:
+            metrics_enabled = False
+        else:
+            metrics_enabled = True
+        if cnf_dict is None:
+            cnf_dict = cls.get_cnf_dict()
+        if cnf_dict:
+            cnf_enabled = cls.convert_to_bool(
+                cnf_dict.get("export_metrics_enabled")
+            )
+            metrics_enabled = (
+                cnf_enabled if cnf_enabled is not None else metrics_enabled
+            )
+        env_enabled = cls.convert_to_bool(
+            os.environ.get("SW_APM_EXPORT_METRICS_ENABLED")
+        )
+        return env_enabled if env_enabled is not None else metrics_enabled
 
     def _calculate_agent_enabled_platform(self) -> bool:
         """Checks if agent is enabled/disabled based on platform"""
@@ -628,36 +683,6 @@ class SolarWindsApmConfig:
                 )
         return certs
 
-    def _calculate_logs_enabled(self) -> bool:
-        """Return if export of logs telemetry enabled, based on collector.
-        Always False if AO collector, else use current config."""
-        host = self.get("collector")
-        if host:
-            if (
-                INTL_SWO_AO_COLLECTOR in host
-                or INTL_SWO_AO_STG_COLLECTOR in host
-            ):
-                logger.warning(
-                    "AO collector detected. Defaulting to disabled logs export."
-                )
-                return False
-        return self.get("export_logs_enabled")
-
-    def _calculate_metrics_enabled(self) -> bool:
-        """Return if export of metrics telemetry enabled, based on collector.
-        Always False if AO collector, else use current config."""
-        host = self.get("collector")
-        if host:
-            if (
-                INTL_SWO_AO_COLLECTOR in host
-                or INTL_SWO_AO_STG_COLLECTOR in host
-            ):
-                logger.warning(
-                    "AO collector detected. Defaulting to disabled OTLP metrics export."
-                )
-                return False
-        return self.get("export_metrics_enabled")
-
     def mask_service_key(self) -> str:
         """Return masked service key except first 4 and last 4 chars"""
         service_key = self.__config.get("service_key")
@@ -695,11 +720,12 @@ class SolarWindsApmConfig:
 
     def __str__(self) -> str:
         """String representation of ApmConfig is config with masked service key,
-        plus agent_enabled and context"""
+        plus agent_enabled and context and OboeAPI"""
         apm_config = {
             "__config": self._config_mask_service_key(),
             "agent_enabled": self.agent_enabled,
             "context": str(self.context),
+            "oboe_api": str(self.oboe_api),
             "service_name": self.service_name,
         }
         return json.dumps(apm_config)
@@ -731,13 +757,14 @@ class SolarWindsApmConfig:
         )
         return value if value is not None else default
 
-    def get_cnf_dict(self) -> Any:
+    @classmethod
+    def get_cnf_dict(cls) -> Any:
         """Load Python dict from confg file (json), if any"""
         cnf_filepath = os.environ.get("SW_APM_CONFIG_FILE")
         cnf_dict = None
 
         if not cnf_filepath:
-            cnf_filepath = self._CONFIG_FILE_DEFAULT
+            cnf_filepath = cls._CONFIG_FILE_DEFAULT
             if not os.path.isfile(cnf_filepath):
                 logger.debug("No config file at %s; skipping", cnf_filepath)
                 return cnf_dict
@@ -947,11 +974,21 @@ class SolarWindsApmConfig:
                 self.__config[key] = val
             elif keys == ["transaction_name"]:
                 self.__config[key] = val
-            elif keys in [["export_logs_enabled"], ["export_metrics_enabled"]]:
+            elif keys in [
+                ["export_metrics_enabled"],
+                ["legacy"],
+            ]:
                 val = self.convert_to_bool(val)
                 if val not in (True, False):
                     raise ValueError
                 self.__config[key] = val
+            elif keys == ["export_logs_enabled"]:
+                # TODO: Remove in NH-101930
+                logger.warning(
+                    "SW_APM_EXPORT_LOGS_ENABLED is no longer supported. Please configure "
+                    "Otel Logger SDK using OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED."
+                )
+                val = False
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
                     val = self.convert_to_bool(val)

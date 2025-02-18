@@ -6,6 +6,8 @@
 
 import pytest
 
+from solarwinds_apm.apm_config import SolarWindsApmConfig
+
 # ==================================================================
 # Configurator stdlib fixtures
 # ==================================================================
@@ -129,8 +131,8 @@ def get_apmconfig_mocks(
     enabled=True,
     is_lambda=False,
     md_is_valid=True,
-    export_logs_enabled=True,
     export_metrics_enabled=True,
+    legacy=False,
 ):
     # mock the extension that is linked to ApmConfig
     mock_ext_config = mocker.Mock()
@@ -182,8 +184,8 @@ def get_apmconfig_mocks(
     def get_side_effect(param):
         if param == "export_metrics_enabled":
             return export_metrics_enabled
-        elif param == "export_logs_enabled":
-            return export_logs_enabled
+        elif param == "legacy":
+            return legacy
         else:
             return "foo"
 
@@ -196,6 +198,7 @@ def get_apmconfig_mocks(
             "is_lambda": is_lambda,
             "extension": mock_ext,
             "oboe_api": mocker.Mock(),
+            "convert_to_bool": SolarWindsApmConfig.convert_to_bool,
         }
     )
     return mock_apmconfig
@@ -219,6 +222,38 @@ def mock_apmconfig_enabled(mocker):
         )
     )
 
+@pytest.fixture(name="mock_apmconfig_enabled_metrics_logs_false")
+def mock_apmconfig_enabled_metrics_logs_false(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsApmConfig",
+        get_apmconfig_mocks(
+            mocker,
+            export_metrics_enabled=False,
+        )
+    )
+
+@pytest.fixture(name="mock_apmconfig_enabled_legacy")
+def mock_apmconfig_enabled_legacy(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsApmConfig",
+        get_apmconfig_mocks(
+            mocker,
+            export_metrics_enabled=False,
+            legacy=True,
+        )
+    )
+
+@pytest.fixture(name="mock_apmconfig_enabled_legacy_opt_in_metrics_logs")
+def mock_apmconfig_enabled_legacy_opt_in_metrics_logs(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsApmConfig",
+        get_apmconfig_mocks(
+            mocker,
+            export_metrics_enabled=True,
+            legacy=True,
+        )
+    )
+
 @pytest.fixture(name="mock_apmconfig_enabled_md_invalid")
 def mock_apmconfig_enabled_md_invalid(mocker):
     return mocker.patch(
@@ -226,6 +261,7 @@ def mock_apmconfig_enabled_md_invalid(mocker):
         get_apmconfig_mocks(
             mocker,
             md_is_valid=False,
+            legacy=True,
         )
     )
 
@@ -236,26 +272,6 @@ def mock_apmconfig_enabled_is_lambda(mocker):
         get_apmconfig_mocks(
             mocker,
             is_lambda=True,
-        )
-    )
-
-@pytest.fixture(name="mock_apmconfig_logs_enabled_false")
-def mock_apmconfig_logs_enabled_false(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsApmConfig",
-        get_apmconfig_mocks(
-            mocker,
-            export_logs_enabled=False
-        )
-    )
-
-@pytest.fixture(name="mock_apmconfig_logs_enabled_none")
-def mock_apmconfig_logs_enabled_none(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsApmConfig",
-        get_apmconfig_mocks(
-            mocker,
-            export_logs_enabled=None
         )
     )
 
@@ -389,6 +405,12 @@ def mock_config_logs_exp(mocker):
         "solarwinds_apm.configurator.SolarWindsConfigurator._configure_logs_exporter"
     )
 
+@pytest.fixture(name="mock_config_logs_handler")
+def mock_config_logs_handler(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_logs_handler"
+    )
+
 @pytest.fixture(name="mock_config_propagator")
 def mock_config_propagator(mocker):
     return mocker.patch(
@@ -445,9 +467,37 @@ def mock_fwkv_manager_init(mocker):
         "solarwinds_apm.configurator.SolarWindsFrameworkKvManager"
     )
 
-@pytest.fixture(name="mock_oboe_api_obj")
-def mock_oboe_api_obj(mocker):
-    return mocker.Mock()
+@pytest.fixture(name="mock_oboe_api_obj_non_legacy")
+def mock_oboe_api_obj_non_legacy(mocker):
+    def get_side_effect(param):
+        if param == "legacy":
+            return False
+        else:
+            return "not mocked"
+
+    mock_apmconfig = mocker.Mock()
+    mock_apmconfig.configure_mock(
+        **{
+            "get": mocker.Mock(side_effect=get_side_effect),
+        }
+    )
+    return mock_apmconfig
+
+@pytest.fixture(name="mock_oboe_api_obj_legacy")
+def mock_oboe_api_obj_legacy(mocker):
+    def get_side_effect(param):
+        if param == "legacy":
+            return True
+        else:
+            return "not mocked"
+
+    mock_apmconfig = mocker.Mock()
+    mock_apmconfig.configure_mock(
+        **{
+            "get": mocker.Mock(side_effect=get_side_effect),
+        }
+    )
+    return mock_apmconfig
 
 
 # ==================================================================

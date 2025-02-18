@@ -25,6 +25,7 @@ def fixture_cnf_dict():
         "logTraceId": "always",
         "proxy": "http://foo-bar",
         "exportLogsEnabled": True,
+        "legacy": True,
     }
 
 @pytest.fixture
@@ -52,6 +53,7 @@ def fixture_cnf_dict_enabled_false():
         "logTraceId": "always",
         "proxy": "http://foo-bar",
         "exportLogsEnabled": False,
+        "legacy": False,
     }
 
 @pytest.fixture
@@ -78,4 +80,5 @@ def fixture_cnf_dict_enabled_false_mixed_case():
         "reporterFileSingle": 2,
         "proxy": "http://foo-bar",
         "exportLogsEnabled": "fALsE",
+        "legacy": "tRUe",
     }

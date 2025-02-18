@@ -6,14 +6,15 @@
 
 import re
 import json
-
-from opentelemetry import trace as trace_api
 from unittest import mock
 
-from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
+from opentelemetry import trace as trace_api
 
 
-class TestScenario8(TestBaseSwHeadersAndAttributes):
+from .test_base_sw_otlp import TestBaseSwOtlp
+
+
+class TestScenario8(TestBaseSwOtlp):
     """
     Test class for continuing tracing decision OR trigger tracing with input headers
     for traceparent, tracestate, and trigger tracing.
@@ -51,7 +52,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
             return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ignored", "ok", 0)
         )
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            target="solarwinds_apm.extension.oboe.OboeAPI.getTracingDecision",
             new=mock_decision,
         ):
             # Request to instrumented app with headers
@@ -131,7 +132,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
 
         # Verify spans exported: service entry + outgoing request (child with local parent)
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]
@@ -204,6 +205,11 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
 
+        self.assertFlaskMetrics()
+        self.assertRequestsMetrics()
+        self.assertApmMetrics()
+        self.assertLogs()
+
     def test_not_sampled_both_trace_context_and_xtraceoptions_valid(self):
         """
         1. Decision to NOT sample is continued using valid extracted
@@ -233,7 +239,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
             return_value=(1, 0, 3, 4, 5.0, 6.0, 1, 0, "ignored", "ok", 0)
         )
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            target="solarwinds_apm.extension.oboe.OboeAPI.getTracingDecision",
             new=mock_decision,
         ):
             # Request to instrumented app with headers
@@ -313,8 +319,13 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 0
+
+        self.assertFlaskMetrics()
+        self.assertRequestsMetrics(status_code=False)
+        self.assertApmMetrics()
+        self.assertLogs()
 
     def test_sampled_both_trace_context_and_xtraceoptions_valid_without_tt(self):
         """
@@ -348,7 +359,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
             return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ignored", "ok", 0)
         )
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            target="solarwinds_apm.extension.oboe.OboeAPI.getTracingDecision",
             new=mock_decision,
         ):
             # Request to instrumented app with headers
@@ -429,7 +440,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
 
         # Verify spans exported: service entry + outgoing request (child with local parent)
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]
@@ -502,6 +513,11 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
 
+        self.assertFlaskMetrics()
+        self.assertRequestsMetrics()
+        self.assertApmMetrics()
+        self.assertLogs()
+
     def test_not_sampled_both_trace_context_and_xtraceoptions_valid_without_tt(self):
         """
         1. Decision to NOT sample is continued using valid extracted tracestate at service
@@ -530,7 +546,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
             return_value=(1, 0, 3, 4, 5.0, 6.0, 1, 0, "ignored", "ok", 0)
         )
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            target="solarwinds_apm.extension.oboe.OboeAPI.getTracingDecision",
             new=mock_decision,
         ):
             # Request to instrumented app with headers
@@ -611,8 +627,13 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "ignored=foo" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 0
+
+        self.assertFlaskMetrics()
+        self.assertRequestsMetrics(status_code=False)
+        self.assertApmMetrics()
+        self.assertLogs()
 
     def test_sampled_invalid_trace_context_and_valid_unsigned_with_tt(self):
         """
@@ -637,7 +658,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
             return_value=(1, 1, -1, -1, 5.0, 6.0, 1, -1, "ok", "ok", 0)
         )
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            target="solarwinds_apm.extension.oboe.OboeAPI.getTracingDecision",
             new=mock_decision,
         ):
             # Request to instrumented app with headers
@@ -700,7 +721,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]
@@ -775,6 +796,11 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
 
+        self.assertFlaskMetrics()
+        self.assertRequestsMetrics()
+        self.assertApmMetrics()
+        self.assertLogs()
+
     def test_not_sampled_invalid_trace_context_and_valid_unsigned_with_tt(self):
         """
         Scenario #6, not sampled with unsigned tt:
@@ -795,7 +821,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
             return_value=(1, 0, -1, -1, 5.0, 6.0, 1, -1, "rate-exceeded", "ok", -4)
         )
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            target="solarwinds_apm.extension.oboe.OboeAPI.getTracingDecision",
             new=mock_decision,
         ):
             # Request to instrumented app with headers
@@ -855,5 +881,10 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 0
+
+        self.assertFlaskMetrics()
+        self.assertRequestsMetrics(status_code=False)
+        self.assertApmMetrics()
+        self.assertLogs()

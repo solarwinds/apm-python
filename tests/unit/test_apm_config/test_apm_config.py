@@ -24,6 +24,11 @@ def setup_caplog():
     apm_logger = logging.getLogger("solarwinds_apm")
     apm_logger.propagate = True
 
+@pytest.fixture
+def setup_caplog_debug():
+    apm_logger = logging.getLogger("solarwinds_apm")
+    apm_logger.propagate = True
+    apm_logger.setLevel(logging.DEBUG)
 
 class TestSolarWindsApmConfig:
     """
@@ -56,12 +61,12 @@ class TestSolarWindsApmConfig:
         old_trustedpath = os.environ.get("SW_APM_TRUSTEDPATH", None)
         if old_trustedpath:
             del os.environ["SW_APM_TRUSTEDPATH"]
-        old_expt_logs = os.environ.get("SW_APM_EXPORT_LOGS_ENABLED", None)
-        if old_expt_logs:
-            del os.environ["SW_APM_EXPORT_LOGS_ENABLED"]
         old_expt_metrics = os.environ.get("SW_APM_EXPORT_METRICS_ENABLED", None)
         if old_expt_metrics:
             del os.environ["SW_APM_EXPORT_METRICS_ENABLED"]
+        old_legacy = os.environ.get("SW_APM_LEGACY", None)
+        if old_legacy:
+            del os.environ["SW_APM_LEGACY"]
 
         # Wait for test
         yield
@@ -81,10 +86,10 @@ class TestSolarWindsApmConfig:
             os.environ["SW_APM_COLLECTOR"] = old_collector
         if old_trustedpath:
             os.environ["SW_APM_TRUSTEDPATH"] = old_trustedpath
-        if old_expt_logs:
-            os.environ["SW_APM_EXPORT_LOGS_ENABLED"] = old_expt_logs
         if old_expt_metrics:
             os.environ["SW_APM_EXPORT_METRICS_ENABLED"] = old_expt_metrics
+        if old_legacy:
+            os.environ["SW_APM_LEGACY"] = old_legacy
 
     def _mock_service_key(self, mocker, service_key):
         mocker.patch.dict(os.environ, {
@@ -374,14 +379,43 @@ class TestSolarWindsApmConfig:
         mock_certs = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_certificates"
         )
-        mock_logs_enabled = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_logs_enabled"
-        )
-
         apm_config.SolarWindsApmConfig()
         mock_metric_format.assert_called_once()
         mock_certs.assert_called_once()
-        mock_logs_enabled.assert_called_once()
+
+    def test__init_lambda_true_and_legacy_true_resets_legacy(self, mocker, caplog, setup_caplog_debug):
+        mocker.patch.dict(os.environ, {
+            "AWS_LAMBDA_FUNCTION_NAME": "foo",
+            "LAMBDA_TASK_ROOT": "bar",
+            "SW_APM_LEGACY": "true",
+        })
+        result = apm_config.SolarWindsApmConfig()
+        assert result.is_lambda is True
+        assert result.get("legacy") is False
+        assert "Ignoring legacy config." in caplog.text
+
+    def test__init_lambda_true_and_legacy_false(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "AWS_LAMBDA_FUNCTION_NAME": "foo",
+            "LAMBDA_TASK_ROOT": "bar",
+            "SW_APM_LEGACY": "false",
+        })
+        result = apm_config.SolarWindsApmConfig()
+        assert result.is_lambda is True
+        assert result.get("legacy") is False
+
+    def test__init_lambda_false_and_legacy_true(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_LEGACY": "true",
+        })
+        result = apm_config.SolarWindsApmConfig()
+        assert result.is_lambda is False
+        assert result.get("legacy") is True
+
+    def test__init_lambda_false_and_legacy_false(self, mocker):
+        result = apm_config.SolarWindsApmConfig()
+        assert result.is_lambda is False
+        assert result.get("legacy") is False
 
     def test_calculate_metric_format_no_collector(self, mocker):
         assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 2
@@ -534,104 +568,6 @@ class TestSolarWindsApmConfig:
         mock_get_public_cert.configure_mock(return_value="foo")
         assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "bar"
 
-    def test_calculate_logs_enabled_no_collector_enabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "",
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == True
-
-    def test_calculate_logs_enabled_no_collector_disabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "",
-            "SW_APM_EXPORT_LOGS_ENABLED": "false",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_logs_enabled_not_ao_enabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "some-other-collector",
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == True
-
-    def test_calculate_logs_enabled_not_ao_disabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "some-other-collector",
-            "SW_APM_EXPORT_LOGS_ENABLED": "false",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_logs_enabled_ao_prod(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR,
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_logs_enabled_ao_staging(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR,
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_logs_enabled_ao_prod_with_port(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR),
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_metrics_enabled_no_collector_enabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "",
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == True
-
-    def test_calculate_metrics_enabled_no_collector_disabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "",
-            "SW_APM_EXPORT_METRICS_ENABLED": "false",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
-    def test_calculate_metrics_enabled_not_ao_enabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "some-other-collector",
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == True
-
-    def test_calculate_metrics_enabled_not_ao_disabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "some-other-collector",
-            "SW_APM_EXPORT_METRICS_ENABLED": "false",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
-    def test_calculate_metrics_enabled_ao_prod(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR,
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
-    def test_calculate_metrics_enabled_ao_staging(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR,
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
-    def test_calculate_metrics_enabled_ao_prod_with_port(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR),
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
     def test_mask_service_key_no_key_empty_default(self, mocker):
         mock_entry_points = mocker.patch(
             "solarwinds_apm.apm_config.entry_points"
@@ -713,7 +649,7 @@ class TestSolarWindsApmConfig:
         self._mock_service_key(mocker, "valid-and-long:key")
         assert apm_config.SolarWindsApmConfig()._config_mask_service_key().get("service_key") == "vali...long:key"
 
-    def test_str(
+    def test_str_non_legacy(
         self,
         mocker,
         mock_env_vars,
@@ -722,7 +658,23 @@ class TestSolarWindsApmConfig:
         result = str(apm_config.SolarWindsApmConfig())
         assert "vali...long:key" in result
         assert "agent_enabled" in result
+        assert "solarwinds_apm.apm_noop.Context" in result
+        assert "solarwinds_apm.extension.oboe.OboeAPI" in result
+
+    def test_str_legacy(
+        self,
+        mocker,
+        mock_env_vars,
+    ):
+        self._mock_service_key(mocker, "valid-and-long:key")
+        mocker.patch.dict(os.environ, {
+            "SW_APM_LEGACY": "true",
+        })
+        result = str(apm_config.SolarWindsApmConfig())
+        assert "vali...long:key" in result
+        assert "agent_enabled" in result
         assert "solarwinds_apm.extension.oboe.Context" in result
+        assert "solarwinds_apm.apm_noop.OboeAPI" in result
 
     # pylint:disable=unused-argument
     def test_set_config_value_invalid_key(self, caplog, setup_caplog, mock_env_vars):
@@ -783,12 +735,7 @@ class TestSolarWindsApmConfig:
         assert test_config.get("log_type") == 0
         assert "Ignore config option" in caplog.text
 
-    def test_set_config_value_default_export_logs_enabled(
-        self,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        assert test_config.get("export_logs_enabled") == False
-
+    # TODO: Remove in NH-101930
     def test_set_config_value_ignore_export_logs_enabled(
         self,
         caplog,
@@ -796,52 +743,9 @@ class TestSolarWindsApmConfig:
         mock_env_vars,
     ):
         test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "not-valid")
-        assert test_config.get("export_logs_enabled") == False
-        assert "Ignore config option" in caplog.text
-    def test_set_config_value_set_export_logs_enabled_false(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "false")
-        assert test_config.get("export_logs_enabled") == False
-        assert "Ignore config option" not in caplog.text
-
-    def test_set_config_value_set_export_logs_enabled_false_mixed_case(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "fALsE")
-        assert test_config.get("export_logs_enabled") == False
-        assert "Ignore config option" not in caplog.text
-
-    def test_set_config_value_set_export_logs_enabled_true(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "true")
-        assert test_config.get("export_logs_enabled") == True
-        assert "Ignore config option" not in caplog.text
-
-    def test_set_config_value_set_export_logs_enabled_true_mixed_case(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("export_logs_enabled", "tRUe")
-        assert test_config.get("export_logs_enabled") == True
-        assert "Ignore config option" not in caplog.text
+        test_config._set_config_value("export_logs_enabled", "any")
+        assert test_config.get("export_logs_enabled") is None
+        assert "SW_APM_EXPORT_LOGS_ENABLED is no longer supported." in caplog.text
 
     def test_set_config_value_default_export_metrics_enabled(
         self,
@@ -901,6 +805,67 @@ class TestSolarWindsApmConfig:
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("export_metrics_enabled", "tRUe")
         assert test_config.get("export_metrics_enabled") == True
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_default_legacy(
+        self,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config.get("legacy") == False
+
+    def test_set_config_value_ignore_legacy(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("legacy", "not-valid")
+        assert test_config.get("legacy") == False
+        assert "Ignore config option" in caplog.text
+
+    def test_set_config_value_set_legacy_false(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("legacy", "false")
+        assert test_config.get("legacy") == False
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_set_legacy_false_mixed_case(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("legacy", "fALsE")
+        assert test_config.get("legacy") == False
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_set_legacy_true(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("legacy", "true")
+        assert test_config.get("legacy") == True
+        assert "Ignore config option" not in caplog.text
+
+    def test_set_config_value_set_legacy_true_mixed_case(
+        self,
+        caplog,
+        setup_caplog,
+        mock_env_vars,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("legacy", "tRUe")
+        assert test_config.get("legacy") == True
         assert "Ignore config option" not in caplog.text
 
     def test__update_service_key_name_not_agent_enabled(self):
