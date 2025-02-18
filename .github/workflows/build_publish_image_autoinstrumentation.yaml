@@ -33,8 +33,8 @@ jobs:
         uses: docker/login-action@v3
         if: ${{ github.event_name == 'push' }}
         with:
-          username: ${{ secrets.DOCKER_HUB_CI_USER }}
-          password: ${{ secrets.DOCKER_HUB_CI_PASSWORD }}
+          username: ${{ vars.DOCKER_SOLARWINDS_ORG_LOGIN }}
+          password: ${{ secrets.ENOPS5919_APM_DOCKER_HUB_CI_OAT }}
 
       - name: Extract Docker metadata
         id: meta
