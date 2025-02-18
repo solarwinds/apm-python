@@ -46,7 +46,6 @@ class TestConfiguratorLogsExporter:
         mock_apmconfig_disabled,
         mock_blprocessor,
         mock_loggerprovider,
-        mock_logginghandler,
     ):
         trace_mocks = get_trace_mocks(mocker)
 
@@ -59,7 +58,6 @@ class TestConfiguratorLogsExporter:
         trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
         mock_loggerprovider.assert_not_called()
         mock_blprocessor.assert_not_called()
-        mock_logginghandler.assert_not_called()
 
     def test_configure_logs_exporter_otel_false(
         self,
@@ -67,7 +65,6 @@ class TestConfiguratorLogsExporter:
         mock_apmconfig_enabled,
         mock_blprocessor,
         mock_loggerprovider,
-        mock_logginghandler,
     ):
         mocker.patch.dict(
             os.environ,
@@ -86,7 +83,6 @@ class TestConfiguratorLogsExporter:
         trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
         mock_loggerprovider.assert_not_called()
         mock_blprocessor.assert_not_called()
-        mock_logginghandler.assert_not_called()
 
     def test_configure_logs_exporter_otel_none(
         self,
@@ -94,7 +90,6 @@ class TestConfiguratorLogsExporter:
         mock_apmconfig_enabled,
         mock_blprocessor,
         mock_loggerprovider,
-        mock_logginghandler,
     ):
         mocker.patch.dict(
             os.environ,
@@ -113,7 +108,6 @@ class TestConfiguratorLogsExporter:
         trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
         mock_loggerprovider.assert_not_called()
         mock_blprocessor.assert_not_called()
-        mock_logginghandler.assert_not_called()
 
     def test_configure_logs_exporter_otel_true_no_exporter(
         self,
@@ -121,7 +115,6 @@ class TestConfiguratorLogsExporter:
         mock_apmconfig_enabled,
         mock_blprocessor,
         mock_loggerprovider,
-        mock_logginghandler,
     ):
         mocker.patch.dict(
             os.environ,
@@ -141,7 +134,6 @@ class TestConfiguratorLogsExporter:
         trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
         mock_loggerprovider.assert_not_called()
         mock_blprocessor.assert_not_called()
-        mock_logginghandler.assert_not_called()
 
     def test_configure_logs_exporter_otel_true_invalid_exporter(
         self,
@@ -149,7 +141,6 @@ class TestConfiguratorLogsExporter:
         mock_apmconfig_enabled,
         mock_blprocessor,
         mock_loggerprovider,
-        mock_logginghandler,
     ):
         # Mock entry points
         mock_entry_points = mocker.patch(
@@ -180,7 +171,6 @@ class TestConfiguratorLogsExporter:
         mock_loggerprovider.assert_called_once()
 
         mock_blprocessor.assert_not_called()
-        mock_logginghandler.assert_not_called()
 
     def test_configure_logs_exporter_otel_true_valid_exporter(
         self,
@@ -188,7 +178,6 @@ class TestConfiguratorLogsExporter:
         mock_apmconfig_enabled,
         mock_blprocessor,
         mock_loggerprovider,
-        mock_logginghandler,
     ):
         # Mock entry points
         mock_exporter = mocker.Mock()
@@ -231,4 +220,3 @@ class TestConfiguratorLogsExporter:
         mock_loggerprovider.assert_called_once()
 
         mock_blprocessor.assert_called_once()
-        mock_logginghandler.assert_called_once()
