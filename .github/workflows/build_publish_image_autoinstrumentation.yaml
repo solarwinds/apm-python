@@ -7,6 +7,9 @@
 name: "Publish APM Python Auto-Instrumentation"
 
 on:
+  push:
+    branches:
+      - NH-100901-migrate-to-oat
   workflow_dispatch:
 
 permissions:
