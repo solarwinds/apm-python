@@ -4,7 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.3.2...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.4.0...HEAD)
+
+## [3.4.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.4.0) - 2025-02-18
+
+### Added
+- Added autoinstrumentation image publishing ([#481](https://github.com/solarwinds/apm-python/pull/481), [#490](https://github.com/solarwinds/apm-python/pull/490), [#520](https://github.com/solarwinds/apm-python/pull/520), [#523](https://github.com/solarwinds/apm-python/pull/523))
+- Added support for `SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE` ([#524](https://github.com/solarwinds/apm-python/pull/524))
+
+### Changed
+- Fixed PyPI publishing ([#488](https://github.com/solarwinds/apm-python/pull/488))
+- Fixed version lookup logs ([#489](https://github.com/solarwinds/apm-python/pull/489))
+- Changed exporter header defaults ([#494](https://github.com/solarwinds/apm-python/pull/494))
+- Make service_key updates more general ([#496](https://github.com/solarwinds/apm-python/pull/496))
+- Fixed AttributeError if Propagators None ([#501](https://github.com/solarwinds/apm-python/pull/501))
+- Fixed test mocks ([#502](https://github.com/solarwinds/apm-python/pull/502))
+- Upgraded to OpenTelemetry Python 1.30.0/0.51b0 ([#521](https://github.com/solarwinds/apm-python/pull/521))
+
+### Removed
+- Removed support of deprecated `OTEL_SQLCOMMENTER_ENABLED` and `OTEL_SQLCOMMENTER_OPTIONS` ([#522](https://github.com/solarwinds/apm-python/pull/522))
 
 ## [3.3.2](https://github.com/solarwinds/apm-python/releases/tag/rel-3.3.2) - 2025-01-06
 
