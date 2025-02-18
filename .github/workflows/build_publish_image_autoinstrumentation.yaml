@@ -68,23 +68,24 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Analyze for critical and high CVEs - local Dockerfile
-        id: docker-scout-cves
-        uses: docker/scout-action@v1
-        with:
-          command: cves
-          image: "fs://./"
-          platform: "linux/amd64"
-          ignore-base: true
-          only-package-types: pip
+      ## TODO Switch to ENOPS PAT
+      # - name: Analyze for critical and high CVEs - local Dockerfile
+      #   id: docker-scout-cves
+      #   uses: docker/scout-action@v1
+      #   with:
+      #     command: cves
+      #     image: "fs://./"
+      #     platform: "linux/amd64"
+      #     ignore-base: true
+      #     only-package-types: pip
 
-      - name: Analyze for critical and high CVEs - tagged image
-        id: docker-scout-image-cves
-        uses: docker/scout-action@v1
-        with:
-          command: cves
-          image: ${{ steps.meta.outputs.tags[0] }}
-          platform: "linux/amd64"
+      # - name: Analyze for critical and high CVEs - tagged image
+      #   id: docker-scout-image-cves
+      #   uses: docker/scout-action@v1
+      #   with:
+      #     command: cves
+      #     image: ${{ steps.meta.outputs.tags[0] }}
+      #     platform: "linux/amd64"
   
 
   ghcr_io:
