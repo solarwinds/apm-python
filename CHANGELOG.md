@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.4.0...HEAD)
 
-## [3.4.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.4.0) - 2025-02-18
+## [3.4.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.4.0) - 2025-02-18
 
 ### Added
 - Added autoinstrumentation image publishing ([#481](https://github.com/solarwinds/apm-python/pull/481), [#490](https://github.com/solarwinds/apm-python/pull/490), [#520](https://github.com/solarwinds/apm-python/pull/520), [#523](https://github.com/solarwinds/apm-python/pull/523))
