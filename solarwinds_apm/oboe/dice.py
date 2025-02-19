@@ -1,7 +1,8 @@
 import random
 
+
 class _Dice:
-    def __init__(self, scale, rate = 0):
+    def __init__(self, scale, rate=0):
         self._scale = scale
         self._rate = rate
 
@@ -13,9 +14,10 @@ class _Dice:
     def rate(self, new_rate):
         self._rate = max([0, min([self._scale, new_rate])])
 
-    def update(self, new_scale, new_rate):
+    def update(self, new_scale, new_rate=None):
         self._scale = new_scale
-        self.rate = new_rate
+        if new_rate is not None:
+            self.rate = new_rate
 
     def roll(self):
         return random.random() * self._scale < self.rate
