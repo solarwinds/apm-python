@@ -7,6 +7,9 @@
 name: "Publish APM Python Auto-Instrumentation"
 
 on:
+  push:
+    branches:
+      - NH-102374-update-scout-scans
   workflow_dispatch:
 
 permissions:
