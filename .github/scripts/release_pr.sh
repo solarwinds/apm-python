@@ -20,10 +20,8 @@ gh api -X POST /repos/solarwinds/apm-python/git/refs \
 # Get SHA of current version.py at main
 SHA=$(gh api /repos/solarwinds/apm-python/contents/solarwinds_apm/version.py?ref="main" --jq '.sha')
 
-newline=$'\n'
-content=$(base64 <<< "__version__ = \"$version_number\"$newline")
-
 # Commit version.py with updated agent version
+content=$(base64 <<< "__version__ = \"$version_number\"")
 echo "Pushing new version.py to branch '$branch_name'"
 gh api --method PUT /repos/solarwinds/apm-python/contents/solarwinds_apm/version.py \
     --field message="Update agent version to $version_number" \
