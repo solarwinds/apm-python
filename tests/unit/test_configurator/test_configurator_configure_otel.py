@@ -193,7 +193,6 @@ class TestConfiguratorConfigureOtelComponents:
             "not-a-bool-string",
             False,
         )
-        pass
 
     def test_configure_otel_components_agent_enabled_non_legacy(
         self,

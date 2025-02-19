@@ -988,7 +988,6 @@ class SolarWindsApmConfig:
                     "SW_APM_EXPORT_LOGS_ENABLED is no longer supported. Please configure "
                     "Otel Logger SDK using OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED."
                 )
-                val = False
             elif isinstance(sub_dict, dict) and keys[-1] in sub_dict:
                 if isinstance(sub_dict[keys[-1]], bool):
                     val = self.convert_to_bool(val)
