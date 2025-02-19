@@ -1243,7 +1243,10 @@ class TestDistro:
         mocker.patch(
             "solarwinds_apm.distro.SolarWindsDistro.get_enable_commenter_env_map",
             return_value={
-                "not-on-list": True,
+                "not-on-list": {
+                    "enable_commenter": True,
+                    "enable_attribute_commenter": False,
+                }
             }
         )
         mocker.patch(
@@ -1284,7 +1287,10 @@ class TestDistro:
         mocker.patch(
             "solarwinds_apm.distro.SolarWindsDistro.get_enable_commenter_env_map",
             return_value={
-                "foo-instrumentor": False,
+                "foo-instrumentor": {
+                    "enable_commenter": False,
+                    "enable_attribute_commenter": True,
+                }
             }
         )
         mocker.patch(
@@ -1292,9 +1298,10 @@ class TestDistro:
             return_value="foo-options"
         )
         distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
-        # Commenting still enabled for individual even if catch-all is False
         mock_instrument.assert_called_once_with(
             foo="bar",
+            # If passed without enable_commenter=True, this does nothing
+            enable_attribute_commenter=True,
         )
 
     def test_load_instrumentor_enable_commenting_true(self, mocker):
@@ -1325,7 +1332,10 @@ class TestDistro:
         mocker.patch(
             "solarwinds_apm.distro.SolarWindsDistro.get_enable_commenter_env_map",
             return_value={
-                "foo-instrumentor": True,
+                "foo-instrumentor": {
+                    "enable_commenter": True,
+                    "enable_attribute_commenter": False,
+                }
             }
         )
         mocker.patch(
@@ -1333,7 +1343,6 @@ class TestDistro:
             return_value="foo-options"
         )
         distro.SolarWindsDistro().load_instrumentor(mock_entry_point, **{"foo": "bar"})
-        # Commenting still enabled for individual even if catch-all is False
         mock_instrument.assert_called_once_with(
             commenter_options="foo-options",
             enable_commenter=True,
@@ -1368,7 +1377,10 @@ class TestDistro:
         mocker.patch(
             "solarwinds_apm.distro.SolarWindsDistro.get_enable_commenter_env_map",
             return_value={
-                "foo-instrumentor": True,
+                "foo-instrumentor": {
+                    "enable_commenter": True,
+                    "enable_attribute_commenter": False,
+                }
             }
         )
         mocker.patch(
@@ -1410,7 +1422,10 @@ class TestDistro:
         mocker.patch(
             "solarwinds_apm.distro.SolarWindsDistro.get_enable_commenter_env_map",
             return_value={
-                "django": True,
+                "django": {
+                    "enable_commenter": True,
+                    "enable_attribute_commenter": False,
+                }
             }
         )
         mocker.patch(
@@ -1427,101 +1442,305 @@ class TestDistro:
     def test_get_enable_commenter_env_map_none(self, mocker):
         mocker.patch.dict(os.environ, {})
         assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
-            "django": False,
-            "flask": False,
-            "psycopg": False,
-            "psycopg2": False,
-            "sqlalchemy": False,
+            "django": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "flask": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg2": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "sqlalchemy": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
         }
 
     def test_get_enable_commenter_env_map_invalid_just_a_comma(self, mocker):
-        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": ","})
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_ENABLED_SQLCOMMENT": ",",
+                "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE": ",",
+            }
+        )
         assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
-            "django": False,
-            "flask": False,
-            "psycopg": False,
-            "psycopg2": False,
-            "sqlalchemy": False,
+            "django": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "flask": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg2": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "sqlalchemy": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
         }
 
     def test_get_enable_commenter_env_map_invalid_missing_equals_sign_single_val(self, mocker):
-        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django"})
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_ENABLED_SQLCOMMENT": "django",
+                "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE": "django",
+            }
+        )
         assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
-            "django": False,
-            "flask": False,
-            "psycopg": False,
-            "psycopg2": False,
-            "sqlalchemy": False,
+            "django": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "flask": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg2": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "sqlalchemy": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
         }
 
     def test_get_enable_commenter_env_map_invalid_missing_equals_sign_multiple_first(self, mocker):
-        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django,flask=true"})
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_ENABLED_SQLCOMMENT": "django,flask=true",
+                "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE": "django,flask=false",
+            }
+        )
         assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
-            "django": False,
-            "flask": True,
-            "psycopg": False,
-            "psycopg2": False,
-            "sqlalchemy": False,
+            "django": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "flask": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
+            "psycopg": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg2": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "sqlalchemy": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
         }
 
     def test_get_enable_commenter_env_map_invalid_missing_equals_sign_multiple_last(self, mocker):
-        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "flask=true,django"})
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_ENABLED_SQLCOMMENT": "flask=true,django",
+                "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE": "flask=false,django",
+            }
+        )
         assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
-            "django": False,
-            "flask": True,
-            "psycopg": False,
-            "psycopg2": False,
-            "sqlalchemy": False,
+            "django": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "flask": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
+            "psycopg": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg2": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "sqlalchemy": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
         }
 
     def test_get_enable_commenter_env_map_valid_ignored_values(self, mocker):
-        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django=true,flask=foobar,psycopg=123"})
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_ENABLED_SQLCOMMENT": "django=true,flask=foobar,psycopg=123",
+                "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE": "django=false,flask=foobar,psycopg=123",
+            }
+        )
         assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
-            "django": True,
-            "flask": False,
-            "psycopg": False,
-            "psycopg2": False,
-            "sqlalchemy": False,
+            "django": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
+            "flask": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg2": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "sqlalchemy": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
         }
 
     def test_get_enable_commenter_env_map_valid_mixed_case(self, mocker):
-        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "dJAnGO=tRuE,FlaSK=TrUe"})
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_ENABLED_SQLCOMMENT": "dJAnGO=tRuE,FlaSK=TrUe",
+                "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE": "dJAnGO=fAlSe,FlaSK=FaLsE",
+            }
+        )
         assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
-            "django": True,
-            "flask": True,
-            "psycopg": False,
-            "psycopg2": False,
-            "sqlalchemy": False,
+            "django": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
+            "flask": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
+            "psycopg": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg2": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "sqlalchemy": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
         }
 
     def test_get_enable_commenter_env_map_valid_whitespace_stripped(self, mocker):
-        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django  =  true  ,  flask=  true  "})
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_ENABLED_SQLCOMMENT": "django  =  true  ,  flask=  true  ",
+                "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE": "django  =  false  ,  flask=  false  ",
+            }
+        )
         assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
-            "django": True,
-            "flask": True,
-            "psycopg": False,
-            "psycopg2": False,
-            "sqlalchemy": False,
+            "django": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
+            "flask": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
+            "psycopg": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg2": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "sqlalchemy": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
         }
 
     def test_get_enable_commenter_env_map_valid_update_existing(self, mocker):
-        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "django=true,flask=true,psycopg=true,psycopg2=true,sqlalchemy=true"})
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_ENABLED_SQLCOMMENT": "django=true,flask=true,psycopg=true,psycopg2=true,sqlalchemy=true",
+                "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE": "django=false,flask=false,psycopg=false,psycopg2=false,sqlalchemy=false",
+            }
+        )
         assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
-            "django": True,
-            "flask": True,
-            "psycopg": True,
-            "psycopg2": True,
-            "sqlalchemy": True,
+            "django": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
+            "flask": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
+            "psycopg": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
+            "psycopg2": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
+            "sqlalchemy": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
         }
 
     def test_get_enable_commenter_env_map_valid_ignores_if_not_on_list(self, mocker):
-        mocker.patch.dict(os.environ, {"SW_APM_ENABLED_SQLCOMMENT": "flask=true,foobar=true"})
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_ENABLED_SQLCOMMENT": "flask=true,foobar=true",
+                "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE": "flask=false,foobar=false",
+            }
+        )
         assert distro.SolarWindsDistro().get_enable_commenter_env_map() == {
-            "django": False,
-            "flask": True,
-            "psycopg": False,
-            "psycopg2": False,
-            "sqlalchemy": False,
+            "django": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "flask": {
+                "enable_commenter": True,
+                "enable_attribute_commenter": False,
+            },
+            "psycopg": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "psycopg2": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
+            "sqlalchemy": {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            },
         }
 
     def test_detect_commenter_options_not_set(self, mocker):

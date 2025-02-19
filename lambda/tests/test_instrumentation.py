@@ -158,6 +158,7 @@ class TestAwsLambdaInstrumentor(TestBase):
             {
                 AWS_LAMBDA_EXEC_WRAPPER: "mock_aws_lambda_exec_wrapper",
                 _HANDLER: "mocks.lambda_function.handler",
+                "AWS_LAMBDA_FUNCTION_NAME": "mylambda",
             },
         )
         self.common_env_patch.start()

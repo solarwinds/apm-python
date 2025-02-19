@@ -242,7 +242,9 @@ class SolarWindsDistro(BaseDistro):
         individual instrumentor by upstream sitecustomize.
 
         For enabling sqlcommenting, SW_APM_ENABLED_SQLCOMMENT enables
-        individual instrumentors if in _SQLCOMMENTERS (each is false by default)
+        individual instrumentors if in _SQLCOMMENTERS (each is false by default).
+        APM Python also sets enable_attribute_commenter=True by default;
+        can be opted out for each instrumentor with SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE.
         """
         # If we're in Lambda environment, then we skip loading
         # AwsLambdaInstrumentor because we assume the wrapper
@@ -255,7 +257,7 @@ class SolarWindsDistro(BaseDistro):
             entry_point_setting = self.get_enable_commenter_env_map().get(
                 entry_point.name
             )
-            if entry_point_setting is True:
+            if entry_point_setting.get("enable_commenter") is True:
                 if entry_point.name == "django":
                     kwargs["is_sql_commentor_enabled"] = True
                 else:
@@ -266,11 +268,14 @@ class SolarWindsDistro(BaseDistro):
                     kwargs["commenter_options"] = (
                         self.detect_commenter_options()
                     )
-                logger.debug(
-                    "Enabling sqlcommenter for %s with %s",
-                    entry_point.name,
-                    kwargs,
-                )
+            if entry_point_setting.get("enable_attribute_commenter") is True:
+                kwargs["enable_attribute_commenter"] = True
+
+            logger.debug(
+                "Enabling sqlcommenter for %s with %s",
+                entry_point.name,
+                kwargs,
+            )
 
         # If SW_APM_EXPORT_METRICS_ENABLED is set to false,
         # then we load the instrumentor with NoOp providers to disable
@@ -292,33 +297,64 @@ class SolarWindsDistro(BaseDistro):
         instrumentor().instrument(**kwargs)
 
     def get_enable_commenter_env_map(self) -> dict:
-        """Return a map of which instrumentors will have sqlcomment enabled,
-        if implemented. Default is False for each instrumentor in _SQLCOMMENTERS.
+        """Return a map of which instrumentors will have sqlcomment and attribute
+        -in-attribute enabled, if implemented.
+        Reads env SW_APM_ENABLED_SQLCOMMENT and SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE
+        each as a comma-separated string of KVs paired by equals signs,
+        e.g. 'django=true,sqlalchemy=false'.
 
-        Reads env SW_APM_ENABLED_SQLCOMMENT as a comma-separated string of KVs
-        paired by equals signs, e.g. 'django=true,sqlalchemy=false'."""
-        env_commenter_items = environ.get("SW_APM_ENABLED_SQLCOMMENT", "")
-        env_commenter_map = {instr: False for instr in _SQLCOMMENTERS}
-        if env_commenter_items:
-            for item in env_commenter_items.split(","):
-                try:
-                    key, value = item.split("=", maxsplit=1)
-                except ValueError as exc:
-                    logger.warning(
-                        "Invalid sqlcommenter key value at pair %s: %s",
-                        item,
-                        exc,
-                    )
-                    continue
+        Partial example returned map:
+        {
+            "django": {
+                "enable_commenter": True,
+                "enable_attribute_commenter", False,
+            }
+            "psycopg2": {
+                "enable_commenter": False,
+                "enable_attribute_commenter", True,
+            }
+            ...
+        }
 
-                instrumentor_name = key.strip().lower()
-                if instrumentor_name in _SQLCOMMENTERS:
-                    env_v_bool = SolarWindsApmConfig.convert_to_bool(
-                        value.strip()
-                    )
-                    if env_v_bool is not None:
-                        env_commenter_map[instrumentor_name] = env_v_bool
+        Default for sqlcomment is False for each instrumentor in _SQLCOMMENTERS.
+        Default for adding sqlcomment to attribute is True. This has no effect
+        upstream if sqlcomment is False."""
+        env_commenter_map = {
+            instr: {
+                "enable_commenter": False,
+                "enable_attribute_commenter": True,
+            }
+            for instr in _SQLCOMMENTERS
+        }
 
+        def parse_env_items(env_var, key_name):
+            env_items = environ.get(env_var, "")
+            if env_items:
+                for item in env_items.split(","):
+                    try:
+                        key, value = item.split("=", maxsplit=1)
+                    except ValueError as exc:
+                        logger.warning(
+                            "Invalid sqlcommenter key value at pair %s: %s",
+                            item,
+                            exc,
+                        )
+                        continue
+
+                    instrumentor_name = key.strip().lower()
+                    if instrumentor_name in _SQLCOMMENTERS:
+                        env_v_bool = SolarWindsApmConfig.convert_to_bool(
+                            value.strip()
+                        )
+                        if env_v_bool is not None:
+                            env_commenter_map[instrumentor_name][
+                                key_name
+                            ] = env_v_bool
+
+        parse_env_items("SW_APM_ENABLED_SQLCOMMENT", "enable_commenter")
+        parse_env_items(
+            "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE", "enable_attribute_commenter"
+        )
         return env_commenter_map
 
     def detect_commenter_options(self):
