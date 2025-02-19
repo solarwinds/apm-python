@@ -58,12 +58,23 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push - amd64
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          load: true
+          context: image
+          platforms: linux/amd64
+          build-args: version=${{ env.VERSION }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build and push - arm64
         uses: docker/build-push-action@v6
         with:
           push: true
           context: image
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           build-args: version=${{ env.VERSION }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -74,16 +85,6 @@ jobs:
         with:
           username: ${{ vars.ENOPS5919_DOCKER_SCOUT_CI_USER }}
           password: ${{ secrets.ENOPS5919_DOCKER_SCOUT_CI_PAT }}
-
-      - name: Analyze for critical and high CVEs - local Dockerfile
-        id: docker-scout-cves
-        uses: docker/scout-action@v1
-        with:
-          command: cves
-          image: "fs://./"
-          platform: "linux/amd64"
-          ignore-base: true
-          only-package-types: pip
 
       - name: Analyze for critical and high CVEs - tagged image
         id: docker-scout-image-cves
