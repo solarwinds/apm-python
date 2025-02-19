@@ -18,27 +18,30 @@ gh api -X POST /repos/solarwinds/apm-python/git/refs \
     --field sha="$(git rev-parse "origin/main")"
 
 # Get SHA of current version.py at main
-SHA=$(gh api /repos/solarwinds/apm-python/contents/solarwinds_apm/version.py?ref="main" --jq '.sha')
+SHA_VERS=$(gh api /repos/solarwinds/apm-python/contents/solarwinds_apm/version.py?ref="main" --jq '.sha')
 
 # Commit version.py with updated agent version
-content=$(base64 <<< "__version__ = \"$version_number\"")
+version_str=$(base64 <<< "__version__ = \"$version_number\"")
 echo "Pushing new version.py to branch '$branch_name'"
 gh api --method PUT /repos/solarwinds/apm-python/contents/solarwinds_apm/version.py \
     --field message="Update agent version to $version_number" \
-    --field content="$content" \
+    --field content="$version_str" \
     --field encoding="base64" \
     --field branch="$branch_name" \
-    --field sha="$SHA"
+    --field sha="$SHA_VERS"
+
+# Get SHA of current requirements-nodeps.py at main
+SHA_REQ=$(gh api /repos/solarwinds/apm-python/contents/image/requirements-nodeps.txt?ref="main" --jq '.sha')
 
 # Commit image requirements with updated agent version
-requirement=$(base64 <<< "solarwinds_apm==$version_number")
+requirement_str=$(base64 <<< "solarwinds_apm==$version_number")
 echo "Pushing new image/requirements to branch '$branch_name'"
 gh api --method PUT /repos/solarwinds/apm-python/contents/image/requirements-nodeps.txt \
     --field message="Update image's agent version to $version_number" \
-    --field content="$requirement" \
+    --field content="$requirement_str" \
     --field encoding="base64" \
     --field branch="$branch_name" \
-    --field sha="$SHA"
+    --field sha="$SHA_REQ"
 
 # Open draft Pull Request for version bump
 echo "Creating draft pull request"
