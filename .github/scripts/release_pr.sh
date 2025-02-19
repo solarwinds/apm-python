@@ -32,6 +32,16 @@ gh api --method PUT /repos/solarwinds/apm-python/contents/solarwinds_apm/version
     --field branch="$branch_name" \
     --field sha="$SHA"
 
+# Commit image requirements with updated agent version
+requirement=$(base64 <<< "solarwinds_apm==$version_number")
+echo "Pushing new image/requirements to branch '$branch_name'"
+gh api --method PUT /repos/solarwinds/apm-python/contents/image/requirements-nodeps.txt \
+    --field message="Update image's agent version to $version_number" \
+    --field content="$requirement" \
+    --field encoding="base64" \
+    --field branch="$branch_name" \
+    --field sha="$SHA"
+
 # Open draft Pull Request for version bump
 echo "Creating draft pull request"
 gh pr create --draft --base "main" --head "$branch_name" \
