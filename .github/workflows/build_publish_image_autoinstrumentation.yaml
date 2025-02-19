@@ -71,7 +71,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      ## TODO Switch to ENOPS PAT
+      ## TODO Switch to ENOPS org PAT
       # - name: Analyze for critical and high CVEs - local Dockerfile
       #   id: docker-scout-cves
       #   uses: docker/scout-action@v1
