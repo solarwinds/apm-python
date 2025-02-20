@@ -56,14 +56,14 @@ def test_parse_trace_options(header, expected):
 
 def test_stringify_trace_options_response():
     result = stringify_trace_options_response({
-        "auth": Auth.OK,
-        "trigger-trace": TriggerTrace.OK,
+        "auth": Auth.OK.value,
+        "trigger-trace": TriggerTrace.OK.value,
     })
     assert result == "auth=ok;trigger-trace=ok"
 
     result = stringify_trace_options_response({
-        "auth": Auth.OK,
-        "trigger-trace": TriggerTrace.TRIGGER_TRACING_DISABLED,
+        "auth": Auth.OK.value,
+        "trigger-trace": TriggerTrace.TRIGGER_TRACING_DISABLED.value,
         "ignored": ["invalid-key1", "invalid_key2"],
     })
     assert result == "auth=ok;trigger-trace=trigger-tracing-disabled;ignored=invalid-key1,invalid_key2"

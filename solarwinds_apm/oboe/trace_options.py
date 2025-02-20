@@ -3,6 +3,7 @@ import hmac
 import logging
 import re
 import time
+from enum import Enum
 from typing import Optional, Dict, List, Tuple
 
 TRIGGER_TRACE_KEY = "trigger-trace"
@@ -12,14 +13,14 @@ SW_KEYS_KEY = "sw-keys"
 CUSTOM_KEY_REGEX = r'^custom-[^\s]+$'
 
 
-class Auth:
+class Auth(Enum):
     OK = "ok"
     BAD_TIMESTAMP = "bad-timestamp"
     BAD_SIGNATURE = "bad-signature"
     NO_SIGNATURE_KEY = "no-signature-key"
 
 
-class TriggerTrace:
+class TriggerTrace(Enum):
     OK = "ok"
     NOT_REQUESTED = "not-requested"
     IGNORED = "ignored"
@@ -46,6 +47,45 @@ class TraceOptions:
         if not isinstance(other, TraceOptions):
             return NotImplemented
         return self.trigger_trace == other.trigger_trace and self.timestamp == other.timestamp and self.sw_keys == other.sw_keys and self.custom == other.custom and self.ignored == other.ignored
+
+
+class TraceOptionsResponse:
+    def __init__(self,
+                 auth: Optional[str] = None,
+                 trigger_trace: Optional[str] = None,
+                 ignored: Optional[List[str]] = None):
+        self.auth = auth
+        self.trigger_trace = trigger_trace
+        self.ignored = ignored
+
+    def __eq__(self, other):
+        if not isinstance(other, TraceOptionsResponse):
+            return NotImplemented
+        return self.auth == other.auth and self.trigger_trace == other.trigger_trace and self.ignored == other.ignored
+
+
+class RequestHeaders:
+    def __init__(self,
+                 x_trace_options: Optional[str] = None,
+                 x_trace_options_signature: Optional[str] = None):
+        self.x_trace_options = x_trace_options
+        self.x_trace_options_signature = x_trace_options_signature
+
+    def __eq__(self, other):
+        if not isinstance(other, RequestHeaders):
+            return NotImplemented
+        return self.x_trace_options == other.x_trace_options and self.x_trace_options_signature == other.x_trace_options_signature
+
+
+class ResponseHeaders:
+    def __init__(self,
+                 x_trace_options_response: Optional[str] = None):
+        self.x_trace_options_response = x_trace_options_response
+
+    def __eq__(self, other):
+        if not isinstance(other, ResponseHeaders):
+            return NotImplemented
+        return self.x_trace_options_response == other.x_trace_options_response
 
 
 def parse_trace_options(header, logger=logging.getLogger(__name__)):

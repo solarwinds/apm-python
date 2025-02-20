@@ -4,8 +4,9 @@ import threading
 
 class _TokenBucket(object):
     MAX_INTERVAL = sys.maxsize
+    DEFAULT_INTERVAL = 1
 
-    def __init__(self, capacity=0, rate=0, interval=MAX_INTERVAL):
+    def __init__(self, capacity=0, rate=0, interval=DEFAULT_INTERVAL):
         self._capacity = float(capacity)
         self._rate = float(rate)
         self._interval = float(interval)

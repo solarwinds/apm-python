@@ -1,12 +1,13 @@
 from typing import Optional, Dict
+from enum import Enum, IntEnum
 
 
-class SampleSource:
+class SampleSource(IntEnum):
     LocalDefault = 2
     Remote = 6
 
 
-class Flags:
+class Flags(IntEnum):
     OK = 0x0
     INVALID = 0x1
     OVERRIDE = 0x2
@@ -15,12 +16,12 @@ class Flags:
     TRIGGERED_TRACE = 0x20
 
 
-class TracingMode:
+class TracingMode(IntEnum):
     ALWAYS = Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS
     NEVER = 0x0
 
 
-class BucketType:
+class BucketType(Enum):
     DEFAULT = ""
     TRIGGER_RELAXED = "TriggerRelaxed"
     TRIGGER_STRICT = "TriggerStrict"
