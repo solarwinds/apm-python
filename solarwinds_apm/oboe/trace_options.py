@@ -13,6 +13,65 @@ SW_KEYS_KEY = "sw-keys"
 CUSTOM_KEY_REGEX = r'^custom-[^\s]+$'
 
 
+class TraceOptions:
+    def __init__(self,
+                 trigger_trace: Optional[bool] = None,
+                 timestamp: Optional[int] = None,
+                 sw_keys: Optional[str] = None,
+                 custom: Optional[Dict[str, str]] = None,
+                 ignored: Optional[List[Tuple[str, Optional[str]]]] = None):
+        self._trigger_trace = trigger_trace
+        self._timestamp = timestamp
+        self._sw_keys = sw_keys
+        self._custom = custom if custom is not None else {}
+        self._ignored = ignored if ignored is not None else []
+
+    @property
+    def trigger_trace(self):
+        return self._trigger_trace
+
+    @trigger_trace.setter
+    def trigger_trace(self, new_trigger_trace):
+        self._trigger_trace = new_trigger_trace
+
+    @property
+    def timestamp(self):
+        return self._timestamp
+
+    @timestamp.setter
+    def timestamp(self, new_timestamp):
+        self._timestamp = new_timestamp
+
+    @property
+    def sw_keys(self):
+        return self._sw_keys
+
+    @sw_keys.setter
+    def sw_keys(self, new_sw_keys):
+        self._sw_keys = new_sw_keys
+
+    @property
+    def custom(self):
+        return self._custom
+
+    @custom.setter
+    def custom(self, new_custom):
+        self._custom = new_custom
+
+    @property
+    def ignored(self):
+        return self._ignored
+
+    @ignored.setter
+    def ignored(self, new_ignored):
+        self._ignored = new_ignored
+
+    def __eq__(self, other):
+        if not isinstance(other, TraceOptions):
+            return NotImplemented
+        return self._trigger_trace == other._trigger_trace and self._timestamp == other._timestamp and self._sw_keys == other._sw_keys and self._custom == other._custom and self._ignored == other._ignored
+
+
 class Auth(Enum):
     OK = "ok"
     BAD_TIMESTAMP = "bad-timestamp"
@@ -30,62 +89,91 @@ class TriggerTrace(Enum):
     SETTINGS_NOT_AVAILABLE = "settings-not-available"
 
 
-class TraceOptions:
-    def __init__(self,
-                 trigger_trace: Optional[bool] = None,
-                 timestamp: Optional[int] = None,
-                 sw_keys: Optional[str] = None,
-                 custom: Optional[Dict[str, str]] = None,
-                 ignored: Optional[List[Tuple[str, Optional[str]]]] = None):
-        self.trigger_trace = trigger_trace
-        self.timestamp = timestamp
-        self.sw_keys = sw_keys
-        self.custom = custom if custom is not None else {}
-        self.ignored = ignored if ignored is not None else []
-
-    def __eq__(self, other):
-        if not isinstance(other, TraceOptions):
-            return NotImplemented
-        return self.trigger_trace == other.trigger_trace and self.timestamp == other.timestamp and self.sw_keys == other.sw_keys and self.custom == other.custom and self.ignored == other.ignored
-
-
 class TraceOptionsResponse:
     def __init__(self,
-                 auth: Optional[str] = None,
-                 trigger_trace: Optional[str] = None,
+                 auth: Optional[Auth] = None,
+                 trigger_trace: Optional[TriggerTrace] = None,
                  ignored: Optional[List[str]] = None):
-        self.auth = auth
-        self.trigger_trace = trigger_trace
-        self.ignored = ignored
+        self._auth = auth
+        self._trigger_trace = trigger_trace
+        self._ignored = ignored
+
+    @property
+    def auth(self):
+        return self._auth
+
+    @auth.setter
+    def auth(self, new_auth):
+        self._auth = new_auth
+
+    @property
+    def trigger_trace(self):
+        return self._trigger_trace
+
+    @trigger_trace.setter
+    def trigger_trace(self, new_trigger_trace):
+        self._trigger_trace = new_trigger_trace
+
+    @property
+    def ignored(self):
+        return self._ignored
+
+    @ignored.setter
+    def ignored(self, new_ignored):
+        self._ignored = new_ignored
 
     def __eq__(self, other):
         if not isinstance(other, TraceOptionsResponse):
             return NotImplemented
-        return self.auth == other.auth and self.trigger_trace == other.trigger_trace and self.ignored == other.ignored
+        return self._auth == other._auth and self._trigger_trace == other._trigger_trace and self._ignored == other._ignored
 
 
 class RequestHeaders:
     def __init__(self,
                  x_trace_options: Optional[str] = None,
                  x_trace_options_signature: Optional[str] = None):
-        self.x_trace_options = x_trace_options
-        self.x_trace_options_signature = x_trace_options_signature
+        self._x_trace_options = x_trace_options
+        self._x_trace_options_signature = x_trace_options_signature
+
+    @property
+    def x_trace_options(self):
+        return self._x_trace_options
+
+    @x_trace_options.setter
+    def x_trace_options(self, new_x_trace_options):
+        self._x_trace_options = new_x_trace_options
+
+    @property
+    def x_trace_options_signature(self):
+        return self._x_trace_options_signature
+
+    @x_trace_options_signature.setter
+    def x_trace_options_signature(self, new_x_trace_options_signature):
+        self._x_trace_options_signature = new_x_trace_options_signature
 
     def __eq__(self, other):
         if not isinstance(other, RequestHeaders):
             return NotImplemented
-        return self.x_trace_options == other.x_trace_options and self.x_trace_options_signature == other.x_trace_options_signature
+        return self._x_trace_options == other._x_trace_options and self._x_trace_options_signature == other._x_trace_options_signature
 
 
 class ResponseHeaders:
     def __init__(self,
                  x_trace_options_response: Optional[str] = None):
-        self.x_trace_options_response = x_trace_options_response
+        self._x_trace_options_response = x_trace_options_response
+
+    @property
+    def x_trace_options_response(self):
+        return self._x_trace_options_response
+
+    @x_trace_options_response.setter
+    def x_trace_options_response(self, new_x_trace_options_response):
+        self._x_trace_options_response = new_x_trace_options_response
 
     def __eq__(self, other):
         if not isinstance(other, ResponseHeaders):
             return NotImplemented
-        return self.x_trace_options_response == other.x_trace_options_response
+        return self._x_trace_options_response == other._x_trace_options_response
 
 
 def parse_trace_options(header, logger=logging.getLogger(__name__)):
@@ -97,7 +185,6 @@ def parse_trace_options(header, logger=logging.getLogger(__name__)):
             kvs.append((kv[0].strip(), kv[1].strip()))
         elif len(kv) == 1 and len(kv[0].strip()) > 0:
             kvs.append((kv[0].strip(), None))
-
     for [k, v] in kvs:
         if k == TRIGGER_TRACE_KEY:
             if v is not None or trace_options.trigger_trace is not None:
