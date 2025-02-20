@@ -13,6 +13,7 @@ permissions:
   packages: write
   contents: write
   id-token: write
+  security-events: write
 
 jobs:
   docker_hub:
@@ -93,7 +94,12 @@ jobs:
           command: cves
           image: ${{ steps.meta.outputs.tags[0] }}
           platform: "linux/amd64"
-  
+          sarif-file: sarif.output.json
+
+      - name: Upload SARIF result
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: sarif.output.json
 
   ghcr_io:
     runs-on: ubuntu-latest
