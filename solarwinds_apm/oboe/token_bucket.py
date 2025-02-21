@@ -6,11 +6,11 @@ class _TokenBucket(object):
     MAX_INTERVAL = sys.maxsize
     DEFAULT_INTERVAL = 1
 
-    def __init__(self, capacity=0, rate=0, interval=DEFAULT_INTERVAL):
-        self._capacity = float(capacity)
-        self._rate = float(rate)
-        self._interval = float(interval)
-        self._tokens = float(capacity)
+    def __init__(self, capacity : float = 0, rate : float = 0, interval : float = DEFAULT_INTERVAL):
+        self._capacity = capacity
+        self._rate = rate
+        self._interval = interval
+        self._tokens = capacity
         self._stopping = False
         self._lock = threading.Lock()
         self._condition = threading.Condition()
@@ -42,13 +42,12 @@ class _TokenBucket(object):
 
     @property
     def tokens(self):
-        ans = 0
         self._lock.acquire()
         try:
             ans = self._tokens
         finally:
             self._lock.release()
-            return ans
+        return ans
 
     @tokens.setter
     def tokens(self, new_tokens):
