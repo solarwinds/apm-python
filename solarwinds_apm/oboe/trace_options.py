@@ -128,6 +128,34 @@ class TraceOptionsResponse:
         return self._auth == other._auth and self._trigger_trace == other._trigger_trace and self._ignored == other._ignored
 
 
+class TraceOptionsWithResponse:
+    def __init__(self,
+                 options: Optional[TraceOptions] = None,
+                 response: Optional[TraceOptionsResponse] = None):
+        self._options = options
+        self._response = response
+
+    @property
+    def options(self):
+        return self._options
+
+    @options.setter
+    def options(self, new_options):
+        self._options = new_options
+
+    @property
+    def response(self):
+        return self._response
+
+    @response.setter
+    def response(self, new_response):
+        self._response = new_response
+
+    def __eq__(self, other):
+        if not isinstance(other, TraceOptionsWithResponse):
+            return NotImplemented
+        return self._options == other._options and self._response == other._response
+
 class RequestHeaders:
     def __init__(self,
                  x_trace_options: Optional[str] = None,

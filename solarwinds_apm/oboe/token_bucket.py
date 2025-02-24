@@ -42,12 +42,7 @@ class _TokenBucket(object):
 
     @property
     def tokens(self):
-        self._lock.acquire()
-        try:
-            ans = self._tokens
-        finally:
-            self._lock.release()
-        return ans
+        return self._tokens
 
     @tokens.setter
     def tokens(self, new_tokens):
@@ -93,3 +88,6 @@ class _TokenBucket(object):
                 # either self._stopping is False and the interval has elapsed
                 self._timer = threading.Timer(self.interval, self.task)
                 self._timer.start()
+
+    def __str__(self):
+        return f"_TokenBucket(capacity={self._capacity}, rate={self._rate}, interval={self._interval}, tokens={self._tokens}, stopping={self._stopping})"
