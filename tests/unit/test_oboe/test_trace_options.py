@@ -7,7 +7,7 @@ from solarwinds_apm.oboe.trace_options import (
     parse_trace_options,
     stringify_trace_options_response,
     TriggerTrace,
-    validate_signature, TraceOptions,
+    validate_signature, TraceOptions, TraceOptionsResponse,
 )
 
 
@@ -19,7 +19,7 @@ from solarwinds_apm.oboe.trace_options import (
     ("trigger-trace;trigger-trace", TraceOptions(True, None, None, {}, [("trigger-trace", None)])),
     ("ts", TraceOptions(None, None, None, {}, [("ts", None)])),
     ("ts=1234;ts=5678", TraceOptions(None, 1234, None, {}, [("ts", "5678")])),
-    # ("ts=value", TraceOptions(None, None, None, {}, [("ts", "value")])),
+    ("ts=value", TraceOptions(None, None, None, {}, [("ts", "value")])),
     ("ts=12.34", TraceOptions(None, None, None, {}, [("ts", "12.34")])),
     ("ts = 1234567890 ", TraceOptions(None, 1234567890, None, {}, [])),
     ("sw-keys", TraceOptions(None, None, None, {}, [("sw-keys", None)])),
@@ -55,33 +55,33 @@ def test_parse_trace_options(header, expected):
 
 
 def test_stringify_trace_options_response():
-    result = stringify_trace_options_response({
-        "auth": Auth.OK.value,
-        "trigger-trace": TriggerTrace.OK.value,
-    })
+    result = stringify_trace_options_response(TraceOptionsResponse(
+        auth=Auth.OK,
+        trigger_trace=TriggerTrace.OK,
+    ))
     assert result == "auth=ok;trigger-trace=ok"
 
-    result = stringify_trace_options_response({
-        "auth": Auth.OK.value,
-        "trigger-trace": TriggerTrace.TRIGGER_TRACING_DISABLED.value,
-        "ignored": ["invalid-key1", "invalid_key2"],
-    })
+    result = stringify_trace_options_response(TraceOptionsResponse(
+        auth=Auth.OK,
+        trigger_trace=TriggerTrace.TRIGGER_TRACING_DISABLED,
+        ignored=["invalid-key1", "invalid_key2"],
+    ))
     assert result == "auth=ok;trigger-trace=trigger-tracing-disabled;ignored=invalid-key1,invalid_key2"
 
 
 @pytest.mark.parametrize("header, signature, key, timestamp, expected", [
     ("trigger-trace;pd-keys=lo:se,check-id:123;ts=1564597681", "2c1c398c3e6be898f47f74bf74f035903b48b59c",
-     b"8mZ98ZnZhhggcsUmdMbS", int(time.time()) - 60, Auth.OK),
+     "8mZ98ZnZhhggcsUmdMbS", int(time.time()) - 60, Auth.OK),
     ("trigger-trace;pd-keys=lo:se,check-id:123;ts=1564597681", "2c1c398c3e6be898f47f74bf74f035903b48b59d",
-     b"8mZ98ZnZhhggcsUmdMbS", int(time.time()) - 60, Auth.BAD_SIGNATURE),
+     "8mZ98ZnZhhggcsUmdMbS", int(time.time()) - 60, Auth.BAD_SIGNATURE),
     ("trigger-trace;pd-keys=lo:se,check-id:123;ts=1564597681", "2c1c398c3e6be898f47f74bf74f035903b48b59c", None,
      int(time.time()) - 60, Auth.NO_SIGNATURE_KEY),
     ("trigger-trace;pd-keys=lo:se,check-id:123;ts=1564597681", "2c1c398c3e6be898f47f74bf74f035903b48b59c",
-     b"8mZ98ZnZhhggcsUmdMbS", int(time.time()) - 10 * 60, Auth.BAD_TIMESTAMP),
+     "8mZ98ZnZhhggcsUmdMbS", int(time.time()) - 10 * 60, Auth.BAD_TIMESTAMP),
     ("trigger-trace;pd-keys=lo:se,check-id:123;ts=1564597681", "2c1c398c3e6be898f47f74bf74f035903b48b59c",
-     b"8mZ98ZnZhhggcsUmdMbS", int(time.time()) + 10 * 60, Auth.BAD_TIMESTAMP),
+     "8mZ98ZnZhhggcsUmdMbS", int(time.time()) + 10 * 60, Auth.BAD_TIMESTAMP),
     ("trigger-trace;pd-keys=lo:se,check-id:123;ts=1564597681", "2c1c398c3e6be898f47f74bf74f035903b48b59c",
-     b"8mZ98ZnZhhggcsUmdMbS", None, Auth.BAD_TIMESTAMP),
+     "8mZ98ZnZhhggcsUmdMbS", None, Auth.BAD_TIMESTAMP),
 ])
 def test_validate_signature(header, signature, key, timestamp, expected):
     result = validate_signature(header, signature, key, timestamp)
