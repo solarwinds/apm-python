@@ -152,6 +152,9 @@ class LocalSettings:
             return NotImplemented
         return self._tracing_mode == other._tracing_mode and self._trigger_mode == other._trigger_mode
 
+    def __str__(self):
+        return f"LocalSettings(tracing_mode={self._tracing_mode}, trigger_mode={self._trigger_mode})"
+
 
 def merge(remote: Optional[Settings] = None, local: Optional[LocalSettings] = None) -> Optional[Settings]:
     if remote is None and local is None:
