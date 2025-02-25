@@ -251,13 +251,11 @@ def parse_trace_options(header, logger=logging.getLogger(__name__)):
     return trace_options
 
 
-def stringify_trace_options_response(trace_options_response):
+def stringify_trace_options_response(trace_options_response : Optional[TraceOptionsResponse] = None):
     kvs = {
-        'auth': trace_options_response.get('auth') if trace_options_response.get('auth') is not None else None,
-        'trigger-trace': trace_options_response.get('trigger-trace') if trace_options_response.get(
-            'trigger-trace') is not None else None,
-        'ignored': ','.join(trace_options_response.get('ignored')) if trace_options_response.get(
-            'ignored') is not None else None,
+        'auth': trace_options_response.auth.value if trace_options_response and trace_options_response.auth else None,
+        'trigger-trace': trace_options_response.trigger_trace.value if trace_options_response and trace_options_response.trigger_trace else None,
+        'ignored': ','.join(trace_options_response.ignored) if trace_options_response and trace_options_response.ignored else None,
     }
     return ';'.join(f"{k}={v}" for k, v in kvs.items() if v is not None)
 
@@ -267,7 +265,7 @@ def validate_signature(header, signature, key, timestamp):
         return Auth.NO_SIGNATURE_KEY
     if timestamp is None or abs(int(time.time()) - timestamp) > 5 * 60:
         return Auth.BAD_TIMESTAMP
-    digest = hmac.new(key, header.encode(), hashlib.sha1).hexdigest()
+    digest = hmac.new(str.encode(key), str.encode(header), hashlib.sha1).hexdigest()
     if signature == digest:
         return Auth.OK
     else:

@@ -153,8 +153,18 @@ class LocalSettings:
         return self._tracing_mode == other._tracing_mode and self._trigger_mode == other._trigger_mode
 
 
-def merge(remote: Settings, local: LocalSettings) -> Settings:
-    flags = local.tracing_mode if local.tracing_mode is not None else remote.flags
+def merge(remote: Optional[Settings] = None, local: Optional[LocalSettings] = None) -> Optional[Settings]:
+    if remote is None and local is None:
+        return None
+    elif remote is None:
+        return local
+    elif local is None:
+        return remote
+    else:
+        return _merge(remote, local)
+
+def _merge(remote: Settings, local: LocalSettings) -> Settings:
+    flags = local.tracing_mode if local.tracing_mode is not None or False else remote.flags
 
     if local.trigger_mode:
         flags |= Flags.TRIGGERED_TRACE
