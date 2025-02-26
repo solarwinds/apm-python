@@ -1,104 +1,51 @@
-import sys
-import threading
-
+import time
 
 class _TokenBucket(object):
-    MAX_INTERVAL = sys.maxsize
-    DEFAULT_INTERVAL = 1
-
-    def __init__(self, capacity : float = 0, rate : float = 0, interval : float = DEFAULT_INTERVAL):
+    def __init__(self, capacity : float = 0, rate : float = 0):
         self._capacity = capacity
         self._rate = rate
-        self._interval = interval
         self._tokens = capacity
-        self._stopping = False
-        self._lock = threading.Lock()
-        self._condition = threading.Condition()
-        self._timer = None
+        self._last_used = time.time()
 
     @property
     def capacity(self):
         return self._capacity
 
-    @capacity.setter
-    def capacity(self, new_capacity):
-        self._capacity = max([0, new_capacity])
-
     @property
     def rate(self):
         return self._rate
 
-    @rate.setter
-    def rate(self, new_rate):
-        self._rate = max([0, new_rate])
-
-    @property
-    def interval(self):
-        return self._interval
-
-    @interval.setter
-    def interval(self, new_interval):
-        self._interval = max([0, min([_TokenBucket.MAX_INTERVAL, new_interval])])
-
     @property
     def tokens(self):
-        tokens = 0
-        self._lock.acquire()
-        try:
-            tokens = self._tokens
-        finally:
-            self._lock.release()
-        return tokens
+        self._calculate_tokens()
+        return self._tokens
 
-    @tokens.setter
-    def tokens(self, new_tokens):
-        self._lock.acquire()
-        try:
-            self._tokens = max([0, min([self.capacity, new_tokens])])
-        finally:
-            self._lock.release()
+    def _calculate_tokens(self):
+        now = time.time()
+        elapsed = now - self._last_used
+        self._last_used = now
+        self._tokens += (elapsed * self.rate)
+        self._tokens = min(self._tokens, self.capacity)
 
-    def update(self, capacity=None, rate=None, interval=None):
-        if capacity is not None:
-            diff = capacity - self.capacity
-            self.capacity = capacity
-            self.tokens += diff
-        if rate is not None:
-            self.rate = rate
-        if interval is not None:
-            self.interval = interval
+    def update(self, new_capacity = None, new_rate = None):
+        self._calculate_tokens()
+        if new_capacity is not None:
+            # negative means reset to 0
+            new_capacity = max(0, new_capacity)
+            diff = new_capacity - self.capacity
+            self._capacity = new_capacity
+            self._tokens += diff
+            self._tokens = max(float(0), self._tokens)
+        if new_rate is not None:
+            new_rate = max(0, new_rate)
+            self._rate = new_rate
 
-    def consume(self, tokens=1):
-        self._lock.acquire()
-        consume = False
-        try:
-            if self._tokens >= tokens:
-                self._tokens -= tokens
-                consume = True
-        finally:
-            self._lock.release()
-        return consume
-
-    def start(self):
-        with (self._condition):
-            self._stopping = False
-            self._timer = threading.Timer(self.interval, self.task)
-            self._timer.start()
-
-    def stop(self):
-        with self._condition:
-            self._timer.cancel()
-            self._stopping = True
-            self._condition.notify_all()
-
-    def task(self):
-        self.tokens += self.rate
-        with (self._condition):
-            predicate = self._condition.wait_for(lambda: self._stopping, self.interval)
-            if predicate is False:
-                # either self._stopping is False and the interval has elapsed
-                self._timer = threading.Timer(self.interval, self.task)
-                self._timer.start()
+    def consume(self, tokens = 1):
+        self._calculate_tokens()
+        if self._tokens >= tokens:
+            self._tokens -= tokens
+            return True
+        return False
 
     def __str__(self):
-        return f"_TokenBucket(capacity={self._capacity}, rate={self._rate}, interval={self._interval}, tokens={self._tokens}, stopping={self._stopping})"
+        return f"_TokenBucket(capacity={self._capacity}, rate={self._rate})"
