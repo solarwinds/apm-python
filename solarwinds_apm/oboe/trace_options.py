@@ -12,7 +12,6 @@ SW_KEYS_KEY = "sw-keys"
 
 CUSTOM_KEY_REGEX = r'^custom-[^\s]+$'
 
-
 class TraceOptions:
     def __init__(self,
                  trigger_trace: Optional[bool] = None,

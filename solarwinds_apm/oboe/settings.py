@@ -28,7 +28,7 @@ class BucketType(Enum):
 
 
 class BucketSettings:
-    def __init__(self, capacity: int, rate: int):
+    def __init__(self, capacity: float, rate: float):
         self._capacity = capacity
         self._rate = rate
 
@@ -50,14 +50,11 @@ class BucketSettings:
 
 
 class Settings:
-    def __init__(self, sample_rate: int, sample_source: SampleSource, flags: int,
-                 timestamp: int, ttl: int,
-                 buckets: Optional[Dict[BucketType, BucketSettings]] = None,
-                 signature_key: Optional[str] = None):
+    def __init__(self, sample_rate: int, sample_source: SampleSource, flags: Flags, buckets: Dict[BucketType, BucketSettings], signature_key: Optional[str], timestamp: int, ttl: int):
         self._sample_rate = sample_rate
         self._sample_source = sample_source
         self._flags = flags
-        self._buckets = buckets if buckets is not None else {}
+        self._buckets = buckets
         self._signature_key = signature_key
         self._timestamp = timestamp
         self._ttl = ttl
@@ -127,7 +124,7 @@ class Settings:
         return f"Settings(sample_rate={self._sample_rate}, sample_source={self._sample_source}, flags={self._flags}, buckets={self._buckets}, timestamp={self._timestamp}, ttl={self._ttl})"
 
 class LocalSettings:
-    def __init__(self, trigger_mode: bool, tracing_mode: Optional[TracingMode] = None):
+    def __init__(self, tracing_mode: Optional[TracingMode], trigger_mode: bool):
         self._tracing_mode = tracing_mode
         self._trigger_mode = trigger_mode
 
@@ -167,7 +164,7 @@ def merge(remote: Optional[Settings] = None, local: Optional[LocalSettings] = No
         return _merge(remote, local)
 
 def _merge(remote: Settings, local: LocalSettings) -> Settings:
-    flags = local.tracing_mode if local.tracing_mode is not None or False else remote.flags
+    flags = local.tracing_mode if local.tracing_mode is not None else remote.flags
 
     if local.trigger_mode:
         flags |= Flags.TRIGGERED_TRACE

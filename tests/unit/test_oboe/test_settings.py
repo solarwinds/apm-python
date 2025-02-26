@@ -9,6 +9,7 @@ def test_merge_override_unset():
         sample_source=SampleSource.LocalDefault,
         flags=Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS | Flags.TRIGGERED_TRACE,
         buckets={},
+        signature_key=None,
         timestamp=int(time.time()),
         ttl=60
     )
@@ -18,15 +19,16 @@ def test_merge_override_unset():
     )
 
     merged = merge(remote, local)
-    assert merged.flags == 0x0
+    assert merged.flags == Flags.OK
 
 
 def test_merge_override_unset_always_trigger_enabled():
     remote = Settings(
         sample_rate=1,
         sample_source=SampleSource.LocalDefault,
-        flags=0x0,
+        flags=Flags.OK,
         buckets={},
+        signature_key=None,
         timestamp=int(time.time()),
         ttl=60
     )
@@ -45,11 +47,13 @@ def test_merge_override_unset_defaults_to_remote():
         sample_source=SampleSource.LocalDefault,
         flags=Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS | Flags.TRIGGERED_TRACE,
         buckets={},
+        signature_key=None,
         timestamp=int(time.time()),
         ttl=60
     )
     local = LocalSettings(
-        trigger_mode=True
+        trigger_mode=True,
+        tracing_mode=None
     )
 
     merged = merge(remote, local)
@@ -62,6 +66,7 @@ def test_merge_override_set_never_trigger_disabled():
         sample_source=SampleSource.LocalDefault,
         flags=Flags.OVERRIDE | Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS | Flags.TRIGGERED_TRACE,
         buckets={},
+        signature_key=None,
         timestamp=int(time.time()),
         ttl=60
     )
@@ -80,6 +85,7 @@ def test_merge_override_set_always_trigger_enabled():
         sample_source=SampleSource.LocalDefault,
         flags=Flags.OVERRIDE,
         buckets={},
+        signature_key=None,
         timestamp=int(time.time()),
         ttl=60
     )
@@ -98,11 +104,13 @@ def test_merge_override_set_defaults_to_remote():
         sample_source=SampleSource.LocalDefault,
         flags=Flags.OVERRIDE,
         buckets={},
+        signature_key=None,
         timestamp=int(time.time()),
         ttl=60
     )
     local = LocalSettings(
-        trigger_mode=False
+        trigger_mode=False,
+        tracing_mode=None
     )
 
     merged = merge(remote, local)
