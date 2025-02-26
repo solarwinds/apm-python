@@ -42,7 +42,13 @@ class _TokenBucket(object):
 
     @property
     def tokens(self):
-        return self._tokens
+        tokens = 0
+        self._lock.acquire()
+        try:
+            tokens = self._tokens
+        finally:
+            self._lock.release()
+        return tokens
 
     @tokens.setter
     def tokens(self, new_tokens):
@@ -63,10 +69,15 @@ class _TokenBucket(object):
             self.interval = interval
 
     def consume(self, tokens=1):
-        if self.tokens >= tokens:
-            self.tokens -= tokens
-            return True
-        return False
+        self._lock.acquire()
+        consume = False
+        try:
+            if self._tokens >= tokens:
+                self._tokens -= tokens
+                consume = True
+        finally:
+            self._lock.release()
+        return consume
 
     def start(self):
         with (self._condition):
