@@ -341,7 +341,7 @@ class OboeSampler(Sampler, ABC):
             self.settings = settings
             for t, b in self.buckets.items():
                 if t in self.settings.buckets:
-                    b.update(self.settings.buckets[t])
+                    b.update(new_capacity=self.settings.buckets[t].capacity, new_rate=self.settings.buckets[t].rate)
 
     def get_settings(self,
                      parent_context: Optional["Context"],
