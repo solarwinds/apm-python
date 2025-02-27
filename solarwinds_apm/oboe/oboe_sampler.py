@@ -114,6 +114,7 @@ class SampleState:
     def trace_options(self, value: Optional[TraceOptionsWithResponse]):
         self._trace_options = value
 
+
 def _span_type(parent_span: Optional[Span] = None) -> SpanType:
     parent_span_context = parent_span.get_span_context() if parent_span else None
     if parent_span_context is None or not parent_span_context.is_valid:
@@ -203,7 +204,8 @@ class OboeSampler(Sampler, ABC):
                                                        sw_keys=parsed.sw_keys,
                                                        custom=parsed.custom,
                                                        ignored=parsed.ignored,
-                                                       response=TraceOptionsResponse(auth=None, trigger_trace=None, ignored=None))
+                                                       response=TraceOptionsResponse(auth=None, trigger_trace=None,
+                                                                                     ignored=None))
             self.logger.debug("X-Trace-Options present", s.trace_options)
             if s.headers.x_trace_options_signature:
                 s.trace_options.response.auth = validate_signature(
@@ -277,7 +279,7 @@ class OboeSampler(Sampler, ABC):
     def trigger_trace_algo(self, s: SampleState, parent_context: Optional["Context"]):
         if s.settings and s.settings.flags & Flags.TRIGGERED_TRACE:
             self.logger.debug("TRIGGERED_TRACE set; trigger tracing")
-            bucket : _TokenBucket
+            bucket: _TokenBucket
             if s.trace_options and s.trace_options.response.auth:
                 self.logger.debug("signed request; using relaxed rate")
                 bucket = self.buckets[BucketType.TRIGGER_RELAXED]
@@ -363,14 +365,14 @@ class OboeSampler(Sampler, ABC):
 
     @abstractmethod
     def local_settings(self,
-                        parent_context: Optional["Context"],
-                        trace_id: int,
-                        name: str,
-                        kind: Optional[SpanKind] = None,
-                        attributes: Attributes = None,
-                        links: Optional[Sequence["Link"]] = None,
-                        trace_state: Optional["TraceState"] = None,
-                        ) -> LocalSettings:
+                       parent_context: Optional["Context"],
+                       trace_id: int,
+                       name: str,
+                       kind: Optional[SpanKind] = None,
+                       attributes: Attributes = None,
+                       links: Optional[Sequence["Link"]] = None,
+                       trace_state: Optional["TraceState"] = None,
+                       ) -> LocalSettings:
         pass
 
     @abstractmethod
@@ -398,4 +400,3 @@ class OboeSampler(Sampler, ABC):
 
     def get_description(self) -> str:
         return f"OboeSampler{{{self._settings}}}"
-
