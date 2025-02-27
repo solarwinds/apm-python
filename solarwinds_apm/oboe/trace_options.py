@@ -70,6 +70,9 @@ class TraceOptions:
             return NotImplemented
         return self._trigger_trace == other._trigger_trace and self._timestamp == other._timestamp and self._sw_keys == other._sw_keys and self._custom == other._custom and self._ignored == other._ignored
 
+    def __str__(self):
+        return f"trigger_trace={self._trigger_trace}, timestamp={self._timestamp}, sw_keys={self._sw_keys}, custom={self._custom}, ignored={self._ignored}"
+
 
 class Auth(Enum):
     OK = "ok"
@@ -126,6 +129,9 @@ class TraceOptionsResponse:
             return NotImplemented
         return self._auth == other._auth and self._trigger_trace == other._trigger_trace and self._ignored == other._ignored
 
+    def __str__(self):
+        return f"auth={self._auth}, trigger_trace={self._trigger_trace}, ignored={self._ignored}"
+
 
 class TraceOptionsWithResponse(TraceOptions):
     def __init__(self,
@@ -150,6 +156,9 @@ class TraceOptionsWithResponse(TraceOptions):
         if not isinstance(other, TraceOptionsWithResponse):
             return NotImplemented
         return super.__eq__(self, other) and self._response == other._response
+
+    def __str__(self):
+        return f"{super.__str__(self)}, response={self._response}"
 
 class RequestHeaders:
     def __init__(self,
