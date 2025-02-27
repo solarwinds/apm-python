@@ -188,7 +188,7 @@ class OboeSampler(Sampler, ABC):
                 return SamplingResult(decision=Decision.DROP)
         s = SampleState(
             decision=Decision.DROP,
-            attributes=attributes,
+            attributes=attributes if attributes else {},
 
             settings=self.get_settings(parent_context, trace_id, name, kind, attributes, links, trace_state),
             trace_state=parent_span.get_span_context().trace_state.get("sw") if parent_span else None,
