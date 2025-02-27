@@ -197,6 +197,7 @@ import os
 import logging
 import random
 import time
+from random import sample
 from typing import Optional, Sequence, __all__
 from unittest.mock import Mock
 
@@ -208,8 +209,9 @@ from opentelemetry.trace import SpanKind, Link, TraceState, TraceFlags, get_curr
 from typing_extensions import override
 
 from solarwinds_apm.apm_noop import Context
-from solarwinds_apm.oboe.oboe_sampler import _span_type, SpanType, OboeSampler, SW_KEYS_ATTRIBUTE
-from solarwinds_apm.oboe.settings import LocalSettings, Settings, SampleSource, Flags
+from solarwinds_apm.oboe.oboe_sampler import _span_type, SpanType, OboeSampler, SW_KEYS_ATTRIBUTE, \
+    BUCKET_RATE_ATTRIBUTE, BUCKET_CAPACITY_ATTRIBUTE, SAMPLE_RATE_ATTRIBUTE, SAMPLE_SOURCE_ATTRIBUTE
+from solarwinds_apm.oboe.settings import LocalSettings, Settings, SampleSource, Flags, BucketType, BucketSettings
 from solarwinds_apm.oboe.trace_options import RequestHeaders, ResponseHeaders
 
 class MakeRequestHeaders:
@@ -341,7 +343,7 @@ class TestSampler(OboeSampler):
         span_id = generator.generate_span_id()
         trace_state = None
         if isinstance(sw, str) and sw == "inverse":
-            trace_state = TraceState([("sw", format(span_id, "016x s") + "-0" + ("0" if trace_flags == TraceFlags.SAMPLED else "1"))])
+            trace_state = TraceState([("sw", format(span_id, "016x") + "-0" + ("0" if trace_flags == TraceFlags.SAMPLED else "1"))])
         elif isinstance(sw, bool):
             trace_state = TraceState([("sw", format(span_id, "016x") + "-0" + ("1" if trace_flags == TraceFlags.SAMPLED else "0"))])
         span_context = trace.SpanContext(trace_id=trace_id,span_id=span_id,is_remote=is_remote,trace_flags=trace_flags,trace_state=trace_state,)
@@ -530,7 +532,349 @@ class TestMissingSettings:
         assert "trigger-trace=settings-not-available" in sampler.response_headers.x_trace_options_response
         assert "ignored=invalid-key" in sampler.response_headers.x_trace_options_response
 
+class TestEntrySpanWithValidSwContextXTraceOptions:
+    def test_respects_keys_and_values(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LocalDefault,
+                flags=Flags.SAMPLE_THROUGH_ALWAYS,
+                buckets={},
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders(kvs={ "custom-key": "value", "sw-keys": "sw-values" }))
+        ))
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True, sw=True)
+        sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "respects_keys_and_values")
+        assert sample.attributes.get("custom-key") == "value"
+        assert sample.attributes.get(SW_KEYS_ATTRIBUTE) == "sw-values"
+        assert "trigger-trace=not-requested" in sampler.response_headers.x_trace_options_response
+    def test_ignores_trigger_trace(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LocalDefault,
+                flags=Flags.SAMPLE_THROUGH_ALWAYS,
+                buckets={},
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=True, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders(trigger_trace=True, kvs={ "custom-key": "value", "invalid-keys": "value" }))
+        ))
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True, sw=True)
+        sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "ignores_trigger_trace")
+        assert sample.attributes.get("custom-key") == "value"
+        assert "trigger-trace=ignored" in sampler.response_headers.x_trace_options_response
+        assert "ignored=invalid-key" in sampler.response_headers.x_trace_options_response
 
+class TestEntrySpanWithValidSwContextSampleThroughAlwaysSet:
+    @pytest.fixture()
+    def sample_through_always_set(self):
+        return TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LocalDefault,
+                flags=Flags.SAMPLE_THROUGH_ALWAYS,
+                buckets={},
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders())
+        ))
+    def test_respects_parent_sampled(self, sample_through_always_set):
+        ctxt = sample_through_always_set._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True, sw=True)
+        sample = sample_through_always_set.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "respects_parent_sampled")
+        assert sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get("sw.tracestate_parent_id") == format(get_current_span(ctxt).get_span_context().span_id, "016x")
+    def test_respects_parent_not_sampled(self, sample_through_always_set):
+        ctxt = sample_through_always_set._create_parent(trace_flags=TraceFlags.DEFAULT, is_remote=True, sw=True)
+        sample = sample_through_always_set.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "respects_parent_not_sampled")
+        assert not sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get("sw.tracestate_parent_id") == format(get_current_span(ctxt).get_span_context().span_id, "016x")
+    def test_respects_sw_sampled_over_w3c_not_sampled(self, sample_through_always_set):
+        ctxt = sample_through_always_set._create_parent(trace_flags=TraceFlags.DEFAULT, is_remote=True, sw="inverse")
+        sample = sample_through_always_set.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "respects_sw_sampled_over_w3c_not_sampled")
+        assert sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get("sw.tracestate_parent_id") == format(get_current_span(ctxt).get_span_context().span_id, "016x")
+    def test_respects_sw_not_sampled_over_w3c_sampled(self, sample_through_always_set):
+        ctxt = sample_through_always_set._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True, sw="inverse")
+        sample = sample_through_always_set.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "respects_sw_not_sampled_over_w3c_sampled")
+        assert not sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get("sw.tracestate_parent_id") == format(get_current_span(ctxt).get_span_context().span_id, "016x")
+
+class TestEntrySpanWithValidSwContextSampleThroughAlwaysUnset:
+    def test_records_but_does_not_sample_when_SAMPLE_START_set(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LocalDefault,
+                flags=Flags.SAMPLE_START,
+                buckets={},
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders())
+        ))
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True, sw=True)
+        sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "respects_sw_not_sampled_over_w3c_sampled")
+        assert not sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+    def test_does_not_record_or_sample_when_SAMPLE_START_unset(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LocalDefault,
+                flags=Flags.OK,
+                buckets={},
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders())
+        ))
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True, sw=True)
+        sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "does_not_record_or_sample_when_SAMPLE_START_unset")
+        assert not sample.decision.is_sampled()
+        assert not sample.decision.is_recording()
+
+class TestTriggerTraceRequestedTriggeredTraceSetUnsigned:
+    def test_records_and_samples_when_there_is_capacity(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LocalDefault,
+                flags=Flags.SAMPLE_START | Flags.TRIGGERED_TRACE,
+                buckets={
+                    BucketType.TRIGGER_STRICT: BucketSettings(capacity=10, rate=5),
+                    BucketType.TRIGGER_RELAXED: BucketSettings(capacity=0, rate=0)
+                },
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=True, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders(trigger_trace=True, kvs={ "custom-key": "value", "sw-keys": "sw-values" }))
+        ))
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True)
+        sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id,"records_and_samples_when_there_is_capacity")
+        assert sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get("custom-key") == "value"
+        assert sample.attributes.get(SW_KEYS_ATTRIBUTE) == "sw-values"
+        assert sample.attributes.get(BUCKET_CAPACITY_ATTRIBUTE) == 10
+        assert sample.attributes.get(BUCKET_RATE_ATTRIBUTE) == 5
+        assert "trigger-trace=ok" in sampler.response_headers.x_trace_options_response
+    def test_records_but_does_not_sample_when_there_is_no_capacity(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LocalDefault,
+                flags=Flags.SAMPLE_START | Flags.TRIGGERED_TRACE,
+                buckets={
+                    BucketType.TRIGGER_STRICT: BucketSettings(capacity=0, rate=0),
+                    BucketType.TRIGGER_RELAXED: BucketSettings(capacity=20, rate=10)
+                },
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=True, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders(trigger_trace=True, kvs={ "custom-key": "value", "invalid-keys": "value" }))
+        ))
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True)
+        sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "records_but_does_not_sample_when_there_is_no_capacity")
+        assert not sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get("custom-key") == "value"
+        assert sample.attributes.get(BUCKET_CAPACITY_ATTRIBUTE) == 0
+        assert sample.attributes.get(BUCKET_RATE_ATTRIBUTE) == 0
+        assert "trigger-trace=rate-exceeded" in sampler.response_headers.x_trace_options_response
+        assert "ignored=invalid-key" in sampler.response_headers.x_trace_options_response
+
+class TestTriggerTraceRequestedTriggeredTraceSetSigned:
+    def test_records_and_samples_when_there_is_capacity(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LocalDefault,
+                flags=Flags.SAMPLE_START | Flags.TRIGGERED_TRACE,
+                buckets={
+                    BucketType.TRIGGER_STRICT: BucketSettings(capacity=0, rate=0),
+                    BucketType.TRIGGER_RELAXED: BucketSettings(capacity=20, rate=10)
+                },
+                signature_key="key",
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=True, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders(trigger_trace=True, signature=True, signature_key="key", kvs={ "custom-key": "value", "sw-keys": "sw-values" }))
+        ))
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True)
+        sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id,"records_and_samples_when_there_is_capacity")
+        assert sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get("custom-key") == "value"
+        assert sample.attributes.get(SW_KEYS_ATTRIBUTE) == "sw-values"
+        assert sample.attributes.get(BUCKET_CAPACITY_ATTRIBUTE) == 20
+        assert sample.attributes.get(BUCKET_RATE_ATTRIBUTE) == 10
+        assert "auth=ok" in sampler.response_headers.x_trace_options_response
+        assert "trigger-trace=ok" in sampler.response_headers.x_trace_options_response
+    def test_records_but_does_not_sample_when_there_is_no_capacity(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LocalDefault,
+                flags=Flags.SAMPLE_START | Flags.TRIGGERED_TRACE,
+                buckets={
+                    BucketType.TRIGGER_STRICT: BucketSettings(capacity=10, rate=5),
+                    BucketType.TRIGGER_RELAXED: BucketSettings(capacity=0, rate=0)
+                },
+                signature_key="key",
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=True, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders(trigger_trace=True, signature=True, signature_key="key", kvs={ "custom-key": "value", "invalid-keys": "value" }))
+        ))
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True)
+        sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "records_but_does_not_sample_when_there_is_no_capacity")
+        assert not sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get("custom-key") == "value"
+        assert sample.attributes.get(BUCKET_CAPACITY_ATTRIBUTE) == 0
+        assert sample.attributes.get(BUCKET_RATE_ATTRIBUTE) == 0
+        assert "trigger-trace=rate-exceeded" in sampler.response_headers.x_trace_options_response
+        assert "ignored=invalid-key" in sampler.response_headers.x_trace_options_response
+
+class TestTriggerTraceRequestedTriggeredTraceUnset:
+    def test_record_but_does_not_sample_when_TRIGGERED_TRACE_unset(self):
+        sampler= TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LocalDefault,
+                flags=Flags.SAMPLE_START,
+                buckets={},
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders(trigger_trace=True, kvs={"custom-key": "value", "invalid-keys": "value"}))
+        ))
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True)
+        sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "record_but_does_not_sample_when_TRIGGERED_TRACE_unset")
+        assert not sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get("custom-key") == "value"
+        assert "trigger-trace=trigger-tracing-disabled" in sampler.response_headers.x_trace_options_response
+        assert "ignored=invalid-key" in sampler.response_headers.x_trace_options_response
+
+class TestTriggerTraceRequestedDiceRoll:
+    def test_respects_x_trace_options_keys_and_values(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LocalDefault,
+                flags=Flags.SAMPLE_START,
+                buckets={},
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders(kvs={ "custom-key": "value", "sw-keys": "sw-values" }))
+        ))
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.DEFAULT, is_remote=True)
+        sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "respects_x_trace_options_keys_and_values")
+        assert sample.attributes.get("custom-key") == "value"
+        assert sample.attributes.get(SW_KEYS_ATTRIBUTE) == "sw-values"
+        assert "trigger-trace=not-requested" in sampler.response_headers.x_trace_options_response
+    def test_records_and_samples_when_dice_success_and_sufficient_capacity(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=1_000_000,
+                sample_source=SampleSource.Remote,
+                flags=Flags.SAMPLE_START,
+                buckets={
+                    BucketType.DEFAULT: BucketSettings(capacity=10, rate=5),
+                },
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders())
+        ))
+        generator = RandomIdGenerator()
+        sample = sampler.should_sample(None, generator.generate_trace_id(), "records_and_samples_when_dice_success_and_sufficient_capacity")
+        assert sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get(SAMPLE_RATE_ATTRIBUTE) == 1_000_000
+        assert sample.attributes.get(SAMPLE_SOURCE_ATTRIBUTE) == 6
+        assert sample.attributes.get(BUCKET_CAPACITY_ATTRIBUTE) == 10
+        assert sample.attributes.get(BUCKET_RATE_ATTRIBUTE) == 5
+    def test_records_but_does_not_sample_when_dice_success_but_insufficient_capacity(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=1_000_000,
+                sample_source=SampleSource.Remote,
+                flags=Flags.SAMPLE_START,
+                buckets={
+                    BucketType.DEFAULT: BucketSettings(capacity=0, rate=0),
+                },
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders())
+        ))
+        generator = RandomIdGenerator()
+        sample = sampler.should_sample(None, generator.generate_trace_id(), "records_but_does_not_sample_when_dice_success_but_insufficient_capacity")
+        assert not sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get(SAMPLE_RATE_ATTRIBUTE) == 1_000_000
+        assert sample.attributes.get(SAMPLE_SOURCE_ATTRIBUTE) == 6
+        assert sample.attributes.get(BUCKET_CAPACITY_ATTRIBUTE) == 0
+        assert sample.attributes.get(BUCKET_RATE_ATTRIBUTE) == 0
+    def test_records_but_does_not_sample_when_dice_failure(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LocalDefault,
+                flags=Flags.SAMPLE_START,
+                buckets={
+                    BucketType.DEFAULT: BucketSettings(capacity=10, rate=5)
+                },
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders())
+        ))
+        generator = RandomIdGenerator()
+        sample = sampler.should_sample(None, generator.generate_trace_id(), "records_but_does_not_sample_when_dice_failure")
+        assert not sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get(SAMPLE_RATE_ATTRIBUTE) == 0
+        assert sample.attributes.get(SAMPLE_SOURCE_ATTRIBUTE) == 2
+        assert BUCKET_CAPACITY_ATTRIBUTE not in sample.attributes
+        assert BUCKET_RATE_ATTRIBUTE not in sample.attributes
 
 
 
