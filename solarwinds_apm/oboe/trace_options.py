@@ -14,16 +14,16 @@ CUSTOM_KEY_REGEX = r'^custom-[^\s]+$'
 
 class TraceOptions:
     def __init__(self,
-                 trigger_trace: Optional[bool] = None,
-                 timestamp: Optional[int] = None,
-                 sw_keys: Optional[str] = None,
-                 custom: Optional[Dict[str, str]] = None,
-                 ignored: Optional[List[Tuple[str, Optional[str]]]] = None):
+                 trigger_trace: Optional[bool],
+                 timestamp: Optional[int],
+                 sw_keys: Optional[str],
+                 custom: Dict[str, str],
+                 ignored: List[Tuple[str, Optional[str]]]):
         self._trigger_trace = trigger_trace
         self._timestamp = timestamp
         self._sw_keys = sw_keys
-        self._custom = custom if custom is not None else {}
-        self._ignored = ignored if ignored is not None else []
+        self._custom = custom
+        self._ignored = ignored
 
     @property
     def trigger_trace(self):
@@ -90,9 +90,9 @@ class TriggerTrace(Enum):
 
 class TraceOptionsResponse:
     def __init__(self,
-                 auth: Optional[Auth] = None,
-                 trigger_trace: Optional[TriggerTrace] = None,
-                 ignored: Optional[List[str]] = None):
+                 auth: Optional[Auth],
+                 trigger_trace: Optional[TriggerTrace],
+                 ignored: Optional[List[str]]):
         self._auth = auth
         self._trigger_trace = trigger_trace
         self._ignored = ignored
@@ -127,20 +127,16 @@ class TraceOptionsResponse:
         return self._auth == other._auth and self._trigger_trace == other._trigger_trace and self._ignored == other._ignored
 
 
-class TraceOptionsWithResponse:
+class TraceOptionsWithResponse(TraceOptions):
     def __init__(self,
-                 options: Optional[TraceOptions] = None,
-                 response: Optional[TraceOptionsResponse] = None):
-        self._options = options
+                 trigger_trace: Optional[bool],
+                 timestamp: Optional[int],
+                 sw_keys: Optional[str],
+                 custom: Dict[str, str],
+                 ignored: List[Tuple[str, Optional[str]]],
+                 response: TraceOptionsResponse):
+        super().__init__(trigger_trace, timestamp, sw_keys, custom, ignored)
         self._response = response
-
-    @property
-    def options(self):
-        return self._options
-
-    @options.setter
-    def options(self, new_options):
-        self._options = new_options
 
     @property
     def response(self):
@@ -153,12 +149,12 @@ class TraceOptionsWithResponse:
     def __eq__(self, other):
         if not isinstance(other, TraceOptionsWithResponse):
             return NotImplemented
-        return self._options == other._options and self._response == other._response
+        return super.__eq__(self, other) and self._response == other._response
 
 class RequestHeaders:
     def __init__(self,
-                 x_trace_options: Optional[str] = None,
-                 x_trace_options_signature: Optional[str] = None):
+                 x_trace_options: Optional[str],
+                 x_trace_options_signature: Optional[str]):
         self._x_trace_options = x_trace_options
         self._x_trace_options_signature = x_trace_options_signature
 
@@ -186,7 +182,7 @@ class RequestHeaders:
 
 class ResponseHeaders:
     def __init__(self,
-                 x_trace_options_response: Optional[str] = None):
+                 x_trace_options_response: Optional[str]):
         self._x_trace_options_response = x_trace_options_response
 
     @property
@@ -204,7 +200,7 @@ class ResponseHeaders:
 
 
 def parse_trace_options(header, logger=logging.getLogger(__name__)):
-    trace_options = TraceOptions()
+    trace_options = TraceOptions(trigger_trace=None, timestamp=None, sw_keys=None, custom={}, ignored=[])
     kvs = []
     for pair in header.split(";"):
         kv = pair.split("=", 1)
@@ -250,11 +246,11 @@ def parse_trace_options(header, logger=logging.getLogger(__name__)):
     return trace_options
 
 
-def stringify_trace_options_response(trace_options_response : Optional[TraceOptionsResponse] = None):
+def stringify_trace_options_response(trace_options_response : TraceOptionsResponse):
     kvs = {
-        'auth': trace_options_response.auth.value if trace_options_response and trace_options_response.auth else None,
-        'trigger-trace': trace_options_response.trigger_trace.value if trace_options_response and trace_options_response.trigger_trace else None,
-        'ignored': ','.join(trace_options_response.ignored) if trace_options_response and trace_options_response.ignored else None,
+        'auth': trace_options_response.auth.value if trace_options_response.auth else None,
+        'trigger-trace': trace_options_response.trigger_trace.value if trace_options_response.trigger_trace else None,
+        'ignored': ','.join(trace_options_response.ignored) if trace_options_response.ignored else None,
     }
     return ';'.join(f"{k}={v}" for k, v in kvs.items() if v is not None)
 
