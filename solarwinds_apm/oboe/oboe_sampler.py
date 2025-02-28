@@ -6,6 +6,7 @@ from enum import IntEnum, auto
 from typing import Optional, Sequence
 
 from opentelemetry.context import Context
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.trace.sampling import (
     Decision,
     Attributes,
@@ -126,9 +127,9 @@ def _span_type(parent_span: Optional[Span] = None) -> SpanType:
 
 
 class OboeSampler(Sampler, ABC):
-    def __init__(self, logger=logging.getLogger(__name__)):
+    def __init__(self, meter_provider: MeterProvider, logger=logging.getLogger(__name__)):
         self._logger = logger
-        self._counters = Counters()
+        self._counters = Counters(meter_provider=meter_provider)
         self._buckets = {
             BucketType.DEFAULT: _TokenBucket(),
             BucketType.TRIGGER_RELAXED: _TokenBucket(),
