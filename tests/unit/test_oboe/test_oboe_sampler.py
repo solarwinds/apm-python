@@ -8,6 +8,8 @@ from unittest.mock import Mock
 
 import pytest
 from opentelemetry import trace
+from opentelemetry.sdk.metrics import MeterProvider, AlwaysOnExemplarFilter
+from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.resources import Attributes
 from opentelemetry.sdk.trace import RandomIdGenerator
 from opentelemetry.trace import SpanKind, Link, TraceState, TraceFlags, get_current_span
@@ -117,6 +119,24 @@ class TestSpanType:
         assert span_type == SpanType.LOCAL
 
 
+def check_counters(sampler, counter_names):
+    counters = set(counter_names)
+    sampler.metric_reader.collect()
+    if counters == set():
+        assert sampler.metric_reader.get_metrics_data() is None
+    else:
+        assert len(sampler.metric_reader.get_metrics_data().resource_metrics) == 1
+        assert len(sampler.metric_reader.get_metrics_data().resource_metrics[0].scope_metrics) == 1
+        scope_metrics_data = sampler.metric_reader.get_metrics_data().resource_metrics[0].scope_metrics[0].metrics
+        assert len(counter_names) == len(scope_metrics_data)
+        for m in scope_metrics_data:
+            assert m.name in counters
+            counters.discard(m.name)
+            assert len(m.data.data_points) == 1
+            assert m.data.data_points[0].value == 1
+        assert counters == set()
+
+
 class TestSamplerOptions:
     def __init__(self, settings: Optional[Settings] = None, local_settings: Optional[LocalSettings] = None,
                  request_headers: Optional[RequestHeaders] = None):
@@ -139,7 +159,12 @@ class TestSamplerOptions:
 
 class TestSampler(OboeSampler):
     def __init__(self, options: TestSamplerOptions):
-        super().__init__(logging.getLogger(__name__))
+        self._metric_reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(
+            metric_readers=[self._metric_reader],
+            exemplar_filter=AlwaysOnExemplarFilter()
+        )
+        super().__init__(meter_provider=meter_provider, logger=logging.getLogger(__name__))
         self._local_settings = options.local_settings
         self._request_headers = options.request_headers
         if options.settings:
@@ -164,7 +189,7 @@ class TestSampler(OboeSampler):
             trace_state = TraceState(
                 [("sw", format(span_id, "016x") + "-0" + ("1" if trace_flags == TraceFlags.SAMPLED else "0"))])
         span_context = trace.SpanContext(trace_id=trace_id, span_id=span_id, is_remote=is_remote,
-                                         trace_flags=trace_flags, trace_state=trace_state, )
+                                         trace_flags=trace_flags, trace_state=trace_state)
         return trace.NonRecordingSpan(span_context)
 
     @override
@@ -199,6 +224,10 @@ class TestSampler(OboeSampler):
     def response_headers(self):
         return self._response_headers
 
+    @property
+    def metric_reader(self):
+        return self._metric_reader
+
     def __str__(self):
         return f"Test Sampler"
 
@@ -226,6 +255,7 @@ class TestLocalSpan:
                                           "local_span_respects_parent_sampled")
         assert sample.decision.is_sampled()
         assert sample.decision.is_recording()
+        check_counters(local_span, [])
 
     def test_respects_parent_not_sampled(self, local_span):
         ctxt = local_span._create_parent(trace_flags=TraceFlags.DEFAULT, is_remote=False)
@@ -233,6 +263,7 @@ class TestLocalSpan:
                                           "local_span_respects_parent_not_sampled")
         assert not sample.decision.is_sampled()
         assert not sample.decision.is_recording()
+        check_counters(local_span, [])
 
 
 class TestInvalidXTraceOptionsSignature:
@@ -258,6 +289,7 @@ class TestInvalidXTraceOptionsSignature:
         assert not sample.decision.is_recording()
         assert sample.attributes == {}
         assert "auth=no-signature-key" in sampler.response_headers.x_trace_options_response
+        check_counters(sampler, ["trace.service.request_count"])
 
     def test_rejects_bad_timestamp(self):
         sampler = TestSampler(TestSamplerOptions(
@@ -282,6 +314,7 @@ class TestInvalidXTraceOptionsSignature:
         assert not sample.decision.is_recording()
         assert sample.attributes == {}
         assert "auth=bad-timestamp" in sampler.response_headers.x_trace_options_response
+        check_counters(sampler, ["trace.service.request_count"])
 
     def test_rejects_bad_signature(self):
         sampler = TestSampler(TestSamplerOptions(
@@ -306,6 +339,7 @@ class TestInvalidXTraceOptionsSignature:
         assert not sample.decision.is_recording()
         assert sample.attributes == {}
         assert "auth=bad-signature" in sampler.response_headers.x_trace_options_response
+        check_counters(sampler, ["trace.service.request_count"])
 
 
 class TestMissingSettings:
@@ -319,6 +353,7 @@ class TestMissingSettings:
         sample = sampler.should_sample(None, generator.generate_trace_id(), "does_not_sample")
         assert not sample.decision.is_sampled()
         assert not sample.decision.is_recording()
+        check_counters(sampler, ["trace.service.request_count"])
 
     def test_expires_after_ttl(self):
         sampler = TestSampler(TestSamplerOptions(
@@ -338,6 +373,7 @@ class TestMissingSettings:
         sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id, "expires_after_ttl")
         assert not sample.decision.is_sampled()
         assert not sample.decision.is_recording()
+        check_counters(sampler, ["trace.service.request_count"])
 
     def test_respects_x_trace_options_keys_and_values(self):
         sampler = TestSampler(TestSamplerOptions(
@@ -436,6 +472,8 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysSet:
         assert sample.decision.is_recording()
         assert sample.attributes.get("sw.tracestate_parent_id") == format(
             get_current_span(ctxt).get_span_context().span_id, "016x")
+        check_counters(sample_through_always_set,
+                       ["trace.service.request_count", "trace.service.tracecount", "trace.service.through_trace_count"])
 
     def test_respects_parent_not_sampled(self, sample_through_always_set):
         ctxt = sample_through_always_set._create_parent(trace_flags=TraceFlags.DEFAULT, is_remote=True, sw=True)
@@ -445,6 +483,7 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysSet:
         assert sample.decision.is_recording()
         assert sample.attributes.get("sw.tracestate_parent_id") == format(
             get_current_span(ctxt).get_span_context().span_id, "016x")
+        check_counters(sample_through_always_set, ["trace.service.request_count"])
 
     def test_respects_sw_sampled_over_w3c_not_sampled(self, sample_through_always_set):
         ctxt = sample_through_always_set._create_parent(trace_flags=TraceFlags.DEFAULT, is_remote=True, sw="inverse")
@@ -454,6 +493,8 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysSet:
         assert sample.decision.is_recording()
         assert sample.attributes.get("sw.tracestate_parent_id") == format(
             get_current_span(ctxt).get_span_context().span_id, "016x")
+        check_counters(sample_through_always_set,
+                       ["trace.service.request_count", "trace.service.tracecount", "trace.service.through_trace_count"])
 
     def test_respects_sw_not_sampled_over_w3c_sampled(self, sample_through_always_set):
         ctxt = sample_through_always_set._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True, sw="inverse")
@@ -463,6 +504,7 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysSet:
         assert sample.decision.is_recording()
         assert sample.attributes.get("sw.tracestate_parent_id") == format(
             get_current_span(ctxt).get_span_context().span_id, "016x")
+        check_counters(sample_through_always_set, ["trace.service.request_count"])
 
 
 class TestEntrySpanWithValidSwContextSampleThroughAlwaysUnset:
@@ -485,6 +527,7 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysUnset:
                                        "respects_sw_not_sampled_over_w3c_sampled")
         assert not sample.decision.is_sampled()
         assert sample.decision.is_recording()
+        check_counters(sampler, ["trace.service.request_count"])
 
     def test_does_not_record_or_sample_when_SAMPLE_START_unset(self):
         sampler = TestSampler(TestSamplerOptions(
@@ -505,6 +548,7 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysUnset:
                                        "does_not_record_or_sample_when_SAMPLE_START_unset")
         assert not sample.decision.is_sampled()
         assert not sample.decision.is_recording()
+        check_counters(sampler, ["trace.service.request_count"])
 
 
 class TestTriggerTraceRequestedTriggeredTraceSetUnsigned:
@@ -536,6 +580,8 @@ class TestTriggerTraceRequestedTriggeredTraceSetUnsigned:
         assert sample.attributes.get(BUCKET_CAPACITY_ATTRIBUTE) == 10
         assert sample.attributes.get(BUCKET_RATE_ATTRIBUTE) == 5
         assert "trigger-trace=ok" in sampler.response_headers.x_trace_options_response
+        check_counters(sampler, ["trace.service.request_count", "trace.service.tracecount",
+                                 "trace.service.triggered_trace_count"])
 
     def test_records_but_does_not_sample_when_there_is_no_capacity(self):
         sampler = TestSampler(TestSamplerOptions(
@@ -565,6 +611,7 @@ class TestTriggerTraceRequestedTriggeredTraceSetUnsigned:
         assert sample.attributes.get(BUCKET_RATE_ATTRIBUTE) == 0
         assert "trigger-trace=rate-exceeded" in sampler.response_headers.x_trace_options_response
         assert "ignored=invalid-key" in sampler.response_headers.x_trace_options_response
+        check_counters(sampler, ["trace.service.request_count"])
 
 
 class TestTriggerTraceRequestedTriggeredTraceSetSigned:
@@ -598,6 +645,8 @@ class TestTriggerTraceRequestedTriggeredTraceSetSigned:
         assert sample.attributes.get(BUCKET_RATE_ATTRIBUTE) == 10
         assert "auth=ok" in sampler.response_headers.x_trace_options_response
         assert "trigger-trace=ok" in sampler.response_headers.x_trace_options_response
+        check_counters(sampler, ["trace.service.request_count", "trace.service.tracecount",
+                                 "trace.service.triggered_trace_count"])
 
     def test_records_but_does_not_sample_when_there_is_no_capacity(self):
         sampler = TestSampler(TestSamplerOptions(
@@ -628,6 +677,7 @@ class TestTriggerTraceRequestedTriggeredTraceSetSigned:
         assert sample.attributes.get(BUCKET_RATE_ATTRIBUTE) == 0
         assert "trigger-trace=rate-exceeded" in sampler.response_headers.x_trace_options_response
         assert "ignored=invalid-key" in sampler.response_headers.x_trace_options_response
+        check_counters(sampler, ["trace.service.request_count"])
 
 
 class TestTriggerTraceRequestedTriggeredTraceUnset:
@@ -654,6 +704,7 @@ class TestTriggerTraceRequestedTriggeredTraceUnset:
         assert sample.attributes.get("custom-key") == "value"
         assert "trigger-trace=trigger-tracing-disabled" in sampler.response_headers.x_trace_options_response
         assert "ignored=invalid-key" in sampler.response_headers.x_trace_options_response
+        check_counters(sampler, ["trace.service.request_count"])
 
 
 class TestTriggerTraceRequestedDiceRoll:
@@ -704,6 +755,8 @@ class TestTriggerTraceRequestedDiceRoll:
         assert sample.attributes.get(SAMPLE_SOURCE_ATTRIBUTE) == 6
         assert sample.attributes.get(BUCKET_CAPACITY_ATTRIBUTE) == 10
         assert sample.attributes.get(BUCKET_RATE_ATTRIBUTE) == 5
+        check_counters(sampler,
+                       ["trace.service.request_count", "trace.service.samplecount", "trace.service.tracecount"])
 
     def test_records_but_does_not_sample_when_dice_success_but_insufficient_capacity(self):
         sampler = TestSampler(TestSamplerOptions(
@@ -730,6 +783,8 @@ class TestTriggerTraceRequestedDiceRoll:
         assert sample.attributes.get(SAMPLE_SOURCE_ATTRIBUTE) == 6
         assert sample.attributes.get(BUCKET_CAPACITY_ATTRIBUTE) == 0
         assert sample.attributes.get(BUCKET_RATE_ATTRIBUTE) == 0
+        check_counters(sampler, ["trace.service.request_count", "trace.service.samplecount",
+                                 "trace.service.tokenbucket_exhaustion_count"])
 
     def test_records_but_does_not_sample_when_dice_failure(self):
         sampler = TestSampler(TestSamplerOptions(
@@ -756,6 +811,7 @@ class TestTriggerTraceRequestedDiceRoll:
         assert sample.attributes.get(SAMPLE_SOURCE_ATTRIBUTE) == 2
         assert BUCKET_CAPACITY_ATTRIBUTE not in sample.attributes
         assert BUCKET_RATE_ATTRIBUTE not in sample.attributes
+        check_counters(sampler, ["trace.service.request_count", "trace.service.samplecount"])
 
 
 class TestTriggerTraceRequestedSampleStartUnset:
@@ -800,6 +856,7 @@ class TestTriggerTraceRequestedSampleStartUnset:
                                        "records_when_SAMPLE_THROUGH_ALWAYS_set")
         assert not sample.decision.is_sampled()
         assert sample.decision.is_recording()
+        check_counters(sampler, ["trace.service.request_count"])
 
     def test_does_not_record_when_SAMPLE_THROUGH_ALWAYS_unset(self):
         sampler = TestSampler(TestSamplerOptions(
@@ -820,3 +877,4 @@ class TestTriggerTraceRequestedSampleStartUnset:
                                        "does_not_record_when_SAMPLE_THROUGH_ALWAYS_unset")
         assert not sample.decision.is_sampled()
         assert not sample.decision.is_recording()
+        check_counters(sampler, ["trace.service.request_count"])
