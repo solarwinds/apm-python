@@ -49,38 +49,38 @@ RUN pip install --target workspace -r requirements.txt
 FROM python:3.8-alpine AS build-musl-38
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
-RUN apk add g++ gcc python3-dev musl-dev linux-headers
+RUN apk add g++ gcc libstdc++ python3-dev make musl-dev linux-headers
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
+RUN pip install --no-deps --no-binary :all: --target workspace -r requirements-nodeps.txt
 
 FROM python:3.9-alpine AS build-musl-39
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
-RUN apk add g++ gcc python3-dev musl-dev linux-headers
+RUN apk add g++ gcc libstdc++ python3-dev make musl-dev linux-headers
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
+RUN pip install --no-deps --no-binary :all: --target workspace -r requirements-nodeps.txt
 
 FROM python:3.10-alpine AS build-musl-310
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
-RUN apk add g++ gcc python3-dev musl-dev linux-headers
+RUN apk add g++ gcc libstdc++ python3-dev make musl-dev linux-headers
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
+RUN pip install --no-deps --no-binary :all: --target workspace -r requirements-nodeps.txt
 
 FROM python:3.11-alpine AS build-musl-311
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
-RUN apk add g++ gcc python3-dev musl-dev linux-headers
+RUN apk add g++ gcc libstdc++ python3-dev make musl-dev linux-headers
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
+RUN pip install --no-deps --no-binary :all: --target workspace -r requirements-nodeps.txt
 
 FROM python:3.12-alpine AS build-musl-312
 WORKDIR /operator-build
 ADD requirements-nodeps.txt .
 ADD requirements.txt .
-RUN apk add g++ gcc python3-dev musl-dev linux-headers
+RUN apk add g++ gcc libstdc++ python3-dev make musl-dev linux-headers
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
+RUN pip install --no-deps --no-binary :all: --target workspace -r requirements-nodeps.txt
 RUN pip install --target workspace -r requirements.txt
 
 FROM busybox
