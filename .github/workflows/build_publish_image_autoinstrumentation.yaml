@@ -32,7 +32,6 @@ jobs:
 
       - name: Log into Docker.io (build)
         uses: docker/login-action@v3
-        if: ${{ github.event_name == 'push' }}
         with:
           username: ${{ vars.DOCKER_SOLARWINDS_ORG_LOGIN }}
           password: ${{ secrets.ENOPS5919_APM_DOCKER_HUB_CI_OAT }}
@@ -53,7 +52,6 @@ jobs:
 
       - name: Login to GitHub Package Registry
         uses: docker/login-action@v3
-        if: ${{ github.event_name == 'push' }}
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -82,7 +80,6 @@ jobs:
 
       - name: Log into Docker.io (scan)
         uses: docker/login-action@v3
-        if: ${{ github.event_name == 'push' }}
         with:
           username: ${{ vars.ENOPS5919_DOCKER_SCOUT_CI_USER }}
           password: ${{ secrets.ENOPS5919_DOCKER_SCOUT_CI_PAT }}
