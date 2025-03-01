@@ -127,7 +127,7 @@ def _span_type(parent_span: Optional[Span] = None) -> SpanType:
 
 
 class OboeSampler(Sampler, ABC):
-    def __init__(self, meter_provider: MeterProvider, logger=logging.getLogger(__name__)):
+    def __init__(self, meter_provider: MeterProvider, logger: logging.Logger):
         self._logger = logger
         self._counters = Counters(meter_provider=meter_provider)
         self._buckets = {

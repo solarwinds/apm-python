@@ -48,6 +48,11 @@ class BucketSettings:
     def rate(self, new_rate):
         self._rate = new_rate
 
+    def __eq__(self, other):
+        if not isinstance(other, BucketSettings):
+            return NotImplemented
+        return self._capacity == other._capacity and self._rate == other._rate
+
 
 class Settings:
     def __init__(self, sample_rate: int, sample_source: SampleSource, flags: Flags, buckets: Dict[BucketType, BucketSettings], signature_key: Optional[str], timestamp: int, ttl: int):
