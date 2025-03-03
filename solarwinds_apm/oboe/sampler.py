@@ -99,7 +99,10 @@ def parse_settings(unparsed: Any) -> Optional[tuple[Settings, Optional[str]]]:
 class Sampler(OboeSampler):
     def __init__(self, meter_provider: MeterProvider, config: Configuration, logger: Logger, initial: Any):
         super().__init__(meter_provider=meter_provider ,logger=logger)
-        self._tracing_mode = TracingMode.ALWAYS if config.tracing_mode else TracingMode.NEVER
+        if config.tracing_mode is not None:
+            self._tracing_mode = TracingMode.ALWAYS if config.tracing_mode else TracingMode.NEVER
+        else:
+            self._tracing_mode = None
         self._trigger_mode = config.trigger_trace_enabled
         self._transaction_settings = config.transaction_settings
         self._ready = self._create_ready_promise()

@@ -6,7 +6,9 @@ import pytest
 from opentelemetry import trace
 from opentelemetry.sdk.metrics import MeterProvider, AlwaysOnExemplarFilter
 from opentelemetry.sdk.metrics._internal.export import InMemoryMetricReader
-from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace import TracerProvider, export
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.semconv._incubating.attributes.http_attributes import HTTP_METHOD, HTTP_STATUS_CODE, HTTP_SCHEME, \
     HTTP_TARGET
 from opentelemetry.semconv._incubating.attributes.net_attributes import NET_HOST_NAME
@@ -19,6 +21,7 @@ from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting,
 from solarwinds_apm.oboe.sampler import http_span_metadata, parse_settings, Sampler
 from solarwinds_apm.oboe.settings import Settings, SampleSource, Flags, BucketType, BucketSettings
 
+from opentelemetry.test.globals_test import reset_trace_globals
 
 class TestSampler(Sampler):
     def __init__(self, meter_provider: MeterProvider, config: Configuration, initial: Any):
@@ -161,6 +164,7 @@ class TestParseSettingsName:
         )
         assert warnings == "warning"
 
+
 class TestSamplerName:
     def test_respects_enabled_settings_when_no_config_or_transaction_settings(self):
         meter_provider = MeterProvider(
@@ -172,16 +176,40 @@ class TestSamplerName:
             config=options(tracing=None, trigger_trace=False, transaction_settings=[]),
             initial=settings(enabled=True, signature_key=None)
         )
-        tracer = trace.get_tracer("test_respects_enabled_settings_when_no_config_or_transaction_settings", tracer_provider=TracerProvider(sampler=sampler))
+        memory_exporter = InMemorySpanExporter()
+        tracer_provider = TracerProvider(sampler=sampler)
+        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+        tracer = trace.get_tracer("respects_enabled_settings_when_no_config_or_transaction_settings", tracer_provider=tracer_provider)
+        with tracer.start_as_current_span("test") as span:
+            assert span.is_recording()
+        spans = memory_exporter.get_finished_spans()
+        assert len(spans) == 1
+        assert spans[0].attributes == {
+            "SampleRate": 1_000_000,
+            "SampleSource": 6,
+            "BucketCapacity": 10,
+            "BucketRate": 1,
+        }
 
-        # with tracer.start_as_current_span("test") as span:
-        #     assert not span.is_sampled()
-        #     assert not span.is_recording()
-            # current_span = trace.get_current_span()
-
-
-        #      assert not current_span.is_recording()
-
+    def test_respects_disabled_settings_when_no_config_or_transaction_settings(self):
+        meter_provider = MeterProvider(
+            metric_readers=[InMemoryMetricReader()],
+            exemplar_filter=AlwaysOnExemplarFilter()
+        )
+        sampler = TestSampler(
+            meter_provider=meter_provider,
+            config=options(tracing=None, trigger_trace=True, transaction_settings=[]),
+            initial=settings(enabled=False, signature_key=None)
+        )
+        memory_exporter = InMemorySpanExporter()
+        tracer_provider = TracerProvider(sampler=sampler)
+        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+        tracer = trace.get_tracer("respects_disabled_settings_when_no_config_or_transaction_settings",
+                                  tracer_provider=tracer_provider)
+        with tracer.start_as_current_span("test") as span:
+            assert not span.is_recording()
+        spans = memory_exporter.get_finished_spans()
+        assert len(spans) == 0
 
 
 # def test_parse_settings():
