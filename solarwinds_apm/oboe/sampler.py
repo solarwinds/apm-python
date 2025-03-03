@@ -15,11 +15,13 @@ from opentelemetry.semconv.attributes.url_attributes import URL_SCHEME, URL_PATH
 from opentelemetry.trace import SpanKind, Link, TraceState
 from typing_extensions import override
 
+from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_KEY, INTL_SWO_X_OPTIONS_RESPONSE_KEY
 from solarwinds_apm.oboe.configuration import Configuration
 from solarwinds_apm.oboe.oboe_sampler import OboeSampler
 from solarwinds_apm.oboe.settings import Settings, Flags, BucketType, SampleSource, BucketSettings, TracingMode, \
     LocalSettings
 from solarwinds_apm.oboe.trace_options import RequestHeaders, ResponseHeaders
+from solarwinds_apm.traceoptions import XTraceOptions
 
 
 def http_span_metadata(kind: SpanKind, attributes: Attributes):
@@ -97,13 +99,24 @@ def parse_settings(unparsed: Any) -> Optional[tuple[Settings, Optional[str]]]:
 class Sampler(OboeSampler):
     def __init__(self, meter_provider: MeterProvider, config: Configuration, logger: Logger, initial: Any):
         super().__init__(meter_provider=meter_provider ,logger=logger)
-        if config.tracing_mode is not None:
-            self._tracing_mode = TracingMode.ALWAYS if config.tracing_mode else TracingMode.NEVER
+        self._tracing_mode = TracingMode.ALWAYS if config.tracing_mode else TracingMode.NEVER
         self._trigger_mode = config.trigger_trace_enabled
         self._transaction_settings = config.transaction_settings
         self._ready = self._create_ready_promise()
         if initial:
             self.update_settings(initial)
+
+    @property
+    def tracing_mode(self):
+        return self._tracing_mode
+
+    @property
+    def trigger_mode(self):
+        return self._trigger_mode
+
+    @property
+    def transaction_settings(self):
+        return self._transaction_settings
 
     def _create_ready_promise(self):
         self._ready_event = asyncio.Event()
@@ -125,12 +138,12 @@ class Sampler(OboeSampler):
                        attributes: Attributes = None,
                        links: Optional[Sequence["Link"]] = None,
                        trace_state: Optional["TraceState"] = None) -> LocalSettings:
-        settings = LocalSettings(tracing_mode=self._tracing_mode, trigger_mode=self._trigger_mode)
-        if self._transaction_settings is None or len(self._transaction_settings) == 0:
+        settings = LocalSettings(tracing_mode=self.tracing_mode, trigger_mode=self.trigger_mode)
+        if self.transaction_settings is None or len(self.transaction_settings) == 0:
             return settings
         meta = http_span_metadata(kind, attributes)
         identifier = meta["url"] if meta["http"] else f"{SpanKind(kind).name}:{name}"
-        for t in self._transaction_settings:
+        for t in self.transaction_settings:
             if t.matcher and t.matcher(identifier):
                 settings.tracing_mode = TracingMode.ALWAYS if t.tracing else TracingMode.NEVER
                 break
@@ -146,12 +159,29 @@ class Sampler(OboeSampler):
                         links: Optional[Sequence["Link"]] = None,
                         trace_state: Optional["TraceState"] = None
                         ) -> RequestHeaders:
+        if parent_context:
+            options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
+            if options and isinstance(options, XTraceOptions):
+                RequestHeaders(x_trace_options=options.options_header, x_trace_options_signature=options.signature)
         return RequestHeaders(x_trace_options=None, x_trace_options_signature=None)
 
     @override
     def set_response_headers(self,
-                             headers: ResponseHeaders):
-        return
+                             headers: ResponseHeaders,
+                             parent_context: Optional["Context"],
+                             trace_id: int,
+                             name: str,
+                             kind: Optional[SpanKind] = None,
+                             attributes: Attributes = None,
+                             links: Optional[Sequence["Link"]] = None,
+                             trace_state: Optional["TraceState"] = None
+                             ) -> Optional["TraceState"]:
+        if parent_context:
+            options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
+            if options and isinstance(options, XTraceOptions):
+                if options.include_response and headers.x_trace_options_response:
+                    return trace_state.add(INTL_SWO_X_OPTIONS_RESPONSE_KEY, headers.x_trace_options_response)
+        return None
 
     def update_settings(self, settings: Any) -> Optional[Settings]:
         parsed = parse_settings(settings)
