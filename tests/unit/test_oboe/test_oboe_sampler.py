@@ -217,8 +217,17 @@ class TestSampler(OboeSampler):
 
     @override
     def set_response_headers(self,
-                             headers: ResponseHeaders):
+                             headers: ResponseHeaders,
+                             parent_context: Optional["Context"],
+                             trace_id: int,
+                             name: str,
+                             kind: Optional[SpanKind] = None,
+                             attributes: Attributes = None,
+                             links: Optional[Sequence["Link"]] = None,
+                             trace_state: Optional["TraceState"] = None
+                             ) -> Optional["TraceState"]:
         self._response_headers = headers
+        return None
 
     @property
     def response_headers(self):

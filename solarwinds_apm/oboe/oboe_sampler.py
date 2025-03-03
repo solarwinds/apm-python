@@ -217,8 +217,8 @@ class OboeSampler(Sampler, ABC):
                 )
                 if s.trace_options.response.auth != Auth.OK:
                     self.logger.debug("X-Trace-Options-Signature invalid; tracing disabled")
-                    self.set_response_headers_from_sample_state(s)
-                    return SamplingResult(decision=Decision.DROP)
+                    new_trace_state = self.set_response_headers_from_sample_state(s, parent_context, trace_id, name, kind, attributes, links, trace_state)
+                    return SamplingResult(decision=Decision.DROP, trace_state=new_trace_state)
             if not s.trace_options.trigger_trace:
                 s.trace_options.response.trigger_trace = TriggerTrace.NOT_REQUESTED
             if s.trace_options.sw_keys:
@@ -232,8 +232,8 @@ class OboeSampler(Sampler, ABC):
             if s.trace_options and s.trace_options.trigger_trace:
                 self.logger.debug("trigger trace requested but settings unavailable")
                 s.trace_options.response.trigger_trace = TriggerTrace.SETTINGS_NOT_AVAILABLE
-            self.set_response_headers_from_sample_state(s)
-            return SamplingResult(decision=Decision.DROP, attributes=s.attributes)
+            new_trace_state = self.set_response_headers_from_sample_state(s, parent_context, trace_id, name, kind, attributes, links, trace_state)
+            return SamplingResult(decision=Decision.DROP, attributes=s.attributes, trace_state=new_trace_state)
         if s.trace_state and re.match(TRACESTATE_REGEXP, s.trace_state):
             self.logger.debug("context is valid for parent-based sampling")
             self.parent_based_algo(s, parent_context)
@@ -248,8 +248,8 @@ class OboeSampler(Sampler, ABC):
             self.logger.debug("SAMPLE_START is unset; sampling disabled")
             self.disabled_algo(s)
         self.logger.debug("final sampling state", s)
-        self.set_response_headers_from_sample_state(s)
-        return SamplingResult(decision=s.decision, attributes=s.attributes)
+        new_trace_state = self.set_response_headers_from_sample_state(s, parent_context, trace_id, name, kind, attributes, links, trace_state)
+        return SamplingResult(decision=s.decision, attributes=s.attributes, trace_state=new_trace_state)
 
     def parent_based_algo(self, s: SampleState, parent_context: Optional["Context"]):
         s.attributes[PARENT_ID_ATTRIBUTE] = s.trace_state[:16] if s.trace_state else None
@@ -388,15 +388,30 @@ class OboeSampler(Sampler, ABC):
                         ) -> RequestHeaders:
         pass
 
-    def set_response_headers_from_sample_state(self, s: SampleState):
+    def set_response_headers_from_sample_state(self,
+                                                s: SampleState,
+                                                parent_context: Optional["Context"],
+                                                trace_id: int,
+                                                name: str,
+                                                kind: Optional[SpanKind] = None,
+                                                attributes: Attributes = None,
+                                                links: Optional[Sequence["Link"]] = None,
+                                                trace_state: Optional["TraceState"] = None) -> Optional["TraceState"]:
         headers = ResponseHeaders(x_trace_options_response=None)
         if s.trace_options:
             headers.x_trace_options_response = stringify_trace_options_response(s.trace_options.response)
-        self.set_response_headers(headers)
+        return self.set_response_headers(headers, parent_context,trace_id, name, kind, attributes, links, trace_state)
 
     @abstractmethod
     def set_response_headers(self,
-                             headers: ResponseHeaders):
+                             headers: ResponseHeaders,
+                             parent_context: Optional["Context"],
+                             trace_id: int,
+                             name: str,
+                             kind: Optional[SpanKind] = None,
+                             attributes: Attributes = None,
+                             links: Optional[Sequence["Link"]] = None,
+                             trace_state: Optional["TraceState"] = None) -> Optional["TraceState"]:
         pass
 
     def get_description(self) -> str:

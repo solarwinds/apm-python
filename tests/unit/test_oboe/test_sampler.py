@@ -4,7 +4,8 @@ from typing import Optional, Sequence, Dict, Any
 
 import pytest
 from opentelemetry import trace
-from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider, AlwaysOnExemplarFilter
+from opentelemetry.sdk.metrics._internal.export import InMemoryMetricReader
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.semconv._incubating.attributes.http_attributes import HTTP_METHOD, HTTP_STATUS_CODE, HTTP_SCHEME, \
     HTTP_TARGET
@@ -160,15 +161,26 @@ class TestParseSettingsName:
         )
         assert warnings == "warning"
 
-# class TestSamplerName:
-#     def test_respects_enabled_settings_when_no_config_or_transaction_settings(self):
-#         sampler = TestSampler(
-#             config=options(tracing=None, trigger_trace=False, transaction_settings=[]),
-#             intial=settings(enabled=True, signature_key=None))
-#         tracer = trace.get_tracer("test_respects_enabled_settings_when_no_config_or_transaction_settings", tracer_provider=TracerProvider(sampler=sampler))
-#         with tracer.start_as_current_span("test"):
-#              current_span = trace.get_current_span()
-#              assert not current_span.is_recording()
+class TestSamplerName:
+    def test_respects_enabled_settings_when_no_config_or_transaction_settings(self):
+        meter_provider = MeterProvider(
+            metric_readers=[InMemoryMetricReader()],
+            exemplar_filter=AlwaysOnExemplarFilter()
+        )
+        sampler = TestSampler(
+            meter_provider=meter_provider,
+            config=options(tracing=None, trigger_trace=False, transaction_settings=[]),
+            initial=settings(enabled=True, signature_key=None)
+        )
+        tracer = trace.get_tracer("test_respects_enabled_settings_when_no_config_or_transaction_settings", tracer_provider=TracerProvider(sampler=sampler))
+
+        # with tracer.start_as_current_span("test") as span:
+        #     assert not span.is_sampled()
+        #     assert not span.is_recording()
+            # current_span = trace.get_current_span()
+
+
+        #      assert not current_span.is_recording()
 
 
 
