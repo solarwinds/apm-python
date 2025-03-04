@@ -14,6 +14,8 @@ def config_get(param) -> Any:
         return []
     elif param == "transaction_name":
         return "foo-txn"
+    elif param == "legacy":
+        return False
     else:
         return None
 

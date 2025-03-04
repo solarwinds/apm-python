@@ -10,10 +10,10 @@ import json
 from opentelemetry import trace as trace_api
 from unittest import mock
 
-from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
+from .test_base_sw_legacy import TestBaseSwLegacy
 
 
-class TestScenario4(TestBaseSwHeadersAndAttributes):
+class TestScenario4(TestBaseSwLegacy):
     """
     Test class for continuing tracing decision with input headers
     for traceparent and tracestate.
@@ -113,7 +113,7 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify spans exported: service entry + outgoing request (child with local parent)
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]
@@ -263,5 +263,5 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify no spans exported
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 0

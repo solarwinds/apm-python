@@ -6,13 +6,13 @@
 
 import re
 import json
-
-from opentelemetry import trace as trace_api
 from unittest import mock
 
-from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
+from opentelemetry import trace as trace_api
 
-class TestScenario1(TestBaseSwHeadersAndAttributes):
+from .test_base_sw_otlp import TestBaseSwOtlp
+
+class TestScenario1(TestBaseSwOtlp):
     """
     Test class for starting a new tracing decision with no input headers.
     """
@@ -38,7 +38,7 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
             return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
         )
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
+            target="solarwinds_apm.extension.oboe.OboeAPI.getTracingDecision",
             new=mock_decision,
         ):
             # Request to instrumented app, no traceparent/tracestate
@@ -88,7 +88,7 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         assert new_trace_id in resp.headers["x-trace"]
 
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]
@@ -135,3 +135,8 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         # is stored in the test app's response body (new_span_id).
         # Note: context.span_id needs a 16-byte hex conversion first.
         assert "{:016x}".format(span_client.context.span_id) == new_span_id
+
+        self.assertFlaskMetrics()
+        self.assertRequestsMetrics()
+        self.assertApmMetrics()
+        self.assertLogs()

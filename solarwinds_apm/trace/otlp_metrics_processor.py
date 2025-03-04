@@ -72,7 +72,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         return "unknown"
 
     def on_end(self, span: "ReadableSpan") -> None:
-        """Calculates and reports OTLP trace metrics"""
+        """Calculates and reports APM OTLP trace metrics"""
         # Only calculate OTLP metrics for service entry spans
         parent_span_context = span.parent
         if (

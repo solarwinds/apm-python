@@ -208,8 +208,7 @@ class _SwSampler(Sampler):
             timestamp,
         )
 
-        if self.apm_config.is_lambda:
-            logger.debug("Sampling in lambda mode.")
+        if self.apm_config.get("legacy") is False:
             (
                 do_metrics,
                 do_sample,
@@ -235,6 +234,7 @@ class _SwSampler(Sampler):
             )
 
         else:
+            logger.debug("Sampling in legacy mode.")
             (
                 do_metrics,
                 do_sample,
