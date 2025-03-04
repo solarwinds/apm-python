@@ -211,235 +211,205 @@ class TestSamplerName:
         spans = memory_exporter.get_finished_spans()
         assert len(spans) == 0
 
+    def test_respects_enabled_config_when_no_transaction_settings(self):
+        meter_provider = MeterProvider(
+            metric_readers=[InMemoryMetricReader()],
+            exemplar_filter=AlwaysOnExemplarFilter()
+        )
+        sampler = TestSampler(
+            meter_provider=meter_provider,
+            config=options(tracing=True, trigger_trace=True, transaction_settings=[]),
+            initial=settings(enabled=False, signature_key=None)
+        )
+        memory_exporter = InMemorySpanExporter()
+        tracer_provider = TracerProvider(sampler=sampler)
+        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+        tracer = trace.get_tracer("respects_enabled_config_when_no_transaction_settings", tracer_provider=tracer_provider)
+        with tracer.start_as_current_span("test") as span:
+            assert span.is_recording()
+        spans = memory_exporter.get_finished_spans()
+        assert len(spans) == 1
+        assert spans[0].attributes == {
+            "SampleRate": 1_000_000,
+            "SampleSource": 6,
+            "BucketCapacity": 10,
+            "BucketRate": 1,
+        }
 
-# def test_parse_settings():
-#     timestamp = round(time.time())
-#     json = {
-#         "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,TRIGGER_TRACE,OVERRIDE",
-#         "value": 500_000,
-#         "arguments": {
-#             "BucketCapacity": 0.2,
-#             "BucketRate": 0.1,
-#             "TriggerRelaxedBucketCapacity": 20,
-#             "TriggerRelaxedBucketRate": 10,
-#             "TriggerStrictBucketCapacity": 2,
-#             "TriggerStrictBucketRate": 1,
-#             "SignatureKey": "key",
-#         },
-#         "timestamp": timestamp,
-#         "ttl": 120,
-#         "warning": "warning",
-#     }
-#     setting = parse_settings(json)
-#     assert setting == (
-#         {
-#             "sample_rate": 500_000,
-#             "sample_source": SampleSource.Remote,
-#             "flags": Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS | Flags.TRIGGERED_TRACE | Flags.OVERRIDE,
-#             "buckets": {
-#                 BucketType.DEFAULT: {"capacity": 0.2, "rate": 0.1},
-#                 BucketType.TRIGGER_RELAXED: {"capacity": 20, "rate": 10},
-#                 BucketType.TRIGGER_STRICT: {"capacity": 2, "rate": 1},
-#             },
-#             "signature_key": "key",
-#             "timestamp": timestamp,
-#             "ttl": 120,
-#             "warning": "warning",
-#         }
-#     )
-#
-# @pytest.mark.asyncio
-# async def test_sampler_respects_enabled_settings():
-#     sampler = TestSampler(options(trigger_trace=False), settings(enabled=True))
-#     await otel.reset({"trace": {"sampler": sampler}})
-#     tracer = trace.get_tracer("test")
-#     with tracer.start_as_current_span("test") as span:
-#         assert span.is_recording()
-#     spans = await otel.spans()
-#     assert len(spans) == 1
-#     assert spans[0].attributes == {
-#         "SampleRate": 1_000_000,
-#         "SampleSource": 6,
-#         "BucketCapacity": 10,
-#         "BucketRate": 1,
-#     }
-#
-# @pytest.mark.asyncio
-# async def test_sampler_respects_disabled_settings():
-#     sampler = TestSampler(options(trigger_trace=True), settings(enabled=False))
-#     await otel.reset({"trace": {"sampler": sampler}})
-#     tracer = trace.get_tracer("test")
-#     with tracer.start_as_current_span("test") as span:
-#         assert not span.is_recording()
-#     spans = await otel.spans()
-#     assert len(spans) == 0
-#
-# @pytest.mark.asyncio
-# async def test_sampler_respects_enabled_config():
-#     sampler = TestSampler(options(tracing=True, trigger_trace=True), settings(enabled=False))
-#     await otel.reset({"trace": {"sampler": sampler}})
-#     tracer = trace.get_tracer("test")
-#     with tracer.start_as_current_span("test") as span:
-#         assert span.is_recording()
-#     spans = await otel.spans()
-#     assert len(spans) == 1
-#     assert spans[0].attributes == {
-#         "SampleRate": 1_000_000,
-#         "SampleSource": 6,
-#         "BucketCapacity": 10,
-#         "BucketRate": 1,
-#     }
-#
-# @pytest.mark.asyncio
-# async def test_sampler_respects_disabled_config():
-#     sampler = TestSampler(options(tracing=False, trigger_trace=False), settings(enabled=True))
-#     await otel.reset({"trace": {"sampler": sampler}})
-#     tracer = trace.get_tracer("test")
-#     with tracer.start_as_current_span("test") as span:
-#         assert not span.is_recording()
-#     spans = await otel.spans()
-#     assert len(spans) == 0
-#
-# @pytest.mark.asyncio
-# async def test_sampler_respects_enabled_matching_transaction_setting():
-#     sampler = TestSampler(
-#         options(tracing=False, trigger_trace=False, transaction_settings=[{"tracing": True, "matcher": lambda: True}]),
-#         settings(enabled=False),
-#     )
-#     await otel.reset({"trace": {"sampler": sampler}})
-#     tracer = trace.get_tracer("test")
-#     with tracer.start_as_current_span("test") as span:
-#         assert span.is_recording()
-#     spans = await otel.spans()
-#     assert len(spans) == 1
-#     assert spans[0].attributes == {
-#         "SampleRate": 1_000_000,
-#         "SampleSource": 6,
-#         "BucketCapacity": 10,
-#         "BucketRate": 1,
-#     }
-#
-# @pytest.mark.asyncio
-# async def test_sampler_respects_disabled_matching_transaction_setting():
-#     sampler = TestSampler(
-#         options(tracing=True, trigger_trace=True, transaction_settings=[{"tracing": False, "matcher": lambda: True}]),
-#         settings(enabled=True),
-#     )
-#     await otel.reset({"trace": {"sampler": sampler}})
-#     tracer = trace.get_tracer("test")
-#     with tracer.start_as_current_span("test") as span:
-#         assert not span.is_recording()
-#     spans = await otel.spans()
-#     assert len(spans) == 0
-#
-# @pytest.mark.asyncio
-# async def test_sampler_respects_first_matching_transaction_setting():
-#     sampler = TestSampler(
-#         options(tracing=False, trigger_trace=False, transaction_settings=[
-#             {"tracing": True, "matcher": lambda: True},
-#             {"tracing": False, "matcher": lambda: True},
-#         ]),
-#         settings(enabled=False),
-#     )
-#     await otel.reset({"trace": {"sampler": sampler}})
-#     tracer = trace.get_tracer("test")
-#     with tracer.start_as_current_span("test") as span:
-#         assert span.is_recording()
-#     spans = await otel.spans()
-#     assert len(spans) == 1
-#     assert spans[0].attributes == {
-#         "SampleRate": 1_000_000,
-#         "SampleSource": 6,
-#         "BucketCapacity": 10,
-#         "BucketRate": 1,
-#     }
-#
-# @pytest.mark.asyncio
-# async def test_sampler_matches_non_http_spans():
-#     sampler = TestSampler(
-#         options(tracing=False, trigger_trace=False, transaction_settings=[
-#             {"tracing": True, "matcher": lambda name: name == "CLIENT:test"},
-#         ]),
-#         settings(enabled=False),
-#     )
-#     await otel.reset({"trace": {"sampler": sampler}})
-#     tracer = trace.get_tracer("test")
-#     with tracer.start_as_current_span("test", kind=SpanKind.CLIENT) as span:
-#         assert span.is_recording()
-#     spans = await otel.spans()
-#     assert len(spans) == 1
-#     assert spans[0].attributes == {
-#         "SampleRate": 1_000_000,
-#         "SampleSource": 6,
-#         "BucketCapacity": 10,
-#         "BucketRate": 1,
-#     }
-#
-# @pytest.mark.asyncio
-# async def test_sampler_matches_http_spans():
-#     sampler = TestSampler(
-#         options(tracing=False, trigger_trace=False, transaction_settings=[
-#             {"tracing": True, "matcher": lambda name: name == "http://localhost/test"},
-#         ]),
-#         settings(enabled=False),
-#     )
-#     await otel.reset({"trace": {"sampler": sampler}})
-#     tracer = trace.get_tracer("test")
-#     with tracer.start_as_current_span("test", kind=SpanKind.SERVER, attributes={
-#         "http.request.method": "GET",
-#         "url.scheme": "http",
-#         "server.address": "localhost",
-#         "url.path": "/test",
-#     }) as span:
-#         assert span.is_recording()
-#     spans = await otel.spans()
-#     assert len(spans) == 1
-#     assert spans[0].attributes == {
-#         "SampleRate": 1_000_000,
-#         "SampleSource": 6,
-#         "BucketCapacity": 10,
-#         "BucketRate": 1,
-#     }
-#
-# @pytest.mark.asyncio
-# async def test_sampler_matches_deprecated_http_spans():
-#     sampler = TestSampler(
-#         options(tracing=False, trigger_trace=False, transaction_settings=[
-#             {"tracing": True, "matcher": lambda name: name == "http://localhost/test"},
-#         ]),
-#         settings(enabled=False),
-#     )
-#     await otel.reset({"trace": {"sampler": sampler}})
-#     tracer = trace.get_tracer("test")
-#     with tracer.start_as_current_span("test", kind=SpanKind.SERVER, attributes={
-#         "http.method": "GET",
-#         "http.scheme": "http",
-#         "net.host.name": "localhost",
-#         "http.target": "/test",
-#     }) as span:
-#         assert span.is_recording()
-#     spans = await otel.spans()
-#     assert len(spans) == 1
-#     assert spans[0].attributes == {
-#         "SampleRate": 1_000_000,
-#         "SampleSource": 6,
-#         "BucketCapacity": 10,
-#         "BucketRate": 1,
-#     }
-#
-# @pytest.mark.asyncio
-# async def test_sampler_picks_up_trigger_trace():
-#     sampler = TestSampler(options(trigger_trace=True), settings(enabled=True))
-#     await otel.reset({"trace": {"sampler": sampler}})
-#     ctx = HEADERS_STORAGE.set(context.active(), {
-#         "request": {"X-Trace-Options": "trigger-trace"},
-#         "response": {},
-#     })
-#     context.with(ctx, lambda: trace.get_tracer("test").start_as_current_span("test", lambda span: span.end()))
-#     spans = await otel.spans()
-#     assert len(spans) == 1
-#     assert spans[0].attributes == {
-#         "BucketCapacity": 1,
-#         "BucketRate": 0.1,
-#     }
-#     assert "X-Trace-Options-Response" in HEADERS_STORAGE.get(ctx)["response"]
+    def test_respects_disabled_config_when_no_transaction_settings(self):
+        meter_provider = MeterProvider(
+            metric_readers=[InMemoryMetricReader()],
+            exemplar_filter=AlwaysOnExemplarFilter()
+        )
+        sampler = TestSampler(
+            meter_provider=meter_provider,
+            config=options(tracing=False, trigger_trace=False, transaction_settings=[]),
+            initial=settings(enabled=True, signature_key=None)
+        )
+        memory_exporter = InMemorySpanExporter()
+        tracer_provider = TracerProvider(sampler=sampler)
+        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+        tracer = trace.get_tracer("respects_disabled_config_when_no_transaction_settings", tracer_provider=tracer_provider)
+        with tracer.start_as_current_span("test") as span:
+            assert not span.is_recording()
+        spans = memory_exporter.get_finished_spans()
+        assert len(spans) == 0
+
+    def test_respects_enabled_matching_transaction_setting(self):
+        meter_provider = MeterProvider(
+            metric_readers=[InMemoryMetricReader()],
+            exemplar_filter=AlwaysOnExemplarFilter()
+        )
+        sampler = TestSampler(
+            meter_provider=meter_provider,
+            config=options(tracing=False, trigger_trace=False, transaction_settings=[TransactionSetting(tracing=True, matcher=lambda s :True)]),
+            initial=settings(enabled=False, signature_key=None)
+        )
+        memory_exporter = InMemorySpanExporter()
+        tracer_provider = TracerProvider(sampler=sampler)
+        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+        tracer = trace.get_tracer("respects_enabled_matching_transaction_setting", tracer_provider=tracer_provider)
+        with tracer.start_as_current_span("test") as span:
+            assert span.is_recording()
+        spans = memory_exporter.get_finished_spans()
+        assert len(spans) == 1
+        assert spans[0].attributes == {
+            "SampleRate": 1_000_000,
+            "SampleSource": 6,
+            "BucketCapacity": 10,
+            "BucketRate": 1,
+        }
+
+    def test_respects_disabled_matching_transaction_setting(self):
+        meter_provider = MeterProvider(
+            metric_readers=[InMemoryMetricReader()],
+            exemplar_filter=AlwaysOnExemplarFilter()
+        )
+        sampler = TestSampler(
+            meter_provider=meter_provider,
+            config=options(tracing=True, trigger_trace=True, transaction_settings=[TransactionSetting(tracing=False, matcher=lambda s :True)]),
+            initial=settings(enabled=True, signature_key=None)
+        )
+        memory_exporter = InMemorySpanExporter()
+        tracer_provider = TracerProvider(sampler=sampler)
+        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+        tracer = trace.get_tracer("respects_disabled_matching_transaction_setting", tracer_provider=tracer_provider)
+        with tracer.start_as_current_span("test") as span:
+            assert not span.is_recording()
+        spans = memory_exporter.get_finished_spans()
+        assert len(spans) == 0
+
+    def test_respects_first_matching_transaction_setting(self):
+        meter_provider = MeterProvider(
+            metric_readers=[InMemoryMetricReader()],
+            exemplar_filter=AlwaysOnExemplarFilter()
+        )
+        sampler = TestSampler(
+            meter_provider=meter_provider,
+            config=options(tracing=False, trigger_trace=False, transaction_settings=[
+                TransactionSetting(tracing=True, matcher=lambda s :True),
+                TransactionSetting(tracing=False, matcher=lambda s :True),
+            ]),
+            initial=settings(enabled=False, signature_key=None)
+        )
+        memory_exporter = InMemorySpanExporter()
+        tracer_provider = TracerProvider(sampler=sampler)
+        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+        tracer = trace.get_tracer("respects_first_matching_transaction_setting", tracer_provider=tracer_provider)
+        with tracer.start_as_current_span("test") as span:
+            assert span.is_recording()
+        spans = memory_exporter.get_finished_spans()
+        assert len(spans) == 1
+        assert spans[0].attributes == {
+            "SampleRate": 1_000_000,
+            "SampleSource": 6,
+            "BucketCapacity": 10,
+            "BucketRate": 1,
+        }
+
+    def test_matches_non_http_spans(self):
+        meter_provider = MeterProvider(
+            metric_readers=[InMemoryMetricReader()],
+            exemplar_filter=AlwaysOnExemplarFilter()
+        )
+        sampler = TestSampler(
+            meter_provider=meter_provider,
+            config=options(tracing=False, trigger_trace=False, transaction_settings=[
+                TransactionSetting(tracing=True, matcher=lambda s : s == "CLIENT:test"),
+            ]),
+            initial=settings(enabled=False, signature_key=None)
+        )
+        memory_exporter = InMemorySpanExporter()
+        tracer_provider = TracerProvider(sampler=sampler)
+        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+        tracer = trace.get_tracer("matches_non_http_spans", tracer_provider=tracer_provider)
+        with tracer.start_as_current_span("test", kind=SpanKind.CLIENT) as span:
+            assert span.is_recording()
+        spans = memory_exporter.get_finished_spans()
+        assert len(spans) == 1
+        assert spans[0].attributes == {
+            "SampleRate": 1_000_000,
+            "SampleSource": 6,
+            "BucketCapacity": 10,
+            "BucketRate": 1,
+        }
+
+    def test_matches_http_spans(self):
+        meter_provider = MeterProvider(
+            metric_readers=[InMemoryMetricReader()],
+            exemplar_filter=AlwaysOnExemplarFilter()
+        )
+        sampler = TestSampler(
+            meter_provider=meter_provider,
+            config=options(tracing=False, trigger_trace=False, transaction_settings=[
+                TransactionSetting(tracing=True, matcher=lambda s : s == "http://localhost/test"),
+            ]),
+            initial=settings(enabled=False, signature_key=None)
+        )
+        memory_exporter = InMemorySpanExporter()
+        tracer_provider = TracerProvider(sampler=sampler)
+        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+        tracer = trace.get_tracer("matches_http_spans", tracer_provider=tracer_provider)
+        with tracer.start_as_current_span("test", kind=SpanKind.SERVER, attributes={
+            HTTP_METHOD: "GET",
+            URL_SCHEME: "http",
+            SERVER_ADDRESS: "localhost",
+            URL_PATH: "/test",
+        }) as span:
+            assert span.is_recording()
+        spans = memory_exporter.get_finished_spans()
+        assert len(spans) == 1
+        assert spans[0].attributes['SampleRate'] == 1_000_000
+        assert spans[0].attributes['SampleSource'] == 6
+        assert spans[0].attributes['BucketCapacity'] == 10
+        assert spans[0].attributes['BucketRate'] == 1
+
+    def test_matches_deprecated_http_spans(self):
+        meter_provider = MeterProvider(
+            metric_readers=[InMemoryMetricReader()],
+            exemplar_filter=AlwaysOnExemplarFilter()
+        )
+        sampler = TestSampler(
+            meter_provider=meter_provider,
+            config=options(tracing=False, trigger_trace=False, transaction_settings=[
+                TransactionSetting(tracing=True, matcher=lambda s : s == "http://localhost/test"),
+            ]),
+            initial=settings(enabled=False, signature_key=None)
+        )
+        memory_exporter = InMemorySpanExporter()
+        tracer_provider = TracerProvider(sampler=sampler)
+        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+        tracer = trace.get_tracer("matches_deprecated_http_spans", tracer_provider=tracer_provider)
+        with tracer.start_as_current_span("test", kind=SpanKind.SERVER, attributes={
+            HTTP_REQUEST_METHOD: "GET",
+            URL_SCHEME: "http",
+            SERVER_ADDRESS: "localhost",
+            URL_PATH: "/test",
+        }) as span:
+            assert span.is_recording()
+        spans = memory_exporter.get_finished_spans()
+        assert len(spans) == 1
+        assert spans[0].attributes['SampleRate'] == 1_000_000
+        assert spans[0].attributes['SampleSource'] == 6
+        assert spans[0].attributes['BucketCapacity'] == 10
+        assert spans[0].attributes['BucketRate'] == 1
