@@ -159,7 +159,7 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
             "TriggerRelaxedBucketRate": 1,
             "TriggerStrictBucketCapacity": 6,
             "TriggerStrictBucketRate": 0.1,
-            "SignatureKey": "0sftj1EYX7JJp01DblJwkccYCIZ91fbU"
+            "SignatureKey": "signature"
         }
     }
     mock_response.status_code = 200
@@ -178,7 +178,7 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
             "TriggerRelaxedBucketRate": 1,
             "TriggerStrictBucketCapacity": 6,
             "TriggerStrictBucketRate": 0.1,
-            "SignatureKey": "0sftj1EYX7JJp01DblJwkccYCIZ91fbU"
+            "SignatureKey": "signature"
         }
     }
     mock_get.assert_called_with(
