@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import threading
 from logging import Logger
 from typing import Dict, Any, Optional, Sequence
 
@@ -105,9 +106,12 @@ class Sampler(OboeSampler):
             self._tracing_mode = None
         self._trigger_mode = config.trigger_trace_enabled
         self._transaction_settings = config.transaction_settings
-        self._ready = self._create_ready_promise()
+        self._ready = threading.Event()
         if initial:
             self.update_settings(initial)
+
+    def __str__(self) -> str:
+        return f"Sampler{self._tracing_mode}({self._trigger_mode}) {super.__str__(self)}"
 
     @property
     def tracing_mode(self):
@@ -121,16 +125,8 @@ class Sampler(OboeSampler):
     def transaction_settings(self):
         return self._transaction_settings
 
-    def _create_ready_promise(self):
-        self._ready_event = asyncio.Event()
-        return self._ready_event.wait()
-
-    async def wait_until_ready(self, timeout: int) -> bool:
-        try:
-            await asyncio.wait_for(self._ready, timeout)
-            return True
-        except asyncio.TimeoutError:
-            return False
+    def wait_until_ready(self, timeout: int) -> bool:
+        return self._ready.wait(timeout)
 
     @override
     def local_settings(self,
@@ -192,9 +188,9 @@ class Sampler(OboeSampler):
             parsed_settings, parsed_warning = parsed
             self.logger.debug("valid settings", parsed_settings, settings)
             super().update_settings(parsed_settings)
-            self._ready_event.set()
+            self._ready.set()
             if parsed_warning:
-                self.logger.warn(parsed_warning)
+                self.logger.warning(parsed_warning)
             return parsed_settings
         else:
             self.logger.debug("invalid settings", settings)
