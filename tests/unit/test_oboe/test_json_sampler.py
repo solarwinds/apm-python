@@ -1,3 +1,9 @@
+# © 2025 SolarWinds Worldwide, LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
 import json
 import os
 import tempfile
@@ -16,6 +22,7 @@ from solarwinds_apm.oboe.json_sampler import JsonSampler
 
 PATH = os.path.join(tempfile.gettempdir(), "solarwinds-apm-settings.json")
 
+
 @pytest.fixture
 def json_sampler_tracer_memory_exporter():
     meter_provider = MeterProvider(
@@ -24,7 +31,10 @@ def json_sampler_tracer_memory_exporter():
     )
     sampler = JsonSampler(
         meter_provider=meter_provider,
-        config=Configuration(enabled=True, service="test", token=None, collector="", headers={}, otlp=Otlp(traces="", metrics="", logs=""), log_level=0, tracing_mode=True, trigger_trace_enabled=True, export_logs_enabled=True, transaction_name=None, transaction_settings=[]),
+        config=Configuration(enabled=True, service="test", token=None, collector="", headers={},
+                             otlp=Otlp(traces="", metrics="", logs=""), log_level=0, tracing_mode=True,
+                             trigger_trace_enabled=True, export_logs_enabled=True, transaction_name=None,
+                             transaction_settings=[]),
         path=PATH
     )
     memory_exporter = InMemorySpanExporter()
@@ -57,6 +67,7 @@ def test_valid_file_samples_created_spans(json_sampler_tracer_memory_exporter):
     assert 'BucketRate' in spans[0].attributes
     os.remove(PATH)
 
+
 def test_invalid_file_no_samples_created_spans(json_sampler_tracer_memory_exporter):
     with open(PATH, "w") as f:
         json.dump({"hello": "world"}, f)
@@ -66,6 +77,7 @@ def test_invalid_file_no_samples_created_spans(json_sampler_tracer_memory_export
     spans = memory_exporter.get_finished_spans()
     assert len(spans) == 0
     os.remove(PATH)
+
 
 def test_missing_file_no_samples_created_spans(json_sampler_tracer_memory_exporter):
     try:
@@ -77,6 +89,7 @@ def test_missing_file_no_samples_created_spans(json_sampler_tracer_memory_export
         assert not span.is_recording()
     spans = memory_exporter.get_finished_spans()
     assert len(spans) == 0
+
 
 def test_expired_file_no_samples_created_spans(json_sampler_tracer_memory_exporter):
     with open(PATH, "w") as f:
@@ -96,6 +109,7 @@ def test_expired_file_no_samples_created_spans(json_sampler_tracer_memory_export
     spans = memory_exporter.get_finished_spans()
     assert len(spans) == 0
     os.remove(PATH)
+
 
 def test_samples_after_reading_new_settings(json_sampler_tracer_memory_exporter):
     with open(PATH, "w") as f:

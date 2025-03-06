@@ -1,7 +1,14 @@
+# © 2025 SolarWinds Worldwide, LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
 import time
 
+
 class _TokenBucket(object):
-    def __init__(self, capacity : float = 0, rate : float = 0):
+    def __init__(self, capacity: float = 0, rate: float = 0):
         self._capacity = capacity
         self._rate = rate
         self._tokens = capacity
@@ -27,7 +34,7 @@ class _TokenBucket(object):
         self._tokens += (elapsed * self.rate)
         self._tokens = min(self._tokens, self.capacity)
 
-    def update(self, new_capacity = None, new_rate = None):
+    def update(self, new_capacity=None, new_rate=None):
         self._calculate_tokens()
         if new_capacity is not None:
             # negative means reset to 0
@@ -40,7 +47,7 @@ class _TokenBucket(object):
             new_rate = max(0, new_rate)
             self._rate = new_rate
 
-    def consume(self, tokens = 1):
+    def consume(self, tokens=1):
         self._calculate_tokens()
         if self._tokens >= tokens:
             self._tokens -= tokens

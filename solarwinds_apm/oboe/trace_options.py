@@ -1,3 +1,9 @@
+# © 2025 SolarWinds Worldwide, LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
 import hashlib
 import hmac
 import logging
@@ -11,6 +17,7 @@ TIMESTAMP_KEY = "ts"
 SW_KEYS_KEY = "sw-keys"
 
 CUSTOM_KEY_REGEX = r'^custom-[^\s]+$'
+
 
 class TraceOptions:
     def __init__(self,
@@ -160,6 +167,7 @@ class TraceOptionsWithResponse(TraceOptions):
     def __str__(self):
         return f"{super.__str__(self)}, response={self._response}"
 
+
 class RequestHeaders:
     def __init__(self,
                  x_trace_options: Optional[str],
@@ -255,7 +263,7 @@ def parse_trace_options(header, logger=logging.getLogger(__name__)):
     return trace_options
 
 
-def stringify_trace_options_response(trace_options_response : TraceOptionsResponse):
+def stringify_trace_options_response(trace_options_response: TraceOptionsResponse):
     kvs = {
         'auth': trace_options_response.auth.value if trace_options_response.auth else None,
         'trigger-trace': trace_options_response.trigger_trace.value if trace_options_response.trigger_trace else None,

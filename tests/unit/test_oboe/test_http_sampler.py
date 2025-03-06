@@ -1,10 +1,14 @@
+# © 2025 SolarWinds Worldwide, LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
 import os
 import socket
-import time
-
-import pytest
 from unittest.mock import patch, MagicMock
 
+import pytest
 from opentelemetry import trace
 from opentelemetry.sdk.metrics import MeterProvider, AlwaysOnExemplarFilter
 from opentelemetry.sdk.metrics._internal.export import InMemoryMetricReader
@@ -12,8 +16,9 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
+from solarwinds_apm.oboe.configuration import Configuration, Otlp
 from solarwinds_apm.oboe.http_sampler import HttpSampler, DAEMON_THREAD_JOIN_TIMEOUT
-from solarwinds_apm.oboe.configuration import Configuration, Otlp, TransactionSetting
+
 
 def test_valid_service_key_samples_created_spans():
     # This test requires a valid service key to be set in the environment
@@ -61,6 +66,7 @@ def test_valid_service_key_samples_created_spans():
             assert "BucketCapacity" in spans[0].attributes
             assert "BucketRate" in spans[0].attributes
 
+
 def test_invalid_service_key_does_not_sample_created_spans():
     meter_provider = MeterProvider(
         metric_readers=[InMemoryMetricReader()],
@@ -96,6 +102,7 @@ def test_invalid_service_key_does_not_sample_created_spans():
     spans = memory_exporter.get_finished_spans()
     assert len(spans) == 0
 
+
 def test_invalid_collector_does_not_sample_created_spans():
     meter_provider = MeterProvider(
         metric_readers=[InMemoryMetricReader()],
@@ -130,6 +137,7 @@ def test_invalid_collector_does_not_sample_created_spans():
     spans = memory_exporter.get_finished_spans()
     assert len(spans) == 0
 
+
 @pytest.fixture
 def config():
     return Configuration(
@@ -147,9 +155,11 @@ def config():
         tracing_mode=None,
     )
 
+
 @pytest.fixture
 def meter_provider():
     return MeterProvider()
+
 
 @patch('requests.get')
 def test_fetch_from_collector_success(mock_get, config, meter_provider):
@@ -194,6 +204,7 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
         timeout=10)
     # one in constructor and one in test case
     assert mock_get.call_count == 2
+
 
 def test_shutdown(config, meter_provider):
     sampler = HttpSampler(meter_provider=meter_provider, config=config, initial=None)
