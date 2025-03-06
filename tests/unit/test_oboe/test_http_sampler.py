@@ -1,3 +1,4 @@
+import os
 import socket
 import time
 
@@ -14,45 +15,51 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 from solarwinds_apm.oboe.http_sampler import HttpSampler, DAEMON_THREAD_JOIN_TIMEOUT
 from solarwinds_apm.oboe.configuration import Configuration, Otlp, TransactionSetting
 
-# def test_valid_service_key_samples_created_spans():
-#     meter_provider = MeterProvider(
-#         metric_readers=[InMemoryMetricReader()],
-#         exemplar_filter=AlwaysOnExemplarFilter()
-#     )
-#     sampler = HttpSampler(
-#         meter_provider=meter_provider,
-#         config=Configuration(
-#             collector="https://apm.collector.na-01.cloud.solarwinds.com",
-#             service="apm-python-test",
-#             headers={
-#                 "Authorization": "Bearer good"
-#             },
-#             enabled=True,
-#             otlp=Otlp(traces="", metrics="", logs=""),
-#             log_level=0,
-#             trigger_trace_enabled=True,
-#             export_logs_enabled=True,
-#             tracing_mode=None,
-#             transaction_settings=[],
-#             token=None,
-#             transaction_name=None,
-#         ),
-#         initial=None
-#     )
-#     memory_exporter = InMemorySpanExporter()
-#     tracer_provider = TracerProvider(sampler=sampler)
-#     tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-#     tracer = trace.get_tracer("test", tracer_provider=tracer_provider)
-#     sampler.wait_until_ready(1)
-#     # time.sleep(10)
-#     with tracer.start_as_current_span("test") as span:
-#         assert span.is_recording()
-#     spans = memory_exporter.get_finished_spans()
-#     assert len(spans) == 1
-#     assert "SampleRate" in spans[0].attributes
-#     assert "SampleSource" in spans[0].attributes
-#     assert "BucketCapacity" in spans[0].attributes
-#     assert "BucketRate" in spans[0].attributes
+def test_valid_service_key_samples_created_spans():
+    # This test requires a valid service key to be set in the environment
+    service_key = os.getenv("SW_APM_SERVICE_KEY")
+    if service_key:
+        l = service_key.split(":")
+        if len(l) == 2:
+            bearer = l[0]
+            service = l[1]
+            meter_provider = MeterProvider(
+                metric_readers=[InMemoryMetricReader()],
+                exemplar_filter=AlwaysOnExemplarFilter()
+            )
+            sampler = HttpSampler(
+                meter_provider=meter_provider,
+                config=Configuration(
+                    collector="https://apm.collector.na-01.cloud.solarwinds.com",
+                    service=service,
+                    headers={
+                        "Authorization": f"Bearer {bearer}"
+                    },
+                    enabled=True,
+                    otlp=Otlp(traces="", metrics="", logs=""),
+                    log_level=0,
+                    trigger_trace_enabled=True,
+                    export_logs_enabled=True,
+                    tracing_mode=None,
+                    transaction_settings=[],
+                    token=None,
+                    transaction_name=None,
+                ),
+                initial=None
+            )
+            memory_exporter = InMemorySpanExporter()
+            tracer_provider = TracerProvider(sampler=sampler)
+            tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+            tracer = trace.get_tracer("test", tracer_provider=tracer_provider)
+            sampler.wait_until_ready(1)
+            with tracer.start_as_current_span("test") as span:
+                assert span.is_recording()
+            spans = memory_exporter.get_finished_spans()
+            assert len(spans) == 1
+            assert "SampleRate" in spans[0].attributes
+            assert "SampleSource" in spans[0].attributes
+            assert "BucketCapacity" in spans[0].attributes
+            assert "BucketRate" in spans[0].attributes
 
 def test_invalid_service_key_does_not_sample_created_spans():
     meter_provider = MeterProvider(
@@ -69,7 +76,7 @@ def test_invalid_service_key_does_not_sample_created_spans():
             },
             enabled=True,
             otlp=Otlp(traces="", metrics="", logs=""),
-            log_level=6,
+            log_level=0,
             trigger_trace_enabled=True,
             export_logs_enabled=True,
             tracing_mode=None,
@@ -103,7 +110,7 @@ def test_invalid_collector_does_not_sample_created_spans():
             },
             enabled=True,
             otlp=Otlp(traces="", metrics="", logs=""),
-            log_level=6,
+            log_level=0,
             trigger_trace_enabled=True,
             export_logs_enabled=True,
             tracing_mode=None,
@@ -187,15 +194,6 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
         timeout=10)
     # one in constructor and one in test case
     assert mock_get.call_count == 2
-
-# @patch('requests.get')
-# def test_fetch_from_collector_failure(mock_get, config, meter_provider):
-#     mock_get.side_effect = Exception("Network error")
-#
-#     sampler = HttpSampler(meter_provider=meter_provider, config=config, initial=None)
-#
-#     with pytest.raises(Exception, match="Network error"):
-#         sampler._fetch_from_collector()
 
 def test_shutdown(config, meter_provider):
     sampler = HttpSampler(meter_provider=meter_provider, config=config, initial=None)
