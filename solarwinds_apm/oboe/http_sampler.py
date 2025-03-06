@@ -21,7 +21,6 @@ from opentelemetry.sdk.trace import TracerProvider
 
 from opentelemetry.trace import SpanKind, Link
 
-from solarwinds_apm.oboe.backoff import backoff
 from solarwinds_apm.oboe.configuration import Configuration
 from solarwinds_apm.oboe.sampler import Sampler
 
@@ -77,10 +76,9 @@ class HttpSampler(Sampler):
             message = "Failed to retrieve sampling settings"
             if isinstance(error, Exception):
                 message += f" ({error})"
-            message += ", tracing will be disabled until valid ones are available."
+            message += ", tracing will be disabled after time-to-live of the previous settings expired, until valid ones are available."
             self._warn(message, error)
 
-    @backoff(base=RETRY_INITIAL_TIMEOUT, multiplier=MULTIPLIER, cap=RETRY_MAX_TIMEOUT, retries=RETRY_MAX_ATTEMPTS)
     def _fetch_from_collector(self):
         url = f"{self._url}/v1/settings/{self._service}/{self._hostname}"
         self.logger.debug(f"retrieving sampling settings from {url}")
