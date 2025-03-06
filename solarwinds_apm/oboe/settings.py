@@ -1,5 +1,11 @@
-from typing import Optional, Dict
+# © 2025 SolarWinds Worldwide, LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
 from enum import Enum, IntEnum
+from typing import Optional, Dict
 
 
 class SampleSource(IntEnum):
@@ -55,7 +61,8 @@ class BucketSettings:
 
 
 class Settings:
-    def __init__(self, sample_rate: int, sample_source: SampleSource, flags: Flags, buckets: Dict[BucketType, BucketSettings], signature_key: Optional[str], timestamp: int, ttl: int):
+    def __init__(self, sample_rate: int, sample_source: SampleSource, flags: Flags,
+                 buckets: Dict[BucketType, BucketSettings], signature_key: Optional[str], timestamp: int, ttl: int):
         self._sample_rate = sample_rate
         self._sample_source = sample_source
         self._flags = flags
@@ -128,6 +135,7 @@ class Settings:
     def __str__(self):
         return f"Settings(sample_rate={self._sample_rate}, sample_source={self._sample_source}, flags={self._flags}, buckets={self._buckets}, timestamp={self._timestamp}, ttl={self._ttl})"
 
+
 class LocalSettings:
     def __init__(self, tracing_mode: Optional[TracingMode], trigger_mode: bool):
         self._tracing_mode = tracing_mode
@@ -167,6 +175,7 @@ def merge(remote: Optional[Settings] = None, local: Optional[LocalSettings] = No
         return remote
     else:
         return _merge(remote, local)
+
 
 def _merge(remote: Settings, local: LocalSettings) -> Settings:
     flags = local.tracing_mode if local.tracing_mode is not None else remote.flags

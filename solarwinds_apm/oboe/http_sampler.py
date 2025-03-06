@@ -1,25 +1,16 @@
-import http
-import os
-import json
-import logging
-import asyncio
-import threading
-import time
-from asyncio import events
-from datetime import datetime, timedelta
-import socket
-from typing import Optional, Any, Dict
-from urllib.parse import quote
+# © 2025 SolarWinds Worldwide, LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-from requests.adapters import HTTPAdapter, Retry
+import logging
+import socket
+import threading
+from typing import Optional, Any, Dict
 
 import requests
-
-from opentelemetry.context import Context
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.trace import TracerProvider
-
-from opentelemetry.trace import SpanKind, Link
 
 from solarwinds_apm.oboe.configuration import Configuration
 from solarwinds_apm.oboe.sampler import Sampler
@@ -30,12 +21,14 @@ RETRY_MAX_TIMEOUT = 60  # 60s
 RETRY_MAX_ATTEMPTS = 20
 MULTIPLIER = 1.5
 
-DAEMON_THREAD_JOIN_TIMEOUT = 10 # 10s
-REQUEST_INTERVAL = 60 # 60s
+DAEMON_THREAD_JOIN_TIMEOUT = 10  # 10s
+REQUEST_INTERVAL = 60  # 60s
+
 
 class HttpSampler(Sampler):
-    def __init__(self, meter_provider: MeterProvider, config: Configuration, initial: Optional[Dict[str, Any]],):
-        super().__init__(meter_provider=meter_provider, config=config, logger=logging.getLogger(__name__), initial=initial)
+    def __init__(self, meter_provider: MeterProvider, config: Configuration, initial: Optional[Dict[str, Any]], ):
+        super().__init__(meter_provider=meter_provider, config=config, logger=logging.getLogger(__name__),
+                         initial=initial)
         self._url = config.collector
         self._service = config.service
         self._headers = config.headers
@@ -50,7 +43,7 @@ class HttpSampler(Sampler):
 
     def _warn(self, message: str, *args: Any):
         if message != self._last_warning_message:
-            self.logger.warn(message, *args)
+            self.logger.warning(message, *args)
             self._last_warning_message = message
         else:
             self.logger.debug(message, *args)

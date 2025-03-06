@@ -1,12 +1,17 @@
+# © 2025 SolarWinds Worldwide, LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
 import logging
 import time
-from typing import Optional, Sequence, Dict, Any
+from typing import Optional, Any
 
-import pytest
 from opentelemetry import trace
 from opentelemetry.sdk.metrics import MeterProvider, AlwaysOnExemplarFilter
 from opentelemetry.sdk.metrics._internal.export import InMemoryMetricReader
-from opentelemetry.sdk.trace import TracerProvider, export
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.semconv._incubating.attributes.http_attributes import HTTP_METHOD, HTTP_STATUS_CODE, HTTP_SCHEME, \
@@ -21,16 +26,18 @@ from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting,
 from solarwinds_apm.oboe.sampler import http_span_metadata, parse_settings, Sampler
 from solarwinds_apm.oboe.settings import Settings, SampleSource, Flags, BucketType, BucketSettings
 
-from opentelemetry.test.globals_test import reset_trace_globals
 
 class TestSampler(Sampler):
     def __init__(self, meter_provider: MeterProvider, config: Configuration, initial: Any):
-        super().__init__(meter_provider=meter_provider, config=config, logger=logging.getLogger(__name__), initial=initial)
+        super().__init__(meter_provider=meter_provider, config=config, logger=logging.getLogger(__name__),
+                         initial=initial)
 
     def __str__(self):
         raise Exception("Test sampler")
 
-def options(tracing: Optional[bool], trigger_trace: bool, transaction_settings: list[TransactionSetting]) -> Configuration:
+
+def options(tracing: Optional[bool], trigger_trace: bool,
+            transaction_settings: list[TransactionSetting]) -> Configuration:
     return Configuration(
         tracing_mode=tracing,
         trigger_trace_enabled=trigger_trace,
@@ -45,6 +52,7 @@ def options(tracing: Optional[bool], trigger_trace: bool, transaction_settings: 
         export_logs_enabled=False,
         transaction_name=None,
     )
+
 
 def settings(enabled: bool, signature_key: Optional[str]):
     return {
@@ -63,11 +71,12 @@ def settings(enabled: bool, signature_key: Optional[str]):
         "ttl": 60
     }
 
+
 class TestHTTPSpanMetadataName:
     def test_handles_non_http_spans_properly(self):
         span = {
             "kind": SpanKind.SERVER,
-            "attributes": { "network.transport": "udp" },
+            "attributes": {"network.transport": "udp"},
         }
         output = http_span_metadata(span["kind"], span["attributes"])
         assert output == {"http": False}
@@ -107,6 +116,7 @@ class TestHTTPSpanMetadataName:
             "path": "",
             "url": "https://solarwinds.com",
         }
+
     def test_handles_legacy_http_server_spans_properly(self):
         span = {
             "kind": SpanKind.SERVER,
@@ -128,6 +138,7 @@ class TestHTTPSpanMetadataName:
             "path": "",
             "url": "https://solarwinds.com",
         }
+
 
 class TestParseSettingsName:
     def test_correctly_parses_JSON_settings(self):
@@ -179,7 +190,8 @@ class TestSamplerName:
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
         tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-        tracer = trace.get_tracer("respects_enabled_settings_when_no_config_or_transaction_settings", tracer_provider=tracer_provider)
+        tracer = trace.get_tracer("respects_enabled_settings_when_no_config_or_transaction_settings",
+                                  tracer_provider=tracer_provider)
         with tracer.start_as_current_span("test") as span:
             assert span.is_recording()
         spans = memory_exporter.get_finished_spans()
@@ -224,7 +236,8 @@ class TestSamplerName:
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
         tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-        tracer = trace.get_tracer("respects_enabled_config_when_no_transaction_settings", tracer_provider=tracer_provider)
+        tracer = trace.get_tracer("respects_enabled_config_when_no_transaction_settings",
+                                  tracer_provider=tracer_provider)
         with tracer.start_as_current_span("test") as span:
             assert span.is_recording()
         spans = memory_exporter.get_finished_spans()
@@ -249,7 +262,8 @@ class TestSamplerName:
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
         tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-        tracer = trace.get_tracer("respects_disabled_config_when_no_transaction_settings", tracer_provider=tracer_provider)
+        tracer = trace.get_tracer("respects_disabled_config_when_no_transaction_settings",
+                                  tracer_provider=tracer_provider)
         with tracer.start_as_current_span("test") as span:
             assert not span.is_recording()
         spans = memory_exporter.get_finished_spans()
@@ -262,7 +276,8 @@ class TestSamplerName:
         )
         sampler = TestSampler(
             meter_provider=meter_provider,
-            config=options(tracing=False, trigger_trace=False, transaction_settings=[TransactionSetting(tracing=True, matcher=lambda s :True)]),
+            config=options(tracing=False, trigger_trace=False,
+                           transaction_settings=[TransactionSetting(tracing=True, matcher=lambda s: True)]),
             initial=settings(enabled=False, signature_key=None)
         )
         memory_exporter = InMemorySpanExporter()
@@ -287,7 +302,8 @@ class TestSamplerName:
         )
         sampler = TestSampler(
             meter_provider=meter_provider,
-            config=options(tracing=True, trigger_trace=True, transaction_settings=[TransactionSetting(tracing=False, matcher=lambda s :True)]),
+            config=options(tracing=True, trigger_trace=True,
+                           transaction_settings=[TransactionSetting(tracing=False, matcher=lambda s: True)]),
             initial=settings(enabled=True, signature_key=None)
         )
         memory_exporter = InMemorySpanExporter()
@@ -307,8 +323,8 @@ class TestSamplerName:
         sampler = TestSampler(
             meter_provider=meter_provider,
             config=options(tracing=False, trigger_trace=False, transaction_settings=[
-                TransactionSetting(tracing=True, matcher=lambda s :True),
-                TransactionSetting(tracing=False, matcher=lambda s :True),
+                TransactionSetting(tracing=True, matcher=lambda s: True),
+                TransactionSetting(tracing=False, matcher=lambda s: True),
             ]),
             initial=settings(enabled=False, signature_key=None)
         )
@@ -335,7 +351,7 @@ class TestSamplerName:
         sampler = TestSampler(
             meter_provider=meter_provider,
             config=options(tracing=False, trigger_trace=False, transaction_settings=[
-                TransactionSetting(tracing=True, matcher=lambda s : s == "CLIENT:test"),
+                TransactionSetting(tracing=True, matcher=lambda s: s == "CLIENT:test"),
             ]),
             initial=settings(enabled=False, signature_key=None)
         )
@@ -362,7 +378,7 @@ class TestSamplerName:
         sampler = TestSampler(
             meter_provider=meter_provider,
             config=options(tracing=False, trigger_trace=False, transaction_settings=[
-                TransactionSetting(tracing=True, matcher=lambda s : s == "http://localhost/test"),
+                TransactionSetting(tracing=True, matcher=lambda s: s == "http://localhost/test"),
             ]),
             initial=settings(enabled=False, signature_key=None)
         )
@@ -392,7 +408,7 @@ class TestSamplerName:
         sampler = TestSampler(
             meter_provider=meter_provider,
             config=options(tracing=False, trigger_trace=False, transaction_settings=[
-                TransactionSetting(tracing=True, matcher=lambda s : s == "http://localhost/test"),
+                TransactionSetting(tracing=True, matcher=lambda s: s == "http://localhost/test"),
             ]),
             initial=settings(enabled=False, signature_key=None)
         )
