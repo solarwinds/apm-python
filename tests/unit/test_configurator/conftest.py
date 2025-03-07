@@ -99,7 +99,7 @@ def mock_blprocessor(mocker):
 @pytest.fixture(name="mock_tracerprovider")
 def mock_tracerprovider(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.TracerProvider"
+        "solarwinds_apm.configurator.SolarwindsTracerProvider"
     )
 
 @pytest.fixture(name="mock_meterprovider")
