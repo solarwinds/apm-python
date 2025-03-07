@@ -121,21 +121,29 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()
         )
 
+        def handle_baggage_header(baggage_header):
+            sanitized_baggage = self.remove_custom_naming_baggage_header(
+                baggage_header
+            )
+            if sanitized_baggage != "":
+                # Re-inject if sanitized baggage non-empty
+                setter.set(
+                    carrier, self._BAGGAGE_HEADER_NAME, sanitized_baggage
+                )
+            else:
+                # Or, remove baggage from carrier to prevent empty header
+                del carrier[self._BAGGAGE_HEADER_NAME]
+
         # Remove any baggage stored for custom transaction naming
         if baggage_header:
-            baggage_header = self.remove_custom_naming_baggage_header(
-                baggage_header,
-            )
-            # Re-inject if sanitized baggage non-empty
-            if baggage_header != "":
-                setter.set(
-                    carrier,
-                    self._BAGGAGE_HEADER_NAME,
-                    baggage_header,
-                )
-            # Or, remove baggage from carrier to prevent empty header
-            else:
-                del carrier[self._BAGGAGE_HEADER_NAME]
+            # Note: OTel instrumentors of messaging systems (e.g. boto3) may set
+            # baggage header value as a dictionary, not a string.
+            if isinstance(baggage_header, dict):
+                baggage_stringvalue = baggage_header.get("StringValue")
+                handle_baggage_header(baggage_stringvalue)
+            elif isinstance(baggage_header, str):
+                handle_baggage_header(baggage_header)
+            # Else: leave baggage header as is in carrier
 
     def remove_custom_naming_baggage_header(
         self,
