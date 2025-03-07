@@ -12,7 +12,7 @@ from solarwinds_apm.oboe.settings import Flags, LocalSettings, merge, SampleSour
 def test_merge_override_unset():
     remote = Settings(
         sample_rate=1,
-        sample_source=SampleSource.LocalDefault,
+        sample_source=SampleSource.LOCAL_DEFAULT,
         flags=Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS | Flags.TRIGGERED_TRACE,
         buckets={},
         signature_key=None,
@@ -31,7 +31,7 @@ def test_merge_override_unset():
 def test_merge_override_unset_always_trigger_enabled():
     remote = Settings(
         sample_rate=1,
-        sample_source=SampleSource.LocalDefault,
+        sample_source=SampleSource.LOCAL_DEFAULT,
         flags=Flags.OK,
         buckets={},
         signature_key=None,
@@ -50,7 +50,7 @@ def test_merge_override_unset_always_trigger_enabled():
 def test_merge_override_unset_defaults_to_remote():
     remote = Settings(
         sample_rate=1,
-        sample_source=SampleSource.LocalDefault,
+        sample_source=SampleSource.LOCAL_DEFAULT,
         flags=Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS | Flags.TRIGGERED_TRACE,
         buckets={},
         signature_key=None,
@@ -69,7 +69,7 @@ def test_merge_override_unset_defaults_to_remote():
 def test_merge_override_set_never_trigger_disabled():
     remote = Settings(
         sample_rate=1,
-        sample_source=SampleSource.LocalDefault,
+        sample_source=SampleSource.LOCAL_DEFAULT,
         flags=Flags.OVERRIDE | Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS | Flags.TRIGGERED_TRACE,
         buckets={},
         signature_key=None,
@@ -88,7 +88,7 @@ def test_merge_override_set_never_trigger_disabled():
 def test_merge_override_set_always_trigger_enabled():
     remote = Settings(
         sample_rate=1,
-        sample_source=SampleSource.LocalDefault,
+        sample_source=SampleSource.LOCAL_DEFAULT,
         flags=Flags.OVERRIDE,
         buckets={},
         signature_key=None,
@@ -107,7 +107,7 @@ def test_merge_override_set_always_trigger_enabled():
 def test_merge_override_set_defaults_to_remote():
     remote = Settings(
         sample_rate=1,
-        sample_source=SampleSource.LocalDefault,
+        sample_source=SampleSource.LOCAL_DEFAULT,
         flags=Flags.OVERRIDE,
         buckets={},
         signature_key=None,

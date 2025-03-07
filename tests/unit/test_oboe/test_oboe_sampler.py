@@ -9,7 +9,8 @@ import hmac
 import logging
 import os
 import time
-from typing import Optional, Sequence
+from typing import Optional
+from collections.abc import Sequence
 from unittest.mock import Mock
 
 import pytest
@@ -253,7 +254,7 @@ class TestLocalSpan:
         return TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.OK,
                 buckets={},
                 signature_key=None,
@@ -286,7 +287,7 @@ class TestInvalidXTraceOptionsSignature:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=1_000_000,
-                sample_source=SampleSource.Remote,
+                sample_source=SampleSource.REMOTE,
                 flags=Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS,
                 buckets={},
                 signature_key=None,
@@ -310,7 +311,7 @@ class TestInvalidXTraceOptionsSignature:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=1_000_000,
-                sample_source=SampleSource.Remote,
+                sample_source=SampleSource.REMOTE,
                 flags=Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS,
                 buckets={},
                 signature_key="key",
@@ -335,7 +336,7 @@ class TestInvalidXTraceOptionsSignature:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=1_000_000,
-                sample_source=SampleSource.Remote,
+                sample_source=SampleSource.REMOTE,
                 flags=Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS,
                 buckets={},
                 signature_key="key1",
@@ -374,7 +375,7 @@ class TestMissingSettings:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_THROUGH_ALWAYS,
                 buckets={},
                 signature_key=None,
@@ -421,7 +422,7 @@ class TestEntrySpanWithValidSwContextXTraceOptions:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_THROUGH_ALWAYS,
                 buckets={},
                 signature_key=None,
@@ -443,7 +444,7 @@ class TestEntrySpanWithValidSwContextXTraceOptions:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_THROUGH_ALWAYS,
                 buckets={},
                 signature_key=None,
@@ -468,7 +469,7 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysSet:
         return TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_THROUGH_ALWAYS,
                 buckets={},
                 signature_key=None,
@@ -527,7 +528,7 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysUnset:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_START,
                 buckets={},
                 signature_key=None,
@@ -548,7 +549,7 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysUnset:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.OK,
                 buckets={},
                 signature_key=None,
@@ -571,7 +572,7 @@ class TestTriggerTraceRequestedTriggeredTraceSetUnsigned:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_START | Flags.TRIGGERED_TRACE,
                 buckets={
                     BucketType.TRIGGER_STRICT: BucketSettings(capacity=10, rate=5),
@@ -602,7 +603,7 @@ class TestTriggerTraceRequestedTriggeredTraceSetUnsigned:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_START | Flags.TRIGGERED_TRACE,
                 buckets={
                     BucketType.TRIGGER_STRICT: BucketSettings(capacity=0, rate=0),
@@ -634,7 +635,7 @@ class TestTriggerTraceRequestedTriggeredTraceSetSigned:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_START | Flags.TRIGGERED_TRACE,
                 buckets={
                     BucketType.TRIGGER_STRICT: BucketSettings(capacity=0, rate=0),
@@ -667,7 +668,7 @@ class TestTriggerTraceRequestedTriggeredTraceSetSigned:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_START | Flags.TRIGGERED_TRACE,
                 buckets={
                     BucketType.TRIGGER_STRICT: BucketSettings(capacity=10, rate=5),
@@ -700,7 +701,7 @@ class TestTriggerTraceRequestedTriggeredTraceUnset:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_START,
                 buckets={},
                 signature_key=None,
@@ -727,7 +728,7 @@ class TestTriggerTraceRequestedDiceRoll:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_START,
                 buckets={},
                 signature_key=None,
@@ -749,7 +750,7 @@ class TestTriggerTraceRequestedDiceRoll:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=1_000_000,
-                sample_source=SampleSource.Remote,
+                sample_source=SampleSource.REMOTE,
                 flags=Flags.SAMPLE_START,
                 buckets={
                     BucketType.DEFAULT: BucketSettings(capacity=10, rate=5),
@@ -777,7 +778,7 @@ class TestTriggerTraceRequestedDiceRoll:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=1_000_000,
-                sample_source=SampleSource.Remote,
+                sample_source=SampleSource.REMOTE,
                 flags=Flags.SAMPLE_START,
                 buckets={
                     BucketType.DEFAULT: BucketSettings(capacity=0, rate=0),
@@ -805,7 +806,7 @@ class TestTriggerTraceRequestedDiceRoll:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_START,
                 buckets={
                     BucketType.DEFAULT: BucketSettings(capacity=10, rate=5)
@@ -834,7 +835,7 @@ class TestTriggerTraceRequestedSampleStartUnset:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.OK,
                 buckets={},
                 signature_key=None,
@@ -856,7 +857,7 @@ class TestTriggerTraceRequestedSampleStartUnset:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.SAMPLE_THROUGH_ALWAYS,
                 buckets={},
                 signature_key=None,
@@ -877,7 +878,7 @@ class TestTriggerTraceRequestedSampleStartUnset:
         sampler = TestSampler(TestSamplerOptions(
             settings=Settings(
                 sample_rate=0,
-                sample_source=SampleSource.LocalDefault,
+                sample_source=SampleSource.LOCAL_DEFAULT,
                 flags=Flags.OK,
                 buckets={},
                 signature_key=None,

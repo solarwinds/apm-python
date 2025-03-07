@@ -162,7 +162,7 @@ class TestParseSettingsName:
         output, warnings = parse_settings(settings)
         assert output == Settings(
             sample_rate=500_000,
-            sample_source=SampleSource.Remote,
+            sample_source=SampleSource.REMOTE,
             flags=Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS | Flags.TRIGGERED_TRACE | Flags.OVERRIDE,
             buckets={
                 BucketType.DEFAULT: BucketSettings(capacity=0.2, rate=0.1),

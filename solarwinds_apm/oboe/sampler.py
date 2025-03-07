@@ -5,8 +5,9 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import threading
+from collections.abc import Sequence
 from logging import Logger
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Optional
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.metrics import MeterProvider
@@ -96,16 +97,16 @@ def parse_settings(unparsed: Any) -> Optional[tuple[Settings, Optional[str]]]:
         return None
     flags = Flags.OK
     if "flags" in unparsed and isinstance(unparsed["flags"], str):
-        for f in unparsed["flags"].split(","):
+        for unparsed_flag in unparsed["flags"].split(","):
             flag = {
                 "OVERRIDE": Flags.OVERRIDE,
                 "SAMPLE_START": Flags.SAMPLE_START,
                 "SAMPLE_THROUGH_ALWAYS": Flags.SAMPLE_THROUGH_ALWAYS,
                 "TRIGGER_TRACE": Flags.TRIGGERED_TRACE,
-            }.get(f)
+            }.get(unparsed_flag)
             if flag:
                 flags |= flag
-    buckets: Dict[BucketType, BucketSettings] = {}
+    buckets: dict[BucketType, BucketSettings] = {}
     signature_key = None
     if "arguments" in unparsed:
         args = unparsed["arguments"]
@@ -135,7 +136,7 @@ def parse_settings(unparsed: Any) -> Optional[tuple[Settings, Optional[str]]]:
     warning = unparsed.get("warning")
     return (
         Settings(
-            sample_source=SampleSource.Remote,
+            sample_source=SampleSource.REMOTE,
             sample_rate=sample_rate,
             flags=flags,
             timestamp=timestamp,
@@ -171,7 +172,7 @@ class Sampler(OboeSampler):
             self.update_settings(initial)
 
     def __str__(self) -> str:
-        return f"Sampler{self._tracing_mode}({self._trigger_mode}) {super.__str__(self)}"
+        return f"Sampler{self._tracing_mode}({self._trigger_mode}) {super().__str__(self)}"
 
     @property
     def tracing_mode(self):
@@ -211,10 +212,14 @@ class Sampler(OboeSampler):
         identifier = (
             meta["url"] if meta["http"] else f"{SpanKind(kind).name}:{name}"
         )
-        for t in self.transaction_settings:
-            if t.matcher and t.matcher(identifier):
+        for transaction_setting in self.transaction_settings:
+            if transaction_setting.matcher and transaction_setting.matcher(
+                identifier
+            ):
                 settings.tracing_mode = (
-                    TracingMode.ALWAYS if t.tracing else TracingMode.NEVER
+                    TracingMode.ALWAYS
+                    if transaction_setting.tracing
+                    else TracingMode.NEVER
                 )
                 break
         return settings
@@ -276,6 +281,5 @@ class Sampler(OboeSampler):
             if parsed_warning:
                 self.logger.warning(parsed_warning)
             return parsed_settings
-        else:
-            self.logger.debug("invalid settings", settings)
-            return None
+        self.logger.debug("invalid settings", settings)
+        return None

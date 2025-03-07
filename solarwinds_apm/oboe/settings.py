@@ -5,12 +5,12 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 from enum import Enum, IntEnum
-from typing import Dict, Optional
+from typing import Optional
 
 
 class SampleSource(IntEnum):
-    LocalDefault = 2
-    Remote = 6
+    LOCAL_DEFAULT = 2
+    REMOTE = 6
 
 
 class Flags(IntEnum):
@@ -66,7 +66,7 @@ class Settings:
         sample_rate: int,
         sample_source: SampleSource,
         flags: Flags,
-        buckets: Dict[BucketType, BucketSettings],
+        buckets: dict[BucketType, BucketSettings],
         signature_key: Optional[str],
         timestamp: int,
         ttl: int,
@@ -190,14 +190,11 @@ class LocalSettings:
 def merge(
     remote: Optional[Settings] = None, local: Optional[LocalSettings] = None
 ) -> Optional[Settings]:
-    if remote is None and local is None:
+    if remote is None:
         return None
-    elif remote is None:
-        return local
-    elif local is None:
+    if local is None:
         return remote
-    else:
-        return _merge(remote, local)
+    return _merge(remote, local)
 
 
 def _merge(remote: Settings, local: LocalSettings) -> Settings:
