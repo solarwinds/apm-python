@@ -5,7 +5,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 from enum import Enum, IntEnum
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 
 class SampleSource(IntEnum):
@@ -61,8 +61,16 @@ class BucketSettings:
 
 
 class Settings:
-    def __init__(self, sample_rate: int, sample_source: SampleSource, flags: Flags,
-                 buckets: Dict[BucketType, BucketSettings], signature_key: Optional[str], timestamp: int, ttl: int):
+    def __init__(
+        self,
+        sample_rate: int,
+        sample_source: SampleSource,
+        flags: Flags,
+        buckets: Dict[BucketType, BucketSettings],
+        signature_key: Optional[str],
+        timestamp: int,
+        ttl: int,
+    ):
         self._sample_rate = sample_rate
         self._sample_source = sample_source
         self._flags = flags
@@ -130,14 +138,24 @@ class Settings:
     def __eq__(self, other):
         if not isinstance(other, Settings):
             return NotImplemented
-        return self._sample_rate == other._sample_rate and self._sample_source == other._sample_source and self._flags == other._flags and self._buckets == other._buckets and self._signature_key == other._signature_key and self._timestamp == other._timestamp and self._ttl == other._ttl
+        return (
+            self._sample_rate == other._sample_rate
+            and self._sample_source == other._sample_source
+            and self._flags == other._flags
+            and self._buckets == other._buckets
+            and self._signature_key == other._signature_key
+            and self._timestamp == other._timestamp
+            and self._ttl == other._ttl
+        )
 
     def __str__(self):
         return f"Settings(sample_rate={self._sample_rate}, sample_source={self._sample_source}, flags={self._flags}, buckets={self._buckets}, timestamp={self._timestamp}, ttl={self._ttl})"
 
 
 class LocalSettings:
-    def __init__(self, tracing_mode: Optional[TracingMode], trigger_mode: bool):
+    def __init__(
+        self, tracing_mode: Optional[TracingMode], trigger_mode: bool
+    ):
         self._tracing_mode = tracing_mode
         self._trigger_mode = trigger_mode
 
@@ -160,13 +178,18 @@ class LocalSettings:
     def __eq__(self, other):
         if not isinstance(other, LocalSettings):
             return NotImplemented
-        return self._tracing_mode == other._tracing_mode and self._trigger_mode == other._trigger_mode
+        return (
+            self._tracing_mode == other._tracing_mode
+            and self._trigger_mode == other._trigger_mode
+        )
 
     def __str__(self):
         return f"LocalSettings(tracing_mode={self._tracing_mode}, trigger_mode={self._trigger_mode})"
 
 
-def merge(remote: Optional[Settings] = None, local: Optional[LocalSettings] = None) -> Optional[Settings]:
+def merge(
+    remote: Optional[Settings] = None, local: Optional[LocalSettings] = None
+) -> Optional[Settings]:
     if remote is None and local is None:
         return None
     elif remote is None:
@@ -178,7 +201,9 @@ def merge(remote: Optional[Settings] = None, local: Optional[LocalSettings] = No
 
 
 def _merge(remote: Settings, local: LocalSettings) -> Settings:
-    flags = local.tracing_mode if local.tracing_mode is not None else remote.flags
+    flags = (
+        local.tracing_mode if local.tracing_mode is not None else remote.flags
+    )
 
     if local.trigger_mode:
         flags |= Flags.TRIGGERED_TRACE
@@ -196,5 +221,5 @@ def _merge(remote: Settings, local: LocalSettings) -> Settings:
         buckets=remote.buckets,
         signature_key=remote.signature_key,
         timestamp=remote.timestamp,
-        ttl=remote.ttl
+        ttl=remote.ttl,
     )

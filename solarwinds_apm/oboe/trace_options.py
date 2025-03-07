@@ -10,22 +10,24 @@ import logging
 import re
 import time
 from enum import Enum
-from typing import Optional, Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 TRIGGER_TRACE_KEY = "trigger-trace"
 TIMESTAMP_KEY = "ts"
 SW_KEYS_KEY = "sw-keys"
 
-CUSTOM_KEY_REGEX = r'^custom-[^\s]+$'
+CUSTOM_KEY_REGEX = r"^custom-[^\s]+$"
 
 
 class TraceOptions:
-    def __init__(self,
-                 trigger_trace: Optional[bool],
-                 timestamp: Optional[int],
-                 sw_keys: Optional[str],
-                 custom: Dict[str, str],
-                 ignored: List[Tuple[str, Optional[str]]]):
+    def __init__(
+        self,
+        trigger_trace: Optional[bool],
+        timestamp: Optional[int],
+        sw_keys: Optional[str],
+        custom: Dict[str, str],
+        ignored: List[Tuple[str, Optional[str]]],
+    ):
         self._trigger_trace = trigger_trace
         self._timestamp = timestamp
         self._sw_keys = sw_keys
@@ -75,7 +77,13 @@ class TraceOptions:
     def __eq__(self, other):
         if not isinstance(other, TraceOptions):
             return NotImplemented
-        return self._trigger_trace == other._trigger_trace and self._timestamp == other._timestamp and self._sw_keys == other._sw_keys and self._custom == other._custom and self._ignored == other._ignored
+        return (
+            self._trigger_trace == other._trigger_trace
+            and self._timestamp == other._timestamp
+            and self._sw_keys == other._sw_keys
+            and self._custom == other._custom
+            and self._ignored == other._ignored
+        )
 
     def __str__(self):
         return f"trigger_trace={self._trigger_trace}, timestamp={self._timestamp}, sw_keys={self._sw_keys}, custom={self._custom}, ignored={self._ignored}"
@@ -99,10 +107,12 @@ class TriggerTrace(Enum):
 
 
 class TraceOptionsResponse:
-    def __init__(self,
-                 auth: Optional[Auth],
-                 trigger_trace: Optional[TriggerTrace],
-                 ignored: Optional[List[str]]):
+    def __init__(
+        self,
+        auth: Optional[Auth],
+        trigger_trace: Optional[TriggerTrace],
+        ignored: Optional[List[str]],
+    ):
         self._auth = auth
         self._trigger_trace = trigger_trace
         self._ignored = ignored
@@ -134,20 +144,26 @@ class TraceOptionsResponse:
     def __eq__(self, other):
         if not isinstance(other, TraceOptionsResponse):
             return NotImplemented
-        return self._auth == other._auth and self._trigger_trace == other._trigger_trace and self._ignored == other._ignored
+        return (
+            self._auth == other._auth
+            and self._trigger_trace == other._trigger_trace
+            and self._ignored == other._ignored
+        )
 
     def __str__(self):
         return f"auth={self._auth}, trigger_trace={self._trigger_trace}, ignored={self._ignored}"
 
 
 class TraceOptionsWithResponse(TraceOptions):
-    def __init__(self,
-                 trigger_trace: Optional[bool],
-                 timestamp: Optional[int],
-                 sw_keys: Optional[str],
-                 custom: Dict[str, str],
-                 ignored: List[Tuple[str, Optional[str]]],
-                 response: TraceOptionsResponse):
+    def __init__(
+        self,
+        trigger_trace: Optional[bool],
+        timestamp: Optional[int],
+        sw_keys: Optional[str],
+        custom: Dict[str, str],
+        ignored: List[Tuple[str, Optional[str]]],
+        response: TraceOptionsResponse,
+    ):
         super().__init__(trigger_trace, timestamp, sw_keys, custom, ignored)
         self._response = response
 
@@ -169,9 +185,11 @@ class TraceOptionsWithResponse(TraceOptions):
 
 
 class RequestHeaders:
-    def __init__(self,
-                 x_trace_options: Optional[str],
-                 x_trace_options_signature: Optional[str]):
+    def __init__(
+        self,
+        x_trace_options: Optional[str],
+        x_trace_options_signature: Optional[str],
+    ):
         self._x_trace_options = x_trace_options
         self._x_trace_options_signature = x_trace_options_signature
 
@@ -194,12 +212,15 @@ class RequestHeaders:
     def __eq__(self, other):
         if not isinstance(other, RequestHeaders):
             return NotImplemented
-        return self._x_trace_options == other._x_trace_options and self._x_trace_options_signature == other._x_trace_options_signature
+        return (
+            self._x_trace_options == other._x_trace_options
+            and self._x_trace_options_signature
+            == other._x_trace_options_signature
+        )
 
 
 class ResponseHeaders:
-    def __init__(self,
-                 x_trace_options_response: Optional[str]):
+    def __init__(self, x_trace_options_response: Optional[str]):
         self._x_trace_options_response = x_trace_options_response
 
     @property
@@ -213,11 +234,15 @@ class ResponseHeaders:
     def __eq__(self, other):
         if not isinstance(other, ResponseHeaders):
             return NotImplemented
-        return self._x_trace_options_response == other._x_trace_options_response
+        return (
+            self._x_trace_options_response == other._x_trace_options_response
+        )
 
 
 def parse_trace_options(header, logger=logging.getLogger(__name__)):
-    trace_options = TraceOptions(trigger_trace=None, timestamp=None, sw_keys=None, custom={}, ignored=[])
+    trace_options = TraceOptions(
+        trigger_trace=None, timestamp=None, sw_keys=None, custom={}, ignored=[]
+    )
     kvs = []
     for pair in header.split(";"):
         kv = pair.split("=", 1)
@@ -229,13 +254,16 @@ def parse_trace_options(header, logger=logging.getLogger(__name__)):
         if k == TRIGGER_TRACE_KEY:
             if v is not None or trace_options.trigger_trace is not None:
                 logger.debug(
-                    "invalid trace option for trigger trace, should not have a value and only be provided once")
+                    "invalid trace option for trigger trace, should not have a value and only be provided once"
+                )
                 trace_options.ignored.append((k, v))
                 continue
             trace_options.trigger_trace = True
         elif k == TIMESTAMP_KEY:
             if v is None or trace_options.timestamp is not None:
-                logger.debug("invalid trace option for timestamp, should have a value and only be provided once")
+                logger.debug(
+                    "invalid trace option for timestamp, should have a value and only be provided once"
+                )
                 trace_options.ignored.append((k, v))
                 continue
             try:
@@ -244,17 +272,23 @@ def parse_trace_options(header, logger=logging.getLogger(__name__)):
                     raise ValueError
                 trace_options.timestamp = int(ts)
             except ValueError:
-                logger.debug("invalid trace option for timestamp, should be an integer")
+                logger.debug(
+                    "invalid trace option for timestamp, should be an integer"
+                )
                 trace_options.ignored.append((k, v))
         elif k == SW_KEYS_KEY:
             if v is None or trace_options.sw_keys is not None:
-                logger.debug("invalid trace option for sw keys, should have a value and only be provided once")
+                logger.debug(
+                    "invalid trace option for sw keys, should have a value and only be provided once"
+                )
                 trace_options.ignored.append((k, v))
                 continue
             trace_options.sw_keys = v
         elif re.match(CUSTOM_KEY_REGEX, k):
             if v is None or k in trace_options.custom:
-                logger.debug(f"invalid trace option for custom key {k}, should have a value and only be provided once")
+                logger.debug(
+                    f"invalid trace option for custom key {k}, should have a value and only be provided once"
+                )
                 trace_options.ignored.append((k, v))
                 continue
             trace_options.custom[k] = v
@@ -263,13 +297,27 @@ def parse_trace_options(header, logger=logging.getLogger(__name__)):
     return trace_options
 
 
-def stringify_trace_options_response(trace_options_response: TraceOptionsResponse):
+def stringify_trace_options_response(
+    trace_options_response: TraceOptionsResponse,
+):
     kvs = {
-        'auth': trace_options_response.auth.value if trace_options_response.auth else None,
-        'trigger-trace': trace_options_response.trigger_trace.value if trace_options_response.trigger_trace else None,
-        'ignored': ','.join(trace_options_response.ignored) if trace_options_response.ignored else None,
+        "auth": (
+            trace_options_response.auth.value
+            if trace_options_response.auth
+            else None
+        ),
+        "trigger-trace": (
+            trace_options_response.trigger_trace.value
+            if trace_options_response.trigger_trace
+            else None
+        ),
+        "ignored": (
+            ",".join(trace_options_response.ignored)
+            if trace_options_response.ignored
+            else None
+        ),
     }
-    return ';'.join(f"{k}={v}" for k, v in kvs.items() if v is not None)
+    return ";".join(f"{k}={v}" for k, v in kvs.items() if v is not None)
 
 
 def validate_signature(header, signature, key, timestamp):
@@ -277,7 +325,9 @@ def validate_signature(header, signature, key, timestamp):
         return Auth.NO_SIGNATURE_KEY
     if timestamp is None or abs(int(time.time()) - timestamp) > 5 * 60:
         return Auth.BAD_TIMESTAMP
-    digest = hmac.new(str.encode(key), str.encode(header), hashlib.sha1).hexdigest()
+    digest = hmac.new(
+        str.encode(key), str.encode(header), hashlib.sha1
+    ).hexdigest()
     if signature == digest:
         return Auth.OK
     else:
