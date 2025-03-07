@@ -15,7 +15,7 @@ from opentelemetry.context import Context
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk.resources import Attributes
 from opentelemetry.sdk.trace.sampling import SamplingResult
-from opentelemetry.trace import SpanKind, Link, TraceState
+from opentelemetry.trace import Link, SpanKind, TraceState
 from typing_extensions import override
 
 from solarwinds_apm.oboe.configuration import Configuration
@@ -25,25 +25,43 @@ PATH = os.path.join(tempfile.gettempdir(), "solarwinds-apm-settings.json")
 
 
 class JsonSampler(Sampler):
-    def __init__(self, meter_provider: MeterProvider, config: Configuration, path: str = PATH):
-        super().__init__(meter_provider=meter_provider, config=config, logger=logging.getLogger(__name__), initial=None)
+    def __init__(
+        self,
+        meter_provider: MeterProvider,
+        config: Configuration,
+        path: str = PATH,
+    ):
+        super().__init__(
+            meter_provider=meter_provider,
+            config=config,
+            logger=logging.getLogger(__name__),
+            initial=None,
+        )
         self._path = path
         self._expiry = time.time()
         self._loop()
 
     @override
     def should_sample(
-            self,
-            parent_context: Optional["Context"],
-            trace_id: int,
-            name: str,
-            kind: Optional[SpanKind] = None,
-            attributes: Attributes = None,
-            links: Optional[Sequence["Link"]] = None,
-            trace_state: Optional["TraceState"] = None,
+        self,
+        parent_context: Optional["Context"],
+        trace_id: int,
+        name: str,
+        kind: Optional[SpanKind] = None,
+        attributes: Attributes = None,
+        links: Optional[Sequence["Link"]] = None,
+        trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         self._loop()
-        return super().should_sample(parent_context, trace_id, name, kind, attributes, links, trace_state)
+        return super().should_sample(
+            parent_context,
+            trace_id,
+            name,
+            kind,
+            attributes,
+            links,
+            trace_state,
+        )
 
     def __str__(self) -> str:
         return f"JSON Sampler ({self._path})"
@@ -54,7 +72,7 @@ class JsonSampler(Sampler):
             return
 
         try:
-            with open(self._path, 'r', encoding='utf-8') as file:
+            with open(self._path, "r", encoding="utf-8") as file:
                 contents = file.read()
             unparsed = json.loads(contents)
         except (FileNotFoundError, json.JSONDecodeError) as error:

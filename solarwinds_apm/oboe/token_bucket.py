@@ -31,7 +31,7 @@ class _TokenBucket(object):
         now = time.time()
         elapsed = now - self._last_used
         self._last_used = now
-        self._tokens += (elapsed * self.rate)
+        self._tokens += elapsed * self.rate
         self._tokens = min(self._tokens, self.capacity)
 
     def update(self, new_capacity=None, new_rate=None):

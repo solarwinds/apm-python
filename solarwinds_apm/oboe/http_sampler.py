@@ -7,7 +7,7 @@
 import logging
 import socket
 import threading
-from typing import Optional, Any, Dict
+from typing import Any, Dict, Optional
 
 import requests
 from opentelemetry.sdk.metrics import MeterProvider
@@ -26,16 +26,27 @@ REQUEST_INTERVAL = 60  # 60s
 
 
 class HttpSampler(Sampler):
-    def __init__(self, meter_provider: MeterProvider, config: Configuration, initial: Optional[Dict[str, Any]], ):
-        super().__init__(meter_provider=meter_provider, config=config, logger=logging.getLogger(__name__),
-                         initial=initial)
+    def __init__(
+        self,
+        meter_provider: MeterProvider,
+        config: Configuration,
+        initial: Optional[Dict[str, Any]],
+    ):
+        super().__init__(
+            meter_provider=meter_provider,
+            config=config,
+            logger=logging.getLogger(__name__),
+            initial=initial,
+        )
         self._url = config.collector
         self._service = config.service
         self._headers = config.headers
         self._hostname = socket.gethostname()
         self._last_warning_message = None
         self._shutdown_event = threading.Event()
-        self._daemon_thread = threading.Thread(name="HttpSampler", target=self._loop, daemon=True)
+        self._daemon_thread = threading.Thread(
+            name="HttpSampler", target=self._loop, daemon=True
+        )
         self._daemon_thread.start()
 
     def __str__(self) -> str:
@@ -75,7 +86,11 @@ class HttpSampler(Sampler):
     def _fetch_from_collector(self):
         url = f"{self._url}/v1/settings/{self._service}/{self._hostname}"
         self.logger.debug(f"retrieving sampling settings from {url}")
-        response = requests.get(url, headers=self._headers, timeout=REQUEST_TIMEOUT)
+        response = requests.get(
+            url, headers=self._headers, timeout=REQUEST_TIMEOUT
+        )
         response.raise_for_status()
-        self.logger.debug(f"received sampling settings response {response.text}")
+        self.logger.debug(
+            f"received sampling settings response {response.text}"
+        )
         return response.json()

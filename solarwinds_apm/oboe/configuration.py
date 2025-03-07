@@ -4,7 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-from typing import Optional, Dict, Callable
+from typing import Callable, Dict, Optional
 
 
 class Otlp:
@@ -61,19 +61,21 @@ class TransactionSetting:
 
 
 class Configuration:
-    def __init__(self,
-                 enabled: bool,
-                 service: str,
-                 token: Optional[str],
-                 collector: str,
-                 headers: Dict[str, str],
-                 otlp: Otlp,
-                 log_level: int,
-                 tracing_mode: Optional[bool],
-                 trigger_trace_enabled: bool,
-                 export_logs_enabled: bool,
-                 transaction_name: Optional[Callable[[], str]],
-                 transaction_settings: list[TransactionSetting]):
+    def __init__(
+        self,
+        enabled: bool,
+        service: str,
+        token: Optional[str],
+        collector: str,
+        headers: Dict[str, str],
+        otlp: Otlp,
+        log_level: int,
+        tracing_mode: Optional[bool],
+        trigger_trace_enabled: bool,
+        export_logs_enabled: bool,
+        transaction_name: Optional[Callable[[], str]],
+        transaction_settings: list[TransactionSetting],
+    ):
         self._enabled = enabled
         self._service = service
         self._token = token
