@@ -260,7 +260,7 @@ def parse_trace_options(header, logger=logging.getLogger(__name__)):
                 continue
             trace_options.trigger_trace = True
         elif key == TIMESTAMP_KEY:
-            if v is None or trace_options.timestamp is not None:
+            if value is None or trace_options.timestamp is not None:
                 logger.debug(
                     "invalid trace option for timestamp, should have a value and only be provided once"
                 )
@@ -287,13 +287,15 @@ def parse_trace_options(header, logger=logging.getLogger(__name__)):
         elif re.match(CUSTOM_KEY_REGEX, key):
             if value is None or key in trace_options.custom:
                 logger.debug(
-                    f"invalid trace option for custom key {key}, should have a value and only be provided once"
+                    "invalid trace option for custom key %s, should have a value and only be provided once",
+                    key,
                 )
                 trace_options.ignored.append((key, value))
                 continue
             trace_options.custom[key] = value
         else:
-            trace_options.ignored.append((key, value)) if len(key) > 0 else None
+            if len(key) > 0:
+                trace_options.ignored.append((key, value))
     return trace_options
 
 
