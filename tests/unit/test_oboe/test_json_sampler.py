@@ -83,6 +83,7 @@ def test_missing_file_no_samples_created_spans(json_sampler_tracer_memory_export
     try:
         os.remove(PATH)
     except FileNotFoundError:
+        # It's okay if the file does not exist
         pass
     tracer, memory_exporter = json_sampler_tracer_memory_exporter
     with tracer.start_as_current_span("test") as span:
