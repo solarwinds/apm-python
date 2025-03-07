@@ -206,9 +206,8 @@ class OboeSampler(Sampler, ABC):
                 & TraceFlags.SAMPLED
             ):
                 return SamplingResult(decision=Decision.RECORD_AND_SAMPLE)
-            else:
-                return SamplingResult(decision=Decision.DROP)
-        s = SampleState(
+            return SamplingResult(decision=Decision.DROP)
+        sample_state = SampleState(
             decision=Decision.DROP,
             attributes=attributes if attributes else {},
             settings=self.get_settings(
@@ -237,9 +236,9 @@ class OboeSampler(Sampler, ABC):
             trace_options=None,
         )
         self.counters.request_count.add(1, {}, parent_context)
-        if s.headers.x_trace_options:
-            parsed = parse_trace_options(s.headers.x_trace_options)
-            s.trace_options = TraceOptionsWithResponse(
+        if sample_state.headers.x_trace_options:
+            parsed = parse_trace_options(sample_state.headers.x_trace_options)
+            sample_state.trace_options = TraceOptionsWithResponse(
                 trigger_trace=parsed.trigger_trace,
                 timestamp=parsed.timestamp,
                 sw_keys=parsed.sw_keys,
@@ -249,25 +248,25 @@ class OboeSampler(Sampler, ABC):
                     auth=None, trigger_trace=None, ignored=None
                 ),
             )
-            self.logger.debug("X-Trace-Options present", s.trace_options)
-            if s.headers.x_trace_options_signature:
-                s.trace_options.response.auth = validate_signature(
-                    s.headers.x_trace_options,
-                    s.headers.x_trace_options_signature,
+            self.logger.debug("X-Trace-Options present", sample_state.trace_options)
+            if sample_state.headers.x_trace_options_signature:
+                sample_state.trace_options.response.auth = validate_signature(
+                    sample_state.headers.x_trace_options,
+                    sample_state.headers.x_trace_options_signature,
                     (
-                        s.settings.signature_key
-                        if s.settings and s.settings.signature_key
+                        sample_state.settings.signature_key
+                        if sample_state.settings and sample_state.settings.signature_key
                         else None
                     ),
-                    s.trace_options.timestamp,
+                    sample_state.trace_options.timestamp,
                 )
-                if s.trace_options.response.auth != Auth.OK:
+                if sample_state.trace_options.response.auth != Auth.OK:
                     self.logger.debug(
                         "X-Trace-Options-Signature invalid; tracing disabled"
                     )
                     new_trace_state = (
                         self.set_response_headers_from_sample_state(
-                            s,
+                            sample_state,
                             parent_context,
                             trace_id,
                             name,
@@ -280,29 +279,29 @@ class OboeSampler(Sampler, ABC):
                     return SamplingResult(
                         decision=Decision.DROP, trace_state=new_trace_state
                     )
-            if not s.trace_options.trigger_trace:
-                s.trace_options.response.trigger_trace = (
+            if not sample_state.trace_options.trigger_trace:
+                sample_state.trace_options.response.trigger_trace = (
                     TriggerTrace.NOT_REQUESTED
                 )
-            if s.trace_options.sw_keys:
-                s.attributes[SW_KEYS_ATTRIBUTE] = s.trace_options.sw_keys
-            for k, v in s.trace_options.custom.items():
-                s.attributes[k] = v
-            if len(s.trace_options.ignored) > 0:
-                s.trace_options.response.ignored = [
-                    k for k, _ in s.trace_options.ignored
+            if sample_state.trace_options.sw_keys:
+                sample_state.attributes[SW_KEYS_ATTRIBUTE] = sample_state.trace_options.sw_keys
+            for k, v in sample_state.trace_options.custom.items():
+                sample_state.attributes[k] = v
+            if len(sample_state.trace_options.ignored) > 0:
+                sample_state.trace_options.response.ignored = [
+                    k for k, _ in sample_state.trace_options.ignored
                 ]
-        if not s.settings:
+        if not sample_state.settings:
             self.logger.debug("settings unavailable; sampling disabled")
-            if s.trace_options and s.trace_options.trigger_trace:
+            if sample_state.trace_options and sample_state.trace_options.trigger_trace:
                 self.logger.debug(
                     "trigger trace requested but settings unavailable"
                 )
-                s.trace_options.response.trigger_trace = (
+                sample_state.trace_options.response.trigger_trace = (
                     TriggerTrace.SETTINGS_NOT_AVAILABLE
                 )
             new_trace_state = self.set_response_headers_from_sample_state(
-                s,
+                sample_state,
                 parent_context,
                 trace_id,
                 name,
@@ -313,25 +312,25 @@ class OboeSampler(Sampler, ABC):
             )
             return SamplingResult(
                 decision=Decision.DROP,
-                attributes=s.attributes,
+                attributes=sample_state.attributes,
                 trace_state=new_trace_state,
             )
-        if s.trace_state and re.match(TRACESTATE_REGEXP, s.trace_state):
+        if sample_state.trace_state and re.match(TRACESTATE_REGEXP, sample_state.trace_state):
             self.logger.debug("context is valid for parent-based sampling")
-            self.parent_based_algo(s, parent_context)
-        elif s.settings.flags & Flags.SAMPLE_START:
-            if s.trace_options and s.trace_options.trigger_trace:
+            self.parent_based_algo(sample_state, parent_context)
+        elif sample_state.settings.flags & Flags.SAMPLE_START:
+            if sample_state.trace_options and sample_state.trace_options.trigger_trace:
                 self.logger.debug("trigger trace requested")
-                self.trigger_trace_algo(s, parent_context)
+                self.trigger_trace_algo(sample_state, parent_context)
             else:
                 self.logger.debug("defaulting to dice roll")
-                self.dice_roll_algo(s, parent_context)
+                self.dice_roll_algo(sample_state, parent_context)
         else:
             self.logger.debug("SAMPLE_START is unset; sampling disabled")
-            self.disabled_algo(s)
-        self.logger.debug("final sampling state", s)
+            self.disabled_algo(sample_state)
+        self.logger.debug("final sampling state", sample_state)
         new_trace_state = self.set_response_headers_from_sample_state(
-            s,
+            sample_state,
             parent_context,
             trace_id,
             name,
@@ -341,8 +340,8 @@ class OboeSampler(Sampler, ABC):
             trace_state,
         )
         return SamplingResult(
-            decision=s.decision,
-            attributes=s.attributes,
+            decision=sample_state.decision,
+            attributes=sample_state.attributes,
             trace_state=new_trace_state,
         )
 
