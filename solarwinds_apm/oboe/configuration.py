@@ -4,7 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-from typing import Callable, Dict, Optional
+from typing import Callable, Optional
 
 
 class Otlp:
@@ -67,7 +67,7 @@ class Configuration:
         service: str,
         token: Optional[str],
         collector: str,
-        headers: Dict[str, str],
+        headers: dict[str, str],
         otlp: Otlp,
         log_level: int,
         tracing_mode: Optional[bool],
@@ -122,11 +122,11 @@ class Configuration:
         self._collector = value
 
     @property
-    def headers(self) -> Dict[str, str]:
+    def headers(self) -> dict[str, str]:
         return self._headers
 
     @headers.setter
-    def headers(self, value: Dict[str, str]):
+    def headers(self, value: dict[str, str]):
         self._headers = value
 
     @property

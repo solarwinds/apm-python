@@ -7,7 +7,7 @@
 import logging
 import socket
 import threading
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import requests
 from opentelemetry.sdk.metrics import MeterProvider
@@ -30,7 +30,7 @@ class HttpSampler(Sampler):
         self,
         meter_provider: MeterProvider,
         config: Configuration,
-        initial: Optional[Dict[str, Any]],
+        initial: Optional[dict[str, Any]],
     ):
         super().__init__(
             meter_provider=meter_provider,

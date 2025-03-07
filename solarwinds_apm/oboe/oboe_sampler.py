@@ -8,8 +8,9 @@ import logging
 import re
 import time
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from enum import IntEnum, auto
-from typing import Optional, Sequence
+from typing import Optional
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.metrics import MeterProvider
@@ -460,11 +461,13 @@ class OboeSampler(Sampler, ABC):
             self.settings.timestamp if self.settings else 0
         ):
             self.settings = settings
-            for t, b in self.buckets.items():
-                if t in self.settings.buckets:
-                    b.update(
-                        new_capacity=self.settings.buckets[t].capacity,
-                        new_rate=self.settings.buckets[t].rate,
+            for bucket_type, bucket in self.buckets.items():
+                if bucket_type in self.settings.buckets:
+                    bucket.update(
+                        new_capacity=self.settings.buckets[
+                            bucket_type
+                        ].capacity,
+                        new_rate=self.settings.buckets[bucket_type].rate,
                     )
 
     def get_settings(

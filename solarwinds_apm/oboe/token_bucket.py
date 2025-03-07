@@ -7,7 +7,7 @@
 import time
 
 
-class _TokenBucket(object):
+class _TokenBucket:
     def __init__(self, capacity: float = 0, rate: float = 0):
         self._capacity = capacity
         self._rate = rate

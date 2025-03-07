@@ -10,7 +10,7 @@ import logging
 import re
 import time
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 TRIGGER_TRACE_KEY = "trigger-trace"
 TIMESTAMP_KEY = "ts"
@@ -25,7 +25,7 @@ class TraceOptions:
         trigger_trace: Optional[bool],
         timestamp: Optional[int],
         sw_keys: Optional[str],
-        custom: Dict[str, str],
+        custom: dict[str, str],
         ignored: List[Tuple[str, Optional[str]]],
     ):
         self._trigger_trace = trigger_trace
@@ -160,7 +160,7 @@ class TraceOptionsWithResponse(TraceOptions):
         trigger_trace: Optional[bool],
         timestamp: Optional[int],
         sw_keys: Optional[str],
-        custom: Dict[str, str],
+        custom: dict[str, str],
         ignored: List[Tuple[str, Optional[str]]],
         response: TraceOptionsResponse,
     ):
@@ -178,10 +178,10 @@ class TraceOptionsWithResponse(TraceOptions):
     def __eq__(self, other):
         if not isinstance(other, TraceOptionsWithResponse):
             return NotImplemented
-        return super.__eq__(self, other) and self._response == other._response
+        return super().__eq__(self) and self._response == other._response
 
     def __str__(self):
-        return f"{super.__str__(self)}, response={self._response}"
+        return f"{super().__str__()}, response={self._response}"
 
 
 class RequestHeaders:
@@ -250,24 +250,24 @@ def parse_trace_options(header, logger=logging.getLogger(__name__)):
             kvs.append((kv[0].strip(), kv[1].strip()))
         elif len(kv) == 1 and len(kv[0].strip()) > 0:
             kvs.append((kv[0].strip(), None))
-    for [k, v] in kvs:
-        if k == TRIGGER_TRACE_KEY:
-            if v is not None or trace_options.trigger_trace is not None:
+    for [key, value] in kvs:
+        if key == TRIGGER_TRACE_KEY:
+            if value is not None or trace_options.trigger_trace is not None:
                 logger.debug(
                     "invalid trace option for trigger trace, should not have a value and only be provided once"
                 )
-                trace_options.ignored.append((k, v))
+                trace_options.ignored.append((key, value))
                 continue
             trace_options.trigger_trace = True
-        elif k == TIMESTAMP_KEY:
+        elif key == TIMESTAMP_KEY:
             if v is None or trace_options.timestamp is not None:
                 logger.debug(
                     "invalid trace option for timestamp, should have a value and only be provided once"
                 )
-                trace_options.ignored.append((k, v))
+                trace_options.ignored.append((key, value))
                 continue
             try:
-                ts = float(v)
+                ts = float(value)
                 if not ts.is_integer():
                     raise ValueError
                 trace_options.timestamp = int(ts)
@@ -275,25 +275,25 @@ def parse_trace_options(header, logger=logging.getLogger(__name__)):
                 logger.debug(
                     "invalid trace option for timestamp, should be an integer"
                 )
-                trace_options.ignored.append((k, v))
-        elif k == SW_KEYS_KEY:
-            if v is None or trace_options.sw_keys is not None:
+                trace_options.ignored.append((key, value))
+        elif key == SW_KEYS_KEY:
+            if value is None or trace_options.sw_keys is not None:
                 logger.debug(
                     "invalid trace option for sw keys, should have a value and only be provided once"
                 )
-                trace_options.ignored.append((k, v))
+                trace_options.ignored.append((key, value))
                 continue
-            trace_options.sw_keys = v
-        elif re.match(CUSTOM_KEY_REGEX, k):
-            if v is None or k in trace_options.custom:
+            trace_options.sw_keys = value
+        elif re.match(CUSTOM_KEY_REGEX, key):
+            if value is None or key in trace_options.custom:
                 logger.debug(
-                    f"invalid trace option for custom key {k}, should have a value and only be provided once"
+                    f"invalid trace option for custom key {key}, should have a value and only be provided once"
                 )
-                trace_options.ignored.append((k, v))
+                trace_options.ignored.append((key, value))
                 continue
-            trace_options.custom[k] = v
+            trace_options.custom[key] = value
         else:
-            trace_options.ignored.append((k, v)) if len(k) > 0 else None
+            trace_options.ignored.append((key, value)) if len(key) > 0 else None
     return trace_options
 
 
