@@ -3,6 +3,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+from __future__ import annotations
 
 import logging
 import re
@@ -10,7 +11,6 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from enum import IntEnum, auto
-from typing import Optional
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.metrics import MeterProvider
@@ -69,10 +69,10 @@ class SampleState:
         self,
         decision: Decision,
         attributes: Attributes,
-        settings: Optional[Settings],
-        trace_state: Optional[str],
+        settings: Settings | None,
+        trace_state: str | None,
         headers: RequestHeaders,
-        trace_options: Optional[TraceOptionsWithResponse],
+        trace_options: TraceOptionsWithResponse | None,
     ):
         self._decision = decision
         self._attributes = attributes
@@ -98,19 +98,19 @@ class SampleState:
         self._attributes = value
 
     @property
-    def settings(self) -> Optional[Settings]:
+    def settings(self) -> Settings | None:
         return self._settings
 
     @settings.setter
-    def settings(self, value: Optional[Settings]):
+    def settings(self, value: Settings | None):
         self._settings = value
 
     @property
-    def trace_state(self) -> Optional[str]:
+    def trace_state(self) -> str | None:
         return self._trace_state
 
     @trace_state.setter
-    def trace_state(self, value: Optional[str]):
+    def trace_state(self, value: str | None):
         self._trace_state = value
 
     @property
@@ -122,24 +122,23 @@ class SampleState:
         self._headers = value
 
     @property
-    def trace_options(self) -> Optional[TraceOptionsWithResponse]:
+    def trace_options(self) -> TraceOptionsWithResponse | None:
         return self._trace_options
 
     @trace_options.setter
-    def trace_options(self, value: Optional[TraceOptionsWithResponse]):
+    def trace_options(self, value: TraceOptionsWithResponse | None):
         self._trace_options = value
 
 
-def _span_type(parent_span: Optional[Span] = None) -> SpanType:
+def _span_type(parent_span: Span | None = None) -> SpanType:
     parent_span_context = (
         parent_span.get_span_context() if parent_span else None
     )
     if parent_span_context is None or not parent_span_context.is_valid:
         return SpanType.ROOT
-    elif parent_span_context.is_remote:
+    if parent_span_context.is_remote:
         return SpanType.ENTRY
-    else:
-        return SpanType.LOCAL
+    return SpanType.LOCAL
 
 
 class OboeSampler(Sampler, ABC):
@@ -151,7 +150,7 @@ class OboeSampler(Sampler, ABC):
             BucketType.TRIGGER_RELAXED: _TokenBucket(),
             BucketType.TRIGGER_STRICT: _TokenBucket(),
         }
-        self._settings: Optional[Settings] = None
+        self._settings: Settings | None = None
 
     @property
     def logger(self):
@@ -188,26 +187,108 @@ class OboeSampler(Sampler, ABC):
     @override
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: "Context" | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
+        links: Sequence["Link"] | None = None,
+        trace_state: "TraceState" | None = None,
     ) -> "SamplingResult":
         parent_span = get_current_span(parent_context)
         span_type = _span_type(parent_span)
         self.logger.debug(f"span type is {SpanType(span_type).name}")
+
         if span_type == SpanType.LOCAL:
-            if (
-                parent_span
-                and parent_span.get_span_context().trace_flags
-                & TraceFlags.SAMPLED
-            ):
-                return SamplingResult(decision=Decision.RECORD_AND_SAMPLE)
-            return SamplingResult(decision=Decision.DROP)
-        sample_state = SampleState(
+            return self._handle_local_span(parent_span)
+
+        sample_state = self._initialize_sample_state(
+            parent_context,
+            trace_id,
+            name,
+            kind,
+            attributes,
+            links,
+            trace_state,
+            parent_span,
+        )
+
+        self.counters.request_count.add(1, {}, parent_context)
+
+        if sample_state.headers.x_trace_options:
+            result = self._process_trace_options(
+                sample_state,
+                parent_context,
+                trace_id,
+                name,
+                kind,
+                attributes,
+                links,
+                trace_state,
+            )
+            if result:
+                return result
+
+        if not sample_state.settings:
+            return self._handle_no_settings(
+                sample_state,
+                parent_context,
+                trace_id,
+                name,
+                kind,
+                attributes,
+                links,
+                trace_state,
+            )
+
+        if sample_state.trace_state and re.match(
+            TRACESTATE_REGEXP, sample_state.trace_state
+        ):
+            sample_state.decision = self.parent_based_algo(
+                sample_state, parent_context
+            )
+        elif sample_state.settings.flags & Flags.SAMPLE_START:
+            self._handle_sample_start(sample_state, parent_context)
+        else:
+            self.disabled_algo(sample_state)
+
+        self.logger.debug("final sampling state", sample_state)
+        new_trace_state = self.set_response_headers_from_sample_state(
+            sample_state,
+            parent_context,
+            trace_id,
+            name,
+            kind,
+            attributes,
+            links,
+            trace_state,
+        )
+        return SamplingResult(
+            decision=sample_state.decision,
+            attributes=sample_state.attributes,
+            trace_state=new_trace_state,
+        )
+
+    def _handle_local_span(self, parent_span: Span | None) -> "SamplingResult":
+        if (
+            parent_span
+            and parent_span.get_span_context().trace_flags & TraceFlags.SAMPLED
+        ):
+            return SamplingResult(decision=Decision.RECORD_AND_SAMPLE)
+        return SamplingResult(decision=Decision.DROP)
+
+    def _initialize_sample_state(
+        self,
+        parent_context: "Context" | None,
+        trace_id: int,
+        name: str,
+        kind: SpanKind | None,
+        attributes: Attributes,
+        links: Sequence["Link"] | None,
+        trace_state: "TraceState" | None,
+        parent_span: Span | None,
+    ) -> SampleState:
+        return SampleState(
             decision=Decision.DROP,
             attributes=attributes if attributes else {},
             settings=self.get_settings(
@@ -235,100 +316,99 @@ class OboeSampler(Sampler, ABC):
             ),
             trace_options=None,
         )
-        self.counters.request_count.add(1, {}, parent_context)
-        if sample_state.headers.x_trace_options:
-            parsed = parse_trace_options(sample_state.headers.x_trace_options)
-            sample_state.trace_options = TraceOptionsWithResponse(
-                trigger_trace=parsed.trigger_trace,
-                timestamp=parsed.timestamp,
-                sw_keys=parsed.sw_keys,
-                custom=parsed.custom,
-                ignored=parsed.ignored,
-                response=TraceOptionsResponse(
-                    auth=None, trigger_trace=None, ignored=None
+
+    def _process_trace_options(
+        self,
+        sample_state: SampleState,
+        parent_context: "Context" | None,
+        trace_id: int,
+        name: str,
+        kind: SpanKind | None = None,
+        attributes: Attributes = None,
+        links: Sequence["Link"] | None = None,
+        trace_state: "TraceState" | None = None,
+    ):
+        parsed = parse_trace_options(sample_state.headers.x_trace_options)
+        sample_state.trace_options = TraceOptionsWithResponse(
+            trigger_trace=parsed.trigger_trace,
+            timestamp=parsed.timestamp,
+            sw_keys=parsed.sw_keys,
+            custom=parsed.custom,
+            ignored=parsed.ignored,
+            response=TraceOptionsResponse(
+                auth=None, trigger_trace=None, ignored=None
+            ),
+        )
+        self.logger.debug(
+            "X-Trace-Options present", sample_state.trace_options
+        )
+        if sample_state.headers.x_trace_options_signature:
+            sample_state.trace_options.response.auth = validate_signature(
+                sample_state.headers.x_trace_options,
+                sample_state.headers.x_trace_options_signature,
+                (
+                    sample_state.settings.signature_key
+                    if sample_state.settings
+                    and sample_state.settings.signature_key
+                    else None
                 ),
+                sample_state.trace_options.timestamp,
             )
-            self.logger.debug("X-Trace-Options present", sample_state.trace_options)
-            if sample_state.headers.x_trace_options_signature:
-                sample_state.trace_options.response.auth = validate_signature(
-                    sample_state.headers.x_trace_options,
-                    sample_state.headers.x_trace_options_signature,
-                    (
-                        sample_state.settings.signature_key
-                        if sample_state.settings and sample_state.settings.signature_key
-                        else None
-                    ),
-                    sample_state.trace_options.timestamp,
-                )
-                if sample_state.trace_options.response.auth != Auth.OK:
-                    self.logger.debug(
-                        "X-Trace-Options-Signature invalid; tracing disabled"
-                    )
-                    new_trace_state = (
-                        self.set_response_headers_from_sample_state(
-                            sample_state,
-                            parent_context,
-                            trace_id,
-                            name,
-                            kind,
-                            attributes,
-                            links,
-                            trace_state,
-                        )
-                    )
-                    return SamplingResult(
-                        decision=Decision.DROP, trace_state=new_trace_state
-                    )
-            if not sample_state.trace_options.trigger_trace:
-                sample_state.trace_options.response.trigger_trace = (
-                    TriggerTrace.NOT_REQUESTED
-                )
-            if sample_state.trace_options.sw_keys:
-                sample_state.attributes[SW_KEYS_ATTRIBUTE] = sample_state.trace_options.sw_keys
-            for k, v in sample_state.trace_options.custom.items():
-                sample_state.attributes[k] = v
-            if len(sample_state.trace_options.ignored) > 0:
-                sample_state.trace_options.response.ignored = [
-                    k for k, _ in sample_state.trace_options.ignored
-                ]
-        if not sample_state.settings:
-            self.logger.debug("settings unavailable; sampling disabled")
-            if sample_state.trace_options and sample_state.trace_options.trigger_trace:
+            if sample_state.trace_options.response.auth != Auth.OK:
                 self.logger.debug(
-                    "trigger trace requested but settings unavailable"
+                    "X-Trace-Options-Signature invalid; tracing disabled"
                 )
-                sample_state.trace_options.response.trigger_trace = (
-                    TriggerTrace.SETTINGS_NOT_AVAILABLE
+                new_trace_state = self.set_response_headers_from_sample_state(
+                    sample_state,
+                    parent_context,
+                    trace_id,
+                    name,
+                    kind,
+                    attributes,
+                    links,
+                    trace_state,
                 )
-            new_trace_state = self.set_response_headers_from_sample_state(
-                sample_state,
-                parent_context,
-                trace_id,
-                name,
-                kind,
-                attributes,
-                links,
-                trace_state,
+                return SamplingResult(
+                    decision=Decision.DROP, trace_state=new_trace_state
+                )
+        if not sample_state.trace_options.trigger_trace:
+            sample_state.trace_options.response.trigger_trace = (
+                TriggerTrace.NOT_REQUESTED
             )
-            return SamplingResult(
-                decision=Decision.DROP,
-                attributes=sample_state.attributes,
-                trace_state=new_trace_state,
+        if sample_state.trace_options.sw_keys:
+            sample_state.attributes[SW_KEYS_ATTRIBUTE] = (
+                sample_state.trace_options.sw_keys
             )
-        if sample_state.trace_state and re.match(TRACESTATE_REGEXP, sample_state.trace_state):
-            self.logger.debug("context is valid for parent-based sampling")
-            self.parent_based_algo(sample_state, parent_context)
-        elif sample_state.settings.flags & Flags.SAMPLE_START:
-            if sample_state.trace_options and sample_state.trace_options.trigger_trace:
-                self.logger.debug("trigger trace requested")
-                self.trigger_trace_algo(sample_state, parent_context)
-            else:
-                self.logger.debug("defaulting to dice roll")
-                self.dice_roll_algo(sample_state, parent_context)
-        else:
-            self.logger.debug("SAMPLE_START is unset; sampling disabled")
-            self.disabled_algo(sample_state)
-        self.logger.debug("final sampling state", sample_state)
+        for key, value in sample_state.trace_options.custom.items():
+            sample_state.attributes[key] = value
+        if len(sample_state.trace_options.ignored) > 0:
+            sample_state.trace_options.response.ignored = [
+                key for key, _ in sample_state.trace_options.ignored
+            ]
+        return None
+
+    def _handle_no_settings(
+        self,
+        sample_state: SampleState,
+        parent_context: "Context" | None,
+        trace_id: int,
+        name: str,
+        kind: SpanKind | None,
+        attributes: Attributes,
+        links: Sequence["Link"] | None,
+        trace_state: "TraceState" | None,
+    ) -> "SamplingResult":
+        self.logger.debug("settings unavailable; sampling disabled")
+        if (
+            sample_state.trace_options
+            and sample_state.trace_options.trigger_trace
+        ):
+            self.logger.debug(
+                "trigger trace requested but settings unavailable"
+            )
+            sample_state.trace_options.response.trigger_trace = (
+                TriggerTrace.SETTINGS_NOT_AVAILABLE
+            )
         new_trace_state = self.set_response_headers_from_sample_state(
             sample_state,
             parent_context,
@@ -340,13 +420,24 @@ class OboeSampler(Sampler, ABC):
             trace_state,
         )
         return SamplingResult(
-            decision=sample_state.decision,
+            decision=Decision.DROP,
             attributes=sample_state.attributes,
             trace_state=new_trace_state,
         )
 
+    def _handle_sample_start(
+        self, sample_state: SampleState, parent_context: "Context" | None
+    ):
+        if (
+            sample_state.trace_options
+            and sample_state.trace_options.trigger_trace
+        ):
+            self.trigger_trace_algo(sample_state, parent_context)
+        else:
+            self.dice_roll_algo(sample_state, parent_context)
+
     def parent_based_algo(
-        self, s: SampleState, parent_context: Optional["Context"]
+        self, s: SampleState, parent_context: "Context" | None
     ):
         s.attributes[PARENT_ID_ATTRIBUTE] = (
             s.trace_state[:16] if s.trace_state else None
@@ -364,23 +455,18 @@ class OboeSampler(Sampler, ABC):
                 self.logger.debug("parent is sampled; record and sample")
                 self.counters.trace_count.add(1, {}, parent_context)
                 self.counters.through_trace_count.add(1, {}, parent_context)
-                s.decision = Decision.RECORD_AND_SAMPLE
-            else:
-                self.logger.debug("parent is not sampled; record only")
-                s.decision = Decision.RECORD_ONLY
-        else:
-            self.logger.debug(
-                "SAMPLE_THROUGH_ALWAYS is unset; sampling disabled"
-            )
-            if s.settings and s.settings.flags & Flags.SAMPLE_START:
-                self.logger.debug("SAMPLE_START is set; record")
-                s.decision = Decision.RECORD_ONLY
-            else:
-                self.logger.debug("SAMPLE_START is unset; don't record")
-                s.decision = Decision.DROP
+                return Decision.RECORD_AND_SAMPLE
+            self.logger.debug("parent is not sampled; record only")
+            return Decision.RECORD_ONLY
+        self.logger.debug("SAMPLE_THROUGH_ALWAYS is unset; sampling disabled")
+        if s.settings and s.settings.flags & Flags.SAMPLE_START:
+            self.logger.debug("SAMPLE_START is set; record")
+            return Decision.RECORD_ONLY
+        self.logger.debug("SAMPLE_START is unset; don't record")
+        return Decision.DROP
 
     def trigger_trace_algo(
-        self, s: SampleState, parent_context: Optional["Context"]
+        self, s: SampleState, parent_context: "Context" | None
     ):
         if s.settings and s.settings.flags & Flags.TRIGGERED_TRACE:
             self.logger.debug("TRIGGERED_TRACE set; trigger tracing")
@@ -413,9 +499,7 @@ class OboeSampler(Sampler, ABC):
             )
             s.decision = Decision.RECORD_ONLY
 
-    def dice_roll_algo(
-        self, s: SampleState, parent_context: Optional["Context"]
-    ):
+    def dice_roll_algo(self, s: SampleState, parent_context: "Context" | None):
         dice = _Dice(
             rate=s.settings.sample_rate if s.settings else 0, scale=DICE_SCALE
         )
@@ -471,14 +555,14 @@ class OboeSampler(Sampler, ABC):
 
     def get_settings(
         self,
-        parent_context: Optional["Context"],
+        parent_context: "Context" | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
-    ) -> Optional[Settings]:
+        links: Sequence["Link"] | None = None,
+        trace_state: "TraceState" | None = None,
+    ) -> Settings | None:
         if self.settings is None:
             return None
         if time.time() > self.settings.timestamp + self.settings.ttl:
@@ -501,40 +585,40 @@ class OboeSampler(Sampler, ABC):
     @abstractmethod
     def local_settings(
         self,
-        parent_context: Optional["Context"],
+        parent_context: "Context" | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
+        links: Sequence["Link"] | None = None,
+        trace_state: "TraceState" | None = None,
     ) -> LocalSettings:
         pass
 
     @abstractmethod
     def request_headers(
         self,
-        parent_context: Optional["Context"],
+        parent_context: "Context" | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
+        links: Sequence["Link"] | None = None,
+        trace_state: "TraceState" | None = None,
     ) -> RequestHeaders:
         pass
 
     def set_response_headers_from_sample_state(
         self,
         s: SampleState,
-        parent_context: Optional["Context"],
+        parent_context: "Context" | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
-    ) -> Optional["TraceState"]:
+        links: Sequence["Link"] | None = None,
+        trace_state: "TraceState" | None = None,
+    ) -> "TraceState" | None:
         headers = ResponseHeaders(x_trace_options_response=None)
         if s.trace_options:
             headers.x_trace_options_response = (
@@ -555,14 +639,14 @@ class OboeSampler(Sampler, ABC):
     def set_response_headers(
         self,
         headers: ResponseHeaders,
-        parent_context: Optional["Context"],
+        parent_context: "Context" | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
-    ) -> Optional["TraceState"]:
+        links: Sequence["Link"] | None = None,
+        trace_state: "TraceState" | None = None,
+    ) -> "TraceState" | None:
         pass
 
     def get_description(self) -> str:
