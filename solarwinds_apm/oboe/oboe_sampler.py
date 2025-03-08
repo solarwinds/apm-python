@@ -432,9 +432,14 @@ class OboeSampler(Sampler, ABC):
             sample_state.trace_options
             and sample_state.trace_options.trigger_trace
         ):
-            self.trigger_trace_algo(sample_state, parent_context)
+            (
+                sample_state.trace_options.response.trigger_trace,
+                sample_state.decision,
+            ) = self.trigger_trace_algo(sample_state, parent_context)
         else:
-            self.dice_roll_algo(sample_state, parent_context)
+            sample_state.decision = self.dice_roll_algo(
+                sample_state, parent_context
+            )
 
     def parent_based_algo(
         self, s: SampleState, parent_context: "Context" | None
@@ -484,20 +489,11 @@ class OboeSampler(Sampler, ABC):
                 self.logger.debug("sufficient capacity; record and sample")
                 self.counters.triggered_trace_count.add(1, {}, parent_context)
                 self.counters.trace_count.add(1, {}, parent_context)
-                s.trace_options.response.trigger_trace = TriggerTrace.OK
-                s.decision = Decision.RECORD_AND_SAMPLE
-            else:
-                self.logger.debug("insufficient capacity; record only")
-                s.trace_options.response.trigger_trace = (
-                    TriggerTrace.RATE_EXCEEDED
-                )
-                s.decision = Decision.RECORD_ONLY
-        else:
-            self.logger.debug("TRIGGERED_TRACE unset; record only")
-            s.trace_options.response.trigger_trace = (
-                TriggerTrace.TRIGGER_TRACING_DISABLED
-            )
-            s.decision = Decision.RECORD_ONLY
+                return TriggerTrace.OK, Decision.RECORD_AND_SAMPLE
+            self.logger.debug("insufficient capacity; record only")
+            return TriggerTrace.RATE_EXCEEDED, Decision.RECORD_ONLY
+        self.logger.debug("TRIGGERED_TRACE unset; record only")
+        return TriggerTrace.TRIGGER_TRACING_DISABLED, Decision.RECORD_ONLY
 
     def dice_roll_algo(self, s: SampleState, parent_context: "Context" | None):
         dice = _Dice(
@@ -514,16 +510,14 @@ class OboeSampler(Sampler, ABC):
             if bucket.consume():
                 self.logger.debug("sufficient capacity; record and sample")
                 self.counters.trace_count.add(1, {}, parent_context)
-                s.decision = Decision.RECORD_AND_SAMPLE
-            else:
-                self.logger.debug("insufficient capacity; record only")
-                self.counters.token_bucket_exhaustion_count.add(
-                    1, {}, parent_context
-                )
-                s.decision = Decision.RECORD_ONLY
-        else:
-            self.logger.debug("dice roll failure; record only")
-            s.decision = Decision.RECORD_ONLY
+                return Decision.RECORD_AND_SAMPLE
+            self.logger.debug("insufficient capacity; record only")
+            self.counters.token_bucket_exhaustion_count.add(
+                1, {}, parent_context
+            )
+            return Decision.RECORD_ONLY
+        self.logger.debug("dice roll failure; record only")
+        return Decision.RECORD_ONLY
 
     def disabled_algo(self, s: SampleState):
         if s.trace_options and s.trace_options.trigger_trace:
