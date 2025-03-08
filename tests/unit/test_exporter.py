@@ -1298,6 +1298,33 @@ class Test_SolarWindsSpanExporter():
             "4.5.6",
         )
 
+    def test__add_info_instrumented_framework_boto3(
+        self,
+        mocker,
+        mock_event,
+        mock_create_event,
+    ):
+        # mock module and sys.modules
+        mock_module = mocker.Mock()
+        mock_module.configure_mock(
+            **{
+                "__version__": "4.5.6"
+            }
+        )
+        mock_sys_modules = {
+            "boto3": mock_module
+        }
+
+        self.mock_and_assert_addinfo_for_instrumented_framework(
+            mocker,
+            mock_event,
+            mock_create_event,
+            mock_sys_modules,
+            "opentelemetry.instrumentation.boto3sqs",
+            "Python.boto3.Version",
+            "4.5.6",
+        )
+
     def test__add_info_instrumented_framework_mysql(
         self,
         mocker,
