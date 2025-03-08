@@ -3,13 +3,13 @@
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+from __future__ import annotations
 
 import hashlib
 import hmac
 import logging
 import os
 import time
-from typing import Optional
 from collections.abc import Sequence
 from unittest.mock import Mock
 
@@ -30,27 +30,27 @@ from solarwinds_apm.oboe.trace_options import RequestHeaders, ResponseHeaders
 
 
 class MakeRequestHeaders:
-    def __init__(self, trigger_trace: Optional[bool] = None, kvs: Optional[dict] = None, signature=None,
-                 signature_key: Optional[str] = None):
+    def __init__(self, trigger_trace: bool | None = None, kvs: dict | None = None, signature=None,
+                 signature_key: str | None = None):
         self._trigger_trace = trigger_trace
         self._kvs = kvs
         self._signature = signature
         self._signature_key = signature_key
 
     @property
-    def trigger_trace(self) -> Optional[bool]:
+    def trigger_trace(self) -> bool | None:
         return self._trigger_trace
 
     @property
-    def kvs(self) -> Optional[dict]:
+    def kvs(self) -> dict | None:
         return self._kvs
 
     @property
-    def signature(self) -> Optional[str]:
+    def signature(self) -> str | None:
         return self._signature
 
     @property
-    def signature_key(self) -> Optional[str]:
+    def signature_key(self) -> str | None:
         return self._signature_key
 
 
@@ -145,22 +145,22 @@ def check_counters(sampler, counter_names):
 
 
 class TestSamplerOptions:
-    def __init__(self, settings: Optional[Settings] = None, local_settings: Optional[LocalSettings] = None,
-                 request_headers: Optional[RequestHeaders] = None):
+    def __init__(self, settings: Settings | None = None, local_settings: LocalSettings | None = None,
+                 request_headers: RequestHeaders | None = None):
         self._settings = settings
         self._local_settings = local_settings
         self._request_headers = request_headers
 
     @property
-    def settings(self) -> Optional[Settings]:
+    def settings(self) -> Settings | None:
         return self._settings
 
     @property
-    def local_settings(self) -> Optional[LocalSettings]:
+    def local_settings(self) -> LocalSettings | None:
         return self._local_settings
 
     @property
-    def request_headers(self) -> Optional[RequestHeaders]:
+    def request_headers(self) -> RequestHeaders | None:
         return self._request_headers
 
 
@@ -178,7 +178,7 @@ class TestSampler(OboeSampler):
             self.update_settings(options.settings)
         self._response_headers = None
 
-    def _create_parent(self, trace_flags: trace.TraceFlags, is_remote=False, sw=None) -> Optional[Context]:
+    def _create_parent(self, trace_flags: trace.TraceFlags, is_remote=False, sw=None) -> Context | None:
         if trace_flags is None:
             return None
         return trace.set_span_in_context(self._create_parent_span(trace_flags, is_remote, sw))
@@ -201,38 +201,38 @@ class TestSampler(OboeSampler):
 
     @override
     def local_settings(self,
-                       parent_context: Optional["Context"],
+                       parent_context: "Context" | None,
                        trace_id: int,
                        name: str,
-                       kind: Optional[SpanKind] = None,
+                       kind: SpanKind | None = None,
                        attributes: Attributes = None,
-                       links: Optional[Sequence["Link"]] = None,
-                       trace_state: Optional["TraceState"] = None) -> LocalSettings:
+                       links: Sequence["Link"] | None = None,
+                       trace_state: "TraceState" | None = None) -> LocalSettings:
         return self._local_settings
 
     @override
     def request_headers(self,
-                        parent_context: Optional["Context"],
+                        parent_context: "Context" | None,
                         trace_id: int,
                         name: str,
-                        kind: Optional[SpanKind] = None,
+                        kind: SpanKind | None = None,
                         attributes: Attributes = None,
-                        links: Optional[Sequence["Link"]] = None,
-                        trace_state: Optional["TraceState"] = None
+                        links: Sequence["Link"] | None = None,
+                        trace_state: "TraceState" | None = None
                         ) -> RequestHeaders:
         return self._request_headers
 
     @override
     def set_response_headers(self,
                              headers: ResponseHeaders,
-                             parent_context: Optional["Context"],
+                             parent_context: "Context" | None,
                              trace_id: int,
                              name: str,
-                             kind: Optional[SpanKind] = None,
+                             kind: SpanKind | None = None,
                              attributes: Attributes = None,
-                             links: Optional[Sequence["Link"]] = None,
-                             trace_state: Optional["TraceState"] = None
-                             ) -> Optional["TraceState"]:
+                             links: Sequence["Link"] | None = None,
+                             trace_state: "TraceState" | None = None
+                             ) -> "TraceState" | None:
         self._response_headers = headers
         return None
 
