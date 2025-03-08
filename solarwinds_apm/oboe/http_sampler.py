@@ -3,11 +3,12 @@
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+from __future__ import annotations
 
 import logging
 import socket
 import threading
-from typing import Any, Optional
+from typing import Any
 
 import requests
 from opentelemetry.sdk.metrics import MeterProvider
@@ -30,7 +31,7 @@ class HttpSampler(Sampler):
         self,
         meter_provider: MeterProvider,
         config: Configuration,
-        initial: Optional[dict[str, Any]],
+        initial: dict[str, Any] | None,
     ):
         super().__init__(
             meter_provider=meter_provider,
@@ -76,10 +77,9 @@ class HttpSampler(Sampler):
             parsed = self.update_settings(unparsed)
             if not parsed:
                 self._warn("Retrieved sampling settings are invalid.")
-        except Exception as error:
+        except requests.RequestException as error:
             message = "Failed to retrieve sampling settings"
-            if isinstance(error, Exception):
-                message += f" ({error})"
+            message += f" ({error})"
             message += ", tracing will be disabled after time-to-live of the previous settings expired, until valid ones are available."
             self._warn(message, error)
 

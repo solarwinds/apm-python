@@ -3,9 +3,9 @@
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+from __future__ import annotations
 
 from enum import Enum, IntEnum
-from typing import Optional
 
 
 class SampleSource(IntEnum):
@@ -67,7 +67,7 @@ class Settings:
         sample_source: SampleSource,
         flags: Flags,
         buckets: dict[BucketType, BucketSettings],
-        signature_key: Optional[str],
+        signature_key: str | None,
         timestamp: int,
         ttl: int,
     ):
@@ -153,9 +153,7 @@ class Settings:
 
 
 class LocalSettings:
-    def __init__(
-        self, tracing_mode: Optional[TracingMode], trigger_mode: bool
-    ):
+    def __init__(self, tracing_mode: TracingMode | None, trigger_mode: bool):
         self._tracing_mode = tracing_mode
         self._trigger_mode = trigger_mode
 
@@ -188,8 +186,8 @@ class LocalSettings:
 
 
 def merge(
-    remote: Optional[Settings] = None, local: Optional[LocalSettings] = None
-) -> Optional[Settings]:
+    remote: Settings | None = None, local: LocalSettings | None = None
+) -> Settings | None:
     if remote is None:
         return None
     if local is None:

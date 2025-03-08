@@ -3,11 +3,12 @@
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+from __future__ import annotations
 
 import threading
 from collections.abc import Sequence
 from logging import Logger
-from typing import Any, Optional
+from typing import Any
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.metrics import MeterProvider
@@ -86,7 +87,7 @@ def http_span_metadata(kind: SpanKind, attributes: Attributes):
     }
 
 
-def parse_settings(unparsed: Any) -> Optional[tuple[Settings, Optional[str]]]:
+def parse_settings(unparsed: Any) -> tuple[Settings, str | None] | None:
     if unparsed is None or not isinstance(unparsed, dict):
         return None
     try:
@@ -192,13 +193,13 @@ class Sampler(OboeSampler):
     @override
     def local_settings(
         self,
-        parent_context: Optional["Context"],
+        parent_context: "Context" | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
+        links: Sequence["Link"] | None = None,
+        trace_state: "TraceState" | None = None,
     ) -> LocalSettings:
         settings = LocalSettings(
             tracing_mode=self.tracing_mode, trigger_mode=self.trigger_mode
@@ -227,13 +228,13 @@ class Sampler(OboeSampler):
     @override
     def request_headers(
         self,
-        parent_context: Optional["Context"],
+        parent_context: "Context" | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
+        links: Sequence["Link"] | None = None,
+        trace_state: "TraceState" | None = None,
     ) -> RequestHeaders:
         if parent_context:
             options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
@@ -250,14 +251,14 @@ class Sampler(OboeSampler):
     def set_response_headers(
         self,
         headers: ResponseHeaders,
-        parent_context: Optional["Context"],
+        parent_context: "Context" | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
-    ) -> Optional["TraceState"]:
+        links: Sequence["Link"] | None = None,
+        trace_state: "TraceState" | None = None,
+    ) -> "TraceState" | None:
         if parent_context:
             options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
             if options and isinstance(options, XTraceOptions):
@@ -271,7 +272,7 @@ class Sampler(OboeSampler):
                     )
         return None
 
-    def update_settings(self, settings: Any) -> Optional[Settings]:
+    def update_settings(self, settings: Any) -> Settings | None:
         parsed = parse_settings(settings)
         if parsed:
             parsed_settings, parsed_warning = parsed

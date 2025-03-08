@@ -3,8 +3,9 @@
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+from __future__ import annotations
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
 
 class Otlp:
@@ -65,15 +66,15 @@ class Configuration:
         self,
         enabled: bool,
         service: str,
-        token: Optional[str],
+        token: str | None,
         collector: str,
         headers: dict[str, str],
         otlp: Otlp,
         log_level: int,
-        tracing_mode: Optional[bool],
+        tracing_mode: bool | None,
         trigger_trace_enabled: bool,
         export_logs_enabled: bool,
-        transaction_name: Optional[Callable[[], str]],
+        transaction_name: Callable[[], str] | None,
         transaction_settings: list[TransactionSetting],
     ):
         self._enabled = enabled
@@ -106,11 +107,11 @@ class Configuration:
         self._service = value
 
     @property
-    def token(self) -> Optional[str]:
+    def token(self) -> str | None:
         return self._token
 
     @token.setter
-    def token(self, value: Optional[str]):
+    def token(self, value: str | None):
         self._token = value
 
     @property
@@ -146,11 +147,11 @@ class Configuration:
         self._log_level = value
 
     @property
-    def tracing_mode(self) -> Optional[bool]:
+    def tracing_mode(self) -> bool | None:
         return self._tracing_mode
 
     @tracing_mode.setter
-    def tracing_mode(self, value: Optional[bool]):
+    def tracing_mode(self, value: bool | None):
         self._tracing_mode = value
 
     @property
@@ -170,11 +171,11 @@ class Configuration:
         self._export_logs_enabled = value
 
     @property
-    def transaction_name(self) -> Optional[Callable[[], str]]:
+    def transaction_name(self) -> Callable[[], str] | None:
         return self._transaction_name
 
     @transaction_name.setter
-    def transaction_name(self, value: Optional[Callable[[], str]]):
+    def transaction_name(self, value: Callable[[], str] | None):
         self._transaction_name = value
 
     @property
