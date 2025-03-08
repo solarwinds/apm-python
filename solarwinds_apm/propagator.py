@@ -136,8 +136,10 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
 
         # Remove any baggage stored for custom transaction naming
         if baggage_header:
-            # Note: OTel instrumentors of messaging systems (e.g. boto3) may set
+            # Note: OTel instrumentors of messaging systems (e.g. boto3) may inject
             # baggage header value as a dictionary, not a string.
+            # APM Python SDK always sets baggage header as a string because the same
+            # instrumentors' getters extract with expectation of string.
             if isinstance(baggage_header, dict):
                 baggage_stringvalue = baggage_header.get("StringValue")
                 handle_baggage_header(baggage_stringvalue)
