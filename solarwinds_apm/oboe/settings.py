@@ -192,6 +192,9 @@ class LocalSettings:
 def merge(
     remote: Settings | None = None, local: LocalSettings | None = None
 ) -> Settings | None:
+    """
+    Returns remote sampling settings if available, else returns None. If possible, sets Flags by order of precedence (remote > local) unless remote has set an override.
+    """
     if remote is None:
         return None
     if local is None:
