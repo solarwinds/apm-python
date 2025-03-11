@@ -218,6 +218,9 @@ class RequestHeaders:
             == other._x_trace_options_signature
         )
 
+    def __str__(self):
+        return f"x_trace_options={self._x_trace_options}, x_trace_options_signature={self._x_trace_options_signature}"
+
 
 class ResponseHeaders:
     def __init__(self, x_trace_options_response: str | None):
@@ -237,6 +240,9 @@ class ResponseHeaders:
         return (
             self._x_trace_options_response == other._x_trace_options_response
         )
+
+    def __str__(self):
+        return f"x_trace_options_response={self._x_trace_options_response}"
 
 
 def parse_trace_options(header, logger=logging.getLogger(__name__)):

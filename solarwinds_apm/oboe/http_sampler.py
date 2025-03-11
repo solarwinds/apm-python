@@ -55,10 +55,10 @@ class HttpSampler(Sampler):
 
     def _warn(self, message: str, *args: Any):
         if message != self._last_warning_message:
-            self.logger.warning(message, *args)
+            self.logger.warning("%s %s", message, str(*args))
             self._last_warning_message = message
         else:
-            self.logger.debug(message, *args)
+            self.logger.debug("%s %s", message, str(*args))
 
     def shutdown(self):
         self._shutdown_event.set()

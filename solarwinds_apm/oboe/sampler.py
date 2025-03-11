@@ -276,11 +276,13 @@ class Sampler(OboeSampler):
         parsed = parse_settings(settings)
         if parsed:
             parsed_settings, parsed_warning = parsed
-            self.logger.debug("valid settings", parsed_settings, settings)
+            self.logger.debug(
+                "valid settings %s %s", parsed_settings, settings
+            )
             super().update_settings(parsed_settings)
             self._ready.set()
             if parsed_warning:
                 self.logger.warning(parsed_warning)
             return parsed_settings
-        self.logger.debug("invalid settings", settings)
+        self.logger.debug("invalid settings %s", settings)
         return None

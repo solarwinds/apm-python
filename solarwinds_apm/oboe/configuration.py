@@ -38,6 +38,9 @@ class Otlp:
     def logs(self, value: str):
         self._logs = value
 
+    def __str__(self):
+        return f"Otlp(traces={self._traces}, metrics={self._metrics}, logs={self._logs})"
+
 
 class TransactionSetting:
     def __init__(self, tracing: bool, matcher: Callable[[str], bool]):
@@ -59,6 +62,9 @@ class TransactionSetting:
     @matcher.setter
     def matcher(self, value: Callable[[str], bool]):
         self._matcher = value
+
+    def __str__(self):
+        return f"TransactionSetting(tracing={self._tracing}, matcher={self._matcher})"
 
 
 class Configuration:
@@ -185,3 +191,6 @@ class Configuration:
     @transaction_settings.setter
     def transaction_settings(self, value: list[TransactionSetting]):
         self._transaction_settings = value
+
+    def __str__(self):
+        return f"Configuration(enabled={self._enabled}, service={self._service}, token={self._token}, collector={self._collector}, headers={self._headers}, otlp={self._otlp}, log_level={self._log_level}, tracing_mode={self._tracing_mode}, trigger_trace_enabled={self._trigger_trace_enabled}, export_logs_enabled={self._export_logs_enabled}, transaction_name={self._transaction_name}, transaction_settings={self._transaction_settings})"
