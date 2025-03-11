@@ -152,7 +152,8 @@ class Settings:
         )
 
     def __str__(self):
-        return f"Settings(sample_rate={self._sample_rate}, sample_source={self._sample_source}, flags={self._flags}, buckets={self._buckets}, timestamp={self._timestamp}, ttl={self._ttl})"
+        buckets_str = ", ".join(f"{key}: {value}" for key, value in self._buckets.items())
+        return f"Settings(sample_rate={self._sample_rate}, sample_source={self._sample_source}, flags={self._flags}, buckets={{ {buckets_str} }}, timestamp={self._timestamp}, ttl={self._ttl})"
 
 
 class LocalSettings:
