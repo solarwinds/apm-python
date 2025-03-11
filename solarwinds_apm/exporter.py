@@ -198,6 +198,8 @@ class SolarWindsSpanExporter(SpanExporter):
                 framework = "psutil"
             elif framework == "tortoiseorm":
                 framework = "tortoise"
+            elif framework == "boto3sqs":
+                framework = "boto3"
             # asgi is implemented over multiple frameworks
             # https://asgi.readthedocs.io/en/latest/implementations.html
             # Use the first best guess framework for name and version
