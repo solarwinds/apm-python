@@ -129,6 +129,16 @@ class SampleState:
     def trace_options(self, value: TraceOptionsWithResponse | None):
         self._trace_options = value
 
+    def __str__(self):
+        return (
+            f"SampleState{{decision={self.decision}, "
+            f"attributes={self.attributes}, "
+            f"settings={self.settings}, "
+            f"trace_state={self.trace_state}, "
+            f"headers={self.headers}, "
+            f"trace_options={self.trace_options}}}"
+        )
+
 
 def _span_type(parent_span: Span | None = None) -> SpanType:
     parent_span_context = (
@@ -252,7 +262,7 @@ class OboeSampler(Sampler, ABC):
         else:
             self.disabled_algo(sample_state)
 
-        self.logger.debug("final sampling state", sample_state)
+        self.logger.debug("final sampling state %s", sample_state)
         new_trace_state = self.set_response_headers_from_sample_state(
             sample_state,
             parent_context,
@@ -340,7 +350,7 @@ class OboeSampler(Sampler, ABC):
             ),
         )
         self.logger.debug(
-            "X-Trace-Options present", sample_state.trace_options
+            "X-Trace-Options present %s", sample_state.trace_options
         )
         if sample_state.headers.x_trace_options_signature:
             sample_state.trace_options.response.auth = validate_signature(

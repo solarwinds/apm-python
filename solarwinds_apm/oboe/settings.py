@@ -59,6 +59,9 @@ class BucketSettings:
             return NotImplemented
         return self._capacity == other._capacity and self._rate == other._rate
 
+    def __str__(self):
+        return f"BucketSettings(capacity={self._capacity}, rate={self._rate})"
+
 
 class Settings:
     def __init__(

@@ -77,11 +77,13 @@ class JsonSampler(Sampler):
                 contents = file.read()
             unparsed = json.loads(contents)
         except (FileNotFoundError, json.JSONDecodeError) as error:
-            self.logger.debug("missing or invalid settings file", error)
+            self.logger.debug(
+                "missing or invalid settings file %s", str(error)
+            )
             return
 
         if not isinstance(unparsed, list) or len(unparsed) != 1:
-            self.logger.debug("invalid settings file", unparsed)
+            self.logger.debug("invalid settings file %s", str(unparsed))
             return
 
         parsed = self.update_settings(unparsed[0])
