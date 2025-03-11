@@ -3,7 +3,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
+import logging
 import os
 import socket
 from unittest.mock import patch, MagicMock
@@ -50,6 +50,7 @@ def test_valid_service_key_samples_created_spans():
                     token=None,
                     transaction_name=None,
                 ),
+                logger=logging.getLogger(__name__),
                 initial=None
             )
             memory_exporter = InMemorySpanExporter()
@@ -90,6 +91,7 @@ def test_invalid_service_key_does_not_sample_created_spans():
             token=None,
             transaction_name=None,
         ),
+        logger=logging.getLogger(__name__),
         initial=None
     )
     memory_exporter = InMemorySpanExporter()
@@ -125,6 +127,7 @@ def test_invalid_collector_does_not_sample_created_spans():
             token=None,
             transaction_name=None,
         ),
+        logger=logging.getLogger(__name__),
         initial=None
     )
     memory_exporter = InMemorySpanExporter()
@@ -181,7 +184,7 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
     }
     mock_response.status_code = 200
     mock_get.return_value = mock_response
-    sampler = HttpSampler(meter_provider=meter_provider, config=config, initial=None)
+    sampler = HttpSampler(meter_provider=meter_provider, config=config, logger=logging.getLogger(__name__), initial=None)
     result = sampler._fetch_from_collector()
     assert result == {
         "value": 1000000,
@@ -207,7 +210,7 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
 
 
 def test_shutdown(config, meter_provider):
-    sampler = HttpSampler(meter_provider=meter_provider, config=config, initial=None)
+    sampler = HttpSampler(meter_provider=meter_provider, config=config, logger=logging.getLogger(__name__), initial=None)
     sampler.shutdown()
     assert sampler._shutdown_event.is_set()
     sampler._daemon_thread.join(timeout=DAEMON_THREAD_JOIN_TIMEOUT)

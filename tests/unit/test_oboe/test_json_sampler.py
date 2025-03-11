@@ -5,6 +5,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import json
+import logging
 import os
 import tempfile
 import time
@@ -35,6 +36,7 @@ def json_sampler_tracer_memory_exporter():
                              otlp=Otlp(traces="", metrics="", logs=""), log_level=0, tracing_mode=True,
                              trigger_trace_enabled=True, export_logs_enabled=True, transaction_name=None,
                              transaction_settings=[]),
+        logger=logging.getLogger(__name__),
         path=PATH
     )
     memory_exporter = InMemorySpanExporter()

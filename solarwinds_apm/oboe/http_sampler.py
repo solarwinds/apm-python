@@ -31,12 +31,13 @@ class HttpSampler(Sampler):
         self,
         meter_provider: MeterProvider,
         config: Configuration,
+        logger: logging.Logger,
         initial: dict[str, Any] | None,
     ):
         super().__init__(
             meter_provider=meter_provider,
             config=config,
-            logger=logging.getLogger(__name__),
+            logger=logger,
             initial=initial,
         )
         self._url = config.collector

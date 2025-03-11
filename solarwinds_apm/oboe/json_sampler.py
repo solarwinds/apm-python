@@ -30,12 +30,13 @@ class JsonSampler(Sampler):
         self,
         meter_provider: MeterProvider,
         config: Configuration,
+        logger: logging.Logger,
         path: str = PATH,
     ):
         super().__init__(
             meter_provider=meter_provider,
             config=config,
-            logger=logging.getLogger(__name__),
+            logger=logger,
             initial=None,
         )
         self._path = path
