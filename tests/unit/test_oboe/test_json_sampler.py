@@ -34,7 +34,7 @@ def json_sampler_tracer_memory_exporter():
         meter_provider=meter_provider,
         config=Configuration(enabled=True, service="test", token=None, collector="", headers={},
                              log_level=0, tracing_mode=True,
-                             trigger_trace_enabled=True, export_logs_enabled=True, transaction_name=None,
+                             trigger_trace_enabled=True, transaction_name=None,
                              transaction_settings=[]),
         logger=logging.getLogger(__name__),
         path=PATH
