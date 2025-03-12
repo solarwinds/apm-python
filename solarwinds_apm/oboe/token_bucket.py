@@ -35,6 +35,9 @@ class _TokenBucket:
         self._tokens = min(self._tokens, self.capacity)
 
     def update(self, new_capacity=None, new_rate=None):
+        """
+        Update the capacity and rate of the token bucket.
+        """
         self._calculate_tokens()
         if new_capacity is not None:
             # negative means reset to 0
@@ -48,6 +51,9 @@ class _TokenBucket:
             self._rate = new_rate
 
     def consume(self, tokens=1):
+        """
+        Consume the specified number of tokens from the bucket.
+        """
         self._calculate_tokens()
         if self._tokens >= tokens:
             self._tokens -= tokens

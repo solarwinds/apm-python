@@ -54,6 +54,9 @@ from solarwinds_apm.traceoptions import XTraceOptions
 
 
 def http_span_metadata(kind: SpanKind, attributes: Attributes):
+    """
+    Extracts HTTP span metadata from attributes.
+    """
     if kind != SpanKind.SERVER or not (
         HTTP_REQUEST_METHOD in attributes or HTTP_METHOD in attributes
     ):
@@ -88,6 +91,9 @@ def http_span_metadata(kind: SpanKind, attributes: Attributes):
 
 
 def parse_settings(unparsed: Any) -> tuple[Settings, str | None] | None:
+    """
+    Parses settings.
+    """
     if unparsed is None or not isinstance(unparsed, dict):
         return None
     try:
@@ -188,6 +194,9 @@ class Sampler(OboeSampler):
         return self._transaction_settings
 
     def wait_until_ready(self, timeout: int) -> bool:
+        """
+        Waits until the sampler is ready.
+        """
         return self._ready.wait(timeout)
 
     @override
@@ -201,6 +210,9 @@ class Sampler(OboeSampler):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> LocalSettings:
+        """
+        Returns local settings.
+        """
         settings = LocalSettings(
             tracing_mode=self.tracing_mode, trigger_mode=self.trigger_mode
         )
@@ -236,6 +248,9 @@ class Sampler(OboeSampler):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> RequestHeaders:
+        """
+        Returns request headers.
+        """
         if parent_context:
             options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
             if options and isinstance(options, XTraceOptions):
@@ -259,6 +274,9 @@ class Sampler(OboeSampler):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> "TraceState" | None:
+        """
+        Sets response headers.
+        """
         if parent_context:
             options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
             if options and isinstance(options, XTraceOptions):
@@ -273,6 +291,9 @@ class Sampler(OboeSampler):
         return None
 
     def update_settings(self, settings: Any) -> Settings | None:
+        """
+        Updates the settings.
+        """
         parsed = parse_settings(settings)
         if parsed:
             parsed_settings, parsed_warning = parsed

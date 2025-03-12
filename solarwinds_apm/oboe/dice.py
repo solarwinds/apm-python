@@ -26,5 +26,8 @@ class _Dice:
         if new_rate is not None:
             self.rate = new_rate
 
-    def roll(self):
+    def roll(self) -> bool:
+        """
+        Roll the dice and return True if the roll is successful.
+        """
         return random() * self._scale < self.rate

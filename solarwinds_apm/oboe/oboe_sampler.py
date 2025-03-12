@@ -141,6 +141,9 @@ class SampleState:
 
 
 def _span_type(parent_span: Span | None = None) -> SpanType:
+    """
+    Determine the type of span based on the parent span.
+    """
     parent_span_context = (
         parent_span.get_span_context() if parent_span else None
     )
@@ -280,6 +283,9 @@ class OboeSampler(Sampler, ABC):
         )
 
     def _handle_local_span(self, parent_span: Span | None) -> "SamplingResult":
+        """
+        Handle local spans by checking if the parent span is sampled.
+        """
         if (
             parent_span
             and parent_span.get_span_context().trace_flags & TraceFlags.SAMPLED
@@ -298,6 +304,9 @@ class OboeSampler(Sampler, ABC):
         trace_state: "TraceState" | None,
         parent_span: Span | None,
     ) -> SampleState:
+        """
+        Initialize a SampleState object with the given parameters.
+        """
         return SampleState(
             decision=Decision.DROP,
             attributes=attributes if attributes else {},
@@ -338,6 +347,9 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ):
+        """
+        Process the X-Trace-Options header and set the appropriate response
+        """
         parsed = parse_trace_options(sample_state.headers.x_trace_options)
         sample_state.trace_options = TraceOptionsWithResponse(
             trigger_trace=parsed.trigger_trace,
@@ -408,6 +420,9 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None,
         trace_state: "TraceState" | None,
     ) -> "SamplingResult":
+        """
+        Handle the case where settings are unavailable.
+        """
         self.logger.debug("settings unavailable; sampling disabled")
         if (
             sample_state.trace_options
@@ -438,6 +453,9 @@ class OboeSampler(Sampler, ABC):
     def _handle_sample_start(
         self, sample_state: SampleState, parent_context: "Context" | None
     ):
+        """
+        Handle the case where the SAMPLE_START flag is set.
+        """
         if (
             sample_state.trace_options
             and sample_state.trace_options.trigger_trace
@@ -454,6 +472,9 @@ class OboeSampler(Sampler, ABC):
     def parent_based_algo(
         self, s: SampleState, parent_context: "Context" | None
     ):
+        """
+        Determine the sampling decision based on the parent span.
+        """
         s.attributes[PARENT_ID_ATTRIBUTE] = (
             s.trace_state[:16] if s.trace_state else None
         )
@@ -483,6 +504,9 @@ class OboeSampler(Sampler, ABC):
     def trigger_trace_algo(
         self, s: SampleState, parent_context: "Context" | None
     ):
+        """
+        Determine the sampling decision based on the TRIGGER_TRACE flag.
+        """
         if s.settings and s.settings.flags & Flags.TRIGGERED_TRACE:
             self.logger.debug("TRIGGERED_TRACE set; trigger tracing")
             bucket: _TokenBucket
@@ -506,6 +530,9 @@ class OboeSampler(Sampler, ABC):
         return TriggerTrace.TRIGGER_TRACING_DISABLED, Decision.RECORD_ONLY
 
     def dice_roll_algo(self, s: SampleState, parent_context: "Context" | None):
+        """
+        Determine the sampling decision based on a dice roll.
+        """
         dice = _Dice(
             rate=s.settings.sample_rate if s.settings else 0, scale=DICE_SCALE
         )
@@ -530,6 +557,9 @@ class OboeSampler(Sampler, ABC):
         return Decision.RECORD_ONLY
 
     def disabled_algo(self, s: SampleState):
+        """
+        Determine the sampling decision when sampling is disabled
+        """
         if s.trace_options and s.trace_options.trigger_trace:
             self.logger.debug("trigger trace requested but tracing disabled")
             s.trace_options.response.trigger_trace = (
@@ -544,6 +574,9 @@ class OboeSampler(Sampler, ABC):
             s.decision = Decision.DROP
 
     def update_settings(self, settings: Settings):
+        """
+        Update the sampler settings if the new settings are more recent.
+        """
         if settings.timestamp > (
             self.settings.timestamp if self.settings else 0
         ):
@@ -567,6 +600,9 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> Settings | None:
+        """
+        Get the settings within the ttl if available.
+        """
         if self.settings is None:
             return None
         if time.time() > self.settings.timestamp + self.settings.ttl:
@@ -597,7 +633,9 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> LocalSettings:
-        pass
+        """
+        Interface for inherited class to override
+        """
 
     @abstractmethod
     def request_headers(
@@ -610,7 +648,9 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> RequestHeaders:
-        pass
+        """
+        Interface for inherited class to override
+        """
 
     def set_response_headers_from_sample_state(
         self,
@@ -623,6 +663,9 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> "TraceState" | None:
+        """
+        Set the response headers based on the sample state
+        """
         headers = ResponseHeaders(x_trace_options_response=None)
         if s.trace_options:
             headers.x_trace_options_response = (
@@ -651,7 +694,9 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> "TraceState" | None:
-        pass
+        """
+        Interface for inherited class to override
+        """
 
     def get_description(self) -> str:
         return f"OboeSampler{{{self._settings}}}"

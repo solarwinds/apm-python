@@ -72,7 +72,6 @@ class JsonSampler(Sampler):
         # update if we're within 10s of expiry
         if time.time() + 10 < self._expiry:
             return
-
         try:
             with open(self._path, "r", encoding="utf-8") as file:
                 contents = file.read()

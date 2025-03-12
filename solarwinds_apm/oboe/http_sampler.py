@@ -62,17 +62,26 @@ class HttpSampler(Sampler):
             self.logger.debug("%s %s", message, str(*args))
 
     def shutdown(self):
+        """
+        Shutdown the daemon thread.
+        """
         self._shutdown_event.set()
         if self._daemon_thread:
             self._daemon_thread.join(timeout=DAEMON_THREAD_JOIN_TIMEOUT)
 
     def _loop(self):
+        """
+        Main loop of the daemon thread.
+        """
         # Initial fetch
         self._task()
         while not self._shutdown_event.wait(timeout=REQUEST_INTERVAL):
             self._task()
 
     def _task(self):
+        """
+        Fetch sampling settings from the collector and update the settings in the sampler.
+        """
         try:
             unparsed = self._fetch_from_collector()
             parsed = self.update_settings(unparsed)
@@ -85,6 +94,9 @@ class HttpSampler(Sampler):
             self._warn(message, error)
 
     def _fetch_from_collector(self):
+        """
+        Fetch sampling settings from the collector.
+        """
         url = f"{self._url}/v1/settings/{self._service}/{self._hostname}"
         self.logger.debug(f"retrieving sampling settings from {url}")
         response = requests.get(

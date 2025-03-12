@@ -265,6 +265,9 @@ def parse_trace_options(header, logger=logging.getLogger(__name__)):
 
 
 def parse_key_value_pairs(header):
+    """
+    Parse the key value pairs from the trace options header.
+    """
     kvs = []
     for pair in header.split(";"):
         kv = pair.split("=", 1)
@@ -276,6 +279,9 @@ def parse_key_value_pairs(header):
 
 
 def parse_trigger_trace(trace_options, key, value, logger):
+    """
+    Parse the trigger trace option.
+    """
     if value is not None or trace_options.trigger_trace is not None:
         logger.debug(
             "invalid trace option for trigger trace, should not have a value and only be provided once"
@@ -286,6 +292,9 @@ def parse_trigger_trace(trace_options, key, value, logger):
 
 
 def parse_timestamp(trace_options, key, value, logger):
+    """
+    Parse the timestamp from trace option.
+    """
     if value is None or trace_options.timestamp is not None:
         logger.debug(
             "invalid trace option for timestamp, should have a value and only be provided once"
@@ -305,6 +314,9 @@ def parse_timestamp(trace_options, key, value, logger):
 
 
 def parse_sw_keys(trace_options, key, value, logger):
+    """
+    Parse the sw keys from trace option.
+    """
     if value is None or trace_options.sw_keys is not None:
         logger.debug(
             "invalid trace option for sw keys, should have a value and only be provided once"
@@ -315,6 +327,9 @@ def parse_sw_keys(trace_options, key, value, logger):
 
 
 def parse_custom_key(trace_options, key, value, logger):
+    """
+    Parse the custom key from trace option.
+    """
     if value is None or key in trace_options.custom:
         logger.debug(
             "invalid trace option for custom key %s, should have a value and only be provided once",
@@ -328,6 +343,9 @@ def parse_custom_key(trace_options, key, value, logger):
 def stringify_trace_options_response(
     trace_options_response: TraceOptionsResponse,
 ):
+    """
+    Stringify the trace options response.
+    """
     kvs = {
         "auth": (
             trace_options_response.auth.value
@@ -349,6 +367,9 @@ def stringify_trace_options_response(
 
 
 def validate_signature(header, signature, key, timestamp):
+    """
+    Validate the signature of the trace options header using sha1 algorithm.
+    """
     if key is None:
         return Auth.NO_SIGNATURE_KEY
     if timestamp is None or abs(int(time.time()) - timestamp) > 5 * 60:
