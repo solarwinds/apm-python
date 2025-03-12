@@ -423,7 +423,7 @@ class OboeSampler(Sampler, ABC):
         """
         Handle the case where settings are unavailable.
         """
-        self.logger.debug("settings unavailable; sampling disabled")
+        self.logger.warning("settings unavailable; sampling disabled")
         if (
             sample_state.trace_options
             and sample_state.trace_options.trigger_trace
