@@ -16,7 +16,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-from solarwinds_apm.oboe.configuration import Configuration, Otlp
+from solarwinds_apm.oboe.configuration import Configuration
 from solarwinds_apm.oboe.http_sampler import HttpSampler, DAEMON_THREAD_JOIN_TIMEOUT
 
 
@@ -41,7 +41,6 @@ def test_valid_service_key_samples_created_spans():
                         "Authorization": f"Bearer {bearer}"
                     },
                     enabled=True,
-                    otlp=Otlp(traces="", metrics="", logs=""),
                     log_level=0,
                     trigger_trace_enabled=True,
                     export_logs_enabled=True,
@@ -82,7 +81,6 @@ def test_invalid_service_key_does_not_sample_created_spans():
                 "Authorization": "Bearer oh-no"
             },
             enabled=True,
-            otlp=Otlp(traces="", metrics="", logs=""),
             log_level=0,
             trigger_trace_enabled=True,
             export_logs_enabled=True,
@@ -118,7 +116,6 @@ def test_invalid_collector_does_not_sample_created_spans():
             headers={
             },
             enabled=True,
-            otlp=Otlp(traces="", metrics="", logs=""),
             log_level=0,
             trigger_trace_enabled=True,
             export_logs_enabled=True,
@@ -147,7 +144,6 @@ def config():
         collector="https://apm.collector.na-01.cloud.solarwinds.com",
         service="test_service",
         headers={"Authorization": "Bearer test_token"},
-        otlp=Otlp(traces="", metrics="", logs=""),
         log_level=0,
         trigger_trace_enabled=True,
         export_logs_enabled=True,

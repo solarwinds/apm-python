@@ -23,7 +23,7 @@ from opentelemetry.semconv.attributes.server_attributes import SERVER_ADDRESS
 from opentelemetry.semconv.attributes.url_attributes import URL_SCHEME, URL_PATH
 from opentelemetry.trace import SpanKind
 
-from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting, Otlp
+from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting
 from solarwinds_apm.oboe.sampler import http_span_metadata, parse_settings, Sampler
 from solarwinds_apm.oboe.settings import Settings, SampleSource, Flags, BucketType, BucketSettings
 
@@ -48,7 +48,6 @@ def options(tracing: bool | None, trigger_trace: bool,
         token=None,
         collector="localhost",
         headers={},
-        otlp=Otlp(traces="", metrics="", logs=""),
         log_level=0,
         export_logs_enabled=False,
         transaction_name=None,

@@ -18,7 +18,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-from solarwinds_apm.oboe.configuration import Configuration, Otlp
+from solarwinds_apm.oboe.configuration import Configuration
 from solarwinds_apm.oboe.json_sampler import JsonSampler
 
 PATH = os.path.join(tempfile.gettempdir(), "solarwinds-apm-settings.json")
@@ -33,7 +33,7 @@ def json_sampler_tracer_memory_exporter():
     sampler = JsonSampler(
         meter_provider=meter_provider,
         config=Configuration(enabled=True, service="test", token=None, collector="", headers={},
-                             otlp=Otlp(traces="", metrics="", logs=""), log_level=0, tracing_mode=True,
+                             log_level=0, tracing_mode=True,
                              trigger_trace_enabled=True, export_logs_enabled=True, transaction_name=None,
                              transaction_settings=[]),
         logger=logging.getLogger(__name__),

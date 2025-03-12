@@ -8,40 +8,6 @@ from __future__ import annotations
 from collections.abc import Callable
 
 
-class Otlp:
-    def __init__(self, traces: str, metrics: str, logs: str):
-        self._traces = traces
-        self._metrics = metrics
-        self._logs = logs
-
-    @property
-    def traces(self) -> str:
-        return self._traces
-
-    @traces.setter
-    def traces(self, value: str):
-        self._traces = value
-
-    @property
-    def metrics(self) -> str:
-        return self._metrics
-
-    @metrics.setter
-    def metrics(self, value: str):
-        self._metrics = value
-
-    @property
-    def logs(self) -> str:
-        return self._logs
-
-    @logs.setter
-    def logs(self, value: str):
-        self._logs = value
-
-    def __str__(self):
-        return f"Otlp(traces={self._traces}, metrics={self._metrics}, logs={self._logs})"
-
-
 class TransactionSetting:
     def __init__(self, tracing: bool, matcher: Callable[[str], bool]):
         self._tracing = tracing
@@ -75,7 +41,6 @@ class Configuration:
         token: str | None,
         collector: str,
         headers: dict[str, str],
-        otlp: Otlp,
         log_level: int,
         tracing_mode: bool | None,
         trigger_trace_enabled: bool,
@@ -88,7 +53,6 @@ class Configuration:
         self._token = token
         self._collector = collector
         self._headers = headers
-        self._otlp = otlp
         self._log_level = log_level
         self._tracing_mode = tracing_mode
         self._trigger_trace_enabled = trigger_trace_enabled
@@ -135,14 +99,6 @@ class Configuration:
     @headers.setter
     def headers(self, value: dict[str, str]):
         self._headers = value
-
-    @property
-    def otlp(self) -> Otlp:
-        return self._otlp
-
-    @otlp.setter
-    def otlp(self, value: Otlp):
-        self._otlp = value
 
     @property
     def log_level(self) -> int:
@@ -193,4 +149,4 @@ class Configuration:
         self._transaction_settings = value
 
     def __str__(self):
-        return f"Configuration(enabled={self._enabled}, service={self._service}, token={self._token}, collector={self._collector}, headers={self._headers}, otlp={self._otlp}, log_level={self._log_level}, tracing_mode={self._tracing_mode}, trigger_trace_enabled={self._trigger_trace_enabled}, export_logs_enabled={self._export_logs_enabled}, transaction_name={self._transaction_name}, transaction_settings={self._transaction_settings})"
+        return f"Configuration(enabled={self._enabled}, service={self._service}, token={self._token}, collector={self._collector}, headers={self._headers}, log_level={self._log_level}, tracing_mode={self._tracing_mode}, trigger_trace_enabled={self._trigger_trace_enabled}, export_logs_enabled={self._export_logs_enabled}, transaction_name={self._transaction_name}, transaction_settings={self._transaction_settings})"
