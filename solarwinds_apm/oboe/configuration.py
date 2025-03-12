@@ -38,7 +38,6 @@ class Configuration:
         self,
         enabled: bool,
         service: str,
-        token: str | None,
         collector: str,
         headers: dict[str, str],
         log_level: int,
@@ -49,7 +48,6 @@ class Configuration:
     ):
         self._enabled = enabled
         self._service = service
-        self._token = token
         self._collector = collector
         self._headers = headers
         self._log_level = log_level
@@ -73,14 +71,6 @@ class Configuration:
     @service.setter
     def service(self, value: str):
         self._service = value
-
-    @property
-    def token(self) -> str | None:
-        return self._token
-
-    @token.setter
-    def token(self, value: str | None):
-        self._token = value
 
     @property
     def collector(self) -> str:
@@ -139,4 +129,4 @@ class Configuration:
         self._transaction_settings = value
 
     def __str__(self):
-        return f"Configuration(enabled={self._enabled}, service={self._service}, token={self._token}, collector={self._collector}, headers={self._headers}, log_level={self._log_level}, tracing_mode={self._tracing_mode}, trigger_trace_enabled={self._trigger_trace_enabled}, transaction_name={self._transaction_name}, transaction_settings={self._transaction_settings})"
+        return f"Configuration(enabled={self._enabled}, service={self._service}, collector={self._collector}, headers={self._headers}, log_level={self._log_level}, tracing_mode={self._tracing_mode}, trigger_trace_enabled={self._trigger_trace_enabled}, transaction_name={self._transaction_name}, transaction_settings={self._transaction_settings})"

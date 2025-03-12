@@ -45,7 +45,6 @@ def test_valid_service_key_samples_created_spans():
                     trigger_trace_enabled=True,
                     tracing_mode=None,
                     transaction_settings=[],
-                    token=None,
                     transaction_name=None,
                 ),
                 logger=logging.getLogger(__name__),
@@ -84,7 +83,6 @@ def test_invalid_service_key_does_not_sample_created_spans():
             trigger_trace_enabled=True,
             tracing_mode=None,
             transaction_settings=[],
-            token=None,
             transaction_name=None,
         ),
         logger=logging.getLogger(__name__),
@@ -118,7 +116,6 @@ def test_invalid_collector_does_not_sample_created_spans():
             trigger_trace_enabled=True,
             tracing_mode=None,
             transaction_settings=[],
-            token=None,
             transaction_name=None,
         ),
         logger=logging.getLogger(__name__),
@@ -146,7 +143,6 @@ def config():
         enabled=True,
         transaction_name=None,
         transaction_settings=[],
-        token=None,
         tracing_mode=None,
     )
 
