@@ -41,7 +41,6 @@ def test_valid_service_key_samples_created_spans():
                         "Authorization": f"Bearer {bearer}"
                     },
                     enabled=True,
-                    log_level=0,
                     trigger_trace_enabled=True,
                     tracing_mode=None,
                     transaction_settings=[],
@@ -79,7 +78,6 @@ def test_invalid_service_key_does_not_sample_created_spans():
                 "Authorization": "Bearer oh-no"
             },
             enabled=True,
-            log_level=0,
             trigger_trace_enabled=True,
             tracing_mode=None,
             transaction_settings=[],
@@ -112,7 +110,6 @@ def test_invalid_collector_does_not_sample_created_spans():
             headers={
             },
             enabled=True,
-            log_level=0,
             trigger_trace_enabled=True,
             tracing_mode=None,
             transaction_settings=[],
@@ -138,7 +135,6 @@ def config():
         collector="https://apm.collector.na-01.cloud.solarwinds.com",
         service="test_service",
         headers={"Authorization": "Bearer test_token"},
-        log_level=0,
         trigger_trace_enabled=True,
         enabled=True,
         transaction_name=None,

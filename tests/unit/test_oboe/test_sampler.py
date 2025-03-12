@@ -47,7 +47,6 @@ def options(tracing: bool | None, trigger_trace: bool,
         service="test",
         collector="localhost",
         headers={},
-        log_level=0,
         transaction_name=None,
     )
 

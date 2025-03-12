@@ -40,7 +40,6 @@ class Configuration:
         service: str,
         collector: str,
         headers: dict[str, str],
-        log_level: int,
         tracing_mode: bool | None,
         trigger_trace_enabled: bool,
         transaction_name: Callable[[], str] | None,
@@ -50,7 +49,6 @@ class Configuration:
         self._service = service
         self._collector = collector
         self._headers = headers
-        self._log_level = log_level
         self._tracing_mode = tracing_mode
         self._trigger_trace_enabled = trigger_trace_enabled
         self._transaction_name = transaction_name
@@ -89,14 +87,6 @@ class Configuration:
         self._headers = value
 
     @property
-    def log_level(self) -> int:
-        return self._log_level
-
-    @log_level.setter
-    def log_level(self, value: int):
-        self._log_level = value
-
-    @property
     def tracing_mode(self) -> bool | None:
         return self._tracing_mode
 
@@ -129,4 +119,4 @@ class Configuration:
         self._transaction_settings = value
 
     def __str__(self):
-        return f"Configuration(enabled={self._enabled}, service={self._service}, collector={self._collector}, headers={self._headers}, log_level={self._log_level}, tracing_mode={self._tracing_mode}, trigger_trace_enabled={self._trigger_trace_enabled}, transaction_name={self._transaction_name}, transaction_settings={self._transaction_settings})"
+        return f"Configuration(enabled={self._enabled}, service={self._service}, collector={self._collector}, headers={self._headers}, tracing_mode={self._tracing_mode}, trigger_trace_enabled={self._trigger_trace_enabled}, transaction_name={self._transaction_name}, transaction_settings={self._transaction_settings})"
