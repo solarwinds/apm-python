@@ -125,7 +125,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()
         )
 
-        def handle_baggage_header(baggage_header):
+        def _handle_baggage_header(baggage_header):
             sanitized_baggage = self.remove_custom_naming_baggage_header(
                 baggage_header
             )
@@ -144,9 +144,9 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             # inject header values as dictionary, not a string.
             if isinstance(baggage_header, dict):
                 baggage_stringvalue = baggage_header.get("StringValue")
-                handle_baggage_header(baggage_stringvalue)
+                _handle_baggage_header(baggage_stringvalue)
             elif isinstance(baggage_header, str):
-                handle_baggage_header(baggage_header)
+                _handle_baggage_header(baggage_header)
             # Else: leave baggage header as is in carrier
 
     def remove_custom_naming_baggage_header(
