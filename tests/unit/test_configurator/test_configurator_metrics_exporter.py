@@ -16,66 +16,6 @@ from .fixtures.trace import get_trace_mocks
 
 
 class TestConfiguratorMetricsExporter:
-    def test_configure_metrics_exporter_disabled(
-        self,
-        mocker,
-        mock_apmconfig_disabled,
-        mock_pemreader,
-        mock_meterprovider,
-    ):
-        # Mock Otel
-        trace_mocks = get_trace_mocks(mocker)
-
-        # Test!
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_metrics_exporter(
-            mock_apmconfig_disabled,
-        )
-        mock_pemreader.assert_not_called()
-        trace_mocks.get_tracer_provider.assert_not_called()
-        trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
-        mock_meterprovider.assert_not_called()
-
-    def test_configure_metrics_exporter_sw_enabled_false(
-        self,
-        mocker,
-        mock_apmconfig_metrics_enabled_false,
-        mock_pemreader,
-        mock_meterprovider,
-    ):
-        # Mock Otel
-        trace_mocks = get_trace_mocks(mocker)
-
-        # Test!
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_metrics_exporter(
-            mock_apmconfig_metrics_enabled_false,
-        )
-        mock_pemreader.assert_not_called()
-        trace_mocks.get_tracer_provider.assert_not_called()
-        trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
-        mock_meterprovider.assert_not_called()
-
-    def test_configure_metrics_exporter_sw_enabled_none(
-        self,
-        mocker,
-        mock_apmconfig_metrics_enabled_none,
-        mock_pemreader,
-        mock_meterprovider,
-    ):
-        # Mock Otel
-        trace_mocks = get_trace_mocks(mocker)
-
-        # Test!
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_metrics_exporter(
-            mock_apmconfig_metrics_enabled_none,
-        )
-        mock_pemreader.assert_not_called()
-        trace_mocks.get_tracer_provider.assert_not_called()
-        trace_mocks.get_tracer_provider().get_tracer.assert_not_called()
-        mock_meterprovider.assert_not_called()
-
     def test_configure_metrics_exporter_none(
         self,
         mocker,

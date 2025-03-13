@@ -10,10 +10,10 @@ import json
 from opentelemetry import trace as trace_api
 from unittest import mock
 
-from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
+from .test_base_sw_legacy import TestBaseSwLegacy
 
 
-class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
+class TestUnsignedWithOrWithoutTt(TestBaseSwLegacy):
     """
     Test class for unsigned requests, with or without trigger tracing,
     without traceparent nor tracestate headers.
@@ -101,7 +101,7 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]
@@ -253,7 +253,7 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 0
 
     def test_unsigned_with_tt_not_sampled_tt_disabled(self):
@@ -333,7 +333,7 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 0
 
     def test_unsigned_without_tt_sampled(self):
@@ -420,7 +420,7 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 2
         span_server = spans[1]
         span_client = spans[0]
@@ -573,5 +573,5 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
 
         # Verify no spans exported
-        spans = self.memory_exporter.get_finished_spans()
+        spans = self.memory_span_exporter.get_finished_spans()
         assert len(spans) == 0

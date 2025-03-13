@@ -16,7 +16,7 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from opentelemetry import trace
-from opentelemetry._logs import set_logger_provider
+from opentelemetry._logs import get_logger_provider, set_logger_provider
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
@@ -110,8 +110,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             oboe_api,
         )
 
-        if apm_config.is_lambda:
-            logger.debug("No init event in lambda")
+        if apm_config.get("legacy") is False:
+            logger.debug("No init event outside legacy mode")
             return
 
         # Report reporter init status event after everything is done.
@@ -132,50 +132,81 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         reporter: "Reporter",
         oboe_api: "OboeAPI",
     ) -> None:
-        """Configure OTel sampler, exporter, propagator, response propagator"""
-        self._configure_sampler(
-            apm_config,
-            reporter,
-            oboe_api,
-        )
+        """Configure OTel sampler, exporter, propagator, response propagator
+        depending on agent enabled status and legacy mode."""
         if apm_config.agent_enabled:
-            # set MeterProvider first via metrics_exporter config
-            self._configure_metrics_exporter(apm_config)
+            self._configure_sampler(
+                apm_config,
+                reporter,
+                oboe_api,
+            )
+            self._configure_propagator()
+            self._configure_response_propagator()
+
             # This processor only defines on_start
             self._configure_service_entry_id_span_processor()
-
             # The txnname calculator span processor must be registered
             # before the rest of the processors with defined on_end
             self._configure_txnname_calculator_span_processor(
                 apm_txname_manager,
             )
-            self._configure_inbound_metrics_span_processor(
-                apm_txname_manager,
-                apm_config,
-            )
-            self._configure_otlp_metrics_span_processors(
-                apm_txname_manager,
-                apm_config,
-                oboe_api,
-            )
-            # The txnname cleanup span processor must be registered
-            # after the rest of the processors with defined on_end
-            self._configure_txnname_cleanup_span_processor(
-                apm_txname_manager,
-            )
 
+            if apm_config.get("legacy") is True:
+                # Export APM metrics by APM-proto.
+                self._configure_inbound_metrics_span_processor(
+                    apm_txname_manager,
+                    apm_config,
+                )
+                # While in legacy mode, user can also opt into exporting
+                # Otel instrumentor metrics by OTLP.
+                # Default values are set by SolarWindsDistro; user can customize.
+                if apm_config.get("export_metrics_enabled") is True:
+                    self._configure_metrics_exporter(apm_config)
+
+            else:
+                # Export APM and Otel instrumentor metrics, logs by OTLP.
+                # Default values are set by SolarWindsDistro; user can customize.
+                self._configure_metrics_exporter(apm_config)
+                self._configure_otlp_metrics_span_processors(
+                    apm_txname_manager,
+                    apm_config,
+                    oboe_api,
+                )
+
+            # Always setup logs exporter
+            self._configure_logs_exporter(apm_config)
+
+            # If enabled, emit log event telemetry
+            if (
+                SolarWindsApmConfig.convert_to_bool(
+                    os.environ.get(
+                        _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+                    )
+                )
+                is True
+            ):
+                self._configure_logs_handler()
+
+            # Export traces by OTLP or APM-proto depending on OTEL_TRACES_EXPORTER.
+            # Default values are set by SolarWindsDistro; user can customize.
             self._configure_traces_exporter(
                 reporter,
                 apm_txname_manager,
                 apm_fwkv_manager,
                 apm_config,
             )
-            self._configure_logs_exporter(apm_config)
-            self._configure_propagator()
-            self._configure_response_propagator()
+
+            # The txnname cleanup span processor must be registered
+            # after the rest of the processors with defined on_end
+            self._configure_txnname_cleanup_span_processor(
+                apm_txname_manager,
+            )
+
         else:
-            # Warning: This may still set OTEL_PROPAGATORS if set because OTel API
-            logger.error("Tracing disabled. Not setting propagators.")
+            logger.warning(
+                "Tracing disabled. Skipping setup of all telemetry processors and exporters; using no-op tracer."
+            )
+            trace.set_tracer_provider(trace.NoOpTracerProvider())
 
     def _configure_sampler(
         self,
@@ -183,11 +214,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         reporter: "Reporter",
         oboe_api: "OboeAPI",
     ) -> None:
-        """Always configure SolarWinds OTel sampler, or none if disabled"""
-        if not apm_config.agent_enabled:
-            logger.error("Tracing disabled. Using OTel no-op tracer provider.")
-            trace.set_tracer_provider(trace.NoOpTracerProvider())
-            return
+        """Configure SolarWinds OTel sampler"""
         try:
             sampler = next(
                 iter(
@@ -288,19 +315,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_config: SolarWindsApmConfig,
         oboe_api: "OboeAPI",
     ) -> None:
-        """Configure SolarWindsOTLPMetricsSpanProcessor (including OTLP meters)
-        if metrics exporters are configured and set up i.e. by _configure_metrics_exporter
-        """
-        # SolarWindsDistro._configure does setdefault before this is called
-        environ_exporter = os.environ.get(
-            OTEL_METRICS_EXPORTER,
-        )
-        if not environ_exporter:
-            logger.debug(
-                "No OTEL_METRICS_EXPORTER set, skipping init of metrics processors"
-            )
-            return
-
+        """Configure SolarWindsOTLPMetricsSpanProcessor with APM OTLP meters"""
         trace.get_tracer_provider().add_span_processor(
             SolarWindsOTLPMetricsSpanProcessor(
                 apm_txname_manager,
@@ -316,17 +331,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure traces exporters if agent enabled.
-        Links to global TracerProvider.
+        """Configure traces exporters. Links to global TracerProvider.
 
         Initialization of SolarWinds exporter requires a liboboe reporter
         If `reporter` is no-op, the SW exporter will not export spans."""
-        if not apm_config.agent_enabled:
-            logger.error(
-                "APM Python library disabled. Cannot set traces exporters."
-            )
-            return
-
         # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
             OTEL_TRACES_EXPORTER,
@@ -396,21 +404,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure OTel OTLP metrics exporters if enabled and agent enabled.
-        Settings precedence: OTEL_* > SW_APM_EXPORT_METRICS_ENABLED.
-        Links to new metric readers and global MeterProvider."""
-        if not apm_config.agent_enabled:
-            logger.error(
-                "APM Python library disabled. Cannot set metrics exporters."
-            )
-            return
-
-        if not apm_config.get("export_metrics_enabled"):
-            logger.debug(
-                "APM OTLP metrics export disabled. Skipping init of metrics exporters"
-            )
-            return
-
+        """Configures OTel OTLP metrics exporter(s). Links to new metric
+        readers and global MeterProvider."""
         # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
             OTEL_METRICS_EXPORTER,
@@ -485,35 +480,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure OTel OTLP logs exporters if enabled and agent enabled.
-        Settings precedence: OTEL_* > SW_APM_EXPORT_LOGS_ENABLED.
-        Links to new global LoggerProvider."""
-        if not apm_config.agent_enabled:
-            logger.error(
-                "APM Python library disabled. Cannot set logs exporters."
-            )
-            return
-
-        otel_ev = os.environ.get(
-            _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
-        )
-        otlp_log_enabled = SolarWindsApmConfig.convert_to_bool(otel_ev)
-        sw_enabled = apm_config.get("export_logs_enabled")
-        if otlp_log_enabled is False:
-            logger.debug(
-                "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED false. Skipping init of logs exporters"
-            )
-            return
-
-        # If otel_ev is True, ignore sw_enabled.
-        # If otel_ev is None (unset or could not convert to bool)
-        # then sw_enabled determines logs export setup.
-        if not otlp_log_enabled and sw_enabled is False:
-            logger.debug(
-                "APM OTLP logs export disabled. Skipping init of logs exporters"
-            )
-            return
-
+        """Configures OTel OTLP logs exporter(s). Links to new global LoggerProvider."""
         # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
             OTEL_LOGS_EXPORTER,
@@ -570,7 +537,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
             logger_provider.add_log_record_processor(logs_processor)
 
-        # Create and attach OTLP handler to root logger
+    def _configure_logs_handler(self) -> None:
+        """Create and attach Otel LoggingHandler to emit log event telemetry"""
+        logger.debug("Attaching OTel handler to root logger.")
+        logger_provider = get_logger_provider()
         log_handler = LoggingHandler(
             level=logging.NOTSET,
             logger_provider=logger_provider,
@@ -808,10 +778,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         keys: dict = None,
     ) -> Any:
         """Create a Reporter init event if the reporter is ready."""
-        if apm_config.is_lambda:
-            logger.debug("Skipping init event in lambda")
-            return None
-
         reporter_ready = False
         if reporter.init_status in (
             OboeReporterCode.OBOE_INIT_OK,
