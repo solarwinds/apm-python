@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.4.0...HEAD)
 
+## [3.5.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.5.0) - 2025-03-14
+
+### Changed
+- Updated image builds and scans ([#529](https://github.com/solarwinds/apm-python/pull/529), [#531](https://github.com/solarwinds/apm-python/pull/531), [#535](https://github.com/solarwinds/apm-python/pull/535), [#537](https://github.com/solarwinds/apm-python/pull/537))
+- Fixed warning message at boto3 lookup during APM export ([#539](https://github.com/solarwinds/apm-python/pull/539))
+- Fixed custom propagator to support boto3, botocore instrumentation injection ([#540]https://github.com/solarwinds/apm-python/pull/540)
+
 ## [3.4.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.4.0) - 2025-02-18
 
 ### Added
