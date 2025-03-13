@@ -83,6 +83,10 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
 
         # Prepare carrier with carrier's or new tracestate
         trace_state = None
+        # Note: OTel Propagation API callers (OTel instrumentors) may
+        # inject header values as dictionary, not a string.
+        if isinstance(trace_state_header, dict):
+            trace_state_header = trace_state_header.get("StringValue")
         if not trace_state_header:
             # Only create new trace state if valid span_id
             if span_context.span_id == self._INVALID_SPAN_ID:
@@ -121,21 +125,29 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()
         )
 
+        def _handle_baggage_header(baggage_header):
+            sanitized_baggage = self.remove_custom_naming_baggage_header(
+                baggage_header
+            )
+            if sanitized_baggage != "":
+                # Re-inject if sanitized baggage non-empty
+                setter.set(
+                    carrier, self._BAGGAGE_HEADER_NAME, sanitized_baggage
+                )
+            else:
+                # Or, remove baggage from carrier to prevent empty header
+                del carrier[self._BAGGAGE_HEADER_NAME]
+
         # Remove any baggage stored for custom transaction naming
         if baggage_header:
-            baggage_header = self.remove_custom_naming_baggage_header(
-                baggage_header,
-            )
-            # Re-inject if sanitized baggage non-empty
-            if baggage_header != "":
-                setter.set(
-                    carrier,
-                    self._BAGGAGE_HEADER_NAME,
-                    baggage_header,
-                )
-            # Or, remove baggage from carrier to prevent empty header
-            else:
-                del carrier[self._BAGGAGE_HEADER_NAME]
+            # Note: OTel Propagation API callers (OTel instrumentors) may
+            # inject header values as dictionary, not a string.
+            if isinstance(baggage_header, dict):
+                baggage_stringvalue = baggage_header.get("StringValue")
+                _handle_baggage_header(baggage_stringvalue)
+            elif isinstance(baggage_header, str):
+                _handle_baggage_header(baggage_header)
+            # Else: leave baggage header as is in carrier
 
     def remove_custom_naming_baggage_header(
         self,

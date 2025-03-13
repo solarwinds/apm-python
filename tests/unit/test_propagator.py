@@ -192,6 +192,96 @@ class TestSolarWindsPropagator():
             ),
         ])
 
+    def test_inject_existing_tracestate_dict_no_stringvalue(self, mocker):
+        """sw added to start, foo=bar kept, xtrace_options_response removed"""
+        self.mock_otel_context(mocker, True)
+        mock_carrier = {
+            "tracestate": {
+                "not-stringvalue": "unused",
+            }
+        }
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "tracestate",
+                TraceState([("sw", "1000100010001000-01")]).to_header(),
+            ),
+        ])
+
+    def test_inject_existing_tracestate_dict_no_sw(self, mocker):
+        """sw added to start, foo=bar kept, xtrace_options_response removed"""
+        self.mock_otel_context(mocker, True)
+        mock_carrier = {
+            "tracestate": {
+                "StringValue": "xtrace_options_response=abc123,foo=bar",
+            }
+        }
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "tracestate",
+                TraceState([("sw", "1000100010001000-01"), ("foo", "bar")]).to_header(),
+            ),
+        ])
+
+    def test_inject_existing_tracestate_dict_existing_sw(self, mocker):
+        """sw updated and moved to start, foo=bar kept, xtrace_options_response removed"""
+        self.mock_otel_context(mocker, True)
+        mock_carrier = {
+            "tracestate": {
+                "StringValue": "xtrace_options_response=abc123,foo=bar,sw=some-existing-value",
+            }
+        }
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "tracestate",
+                TraceState([("sw", "1000100010001000-01"), ("foo", "bar")]).to_header(),
+            ),
+        ])
+
     def test_inject_empty_baggage_no_sw(self, mocker):
         self.mock_otel_context(mocker, True)
         mock_baggage_header = ""
@@ -309,6 +399,175 @@ class TestSolarWindsPropagator():
                 "foo=bar,zzz=abc",
             ),
         ])
+
+    def test_inject_empty_baggage_dict_no_sw(self, mocker):
+        self.mock_otel_context(mocker, True)
+        mock_baggage_header = {}
+        mock_get = mocker.Mock(return_value=mock_baggage_header)
+        mock_del = mocker.Mock()
+        mock_carrier = mocker.Mock()
+        mock_carrier.configure_mock(
+            **{
+                "get": mock_get,
+                "__delitem__": mock_del,
+            }
+        )
+
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        # carrier does not delete kv
+        mock_del.assert_not_called()
+        # setter not called for empty baggage; only called once for tracestate earlier
+        assert call(mock_carrier, "baggage", mock_baggage_header) not in mock_set.mock_calls
+        mock_set.assert_called_once()
+
+    def test_inject_empty_baggage_dict_with_sw(self, mocker):
+        self.mock_otel_context(mocker, True)
+        mock_baggage_header = {
+            "StringValue": "sw-current-trace-entry-span-id=some-id"
+        }
+        def get_side_effect(param, *args, **kwargs):
+            if param == "baggage":
+                return mock_baggage_header
+            else:
+                return "foo"
+
+        mock_get = mocker.Mock(side_effect=get_side_effect)
+        mock_del = mocker.Mock()
+        mock_carrier = mocker.Mock()
+        mock_carrier.configure_mock(
+            **{
+                "get": mock_get,
+                "__delitem__": mock_del,
+            }
+        )
+
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        # carrier deletes empty kv
+        mock_del.assert_has_calls([
+            call("baggage")
+        ])
+        # setter not called for empty baggage; only called once for tracestate earlier
+        assert call(mock_carrier, "baggage", mock_baggage_header) not in mock_set.mock_calls
+        mock_set.assert_called_once()
+
+    def test_inject_existing_baggage_dict_no_sw(self, mocker):
+        self.mock_otel_context(mocker, True)
+        mock_carrier = {
+            "baggage": {
+                "StringValue": "foo=bar,zzz=abc"
+            },
+        }
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "baggage",
+                "foo=bar,zzz=abc",
+            ),
+        ])
+
+    def test_inject_existing_baggage_dict_with_sw(self, mocker):
+        self.mock_otel_context(mocker, True)
+        mock_carrier = {
+            "baggage": {
+                "StringValue": "foo=bar,sw-current-trace-entry-span-id=some-id,zzz=abc",
+            },
+        }
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "baggage",
+                "foo=bar,zzz=abc",
+            ),
+        ])
+
+    def test_inject_empty_baggage_not_str_not_dict(self, mocker):
+        self.mock_otel_context(mocker, True)
+        mock_baggage_header = 12345
+
+        def get_side_effect(param, *args, **kwargs):
+            if param == "baggage":
+                return mock_baggage_header
+            else:
+                return "foo"
+
+        mock_get = mocker.Mock(side_effect=get_side_effect)
+        mock_del = mocker.Mock()
+        mock_carrier = mocker.Mock()
+        mock_carrier.configure_mock(
+            **{
+                "get": mock_get,
+                "__delitem__": mock_del,
+            }
+        )
+
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        # carrier does not delete kv
+        mock_del.assert_not_called()
+        # setter not called for empty baggage; only called once for tracestate earlier
+        assert call(mock_carrier, "baggage", mock_baggage_header) not in mock_set.mock_calls
+        mock_set.assert_called_once()
 
     def test_remove_custom_naming_baggage_header_various_splits(self):
         """Shouldn't happen with composite but just in case and coverage"""
