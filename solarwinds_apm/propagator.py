@@ -83,6 +83,10 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
 
         # Prepare carrier with carrier's or new tracestate
         trace_state = None
+        # Note: OTel Propagation API callers (OTel instrumentors) may
+        # inject header values as dictionary, not a string.
+        if isinstance(trace_state_header, dict):
+            trace_state_header = trace_state_header.get("StringValue")
         if not trace_state_header:
             # Only create new trace state if valid span_id
             if span_context.span_id == self._INVALID_SPAN_ID:
@@ -136,10 +140,8 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
 
         # Remove any baggage stored for custom transaction naming
         if baggage_header:
-            # Note: OTel instrumentors of messaging systems (e.g. boto3) may inject
-            # baggage header value as a dictionary, not a string.
-            # APM Python SDK always sets baggage header as a string because the same
-            # instrumentors' getters extract with expectation of string.
+            # Note: OTel Propagation API callers (OTel instrumentors) may
+            # inject header values as dictionary, not a string.
             if isinstance(baggage_header, dict):
                 baggage_stringvalue = baggage_header.get("StringValue")
                 handle_baggage_header(baggage_stringvalue)

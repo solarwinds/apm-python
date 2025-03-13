@@ -192,6 +192,96 @@ class TestSolarWindsPropagator():
             ),
         ])
 
+    def test_inject_existing_tracestate_dict_no_stringvalue(self, mocker):
+        """sw added to start, foo=bar kept, xtrace_options_response removed"""
+        self.mock_otel_context(mocker, True)
+        mock_carrier = {
+            "tracestate": {
+                "not-stringvalue": "unused",
+            }
+        }
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "tracestate",
+                TraceState([("sw", "1000100010001000-01")]).to_header(),
+            ),
+        ])
+
+    def test_inject_existing_tracestate_dict_no_sw(self, mocker):
+        """sw added to start, foo=bar kept, xtrace_options_response removed"""
+        self.mock_otel_context(mocker, True)
+        mock_carrier = {
+            "tracestate": {
+                "StringValue": "xtrace_options_response=abc123,foo=bar",
+            }
+        }
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "tracestate",
+                TraceState([("sw", "1000100010001000-01"), ("foo", "bar")]).to_header(),
+            ),
+        ])
+
+    def test_inject_existing_tracestate_dict_existing_sw(self, mocker):
+        """sw updated and moved to start, foo=bar kept, xtrace_options_response removed"""
+        self.mock_otel_context(mocker, True)
+        mock_carrier = {
+            "tracestate": {
+                "StringValue": "xtrace_options_response=abc123,foo=bar,sw=some-existing-value",
+            }
+        }
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "tracestate",
+                TraceState([("sw", "1000100010001000-01"), ("foo", "bar")]).to_header(),
+            ),
+        ])
+
     def test_inject_empty_baggage_no_sw(self, mocker):
         self.mock_otel_context(mocker, True)
         mock_baggage_header = ""
