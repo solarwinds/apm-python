@@ -24,6 +24,7 @@ from opentelemetry.trace import Link, SpanKind, TraceFlags, get_current_span
 from opentelemetry.trace.span import Span, TraceState
 from typing_extensions import override
 
+from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_RESPONSE_KEY
 from solarwinds_apm.oboe.dice import _Dice
 from solarwinds_apm.oboe.metrics import Counters
 from solarwinds_apm.oboe.settings import (
@@ -51,6 +52,7 @@ DICE_SCALE = 1_000_000
 
 SW_KEYS_ATTRIBUTE = "SWKeys"
 PARENT_ID_ATTRIBUTE = "sw.tracestate_parent_id"
+TRACESTATE_CAPTURE_ATTRIBUTE = "sw.w3c.tracestate"
 SAMPLE_RATE_ATTRIBUTE = "SampleRate"
 SAMPLE_SOURCE_ATTRIBUTE = "SampleSource"
 BUCKET_CAPACITY_ATTRIBUTE = "BucketCapacity"
@@ -225,6 +227,12 @@ class OboeSampler(Sampler, ABC):
             trace_state,
             parent_span,
         )
+
+        # Capture the tracestate from the parent span and store it in the sample state
+        if trace_state is not None:
+            sample_state.attributes[TRACESTATE_CAPTURE_ATTRIBUTE] = (
+                trace_state.delete(INTL_SWO_X_OPTIONS_RESPONSE_KEY)
+            )
 
         self.counters.request_count.add(1, {}, parent_context)
 

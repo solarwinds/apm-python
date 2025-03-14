@@ -22,9 +22,10 @@ from opentelemetry.sdk.trace import RandomIdGenerator
 from opentelemetry.trace import SpanKind, Link, TraceState, TraceFlags, get_current_span
 from typing_extensions import override
 
+from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_RESPONSE_KEY
 from solarwinds_apm.apm_noop import Context
 from solarwinds_apm.oboe.oboe_sampler import _span_type, SpanType, OboeSampler, SW_KEYS_ATTRIBUTE, \
-    BUCKET_RATE_ATTRIBUTE, BUCKET_CAPACITY_ATTRIBUTE, SAMPLE_RATE_ATTRIBUTE, SAMPLE_SOURCE_ATTRIBUTE
+    BUCKET_RATE_ATTRIBUTE, BUCKET_CAPACITY_ATTRIBUTE, SAMPLE_RATE_ATTRIBUTE, SAMPLE_SOURCE_ATTRIBUTE, TRACESTATE_CAPTURE_ATTRIBUTE
 from solarwinds_apm.oboe.settings import LocalSettings, Settings, SampleSource, Flags, BucketType, BucketSettings
 from solarwinds_apm.oboe.trace_options import RequestHeaders, ResponseHeaders
 
@@ -415,6 +416,47 @@ class TestMissingSettings:
         assert sample.attributes == {"custom-key": "value"}
         assert "trigger-trace=settings-not-available" in sampler.response_headers.x_trace_options_response
         assert "ignored=invalid-key" in sampler.response_headers.x_trace_options_response
+
+class TestEntrySpan:
+    def test_sw_w3c_tracestate_with_x_trace_options_response(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LOCAL_DEFAULT,
+                flags=Flags.SAMPLE_START,
+                buckets={},
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders())
+        ))
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True)
+        vendor_trace_state = TraceState().add("vendor1", "value1").add("vendor2", "value2")
+        sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id,
+                                       "respects_parent_sampled", None, None, None, vendor_trace_state.add(INTL_SWO_X_OPTIONS_RESPONSE_KEY, "response"))
+        assert sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE) == vendor_trace_state
+
+    def test_sw_w3c_tracestate_without_x_trace_options_response(self):
+        sampler = TestSampler(TestSamplerOptions(
+            settings=Settings(
+                sample_rate=0,
+                sample_source=SampleSource.LOCAL_DEFAULT,
+                flags=Flags.SAMPLE_START,
+                buckets={},
+                signature_key=None,
+                timestamp=int(time.time()),
+                ttl=10
+            ),
+            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
+            request_headers=make_request_headers(MakeRequestHeaders())
+        ))
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True)
+        vendor_trace_state = TraceState().add("vendor1", "value1").add("vendor2", "value2")
+        sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id,
+                                       "respects_parent_sampled", None, None, None, vendor_trace_state)
+        assert sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE) == vendor_trace_state
 
 
 class TestEntrySpanWithValidSwContextXTraceOptions:
