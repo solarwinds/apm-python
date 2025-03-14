@@ -47,7 +47,6 @@ from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     SimpleSpanProcessor,
@@ -74,6 +73,7 @@ from solarwinds_apm.trace import (
     TxnNameCalculatorProcessor,
     TxnNameCleanupProcessor,
 )
+from solarwinds_apm.tracer_provider import SolarwindsTracerProvider
 from solarwinds_apm.version import __version__
 
 if TYPE_CHECKING:
@@ -207,7 +207,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             raise
         trace.set_tracer_provider(
-            TracerProvider(
+            tracer_provider=SolarwindsTracerProvider(
                 sampler=sampler,
                 resource=Resource.create(
                     {

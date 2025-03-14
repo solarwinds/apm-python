@@ -14,8 +14,9 @@ from __future__ import annotations
 
 import enum
 import logging
+from collections.abc import Sequence
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Optional, Sequence
+from typing import TYPE_CHECKING, Optional
 
 from opentelemetry.context.context import Context as OtelContext
 from opentelemetry.sdk.trace.sampling import (
