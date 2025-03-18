@@ -23,7 +23,7 @@ class TestXTraceOptions():
     def test_init_xtraceoptions_only(self):
         xto = XTraceOptions("foo")
         assert xto.ignored == ["foo"]
-        assert xto.options_header == ""
+        assert xto.options_header == "foo"
         assert xto.signature == ""
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""

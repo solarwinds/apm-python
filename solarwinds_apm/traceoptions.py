@@ -40,11 +40,11 @@ class XTraceOptions:
         self.timestamp = 0
         self.include_response = False
 
+        if xtraceoptions_header:
+            self.options_header = xtraceoptions_header
+
         if signature_header:
             self.signature = signature_header
-            # store original header for c-lib sample decision later
-            # only if signature_header exists
-            self.options_header = xtraceoptions_header
 
         if xtraceoptions_header:
             # If x-trace-options header given, set response header
