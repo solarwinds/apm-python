@@ -27,7 +27,6 @@ from opentelemetry.util._importlib_metadata import entry_points
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro
-from solarwinds_apm.extension.oboe import OboeAPI
 from solarwinds_apm.propagator import SolarWindsPropagator
 from solarwinds_apm.sampler import ParentBasedSwSampler
 
@@ -95,7 +94,6 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         # except use TestBase InMemorySpanExporter
         apm_config = SolarWindsApmConfig()
         configurator = SolarWindsConfigurator()
-        reporter = configurator._initialize_solarwinds_reporter(apm_config)
         configurator._configure_propagator()
         configurator._configure_response_propagator()
         # This is done because set_tracer_provider cannot override the
@@ -104,7 +102,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         sampler = next(iter(entry_points(
             group="opentelemetry_traces_sampler",
             name=configurator._DEFAULT_SW_TRACES_SAMPLER,
-        ))).load()(apm_config, reporter, OboeAPI())
+        ))).load()(apm_config, None, None)
         self.tracer_provider = TracerProvider(sampler=sampler)
         # Set InMemorySpanExporter for testing
         # We do NOT use SolarWindsSpanExporter

@@ -19,6 +19,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Optional
 
 from opentelemetry.context.context import Context as OtelContext
+from opentelemetry.sdk import metrics
 from opentelemetry.sdk.trace.sampling import (
     Decision,
     ParentBased,
@@ -39,6 +40,8 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_X_OPTIONS_KEY,
     INTL_SWO_X_OPTIONS_RESPONSE_KEY,
 )
+from solarwinds_apm.oboe.configuration import Configuration
+from solarwinds_apm.oboe.http_sampler import HttpSampler
 from solarwinds_apm.semconv.trace import get_url_attrs
 from solarwinds_apm.traceoptions import XTraceOptions
 from solarwinds_apm.w3c_transformer import W3CTransformer
@@ -637,12 +640,25 @@ class ParentBasedSwSampler(ParentBased):
         Uses _SwSampler/liboboe if parent span is_remote.
         Uses OTEL defaults if parent span is_local.
         """
+        config = Configuration(
+            enabled=True,
+            service="dummy",
+            collector="https://apm.collector.na-01.cloud.solarwinds.com",
+            headers={
+                "authorization": "Bearer <bearer>",
+            },
+            tracing_mode=True,
+            trigger_trace_enabled=True,
+            transaction_name=None,
+            transaction_settings=[],
+        )
+        http_sampler = HttpSampler(meter_provider=metrics.MeterProvider(), config=config, logger=logging.getLogger(__name__), initial=None)
+        http_sampler.wait_until_ready(10)
+
         super().__init__(
-            root=_SwSampler(apm_config, reporter, oboe_api),
-            remote_parent_sampled=_SwSampler(apm_config, reporter, oboe_api),
-            remote_parent_not_sampled=_SwSampler(
-                apm_config, reporter, oboe_api
-            ),
+            root=http_sampler,
+            remote_parent_sampled=http_sampler,
+            remote_parent_not_sampled=http_sampler,
         )
 
     # should_sample defined by ParentBased

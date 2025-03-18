@@ -31,12 +31,12 @@ from opentelemetry.semconv.attributes.url_attributes import (
     URL_PATH,
     URL_SCHEME,
 )
-from opentelemetry.trace import Link, SpanKind, TraceState
+from opentelemetry.trace import Link, SpanKind, TraceState, get_current_span
 from typing_extensions import override
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_X_OPTIONS_KEY,
-    INTL_SWO_X_OPTIONS_RESPONSE_KEY,
+    INTL_SWO_X_OPTIONS_RESPONSE_KEY, INTL_SWO_EQUALS_W3C_SANITIZED,
 )
 from solarwinds_apm.oboe.configuration import Configuration
 from solarwinds_apm.oboe.oboe_sampler import OboeSampler
@@ -254,7 +254,7 @@ class Sampler(OboeSampler):
         if parent_context:
             options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
             if options and isinstance(options, XTraceOptions):
-                RequestHeaders(
+                return RequestHeaders(
                     x_trace_options=options.options_header,
                     x_trace_options_signature=options.signature,
                 )
@@ -284,10 +284,11 @@ class Sampler(OboeSampler):
                     options.include_response
                     and headers.x_trace_options_response
                 ):
-                    return trace_state.add(
-                        INTL_SWO_X_OPTIONS_RESPONSE_KEY,
-                        headers.x_trace_options_response,
-                    )
+                    if get_current_span(parent_context).get_span_context().is_valid and get_current_span(parent_context).get_span_context().trace_state is not None:
+                        trace_state = get_current_span(parent_context).get_span_context().trace_state
+                    else:
+                        trace_state = TraceState()
+                    return trace_state.add(INTL_SWO_X_OPTIONS_RESPONSE_KEY, headers.x_trace_options_response.replace('=', INTL_SWO_EQUALS_W3C_SANITIZED))
         return None
 
     def update_settings(self, settings: Any) -> Settings | None:

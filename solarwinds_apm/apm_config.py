@@ -143,36 +143,6 @@ class SolarWindsApmConfig:
 
         self.update_log_filepath_for_reporter()
 
-        # Calculate c-lib extension usage
-        (
-            self.extension,
-            self.context,
-            oboe_api_swig,
-            oboe_api_options_swig,
-        ) = self._get_extension_components(
-            self.agent_enabled,
-            self.is_lambda,
-        )
-
-        # Create OboeAPI options using extension and __config
-        oboe_api_options = oboe_api_options_swig()
-        oboe_api_options.logging_options.level = self.__config["debug_level"]
-        oboe_api_options.logging_options.type = self.__config["log_type"]
-        self.oboe_api = oboe_api_swig(
-            oboe_api_options,
-        )
-
-        self.context.setTracingMode(self.__config["tracing_mode"])
-        self.context.setTriggerMode(self.__config["trigger_trace"])
-
-        # (Re-)Calculate config if AppOptics
-        self.metric_format = self._calculate_metric_format()
-        self.certificates = self._calculate_certificates()
-        self.__config["export_logs_enabled"] = self._calculate_logs_enabled()
-        self.__config["export_metrics_enabled"] = (
-            self._calculate_metrics_enabled()
-        )
-
         logger.debug("Set ApmConfig as: %s", self)
 
     def _get_extension_components(
@@ -415,11 +385,7 @@ class SolarWindsApmConfig:
     # pylint: disable=too-many-branches,too-many-statements
     def _calculate_agent_enabled(self) -> bool:
         """Checks if agent is enabled/disabled based on platform and config"""
-        agent_enabled = False
-        if self._calculate_agent_enabled_platform():
-            agent_enabled = self._calculate_agent_enabled_config()
-        logger.debug("agent_enabled: %s", agent_enabled)
-        return agent_enabled
+        return True
 
     def _calculate_service_name_lambda(
         self,

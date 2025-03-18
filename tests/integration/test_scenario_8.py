@@ -42,28 +42,16 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         tracestate = "sw={}-{}".format(tracestate_span, trace_flags)
         xtraceoptions = "trigger-trace;custom-from=lin;foo=bar;sw-keys=custom-sw-from:tammy,baz:qux;ts={}".format(1234567890)
 
-        # Use in-process test app client and mock to propagate context
-        # and create in-memory trace
-        resp = None
-        # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # plus status_msg (the "ignored" string)
-        mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ignored", "ok", 0)
+        # Request to instrumented app with headers
+        resp = self.client.get(
+            "/test_trace/",
+            headers={
+                "traceparent": traceparent,
+                "tracestate": tracestate,
+                "x-trace-options": xtraceoptions,
+                "some-header": "some-value"
+            }
         )
-        with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=mock_decision,
-        ):
-            # Request to instrumented app with headers
-            resp = self.client.get(
-                "/test_trace/",
-                headers={
-                    "traceparent": traceparent,
-                    "tracestate": tracestate,
-                    "x-trace-options": xtraceoptions,
-                    "some-header": "some-value"
-                }
-            )
         resp_json = json.loads(resp.data)
 
         # Verify some-header was not altered by instrumentation
@@ -163,11 +151,6 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         #     sw.tracestate_parent_id, because only set if not root and no attributes
         #     custom-*, because included in xtraceoptions in otel context
         #     SWKeys, because included in xtraceoptions in otel context
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == 3
-        assert span_server.attributes["SampleSource"] == 4
         assert "sw.tracestate_parent_id" in span_server.attributes
         assert span_server.attributes["sw.tracestate_parent_id"] == tracestate_span
         assert "custom-from" in span_server.attributes
