@@ -115,6 +115,7 @@ def solarwinds_ready(
      if not solarwinds_ready(wait_milliseconds=10000, integer_response=True):
         Logger.info("SolarWinds not ready after 10 seconds, no metrics will be sent")
     """
+    # TODO: Reimplement in NH-104961
     return True
     # rc = Context.isReady(wait_milliseconds)
     # if not isinstance(rc, int) or rc not in OboeReadyCode.code_values():
