@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from solarwinds_apm.apm_config import SolarWindsApmConfig
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
-    from solarwinds_apm.extension.oboe import OboeAPI
+    # from solarwinds_apm.extension.oboe import OboeAPI
 
 
 logger = logging.getLogger(__name__)

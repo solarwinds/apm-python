@@ -76,8 +76,8 @@ from solarwinds_apm.trace import (
 from solarwinds_apm.tracer_provider import SolarwindsTracerProvider
 from solarwinds_apm.version import __version__
 
-if TYPE_CHECKING:
-    from solarwinds_apm.extension.oboe import Event, OboeAPI, Reporter
+# if TYPE_CHECKING:
+#     from solarwinds_apm.extension.oboe import Event, OboeAPI, Reporter
 
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)

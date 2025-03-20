@@ -27,7 +27,7 @@ from opentelemetry.util._importlib_metadata import entry_points
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro
-from solarwinds_apm.extension.oboe import OboeAPI
+# from solarwinds_apm.extension.oboe import OboeAPI
 from solarwinds_apm.propagator import SolarWindsPropagator
 from solarwinds_apm.sampler import ParentBasedSwSampler
 

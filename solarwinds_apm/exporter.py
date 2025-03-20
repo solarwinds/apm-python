@@ -334,9 +334,10 @@ class SolarWindsSpanExporter(SpanExporter):
 
     @staticmethod
     def _build_metadata(metadata, span_context) -> Any:
-        return metadata.fromString(
-            W3CTransformer.traceparent_from_context(span_context)
-        )
+        return None
+        # return metadata.fromString(
+        #     W3CTransformer.traceparent_from_context(span_context)
+        # )
 
     @staticmethod
     def _normalize_attribute_value(attr_v) -> Any:

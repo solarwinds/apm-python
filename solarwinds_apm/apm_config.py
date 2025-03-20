@@ -33,7 +33,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_SUPPORT_EMAIL,
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
-from solarwinds_apm.certs.ao_issuer_ca import get_public_cert
+# from solarwinds_apm.certs.ao_issuer_ca import get_public_cert
 
 logger = logging.getLogger(__name__)
 
@@ -144,106 +144,106 @@ class SolarWindsApmConfig:
         self.update_log_filepath_for_reporter()
 
         # Calculate c-lib extension usage
-        (
-            self.extension,
-            self.context,
-            oboe_api_swig,
-            oboe_api_options_swig,
-        ) = self._get_extension_components(
-            self.agent_enabled,
-            self.is_lambda,
-        )
+        # (
+        #     self.extension,
+        #     self.context,
+        #     oboe_api_swig,
+        #     oboe_api_options_swig,
+        # ) = self._get_extension_components(
+        #     self.agent_enabled,
+        #     self.is_lambda,
+        # )
 
         # Create OboeAPI options using extension and __config
-        oboe_api_options = oboe_api_options_swig()
-        oboe_api_options.logging_options.level = self.__config["debug_level"]
-        oboe_api_options.logging_options.type = self.__config["log_type"]
-        self.oboe_api = oboe_api_swig(
-            oboe_api_options,
-        )
-
-        self.context.setTracingMode(self.__config["tracing_mode"])
-        self.context.setTriggerMode(self.__config["trigger_trace"])
-
-        # (Re-)Calculate config if AppOptics
-        self.metric_format = self._calculate_metric_format()
-        self.certificates = self._calculate_certificates()
-        self.__config["export_logs_enabled"] = self._calculate_logs_enabled()
-        self.__config["export_metrics_enabled"] = (
-            self._calculate_metrics_enabled()
-        )
+        # oboe_api_options = oboe_api_options_swig()
+        # oboe_api_options.logging_options.level = self.__config["debug_level"]
+        # oboe_api_options.logging_options.type = self.__config["log_type"]
+        # self.oboe_api = oboe_api_swig(
+        #     oboe_api_options,
+        # )
+        #
+        # self.context.setTracingMode(self.__config["tracing_mode"])
+        # self.context.setTriggerMode(self.__config["trigger_trace"])
+        #
+        # # (Re-)Calculate config if AppOptics
+        # self.metric_format = self._calculate_metric_format()
+        # self.certificates = self._calculate_certificates()
+        # self.__config["export_logs_enabled"] = self._calculate_logs_enabled()
+        # self.__config["export_metrics_enabled"] = (
+        #     self._calculate_metrics_enabled()
+        # )
 
         logger.debug("Set ApmConfig as: %s", self)
 
-    def _get_extension_components(
-        self,
-        agent_enabled: bool,
-        is_lambda: bool,
-    ) -> None:
-        """Returns c-lib extension or noop components based on agent_enabled, is_lambda.
-
-        agent_enabled T, is_lambda F -> c-lib extension, c-lib Context, no-op settings API, no-op API options
-        agent_enabled T, is_lambda T -> no-op extension, no-op Context, c-lib settings API, c-lib API options
-        agent_enabled F              -> all no-op
-        """
-        if not agent_enabled:
-            return (
-                noop_extension,
-                noop_extension.Context,
-                noop_extension.OboeAPI,
-                noop_extension.OboeAPIOptions,
-            )
-
-        try:
-            # pylint: disable=import-outside-toplevel
-            import solarwinds_apm.extension.oboe as c_extension
-        except ImportError as err:
-            # At this point, if agent_enabled but cannot import
-            # extension then something unexpected happened
-            logger.error(
-                "Could not import extension. Please contact %s. Tracing disabled: %s",
-                INTL_SWO_SUPPORT_EMAIL,
-                err,
-            )
-            return (
-                noop_extension,
-                noop_extension.Context,
-                noop_extension.OboeAPI,
-                noop_extension.OboeAPIOptions,
-            )
-
-        if is_lambda:
-            try:
-                # pylint: disable=import-outside-toplevel,no-name-in-module
-                from solarwinds_apm.extension.oboe import OboeAPI as oboe_api
-                from solarwinds_apm.extension.oboe import (
-                    OboeAPIOptions as api_options,
-                )
-            except ImportError as err:
-                logger.warning(
-                    "Could not import API in lambda mode. Please contact %s. Tracing disabled: %s",
-                    INTL_SWO_SUPPORT_EMAIL,
-                    err,
-                )
-                return (
-                    noop_extension,
-                    noop_extension.Context,
-                    noop_extension.OboeAPI,
-                    noop_extension.OboeAPIOptions,
-                )
-            return (
-                noop_extension,
-                noop_extension.Context,
-                oboe_api,
-                api_options,
-            )
-
-        return (
-            c_extension,
-            c_extension.Context,
-            noop_extension.OboeAPI,
-            noop_extension.OboeAPIOptions,
-        )
+    # def _get_extension_components(
+    #     self,
+    #     agent_enabled: bool,
+    #     is_lambda: bool,
+    # ) -> None:
+    #     """Returns c-lib extension or noop components based on agent_enabled, is_lambda.
+    #
+    #     agent_enabled T, is_lambda F -> c-lib extension, c-lib Context, no-op settings API, no-op API options
+    #     agent_enabled T, is_lambda T -> no-op extension, no-op Context, c-lib settings API, c-lib API options
+    #     agent_enabled F              -> all no-op
+    #     """
+    #     if not agent_enabled:
+    #         return (
+    #             noop_extension,
+    #             noop_extension.Context,
+    #             noop_extension.OboeAPI,
+    #             noop_extension.OboeAPIOptions,
+    #         )
+    #
+    #     try:
+    #         # pylint: disable=import-outside-toplevel
+    #         import solarwinds_apm.extension.oboe as c_extension
+    #     except ImportError as err:
+    #         # At this point, if agent_enabled but cannot import
+    #         # extension then something unexpected happened
+    #         logger.error(
+    #             "Could not import extension. Please contact %s. Tracing disabled: %s",
+    #             INTL_SWO_SUPPORT_EMAIL,
+    #             err,
+    #         )
+    #         return (
+    #             noop_extension,
+    #             noop_extension.Context,
+    #             noop_extension.OboeAPI,
+    #             noop_extension.OboeAPIOptions,
+    #         )
+    #
+    #     if is_lambda:
+    #         try:
+    #             # pylint: disable=import-outside-toplevel,no-name-in-module
+    #             # from solarwinds_apm.extension.oboe import OboeAPI as oboe_api
+    #             # from solarwinds_apm.extension.oboe import (
+    #             #     OboeAPIOptions as api_options,
+    #             # )
+    #         except ImportError as err:
+    #             logger.warning(
+    #                 "Could not import API in lambda mode. Please contact %s. Tracing disabled: %s",
+    #                 INTL_SWO_SUPPORT_EMAIL,
+    #                 err,
+    #             )
+    #             return (
+    #                 noop_extension,
+    #                 noop_extension.Context,
+    #                 noop_extension.OboeAPI,
+    #                 noop_extension.OboeAPIOptions,
+    #             )
+    #         return (
+    #             noop_extension,
+    #             noop_extension.Context,
+    #             oboe_api,
+    #             api_options,
+    #         )
+    #
+    #     return (
+    #         c_extension,
+    #         c_extension.Context,
+    #         noop_extension.OboeAPI,
+    #         noop_extension.OboeAPIOptions,
+    #     )
 
     @classmethod
     def calculate_is_lambda(cls) -> bool:
@@ -613,8 +613,8 @@ class SolarWindsApmConfig:
         if host:
             if len(host.split(":")) > 1:
                 host = host.split(":")[0]
-            if host in [INTL_SWO_AO_COLLECTOR, INTL_SWO_AO_STG_COLLECTOR]:
-                certs = get_public_cert()
+            # if host in [INTL_SWO_AO_COLLECTOR, INTL_SWO_AO_STG_COLLECTOR]:
+            #     certs = get_public_cert()
 
         if self.get("trustedpath"):
             try:
@@ -699,7 +699,7 @@ class SolarWindsApmConfig:
         apm_config = {
             "__config": self._config_mask_service_key(),
             "agent_enabled": self.agent_enabled,
-            "context": str(self.context),
+            # "context": str(self.context),
             "service_name": self.service_name,
         }
         return json.dumps(apm_config)
