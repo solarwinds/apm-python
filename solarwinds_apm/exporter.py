@@ -67,11 +67,11 @@ class SolarWindsSpanExporter(SpanExporter):
         **kw_args,
     ) -> None:
         super().__init__(*args, **kw_args)
-        self.reporter = reporter
+        # self.reporter = reporter
         self.apm_txname_manager = apm_txname_manager
         self.apm_fwkv_manager = apm_fwkv_manager
-        self.context = apm_config.extension.Context
-        self.metadata = apm_config.extension.Metadata
+        # self.context = apm_config.extension.Context
+        # self.metadata = apm_config.extension.Metadata
 
     def export(self, spans) -> None:
         """Export to AO events and report via liboboe.
@@ -79,47 +79,49 @@ class SolarWindsSpanExporter(SpanExporter):
         Note that OpenTelemetry timestamps are in nanoseconds, whereas SWO expects timestamps
         to be in microseconds, thus all times need to be divided by 1000.
         """
-        for span in spans:
-            md = self._build_metadata(self.metadata, span.get_span_context())
-            if span.parent and span.parent.is_valid:
-                # If there is a parent, we need to add an edge to this parent to this entry event
-                logger.debug("Continue trace from %s", md.toString())
-                parent_md = self._build_metadata(self.metadata, span.parent)
-                evt = self.context.createEntry(
-                    md, int(span.start_time / 1000), parent_md
-                )
-                if span.parent.is_remote:
-                    self._add_info_transaction_name(span, evt)
-            else:
-                # In OpenTelemetry, there are no events with individual IDs, but only a span ID
-                # and trace ID. Thus, the entry event needs to be generated such that it has the
-                # same op ID as the span ID of the OTel span.
-                logger.debug("Start a new trace %s", md.toString())
-                evt = self.context.createEntry(md, int(span.start_time / 1000))
-                self._add_info_transaction_name(span, evt)
-
-            layer = f"{span.kind.name}:{span.name}"
-            evt.addInfo("Layer", layer)
-            evt.addInfo(self._SW_SPAN_NAME, span.name)
-            evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
-            evt.addInfo("Language", "Python")
-            self._add_info_instrumentation_scope(span, evt)
-            self._add_info_status(span, evt)
-            self._add_info_instrumented_framework(span, evt)
-            for attr_k, attr_v in span.attributes.items():
-                attr_v = self._normalize_attribute_value(attr_v)
-                evt.addInfo(attr_k, attr_v)
-            self.reporter.sendReport(evt, False)
-
-            for event in span.events:
-                if event.name == "exception":
-                    self._report_exception_event(event)
-                else:
-                    self._report_info_event(event)
-
-            evt = self.context.createExit(int(span.end_time / 1000))
-            evt.addInfo("Layer", layer)
-            self.reporter.sendReport(evt, False)
+        # TODO: reimplement in NH-72398
+        super().export(spans)
+        # for span in spans:
+        #     md = self._build_metadata(self.metadata, span.get_span_context())
+        #     if span.parent and span.parent.is_valid:
+        #         # If there is a parent, we need to add an edge to this parent to this entry event
+        #         logger.debug("Continue trace from %s", md.toString())
+        #         parent_md = self._build_metadata(self.metadata, span.parent)
+        #         evt = self.context.createEntry(
+        #             md, int(span.start_time / 1000), parent_md
+        #         )
+        #         if span.parent.is_remote:
+        #             self._add_info_transaction_name(span, evt)
+        #     else:
+        #         # In OpenTelemetry, there are no events with individual IDs, but only a span ID
+        #         # and trace ID. Thus, the entry event needs to be generated such that it has the
+        #         # same op ID as the span ID of the OTel span.
+        #         logger.debug("Start a new trace %s", md.toString())
+        #         evt = self.context.createEntry(md, int(span.start_time / 1000))
+        #         self._add_info_transaction_name(span, evt)
+        #
+        #     layer = f"{span.kind.name}:{span.name}"
+        #     evt.addInfo("Layer", layer)
+        #     evt.addInfo(self._SW_SPAN_NAME, span.name)
+        #     evt.addInfo(self._SW_SPAN_KIND, span.kind.name)
+        #     evt.addInfo("Language", "Python")
+        #     self._add_info_instrumentation_scope(span, evt)
+        #     self._add_info_status(span, evt)
+        #     self._add_info_instrumented_framework(span, evt)
+        #     for attr_k, attr_v in span.attributes.items():
+        #         attr_v = self._normalize_attribute_value(attr_v)
+        #         evt.addInfo(attr_k, attr_v)
+        #     self.reporter.sendReport(evt, False)
+        #
+        #     for event in span.events:
+        #         if event.name == "exception":
+        #             self._report_exception_event(event)
+        #         else:
+        #             self._report_info_event(event)
+        #
+        #     evt = self.context.createExit(int(span.end_time / 1000))
+        #     evt.addInfo("Layer", layer)
+        #     self.reporter.sendReport(evt, False)
 
     def _add_info_transaction_name(self, span, evt) -> None:
         """Add transaction name from cache to root span
@@ -301,39 +303,42 @@ class SolarWindsSpanExporter(SpanExporter):
                 )
 
     def _report_exception_event(self, event) -> None:
-        evt = self.context.createEvent(int(event.timestamp / 1000))
-        evt.addInfo("Label", "error")
-        evt.addInfo("ErrorClass", event.attributes.get("exception.type", None))
-        evt.addInfo(
-            "ErrorMsg", event.attributes.get("exception.message", None)
-        )
-        evt.addInfo(
-            "Backtrace", event.attributes.get("exception.stacktrace", None)
-        )
-        # add remaining attributes, if any
-        for attr_k, attr_v in event.attributes.items():
-            if attr_k not in (
-                "exception.type",
-                "exception.message",
-                "exception.stacktrace",
-            ):
-                attr_v = self._normalize_attribute_value(attr_v)
-                evt.addInfo(attr_k, attr_v)
-        self.reporter.sendReport(evt, False)
+        pass
+        # evt = self.context.createEvent(int(event.timestamp / 1000))
+        # evt.addInfo("Label", "error")
+        # evt.addInfo("ErrorClass", event.attributes.get("exception.type", None))
+        # evt.addInfo(
+        #     "ErrorMsg", event.attributes.get("exception.message", None)
+        # )
+        # evt.addInfo(
+        #     "Backtrace", event.attributes.get("exception.stacktrace", None)
+        # )
+        # # add remaining attributes, if any
+        # for attr_k, attr_v in event.attributes.items():
+        #     if attr_k not in (
+        #         "exception.type",
+        #         "exception.message",
+        #         "exception.stacktrace",
+        #     ):
+        #         attr_v = self._normalize_attribute_value(attr_v)
+        #         evt.addInfo(attr_k, attr_v)
+        # self.reporter.sendReport(evt, False)
 
     def _report_info_event(self, event) -> None:
-        evt = self.context.createEvent(int(event.timestamp / 1000))
-        evt.addInfo("Label", "info")
-        for attr_k, attr_v in event.attributes.items():
-            attr_v = self._normalize_attribute_value(attr_v)
-            evt.addInfo(attr_k, attr_v)
-        self.reporter.sendReport(evt, False)
+        pass
+        # evt = self.context.createEvent(int(event.timestamp / 1000))
+        # evt.addInfo("Label", "info")
+        # for attr_k, attr_v in event.attributes.items():
+        #     attr_v = self._normalize_attribute_value(attr_v)
+        #     evt.addInfo(attr_k, attr_v)
+        # self.reporter.sendReport(evt, False)
 
     @staticmethod
     def _build_metadata(metadata, span_context) -> Any:
-        return metadata.fromString(
-            W3CTransformer.traceparent_from_context(span_context)
-        )
+        return None
+        # return metadata.fromString(
+        #     W3CTransformer.traceparent_from_context(span_context)
+        # )
 
     @staticmethod
     def _normalize_attribute_value(attr_v) -> Any:

@@ -23,7 +23,7 @@ keywords = [
   "traceview",
   "tracelytics",
   "oboe",
-  "liboboe",
+#  "liboboe",
   "instrumentation",
   "performance",
   "opentelemetry",
@@ -76,22 +76,22 @@ include-package-data = false
 packages = [
   "solarwinds_apm",
   "solarwinds_apm.api",
-  "solarwinds_apm.certs",
-  "solarwinds_apm.extension",
-  "solarwinds_apm.extension.bson",
+#  "solarwinds_apm.certs",
+#  "solarwinds_apm.extension",
+#  "solarwinds_apm.extension.bson",
   "solarwinds_apm.oboe",
   "solarwinds_apm.semconv",
   "solarwinds_apm.semconv.trace",
   "solarwinds_apm.trace",
 ]
 
-[tool.setuptools.package-data]
-solarwinds_apm = [
-  "extension/liboboe.so",
-  "extension/VERSION",
-  "extension/bson/bson.h",
-  "extension/bson/platform_hacks.h",
-]
+#[tool.setuptools.package-data]
+#solarwinds_apm = [
+#  "extension/liboboe.so",
+#  "extension/VERSION",
+#  "extension/bson/bson.h",
+#  "extension/bson/platform_hacks.h",
+#]
 
 [tool.setuptools.dynamic]
 version = {attr = "solarwinds_apm.version.__version__"}
