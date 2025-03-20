@@ -6,40 +6,40 @@
 
 from solarwinds_apm import configurator
 
-class TestConfiguratorInitializeReporter:
-    def test_configurator_initialize_sw_reporter(
-        self,
-        mocker,
-        mock_apmconfig_enabled_reporter_settings,
-    ):
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._initialize_solarwinds_reporter(
-            mock_apmconfig_enabled_reporter_settings,
-        )
-
-        mock_apmconfig_enabled_reporter_settings.extension.Reporter.assert_called_once_with(
-            **{
-                "hostname_alias": "foo",
-                "log_type": "foo",
-                "log_level": "foo",
-                "log_file_path": "foo",
-                "max_transactions": "foo",
-                "max_flush_wait_time": "foo",
-                "events_flush_interval": "foo",
-                "max_request_size_bytes": "foo",
-                "reporter": "foo",
-                "host": "foo",
-                "service_key": "foo",
-                "certificates": "foo-certs",
-                "buffer_size": "foo",
-                "trace_metrics": "foo",
-                "histogram_precision": "foo",
-                "token_bucket_capacity": -1,
-                "token_bucket_rate": -1,
-                "file_single": "foo",
-                "ec2_metadata_timeout": "foo",
-                "grpc_proxy": "foo",
-                "stdout_clear_nonblocking": 0,
-                "metric_format": "bar",
-            }
-        )
+# class TestConfiguratorInitializeReporter:
+#     def test_configurator_initialize_sw_reporter(
+#         self,
+#         mocker,
+#         mock_apmconfig_enabled_reporter_settings,
+#     ):
+#         test_configurator = configurator.SolarWindsConfigurator()
+#         test_configurator._initialize_solarwinds_reporter(
+#             mock_apmconfig_enabled_reporter_settings,
+#         )
+#
+#         mock_apmconfig_enabled_reporter_settings.extension.Reporter.assert_called_once_with(
+#             **{
+#                 "hostname_alias": "foo",
+#                 "log_type": "foo",
+#                 "log_level": "foo",
+#                 "log_file_path": "foo",
+#                 "max_transactions": "foo",
+#                 "max_flush_wait_time": "foo",
+#                 "events_flush_interval": "foo",
+#                 "max_request_size_bytes": "foo",
+#                 "reporter": "foo",
+#                 "host": "foo",
+#                 "service_key": "foo",
+#                 "certificates": "foo-certs",
+#                 "buffer_size": "foo",
+#                 "trace_metrics": "foo",
+#                 "histogram_precision": "foo",
+#                 "token_bucket_capacity": -1,
+#                 "token_bucket_rate": -1,
+#                 "file_single": "foo",
+#                 "ec2_metadata_timeout": "foo",
+#                 "grpc_proxy": "foo",
+#                 "stdout_clear_nonblocking": 0,
+#                 "metric_format": "bar",
+#             }
+#         )

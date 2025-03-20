@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
     from solarwinds_apm.apm_config import SolarWindsApmConfig
     from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
+
     # from solarwinds_apm.extension.oboe import OboeAPI
 
 
@@ -32,7 +33,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         self,
         apm_txname_manager: "SolarWindsTxnNameManager",
         apm_config: "SolarWindsApmConfig",
-        oboe_api: "OboeAPI",
+        oboe_api,
     ) -> None:
         super().__init__(
             apm_txname_manager=apm_txname_manager,

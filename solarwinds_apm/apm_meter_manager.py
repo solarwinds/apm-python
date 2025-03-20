@@ -16,6 +16,7 @@ from opentelemetry.metrics import CallbackOptions, Observation, get_meter
 
 if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
+
     # from solarwinds_apm.extension.oboe import OboeAPI
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,8 @@ class SolarWindsMeterManager:
     def __init__(
         self,
         apm_config: "SolarWindsApmConfig",
-        oboe_api: "OboeAPI",
+        # oboe_api: "OboeAPI",
+        oboe_api,
         **kwargs: int,
     ) -> None:
         self.oboe_settings_api = oboe_api

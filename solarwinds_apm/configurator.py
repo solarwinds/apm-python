@@ -13,7 +13,7 @@ import os
 import platform
 import sys
 import time
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
@@ -46,7 +46,7 @@ from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     PeriodicExportingMetricReader,
 )
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     SimpleSpanProcessor,
@@ -61,6 +61,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_SUPPORT_EMAIL,
 )
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
+
 # from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.response_propagator import (
@@ -131,8 +132,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
-        reporter: "Reporter",
-        oboe_api: "OboeAPI",
+        reporter,
+        oboe_api,
     ) -> None:
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(
@@ -182,8 +183,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_sampler(
         self,
         apm_config: SolarWindsApmConfig,
-        reporter: "Reporter",
-        oboe_api: "OboeAPI",
+        reporter,
+        oboe_api,
     ) -> None:
         """Always configure SolarWinds OTel sampler, or none if disabled"""
         if not apm_config.agent_enabled:
@@ -288,7 +289,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
-        oboe_api: "OboeAPI",
+        oboe_api,
     ) -> None:
         """Configure SolarWindsOTLPMetricsSpanProcessor (including OTLP meters)
         if metrics exporters are configured and set up i.e. by _configure_metrics_exporter
@@ -313,7 +314,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _configure_traces_exporter(
         self,
-        reporter: "Reporter",
+        reporter,
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
@@ -621,37 +622,38 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _initialize_solarwinds_reporter(
         self,
         apm_config: SolarWindsApmConfig,
-    ) -> "Reporter":
+    ):
         """Initialize SolarWinds reporter used by sampler and exporter, using SolarWindsApmConfig.
         This establishes collector and sampling settings in a background thread.
 
         Note: if config's extension is no-op, this has no effect."""
-        reporter_kwargs = {
-            "hostname_alias": apm_config.get("hostname_alias"),
-            "log_type": apm_config.get("log_type"),
-            "log_level": apm_config.get("debug_level"),
-            "log_file_path": apm_config.get("log_filepath"),
-            "max_transactions": apm_config.get("max_transactions"),
-            "max_flush_wait_time": apm_config.get("max_flush_wait_time"),
-            "events_flush_interval": apm_config.get("events_flush_interval"),
-            "max_request_size_bytes": apm_config.get("max_request_size_bytes"),
-            "reporter": apm_config.get("reporter"),
-            "host": apm_config.get("collector"),
-            "service_key": apm_config.get("service_key"),
-            "certificates": apm_config.certificates,
-            "buffer_size": apm_config.get("bufsize"),
-            "trace_metrics": apm_config.get("trace_metrics"),
-            "histogram_precision": apm_config.get("histogram_precision"),
-            "token_bucket_capacity": -1,  # always unset
-            "token_bucket_rate": -1,  # always unset
-            "file_single": apm_config.get("reporter_file_single"),
-            "ec2_metadata_timeout": apm_config.get("ec2_metadata_timeout"),
-            "grpc_proxy": apm_config.get("proxy"),
-            "stdout_clear_nonblocking": 0,
-            "metric_format": apm_config.metric_format,
-        }
-
-        return apm_config.extension.Reporter(**reporter_kwargs)
+        return None
+        # reporter_kwargs = {
+        #     "hostname_alias": apm_config.get("hostname_alias"),
+        #     "log_type": apm_config.get("log_type"),
+        #     "log_level": apm_config.get("debug_level"),
+        #     "log_file_path": apm_config.get("log_filepath"),
+        #     "max_transactions": apm_config.get("max_transactions"),
+        #     "max_flush_wait_time": apm_config.get("max_flush_wait_time"),
+        #     "events_flush_interval": apm_config.get("events_flush_interval"),
+        #     "max_request_size_bytes": apm_config.get("max_request_size_bytes"),
+        #     "reporter": apm_config.get("reporter"),
+        #     "host": apm_config.get("collector"),
+        #     "service_key": apm_config.get("service_key"),
+        #     "certificates": apm_config.certificates,
+        #     "buffer_size": apm_config.get("bufsize"),
+        #     "trace_metrics": apm_config.get("trace_metrics"),
+        #     "histogram_precision": apm_config.get("histogram_precision"),
+        #     "token_bucket_capacity": -1,  # always unset
+        #     "token_bucket_rate": -1,  # always unset
+        #     "file_single": apm_config.get("reporter_file_single"),
+        #     "ec2_metadata_timeout": apm_config.get("ec2_metadata_timeout"),
+        #     "grpc_proxy": apm_config.get("proxy"),
+        #     "stdout_clear_nonblocking": 0,
+        #     "metric_format": apm_config.metric_format,
+        # }
+        #
+        # return apm_config.extension.Reporter(**reporter_kwargs)
 
     # pylint: disable=too-many-branches,too-many-statements
     def _add_all_instrumented_python_framework_versions(
@@ -804,12 +806,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     # pylint: disable=too-many-locals
     def _create_init_event(
         self,
-        reporter: "Reporter",
+        reporter,
         apm_config: SolarWindsApmConfig,
         layer: str = "Python",
         keys: dict = None,
     ) -> Any:
         return None
+
     #     """Create a Reporter init event if the reporter is ready."""
     #     if apm_config.is_lambda:
     #         logger.debug("Skipping init event in lambda")
@@ -884,8 +887,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _report_init_event(
         self,
-        reporter: "Reporter",
-        init_event: "Event",
+        reporter,
+        init_event,
     ) -> None:
         """Report the APM library's init event message and log its send status."""
         status = reporter.sendStatus(init_event)

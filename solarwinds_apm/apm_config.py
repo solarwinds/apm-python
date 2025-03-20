@@ -20,7 +20,7 @@ from opentelemetry.environment_variables import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.util._importlib_metadata import entry_points
 
-import solarwinds_apm.apm_noop as noop_extension
+# import solarwinds_apm.apm_noop as noop_extension
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_constants import (
     INTL_SWO_AO_COLLECTOR,
@@ -33,6 +33,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_SUPPORT_EMAIL,
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
+
 # from solarwinds_apm.certs.ao_issuer_ca import get_public_cert
 
 logger = logging.getLogger(__name__)

@@ -12,39 +12,41 @@ The custom sampler will fetch sampling configurations for the SolarWinds backend
 # TODO: Remove when Python < 3.10 support dropped
 from __future__ import annotations
 
-import enum
+# import enum
 import logging
-from collections.abc import Sequence
-from types import MappingProxyType
-from typing import TYPE_CHECKING, Optional
 
-from opentelemetry.context.context import Context as OtelContext
-from opentelemetry.sdk.trace.sampling import (
-    Decision,
+# from collections.abc import Sequence
+# from types import MappingProxyType
+from typing import TYPE_CHECKING
+
+# from opentelemetry.context.context import Context as OtelContext
+from opentelemetry.sdk.trace.sampling import (  # Decision,; Sampler,; SamplingResult,
+    ALWAYS_OFF,
+    ALWAYS_ON,
     ParentBased,
-    Sampler,
-    SamplingResult, ALWAYS_ON, ALWAYS_OFF,
 )
-from opentelemetry.trace import Link, SpanKind, get_current_span
-from opentelemetry.trace.span import SpanContext, TraceState
-from opentelemetry.util.types import Attributes
 
-from solarwinds_apm.apm_config import OboeTracingMode
-from solarwinds_apm.apm_constants import (
-    INTL_SWO_COMMA_W3C_SANITIZED,
-    INTL_SWO_EQUALS_W3C_SANITIZED,
-    INTL_SWO_TRACESTATE_KEY,
-    INTL_SWO_TRANSACTION_ATTR_KEY,
-    INTL_SWO_TRANSACTION_ATTR_MAX,
-    INTL_SWO_X_OPTIONS_KEY,
-    INTL_SWO_X_OPTIONS_RESPONSE_KEY,
-)
-from solarwinds_apm.semconv.trace import get_url_attrs
-from solarwinds_apm.traceoptions import XTraceOptions
-from solarwinds_apm.w3c_transformer import W3CTransformer
+# from opentelemetry.trace import Link, SpanKind, get_current_span
+# from opentelemetry.trace.span import SpanContext, TraceState
+# from opentelemetry.util.types import Attributes
+#
+# from solarwinds_apm.apm_config import OboeTracingMode
+# from solarwinds_apm.apm_constants import (
+#     INTL_SWO_COMMA_W3C_SANITIZED,
+#     INTL_SWO_EQUALS_W3C_SANITIZED,
+#     INTL_SWO_TRACESTATE_KEY,
+#     INTL_SWO_TRANSACTION_ATTR_KEY,
+#     INTL_SWO_TRANSACTION_ATTR_MAX,
+#     INTL_SWO_X_OPTIONS_KEY,
+#     INTL_SWO_X_OPTIONS_RESPONSE_KEY,
+# )
+# from solarwinds_apm.semconv.trace import get_url_attrs
+# from solarwinds_apm.traceoptions import XTraceOptions
+# from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
     from solarwinds_apm.apm_config import SolarWindsApmConfig
+
     # from solarwinds_apm.extension.oboe import OboeAPI, Reporter
 
 logger = logging.getLogger(__name__)
@@ -629,8 +631,8 @@ class ParentBasedSwSampler(ParentBased):
     def __init__(
         self,
         apm_config: "SolarWindsApmConfig",
-        reporter: "Reporter",
-        oboe_api: "OboeAPI",
+        reporter,
+        oboe_api,
     ):
         """
         Uses _SwSampler/liboboe if no parent span.
