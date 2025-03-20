@@ -132,8 +132,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager: SolarWindsTxnNameManager,
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
-        reporter,
-        oboe_api,
+        reporter: Any = None,
+        oboe_api: Any = None,
     ) -> None:
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(
