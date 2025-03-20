@@ -79,6 +79,7 @@ class SolarWindsSpanExporter(SpanExporter):
         Note that OpenTelemetry timestamps are in nanoseconds, whereas SWO expects timestamps
         to be in microseconds, thus all times need to be divided by 1000.
         """
+        # TODO: reimplement in NH-72398
         super().export(spans)
         # for span in spans:
         #     md = self._build_metadata(self.metadata, span.get_span_context())
