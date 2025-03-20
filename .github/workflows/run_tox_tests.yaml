@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         python-minor: ["8", "9", "10", "11", "12"]
-        apm-env: ["nh-staging", "ao-prod"]
+        apm-env: ["nh-staging"]
     steps:
     - uses: actions/checkout@v4
     - name: Setup Python
