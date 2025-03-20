@@ -61,7 +61,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_SUPPORT_EMAIL,
 )
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
-from solarwinds_apm.apm_oboe_codes import OboeReporterCode
+# from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
@@ -98,30 +98,32 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_txname_manager = SolarWindsTxnNameManager()
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
-        oboe_api = apm_config.oboe_api
+        # oboe_api = apm_config.oboe_api
 
         # Reporter may be no-op e.g. disabled, lambda
-        reporter = self._initialize_solarwinds_reporter(apm_config)
+        # reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
             apm_txname_manager,
             apm_fwkv_manager,
             apm_config,
-            reporter,
-            oboe_api,
+            None,
+            None,
+            # reporter,
+            # oboe_api,
         )
 
-        if apm_config.is_lambda:
-            logger.debug("No init event in lambda")
-            return
+        # if apm_config.is_lambda:
+        #     logger.debug("No init event in lambda")
+        #     return
 
         # Report reporter init status event after everything is done.
-        init_event = self._create_init_event(reporter, apm_config)
-        if init_event:
-            self._report_init_event(reporter, init_event)
-        else:
-            logger.error(
-                "There was an issue with generating the reporter init message."
-            )
+        # init_event = self._create_init_event(reporter, apm_config)
+        # if init_event:
+        #     self._report_init_event(reporter, init_event)
+        # else:
+        #     logger.error(
+        #         "There was an issue with generating the reporter init message."
+        #     )
 
     # TODO update pylint disable when drop py38 support
     def _configure_otel_components(
@@ -807,77 +809,78 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         layer: str = "Python",
         keys: dict = None,
     ) -> Any:
-        """Create a Reporter init event if the reporter is ready."""
-        if apm_config.is_lambda:
-            logger.debug("Skipping init event in lambda")
-            return None
-
-        reporter_ready = False
-        if reporter.init_status in (
-            OboeReporterCode.OBOE_INIT_OK,
-            OboeReporterCode.OBOE_INIT_ALREADY_INIT,
-        ):
-            reporter_ready = apm_config.agent_enabled
-        if not reporter_ready:
-            if apm_config.agent_enabled:
-                logger.error(
-                    "Failed to initialize the reporter, error code=%s (%s). Not sending init message.",
-                    reporter.init_status,
-                    OboeReporterCode.get_text_code(reporter.init_status),
-                )
-            else:
-                logger.warning("Agent disabled. Not sending init message.")
-            return None
-
-        version_keys = {}
-        version_keys["__Init"] = True
-
-        # Use configured Resource attributes to set telemetry.sdk.*
-        resource_attributes = (
-            trace.get_tracer_provider()
-            .get_tracer(__name__)
-            .resource.attributes
-        )
-        for ra_k, ra_v in resource_attributes.items():
-            # Do not include OTEL SERVICE_NAME in __Init message
-            if ra_k != SERVICE_NAME:
-                version_keys[ra_k] = ra_v
-
-        # liboboe adds key Hostname for us
-        try:
-            version_keys["process.runtime.version"] = (
-                f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
-            )
-        except (AttributeError, IndexError) as ex:
-            logger.warning("Could not retrieve Python version: %s", ex)
-        version_keys["process.runtime.name"] = sys.implementation.name
-        version_keys["process.runtime.description"] = sys.version
-        version_keys["process.executable.path"] = sys.executable
-
-        version_keys["APM.Version"] = __version__
-        version_keys["APM.Extension.Version"] = (
-            apm_config.extension.Config.getVersionString()
-        )
-
-        version_keys = self._add_all_instrumented_python_framework_versions(
-            version_keys
-        )
-
-        if keys:
-            version_keys.update(keys)
-
-        md = apm_config.extension.Metadata.makeRandom(True)
-        if not md.isValid():
-            logger.warning(
-                "Warning: Could not generate Metadata for reporter init. Skipping init message."
-            )
-            return None
-        apm_config.extension.Context.set(md)
-        evt = md.createEvent()
-        evt.addInfo("Layer", layer)
-        for ver_k, ver_v in version_keys.items():
-            evt.addInfo(ver_k, ver_v)
-        return evt
+        return None
+    #     """Create a Reporter init event if the reporter is ready."""
+    #     if apm_config.is_lambda:
+    #         logger.debug("Skipping init event in lambda")
+    #         return None
+    #
+    #     reporter_ready = False
+    #     if reporter.init_status in (
+    #         OboeReporterCode.OBOE_INIT_OK,
+    #         OboeReporterCode.OBOE_INIT_ALREADY_INIT,
+    #     ):
+    #         reporter_ready = apm_config.agent_enabled
+    #     if not reporter_ready:
+    #         if apm_config.agent_enabled:
+    #             logger.error(
+    #                 "Failed to initialize the reporter, error code=%s (%s). Not sending init message.",
+    #                 reporter.init_status,
+    #                 OboeReporterCode.get_text_code(reporter.init_status),
+    #             )
+    #         else:
+    #             logger.warning("Agent disabled. Not sending init message.")
+    #         return None
+    #
+    #     version_keys = {}
+    #     version_keys["__Init"] = True
+    #
+    #     # Use configured Resource attributes to set telemetry.sdk.*
+    #     resource_attributes = (
+    #         trace.get_tracer_provider()
+    #         .get_tracer(__name__)
+    #         .resource.attributes
+    #     )
+    #     for ra_k, ra_v in resource_attributes.items():
+    #         # Do not include OTEL SERVICE_NAME in __Init message
+    #         if ra_k != SERVICE_NAME:
+    #             version_keys[ra_k] = ra_v
+    #
+    #     # liboboe adds key Hostname for us
+    #     try:
+    #         version_keys["process.runtime.version"] = (
+    #             f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
+    #         )
+    #     except (AttributeError, IndexError) as ex:
+    #         logger.warning("Could not retrieve Python version: %s", ex)
+    #     version_keys["process.runtime.name"] = sys.implementation.name
+    #     version_keys["process.runtime.description"] = sys.version
+    #     version_keys["process.executable.path"] = sys.executable
+    #
+    #     version_keys["APM.Version"] = __version__
+    #     version_keys["APM.Extension.Version"] = (
+    #         apm_config.extension.Config.getVersionString()
+    #     )
+    #
+    #     version_keys = self._add_all_instrumented_python_framework_versions(
+    #         version_keys
+    #     )
+    #
+    #     if keys:
+    #         version_keys.update(keys)
+    #
+    #     md = apm_config.extension.Metadata.makeRandom(True)
+    #     if not md.isValid():
+    #         logger.warning(
+    #             "Warning: Could not generate Metadata for reporter init. Skipping init message."
+    #         )
+    #         return None
+    #     apm_config.extension.Context.set(md)
+    #     evt = md.createEvent()
+    #     evt.addInfo("Layer", layer)
+    #     for ver_k, ver_v in version_keys.items():
+    #         evt.addInfo(ver_k, ver_v)
+    #     return evt
 
     def _report_init_event(
         self,

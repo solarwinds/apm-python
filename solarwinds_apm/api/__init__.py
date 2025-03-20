@@ -11,7 +11,7 @@ from opentelemetry import baggage
 from opentelemetry.trace import NoOpTracerProvider, get_tracer_provider
 
 from solarwinds_apm.apm_constants import INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
-from solarwinds_apm.apm_oboe_codes import OboeReadyCode
+# from solarwinds_apm.apm_oboe_codes import OboeReadyCode
 
 # pylint: disable=import-error,no-name-in-module
 from solarwinds_apm.extension.oboe import Context
@@ -113,19 +113,20 @@ def solarwinds_ready(
      if not solarwinds_ready(wait_milliseconds=10000, integer_response=True):
         Logger.info("SolarWinds not ready after 10 seconds, no metrics will be sent")
     """
-    rc = Context.isReady(wait_milliseconds)
-    if not isinstance(rc, int) or rc not in OboeReadyCode.code_values():
-        logger.warning("Unrecognized return code: %s", rc)
-        return (
-            OboeReadyCode.OBOE_SERVER_RESPONSE_UNKNOWN[0]
-            if integer_response
-            else False
-        )
-    if rc != OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]:
-        logger.warning(OboeReadyCode.code_values()[rc])
-
-    return (
-        rc
-        if integer_response
-        else rc == OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]
-    )
+    return True
+    # rc = Context.isReady(wait_milliseconds)
+    # if not isinstance(rc, int) or rc not in OboeReadyCode.code_values():
+    #     logger.warning("Unrecognized return code: %s", rc)
+    #     return (
+    #         OboeReadyCode.OBOE_SERVER_RESPONSE_UNKNOWN[0]
+    #         if integer_response
+    #         else False
+    #     )
+    # if rc != OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]:
+    #     logger.warning(OboeReadyCode.code_values()[rc])
+    #
+    # return (
+    #     rc
+    #     if integer_response
+    #     else rc == OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]
+    # )

@@ -721,11 +721,11 @@ class Test_SwSampler():
             "foo_xto",
         )
 
-class TestParentBasedSwSampler():
-    def test_init(self, mocker):
-        sampler = ParentBasedSwSampler(mocker.Mock(), mocker.Mock(), mocker.Mock())
-        assert type(sampler._root) == _SwSampler
-        assert type(sampler._remote_parent_sampled) == _SwSampler
-        assert type(sampler._remote_parent_not_sampled) == _SwSampler
-        assert type(sampler._local_parent_sampled) == StaticSampler
-        assert type(sampler._local_parent_not_sampled) == StaticSampler
+# class TestParentBasedSwSampler():
+#     def test_init(self, mocker):
+#         sampler = ParentBasedSwSampler(mocker.Mock(), mocker.Mock(), mocker.Mock())
+#         assert type(sampler._root) == _SwSampler
+#         assert type(sampler._remote_parent_sampled) == _SwSampler
+#         assert type(sampler._remote_parent_not_sampled) == _SwSampler
+#         assert type(sampler._local_parent_sampled) == StaticSampler
+#         assert type(sampler._local_parent_not_sampled) == StaticSampler

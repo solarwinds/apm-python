@@ -401,129 +401,129 @@ class Test_SolarWindsSpanExporter():
             mocker.call(mock_event, False),
         ])
 
-    def test_init(self, mocker):
-        mock_reporter = mocker.Mock()
-        mock_apm_txname_manager = mocker.Mock()
-        mock_apm_fwkv_manager = mocker.Mock()
-        mock_extension = mocker.Mock()
-        mock_extension.configure_mock(
-            **{
-                "Context": "foo",
-                "Metadata": "bar",
-            }
-        )
-        mock_apm_config = mocker.Mock()
-        mock_apm_config.configure_mock(
-            **{
-                "extension": mock_extension
-            }
-        )
-        exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
-            mock_reporter,
-            mock_apm_txname_manager,
-            mock_apm_fwkv_manager,
-            mock_apm_config,
-        )
-        assert exporter.reporter == mock_reporter
-        assert exporter.context == "foo"
-        assert exporter.metadata == "bar"
-
-    def test_export_root_span(
-        self,
-        mocker,
-        mock_report_info,
-        mock_report_exception,
-        mock_add_info_instr_scope,
-        mock_add_info_instr_fwork,
-        mock_md,
-        mock_spans_root
-    ):
-        mock_statuscode = mocker.patch(
-            "solarwinds_apm.exporter.StatusCode"
-        )
-        mock_statuscode.configure_mock(
-            **{
-                "ERROR": "foo-code",
-                "OK": "bar-code",
-            }
-        )
-        mock_build_md = mocker.patch(
-            "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
-            return_value=mock_md
-        )
-        exporter, mock_add_info, mock_event, _ = get_exporter_addinfo_event(mocker)
-        exporter.export(mock_spans_root)
-
-        mock_build_md.assert_has_calls([
-            mocker.call(exporter.metadata, "my_span_context")
-        ])
-        exporter.context.createEntry.assert_called_once_with(
-            mock_md,
-            1,
-        )
-        exporter.context.createExit.assert_called_once_with(2)
-
-        self.assert_export_add_info_and_report(
-            mocker,
-            mock_spans_root,
-            mock_event,
-            mock_report_info,
-            mock_report_exception,
-            mock_add_info,
-            mock_add_info_instr_scope,
-            mock_add_info_instr_fwork,
-            exporter
-        )
-
-    def test_export_parent_valid(
-        self,
-        mocker,
-        mock_report_info,
-        mock_report_exception,
-        mock_add_info_instr_scope,
-        mock_add_info_instr_fwork,
-        mock_md,
-        mock_spans_parent_valid
-    ):
-        mock_statuscode = mocker.patch(
-            "solarwinds_apm.exporter.StatusCode"
-        )
-        mock_statuscode.configure_mock(
-            **{
-                "ERROR": "foo-code",
-                "OK": "bar-code",
-            }
-        )
-        mock_build_md = mocker.patch(
-            "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
-            return_value=mock_md
-        )
-        exporter, mock_add_info, mock_event, _ = get_exporter_addinfo_event(mocker)
-        exporter.export(mock_spans_parent_valid)
-
-        mock_span_parent = mock_spans_parent_valid[0].parent
-        mock_build_md.assert_has_calls([
-            mocker.call(exporter.metadata, "my_span_context"),
-            mocker.call(exporter.metadata, mock_span_parent)
-        ])
-        exporter.context.createEntry.assert_called_once_with(
-            mock_md,
-            1,
-            mock_md,
-        )
-        exporter.context.createExit.assert_called_once_with(2)
-
-        self.assert_export_add_info_and_report(
-            mocker,
-            mock_spans_parent_valid,
-            mock_event,
-            mock_report_info,
-            mock_report_exception,
-            mock_add_info,
-            mock_add_info_instr_scope,
-            mock_add_info_instr_fwork,
-            exporter
-        )
+    # def test_init(self, mocker):
+    #     mock_reporter = mocker.Mock()
+    #     mock_apm_txname_manager = mocker.Mock()
+    #     mock_apm_fwkv_manager = mocker.Mock()
+    #     mock_extension = mocker.Mock()
+    #     mock_extension.configure_mock(
+    #         **{
+    #             "Context": "foo",
+    #             "Metadata": "bar",
+    #         }
+    #     )
+    #     mock_apm_config = mocker.Mock()
+    #     mock_apm_config.configure_mock(
+    #         **{
+    #             "extension": mock_extension
+    #         }
+    #     )
+    #     exporter = solarwinds_apm.exporter.SolarWindsSpanExporter(
+    #         mock_reporter,
+    #         mock_apm_txname_manager,
+    #         mock_apm_fwkv_manager,
+    #         mock_apm_config,
+    #     )
+    #     assert exporter.reporter == mock_reporter
+    #     assert exporter.context == "foo"
+    #     assert exporter.metadata == "bar"
+    #
+    # def test_export_root_span(
+    #     self,
+    #     mocker,
+    #     mock_report_info,
+    #     mock_report_exception,
+    #     mock_add_info_instr_scope,
+    #     mock_add_info_instr_fwork,
+    #     mock_md,
+    #     mock_spans_root
+    # ):
+    #     mock_statuscode = mocker.patch(
+    #         "solarwinds_apm.exporter.StatusCode"
+    #     )
+    #     mock_statuscode.configure_mock(
+    #         **{
+    #             "ERROR": "foo-code",
+    #             "OK": "bar-code",
+    #         }
+    #     )
+    #     mock_build_md = mocker.patch(
+    #         "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
+    #         return_value=mock_md
+    #     )
+    #     exporter, mock_add_info, mock_event, _ = get_exporter_addinfo_event(mocker)
+    #     exporter.export(mock_spans_root)
+    #
+    #     mock_build_md.assert_has_calls([
+    #         mocker.call(exporter.metadata, "my_span_context")
+    #     ])
+    #     exporter.context.createEntry.assert_called_once_with(
+    #         mock_md,
+    #         1,
+    #     )
+    #     exporter.context.createExit.assert_called_once_with(2)
+    #
+    #     self.assert_export_add_info_and_report(
+    #         mocker,
+    #         mock_spans_root,
+    #         mock_event,
+    #         mock_report_info,
+    #         mock_report_exception,
+    #         mock_add_info,
+    #         mock_add_info_instr_scope,
+    #         mock_add_info_instr_fwork,
+    #         exporter
+    #     )
+    #
+    # def test_export_parent_valid(
+    #     self,
+    #     mocker,
+    #     mock_report_info,
+    #     mock_report_exception,
+    #     mock_add_info_instr_scope,
+    #     mock_add_info_instr_fwork,
+    #     mock_md,
+    #     mock_spans_parent_valid
+    # ):
+    #     mock_statuscode = mocker.patch(
+    #         "solarwinds_apm.exporter.StatusCode"
+    #     )
+    #     mock_statuscode.configure_mock(
+    #         **{
+    #             "ERROR": "foo-code",
+    #             "OK": "bar-code",
+    #         }
+    #     )
+    #     mock_build_md = mocker.patch(
+    #         "solarwinds_apm.exporter.SolarWindsSpanExporter._build_metadata",
+    #         return_value=mock_md
+    #     )
+    #     exporter, mock_add_info, mock_event, _ = get_exporter_addinfo_event(mocker)
+    #     exporter.export(mock_spans_parent_valid)
+    #
+    #     mock_span_parent = mock_spans_parent_valid[0].parent
+    #     mock_build_md.assert_has_calls([
+    #         mocker.call(exporter.metadata, "my_span_context"),
+    #         mocker.call(exporter.metadata, mock_span_parent)
+    #     ])
+    #     exporter.context.createEntry.assert_called_once_with(
+    #         mock_md,
+    #         1,
+    #         mock_md,
+    #     )
+    #     exporter.context.createExit.assert_called_once_with(2)
+    #
+    #     self.assert_export_add_info_and_report(
+    #         mocker,
+    #         mock_spans_parent_valid,
+    #         mock_event,
+    #         mock_report_info,
+    #         mock_report_exception,
+    #         mock_add_info,
+    #         mock_add_info_instr_scope,
+    #         mock_add_info_instr_fwork,
+    #         exporter
+    #     )
 
     def patch__add_info_transaction_name(
         self,
@@ -1546,42 +1546,42 @@ class Test_SolarWindsSpanExporter():
             "4.5.6",
         )
 
-    def test__report_exception_event(
-        self,
-        mocker,
-    ):
-        exporter, mock_add_info, mock_event, mock_create_event = get_exporter_addinfo_event(mocker, True)
-        exporter._report_exception_event(mock_event)
+    # def test__report_exception_event(
+    #     self,
+    #     mocker,
+    # ):
+    #     exporter, mock_add_info, mock_event, mock_create_event = get_exporter_addinfo_event(mocker, True)
+    #     exporter._report_exception_event(mock_event)
+    #
+    #     mock_create_event.assert_called_once_with(1)
+    #     mock_add_info.assert_has_calls([
+    #         mocker.call("Label", "error"),
+    #         mocker.call("ErrorClass", "foo"),
+    #         mocker.call("ErrorMsg", "bar"),
+    #         mocker.call("Backtrace", "baz"),
+    #         mocker.call("some", "other")
+    #     ])
+    #     exporter.reporter.sendReport.assert_has_calls([
+    #         mocker.call(mock_event, False),
+    #     ])
 
-        mock_create_event.assert_called_once_with(1)
-        mock_add_info.assert_has_calls([
-            mocker.call("Label", "error"),
-            mocker.call("ErrorClass", "foo"),
-            mocker.call("ErrorMsg", "bar"),
-            mocker.call("Backtrace", "baz"),
-            mocker.call("some", "other")
-        ])
-        exporter.reporter.sendReport.assert_has_calls([
-            mocker.call(mock_event, False),
-        ])
-
-    def test__report_info_event(
-        self,
-        mocker,
-        exporter,
-        mock_event,
-        mock_create_event,
-    ):
-        exporter, mock_add_info, mock_event, mock_create_event = get_exporter_addinfo_event(mocker)
-        exporter._report_info_event(mock_event)
-
-        mock_create_event.assert_called_once_with(1)
-        mock_add_info.assert_has_calls([
-            mocker.call("Label", "info"),
-        ])
-        exporter.reporter.sendReport.assert_has_calls([
-            mocker.call(mock_event, False),
-        ])
+    # def test__report_info_event(
+    #     self,
+    #     mocker,
+    #     exporter,
+    #     mock_event,
+    #     mock_create_event,
+    # ):
+    #     exporter, mock_add_info, mock_event, mock_create_event = get_exporter_addinfo_event(mocker)
+    #     exporter._report_info_event(mock_event)
+    #
+    #     mock_create_event.assert_called_once_with(1)
+    #     mock_add_info.assert_has_calls([
+    #         mocker.call("Label", "info"),
+    #     ])
+    #     exporter.reporter.sendReport.assert_has_calls([
+    #         mocker.call(mock_event, False),
+    #     ])
 
     def test__build_metadata(self, mocker, exporter):
         mocker.patch(

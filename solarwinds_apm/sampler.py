@@ -23,7 +23,7 @@ from opentelemetry.sdk.trace.sampling import (
     Decision,
     ParentBased,
     Sampler,
-    SamplingResult,
+    SamplingResult, ALWAYS_ON, ALWAYS_OFF,
 )
 from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import SpanContext, TraceState
@@ -638,11 +638,16 @@ class ParentBasedSwSampler(ParentBased):
         Uses OTEL defaults if parent span is_local.
         """
         super().__init__(
-            root=_SwSampler(apm_config, reporter, oboe_api),
-            remote_parent_sampled=_SwSampler(apm_config, reporter, oboe_api),
-            remote_parent_not_sampled=_SwSampler(
-                apm_config, reporter, oboe_api
-            ),
+            root=ALWAYS_ON,
+            remote_parent_sampled=ALWAYS_ON,
+            remote_parent_not_sampled=ALWAYS_OFF,
         )
+        # super().__init__(
+        #     root=_SwSampler(apm_config, reporter, oboe_api),
+        #     remote_parent_sampled=_SwSampler(apm_config, reporter, oboe_api),
+        #     remote_parent_not_sampled=_SwSampler(
+        #         apm_config, reporter, oboe_api
+        #     ),
+        # )
 
     # should_sample defined by ParentBased
