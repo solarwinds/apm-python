@@ -285,4 +285,4 @@ class TestConfiguratorLogsExporter:
         mock_loggerprovider.assert_called_once()
 
         mock_blprocessor.assert_called_once()
-        mock_logginghandler.assert_called_once()
+        mock_logginghandler.assert_not_called()
