@@ -41,6 +41,8 @@ class HttpSampler(Sampler):
             initial=initial,
         )
         self._url = config.collector
+        if not self._url.startswith("https://"):
+            self._url = f"https://{self._url}"
         self._service = config.service
         self._headers = config.headers
         self._hostname = socket.gethostname()
