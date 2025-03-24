@@ -664,8 +664,8 @@ class ParentBasedSwSampler(ParentBased):
             service=apm_config.service_name,
             collector=apm_config.get("collector"),
             headers={"Authorization": f"Bearer {token}"},
-            tracing_mode=apm_config.get("tracing_mode") == 1,
-            trigger_trace_enabled=apm_config.get("trigger_trace_enabled") == 1,
+            tracing_mode=apm_config.get("tracing_mode") != 0,
+            trigger_trace_enabled=apm_config.get("trigger_trace") == 1,
             transaction_name=apm_config.get("transaction_name"),
             transaction_settings=transaction_settings,
         )
