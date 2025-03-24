@@ -4,6 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+# pylint: disable=too-many-lines
+
 import json
 import logging
 import os
@@ -256,6 +258,36 @@ class SolarWindsApmConfig:
             )
             return True
         return False
+
+    @classmethod
+    def calculate_metrics_enabled(
+        cls,
+        is_legacy: bool = False,
+        cnf_dict: dict = None,
+    ) -> bool:
+        """Return if export of instrumentor metrics telemetry enabled.
+        Invalid boolean values are ignored.
+        Order of precedence: Environment Variable > config file > default.
+        Default is True is not legacy, False if legacy.
+        Optional cnf_dict is presumably already from a config file, else a call
+        to get_cnf_dict() is made for a fresh read."""
+        if is_legacy:
+            metrics_enabled = False
+        else:
+            metrics_enabled = True
+        if cnf_dict is None:
+            cnf_dict = cls.get_cnf_dict()
+        if cnf_dict:
+            cnf_enabled = cls.convert_to_bool(
+                cnf_dict.get("export_metrics_enabled")
+            )
+            metrics_enabled = (
+                cnf_enabled if cnf_enabled is not None else metrics_enabled
+            )
+        env_enabled = cls.convert_to_bool(
+            os.environ.get("SW_APM_EXPORT_METRICS_ENABLED")
+        )
+        return env_enabled if env_enabled is not None else metrics_enabled
 
     def _calculate_agent_enabled_platform(self) -> bool:
         """Checks if agent is enabled/disabled based on platform"""
@@ -731,13 +763,14 @@ class SolarWindsApmConfig:
         )
         return value if value is not None else default
 
-    def get_cnf_dict(self) -> Any:
+    @classmethod
+    def get_cnf_dict(cls) -> Any:
         """Load Python dict from confg file (json), if any"""
         cnf_filepath = os.environ.get("SW_APM_CONFIG_FILE")
         cnf_dict = None
 
         if not cnf_filepath:
-            cnf_filepath = self._CONFIG_FILE_DEFAULT
+            cnf_filepath = cls._CONFIG_FILE_DEFAULT
             if not os.path.isfile(cnf_filepath):
                 logger.debug("No config file at %s; skipping", cnf_filepath)
                 return cnf_dict
