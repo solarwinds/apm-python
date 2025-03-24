@@ -937,7 +937,7 @@ class TestDistro:
         )
 
     def test_load_instrumentor_metrics_disabled(self, mocker):
-        mock_nmp = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.distro.NoOpMeterProvider",
             return_value="noop"
         )
