@@ -396,21 +396,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure OTel OTLP metrics exporters if enabled and agent enabled.
-        Settings precedence: OTEL_* > SW_APM_EXPORT_METRICS_ENABLED.
+        """Configure OTel OTLP metrics exporters.
         Links to new metric readers and global MeterProvider."""
-        if not apm_config.agent_enabled:
-            logger.error(
-                "APM Python library disabled. Cannot set metrics exporters."
-            )
-            return
-
-        if not apm_config.get("export_metrics_enabled"):
-            logger.debug(
-                "APM OTLP metrics export disabled. Skipping init of metrics exporters"
-            )
-            return
-
         # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
             OTEL_METRICS_EXPORTER,
