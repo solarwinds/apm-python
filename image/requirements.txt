@@ -1,6 +1,6 @@
 # Install most APM Python deps
-opentelemetry-api==1.30.0
-opentelemetry-sdk==1.30.0
+opentelemetry-api==1.31.1
+opentelemetry-sdk==1.31.1
 opentelemetry-instrumentation==0.51b0
 
 # We add a cap to urllib3 version else Python 3.8 support is dropped.
