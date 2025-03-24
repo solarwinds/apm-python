@@ -36,7 +36,6 @@ logging.getLogger(__name__) which will return a child logger of the `solarwinds_
 
 import logging
 import os
-from logging.handlers import RotatingFileHandler
 
 
 class ApmLoggingType:
@@ -187,46 +186,6 @@ def disable_logger(disable=True):
         logger.addHandler(_stream_handler)
         logger.removeHandler(logging.NullHandler())
         logger.propagate = True
-
-
-def set_sw_log_type(log_type, log_filepath=""):
-    """Set the logging 'type' of the agent-internal logger.
-
-    This function expects the log_type to be one of the integer
-    representations of the levels defined in ApmLoggingType.log_types.
-    If an invalid type has been provided, the logging handler will not be
-    changed but a warning message will be emitted.
-
-    If log_filepath is provided and log_type is file_type, logger stream handler
-    is swapped with a rotating file handler.
-    """
-    if not ApmLoggingType.is_valid_log_type(log_type):
-        logger.warning(
-            "set_sw_log_type: Ignore attempt to set solarwinds_apm logger with invalid logging handler."
-        )
-        return
-
-    if log_type == ApmLoggingType.file_type() and log_filepath:
-        try:
-            # no rollover to match oboe logs
-            file_hander = RotatingFileHandler(
-                filename=log_filepath,
-                maxBytes=0,
-                backupCount=0,
-            )
-            file_formatter = logging.Formatter(
-                "%(asctime)s [ %(name)s %(levelname)-8s p#%(process)d.%(thread)d] %(message)s"
-            )
-            file_hander.setFormatter(file_formatter)
-            logger.propagate = False
-            logger.addHandler(file_hander)
-            # stop logging to stream
-            logger.removeHandler(_stream_handler)
-        except FileNotFoundError:
-            # path should be checked first by ApmConfig.update_log_filepath
-            logger.error(
-                "Could not write logs to file; please check configured SW_APM_LOG_FILEPATH."
-            )
 
 
 def set_sw_log_level(level):

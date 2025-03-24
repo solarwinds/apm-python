@@ -19,12 +19,16 @@ import logging
 # from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from opentelemetry.sdk import metrics
+
 # from opentelemetry.context.context import Context as OtelContext
 from opentelemetry.sdk.trace.sampling import (  # Decision,; Sampler,; SamplingResult,
-    ALWAYS_OFF,
-    ALWAYS_ON,
     ParentBased,
 )
+
+from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting
+from solarwinds_apm.oboe.http_sampler import HttpSampler
+from solarwinds_apm.oboe.json_sampler import JsonSampler
 
 # from opentelemetry.trace import Link, SpanKind, get_current_span
 # from opentelemetry.trace.span import SpanContext, TraceState
@@ -635,21 +639,51 @@ class ParentBasedSwSampler(ParentBased):
         oboe_api,
     ):
         """
-        Uses _SwSampler/liboboe if no parent span.
-        Uses _SwSampler/liboboe if parent span is_remote.
+        Uses HttpSampler/JsonSampler if no parent span.
+        Uses HttpSampler/JsonSampler if parent span is_remote.
         Uses OTEL defaults if parent span is_local.
         """
-        super().__init__(
-            root=ALWAYS_ON,
-            remote_parent_sampled=ALWAYS_ON,
-            remote_parent_not_sampled=ALWAYS_OFF,
+        token = (
+            apm_config.get("service_key").split(":")[0]
+            if len(apm_config.get("service_key").split(":")) > 0
+            else ""
         )
-        # super().__init__(
-        #     root=_SwSampler(apm_config, reporter, oboe_api),
-        #     remote_parent_sampled=_SwSampler(apm_config, reporter, oboe_api),
-        #     remote_parent_not_sampled=_SwSampler(
-        #         apm_config, reporter, oboe_api
-        #     ),
-        # )
+        filters = apm_config.get("transaction_filters")
+        transaction_settings = []
+        for transaction_filter in filters:
+            if isinstance(transaction_filter, dict):
+                transaction_setting = TransactionSetting(
+                    tracing=transaction_filter.get("tracing_mode") == 1,
+                    matcher=lambda s, regex=transaction_filter.get(
+                        "regex"
+                    ): regex.match(s),
+                )
+                transaction_settings.append(transaction_setting)
+        configuration = Configuration(
+            enabled=apm_config.agent_enabled,
+            service=apm_config.service_name,
+            collector=apm_config.get("collector"),
+            headers={"Authorization": f"Bearer {token}"},
+            tracing_mode=apm_config.get("tracing_mode") == 1,
+            trigger_trace_enabled=apm_config.get("trigger_trace_enabled") == 1,
+            transaction_name=apm_config.get("transaction_name"),
+            transaction_settings=transaction_settings,
+        )
+        sampler = None
+        if apm_config.is_lambda:
+            sampler = JsonSampler(
+                meter_provider=metrics.MeterProvider(), config=configuration
+            )
+        else:
+            sampler = HttpSampler(
+                meter_provider=metrics.MeterProvider(),
+                config=configuration,
+                initial=None,
+            )
+        super().__init__(
+            root=sampler,
+            remote_parent_sampled=sampler,
+            remote_parent_not_sampled=sampler,
+        )
 
     # should_sample defined by ParentBased

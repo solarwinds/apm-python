@@ -36,7 +36,6 @@ def json_sampler_tracer_memory_exporter():
                              tracing_mode=True,
                              trigger_trace_enabled=True, transaction_name=None,
                              transaction_settings=[]),
-        logger=logging.getLogger(__name__),
         path=PATH
     )
     memory_exporter = InMemorySpanExporter()
