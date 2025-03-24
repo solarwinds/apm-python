@@ -46,7 +46,7 @@ dependencies = [
     'opentelemetry-sdk == 1.31.1',
     'opentelemetry-exporter-otlp == 1.31.1',
     'opentelemetry-instrumentation == 0.52b1',
-    'opentelemetry-instrumentation-logging == 0.51b1',
+    'opentelemetry-instrumentation-logging == 0.52b1',
 ]
 
 [project.urls]
