@@ -122,7 +122,7 @@ class TestDistro:
 
         instance = distro.SolarWindsDistro()
         assert instance._cnf_dict == {"foo": "bar"}
-        assert instance._instrumentor_metrics_enabled is "qux"
+        assert instance._instrumentor_metrics_enabled == "qux"
         mock_get_cnf_dict.assert_called_once()
         mock_calculate_metrics_enabled.assert_called_once_with({"foo": "bar"})
 
