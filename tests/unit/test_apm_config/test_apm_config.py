@@ -847,7 +847,7 @@ class TestSolarWindsApmConfig:
         self,
     ):
         test_config = apm_config.SolarWindsApmConfig()
-        assert test_config.get("export_metrics_enabled") == False
+        assert test_config.get("export_metrics_enabled") == True
 
     def test_set_config_value_ignore_export_metrics_enabled(
         self,
@@ -857,7 +857,7 @@ class TestSolarWindsApmConfig:
     ):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("export_metrics_enabled", "not-valid")
-        assert test_config.get("export_metrics_enabled") == False
+        assert test_config.get("export_metrics_enabled") == True
         assert "Ignore config option" in caplog.text
     def test_set_config_value_set_export_metrics_enabled_false(
         self,
