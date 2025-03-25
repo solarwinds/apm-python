@@ -1,6 +1,6 @@
-opentelemetry-test-utils==0.51b0
-opentelemetry-instrumentation-flask==0.51b0
-opentelemetry-instrumentation-requests==0.51b0
+opentelemetry-test-utils==0.52b0
+opentelemetry-instrumentation-flask==0.52b0
+opentelemetry-instrumentation-requests==0.52b0
 pytest
 pytest-cov
 pytest-mock
