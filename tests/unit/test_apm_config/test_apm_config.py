@@ -6,6 +6,8 @@
 
 import logging
 import os
+import re
+
 import pytest
 
 from opentelemetry.sdk.resources import Resource
@@ -15,6 +17,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_AO_COLLECTOR,
     INTL_SWO_AO_STG_COLLECTOR,
 )
+from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting
 
 # pylint: disable=unused-import
 from .fixtures.env_vars import fixture_mock_env_vars
@@ -1151,3 +1154,81 @@ class TestSolarWindsApmConfig:
     def test_convert_to_bool_str_false_mixed_case(self):
         test_config = apm_config.SolarWindsApmConfig()
         assert not test_config.convert_to_bool("fAlSE")
+
+@pytest.fixture
+def apm():
+    return apm_config.SolarWindsApmConfig()
+
+def test_to_configuration_default(apm):
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert isinstance(config, Configuration)
+    assert config.enabled == apm.agent_enabled
+    assert config.service == apm.service_name
+    assert config.collector == apm.get("collector")
+    assert config.headers["Authorization"].startswith("Bearer ")
+    assert config.tracing_mode == (apm.get("tracing_mode") != 0)
+    assert config.trigger_trace_enabled == (apm.get("trigger_trace") == 1)
+    assert config.transaction_name == apm.get("transaction_name")
+    assert isinstance(config.transaction_settings, list)
+
+def test_to_configuration_with_service_key(apm):
+    apm._set_config_value("service_key", "test_token:test_service")
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.headers["Authorization"] == "Bearer test_token"
+
+def test_to_configuration_with_transaction_filters(apm):
+    apm._set_config_value("transaction_filters", [
+        {"tracing_mode": 1, "regex": re.compile(".*")}
+    ])
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert len(config.transaction_settings) == 1
+    assert isinstance(config.transaction_settings[0], TransactionSetting)
+    assert config.transaction_settings[0].tracing is True
+
+def test_to_configuration_with_disabled_tracing(apm):
+    apm._set_config_value("tracing_mode", "disabled")
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.tracing_mode is False
+
+def test_to_configuration_with_disabled_trigger_trace(apm):
+    apm._set_config_value("trigger_trace", "disabled")
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.trigger_trace_enabled is False
+
+def test_to_configuration_with_empty_transaction_filters(apm):
+    apm._set_config_value("transaction_filters", [])
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert isinstance(config.transaction_settings, list)
+    assert len(config.transaction_settings) == 0
+
+def test_to_configuration_with_multiple_transaction_filters(apm):
+    apm._set_config_value("transaction_filters", [
+        {"tracing_mode": 1, "regex": re.compile(".*")},
+        {"tracing_mode": 0, "regex": re.compile("foo")}
+    ])
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert len(config.transaction_settings) == 2
+    assert isinstance(config.transaction_settings[0], TransactionSetting)
+    assert config.transaction_settings[0].tracing is True
+    assert isinstance(config.transaction_settings[1], TransactionSetting)
+    assert config.transaction_settings[1].tracing is False
+
+def test_to_configuration_with_invalid_service_key(apm):
+    apm._set_config_value("service_key", "invalid_format")
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.headers["Authorization"] == "Bearer invalid_format"
+
+def test_to_configuration_with_empty_service_key(apm):
+    apm._set_config_value("service_key", "")
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.headers["Authorization"] == "Bearer "
+
+def test_to_configuration_with_disabled_agent(apm):
+    apm.agent_enabled = False
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.enabled is False
+
+def test_to_configuration_with_enabled_agent(apm):
+    apm.agent_enabled = True
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.enabled is True
