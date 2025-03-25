@@ -16,7 +16,7 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from opentelemetry import trace
-from opentelemetry._logs import set_logger_provider
+from opentelemetry._logs import get_logger_provider, set_logger_provider
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
@@ -170,7 +170,26 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 apm_fwkv_manager,
                 apm_config,
             )
+
+            # Always setup logging provider and exporters when agent enabled
             self._configure_logs_exporter(apm_config)
+
+            # Only emit log event telemetry (auto-instrument logs) if feature enabled,
+            # with settings precedence: OTEL_* > SW_APM_EXPORT_LOGS_ENABLED.
+            # We don't set a default, so this could be None
+            otel_log_enabled = SolarWindsApmConfig.convert_to_bool(
+                os.environ.get(
+                    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+                )
+            )
+            # SW config is False by default
+            sw_log_enabled = apm_config.get("export_logs_enabled")
+            if otel_log_enabled is not None:
+                if otel_log_enabled is True:
+                    self._configure_logs_handler()
+            elif sw_log_enabled:
+                self._configure_logs_handler()
+
             self._configure_propagator()
             self._configure_response_propagator()
         else:
@@ -485,35 +504,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure OTel OTLP logs exporters if enabled and agent enabled.
-        Settings precedence: OTEL_* > SW_APM_EXPORT_LOGS_ENABLED.
-        Links to new global LoggerProvider."""
-        if not apm_config.agent_enabled:
-            logger.error(
-                "APM Python library disabled. Cannot set logs exporters."
-            )
-            return
-
-        otel_ev = os.environ.get(
-            _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
-        )
-        otlp_log_enabled = SolarWindsApmConfig.convert_to_bool(otel_ev)
-        sw_enabled = apm_config.get("export_logs_enabled")
-        if otlp_log_enabled is False:
-            logger.debug(
-                "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED false. Skipping init of logs exporters"
-            )
-            return
-
-        # If otel_ev is True, ignore sw_enabled.
-        # If otel_ev is None (unset or could not convert to bool)
-        # then sw_enabled determines logs export setup.
-        if not otlp_log_enabled and sw_enabled is False:
-            logger.debug(
-                "APM OTLP logs export disabled. Skipping init of logs exporters"
-            )
-            return
-
+        """Configure OTel OTLP logs exporters. Links to new global LoggerProvider."""
         # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
             OTEL_LOGS_EXPORTER,
@@ -570,7 +561,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
             logger_provider.add_log_record_processor(logs_processor)
 
-        # Create and attach OTLP handler to root logger
+    def _configure_logs_handler(self) -> None:
+        """Create and attach Otel LoggingHandler to emit log event telemetry"""
+        logger.debug("Attaching OTel handler to root logger.")
+        logger_provider = get_logger_provider()
         log_handler = LoggingHandler(
             level=logging.NOTSET,
             logger_provider=logger_provider,
