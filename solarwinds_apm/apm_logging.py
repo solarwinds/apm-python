@@ -38,40 +38,6 @@ import logging
 import os
 
 
-class ApmLoggingType:
-    """Mapping of supported solarwinds_apm library log types"""
-
-    log_types = {
-        "STDERR": 0,
-        "FILE": 2,
-        "DISABLED": 4,
-    }
-
-    @classmethod
-    def default_type(cls):
-        """Returns integer representation of default log type"""
-        return cls.log_types["STDERR"]
-
-    @classmethod
-    def disabled_type(cls):
-        """Returns integer representation of disabled log type"""
-        return cls.log_types["DISABLED"]
-
-    @classmethod
-    def file_type(cls):
-        """Returns integer representation of to-file log type"""
-        return cls.log_types["FILE"]
-
-    @classmethod
-    def is_valid_log_type(cls, log_type):
-        """Returns True if the provided type is a valid interger representation of log type, False otherwise."""
-        try:
-            log_type = int(log_type)
-            return bool(log_type in list(cls.log_types.values()))
-        except (ValueError, TypeError):
-            return cls.default_type()
-
-
 class ApmLoggingLevel:
     """Mapping class providing a conversion between solarwinds_apm library logging level and Python logging module
     logging levels.
