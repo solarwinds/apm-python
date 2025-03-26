@@ -61,17 +61,24 @@ class SolarWindsEntrySpanProcessor(SpanProcessor):
                 entry_span.context.span_id,
             )
             try:
-                # AttributeError: can't set attribute 'name'
+                # AttributeError: can't set attribute 'name'/'attributes'
                 # entry_span.name = "MyAwesomeSpanName"
-
-                # AttributeError: can't set attribute 'attributes'
                 # entry_span.attributes = {"bazbaz": "quxqux"}
 
-                # Setting attribute on ended span.
+                # Setting attribute on ended span. (does not work)
                 entry_span.set_attribute("foofoo", "barbar")
                 entry_span.set_attribute(
                     "TransactionName", "MyAwesomeTransactionName"
                 )
+
+                # Full replace works, but does not export
+                new_attributes = {
+                    "bazbaz": "quxqux",
+                    "TransactionName": "MyAwesomestTxnName",
+                }
+                for attr_key, attr_value in entry_span.attributes.items():
+                    new_attributes[attr_key] = attr_value
+                entry_span._attributes = new_attributes
             except Exception as e:
                 logger.error(
                     "%s: %s",
