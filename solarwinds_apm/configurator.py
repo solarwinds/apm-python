@@ -144,9 +144,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             # set MeterProvider first via metrics_exporter config
             self._configure_metrics_exporter(apm_config)
 
-            # Test entry span processor init and register
+            # Test entry span processor
+            # TODO: remove this
             trace.get_tracer_provider().add_span_processor(
-                SolarWindsEntrySpanProcessor(SolarwindsEntrySpanManager())
+                SolarWindsEntrySpanProcessor()
             )
 
             # This processor only defines on_start
