@@ -60,6 +60,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_SUPPORT_EMAIL,
 )
+from solarwinds_apm.apm_entry_span_manager import SolarwindsEntrySpanManager
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
 from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
@@ -68,6 +69,7 @@ from solarwinds_apm.response_propagator import (
 )
 from solarwinds_apm.trace import (
     ServiceEntryIdSpanProcessor,
+    SolarWindsEntrySpanProcessor,
     SolarWindsInboundMetricsSpanProcessor,
     SolarWindsOTLPMetricsSpanProcessor,
     TxnNameCalculatorProcessor,
@@ -141,6 +143,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         if apm_config.agent_enabled:
             # set MeterProvider first via metrics_exporter config
             self._configure_metrics_exporter(apm_config)
+
+            # Test entry span processor init and register
+            trace.get_tracer_provider().add_span_processor(
+                SolarWindsEntrySpanProcessor(SolarwindsEntrySpanManager())
+            )
+
             # This processor only defines on_start
             self._configure_service_entry_id_span_processor()
 
