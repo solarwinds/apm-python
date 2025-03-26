@@ -61,9 +61,13 @@ class SolarWindsEntrySpanProcessor(SpanProcessor):
                 entry_span.context.span_id,
             )
             try:
-                # AttributeError: Error setting entry span name, attributes: can't set attribute 'name'
+                # AttributeError: can't set attribute 'name'
                 # entry_span.name = "MyAwesomeSpanName"
 
+                # AttributeError: can't set attribute 'attributes'
+                # entry_span.attributes = {"bazbaz": "quxqux"}
+
+                # Setting attribute on ended span.
                 entry_span.set_attribute("foofoo", "barbar")
                 entry_span.set_attribute(
                     "TransactionName", "MyAwesomeTransactionName"
