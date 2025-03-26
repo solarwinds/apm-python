@@ -30,6 +30,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_PROPAGATOR,
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
+from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting
 
 logger = logging.getLogger(__name__)
 
@@ -766,3 +767,33 @@ class SolarWindsApmConfig:
                 "Ignore config option with invalid (non-convertible or out-of-range) type: %s",
                 ".".join(keys if keys[0] != "transaction" else keys[1:]),
             )
+
+    @classmethod
+    def to_configuration(cls, apm_config) -> Configuration:
+        """Converts apm_config to Configuration"""
+        token = (
+            apm_config.get("service_key").split(":")[0]
+            if len(apm_config.get("service_key").split(":")) > 0
+            else ""
+        )
+        filters = apm_config.get("transaction_filters")
+        transaction_settings = []
+        for transaction_filter in filters:
+            if isinstance(transaction_filter, dict):
+                transaction_setting = TransactionSetting(
+                    tracing=transaction_filter.get("tracing_mode") == 1,
+                    matcher=lambda s, regex=transaction_filter.get(
+                        "regex"
+                    ): regex.match(s),
+                )
+                transaction_settings.append(transaction_setting)
+        return Configuration(
+            enabled=apm_config.agent_enabled,
+            service=apm_config.service_name,
+            collector=apm_config.get("collector"),
+            headers={"Authorization": f"Bearer {token}"},
+            tracing_mode=apm_config.get("tracing_mode") != 0,
+            trigger_trace_enabled=apm_config.get("trigger_trace") == 1,
+            transaction_name=apm_config.get("transaction_name"),
+            transaction_settings=transaction_settings,
+        )
