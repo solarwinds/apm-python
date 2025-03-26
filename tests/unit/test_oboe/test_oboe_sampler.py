@@ -172,7 +172,7 @@ class TestSampler(OboeSampler):
             metric_readers=[self._metric_reader],
             exemplar_filter=AlwaysOnExemplarFilter()
         )
-        super().__init__(meter_provider=meter_provider, logger=logging.getLogger(__name__))
+        super().__init__(meter_provider=meter_provider)
         self._local_settings = options.local_settings
         self._request_headers = options.request_headers
         if options.settings:

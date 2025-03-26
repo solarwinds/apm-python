@@ -8,7 +8,6 @@ import json
 import logging
 import os
 import re
-import sys
 from functools import reduce
 from pathlib import Path
 from typing import Any
@@ -28,13 +27,10 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_BAGGAGE_PROPAGATOR,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
-    INTL_SWO_DOC_SUPPORTED_PLATFORMS,
     INTL_SWO_PROPAGATOR,
-    INTL_SWO_SUPPORT_EMAIL,
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
-
-# from solarwinds_apm.certs.ao_issuer_ca import get_public_cert
+from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting
 
 logger = logging.getLogger(__name__)
 
@@ -93,23 +89,8 @@ class SolarWindsApmConfig:
                 "enabled"
             ),
             "collector": "",  # the collector address in host:port format.
-            "reporter": "",  # the reporter mode, either 'udp' or 'ssl'.
-            "log_type": apm_logging.ApmLoggingType.default_type(),
             "debug_level": apm_logging.ApmLoggingLevel.default_level(),
-            "log_filepath": "",
             "service_key": "",
-            "hostname_alias": "",
-            "trustedpath": "",
-            "events_flush_interval": -1,
-            "max_request_size_bytes": -1,
-            "ec2_metadata_timeout": 1000,
-            "max_flush_wait_time": -1,
-            "max_transactions": -1,
-            "trace_metrics": -1,
-            "bufsize": -1,
-            "histogram_precision": -1,
-            "reporter_file_single": 0,
-            "proxy": "",
             "transaction_filters": [],
             "transaction_name": None,
             "export_logs_enabled": False,
@@ -135,116 +116,9 @@ class SolarWindsApmConfig:
         )
 
         # Update and apply logging settings to Python logger
-        self.update_log_settings()
-        apm_logging.set_sw_log_type(
-            self.__config["log_type"],
-            self.__config["log_filepath"],
-        )
         apm_logging.set_sw_log_level(self.__config["debug_level"])
 
-        self.update_log_filepath_for_reporter()
-
-        # Calculate c-lib extension usage
-        # (
-        #     self.extension,
-        #     self.context,
-        #     oboe_api_swig,
-        #     oboe_api_options_swig,
-        # ) = self._get_extension_components(
-        #     self.agent_enabled,
-        #     self.is_lambda,
-        # )
-
-        # Create OboeAPI options using extension and __config
-        # oboe_api_options = oboe_api_options_swig()
-        # oboe_api_options.logging_options.level = self.__config["debug_level"]
-        # oboe_api_options.logging_options.type = self.__config["log_type"]
-        # self.oboe_api = oboe_api_swig(
-        #     oboe_api_options,
-        # )
-        #
-        # self.context.setTracingMode(self.__config["tracing_mode"])
-        # self.context.setTriggerMode(self.__config["trigger_trace"])
-        #
-        # # (Re-)Calculate config if AppOptics
-        # self.metric_format = self._calculate_metric_format()
-        # self.certificates = self._calculate_certificates()
-        # self.__config["export_logs_enabled"] = self._calculate_logs_enabled()
-        # self.__config["export_metrics_enabled"] = (
-        #     self._calculate_metrics_enabled()
-        # )
-
         logger.debug("Set ApmConfig as: %s", self)
-
-    # def _get_extension_components(
-    #     self,
-    #     agent_enabled: bool,
-    #     is_lambda: bool,
-    # ) -> None:
-    #     """Returns c-lib extension or noop components based on agent_enabled, is_lambda.
-    #
-    #     agent_enabled T, is_lambda F -> c-lib extension, c-lib Context, no-op settings API, no-op API options
-    #     agent_enabled T, is_lambda T -> no-op extension, no-op Context, c-lib settings API, c-lib API options
-    #     agent_enabled F              -> all no-op
-    #     """
-    #     if not agent_enabled:
-    #         return (
-    #             noop_extension,
-    #             noop_extension.Context,
-    #             noop_extension.OboeAPI,
-    #             noop_extension.OboeAPIOptions,
-    #         )
-    #
-    #     try:
-    #         # pylint: disable=import-outside-toplevel
-    #         import solarwinds_apm.extension.oboe as c_extension
-    #     except ImportError as err:
-    #         # At this point, if agent_enabled but cannot import
-    #         # extension then something unexpected happened
-    #         logger.error(
-    #             "Could not import extension. Please contact %s. Tracing disabled: %s",
-    #             INTL_SWO_SUPPORT_EMAIL,
-    #             err,
-    #         )
-    #         return (
-    #             noop_extension,
-    #             noop_extension.Context,
-    #             noop_extension.OboeAPI,
-    #             noop_extension.OboeAPIOptions,
-    #         )
-    #
-    #     if is_lambda:
-    #         try:
-    #             # pylint: disable=import-outside-toplevel,no-name-in-module
-    #             # from solarwinds_apm.extension.oboe import OboeAPI as oboe_api
-    #             # from solarwinds_apm.extension.oboe import (
-    #             #     OboeAPIOptions as api_options,
-    #             # )
-    #         except ImportError as err:
-    #             logger.warning(
-    #                 "Could not import API in lambda mode. Please contact %s. Tracing disabled: %s",
-    #                 INTL_SWO_SUPPORT_EMAIL,
-    #                 err,
-    #             )
-    #             return (
-    #                 noop_extension,
-    #                 noop_extension.Context,
-    #                 noop_extension.OboeAPI,
-    #                 noop_extension.OboeAPIOptions,
-    #             )
-    #         return (
-    #             noop_extension,
-    #             noop_extension.Context,
-    #             oboe_api,
-    #             api_options,
-    #         )
-    #
-    #     return (
-    #         c_extension,
-    #         c_extension.Context,
-    #         noop_extension.OboeAPI,
-    #         noop_extension.OboeAPIOptions,
-    #     )
 
     @classmethod
     def calculate_is_lambda(cls) -> bool:
@@ -257,21 +131,6 @@ class SolarWindsApmConfig:
             )
             return True
         return False
-
-    def _calculate_agent_enabled_platform(self) -> bool:
-        """Checks if agent is enabled/disabled based on platform"""
-        if not sys.platform.startswith("linux"):
-            logger.warning(
-                """Platform %s not supported.
-                See: %s
-                Tracing is disabled and will go into no-op mode.
-                Contact %s if this is unexpected.""",
-                sys.platform,
-                INTL_SWO_DOC_SUPPORTED_PLATFORMS,
-                INTL_SWO_SUPPORT_EMAIL,
-            )
-            return False
-        return True
 
     def _calculate_agent_enabled_config_lambda(self) -> bool:
         """Checks if agent is enabled/disabled based on config in lambda environment:
@@ -416,9 +275,7 @@ class SolarWindsApmConfig:
     # pylint: disable=too-many-branches,too-many-statements
     def _calculate_agent_enabled(self) -> bool:
         """Checks if agent is enabled/disabled based on platform and config"""
-        agent_enabled = False
-        if self._calculate_agent_enabled_platform():
-            agent_enabled = self._calculate_agent_enabled_config()
+        agent_enabled = self._calculate_agent_enabled_config()
         logger.debug("agent_enabled: %s", agent_enabled)
         return agent_enabled
 
@@ -530,65 +387,6 @@ class SolarWindsApmConfig:
 
         # Else no need to update service_key when not reporting
         return service_key
-
-    def update_log_settings(
-        self,
-    ) -> None:
-        """Update log_filepath and log type"""
-        self.update_log_filepath()
-        self.update_log_type()
-
-    def update_log_filepath(
-        self,
-    ) -> None:
-        """Checks SW_APM_LOG_FILEPATH path to file else fileHandler will fail.
-        If invalid, create path to match Boost.log behaviour.
-        If not possible, switch to default log settings.
-        """
-        log_filepath = os.path.dirname(self.__config["log_filepath"])
-        if log_filepath:
-            if not os.path.exists(log_filepath):
-                try:
-                    os.makedirs(log_filepath)
-                    logger.debug(
-                        "Created directory path from provided SW_APM_LOG_FILEPATH."
-                    )
-                except FileNotFoundError:
-                    logger.error(
-                        "Could not create log file directory path from provided SW_APM_LOG_FILEPATH. Using default log settings."
-                    )
-                    self.__config["log_filepath"] = ""
-                    self.__config["log_type"] = (
-                        apm_logging.ApmLoggingType.default_type()
-                    )
-
-    def update_log_type(
-        self,
-    ) -> None:
-        """Updates agent log type depending on other configs.
-
-        SW_APM_DEBUG_LEVEL -1 will set c-lib log_type to disabled (4).
-        SW_APM_LOG_FILEPATH not None will set c-lib log_type to file (2).
-        """
-        if self.__config["debug_level"] == -1:
-            self.__config["log_type"] = (
-                apm_logging.ApmLoggingType.disabled_type()
-            )
-        elif self.__config["log_filepath"]:
-            self.__config["log_type"] = apm_logging.ApmLoggingType.file_type()
-
-    def update_log_filepath_for_reporter(
-        self,
-    ) -> None:
-        """Updates log_filepath for extension Reporter to avoid conflict"""
-        orig_log_filepath = self.__config["log_filepath"]
-        if orig_log_filepath:
-            log_filepath, log_filepath_ext = os.path.splitext(
-                orig_log_filepath
-            )
-            self.__config["log_filepath"] = (
-                f"{log_filepath}_ext{log_filepath_ext}"
-            )
 
     def _calculate_metric_format(self) -> int:
         """Return one of 1 (TransactionResponseTime only) or 2 (default; ResponseTime only). Note: 0 (both) is no longer supported. Based on collector URL which may have a port e.g. foo-collector.com:443"""
@@ -969,3 +767,33 @@ class SolarWindsApmConfig:
                 "Ignore config option with invalid (non-convertible or out-of-range) type: %s",
                 ".".join(keys if keys[0] != "transaction" else keys[1:]),
             )
+
+    @classmethod
+    def to_configuration(cls, apm_config) -> Configuration:
+        """Converts apm_config to Configuration"""
+        token = (
+            apm_config.get("service_key").split(":")[0]
+            if len(apm_config.get("service_key").split(":")) > 0
+            else ""
+        )
+        filters = apm_config.get("transaction_filters")
+        transaction_settings = []
+        for transaction_filter in filters:
+            if isinstance(transaction_filter, dict):
+                transaction_setting = TransactionSetting(
+                    tracing=transaction_filter.get("tracing_mode") == 1,
+                    matcher=lambda s, regex=transaction_filter.get(
+                        "regex"
+                    ): regex.match(s),
+                )
+                transaction_settings.append(transaction_setting)
+        return Configuration(
+            enabled=apm_config.agent_enabled,
+            service=apm_config.service_name,
+            collector=apm_config.get("collector"),
+            headers={"Authorization": f"Bearer {token}"},
+            tracing_mode=apm_config.get("tracing_mode") != 0,
+            trigger_trace_enabled=apm_config.get("trigger_trace") == 1,
+            transaction_name=apm_config.get("transaction_name"),
+            transaction_settings=transaction_settings,
+        )

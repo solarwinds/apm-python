@@ -25,22 +25,24 @@ MULTIPLIER = 1.5
 DAEMON_THREAD_JOIN_TIMEOUT = 10  # 10s
 REQUEST_INTERVAL = 60  # 60s
 
+logger = logging.getLogger(__name__)
+
 
 class HttpSampler(Sampler):
     def __init__(
         self,
         meter_provider: MeterProvider,
         config: Configuration,
-        logger: logging.Logger,
         initial: dict[str, Any] | None,
     ):
         super().__init__(
             meter_provider=meter_provider,
             config=config,
-            logger=logger,
             initial=initial,
         )
         self._url = config.collector
+        if not self._url.startswith("https://"):
+            self._url = f"https://{self._url}"
         self._service = config.service
         self._headers = config.headers
         self._hostname = socket.gethostname()
@@ -56,10 +58,10 @@ class HttpSampler(Sampler):
 
     def _warn(self, message: str, *args: Any):
         if message != self._last_warning_message:
-            self.logger.warning("%s %s", message, str(*args))
+            logger.warning("%s %s", message, str(*args))
             self._last_warning_message = message
         else:
-            self.logger.debug("%s %s", message, str(*args))
+            logger.debug("%s %s", message, str(*args))
 
     def shutdown(self):
         """
@@ -98,12 +100,10 @@ class HttpSampler(Sampler):
         Fetch sampling settings from the collector.
         """
         url = f"{self._url}/v1/settings/{self._service}/{self._hostname}"
-        self.logger.debug(f"retrieving sampling settings from {url}")
+        logger.debug("retrieving sampling settings from %s", url)
         response = requests.get(
             url, headers=self._headers, timeout=REQUEST_TIMEOUT
         )
         response.raise_for_status()
-        self.logger.debug(
-            f"received sampling settings response {response.text}"
-        )
+        logger.debug("received sampling settings response %s", response.text)
         return response.json()

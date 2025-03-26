@@ -34,7 +34,7 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
         super().__init__(
             apm_txname_manager=apm_txname_manager,
         )
-        self._span = apm_config.extension.Span
+        # self._span = apm_config.extension.Span
         self.config_transaction_name = apm_config.get(self._TRANSACTION_NAME)
 
     def on_end(self, span: "ReadableSpan") -> None:
@@ -79,7 +79,7 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
         domain = None
         has_error = self.has_error(span)
 
-        liboboe_txn_name = None
+        # liboboe_txn_name = None
         if is_span_http:
             # createHttpSpan needs these other params
             status_code = self.get_http_status_code(span)
@@ -95,15 +95,15 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
                 request_method,
                 has_error,
             )
-            liboboe_txn_name = self._span.createHttpSpan(
-                trans_name,
-                url_tran,
-                domain,
-                span_time,
-                status_code,
-                request_method,
-                has_error,
-            )
+            # liboboe_txn_name = self._span.createHttpSpan(
+            #     trans_name,
+            #     url_tran,
+            #     domain,
+            #     span_time,
+            #     status_code,
+            #     request_method,
+            #     has_error,
+            # )
         else:
             logger.debug(
                 "createSpan with trans_name: %s, domain: %s, span_time: %s, has_error: %s",
@@ -112,14 +112,17 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
                 span_time,
                 has_error,
             )
-            liboboe_txn_name = self._span.createSpan(
-                trans_name,
-                domain,
-                span_time,
-                has_error,
-            )
+            # liboboe_txn_name = self._span.createSpan(
+            #     trans_name,
+            #     domain,
+            #     span_time,
+            #     has_error,
+            # )
 
         if span.context.trace_flags == TraceFlags.SAMPLED:
             # Cache txn_name for span export
             txname_key = f"{INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX}-{W3CTransformer.trace_and_span_id_from_context(span.context)}"
-            self.apm_txname_manager[txname_key] = liboboe_txn_name
+            # TO-DO https://swicloud.atlassian.net/browse/NH-105550 : replacement of liboboe txn name with the new txn name
+            self.apm_txname_manager[txname_key] = (
+                "To-do-txn-name"  # liboboe_txn_name
+            )

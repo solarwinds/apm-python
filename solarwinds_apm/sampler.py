@@ -15,16 +15,20 @@ from __future__ import annotations
 # import enum
 import logging
 
-# from collections.abc import Sequence
-# from types import MappingProxyType
-from typing import TYPE_CHECKING
+from opentelemetry.sdk import metrics
 
 # from opentelemetry.context.context import Context as OtelContext
 from opentelemetry.sdk.trace.sampling import (  # Decision,; Sampler,; SamplingResult,
-    ALWAYS_OFF,
-    ALWAYS_ON,
     ParentBased,
 )
+
+from solarwinds_apm.apm_config import SolarWindsApmConfig
+from solarwinds_apm.oboe.http_sampler import HttpSampler
+from solarwinds_apm.oboe.json_sampler import JsonSampler
+
+# from collections.abc import Sequence
+# from types import MappingProxyType
+# from typing import TYPE_CHECKING
 
 # from opentelemetry.trace import Link, SpanKind, get_current_span
 # from opentelemetry.trace.span import SpanContext, TraceState
@@ -44,10 +48,8 @@ from opentelemetry.sdk.trace.sampling import (  # Decision,; Sampler,; SamplingR
 # from solarwinds_apm.traceoptions import XTraceOptions
 # from solarwinds_apm.w3c_transformer import W3CTransformer
 
-if TYPE_CHECKING:
-    from solarwinds_apm.apm_config import SolarWindsApmConfig
 
-    # from solarwinds_apm.extension.oboe import OboeAPI, Reporter
+# from solarwinds_apm.extension.oboe import OboeAPI, Reporter
 
 logger = logging.getLogger(__name__)
 
@@ -635,21 +637,26 @@ class ParentBasedSwSampler(ParentBased):
         oboe_api,
     ):
         """
-        Uses _SwSampler/liboboe if no parent span.
-        Uses _SwSampler/liboboe if parent span is_remote.
+        Uses HttpSampler/JsonSampler if no parent span.
+        Uses HttpSampler/JsonSampler if parent span is_remote.
         Uses OTEL defaults if parent span is_local.
         """
+        configuration = SolarWindsApmConfig.to_configuration(apm_config)
+        sampler = None
+        if apm_config.is_lambda:
+            sampler = JsonSampler(
+                meter_provider=metrics.MeterProvider(), config=configuration
+            )
+        else:
+            sampler = HttpSampler(
+                meter_provider=metrics.MeterProvider(),
+                config=configuration,
+                initial=None,
+            )
         super().__init__(
-            root=ALWAYS_ON,
-            remote_parent_sampled=ALWAYS_ON,
-            remote_parent_not_sampled=ALWAYS_OFF,
+            root=sampler,
+            remote_parent_sampled=sampler,
+            remote_parent_not_sampled=sampler,
         )
-        # super().__init__(
-        #     root=_SwSampler(apm_config, reporter, oboe_api),
-        #     remote_parent_sampled=_SwSampler(apm_config, reporter, oboe_api),
-        #     remote_parent_not_sampled=_SwSampler(
-        #         apm_config, reporter, oboe_api
-        #     ),
-        # )
 
     # should_sample defined by ParentBased
