@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING
 from opentelemetry import context
 from opentelemetry.sdk.trace import SpanProcessor
 
-from solarwinds_apm.apm_constants import INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
 from solarwinds_apm.apm_entry_span_manager import SolarwindsEntrySpanManager
 
 if TYPE_CHECKING:
@@ -34,7 +33,7 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         span: "ReadableSpan",
         parent_context: context.Context | None = None,
     ) -> None:
-        """If entry span, caches it e.g. for API set_transaction_name"""
+        """If entry span, caches it at its trace ID. Used for custom transaction naming."""
         # Only caches for service entry spans
         parent_span_context = span.parent
         if (
@@ -44,6 +43,5 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         ):
             return
 
-        self.apm_entry_span_manager[INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID] = (
-            span
-        )
+        # Cache at current trace ID
+        self.apm_entry_span_manager[span.context.trace_id] = span

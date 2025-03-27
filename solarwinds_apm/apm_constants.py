@@ -9,7 +9,6 @@ INTL_SWO_DEFAULT_OTLP_COLLECTOR = (
 )
 INTL_SWO_AO_COLLECTOR = "collector.appoptics.com"
 INTL_SWO_AO_STG_COLLECTOR = "collector-stg.appoptics.com"
-INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID = "sw-current-trace-entry-span-id"
 INTL_SWO_COMMA = ","
 INTL_SWO_COMMA_W3C_SANITIZED = "...."
 INTL_SWO_EQUALS = "="
