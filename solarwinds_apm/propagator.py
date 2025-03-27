@@ -9,17 +9,13 @@ from __future__ import annotations
 
 import logging
 import typing
-from re import split
 
 from opentelemetry import trace
-from opentelemetry.baggage.propagation import _format_baggage
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
-from opentelemetry.util.re import _DELIMITER_PATTERN
 
 from solarwinds_apm.apm_constants import (
-    INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID,
     INTL_SWO_TRACESTATE_KEY,
     INTL_SWO_X_OPTIONS_KEY,
 )
@@ -36,7 +32,6 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
 
     _INVALID_SPAN_ID = 0x0000000000000000
     _TRACESTATE_HEADER_NAME = "tracestate"
-    _BAGGAGE_HEADER_NAME = "baggage"
     _XTRACEOPTIONS_HEADER_NAME = "x-trace-options"
     _XTRACEOPTIONS_SIGNATURE_HEADER_NAME = "x-trace-options-signature"
 
@@ -79,7 +74,6 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         span_context = span.get_span_context()
         sw_value = W3CTransformer.sw_from_context(span_context)
         trace_state_header = carrier.get(self._TRACESTATE_HEADER_NAME, None)
-        baggage_header = carrier.get(self._BAGGAGE_HEADER_NAME, None)
 
         # Prepare carrier with carrier's or new tracestate
         trace_state = None
@@ -125,58 +119,6 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()
         )
 
-        def _handle_baggage_header(baggage_header):
-            sanitized_baggage = self.remove_custom_naming_baggage_header(
-                baggage_header
-            )
-            if sanitized_baggage != "":
-                # Re-inject if sanitized baggage non-empty
-                setter.set(
-                    carrier, self._BAGGAGE_HEADER_NAME, sanitized_baggage
-                )
-            else:
-                # Or, remove baggage from carrier to prevent empty header
-                del carrier[self._BAGGAGE_HEADER_NAME]
-
-        # Remove any baggage stored for custom transaction naming
-        if baggage_header:
-            # Note: OTel Propagation API callers (OTel instrumentors) may
-            # inject header values as dictionary, not a string.
-            if isinstance(baggage_header, dict):
-                baggage_stringvalue = baggage_header.get("StringValue")
-                _handle_baggage_header(baggage_stringvalue)
-            elif isinstance(baggage_header, str):
-                _handle_baggage_header(baggage_header)
-            # Else: leave baggage header as is in carrier
-
-    def remove_custom_naming_baggage_header(
-        self,
-        baggage_header: str,
-    ) -> str:
-        """Removes values used for custom naming from baggage header created
-        by upstream W3CBaggagePropagator propagator, if present"""
-        baggage_entries: list[str] = split(_DELIMITER_PATTERN, baggage_header)
-        baggage_kvs = {}
-        for entry in baggage_entries:
-            try:
-                e_name, e_value = entry.split("=", 1)
-            except Exception:  # pylint: disable=broad-except
-                logger.warning(
-                    "Baggage list-member `%s` doesn't match the format; "
-                    "skipping injection",
-                    entry,
-                )
-                continue
-
-            # empty key/val
-            if not e_name or not e_value:
-                continue
-            if e_name != INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID:
-                baggage_kvs[e_name] = e_value
-
-        # Otel Python API method to nicely join items into header str
-        return _format_baggage(baggage_kvs)
-
     # Note: this inherits deprecated `typing` use by OTel,
     #       for compatibility with Python3.8 else TypeError
     @property
@@ -184,4 +126,4 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         self,
     ) -> typing.Set[str]:  # pylint: disable=deprecated-typing-alias
         """Returns a set with the fields set in `inject`"""
-        return {self._TRACESTATE_HEADER_NAME, self._BAGGAGE_HEADER_NAME}
+        return {self._TRACESTATE_HEADER_NAME}
