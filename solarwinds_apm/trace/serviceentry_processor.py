@@ -10,11 +10,11 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from opentelemetry import baggage, context
+from opentelemetry import context
 from opentelemetry.sdk.trace import SpanProcessor
 
 from solarwinds_apm.apm_constants import INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
-from solarwinds_apm.w3c_transformer import W3CTransformer
+from solarwinds_apm.apm_entry_span_manager import SolarwindsEntrySpanManager
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
@@ -22,13 +22,19 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class ServiceEntryIdSpanProcessor(SpanProcessor):
+class ServiceEntrySpanProcessor(SpanProcessor):
+    def __init__(
+        self,
+        apm_entry_span_manager: SolarwindsEntrySpanManager,
+    ) -> None:
+        self.apm_entry_span_manager = apm_entry_span_manager
+
     def on_start(
         self,
         span: "ReadableSpan",
         parent_context: context.Context | None = None,
     ) -> None:
-        """Caches current trace ID and entry span ID in span context baggage for API set_transaction_name"""
+        """If entry span, caches it e.g. for API set_transaction_name"""
         # Only caches for service entry spans
         parent_span_context = span.parent
         if (
@@ -38,9 +44,6 @@ class ServiceEntryIdSpanProcessor(SpanProcessor):
         ):
             return
 
-        context.attach(
-            baggage.set_baggage(
-                INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID,
-                W3CTransformer.trace_and_span_id_from_context(span.context),
-            )
+        self.apm_entry_span_manager[INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID] = (
+            span
         )

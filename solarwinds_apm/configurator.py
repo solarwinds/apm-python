@@ -68,7 +68,7 @@ from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
 from solarwinds_apm.trace import (
-    ServiceEntryIdSpanProcessor,
+    ServiceEntrySpanProcessor,
     SolarWindsEntrySpanProcessor,
     SolarWindsInboundMetricsSpanProcessor,
     SolarWindsOTLPMetricsSpanProcessor,
@@ -150,8 +150,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 SolarWindsEntrySpanProcessor()
             )
 
+            apm_entry_span_manager = SolarwindsEntrySpanManager()
             # This processor only defines on_start
-            self._configure_service_entry_id_span_processor()
+            self._configure_service_entry_id_span_processor(
+                apm_entry_span_manager,
+            )
 
             # The txnname calculator span processor must be registered
             # before the rest of the processors with defined on_end
@@ -249,10 +252,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _configure_service_entry_id_span_processor(
         self,
+        apm_entry_span_manager: SolarwindsEntrySpanManager,
     ) -> None:
-        """Configure ServiceEntryIdSpanProcessor"""
+        """Configure ServiceEntrySpanProcessor"""
         trace.get_tracer_provider().add_span_processor(
-            ServiceEntryIdSpanProcessor()
+            ServiceEntrySpanProcessor(SolarwindsEntrySpanManager())
         )
 
     def _configure_txnname_calculator_span_processor(

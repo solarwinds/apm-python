@@ -19,7 +19,7 @@ class TestConfiguratorSpanProcessors:
     ):
         trace_mocks = get_trace_mocks(mocker)
         mocker.patch(
-            "solarwinds_apm.configurator.ServiceEntryIdSpanProcessor"
+            "solarwinds_apm.configurator.ServiceEntrySpanProcessor"
         )
 
         test_configurator = configurator.SolarWindsConfigurator()

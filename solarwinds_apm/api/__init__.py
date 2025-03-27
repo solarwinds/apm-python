@@ -7,7 +7,6 @@
 import logging
 from typing import Any
 
-from opentelemetry import baggage
 from opentelemetry.trace import NoOpTracerProvider, get_tracer_provider
 
 from solarwinds_apm.apm_constants import INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
@@ -15,7 +14,8 @@ from solarwinds_apm.apm_oboe_codes import OboeReadyCode
 
 # pylint: disable=import-error,no-name-in-module
 from solarwinds_apm.extension.oboe import Context
-from solarwinds_apm.trace import TxnNameCalculatorProcessor
+from solarwinds_apm.trace import ServiceEntrySpanProcessor
+from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -60,32 +60,33 @@ def set_transaction_name(custom_name: str) -> bool:
         # pylint: disable=protected-access
         get_tracer_provider()._active_span_processor._span_processors
     )
-    txnname_processor = None
+    entry_span_processor = None
     for spr in span_processors:
-        if isinstance(spr, TxnNameCalculatorProcessor):
-            txnname_processor = spr
+        if isinstance(spr, ServiceEntrySpanProcessor):
+            entry_span_processor = spr
 
-    if not txnname_processor:
-        logger.error("Could not find configured TxnNameCalculatorProcessor.")
+    if not entry_span_processor:
+        logger.error("Could not find configured ServiceEntrySpanProcessor.")
         return False
 
-    current_trace_entry_span_id = baggage.get_baggage(
+    current_trace_entry_span = entry_span_processor.apm_entry_span_manager.get(
         INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
     )
-    if not current_trace_entry_span_id:
+    if not current_trace_entry_span:
         logger.warning(
-            "Cannot cache custom transaction name %s because OTel service entry span not started; ignoring",
+            "Cannot set custom transaction name %s because OTel service entry span not started; ignoring",
             custom_name,
         )
         return False
-    txnname_processor.apm_txname_manager[current_trace_entry_span_id] = (
-        custom_name
-    )
+
     logger.debug(
-        "Cached custom transaction name for %s as %s",
-        current_trace_entry_span_id,
+        "Setting attribute TransactionName for span %s as %s",
+        W3CTransformer.trace_and_span_id_from_context(
+            current_trace_entry_span.context
+        ),
         custom_name,
     )
+    current_trace_entry_span.set_attribute("TransactionName", custom_name)
     return True
 
 

@@ -4,9 +4,9 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-from solarwinds_apm.trace import ServiceEntryIdSpanProcessor
+from solarwinds_apm.trace import ServiceEntrySpanProcessor
 
-class TestServiceEntryIdSpanProcessor():
+class TestServiceEntrySpanProcessor():
 
     def patch_for_on_start(self, mocker):
         mock_otel_context = mocker.patch(
@@ -57,7 +57,7 @@ class TestServiceEntryIdSpanProcessor():
                 "parent": mock_parent
             }
         )
-        processor = ServiceEntryIdSpanProcessor()
+        processor = ServiceEntrySpanProcessor()
         assert processor.on_start(mock_span, None) is None
         mock_swo_baggage_key.assert_not_called()
         mock_set_baggage.assert_not_called()
@@ -78,7 +78,7 @@ class TestServiceEntryIdSpanProcessor():
                 "parent": mock_parent
             }
         )
-        processor = ServiceEntryIdSpanProcessor()
+        processor = ServiceEntrySpanProcessor()
         assert processor.on_start(mock_span, None) is None
         mock_set_baggage.assert_called_once_with(
             mock_swo_baggage_key,
@@ -101,7 +101,7 @@ class TestServiceEntryIdSpanProcessor():
                 "parent": mock_parent
             }
         )
-        processor = ServiceEntryIdSpanProcessor()
+        processor = ServiceEntrySpanProcessor()
         assert processor.on_start(mock_span, None) is None
         mock_set_baggage.assert_called_once_with(
             mock_swo_baggage_key,
@@ -124,7 +124,7 @@ class TestServiceEntryIdSpanProcessor():
                 "parent": mock_parent
             }
         )
-        processor = ServiceEntryIdSpanProcessor()
+        processor = ServiceEntrySpanProcessor()
         assert processor.on_start(mock_span, None) is None
         mock_set_baggage.assert_called_once_with(
             mock_swo_baggage_key,
@@ -140,7 +140,7 @@ class TestServiceEntryIdSpanProcessor():
                 "parent": None
             }
         )
-        processor = ServiceEntryIdSpanProcessor()
+        processor = ServiceEntrySpanProcessor()
         assert processor.on_start(mock_span, None) is None
         mock_set_baggage.assert_called_once_with(
             mock_swo_baggage_key,
