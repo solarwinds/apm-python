@@ -19,7 +19,7 @@ from opentelemetry.trace.span import TraceState
 from opentelemetry.util.re import _DELIMITER_PATTERN
 
 from solarwinds_apm.apm_constants import (
-    INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID,
+    INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
     INTL_SWO_TRACESTATE_KEY,
     INTL_SWO_X_OPTIONS_KEY,
 )
@@ -171,7 +171,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             # empty key/val
             if not e_name or not e_value:
                 continue
-            if e_name != INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID:
+            if e_name != INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN:
                 baggage_kvs[e_name] = e_value
 
         # Otel Python API method to nicely join items into header str
