@@ -19,7 +19,9 @@ class SolarwindsEntrySpanManager:
         self.__cache[key] = value
 
     def __str__(self) -> str:
-        return json.dumps(self.__cache)
+        # Convert all values (spans) in the cache before serializing
+        serializable_cache = {key: value.to_json() for key, value in self.__cache.items()}
+        return json.dumps(serializable_cache)
 
     def get(self, key: str, default: Any = None) -> Any:
         return self.__cache.get(key, default)
