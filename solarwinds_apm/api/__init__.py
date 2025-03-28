@@ -7,14 +7,15 @@
 import logging
 from typing import Any
 
+from opentelemetry import baggage
 from opentelemetry.trace import (
     NoOpTracerProvider,
-    get_current_span,
     get_tracer_provider,
 )
 
 # pylint: disable=import-error,no-name-in-module
 # from solarwinds_apm.extension.oboe import Context
+from solarwinds_apm.apm_constants import INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
 from solarwinds_apm.trace import ServiceEntrySpanProcessor
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
@@ -74,9 +75,8 @@ def set_transaction_name(custom_name: str) -> bool:
         logger.error("Could not find configured ServiceEntrySpanProcessor.")
         return False
 
-    current_trace_id = get_current_span().get_span_context().trace_id
-    current_trace_entry_span = entry_span_processor.apm_entry_span_manager.get(
-        current_trace_id
+    current_trace_entry_span = baggage.get_baggage(
+        INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
     )
     if not current_trace_entry_span:
         logger.warning(

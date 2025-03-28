@@ -10,10 +10,11 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from opentelemetry import context
+from opentelemetry import baggage, context
 from opentelemetry.sdk.trace import SpanProcessor
 
-from solarwinds_apm.apm_entry_span_manager import SolarwindsEntrySpanManager
+from solarwinds_apm.apm_constants import INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
+from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
@@ -22,11 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class ServiceEntrySpanProcessor(SpanProcessor):
-    def __init__(
-        self,
-        apm_entry_span_manager: SolarwindsEntrySpanManager,
-    ) -> None:
-        self.apm_entry_span_manager = apm_entry_span_manager
+    def __init__(self) -> None:
+        self.context_tokens = {}
 
     def on_start(
         self,
@@ -43,5 +41,54 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         ):
             return
 
-        # Cache at current trace ID
-        self.apm_entry_span_manager[span.context.trace_id] = span
+        entry_trace_span_id = W3CTransformer.trace_and_span_id_from_context(
+            span.context
+        )
+        # Cache the entry span in its baggage
+        logger.debug(
+            "Attaching baggage with key %s as entry span with name: %s, trace/span id: %s",
+            INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
+            span.name,
+            entry_trace_span_id,
+        )
+        token = context.attach(
+            baggage.set_baggage(
+                INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
+                span,
+            )
+        )
+        logger.debug(
+            "Storing token %s for trace/span id %s",
+            token,
+            entry_trace_span_id,
+        )
+        self.context_tokens[entry_trace_span_id] = token
+
+    def on_end(self, span: "ReadableSpan") -> None:
+        # Only attempt for service entry spans
+        parent_span_context = span.parent
+        if (
+            parent_span_context
+            and parent_span_context.is_valid
+            and not parent_span_context.is_remote
+        ):
+            return
+
+        entry_trace_span_id = W3CTransformer.trace_and_span_id_from_context(
+            span.context
+        )
+        # Retrieve the token corresponding to this trace/span id,
+        # reset its context (detach), and removes token from the cache
+        token = self.context_tokens.pop(entry_trace_span_id, None)
+        if token is None:
+            logger.error(
+                "No token found for trace/span id: %s",
+                entry_trace_span_id,
+            )
+            return
+        logger.debug(
+            "Detaching from context using token %s from trace/span id: %s",
+            token,
+            entry_trace_span_id,
+        )
+        context.detach(token)
