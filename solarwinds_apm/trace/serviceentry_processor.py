@@ -14,6 +14,9 @@ from opentelemetry import context
 from opentelemetry.sdk.trace import SpanProcessor
 
 from solarwinds_apm.apm_constants import INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
+from solarwinds_apm.oboe.transaction_name_calculator import resolve_transaction_name
+from solarwinds_apm.oboe import get_transaction_name_pool
+from solarwinds_apm.oboe.transaction_name_pool import TRANSACTION_NAME_DEFAULT
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
@@ -41,11 +44,29 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         ):
             return
 
+        # Calculate non-custom txn name for entry span
+        resolved_name = resolve_transaction_name(
+            "",
+            "",
+            span.attributes.get(self._HTTP_URL, ""),
+        )
+        pool = get_transaction_name_pool()
+        registered_name = pool.registered(resolved_name)
+        if registered_name == TRANSACTION_NAME_DEFAULT:
+            logger.warning(
+                "Transaction name pool is full; set as %s for span %s",
+                TRANSACTION_NAME_DEFAULT,
+                W3CTransformer.trace_and_span_id_from_context(
+                    span.context
+                ),
+            )
+        span.set_attribute("TransactionName", registered_name)
+
+        # Cache the entry span in current context to use upstream-managed
+        # execution scope and handle async tracing, for custom naming
         entry_trace_span_id = W3CTransformer.trace_and_span_id_from_context(
             span.context
         )
-        # Cache the entry span in current context to use upstream-managed
-        # execution scope and handle async tracing
         logger.debug(
             "Attaching context with key %s as entry span with name: %s, trace/span id: %s",
             INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
