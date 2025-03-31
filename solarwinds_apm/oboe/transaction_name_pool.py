@@ -45,14 +45,14 @@ class TransactionNamePool:
         # housekeep pool for every call
         self._housekeep()
         name = name[:self._max_length]
-        if len(self._pool) >= self._max_size:
-            return self._default
         if name in self._pool:
             # update timestamp and heapify
             item = self._pool[name]
             item.timestamp = int(time.time())
             heapq.heapify(self._min_heap)
             return name
+        if len(self._pool) >= self._max_size:
+            return self._default
         item = NameItem(name=name, timestamp=int(time.time()))
         self._pool[name] = item
         heapq.heappush(self._min_heap, item)

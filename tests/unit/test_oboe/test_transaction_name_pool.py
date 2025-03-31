@@ -26,6 +26,8 @@ def test_register_name_exceeds_max_size(pool):
     assert len(pool._min_heap) == pool._max_size
     default_name = pool.registered("new_name")
     assert default_name == pool._default
+    registered_name = pool.registered("name_1")
+    assert registered_name == "name_1"
 
 def test_housekeep(pool):
     name = "test_name"
