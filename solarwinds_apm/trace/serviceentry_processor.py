@@ -44,23 +44,21 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         ):
             return
 
-        # Calculate non-custom txn name for entry span
-        resolved_name = resolve_transaction_name(
-            "",
-            "",
-            span.attributes.get(self._HTTP_URL, ""),
-        )
-        pool = get_transaction_name_pool()
-        registered_name = pool.registered(resolved_name)
-        if registered_name == TRANSACTION_NAME_DEFAULT:
-            logger.warning(
-                "Transaction name pool is full; set as %s for span %s",
-                TRANSACTION_NAME_DEFAULT,
-                W3CTransformer.trace_and_span_id_from_context(
-                    span.context
-                ),
-            )
-        span.set_attribute("TransactionName", registered_name)
+        # Calculate non-custom txn name for entry span if we can retrieve the URL
+        url = span.attributes.get(self._HTTP_URL, None)
+        if url:
+            resolved_name = resolve_transaction_name(url)
+            pool = get_transaction_name_pool()
+            registered_name = pool.registered(resolved_name)
+            if registered_name == TRANSACTION_NAME_DEFAULT:
+                logger.warning(
+                    "Transaction name pool is full; set as %s for span %s",
+                    TRANSACTION_NAME_DEFAULT,
+                    W3CTransformer.trace_and_span_id_from_context(
+                        span.context
+                    ),
+                )
+            span.set_attribute("TransactionName", registered_name)
 
         # Cache the entry span in current context to use upstream-managed
         # execution scope and handle async tracing, for custom naming
