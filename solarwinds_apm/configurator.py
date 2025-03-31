@@ -146,11 +146,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             # set MeterProvider first via metrics_exporter config
             self._configure_metrics_exporter(apm_config)
 
-            apm_entry_span_manager = SolarwindsEntrySpanManager()
             # This processor only defines on_start
-            self._configure_service_entry_id_span_processor(
-                apm_entry_span_manager,
-            )
+            self._configure_service_entry_span_processor()
 
             # The txnname calculator span processor must be registered
             # before the rest of the processors with defined on_end
@@ -227,13 +224,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             ),
         )
 
-    def _configure_service_entry_id_span_processor(
+    def _configure_service_entry_span_processor(
         self,
         apm_entry_span_manager: SolarwindsEntrySpanManager,
     ) -> None:
         """Configure ServiceEntrySpanProcessor"""
         trace.get_tracer_provider().add_span_processor(
-            ServiceEntrySpanProcessor(SolarwindsEntrySpanManager())
+            ServiceEntrySpanProcessor()
         )
 
     def _configure_txnname_calculator_span_processor(

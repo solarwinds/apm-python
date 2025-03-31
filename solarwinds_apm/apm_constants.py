@@ -9,12 +9,12 @@ INTL_SWO_DEFAULT_OTLP_COLLECTOR = (
 )
 INTL_SWO_AO_COLLECTOR = "collector.appoptics.com"
 INTL_SWO_AO_STG_COLLECTOR = "collector-stg.appoptics.com"
-INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID = "sw-current-trace-entry-span-id"
 INTL_SWO_COMMA = ","
 INTL_SWO_COMMA_W3C_SANITIZED = "...."
 INTL_SWO_EQUALS = "="
 INTL_SWO_EQUALS_W3C_SANITIZED = "####"
 INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX = "oboe"
+INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN = "sw-current-trace-entry-span"
 INTL_SWO_OTEL_SCOPE_NAME = "otel.scope.name"
 INTL_SWO_OTEL_SCOPE_VERSION = "otel.scope.version"
 INTL_SWO_OTEL_STATUS_CODE = "otel.status_code"

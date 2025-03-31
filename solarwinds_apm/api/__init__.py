@@ -7,13 +7,15 @@
 import logging
 from typing import Any
 
-from opentelemetry.trace import NoOpTracerProvider, get_tracer_provider
-
-from solarwinds_apm.apm_constants import INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
+from opentelemetry import context
+from opentelemetry.trace import (
+    NoOpTracerProvider,
+    get_tracer_provider,
+)
 
 # pylint: disable=import-error,no-name-in-module
 # from solarwinds_apm.extension.oboe import Context
-from solarwinds_apm.trace import ServiceEntrySpanProcessor
+from solarwinds_apm.apm_constants import INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 # from solarwinds_apm.apm_oboe_codes import OboeReadyCode
@@ -49,30 +51,16 @@ def set_transaction_name(custom_name: str) -> bool:
         )
         return False
 
-    if isinstance(get_tracer_provider(), NoOpTracerProvider):
+    tracer_provider = get_tracer_provider()
+    if isinstance(tracer_provider, NoOpTracerProvider):
         logger.debug(
             "Cannot cache custom transaction name %s because agent not enabled; ignoring",
             custom_name,
         )
         return True
 
-    # Assumes TracerProvider's active span processor is SynchronousMultiSpanProcessor
-    # or ConcurrentMultiSpanProcessor
-    span_processors = (
-        # pylint: disable=protected-access
-        get_tracer_provider()._active_span_processor._span_processors
-    )
-    entry_span_processor = None
-    for spr in span_processors:
-        if isinstance(spr, ServiceEntrySpanProcessor):
-            entry_span_processor = spr
-
-    if not entry_span_processor:
-        logger.error("Could not find configured ServiceEntrySpanProcessor.")
-        return False
-
-    current_trace_entry_span = entry_span_processor.apm_entry_span_manager.get(
-        INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
+    current_trace_entry_span = context.get_value(
+        INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
     )
     if not current_trace_entry_span:
         logger.warning(
