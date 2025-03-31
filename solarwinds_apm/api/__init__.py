@@ -16,6 +16,8 @@ from opentelemetry.trace import (
 # pylint: disable=import-error,no-name-in-module
 # from solarwinds_apm.extension.oboe import Context
 from solarwinds_apm.apm_constants import INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
+from solarwinds_apm.oboe import get_transaction_name_pool
+from solarwinds_apm.oboe.transaction_name_pool import TRANSACTION_NAME_DEFAULT
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
 # from solarwinds_apm.apm_oboe_codes import OboeReadyCode
@@ -77,8 +79,18 @@ def set_transaction_name(custom_name: str) -> bool:
         custom_name,
     )
 
-    # TODO: check limit pool; set as "other" if reached and log debug/warning
-    current_trace_entry_span.set_attribute("TransactionName", custom_name)
+    # check limit pool; set as "other" if reached and log debug/warning
+    pool = get_transaction_name_pool()
+    registered_name = pool.registered(custom_name)
+    if registered_name == TRANSACTION_NAME_DEFAULT:
+        logger.warning(
+            "Transaction name pool is full; set as %s for span %s",
+            TRANSACTION_NAME_DEFAULT,
+            W3CTransformer.trace_and_span_id_from_context(
+                current_trace_entry_span.context
+            ),
+        )
+    current_trace_entry_span.set_attribute("TransactionName", registered_name)
     return True
 
 
