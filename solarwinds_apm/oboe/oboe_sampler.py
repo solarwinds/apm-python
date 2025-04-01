@@ -144,20 +144,6 @@ class SampleState:
         )
 
 
-def _span_type(parent_span: Span | None = None) -> SpanType:
-    """
-    Determine the type of span based on the parent span.
-    """
-    parent_span_context = (
-        parent_span.get_span_context() if parent_span else None
-    )
-    if parent_span_context is None or not parent_span_context.is_valid:
-        return SpanType.ROOT
-    if parent_span_context.is_remote:
-        return SpanType.ENTRY
-    return SpanType.LOCAL
-
-
 class OboeSampler(Sampler, ABC):
     def __init__(self, meter_provider: MeterProvider):
         self._counters = Counters(meter_provider=meter_provider)
@@ -204,11 +190,6 @@ class OboeSampler(Sampler, ABC):
         trace_state: "TraceState" | None = None,
     ) -> "SamplingResult":
         parent_span = get_current_span(parent_context)
-        span_type = _span_type(parent_span)
-        logger.debug("span type is %s", SpanType(span_type).name)
-
-        if span_type == SpanType.LOCAL:
-            return self._handle_local_span(parent_span)
 
         sample_state = self._initialize_sample_state(
             parent_context,
@@ -282,17 +263,6 @@ class OboeSampler(Sampler, ABC):
             attributes=sample_state.attributes,
             trace_state=new_trace_state,
         )
-
-    def _handle_local_span(self, parent_span: Span | None) -> "SamplingResult":
-        """
-        Handle local spans by checking if the parent span is sampled.
-        """
-        if (
-            parent_span
-            and parent_span.get_span_context().trace_flags & TraceFlags.SAMPLED
-        ):
-            return SamplingResult(decision=Decision.RECORD_AND_SAMPLE)
-        return SamplingResult(decision=Decision.DROP)
 
     def _initialize_sample_state(
         self,
