@@ -13,17 +13,17 @@ from .fixtures.trace import get_trace_mocks
 
 
 class TestConfiguratorSpanProcessors:
-    def test_configure_service_entry_id_span_processor(
+    def test_configure_service_entry_span_processor(
         self,
         mocker,
     ):
         trace_mocks = get_trace_mocks(mocker)
         mocker.patch(
-            "solarwinds_apm.configurator.ServiceEntryIdSpanProcessor"
+            "solarwinds_apm.configurator.ServiceEntrySpanProcessor"
         )
 
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_service_entry_id_span_processor()
+        test_configurator._configure_service_entry_span_processor()
         trace_mocks.get_tracer_provider.assert_called_once()
         trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
 
@@ -43,7 +43,6 @@ class TestConfiguratorSpanProcessors:
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_inbound_metrics_span_processor(
-            mocker.Mock(),
             mocker.Mock(),
         )  
 
@@ -75,7 +74,6 @@ class TestConfiguratorSpanProcessors:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_inbound_metrics_span_processor(
             mocker.Mock(),
-            mocker.Mock(),
         )  
 
         trace_mocks.get_tracer_provider.assert_not_called()
@@ -90,7 +88,6 @@ class TestConfiguratorSpanProcessors:
         self,
         mocker,
         mock_apmconfig_enabled,
-        mock_txn_name_manager,
     ):
         # Save any exporters in os for later
         old_exporter = os.environ.get("OTEL_TRACES_EXPORTER", None)
@@ -107,13 +104,11 @@ class TestConfiguratorSpanProcessors:
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_inbound_metrics_span_processor(
-            mock_txn_name_manager,
             mock_apmconfig_enabled,
         )       
         trace_mocks.get_tracer_provider.assert_called_once()
         trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
         mock_processor.assert_called_once_with(
-            mock_txn_name_manager,
             mock_apmconfig_enabled,
         )
 
@@ -125,7 +120,6 @@ class TestConfiguratorSpanProcessors:
         self,
         mocker,
         mock_apmconfig_enabled,
-        mock_txn_name_manager,
         mock_meter_manager,
     ):
         # Save any exporters in os for later
@@ -145,7 +139,6 @@ class TestConfiguratorSpanProcessors:
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_otlp_metrics_span_processors(
-            mock_txn_name_manager,
             mock_apmconfig_enabled,
             mock_meter_manager,
         )
@@ -161,7 +154,6 @@ class TestConfiguratorSpanProcessors:
         self,
         mocker,
         mock_apmconfig_enabled,
-        mock_txn_name_manager,
         mock_meter_manager,
     ):
         # Save any exporters in os for later
@@ -181,7 +173,6 @@ class TestConfiguratorSpanProcessors:
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_otlp_metrics_span_processors(
-            mock_txn_name_manager,
             mock_apmconfig_enabled,
             mock_meter_manager,
         )
@@ -196,7 +187,6 @@ class TestConfiguratorSpanProcessors:
             ]
         )
         mock_otlp_processor.assert_called_once_with(
-            mock_txn_name_manager,
             mock_apmconfig_enabled,
             mock_meter_manager,
         )

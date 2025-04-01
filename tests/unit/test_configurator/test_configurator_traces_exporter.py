@@ -18,7 +18,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_txn_name_manager,
         mock_fwkv_manager,
         mock_apmconfig_disabled,
         mock_bsprocessor,
@@ -29,7 +28,6 @@ class TestConfiguratorTracesExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
             mock_extension.Reporter,
-            mock_txn_name_manager,
             mock_fwkv_manager,
             mock_apmconfig_disabled,
         )
@@ -41,7 +39,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_txn_name_manager,
         mock_fwkv_manager,
         mock_apmconfig_enabled,
         mock_bsprocessor,
@@ -57,7 +54,6 @@ class TestConfiguratorTracesExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
             mock_extension.Reporter,
-            mock_txn_name_manager,
             mock_fwkv_manager,
             mock_apmconfig_enabled,
         )
@@ -73,7 +69,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_txn_name_manager,
         mock_fwkv_manager,
         mock_apmconfig_enabled,
         mock_bsprocessor,
@@ -106,7 +101,6 @@ class TestConfiguratorTracesExporter:
         with pytest.raises(Exception):
             test_configurator._configure_traces_exporter(
                 mock_extension.Reporter,
-                mock_txn_name_manager,
                 mock_fwkv_manager,
                 mock_apmconfig_enabled,
             )
@@ -123,7 +117,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_txn_name_manager,
         mock_fwkv_manager,
         mock_apmconfig_enabled,
         mock_bsprocessor,
@@ -162,7 +155,6 @@ class TestConfiguratorTracesExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
             mock_extension.Reporter,
-            mock_txn_name_manager,
             mock_fwkv_manager,
             mock_apmconfig_enabled,
         )
@@ -178,7 +170,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_txn_name_manager,
         mock_fwkv_manager,
         mock_apmconfig_enabled_is_lambda,
         mock_bsprocessor,
@@ -218,7 +209,6 @@ class TestConfiguratorTracesExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
             mock_extension.Reporter,
-            mock_txn_name_manager,
             mock_fwkv_manager,
             mock_apmconfig_enabled_is_lambda,
         )
@@ -235,7 +225,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_txn_name_manager,
         mock_fwkv_manager,
         mock_apmconfig_enabled,
         mock_bsprocessor,
@@ -293,7 +282,6 @@ class TestConfiguratorTracesExporter:
         with pytest.raises(Exception):
             test_configurator._configure_traces_exporter(
                 mock_extension.Reporter,
-                mock_txn_name_manager,
                 mock_fwkv_manager,
                 mock_apmconfig_enabled,
             )
@@ -319,7 +307,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_txn_name_manager,
         mock_fwkv_manager,
         mock_apmconfig_enabled,
         mock_bsprocessor,
@@ -376,7 +363,6 @@ class TestConfiguratorTracesExporter:
         with pytest.raises(Exception):
             test_configurator._configure_traces_exporter(
                 mock_extension.Reporter,
-                mock_txn_name_manager,
                 mock_fwkv_manager,
                 mock_apmconfig_enabled,
             )

@@ -10,7 +10,6 @@ class TestConfiguratorConfigureOtelComponents:
     def test_configure_otel_components_agent_enabled(
         self,
         mocker,
-        mock_txn_name_manager,
         mock_fwkv_manager,
         mock_meter_manager,
         mock_apmconfig_enabled,
@@ -26,22 +25,18 @@ class TestConfiguratorConfigureOtelComponents:
     ):
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_otel_components(
-            mock_txn_name_manager,
             mock_fwkv_manager,
             mock_apmconfig_enabled,
         )
 
         # mock_config_serviceentryid_processor.assert_called_once()
         # mock_config_inbound_processor.assert_called_once_with(
-        #     mock_txn_name_manager,
         #     mock_apmconfig_enabled,
         # )
         # mock_config_otlp_processors.assert_called_once_with(
-        #     mock_txn_name_manager,
         #     mock_apmconfig_enabled,
         # )
         # mock_config_traces_exp.assert_called_once_with(
-        #     mock_txn_name_manager,
         #     mock_fwkv_manager,
         #     mock_apmconfig_enabled,
         # )
@@ -53,7 +48,6 @@ class TestConfiguratorConfigureOtelComponents:
     def test_configure_otel_components_agent_disabled(
         self,
         mocker,
-        mock_txn_name_manager,
         mock_fwkv_manager,
         mock_meter_manager,
         mock_extension,
@@ -71,7 +65,6 @@ class TestConfiguratorConfigureOtelComponents:
     ):
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_otel_components(
-            mock_txn_name_manager,
             mock_fwkv_manager,
             mock_apmconfig_disabled,
             mock_extension.Reporter,
