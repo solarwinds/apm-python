@@ -20,7 +20,7 @@ def resolve_transaction_name(uri: str) -> str:
         if len(ans) > 255:
             return ans[:255]
         return ans
-    except (TypeError, ValueError) as exc:
+    except (AttributeError, TypeError, ValueError) as exc:
         logger.warning(
             "Failed to resolve transaction name from url %s", uri, exc_info=exc
         )
