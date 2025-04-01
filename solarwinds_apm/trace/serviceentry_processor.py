@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from opentelemetry import context
 from opentelemetry.sdk.trace import SpanProcessor
+from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.semconv.trace import SpanAttributes
 
 from solarwinds_apm.apm_constants import INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
@@ -48,7 +49,22 @@ class ServiceEntrySpanProcessor(SpanProcessor):
             return
 
         # Calculate non-custom txn name for entry span if we can retrieve the URL
-        url = span.attributes.get(SpanAttributes.HTTP_URL, None)
+
+        # TODO: use in order of precedence, else span.name
+        faas_name = span.attributes.get(ResourceAttributes.FAAS_NAME, "")
+        http_route = span.attributes.get(SpanAttributes.HTTP_ROUTE, "")
+        url_path = span.attributes.get(SpanAttributes.URL_PATH, "")
+        http_target = (
+            span.attributes.get(SpanAttributes.URL_PATH, None)
+            or span.attributes.get(SpanAttributes.HTTP_TARGET, None)
+            or ""
+        )
+
+        url = (
+            span.attributes.get(SpanAttributes.URL_FULL)
+            or span.attributes.get(SpanAttributes.HTTP_URL)
+            or ""
+        )
         if url:
             resolved_name = resolve_transaction_name(url)
             pool = get_transaction_name_pool()
