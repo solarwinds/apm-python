@@ -11,6 +11,12 @@ import threading
 from typing import Any
 
 import requests
+from opentelemetry.context import (
+    _SUPPRESS_INSTRUMENTATION_KEY,
+    attach,
+    detach,
+    set_value,
+)
 from opentelemetry.sdk.metrics import MeterProvider
 
 from solarwinds_apm.oboe.configuration import Configuration
@@ -101,9 +107,11 @@ class HttpSampler(Sampler):
         """
         url = f"{self._url}/v1/settings/{self._service}/{self._hostname}"
         logger.debug("retrieving sampling settings from %s", url)
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         response = requests.get(
             url, headers=self._headers, timeout=REQUEST_TIMEOUT
         )
+        detach(token)
         response.raise_for_status()
         logger.debug("received sampling settings response %s", response.text)
         return response.json()
