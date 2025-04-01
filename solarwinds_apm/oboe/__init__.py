@@ -26,6 +26,7 @@ def _set_transaction_name_pool(
 
     _TRANSACTION_NAME_POOL_SET_ONCE.do_once(set_tp)
 
+
 def get_transaction_name_pool() -> TransactionNamePool:
     """Gets the current global :class:`~.TransactionNamePool` object."""
     if _TRANSACTION_NAME_POOL is None:
