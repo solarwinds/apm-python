@@ -16,12 +16,14 @@ logger = logging.getLogger(__name__)
 _TRANSACTION_NAME_POOL_SET_ONCE = Once()
 _TRANSACTION_NAME_POOL: Optional[TransactionNamePool] = None
 
-def _set_transaction_name_pool(transaction_name_pool: TransactionNamePool) -> None:
+
+def _set_transaction_name_pool(
+    transaction_name_pool: TransactionNamePool,
+) -> None:
     def set_tp() -> None:
         global _TRANSACTION_NAME_POOL  # pylint: disable=global-statement
         _TRANSACTION_NAME_POOL = transaction_name_pool
 
-    did_set = _TRANSACTION_NAME_POOL_SET_ONCE.do_once(set_tp)
 
 def get_transaction_name_pool() -> TransactionNamePool:
     """Gets the current global :class:`~.TransactionNamePool` object."""
