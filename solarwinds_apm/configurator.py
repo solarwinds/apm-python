@@ -63,7 +63,6 @@ from solarwinds_apm.apm_constants import (
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
 
 # from solarwinds_apm.apm_oboe_codes import OboeReporterCode
-from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
@@ -71,8 +70,6 @@ from solarwinds_apm.trace import (
     ServiceEntrySpanProcessor,
     SolarWindsInboundMetricsSpanProcessor,
     SolarWindsOTLPMetricsSpanProcessor,
-    TxnNameCalculatorProcessor,
-    TxnNameCleanupProcessor,
 )
 from solarwinds_apm.tracer_provider import SolarwindsTracerProvider
 from solarwinds_apm.version import __version__
@@ -96,7 +93,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
-        apm_txname_manager = SolarWindsTxnNameManager()
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
         # oboe_api = apm_config.oboe_api
@@ -104,7 +100,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         # Reporter may be no-op e.g. disabled, lambda
         # reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
-            apm_txname_manager,
             apm_fwkv_manager,
             apm_config,
             None,
@@ -129,7 +124,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     # TODO update pylint disable when drop py38 support
     def _configure_otel_components(
         self,
-        apm_txname_manager: SolarWindsTxnNameManager,
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
         reporter: Any = None,
@@ -148,29 +142,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             # This processor only defines on_start
             self._configure_service_entry_span_processor()
 
-            # The txnname calculator span processor must be registered
-            # before the rest of the processors with defined on_end
-            self._configure_txnname_calculator_span_processor(
-                apm_txname_manager,
-            )
             self._configure_inbound_metrics_span_processor(
-                apm_txname_manager,
                 apm_config,
             )
             self._configure_otlp_metrics_span_processors(
-                apm_txname_manager,
                 apm_config,
                 oboe_api,
-            )
-            # The txnname cleanup span processor must be registered
-            # after the rest of the processors with defined on_end
-            self._configure_txnname_cleanup_span_processor(
-                apm_txname_manager,
             )
 
             self._configure_traces_exporter(
                 reporter,
-                apm_txname_manager,
                 apm_fwkv_manager,
                 apm_config,
             )
@@ -231,31 +212,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             ServiceEntrySpanProcessor()
         )
 
-    def _configure_txnname_calculator_span_processor(
-        self,
-        apm_txname_manager: SolarWindsTxnNameManager,
-    ) -> None:
-        """Configure TxnNameCalculatorSpanProcessor"""
-        trace.get_tracer_provider().add_span_processor(
-            TxnNameCalculatorProcessor(
-                apm_txname_manager,
-            )
-        )
-
-    def _configure_txnname_cleanup_span_processor(
-        self,
-        apm_txname_manager: SolarWindsTxnNameManager,
-    ) -> None:
-        """Configure TxnNameCleanupSpanProcessor"""
-        trace.get_tracer_provider().add_span_processor(
-            TxnNameCleanupProcessor(
-                apm_txname_manager,
-            )
-        )
-
     def _configure_inbound_metrics_span_processor(
         self,
-        apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
     ) -> None:
         """Configure SolarWindsInboundMetricsSpanProcessor only if solarwinds_exporter
@@ -281,14 +239,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         trace.get_tracer_provider().add_span_processor(
             SolarWindsInboundMetricsSpanProcessor(
-                apm_txname_manager,
                 apm_config,
             )
         )
 
     def _configure_otlp_metrics_span_processors(
         self,
-        apm_txname_manager: SolarWindsTxnNameManager,
         apm_config: SolarWindsApmConfig,
         oboe_api,
     ) -> None:
@@ -307,7 +263,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         trace.get_tracer_provider().add_span_processor(
             SolarWindsOTLPMetricsSpanProcessor(
-                apm_txname_manager,
                 apm_config,
                 oboe_api,
             )
@@ -316,7 +271,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_traces_exporter(
         self,
         reporter,
-        apm_txname_manager: SolarWindsTxnNameManager,
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
     ) -> None:
@@ -355,7 +309,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                         )
                     ).load()(
                         reporter,
-                        apm_txname_manager,
                         apm_fwkv_manager,
                         apm_config,
                     )

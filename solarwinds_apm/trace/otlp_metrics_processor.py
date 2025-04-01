@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
     from solarwinds_apm.apm_config import SolarWindsApmConfig
-    from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 
     # from solarwinds_apm.extension.oboe import OboeAPI
 
@@ -31,13 +30,10 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
 
     def __init__(
         self,
-        apm_txname_manager: "SolarWindsTxnNameManager",
         apm_config: "SolarWindsApmConfig",
         oboe_api,
     ) -> None:
-        super().__init__(
-            apm_txname_manager=apm_txname_manager,
-        )
+        super().__init__()
         self.service_name = apm_config.service_name
         # SW_APM_TRANSACTION_NAME and AWS_LAMBDA_FUNCTION_NAME
         self.env_transaction_name = apm_config.get("transaction_name")

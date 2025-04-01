@@ -7,17 +7,17 @@
 import logging
 from typing import TYPE_CHECKING
 
-from opentelemetry.trace import TraceFlags
-
-from solarwinds_apm.apm_constants import INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
-from solarwinds_apm.w3c_transformer import W3CTransformer
+
+# from opentelemetry.trace import TraceFlags
+
+
+# from solarwinds_apm.w3c_transformer import W3CTransformer
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
     from solarwinds_apm.apm_config import SolarWindsApmConfig
-    from solarwinds_apm.apm_txname_manager import SolarWindsTxnNameManager
 
 
 logger = logging.getLogger(__name__)
@@ -28,12 +28,9 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
 
     def __init__(
         self,
-        apm_txname_manager: "SolarWindsTxnNameManager",
         apm_config: "SolarWindsApmConfig",
     ) -> None:
-        super().__init__(
-            apm_txname_manager=apm_txname_manager,
-        )
+        super().__init__()
         # self._span = apm_config.extension.Span
         self.config_transaction_name = apm_config.get(self._TRANSACTION_NAME)
 
@@ -57,17 +54,9 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
         ):
             return
 
-        tnames = self.get_tnames(span)
-        if not tnames:
-            logger.error(
-                "Could not get transaction name. Not recording inbound metrics."
-            )
-            return
-
-        trans_name = tnames.trans_name
-        url_tran = tnames.url_tran
-        if tnames.custom_name:
-            trans_name = tnames.custom_name
+        # TODO https://swicloud.atlassian.net/browse/NH-105550
+        trans_name = "foo"
+        url_tran = "bar"
 
         is_span_http = self.is_span_http(span)
         # convert from ns to microseconds
@@ -119,10 +108,10 @@ class SolarWindsInboundMetricsSpanProcessor(_SwBaseMetricsProcessor):
             #     has_error,
             # )
 
-        if span.context.trace_flags == TraceFlags.SAMPLED:
-            # Cache txn_name for span export
-            txname_key = f"{INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX}-{W3CTransformer.trace_and_span_id_from_context(span.context)}"
-            # TO-DO https://swicloud.atlassian.net/browse/NH-105550 : replacement of liboboe txn name with the new txn name
-            self.apm_txname_manager[txname_key] = (
-                "To-do-txn-name"  # liboboe_txn_name
-            )
+        # if span.context.trace_flags == TraceFlags.SAMPLED:
+        #     # Cache txn_name for span export
+        #     txname_key = f"{INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX}-{W3CTransformer.trace_and_span_id_from_context(span.context)}"
+        #     # TO-DO https://swicloud.atlassian.net/browse/NH-105550 : replacement of liboboe txn name with the new txn name
+        #     self.apm_txname_manager[txname_key] = (
+        #         "To-do-txn-name"  # liboboe_txn_name
+        #     )
