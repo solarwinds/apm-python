@@ -183,18 +183,8 @@ def configure_event_mocks(
 @pytest.fixture(name="exporter")
 def fixture_exporter(mocker):
     # mock_reporter = mocker.Mock()
-    mock_apm_txname_manager = mocker.patch(
-        "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager",
-        return_value=mocker.Mock()
-    )
     mock_txnman_get = mocker.Mock()
     mock_txnman_get.configure_mock(return_value="foo")
-    mock_apm_txname_manager.configure_mock(
-        **{
-            "__delitem__": mocker.Mock(),
-            "get": mock_txnman_get
-        }
-    )
     mock_apm_fwkv_manager = mocker.patch(
         "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager",
         return_value=mocker.Mock()
@@ -245,7 +235,6 @@ def fixture_exporter(mocker):
     # )
     return solarwinds_apm.exporter.SolarWindsSpanExporter(
         None,
-        mock_apm_txname_manager,
         mock_apm_fwkv_manager,
         mock_apm_config,
     )
@@ -257,18 +246,8 @@ def get_exporter_addinfo_event(
     """Returns addInfo and Event mocks with mocked-up Exporter
     for detailed span export testing"""
     mock_reporter = mocker.Mock()
-    mock_apm_txname_manager = mocker.patch(
-        "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager",
-        return_value=mocker.Mock()
-    )
     mock_txnman_get = mocker.Mock()
     mock_txnman_get.configure_mock(return_value="foo")
-    mock_apm_txname_manager.configure_mock(
-        **{
-            "__delitem__": mocker.Mock(),
-            "get": mock_txnman_get
-        }
-    )
     mock_apm_fwkv_manager = mocker.patch(
         "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager",
         return_value=mocker.Mock()
@@ -342,7 +321,6 @@ def get_exporter_addinfo_event(
     )
     return solarwinds_apm.exporter.SolarWindsSpanExporter(
         mock_reporter,
-        mock_apm_txname_manager,
         mock_apm_fwkv_manager,
         mock_apm_config,
     ), mock_add_info, mock_event, mock_create_event
