@@ -15,7 +15,10 @@ from opentelemetry.trace import (
 
 # pylint: disable=import-error,no-name-in-module
 # from solarwinds_apm.extension.oboe import Context
-from solarwinds_apm.apm_constants import INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
+    INTL_SWO_TRANSACTION_NAME_ATTR,
+)
 from solarwinds_apm.oboe import get_transaction_name_pool
 from solarwinds_apm.oboe.transaction_name_pool import TRANSACTION_NAME_DEFAULT
 from solarwinds_apm.w3c_transformer import W3CTransformer
@@ -72,7 +75,8 @@ def set_transaction_name(custom_name: str) -> bool:
         return False
 
     logger.debug(
-        "Setting attribute TransactionName for span %s as %s",
+        "Setting attribute %s for span %s as %s",
+        INTL_SWO_TRANSACTION_NAME_ATTR,
         W3CTransformer.trace_and_span_id_from_context(
             current_trace_entry_span.context
         ),
@@ -90,7 +94,9 @@ def set_transaction_name(custom_name: str) -> bool:
                 current_trace_entry_span.context
             ),
         )
-    current_trace_entry_span.set_attribute("TransactionName", registered_name)
+    current_trace_entry_span.set_attribute(
+        INTL_SWO_TRANSACTION_NAME_ATTR, registered_name
+    )
     return True
 
 
