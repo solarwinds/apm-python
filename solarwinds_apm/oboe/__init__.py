@@ -14,6 +14,7 @@ from solarwinds_apm.oboe.transaction_name_pool import TransactionNamePool
 logger = logging.getLogger(__name__)
 
 _TRANSACTION_NAME_POOL_SET_ONCE = Once()
+# pylint: disable=consider-alternative-union-syntax
 _TRANSACTION_NAME_POOL: Optional[TransactionNamePool] = None
 
 
