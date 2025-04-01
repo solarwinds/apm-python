@@ -4,31 +4,36 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-from solarwinds_apm.trace import ServiceEntryIdSpanProcessor
+from solarwinds_apm.apm_constants import INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
+from solarwinds_apm.trace import ServiceEntrySpanProcessor
 
-class TestServiceEntryIdSpanProcessor():
+class TestServiceEntrySpanProcessor():
 
     def patch_for_on_start(self, mocker):
+        mock_pool = mocker.Mock()
+        mock_registered = mocker.Mock(return_value="mock-registered-name")
+        mock_pool.configure_mock(
+            **{
+                "registered": mock_registered,
+            }
+        )
+        mock_get_transaction_name_pool = mocker.patch(
+            "solarwinds_apm.trace.serviceentry_processor.get_transaction_name_pool",
+            return_value=mock_pool,
+        )
         mock_otel_context = mocker.patch(
             "solarwinds_apm.trace.serviceentry_processor.context"
         )
         mock_attach = mocker.Mock()
+        mock_detach = mocker.Mock()
+        mock_set_value = mocker.Mock()
+        mock_set_value.return_value = "foo-set-return"
         mock_otel_context.configure_mock(
             **{
-                "attach": mock_attach
+                "attach": mock_attach,
+                "detach": mock_detach,
+                "set_value": mock_set_value,
             }
-        )
-        mock_otel_baggage = mocker.patch(
-            "solarwinds_apm.trace.serviceentry_processor.baggage"
-        )
-        mock_set_baggage = mocker.Mock()
-        mock_otel_baggage.configure_mock(
-            **{
-                "set_baggage": mock_set_baggage
-            }
-        )
-        mock_swo_baggage_key = mocker.patch(
-            "solarwinds_apm.trace.serviceentry_processor.INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID"
         )
         mock_w3c = mocker.patch(
             "solarwinds_apm.trace.serviceentry_processor.W3CTransformer"
@@ -39,11 +44,11 @@ class TestServiceEntryIdSpanProcessor():
                 "trace_and_span_id_from_context": mock_ts_id
             }
         )
-        return mock_swo_baggage_key, mock_set_baggage, mock_attach
+        return mock_get_transaction_name_pool, mock_otel_context
 
     def test_on_start_valid_local_parent_span(self, mocker):
-        """Only scenario to skip baggage set with entry span"""
-        mock_swo_baggage_key, mock_set_baggage, mock_attach = self.patch_for_on_start(mocker)
+        """Only scenario to skip context set with entry span"""
+        mock_pool, mock_context = self.patch_for_on_start(mocker)
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -52,19 +57,22 @@ class TestServiceEntryIdSpanProcessor():
                 "is_remote": False,
             }
         )
+        mock_attrs_get = mocker.Mock(return_value=None)
         mock_span.configure_mock(
             **{
-                "parent": mock_parent
+                "parent": mock_parent,
+                "attributes.get": mock_attrs_get,
             }
         )
-        processor = ServiceEntryIdSpanProcessor()
+        processor = ServiceEntrySpanProcessor()
         assert processor.on_start(mock_span, None) is None
-        mock_swo_baggage_key.assert_not_called()
-        mock_set_baggage.assert_not_called()
-        mock_attach.assert_not_called()
+        mock_attrs_get.assert_not_called()
+        mock_context.set_value.assert_not_called()
+        mock_context.attach.assert_not_called()
+        mock_pool.registered.assert_not_called()
 
     def test_on_start_valid_remote_parent_span(self, mocker):
-        mock_swo_baggage_key, mock_set_baggage, mock_attach = self.patch_for_on_start(mocker)
+        mock_pool, mock_context = self.patch_for_on_start(mocker)
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -73,21 +81,32 @@ class TestServiceEntryIdSpanProcessor():
                 "is_remote": True,
             }
         )
+        mock_attrs_get = mocker.Mock(return_value=None)
         mock_span.configure_mock(
             **{
-                "parent": mock_parent
+                "parent": mock_parent,
+                "attributes.get": mock_attrs_get,
             }
         )
-        processor = ServiceEntryIdSpanProcessor()
+        processor = ServiceEntrySpanProcessor()
         assert processor.on_start(mock_span, None) is None
-        mock_set_baggage.assert_called_once_with(
-            mock_swo_baggage_key,
-            "some-id",
+        mock_attrs_get.assert_has_calls(
+            [
+                mocker.call("faas.name", None),
+                mocker.call("http.route", None),
+                mocker.call("url.path", None)
+            ]
         )
-        mock_attach.assert_called_once()
+        mock_context.set_value.assert_called_once_with(
+            INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
+            mock_span,
+        )
+        mock_context.attach.assert_called_once_with(
+            "foo-set-return",
+        )
 
     def test_on_start_invalid_remote_parent_span(self, mocker):
-        mock_swo_baggage_key, mock_set_baggage, mock_attach = self.patch_for_on_start(mocker)
+        mock_pool, mock_context = self.patch_for_on_start(mocker)
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -96,21 +115,32 @@ class TestServiceEntryIdSpanProcessor():
                 "is_remote": True,
             }
         )
+        mock_attrs_get = mocker.Mock(return_value=None)
         mock_span.configure_mock(
             **{
-                "parent": mock_parent
+                "parent": mock_parent,
+                "attributes.get": mock_attrs_get,
             }
         )
-        processor = ServiceEntryIdSpanProcessor()
+        processor = ServiceEntrySpanProcessor()
         assert processor.on_start(mock_span, None) is None
-        mock_set_baggage.assert_called_once_with(
-            mock_swo_baggage_key,
-            "some-id",
+        mock_attrs_get.assert_has_calls(
+            [
+                mocker.call("faas.name", None),
+                mocker.call("http.route", None),
+                mocker.call("url.path", None)
+            ]
         )
-        mock_attach.assert_called_once()
+        mock_context.set_value.assert_called_once_with(
+            INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
+            mock_span,
+        )
+        mock_context.attach.assert_called_once_with(
+            "foo-set-return",
+        )
 
     def test_on_start_invalid_local_parent_span(self, mocker):
-        mock_swo_baggage_key, mock_set_baggage, mock_attach = self.patch_for_on_start(mocker)
+        mock_pool, mock_context = self.patch_for_on_start(mocker)
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -119,31 +149,101 @@ class TestServiceEntryIdSpanProcessor():
                 "is_remote": False,
             }
         )
+        mock_attrs_get = mocker.Mock(return_value=None)
         mock_span.configure_mock(
             **{
-                "parent": mock_parent
+                "parent": mock_parent,
+                "attributes.get": mock_attrs_get,
             }
         )
-        processor = ServiceEntryIdSpanProcessor()
+        processor = ServiceEntrySpanProcessor()
         assert processor.on_start(mock_span, None) is None
-        mock_set_baggage.assert_called_once_with(
-            mock_swo_baggage_key,
-            "some-id",
+        mock_attrs_get.assert_has_calls(
+            [
+                mocker.call("faas.name", None),
+                mocker.call("http.route", None),
+                mocker.call("url.path", None)
+            ]
         )
-        mock_attach.assert_called_once()
+        mock_context.set_value.assert_called_once_with(
+            INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
+            mock_span,
+        )
+        mock_context.attach.assert_called_once_with(
+            "foo-set-return",
+        )
 
     def test_on_start_missing_parent(self, mocker):
-        mock_swo_baggage_key, mock_set_baggage, mock_attach = self.patch_for_on_start(mocker)
+        mock_pool, mock_context = self.patch_for_on_start(mocker)
         mock_span = mocker.Mock()
+        mock_attrs_get = mocker.Mock(return_value=None)
         mock_span.configure_mock(
             **{
-                "parent": None
+                "parent": None,
+                "attributes.get": mock_attrs_get,
             }
         )
-        processor = ServiceEntryIdSpanProcessor()
+        processor = ServiceEntrySpanProcessor()
         assert processor.on_start(mock_span, None) is None
-        mock_set_baggage.assert_called_once_with(
-            mock_swo_baggage_key,
-            "some-id",
+        mock_attrs_get.assert_has_calls(
+            [
+                mocker.call("faas.name", None),
+                mocker.call("http.route", None),
+                mocker.call("url.path", None)
+            ]
         )
-        mock_attach.assert_called_once()
+        mock_context.set_value.assert_called_once_with(
+            INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
+            mock_span,
+        )
+        mock_context.attach.assert_called_once_with(
+            "foo-set-return",
+        )
+
+    def test_on_end_valid_local_parent_span(self, mocker):
+        _, mock_context = self.patch_for_on_start(mocker)
+        mock_span = mocker.Mock()
+        mock_parent = mocker.Mock()
+        mock_parent.configure_mock(
+            **{
+                "is_valid": True,
+                "is_remote": False,
+            }
+        )
+        mock_attrs_get = mocker.Mock(return_value=None)
+        mock_span.configure_mock(
+            **{
+                "parent": mock_parent,
+                "attributes.get": mock_attrs_get,
+            }
+        )
+        processor = ServiceEntrySpanProcessor()
+        assert processor.on_end(mock_span) is None
+        mock_context.detach.assert_not_called()
+
+    def test_on_end_valid_remote_parent_span(self, mocker):
+        _, mock_context = self.patch_for_on_start(mocker)
+        mock_span = mocker.Mock()
+        mock_parent = mocker.Mock()
+        mock_parent.configure_mock(
+            **{
+                "is_valid": True,
+                "is_remote": True,
+            }
+        )
+        mock_attrs_get = mocker.Mock(return_value=None)
+        mock_span.configure_mock(
+            **{
+                "parent": mock_parent,
+                "attributes.get": mock_attrs_get,
+            }
+        )
+
+        mock_w3c = mocker.patch(
+            "solarwinds_apm.trace.serviceentry_processor.W3CTransformer.trace_and_span_id_from_context",
+            return_value="some-id",
+        )
+        processor = ServiceEntrySpanProcessor()
+        processor.context_tokens = {"some-id": "mock-token"}
+        assert processor.on_end(mock_span) is None
+        mock_context.detach.assert_called_once_with("mock-token")

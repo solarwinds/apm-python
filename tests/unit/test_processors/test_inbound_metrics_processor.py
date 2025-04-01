@@ -5,7 +5,6 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 from solarwinds_apm.trace import SolarWindsInboundMetricsSpanProcessor
-from solarwinds_apm.trace.tnames import TransactionNames
 
 
 class TestSolarWindsInboundMetricsSpanProcessor():
@@ -14,7 +13,7 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         self,
         mocker,
         is_span_http=True,
-        get_retval=TransactionNames("foo", "bar"),
+        get_retval="foo",
     ):
         mock_is_span_http = mocker.patch(
             "solarwinds_apm.trace.SolarWindsInboundMetricsSpanProcessor.is_span_http"
@@ -61,32 +60,13 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
 
-        mock_txname_manager = mocker.Mock()
         mock_set = mocker.Mock()
         mock_del = mocker.Mock()
-        mock_txname_manager.configure_mock(
-            **{
-                "__setitem__": mock_set,
-                "__delitem__": mock_del,
-                "get": mocker.Mock(return_value=get_retval)
-            }
-        )
-
-        mock_w3c = mocker.patch(
-            "solarwinds_apm.trace.base_metrics_processor.W3CTransformer"
-        )
-        mock_ts_id = mocker.Mock(return_value="some-id")
-        mock_w3c.configure_mock(
-            **{
-                "trace_and_span_id_from_context": mock_ts_id
-            }
-        )
 
         return mock_get_http_status_code, \
             mock_create_http_span, \
             mock_create_span, \
             mock_apm_config, \
-            mock_txname_manager, \
             mock_set, \
             mock_is_span_http, \
             mock_calculate_span_time, \
@@ -95,7 +75,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
     def test_on_end_valid_local_parent_span(self, mocker):
         """Only scenario to skip inbound metrics generation (not entry span)"""
         _, _, _, _, \
-            mock_txname_manager, \
             _, \
             mock_is_span_http, \
             mock_calculate_span_time, \
@@ -114,7 +93,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
             mocker.Mock(),
         )
         assert processor.on_end(mock_span) is None
@@ -124,7 +102,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
 
     def test_on_end_valid_remote_parent_span(self, mocker):
         _, _, _, _, \
-            mock_txname_manager, \
             _, \
             mock_is_span_http, \
             mock_calculate_span_time, \
@@ -143,7 +120,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
             mocker.Mock(),
         )
         assert processor.on_end(mock_span) is None
@@ -153,7 +129,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
 
     def test_on_end_invalid_remote_parent_span(self, mocker):
         _, _, _, _, \
-            mock_txname_manager, \
              _, \
             mock_is_span_http, \
             mock_calculate_span_time, \
@@ -172,7 +147,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
             mocker.Mock(),
         )
         assert processor.on_end(mock_span) is None
@@ -182,7 +156,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
 
     def test_on_end_invalid_local_parent_span(self, mocker):
         _, _, _, _, \
-            mock_txname_manager, \
             _, \
             mock_is_span_http, \
             mock_calculate_span_time, \
@@ -201,7 +174,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
             mocker.Mock(),
         )
         assert processor.on_end(mock_span) is None
@@ -211,7 +183,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
 
     def test_on_end_missing_parent(self, mocker):
         _, _, _, _, \
-            mock_txname_manager, \
             _, \
             mock_is_span_http, \
             mock_calculate_span_time, \
@@ -223,7 +194,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             }
         )
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
             mocker.Mock(),
         )
         assert processor.on_end(mock_span) is None
@@ -231,83 +201,68 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         mock_calculate_span_time.assert_called_once()
         mock_has_error.assert_called_once()
 
-    def test_on_end_missing_txn_name(self, mocker):
-        mock_get_http_status_code, \
-            mock_create_http_span, \
-            mock_create_span, \
-            mock_apm_config, \
-            mock_txname_manager, \
-            mock_set, \
-            mock_is_span_http, \
-            mock_calculate_span_time, \
-            mock_has_error = self.patch_for_on_end(
-                mocker,
-                get_retval=None,
-            )
+    # def test_on_end_missing_txn_name(self, mocker):
+    #     mock_get_http_status_code, \
+    #         mock_create_http_span, \
+    #         mock_create_span, \
+    #         mock_apm_config, \
+    #         mock_set, \
+    #         mock_is_span_http, \
+    #         mock_calculate_span_time, \
+    #         mock_has_error = self.patch_for_on_end(
+    #             mocker,
+    #             get_retval=None,
+    #         )
         
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
-            mocker.Mock(),
-        )
-        processor.on_end(mocker.Mock())
-        mock_get_http_status_code.assert_not_called()
-        mock_create_http_span.assert_not_called()
-        mock_create_span.assert_not_called()
-        mock_apm_config.assert_not_called()
-        mock_set.assert_not_called()
-        mock_is_span_http.assert_not_called()
-        mock_calculate_span_time.assert_not_called()
-        mock_has_error.assert_not_called()
+    #     processor = SolarWindsInboundMetricsSpanProcessor(
+    #         mocker.Mock(),
+    #     )
+    #     processor.on_end(mocker.Mock())
+    #     mock_get_http_status_code.assert_not_called()
+    #     mock_create_http_span.assert_not_called()
+    #     mock_create_span.assert_not_called()
+    #     mock_apm_config.assert_not_called()
+    #     mock_set.assert_not_called()
+    #     mock_is_span_http.assert_not_called()
+    #     mock_calculate_span_time.assert_not_called()
+    #     mock_has_error.assert_not_called()
 
-    def test_on_end_txn_name_wrong_type(self, mocker):
-        mock_get_http_status_code, \
-            mock_create_http_span, \
-            mock_create_span, \
-            mock_apm_config, \
-            mock_txname_manager, \
-            mock_set, \
-            mock_is_span_http, \
-            mock_calculate_span_time, \
-            mock_has_error = self.patch_for_on_end(
-                mocker,
-                get_retval="some-str",
-            )
+    # def test_on_end_txn_name_wrong_type(self, mocker):
+    #     mock_get_http_status_code, \
+    #         mock_create_http_span, \
+    #         mock_create_span, \
+    #         mock_apm_config, \
+    #         mock_set, \
+    #         mock_is_span_http, \
+    #         mock_calculate_span_time, \
+    #         mock_has_error = self.patch_for_on_end(
+    #             mocker,
+    #             get_retval="some-str",
+    #         )
         
-        processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
-            mocker.Mock(),
-        )
-        processor.on_end(mocker.Mock())
-        mock_get_http_status_code.assert_not_called()
-        mock_create_http_span.assert_not_called()
-        mock_create_span.assert_not_called()
-        mock_apm_config.assert_not_called()
-        mock_set.assert_not_called()
-        mock_is_span_http.assert_not_called()
-        mock_calculate_span_time.assert_not_called()
-        mock_has_error.assert_not_called()
+    #     processor = SolarWindsInboundMetricsSpanProcessor(
+    #         mocker.Mock(),
+    #     )
+    #     processor.on_end(mocker.Mock())
+    #     mock_get_http_status_code.assert_not_called()
+    #     mock_create_http_span.assert_not_called()
+    #     mock_create_span.assert_not_called()
+    #     mock_apm_config.assert_not_called()
+    #     mock_set.assert_not_called()
+    #     mock_is_span_http.assert_not_called()
+    #     mock_calculate_span_time.assert_not_called()
+    #     mock_has_error.assert_not_called()
 
     def test_on_end_is_span_http(self, mocker):
         mock_get_http_status_code, \
             mock_create_http_span, \
             mock_create_span, \
             mock_apm_config, \
-            mock_txname_manager, \
             mock_set, \
             _, _, _ = self.patch_for_on_end(
                 mocker,
                 is_span_http=True
             )
-
-        mock_w3c = mocker.patch(
-            "solarwinds_apm.trace.inbound_metrics_processor.W3CTransformer"
-        )
-        mock_ts_id = mocker.Mock(return_value="some-id")
-        mock_w3c.configure_mock(
-            **{
-                "trace_and_span_id_from_context": mock_ts_id
-            }
-        )
 
         mock_spanattributes = mocker.patch(
             "solarwinds_apm.trace.base_metrics_processor.SpanAttributes"
@@ -315,14 +270,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         mock_spanattributes.configure_mock(
             **{
                 "HTTP_METHOD": "http.method"
-            }
-        )
-        mock_traceflags = mocker.patch(
-            "solarwinds_apm.trace.inbound_metrics_processor.TraceFlags"
-        )
-        mock_traceflags.configure_mock(
-            **{
-                "SAMPLED": "foo-sampled"
             }
         )
 
@@ -344,7 +291,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
 
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
             mock_apm_config,
         )
         assert processor.on_end(mock_span) is None
@@ -366,31 +312,11 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mock_create_http_span, \
             mock_create_span, \
             mock_apm_config, \
-            mock_txname_manager, \
             mock_set, \
             _, _, _ = self.patch_for_on_end(
                 mocker,
                 is_span_http=False
             )
-
-        mock_w3c = mocker.patch(
-            "solarwinds_apm.trace.inbound_metrics_processor.W3CTransformer"
-        )
-        mock_ts_id = mocker.Mock(return_value="some-id")
-        mock_w3c.configure_mock(
-            **{
-                "trace_and_span_id_from_context": mock_ts_id
-            }
-        )
-
-        mock_traceflags = mocker.patch(
-            "solarwinds_apm.trace.inbound_metrics_processor.TraceFlags"
-        )
-        mock_traceflags.configure_mock(
-            **{
-                "SAMPLED": "foo-sampled"
-            }
-        )
 
         mock_span_context = mocker.Mock()
         mock_span_context.configure_mock(
@@ -407,7 +333,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
 
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
             mock_apm_config,
         )
         assert processor.on_end(mock_span) is None
@@ -427,7 +352,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mock_create_http_span, \
             mock_create_span, \
             mock_apm_config, \
-            mock_txname_manager, \
             mock_set, \
             _, _, _ = self.patch_for_on_end(
                 mocker,
@@ -440,14 +364,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         mock_spanattributes.configure_mock(
             **{
                 "HTTP_METHOD": "http.method"
-            }
-        )
-        mock_traceflags = mocker.patch(
-            "solarwinds_apm.trace.inbound_metrics_processor.TraceFlags"
-        )
-        mock_traceflags.configure_mock(
-            **{
-                "SAMPLED": "foo-sampled"
             }
         )
 
@@ -469,7 +385,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
 
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
             mock_apm_config,
         )
         assert processor.on_end(mock_span) is None
@@ -492,21 +407,11 @@ class TestSolarWindsInboundMetricsSpanProcessor():
             mock_create_http_span, \
             mock_create_span, \
             mock_apm_config, \
-            mock_txname_manager, \
             mock_set, \
             _, _, _ = self.patch_for_on_end(
                 mocker,
                 is_span_http=False
             )
-
-        mock_traceflags = mocker.patch(
-            "solarwinds_apm.trace.inbound_metrics_processor.TraceFlags"
-        )
-        mock_traceflags.configure_mock(
-            **{
-                "SAMPLED": "foo-sampled"
-            }
-        )
 
         mock_span_context = mocker.Mock()
         mock_span_context.configure_mock(
@@ -523,7 +428,6 @@ class TestSolarWindsInboundMetricsSpanProcessor():
         )
 
         processor = SolarWindsInboundMetricsSpanProcessor(
-            mock_txname_manager,
             mock_apm_config,
         )
         assert processor.on_end(mock_span) is None
