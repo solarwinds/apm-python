@@ -62,12 +62,6 @@ BUCKET_RATE_ATTRIBUTE = "BucketRate"
 TRIGGERED_TRACE_ATTRIBUTE = "TriggeredTrace"
 
 
-class SpanType(IntEnum):
-    ROOT = auto()
-    ENTRY = auto()
-    LOCAL = auto()
-
-
 class SampleState:
     def __init__(
         self,
