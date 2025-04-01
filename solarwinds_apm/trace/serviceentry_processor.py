@@ -26,12 +26,34 @@ from solarwinds_apm.w3c_transformer import W3CTransformer
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
+    from solarwinds_apm.oboe.transaction_name_pool import TransactionNamePool
+
 logger = logging.getLogger(__name__)
 
 
 class ServiceEntrySpanProcessor(SpanProcessor):
     def __init__(self) -> None:
         self.context_tokens = {}
+
+    def set_default_transaction_name(
+        self,
+        span: "ReadableSpan",
+        pool: "TransactionNamePool",
+        attribute_value: str,
+        resolve: bool = False,
+    ) -> None:
+        """Register transaction name and set as span attribute TransactionName"""
+        transaction_name = attribute_value
+        if resolve:
+            transaction_name = resolve_transaction_name(attribute_value)
+        registered_name = pool.registered(transaction_name)
+        if registered_name == TRANSACTION_NAME_DEFAULT:
+            logger.warning(
+                "Transaction name pool is full; set as %s for span %s",
+                TRANSACTION_NAME_DEFAULT,
+                W3CTransformer.trace_and_span_id_from_context(span.context),
+            )
+        span.set_attribute("TransactionName", registered_name)
 
     def on_start(
         self,
@@ -49,35 +71,23 @@ class ServiceEntrySpanProcessor(SpanProcessor):
             return
 
         # Calculate non-custom txn name for entry span if we can retrieve the URL
-
-        # TODO: use in order of precedence, else span.name
-        faas_name = span.attributes.get(ResourceAttributes.FAAS_NAME, "")
-        http_route = span.attributes.get(SpanAttributes.HTTP_ROUTE, "")
-        url_path = span.attributes.get(SpanAttributes.URL_PATH, "")
-        http_target = (
-            span.attributes.get(SpanAttributes.URL_PATH, None)
-            or span.attributes.get(SpanAttributes.HTTP_TARGET, None)
-            or ""
-        )
-
-        url = (
-            span.attributes.get(SpanAttributes.URL_FULL)
-            or span.attributes.get(SpanAttributes.HTTP_URL)
-            or ""
-        )
-        if url:
-            resolved_name = resolve_transaction_name(url)
-            pool = get_transaction_name_pool()
-            registered_name = pool.registered(resolved_name)
-            if registered_name == TRANSACTION_NAME_DEFAULT:
-                logger.warning(
-                    "Transaction name pool is full; set as %s for span %s",
-                    TRANSACTION_NAME_DEFAULT,
-                    W3CTransformer.trace_and_span_id_from_context(
-                        span.context
-                    ),
-                )
-            span.set_attribute("TransactionName", registered_name)
+        # or serverless name. Otherwise, use the span's name
+        pool = get_transaction_name_pool()
+        faas_name = span.attributes.get(ResourceAttributes.FAAS_NAME, None)
+        http_route = span.attributes.get(SpanAttributes.HTTP_ROUTE, None)
+        url_path = span.attributes.get(SpanAttributes.URL_PATH, None)
+        if faas_name:
+            self.set_default_transaction_name(span, pool, faas_name)
+        elif http_route:
+            self.set_default_transaction_name(
+                span, pool, http_route, resolve=True
+            )
+        elif url_path:
+            self.set_default_transaction_name(
+                span, pool, url_path, resolve=True
+            )
+        else:
+            self.set_default_transaction_name(span, pool, span.name)
 
         # Cache the entry span in current context to use upstream-managed
         # execution scope and handle async tracing, for custom naming
