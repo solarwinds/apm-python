@@ -24,7 +24,7 @@ from typing_extensions import override
 
 from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_RESPONSE_KEY
 from solarwinds_apm.apm_noop import Context
-from solarwinds_apm.oboe.oboe_sampler import _span_type, SpanType, OboeSampler, SW_KEYS_ATTRIBUTE, \
+from solarwinds_apm.oboe.oboe_sampler import OboeSampler, SW_KEYS_ATTRIBUTE, \
     BUCKET_RATE_ATTRIBUTE, BUCKET_CAPACITY_ATTRIBUTE, SAMPLE_RATE_ATTRIBUTE, SAMPLE_SOURCE_ATTRIBUTE, TRACESTATE_CAPTURE_ATTRIBUTE
 from solarwinds_apm.oboe.settings import LocalSettings, Settings, SampleSource, Flags, BucketType, BucketSettings
 from solarwinds_apm.oboe.trace_options import RequestHeaders, ResponseHeaders
@@ -71,60 +71,6 @@ def make_request_headers(options=MakeRequestHeaders()) -> RequestHeaders:
         headers.x_trace_options_signature = hmac.new(str.encode(key), str.encode(headers.x_trace_options),
                                                      hashlib.sha1).hexdigest()
     return headers
-
-
-class TestSpanType:
-    def test_identifies_no_parent_as_ROOT(self):
-        span_type = _span_type(None)
-        assert span_type == SpanType.ROOT
-
-    def test_identifies_invalid_parent_as_ROOT(self):
-        mock_get_span_context = Mock()
-        mock_get_span_context.configure_mock(
-            **{
-                "is_valid": False,
-            }
-        )
-        mock_span = Mock()
-        mock_span.configure_mock(
-            **{
-                "get_span_context.return_value": mock_get_span_context
-            }
-        )
-        span_type = _span_type(mock_span)
-        assert span_type == SpanType.ROOT
-
-    def test_identifies_remote_parent_as_ENTRY(self):
-        mock_get_span_context = Mock()
-        mock_get_span_context.configure_mock(
-            **{
-                "is_remote": True,
-            }
-        )
-        mock_span = Mock()
-        mock_span.configure_mock(
-            **{
-                "get_span_context.return_value": mock_get_span_context
-            }
-        )
-        span_type = _span_type(mock_span)
-        assert span_type == SpanType.ENTRY
-
-    def test_identifies_local_parent_as_LOCAL(self):
-        mock_get_span_context = Mock()
-        mock_get_span_context.configure_mock(
-            **{
-                "is_remote": False,
-            }
-        )
-        mock_span = Mock()
-        mock_span.configure_mock(
-            **{
-                "get_span_context.return_value": mock_get_span_context
-            }
-        )
-        span_type = _span_type(mock_span)
-        assert span_type == SpanType.LOCAL
 
 
 def check_counters(sampler, counter_names):
@@ -247,40 +193,6 @@ class TestSampler(OboeSampler):
 
     def __str__(self):
         return f"Test Sampler"
-
-
-class TestLocalSpan:
-    @pytest.fixture
-    def local_span(self):
-        return TestSampler(TestSamplerOptions(
-            settings=Settings(
-                sample_rate=0,
-                sample_source=SampleSource.LOCAL_DEFAULT,
-                flags=Flags.OK,
-                buckets={},
-                signature_key=None,
-                timestamp=int(time.time()),
-                ttl=10
-            ),
-            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
-            request_headers=RequestHeaders(x_trace_options=None, x_trace_options_signature=None)
-        ))
-
-    def test_respects_parent_sampled(self, local_span):
-        ctxt = local_span._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=False)
-        sample = local_span.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id,
-                                          "local_span_respects_parent_sampled")
-        assert sample.decision.is_sampled()
-        assert sample.decision.is_recording()
-        check_counters(local_span, [])
-
-    def test_respects_parent_not_sampled(self, local_span):
-        ctxt = local_span._create_parent(trace_flags=TraceFlags.DEFAULT, is_remote=False)
-        sample = local_span.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id,
-                                          "local_span_respects_parent_not_sampled")
-        assert not sample.decision.is_sampled()
-        assert not sample.decision.is_recording()
-        check_counters(local_span, [])
 
 
 class TestInvalidXTraceOptionsSignature:
