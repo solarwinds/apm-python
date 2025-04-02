@@ -11,7 +11,8 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_TRANSACTION_ATTR_KEY,
     INTL_SWO_TRANSACTION_ATTR_MAX,
 )
-from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
+
+# from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 
 if TYPE_CHECKING:
@@ -38,10 +39,10 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
         # SW_APM_TRANSACTION_NAME and AWS_LAMBDA_FUNCTION_NAME
         self.env_transaction_name = apm_config.get("transaction_name")
         self.lambda_function_name = apm_config.lambda_function_name
-        self.apm_meters = SolarWindsMeterManager(
-            apm_config,
-            oboe_api,
-        )
+        # self.apm_meters = SolarWindsMeterManager(
+        #     apm_config,
+        #     oboe_api,
+        # )
 
     def calculate_otlp_transaction_name(
         self,
@@ -90,11 +91,11 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
 
         is_span_http = self.is_span_http(span)
         # convert from ns to milliseconds
-        span_time = self.calculate_span_time(
-            span.start_time,
-            span.end_time,
-            1e6,
-        )
+        # span_time = self.calculate_span_time(
+        #     span.start_time,
+        #     span.end_time,
+        #     1e6,
+        # )
 
         meter_attrs.update({INTL_SWO_TRANSACTION_ATTR_KEY: trans_name})
         if is_span_http:
@@ -106,7 +107,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
             if request_method:
                 meter_attrs.update({self._HTTP_METHOD: request_method})
 
-        self.apm_meters.response_time.record(
-            amount=span_time,
-            attributes=meter_attrs,
-        )
+        # self.apm_meters.response_time.record(
+        #     amount=span_time,
+        #     attributes=meter_attrs,
+        # )
