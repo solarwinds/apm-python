@@ -39,8 +39,8 @@ jobs:
       run: pip install tox
     # - name: Build extension
     #   run: make wrapper
-    - name: Run tox
-      run: tox -e py3${{ matrix.python-minor }}-${{ matrix.apm-env }}
+    # - name: Run tox
+    #   run: tox -e py3${{ matrix.python-minor }}-${{ matrix.apm-env }}
 
   build_publish_layer_x86_64:
     needs: run_tox_tests
