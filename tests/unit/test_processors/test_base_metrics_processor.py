@@ -5,7 +5,6 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
-from solarwinds_apm.trace.tnames import TransactionNames
 
 class TestSwBaseMetricsProcessor:
 
@@ -46,40 +45,6 @@ class TestSwBaseMetricsProcessor:
 
         return mock_txname_manager, mock_span
 
-    def test_get_tnames_not_found(self, mocker):
-        mocks = self.patch_get_trans_name(mocker)
-        mock_txname_manager = mocks[0]
-        mock_span = mocks[1]
-        processor = _SwBaseMetricsProcessor(
-            mock_txname_manager
-        )
-        assert None == processor.get_tnames(mock_span)
-
-    def test_get_tnames_wrong_type(self, mocker):
-        mocks = self.patch_get_trans_name(
-            mocker,
-            get_retval="some-str",
-        )
-        mock_txname_manager = mocks[0]
-        mock_span = mocks[1]
-        processor = _SwBaseMetricsProcessor(
-            mock_txname_manager
-        )
-        assert None == processor.get_tnames(mock_span)
-
-    def test_get_tnames_ok(self, mocker):
-        tnames = TransactionNames("foo", "bar", "baz")
-        mocks = self.patch_get_trans_name(
-            mocker,
-            get_retval=tnames,
-        )
-        mock_txname_manager = mocks[0]
-        mock_span = mocks[1]
-        processor = _SwBaseMetricsProcessor(
-            mock_txname_manager
-        )
-        assert tnames == processor.get_tnames(mock_span)
-
     def test_is_span_http_true(self, mocker):
         mock_spankind = mocker.patch(
             "solarwinds_apm.trace.base_metrics_processor.SpanKind"
@@ -106,9 +71,7 @@ class TestSwBaseMetricsProcessor:
                 }
             }
         )
-        processor = _SwBaseMetricsProcessor(
-            mocker.Mock(),
-        )
+        processor = _SwBaseMetricsProcessor()
         assert True == processor.is_span_http(mock_span)
 
     def test_is_span_http_false_not_server_kind(self, mocker):
@@ -137,9 +100,7 @@ class TestSwBaseMetricsProcessor:
                 }
             }
         )
-        processor = _SwBaseMetricsProcessor(
-            mocker.Mock(),
-        )
+        processor = _SwBaseMetricsProcessor()
         assert False == processor.is_span_http(mock_span)
 
     def test_is_span_http_false_no_http_method(self, mocker):
@@ -168,9 +129,7 @@ class TestSwBaseMetricsProcessor:
                 }
             }
         )
-        processor = _SwBaseMetricsProcessor(
-            mocker.Mock(),
-        )
+        processor = _SwBaseMetricsProcessor()
         assert False == processor.is_span_http(mock_span)
 
     def test_is_span_http_false_no_server_kind_no_method(self, mocker):
@@ -199,9 +158,7 @@ class TestSwBaseMetricsProcessor:
                 }
             }
         )
-        processor = _SwBaseMetricsProcessor(
-            mocker.Mock(),
-        )
+        processor = _SwBaseMetricsProcessor()
         assert False == processor.is_span_http(mock_span)
 
     def test_get_http_status_code_from_span(self, mocker):
@@ -222,9 +179,7 @@ class TestSwBaseMetricsProcessor:
                 }
             }
         )
-        processor = _SwBaseMetricsProcessor(
-            mocker.Mock(),
-        )
+        processor = _SwBaseMetricsProcessor()
         assert "foo" == processor.get_http_status_code(mock_span)
 
     def test_get_http_status_code_default(self, mocker):
@@ -245,9 +200,7 @@ class TestSwBaseMetricsProcessor:
                 }
             }
         )
-        processor = _SwBaseMetricsProcessor(
-            mocker.Mock(),
-        )
+        processor = _SwBaseMetricsProcessor()
         assert 0 == processor.get_http_status_code(mock_span)
 
     def test_has_error_true(self, mocker):
@@ -271,9 +224,7 @@ class TestSwBaseMetricsProcessor:
                 "status": mock_status
             }
         )
-        processor = _SwBaseMetricsProcessor(
-            mocker.Mock(),
-        )
+        processor = _SwBaseMetricsProcessor()
         assert True == processor.has_error(mock_span)
 
     def test_has_error_false(self, mocker):
@@ -297,29 +248,21 @@ class TestSwBaseMetricsProcessor:
                 "status": mock_status
             }
         )
-        processor = _SwBaseMetricsProcessor(
-            mocker.Mock(),
-        )
+        processor = _SwBaseMetricsProcessor()
         assert False == processor.has_error(mock_span)
 
     def test_calculate_span_time_missing(self, mocker):
-        processor = _SwBaseMetricsProcessor(
-            mocker.Mock(),
-        )
+        processor = _SwBaseMetricsProcessor()
         assert 0 == processor.calculate_span_time(0, 0)
         assert 0 == processor.calculate_span_time(0, 1000)
         assert 0 == processor.calculate_span_time(1000, 0)
 
     def test_calculate_span_time_default_1e3(self, mocker):
-        processor = _SwBaseMetricsProcessor(
-            mocker.Mock(),
-        )
+        processor = _SwBaseMetricsProcessor()
         assert 1 == processor.calculate_span_time(2000, 3000)
 
     def test_calculate_span_time_1e6(self, mocker):
-        processor = _SwBaseMetricsProcessor(
-            mocker.Mock(),
-        )
+        processor = _SwBaseMetricsProcessor()
         assert 1 == processor.calculate_span_time(
             2000000,
             3000000,

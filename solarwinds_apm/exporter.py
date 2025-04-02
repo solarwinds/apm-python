@@ -21,14 +21,14 @@ from opentelemetry.trace import SpanKind, StatusCode
 from opentelemetry.util._importlib_metadata import version
 
 from solarwinds_apm.apm_constants import (
-    INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX,
     INTL_SWO_OTEL_SCOPE_NAME,
     INTL_SWO_OTEL_SCOPE_VERSION,
     INTL_SWO_OTEL_STATUS_CODE,
     INTL_SWO_OTEL_STATUS_DESCRIPTION,
-    INTL_SWO_SUPPORT_EMAIL,
+    INTL_SWO_TRANSACTION_NAME_ATTR,
 )
-from solarwinds_apm.w3c_transformer import W3CTransformer
+
+# from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,6 @@ class SolarWindsSpanExporter(SpanExporter):
         "hypercorn",
         "daphne",
     ]
-    _INTERNAL_TRANSACTION_NAME = "TransactionName"
     _SW_SPAN_KIND = "sw.span_kind"
     _SW_SPAN_NAME = "sw.span_name"
     _STDLIB_PKGS = ["asyncio", "threading"]
@@ -60,7 +59,6 @@ class SolarWindsSpanExporter(SpanExporter):
     def __init__(
         self,
         reporter,
-        apm_txname_manager,
         apm_fwkv_manager,
         apm_config,
         *args,
@@ -68,7 +66,6 @@ class SolarWindsSpanExporter(SpanExporter):
     ) -> None:
         super().__init__(*args, **kw_args)
         # self.reporter = reporter
-        self.apm_txname_manager = apm_txname_manager
         self.apm_fwkv_manager = apm_fwkv_manager
         # self.context = apm_config.extension.Context
         # self.metadata = apm_config.extension.Metadata
@@ -124,19 +121,10 @@ class SolarWindsSpanExporter(SpanExporter):
         #     self.reporter.sendReport(evt, False)
 
     def _add_info_transaction_name(self, span, evt) -> None:
-        """Add transaction name from cache to root span
-        then removes from cache"""
-        txname_key = f"{INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX}-{W3CTransformer.trace_and_span_id_from_context(span.context)}"
-        txname = self.apm_txname_manager.get(txname_key)
-        if txname:
-            evt.addInfo(self._INTERNAL_TRANSACTION_NAME, txname)
-            del self.apm_txname_manager[txname_key]
-        else:
-            logger.warning(
-                "There was an issue setting trace TransactionName. "
-                "Please contact %s with this issue",
-                INTL_SWO_SUPPORT_EMAIL,
-            )
+        """Add transaction name info field using span attribute"""
+        evt.addInfo(
+            span.attributes.get(INTL_SWO_TRANSACTION_NAME_ATTR, "unknown")
+        )
 
     def _add_info_instrumentation_scope(self, span, evt) -> None:
         """Add info from InstrumentationScope of span, if exists"""
