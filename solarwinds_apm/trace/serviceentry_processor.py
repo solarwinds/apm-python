@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import TYPE_CHECKING
 
 from opentelemetry import context
@@ -17,6 +18,7 @@ from opentelemetry.semconv.trace import SpanAttributes
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
+    INTL_SWO_TRANSACTION_ATTR_MAX,
     INTL_SWO_TRANSACTION_NAME_ATTR,
 )
 from solarwinds_apm.oboe import get_transaction_name_pool
@@ -88,10 +90,18 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         # or serverless name. Otherwise, use the span's name
         pool = get_transaction_name_pool()
         faas_name = span.attributes.get(ResourceAttributes.FAAS_NAME, None)
+        # TODO: NH-106175 make tname configurable
+        lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None)
         http_route = span.attributes.get(SpanAttributes.HTTP_ROUTE, None)
         url_path = span.attributes.get(SpanAttributes.URL_PATH, None)
         if faas_name:
             self.set_default_transaction_name(span, pool, faas_name)
+        elif lambda_function_name:
+            self.set_default_transaction_name(
+                span,
+                pool,
+                lambda_function_name[:INTL_SWO_TRANSACTION_ATTR_MAX],
+            )
         elif http_route:
             self.set_default_transaction_name(
                 span, pool, http_route, resolve=True
