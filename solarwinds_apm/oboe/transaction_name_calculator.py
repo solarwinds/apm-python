@@ -17,8 +17,6 @@ def resolve_transaction_name(uri: str) -> str:
             ans = "/" + before_join
         else:
             ans = "/"
-        if len(ans) > 255:
-            return ans[:255]
         return ans
     except (AttributeError, TypeError, ValueError) as exc:
         logger.warning(

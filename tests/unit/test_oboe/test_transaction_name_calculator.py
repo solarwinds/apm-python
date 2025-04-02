@@ -32,7 +32,3 @@ def test_resolve_transaction_name():
     assert resolve_transaction_name( "/a/b") == "/a/b"
     assert resolve_transaction_name("/") == "/"
     assert resolve_transaction_name("images/dot.gif?v=hide#a") == "/images/dot.gif"
-
-def test_resolve_transaction_name_length_limit():
-    path_len_255 = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstu"
-    assert resolve_transaction_name(path_len_255) == "/" + path_len_255[:254]
