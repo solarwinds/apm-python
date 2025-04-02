@@ -92,9 +92,7 @@ class ServiceEntrySpanProcessor(SpanProcessor):
                 lambda_function_name[:INTL_SWO_TRANSACTION_ATTR_MAX],
             )
         elif http_route:
-            self.set_default_transaction_name(
-                span, pool, http_route, resolve=True
-            )
+            self.set_default_transaction_name(span, pool, http_route)
         elif url_path:
             self.set_default_transaction_name(
                 span, pool, url_path, resolve=True

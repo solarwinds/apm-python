@@ -264,7 +264,7 @@ class TestServiceEntrySpanProcessor():
         processor.set_default_transaction_name = mocker.Mock()
         processor.on_start(mock_span, None)
         processor.set_default_transaction_name.assert_called_once_with(
-            mock_span, mock_pool, "http-route", resolve=True
+            mock_span, mock_pool, "http-route"
         )
 
     def test_on_start_url_path(self, mocker):
