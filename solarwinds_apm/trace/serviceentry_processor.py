@@ -58,11 +58,6 @@ class ServiceEntrySpanProcessor(SpanProcessor):
                 TRANSACTION_NAME_DEFAULT,
                 W3CTransformer.trace_and_span_id_from_context(span.context),
             )
-        logger.debug(
-            "Setting default transaction name %s for span %s",
-            registered_name,
-            W3CTransformer.trace_and_span_id_from_context(span.context),
-        )
         span.set_attribute(INTL_SWO_TRANSACTION_NAME_ATTR, registered_name)
 
     def on_start(
@@ -79,12 +74,6 @@ class ServiceEntrySpanProcessor(SpanProcessor):
             and not parent_span_context.is_remote
         ):
             return
-
-        logger.debug(
-            "on_start: entry span with name %s, attributes %s",
-            span.name,
-            span.attributes,
-        )
 
         # Calculate non-custom txn name for entry span if we can retrieve the URL
         # or serverless name. Otherwise, use the span's name
@@ -146,12 +135,6 @@ class ServiceEntrySpanProcessor(SpanProcessor):
             and not parent_span_context.is_remote
         ):
             return
-
-        logger.debug(
-            "on_end: entry span with name %s, attributes %s",
-            span.name,
-            span.attributes,
-        )
 
         entry_trace_span_id = W3CTransformer.trace_and_span_id_from_context(
             span.context
