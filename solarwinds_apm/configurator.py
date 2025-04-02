@@ -147,7 +147,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
             self._configure_otlp_metrics_span_processors(
                 apm_config,
-                oboe_api,
             )
 
             self._configure_traces_exporter(
@@ -246,7 +245,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_otlp_metrics_span_processors(
         self,
         apm_config: SolarWindsApmConfig,
-        oboe_api,
     ) -> None:
         """Configure SolarWindsOTLPMetricsSpanProcessor (including OTLP meters)
         if metrics exporters are configured and set up i.e. by _configure_metrics_exporter
@@ -264,7 +262,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         trace.get_tracer_provider().add_span_processor(
             SolarWindsOTLPMetricsSpanProcessor(
                 apm_config,
-                oboe_api,
             )
         )
 

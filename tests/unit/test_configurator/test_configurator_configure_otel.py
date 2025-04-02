@@ -11,7 +11,6 @@ class TestConfiguratorConfigureOtelComponents:
         self,
         mocker,
         mock_fwkv_manager,
-        mock_meter_manager,
         mock_apmconfig_enabled,
 
         mock_config_serviceentryid_processor,
@@ -49,7 +48,6 @@ class TestConfiguratorConfigureOtelComponents:
         self,
         mocker,
         mock_fwkv_manager,
-        mock_meter_manager,
         mock_extension,
         mock_apmconfig_disabled,
         mock_oboe_api_obj,
