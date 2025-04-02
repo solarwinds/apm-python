@@ -1,6 +1,6 @@
 import pytest
 import time
-from solarwinds_apm.oboe.transaction_name_pool import TransactionNamePool, NameItem
+from solarwinds_apm.oboe.transaction_name_pool import TransactionNamePool
 
 @pytest.fixture
 def pool():
