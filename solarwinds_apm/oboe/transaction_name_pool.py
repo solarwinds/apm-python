@@ -1,5 +1,15 @@
 import heapq
+import sys
 import time
+
+if sys.version_info >= (3, 9):
+    # Use built-in generics for Python 3.9+
+    Dict = dict
+    List = list
+else:
+    # Use typing aliases for Python 3.8
+    from typing import Dict as dict
+    from typing import List as list
 
 
 class NameItem:

@@ -8,10 +8,7 @@ import logging
 from typing import Any
 
 from opentelemetry import context
-from opentelemetry.trace import (
-    NoOpTracerProvider,
-    get_tracer_provider,
-)
+from opentelemetry.trace import NoOpTracerProvider, get_tracer_provider
 
 # pylint: disable=import-error,no-name-in-module
 # from solarwinds_apm.extension.oboe import Context
