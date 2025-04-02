@@ -347,7 +347,7 @@ class TestServiceEntrySpanProcessor():
             }
         )
 
-        mock_w3c = mocker.patch(
+        mocker.patch(
             "solarwinds_apm.trace.serviceentry_processor.W3CTransformer.trace_and_span_id_from_context",
             return_value="some-id",
         )
