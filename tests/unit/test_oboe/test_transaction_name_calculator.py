@@ -1,4 +1,3 @@
-import pytest
 from solarwinds_apm.oboe.transaction_name_calculator import resolve_transaction_name
 
 def test_resolve_transaction_name_unknown():

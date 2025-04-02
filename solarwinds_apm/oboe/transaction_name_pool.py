@@ -1,6 +1,7 @@
 import heapq
 import sys
 import time
+from functools import total_ordering
 
 if sys.version_info >= (3, 9):
     # Use built-in generics for Python 3.9+
@@ -12,6 +13,7 @@ else:
     from typing import List as list
 
 
+@total_ordering
 class NameItem:
     def __init__(self, name: str, timestamp: int):
         self._name = name
@@ -31,6 +33,13 @@ class NameItem:
 
     def __lt__(self, other):
         return self._timestamp < other.timestamp
+
+    def __eq__(self, other):
+        if isinstance(other, NameItem):
+            return (
+                self._timestamp == other.timestamp and self._name == other.name
+            )
+        return NotImplemented
 
 
 TRANSACTION_NAME_POOL_TTL = 60  # 1 minute
