@@ -10,7 +10,6 @@ import re
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from enum import IntEnum, auto
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.metrics import MeterProvider
