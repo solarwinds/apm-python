@@ -4,7 +4,12 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-from solarwinds_apm.apm_constants import INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
+import os
+
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
+    INTL_SWO_TRANSACTION_ATTR_MAX,
+)
 from solarwinds_apm.trace import ServiceEntrySpanProcessor
 
 class TestServiceEntrySpanProcessor():
@@ -198,6 +203,109 @@ class TestServiceEntrySpanProcessor():
         )
         mock_context.attach.assert_called_once_with(
             "foo-set-return",
+        )
+
+    def test_on_start_faas_name(self, mocker):
+        mock_pool, mock_context = self.patch_for_on_start(mocker)
+        mocker.patch(
+            "solarwinds_apm.trace.serviceentry_processor.get_transaction_name_pool",
+            return_value=mock_pool,
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "attributes.get": mocker.Mock(
+                    side_effect=lambda key, default=None: "faas-value" if key == "faas.name" else default
+                )
+            }
+        )
+        processor = ServiceEntrySpanProcessor()
+        processor.set_default_transaction_name = mocker.Mock()
+        processor.on_start(mock_span, None)
+        processor.set_default_transaction_name.assert_called_once_with(
+            mock_span, mock_pool, "faas-value"
+        )
+
+    def test_on_start_lambda_function_name(self, mocker):
+        mock_pool, mock_context = self.patch_for_on_start(mocker)
+        mocker.patch(
+            "solarwinds_apm.trace.serviceentry_processor.get_transaction_name_pool",
+            return_value=mock_pool,
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "attributes.get": mocker.Mock(return_value=None)
+            }
+        )
+        mocker.patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "lambda-function"})
+        processor = ServiceEntrySpanProcessor()
+        processor.set_default_transaction_name = mocker.Mock()
+        processor.on_start(mock_span, None)
+        processor.set_default_transaction_name.assert_called_once_with(
+            mock_span, mock_pool, "lambda-function"[:INTL_SWO_TRANSACTION_ATTR_MAX]
+        )
+
+    def test_on_start_http_route(self, mocker):
+        mock_pool, mock_context = self.patch_for_on_start(mocker)
+        mocker.patch(
+            "solarwinds_apm.trace.serviceentry_processor.get_transaction_name_pool",
+            return_value=mock_pool,
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "attributes.get": mocker.Mock(
+                    side_effect=lambda key, default=None: "http-route" if key == "http.route" else default
+                )
+            }
+        )
+        processor = ServiceEntrySpanProcessor()
+        processor.set_default_transaction_name = mocker.Mock()
+        processor.on_start(mock_span, None)
+        processor.set_default_transaction_name.assert_called_once_with(
+            mock_span, mock_pool, "http-route", resolve=True
+        )
+
+    def test_on_start_url_path(self, mocker):
+        mock_pool, mock_context = self.patch_for_on_start(mocker)
+        mocker.patch(
+            "solarwinds_apm.trace.serviceentry_processor.get_transaction_name_pool",
+            return_value=mock_pool,
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "attributes.get": mocker.Mock(
+                    side_effect=lambda key, default=None: "url-path" if key == "url.path" else default
+                )
+            }
+        )
+        processor = ServiceEntrySpanProcessor()
+        processor.set_default_transaction_name = mocker.Mock()
+        processor.on_start(mock_span, None)
+        processor.set_default_transaction_name.assert_called_once_with(
+            mock_span, mock_pool, "url-path", resolve=True
+        )
+
+    def test_on_start_default(self, mocker):
+        mock_pool, mock_context = self.patch_for_on_start(mocker)
+        mocker.patch(
+            "solarwinds_apm.trace.serviceentry_processor.get_transaction_name_pool",
+            return_value=mock_pool,
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "attributes.get": mocker.Mock(return_value=None),
+                "name": "default-span-name",
+            }
+        )
+        processor = ServiceEntrySpanProcessor()
+        processor.set_default_transaction_name = mocker.Mock()
+        processor.on_start(mock_span, None)
+        processor.set_default_transaction_name.assert_called_once_with(
+            mock_span, mock_pool, "default-span-name"
         )
 
     def test_on_end_valid_local_parent_span(self, mocker):
