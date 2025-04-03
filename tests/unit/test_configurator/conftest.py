@@ -365,10 +365,10 @@ def mock_config_inbound_processor(mocker):
         "solarwinds_apm.configurator.SolarWindsConfigurator._configure_inbound_metrics_span_processor"
     )
 
-@pytest.fixture(name="mock_config_otlp_processors")
-def mock_config_otlp_processors(mocker):
+@pytest.fixture(name="mock_response_time_processor")
+def mock_response_time_processor(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_otlp_metrics_span_processors"
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_response_time_processor"
     )
 
 @pytest.fixture(name="mock_config_traces_exp")

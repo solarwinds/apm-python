@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
-    """SolarWinds span processor for OTLP metrics recording."""
+class ResponseTimeProcessor(_SwBaseMetricsProcessor):
+    """SolarWinds span processor for recording response_time metrics."""
 
     def __init__(
         self,

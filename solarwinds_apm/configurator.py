@@ -69,9 +69,9 @@ from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
 from solarwinds_apm.trace import (
+    ResponseTimeProcessor,
     ServiceEntrySpanProcessor,
     SolarWindsInboundMetricsSpanProcessor,
-    SolarWindsOTLPMetricsSpanProcessor,
 )
 from solarwinds_apm.tracer_provider import SolarwindsTracerProvider
 from solarwinds_apm.version import __version__
@@ -147,7 +147,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             self._configure_inbound_metrics_span_processor(
                 apm_config,
             )
-            self._configure_otlp_metrics_span_processors(
+            self._configure_response_time_processor(
                 apm_config,
             )
 
@@ -244,12 +244,12 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             )
         )
 
-    def _configure_otlp_metrics_span_processors(
+    def _configure_response_time_processor(
         self,
         apm_config: SolarWindsApmConfig,
     ) -> None:
-        """Configure SolarWindsOTLPMetricsSpanProcessor (including OTLP meters)
-        if metrics exporters are configured and set up i.e. by _configure_metrics_exporter
+        """Configure ResponseTimeProcessor if metrics exporters are configured and set up
+        i.e. by _configure_metrics_exporter
         """
         # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
@@ -262,7 +262,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             return
 
         trace.get_tracer_provider().add_span_processor(
-            SolarWindsOTLPMetricsSpanProcessor(
+            ResponseTimeProcessor(
                 apm_config,
             )
         )
