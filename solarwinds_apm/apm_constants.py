@@ -7,8 +7,6 @@
 INTL_SWO_DEFAULT_OTLP_COLLECTOR = (
     "https://otel.collector.na-01.cloud.solarwinds.com:443"
 )
-INTL_SWO_AO_COLLECTOR = "collector.appoptics.com"
-INTL_SWO_AO_STG_COLLECTOR = "collector-stg.appoptics.com"
 INTL_SWO_COMMA = ","
 INTL_SWO_COMMA_W3C_SANITIZED = "...."
 INTL_SWO_EQUALS = "="
