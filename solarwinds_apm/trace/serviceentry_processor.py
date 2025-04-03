@@ -75,8 +75,6 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         5. Span name (default)
         6. "other" (when the transaction name pool limit reached)
 
-        Also caches entry span at its trace ID for custom transaction naming with SDK.
-
         If entry span, caches it at its trace ID. Used for custom transaction naming.
         """
         # Only caches for service entry spans
