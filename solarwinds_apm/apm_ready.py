@@ -7,7 +7,7 @@
 import logging
 from typing import Any
 
-from solarwinds_apm.apm_oboe_codes import OboeReadyCode
+# from solarwinds_apm.apm_oboe_codes import OboeReadyCode
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +25,14 @@ def solarwinds_ready(
      if not solarwinds_ready(wait_milliseconds=10000, integer_response=True):
         Logger.info("SolarWinds not ready after 10 seconds, no metrics will be sent")
     """
-    logger.warning(
-        "solarwinds_apm.apm_ready.solarwinds_ready is deprecated and will no "
-        "longer be available in a near-future version. Please instead use: \n"
-        "from solarwinds_apm.api import solarwinds_ready"
-    )
-    return (
-        OboeReadyCode.OBOE_SERVER_RESPONSE_UNKNOWN
-        if integer_response
-        else False
-    )
+    return True
+    # logger.warning(
+    #     "solarwinds_apm.apm_ready.solarwinds_ready is deprecated and will no "
+    #     "longer be available in a near-future version. Please instead use: \n"
+    #     "from solarwinds_apm.api import solarwinds_ready"
+    # )
+    # return (
+    #     OboeReadyCode.OBOE_SERVER_RESPONSE_UNKNOWN
+    #     if integer_response
+    #     else False
+    # )

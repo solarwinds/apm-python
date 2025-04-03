@@ -8,10 +8,10 @@ name: CodeQL Analysis
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "pure-python" ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "main" ]
+    branches: [ "main", "pure-python" ]
   workflow_dispatch:
   #schedule:
     #        ┌───────────── minute (0 - 59)

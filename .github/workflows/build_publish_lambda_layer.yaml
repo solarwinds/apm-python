@@ -37,8 +37,8 @@ jobs:
           'lambda/tests/requirements.txt'
     - name: Install tox
       run: pip install tox
-    - name: Build extension
-      run: make wrapper
+    # - name: Build extension
+    #   run: make wrapper
     - name: Run tox
       run: tox -e py3${{ matrix.python-minor }}-${{ matrix.apm-env }}
 

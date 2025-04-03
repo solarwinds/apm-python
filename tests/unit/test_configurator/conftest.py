@@ -366,22 +366,16 @@ def mock_fw_versions(mocker):
         side_effect=add_fw_versions
     )
 
-@pytest.fixture(name="mock_config_serviceentryid_processor")
-def mock_config_serviceentryid_processor(mocker):
+@pytest.fixture(name="mock_config_serviceentry_processor")
+def mock_config_serviceentry_processor(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_service_entry_id_span_processor"
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_service_entry_span_processor"
     )
 
-@pytest.fixture(name="mock_config_inbound_processor")
-def mock_config_inbound_processor(mocker):
+@pytest.fixture(name="mock_response_time_processor")
+def mock_response_time_processor(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_inbound_metrics_span_processor"
-    )
-
-@pytest.fixture(name="mock_config_otlp_processors")
-def mock_config_otlp_processors(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_otlp_metrics_span_processors"
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_response_time_processor"
     )
 
 @pytest.fixture(name="mock_config_traces_exp")
@@ -451,22 +445,11 @@ def mock_report_init(mocker):
         "solarwinds_apm.configurator.SolarWindsConfigurator._report_init_event"
     )
 
-
-@pytest.fixture(name="mock_txn_name_manager_init")
-def mock_txn_name_manager_init(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsTxnNameManager"
-    )
-
 @pytest.fixture(name="mock_fwkv_manager_init")
 def mock_fwkv_manager_init(mocker):
     return mocker.patch(
         "solarwinds_apm.configurator.SolarWindsFrameworkKvManager"
     )
-
-@pytest.fixture(name="mock_oboe_api_obj")
-def mock_oboe_api_obj(mocker):
-    return mocker.Mock()
 
 
 # ==================================================================
@@ -484,16 +467,4 @@ def mock_apm_version(mocker):
 def mock_fwkv_manager(mocker):
     return mocker.patch(
         "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager"
-    )
-
-@pytest.fixture(name="mock_meter_manager")
-def mock_meter_manager(mocker):
-    return mocker.patch(
-        "solarwinds_apm.apm_meter_manager.SolarWindsMeterManager"
-    )
-
-@pytest.fixture(name="mock_txn_name_manager")
-def mock_txn_name_manager(mocker):
-    return mocker.patch(
-        "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager"
     )

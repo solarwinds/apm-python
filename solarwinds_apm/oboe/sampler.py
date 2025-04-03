@@ -5,9 +5,9 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 from __future__ import annotations
 
+import logging
 import threading
 from collections.abc import Sequence
-from logging import Logger
 from typing import Any
 
 from opentelemetry.context import Context
@@ -53,6 +53,8 @@ from solarwinds_apm.oboe.settings import (
 )
 from solarwinds_apm.oboe.trace_options import RequestHeaders, ResponseHeaders
 from solarwinds_apm.traceoptions import XTraceOptions
+
+logger = logging.getLogger(__name__)
 
 
 def http_span_metadata(kind: SpanKind, attributes: Attributes):
@@ -162,10 +164,9 @@ class Sampler(OboeSampler):
         self,
         meter_provider: MeterProvider,
         config: Configuration,
-        logger: Logger,
         initial: Any,
     ):
-        super().__init__(meter_provider=meter_provider, logger=logger)
+        super().__init__(meter_provider=meter_provider)
         if config.tracing_mode is not None:
             self._tracing_mode = (
                 TracingMode.ALWAYS
@@ -317,13 +318,11 @@ class Sampler(OboeSampler):
         parsed = parse_settings(settings)
         if parsed:
             parsed_settings, parsed_warning = parsed
-            self.logger.debug(
-                "valid settings %s %s", parsed_settings, settings
-            )
+            logger.debug("valid settings %s %s", parsed_settings, settings)
             super().update_settings(parsed_settings)
             self._ready.set()
             if parsed_warning:
-                self.logger.warning(parsed_warning)
+                logger.warning(parsed_warning)
             return parsed_settings
-        self.logger.debug("invalid settings %s", settings)
+        logger.debug("invalid settings %s", settings)
         return None

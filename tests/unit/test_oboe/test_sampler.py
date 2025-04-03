@@ -30,8 +30,7 @@ from solarwinds_apm.oboe.settings import Settings, SampleSource, Flags, BucketTy
 
 class TestSampler(Sampler):
     def __init__(self, meter_provider: MeterProvider, config: Configuration, initial: Any):
-        super().__init__(meter_provider=meter_provider, config=config, logger=logging.getLogger(__name__),
-                         initial=initial)
+        super().__init__(meter_provider=meter_provider, config=config, initial=initial)
 
     def __str__(self):
         raise Exception("Test sampler")

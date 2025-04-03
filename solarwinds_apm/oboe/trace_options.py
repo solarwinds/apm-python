@@ -18,6 +18,8 @@ SW_KEYS_KEY = "sw-keys"
 
 CUSTOM_KEY_REGEX = r"^custom-[^\s]+$"
 
+logger = logging.getLogger(__name__)
+
 
 class TraceOptions:
     def __init__(
@@ -245,20 +247,20 @@ class ResponseHeaders:
         return f"x_trace_options_response={self._x_trace_options_response}"
 
 
-def parse_trace_options(header, logger=logging.getLogger(__name__)):
+def parse_trace_options(header):
     trace_options = TraceOptions(
         trigger_trace=None, timestamp=None, sw_keys=None, custom={}, ignored=[]
     )
     kvs = parse_key_value_pairs(header)
     for key, value in kvs:
         if key == TRIGGER_TRACE_KEY:
-            parse_trigger_trace(trace_options, key, value, logger)
+            parse_trigger_trace(trace_options, key, value)
         elif key == TIMESTAMP_KEY:
-            parse_timestamp(trace_options, key, value, logger)
+            parse_timestamp(trace_options, key, value)
         elif key == SW_KEYS_KEY:
-            parse_sw_keys(trace_options, key, value, logger)
+            parse_sw_keys(trace_options, key, value)
         elif re.match(CUSTOM_KEY_REGEX, key):
-            parse_custom_key(trace_options, key, value, logger)
+            parse_custom_key(trace_options, key, value)
         elif len(key) > 0:
             trace_options.ignored.append((key, value))
     return trace_options
@@ -278,7 +280,7 @@ def parse_key_value_pairs(header):
     return kvs
 
 
-def parse_trigger_trace(trace_options, key, value, logger):
+def parse_trigger_trace(trace_options, key, value):
     """
     Parse the trigger trace option.
     """
@@ -291,7 +293,7 @@ def parse_trigger_trace(trace_options, key, value, logger):
         trace_options.trigger_trace = True
 
 
-def parse_timestamp(trace_options, key, value, logger):
+def parse_timestamp(trace_options, key, value):
     """
     Parse the timestamp from trace option.
     """
@@ -313,7 +315,7 @@ def parse_timestamp(trace_options, key, value, logger):
             trace_options.ignored.append((key, value))
 
 
-def parse_sw_keys(trace_options, key, value, logger):
+def parse_sw_keys(trace_options, key, value):
     """
     Parse the sw keys from trace option.
     """
@@ -326,7 +328,7 @@ def parse_sw_keys(trace_options, key, value, logger):
         trace_options.sw_keys = value
 
 
-def parse_custom_key(trace_options, key, value, logger):
+def parse_custom_key(trace_options, key, value):
     """
     Parse the custom key from trace option.
     """

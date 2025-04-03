@@ -7,15 +7,21 @@
 import logging
 from typing import Any
 
-from opentelemetry import baggage
+from opentelemetry import context
 from opentelemetry.trace import NoOpTracerProvider, get_tracer_provider
 
-from solarwinds_apm.apm_constants import INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
-from solarwinds_apm.apm_oboe_codes import OboeReadyCode
-
 # pylint: disable=import-error,no-name-in-module
-from solarwinds_apm.extension.oboe import Context
-from solarwinds_apm.trace import TxnNameCalculatorProcessor
+# from solarwinds_apm.extension.oboe import Context
+from solarwinds_apm.apm_constants import (
+    INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
+    INTL_SWO_TRANSACTION_NAME_ATTR,
+)
+from solarwinds_apm.oboe import get_transaction_name_pool
+from solarwinds_apm.oboe.transaction_name_pool import TRANSACTION_NAME_DEFAULT
+from solarwinds_apm.w3c_transformer import W3CTransformer
+
+# from solarwinds_apm.apm_oboe_codes import OboeReadyCode
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,44 +53,46 @@ def set_transaction_name(custom_name: str) -> bool:
         )
         return False
 
-    if isinstance(get_tracer_provider(), NoOpTracerProvider):
+    tracer_provider = get_tracer_provider()
+    if isinstance(tracer_provider, NoOpTracerProvider):
         logger.debug(
             "Cannot cache custom transaction name %s because agent not enabled; ignoring",
             custom_name,
         )
         return True
 
-    # Assumes TracerProvider's active span processor is SynchronousMultiSpanProcessor
-    # or ConcurrentMultiSpanProcessor
-    span_processors = (
-        # pylint: disable=protected-access
-        get_tracer_provider()._active_span_processor._span_processors
+    current_trace_entry_span = context.get_value(
+        INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
     )
-    txnname_processor = None
-    for spr in span_processors:
-        if isinstance(spr, TxnNameCalculatorProcessor):
-            txnname_processor = spr
-
-    if not txnname_processor:
-        logger.error("Could not find configured TxnNameCalculatorProcessor.")
-        return False
-
-    current_trace_entry_span_id = baggage.get_baggage(
-        INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID
-    )
-    if not current_trace_entry_span_id:
+    if not current_trace_entry_span:
         logger.warning(
-            "Cannot cache custom transaction name %s because OTel service entry span not started; ignoring",
+            "Cannot set custom transaction name %s because OTel service entry span not started; ignoring",
             custom_name,
         )
         return False
-    txnname_processor.apm_txname_manager[current_trace_entry_span_id] = (
-        custom_name
-    )
+
     logger.debug(
-        "Cached custom transaction name for %s as %s",
-        current_trace_entry_span_id,
+        "Setting attribute %s for span %s as %s",
+        INTL_SWO_TRANSACTION_NAME_ATTR,
+        W3CTransformer.trace_and_span_id_from_context(
+            current_trace_entry_span.context
+        ),
         custom_name,
+    )
+
+    # check limit pool; set as "other" if reached and log debug/warning
+    pool = get_transaction_name_pool()
+    registered_name = pool.registered(custom_name)
+    if registered_name == TRANSACTION_NAME_DEFAULT:
+        logger.warning(
+            "Transaction name pool is full; set as %s for span %s",
+            TRANSACTION_NAME_DEFAULT,
+            W3CTransformer.trace_and_span_id_from_context(
+                current_trace_entry_span.context
+            ),
+        )
+    current_trace_entry_span.set_attribute(
+        INTL_SWO_TRANSACTION_NAME_ATTR, registered_name
     )
     return True
 
@@ -113,19 +121,21 @@ def solarwinds_ready(
      if not solarwinds_ready(wait_milliseconds=10000, integer_response=True):
         Logger.info("SolarWinds not ready after 10 seconds, no metrics will be sent")
     """
-    rc = Context.isReady(wait_milliseconds)
-    if not isinstance(rc, int) or rc not in OboeReadyCode.code_values():
-        logger.warning("Unrecognized return code: %s", rc)
-        return (
-            OboeReadyCode.OBOE_SERVER_RESPONSE_UNKNOWN[0]
-            if integer_response
-            else False
-        )
-    if rc != OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]:
-        logger.warning(OboeReadyCode.code_values()[rc])
-
-    return (
-        rc
-        if integer_response
-        else rc == OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]
-    )
+    # TODO: Reimplement in NH-104961
+    return True
+    # rc = Context.isReady(wait_milliseconds)
+    # if not isinstance(rc, int) or rc not in OboeReadyCode.code_values():
+    #     logger.warning("Unrecognized return code: %s", rc)
+    #     return (
+    #         OboeReadyCode.OBOE_SERVER_RESPONSE_UNKNOWN[0]
+    #         if integer_response
+    #         else False
+    #     )
+    # if rc != OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]:
+    #     logger.warning(OboeReadyCode.code_values()[rc])
+    #
+    # return (
+    #     rc
+    #     if integer_response
+    #     else rc == OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]
+    # )
