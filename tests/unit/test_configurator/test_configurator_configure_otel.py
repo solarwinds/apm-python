@@ -15,7 +15,7 @@ class TestConfiguratorConfigureOtelComponents:
 
         mock_config_serviceentryid_processor,
         mock_config_inbound_processor,
-        mock_config_otlp_processors,
+        mock_response_time_processor,
         mock_config_traces_exp,
         mock_config_metrics_exp,
         mock_config_logs_exp,
@@ -32,7 +32,7 @@ class TestConfiguratorConfigureOtelComponents:
         # mock_config_inbound_processor.assert_called_once_with(
         #     mock_apmconfig_enabled,
         # )
-        # mock_config_otlp_processors.assert_called_once_with(
+        # mock_response_time_processor.assert_called_once_with(
         #     mock_apmconfig_enabled,
         # )
         # mock_config_traces_exp.assert_called_once_with(
@@ -54,7 +54,7 @@ class TestConfiguratorConfigureOtelComponents:
 
         mock_config_serviceentryid_processor,
         mock_config_inbound_processor,
-        mock_config_otlp_processors,
+        mock_response_time_processor,
         mock_config_traces_exp,
         mock_config_metrics_exp,
         mock_config_logs_exp,
@@ -71,7 +71,7 @@ class TestConfiguratorConfigureOtelComponents:
 
         mock_config_serviceentryid_processor.assert_not_called()
         mock_config_inbound_processor.assert_not_called()
-        mock_config_otlp_processors.assert_not_called()
+        mock_response_time_processor.assert_not_called()
         mock_config_traces_exp.assert_not_called()
         mock_config_metrics_exp.assert_not_called()
         mock_config_logs_exp.assert_not_called()

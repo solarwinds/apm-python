@@ -116,7 +116,7 @@ class TestConfiguratorSpanProcessors:
         if old_exporter:
             os.environ["OTEL_TRACES_EXPORTER"] = old_exporter
 
-    def test_configure_otlp_metrics_span_processors_exporters_not_set(
+    def test_configure_response_time_processor_exporters_not_set(
         self,
         mocker,
         mock_apmconfig_enabled,
@@ -132,12 +132,12 @@ class TestConfiguratorSpanProcessors:
         trace_mocks = get_trace_mocks(mocker)
         mock_processor_instance = mocker.Mock()
         mock_otlp_processor = mocker.patch(
-            "solarwinds_apm.configurator.SolarWindsOTLPMetricsSpanProcessor",
+            "solarwinds_apm.configurator.ResponseTimeProcessor",
             return_value=mock_processor_instance,
         )
 
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_otlp_metrics_span_processors(
+        test_configurator._configure_response_time_processor(
             mock_apmconfig_enabled,
         )
         trace_mocks.get_tracer_provider.assert_not_called()
@@ -148,7 +148,7 @@ class TestConfiguratorSpanProcessors:
         if old_exporter:
             os.environ["OTEL_METRICS_EXPORTER"] = old_exporter
 
-    def test_configure_otlp_metrics_span_processors_exporters_set(
+    def test_configure_response_time_processor_exporters_set(
         self,
         mocker,
         mock_apmconfig_enabled,
@@ -164,12 +164,12 @@ class TestConfiguratorSpanProcessors:
         trace_mocks = get_trace_mocks(mocker)
         mock_processor_instance = mocker.Mock()
         mock_otlp_processor = mocker.patch(
-            "solarwinds_apm.configurator.SolarWindsOTLPMetricsSpanProcessor",
+            "solarwinds_apm.configurator.ResponseTimeProcessor",
             return_value=mock_processor_instance,
         )
 
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_otlp_metrics_span_processors(
+        test_configurator._configure_response_time_processor(
             mock_apmconfig_enabled,
         )
         trace_mocks.get_tracer_provider.assert_has_calls(

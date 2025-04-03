@@ -4,9 +4,9 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-from solarwinds_apm.trace import SolarWindsOTLPMetricsSpanProcessor
+from solarwinds_apm.trace import ResponseTimeProcessor
 
-class TestSolarWindsOTLPMetricsSpanProcessor:
+class TestResponseTimeProcessor:
 
     def get_mock_apm_config(
         self,
@@ -36,7 +36,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             "foo-env-txn-name",
             "foo-lambda-name",
         )
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         assert processor.service_name == "foo-service"
@@ -48,7 +48,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             mocker,
             "foo-env-trans-name",
         )
-        assert "foo-env-trans-name" == SolarWindsOTLPMetricsSpanProcessor(
+        assert "foo-env-trans-name" == ResponseTimeProcessor(
             mock_apm_config,
         ).calculate_otlp_transaction_name("foo-span")
 
@@ -57,7 +57,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             mocker,
             "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo",
         )
-        assert "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooo" == SolarWindsOTLPMetricsSpanProcessor(
+        assert "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooo" == ResponseTimeProcessor(
             mock_apm_config,
         ).calculate_otlp_transaction_name("foo-span")
 
@@ -67,7 +67,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             outer_txn_retval=None,
             lambda_function_name="foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo",
         )
-        assert "foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooo" == SolarWindsOTLPMetricsSpanProcessor(
+        assert "foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooo" == ResponseTimeProcessor(
             mock_apm_config,
         ).calculate_otlp_transaction_name("foo-span")
 
@@ -77,7 +77,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             outer_txn_retval=None,
             lambda_function_name="foo-lambda-name",
         )
-        assert "foo-lambda-name" == SolarWindsOTLPMetricsSpanProcessor(
+        assert "foo-lambda-name" == ResponseTimeProcessor(
             mock_apm_config,
         ).calculate_otlp_transaction_name("foo-span")
 
@@ -87,7 +87,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             outer_txn_retval=None,
             lambda_function_name=None,
         )
-        assert "foo-span" == SolarWindsOTLPMetricsSpanProcessor(
+        assert "foo-span" == ResponseTimeProcessor(
             mock_apm_config,
         ).calculate_otlp_transaction_name("foo-span")
 
@@ -97,7 +97,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             outer_txn_retval=None,
             lambda_function_name=None,
         )
-        assert "foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooooo" == SolarWindsOTLPMetricsSpanProcessor(
+        assert "foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooooo" == ResponseTimeProcessor(
             mock_apm_config,
         ).calculate_otlp_transaction_name("foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo")
 
@@ -107,7 +107,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             outer_txn_retval=None,
             lambda_function_name=None,
         )
-        assert "unknown" == SolarWindsOTLPMetricsSpanProcessor(
+        assert "unknown" == ResponseTimeProcessor(
             mock_apm_config,
         ).calculate_otlp_transaction_name("")
 
@@ -120,12 +120,12 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
         missing_http_attrs=False,
     ):
         mocker.patch(
-            "solarwinds_apm.trace.SolarWindsOTLPMetricsSpanProcessor.calculate_otlp_transaction_name",
+            "solarwinds_apm.trace.ResponseTimeProcessor.calculate_otlp_transaction_name",
             return_value="foo",
         )
 
         mock_has_error = mocker.patch(
-            "solarwinds_apm.trace.SolarWindsOTLPMetricsSpanProcessor.has_error"
+            "solarwinds_apm.trace.ResponseTimeProcessor.has_error"
         )
         if has_error:
             mock_has_error.configure_mock(return_value=True)
@@ -133,7 +133,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             mock_has_error.configure_mock(return_value=False)
 
         mock_is_span_http = mocker.patch(
-            "solarwinds_apm.trace.SolarWindsOTLPMetricsSpanProcessor.is_span_http"
+            "solarwinds_apm.trace.ResponseTimeProcessor.is_span_http"
         )
         if is_span_http:
             mock_is_span_http.configure_mock(return_value=True)
@@ -141,12 +141,12 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             mock_is_span_http.configure_mock(return_value=False)
 
         mock_calculate_span_time = mocker.patch(
-            "solarwinds_apm.trace.SolarWindsOTLPMetricsSpanProcessor.calculate_span_time"
+            "solarwinds_apm.trace.ResponseTimeProcessor.calculate_span_time"
         )
         mock_calculate_span_time.configure_mock(return_value=123)
 
         mock_get_http_status_code = mocker.patch(
-            "solarwinds_apm.trace.SolarWindsOTLPMetricsSpanProcessor.get_http_status_code"
+            "solarwinds_apm.trace.ResponseTimeProcessor.get_http_status_code"
         )
         if missing_http_attrs:
             mock_get_http_status_code.configure_mock(return_value=0)
@@ -185,7 +185,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             )
 
         mock_get_meter = mocker.patch(
-            "solarwinds_apm.trace.otlp_metrics_processor.get_meter"
+            "solarwinds_apm.trace.response_time_processor.get_meter"
         )
         mock_meter = mocker.Mock()
         mock_get_meter.return_value = mock_meter
@@ -220,7 +220,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             }
         )
 
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_span)
@@ -251,7 +251,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             }
         )
 
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_span)
@@ -295,7 +295,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             }
         )
 
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_span)
@@ -339,7 +339,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             }
         )
 
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_span)
@@ -376,7 +376,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
             }
         )
 
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_span)
@@ -404,7 +404,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 mocker,
                 get_retval=None,
             )
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_basic_span)
@@ -418,7 +418,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 get_retval="some-str",
             )
 
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_basic_span)
@@ -433,7 +433,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 is_span_http=True,
             )
         
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_basic_span)
@@ -463,7 +463,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 is_span_http=True,
             )
         
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_basic_span)
@@ -494,7 +494,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 missing_http_attrs=True,
             )
 
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_basic_span)
@@ -522,7 +522,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 is_span_http=False,
             )
         
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_basic_span)
@@ -550,7 +550,7 @@ class TestSolarWindsOTLPMetricsSpanProcessor:
                 is_span_http=False,
             )
         
-        processor = SolarWindsOTLPMetricsSpanProcessor(
+        processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_basic_span)
