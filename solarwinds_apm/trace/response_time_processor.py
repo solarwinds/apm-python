@@ -15,6 +15,7 @@ from opentelemetry.trace import SpanKind, StatusCode
 from solarwinds_apm.apm_constants import (
     INTL_SWO_TRANSACTION_ATTR_KEY,
     INTL_SWO_TRANSACTION_ATTR_MAX,
+    INTL_SWO_TRANSACTION_NAME_ATTR,
 )
 
 if TYPE_CHECKING:
@@ -125,7 +126,7 @@ class ResponseTimeProcessor(SpanProcessor):
         ):
             return
 
-        trans_name = self.calculate_otlp_transaction_name(span.name)
+        trans_name = span.attributes.get(INTL_SWO_TRANSACTION_NAME_ATTR, None)
 
         meter_attrs = {}
         has_error = self.has_error(span)

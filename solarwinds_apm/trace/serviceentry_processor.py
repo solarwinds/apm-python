@@ -65,7 +65,18 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         span: "ReadableSpan",
         parent_context: context.Context | None = None,
     ) -> None:
-        """If entry span, caches it at its trace ID. Used for custom transaction naming."""
+        """Calculates default transaction name for span and metrics following this order
+        of decreasing precedence, truncated to 255 char:
+
+        1. SW_APM_TRANSACTION_NAME
+        2. Any instrumentor-set span attributes for FaaS
+        3. AWS_LAMBDA_FUNCTION_NAME
+        4. Any instrumentor-set span attributes for HTTP
+        5. Span name (default)
+        6. "other" (when the transaction name pool limit reached)
+
+        If entry span, caches it at its trace ID. Used for custom transaction naming.
+        """
         # Only caches for service entry spans
         parent_span_context = span.parent
         if (
@@ -78,12 +89,15 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         # Calculate non-custom txn name for entry span if we can retrieve the URL
         # or serverless name. Otherwise, use the span's name
         pool = get_transaction_name_pool()
+
+        sw_apm_txn_name = os.environ.get("SW_APM_TRANSACTION_NAME", None)
         faas_name = span.attributes.get(ResourceAttributes.FAAS_NAME, None)
-        # TODO: NH-106175 make tname configurable
         lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None)
         http_route = span.attributes.get(SpanAttributes.HTTP_ROUTE, None)
         url_path = span.attributes.get(SpanAttributes.URL_PATH, None)
-        if faas_name:
+        if sw_apm_txn_name:
+            self.set_default_transaction_name(span, pool, sw_apm_txn_name)
+        elif faas_name:
             self.set_default_transaction_name(span, pool, faas_name)
         elif lambda_function_name:
             self.set_default_transaction_name(

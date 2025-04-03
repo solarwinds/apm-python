@@ -343,11 +343,6 @@ class TestResponseTimeProcessor:
         get_retval="foo",
         missing_http_attrs=False,
     ):
-        mocker.patch(
-            "solarwinds_apm.trace.ResponseTimeProcessor.calculate_otlp_transaction_name",
-            return_value="foo",
-        )
-
         mock_has_error = mocker.patch(
             "solarwinds_apm.trace.ResponseTimeProcessor.has_error"
         )
@@ -395,7 +390,8 @@ class TestResponseTimeProcessor:
             mock_basic_span.configure_mock(
                 **{
                     "attributes": {
-                        "http.method": None
+                        "http.method": None,
+                        "TransactionName": "foo"
                     },
                 }
             )
@@ -403,10 +399,12 @@ class TestResponseTimeProcessor:
             mock_basic_span.configure_mock(
                 **{
                     "attributes": {
-                        "http.method": "foo-method"
+                        "http.method": "foo-method",
+                        "TransactionName": "foo"
                     },
                 }
             )
+
 
         mock_get_meter = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.get_meter"
@@ -470,7 +468,8 @@ class TestResponseTimeProcessor:
             **{
                 "parent": mock_parent,
                 "attributes": {
-                    "http.method": "foo-method"
+                    "http.method": "foo-method",
+                    "TransactionName": "foo"
                 }
             }
         )
@@ -514,7 +513,8 @@ class TestResponseTimeProcessor:
             **{
                 "parent": mock_parent,
                 "attributes": {
-                    "http.method": "foo-method"
+                    "http.method": "foo-method",
+                    "TransactionName": "foo"
                 }
             }
         )
@@ -558,7 +558,8 @@ class TestResponseTimeProcessor:
             **{
                 "parent": mock_parent,
                 "attributes": {
-                    "http.method": "foo-method"
+                    "http.method": "foo-method",
+                    "TransactionName": "foo"
                 }
             }
         )
@@ -595,7 +596,8 @@ class TestResponseTimeProcessor:
             **{
                 "parent": None,
                 "attributes": {
-                    "http.method": "foo-method"
+                    "http.method": "foo-method",
+                    "TransactionName": "foo"
                 }
             }
         )
