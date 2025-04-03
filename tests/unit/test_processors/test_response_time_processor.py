@@ -343,11 +343,6 @@ class TestResponseTimeProcessor:
         get_retval="foo",
         missing_http_attrs=False,
     ):
-        # mocker.patch(
-        #     "solarwinds_apm.trace.ResponseTimeProcessor.calculate_otlp_transaction_name",
-        #     return_value="foo",
-        # )
-
         mock_has_error = mocker.patch(
             "solarwinds_apm.trace.ResponseTimeProcessor.has_error"
         )
