@@ -19,7 +19,6 @@ class TestConfiguratorSampler:
         self,
         mocker,
         mock_apmconfig_disabled,
-        mock_oboe_api_obj,
         mock_tracerprovider,
     ):
         # Mock Otel
@@ -30,7 +29,6 @@ class TestConfiguratorSampler:
         test_configurator._configure_sampler(
             mock_apmconfig_disabled,
             mocker.Mock(),
-            mock_oboe_api_obj,
         )
 
         # sets tracer_provider with noop
@@ -45,7 +43,6 @@ class TestConfiguratorSampler:
         self,
         mocker,
         mock_apmconfig_enabled,
-        mock_oboe_api_obj,
         mock_tracerprovider,
     ):
         # Mock entry points
@@ -66,7 +63,6 @@ class TestConfiguratorSampler:
             test_configurator._configure_sampler(
                 mock_apmconfig_enabled,
                 mocker.Mock(),
-                mock_oboe_api_obj,
             )
 
         # no tracer_provider is set
@@ -79,7 +75,6 @@ class TestConfiguratorSampler:
         self,
         mocker,
         mock_apmconfig_enabled,
-        mock_oboe_api_obj,
         mock_tracerprovider,
     ):
         # Mock entry points
@@ -111,7 +106,6 @@ class TestConfiguratorSampler:
         test_configurator._configure_sampler(
             mock_apmconfig_enabled,
             mocker.Mock(),
-            mock_oboe_api_obj,
         )
 
         # tracer_provider set with new resource using configured service_name
@@ -137,7 +131,6 @@ class TestConfiguratorSampler:
         self,
         mocker,
         mock_apmconfig_enabled,
-        mock_oboe_api_obj,
         mock_tracerprovider,
     ):
         # Save any SAMPLER env var for later
@@ -186,7 +179,6 @@ class TestConfiguratorSampler:
         test_configurator._configure_sampler(
             mock_apmconfig_enabled,
             mocker.Mock(),
-            mock_oboe_api_obj,
         )
 
         # sampler loaded was solarwinds_sampler, not configured foo_sampler

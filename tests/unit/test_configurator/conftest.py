@@ -438,10 +438,6 @@ def mock_fwkv_manager_init(mocker):
         "solarwinds_apm.configurator.SolarWindsFrameworkKvManager"
     )
 
-@pytest.fixture(name="mock_oboe_api_obj")
-def mock_oboe_api_obj(mocker):
-    return mocker.Mock()
-
 
 # ==================================================================
 # Configurator APM Python other mocks
