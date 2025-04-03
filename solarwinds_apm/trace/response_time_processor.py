@@ -11,7 +11,7 @@ from opentelemetry.metrics import get_meter
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_TRANSACTION_ATTR_KEY,
-    INTL_SWO_TRANSACTION_ATTR_MAX,
+    INTL_SWO_TRANSACTION_NAME_ATTR,
 )
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 
@@ -44,31 +44,6 @@ class ResponseTimeProcessor(_SwBaseMetricsProcessor):
             unit="ms",
         )
 
-    def calculate_otlp_transaction_name(
-        self,
-        span_name: str,
-    ) -> str:
-        """Calculate transaction name for OTLP metrics following this order
-        of decreasing precedence, truncated to 255 char:
-
-        1. SW_APM_TRANSACTION_NAME
-        2. AWS_LAMBDA_FUNCTION_NAME
-        3. automated naming from span name
-        4. "unknown" backup, to match core lib
-
-        See also _SwSampler.calculate_otlp_transaction_name
-        """
-        if self.env_transaction_name:
-            return self.env_transaction_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
-
-        if self.lambda_function_name:
-            return self.lambda_function_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
-
-        if span_name:
-            return span_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
-
-        return "unknown"
-
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports OTLP trace metrics"""
         # Only calculate OTLP metrics for service entry spans
@@ -80,7 +55,7 @@ class ResponseTimeProcessor(_SwBaseMetricsProcessor):
         ):
             return
 
-        trans_name = self.calculate_otlp_transaction_name(span.name)
+        trans_name = span.attributes.get(INTL_SWO_TRANSACTION_NAME_ATTR, None)
 
         meter_attrs = {}
         has_error = self.has_error(span)

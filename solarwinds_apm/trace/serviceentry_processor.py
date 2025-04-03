@@ -78,12 +78,15 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         # Calculate non-custom txn name for entry span if we can retrieve the URL
         # or serverless name. Otherwise, use the span's name
         pool = get_transaction_name_pool()
+
+        sw_apm_txn_name = os.environ.get("SW_APM_TRANSACTION_NAME", None)
         faas_name = span.attributes.get(ResourceAttributes.FAAS_NAME, None)
-        # TODO: NH-106175 make tname configurable
         lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None)
         http_route = span.attributes.get(SpanAttributes.HTTP_ROUTE, None)
         url_path = span.attributes.get(SpanAttributes.URL_PATH, None)
-        if faas_name:
+        if sw_apm_txn_name:
+            self.set_default_transaction_name(span, pool, sw_apm_txn_name)
+        elif faas_name:
             self.set_default_transaction_name(span, pool, faas_name)
         elif lambda_function_name:
             self.set_default_transaction_name(

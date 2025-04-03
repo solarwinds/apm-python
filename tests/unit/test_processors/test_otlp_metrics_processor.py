@@ -43,73 +43,73 @@ class TestResponseTimeProcessor:
         assert processor.env_transaction_name == "foo-env-txn-name"
         assert processor.lambda_function_name == "foo-lambda-name"
 
-    def test_calculate_otlp_transaction_name_env_trans(self, mocker):
-        mock_apm_config = self.get_mock_apm_config(
-            mocker,
-            "foo-env-trans-name",
-        )
-        assert "foo-env-trans-name" == ResponseTimeProcessor(
-            mock_apm_config,
-        ).calculate_otlp_transaction_name("foo-span")
-
-    def test_calculate_otlp_transaction_name_env_trans_truncated(self, mocker):
-        mock_apm_config = self.get_mock_apm_config(
-            mocker,
-            "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo",
-        )
-        assert "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooo" == ResponseTimeProcessor(
-            mock_apm_config,
-        ).calculate_otlp_transaction_name("foo-span")
-
-    def test_calculate_otlp_transaction_name_env_lambda(self, mocker):
-        mock_apm_config = self.get_mock_apm_config(
-            mocker,
-            outer_txn_retval=None,
-            lambda_function_name="foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo",
-        )
-        assert "foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooo" == ResponseTimeProcessor(
-            mock_apm_config,
-        ).calculate_otlp_transaction_name("foo-span")
-
-    def test_calculate_otlp_transaction_name_env_lambda_truncated(self, mocker):
-        mock_apm_config = self.get_mock_apm_config(
-            mocker,
-            outer_txn_retval=None,
-            lambda_function_name="foo-lambda-name",
-        )
-        assert "foo-lambda-name" == ResponseTimeProcessor(
-            mock_apm_config,
-        ).calculate_otlp_transaction_name("foo-span")
-
-    def test_calculate_otlp_transaction_name_span_name(self, mocker):
-        mock_apm_config = self.get_mock_apm_config(
-            mocker,
-            outer_txn_retval=None,
-            lambda_function_name=None,
-        )
-        assert "foo-span" == ResponseTimeProcessor(
-            mock_apm_config,
-        ).calculate_otlp_transaction_name("foo-span")
-
-    def test_calculate_otlp_transaction_name_span_name_truncated(self, mocker):
-        mock_apm_config = self.get_mock_apm_config(
-            mocker,
-            outer_txn_retval=None,
-            lambda_function_name=None,
-        )
-        assert "foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooooo" == ResponseTimeProcessor(
-            mock_apm_config,
-        ).calculate_otlp_transaction_name("foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo")
-
-    def test_calculate_otlp_transaction_name_empty(self, mocker):
-        mock_apm_config = self.get_mock_apm_config(
-            mocker,
-            outer_txn_retval=None,
-            lambda_function_name=None,
-        )
-        assert "unknown" == ResponseTimeProcessor(
-            mock_apm_config,
-        ).calculate_otlp_transaction_name("")
+    # def test_calculate_otlp_transaction_name_env_trans(self, mocker):
+    #     mock_apm_config = self.get_mock_apm_config(
+    #         mocker,
+    #         "foo-env-trans-name",
+    #     )
+    #     assert "foo-env-trans-name" == ResponseTimeProcessor(
+    #         mock_apm_config,
+    #     ).calculate_otlp_transaction_name("foo-span")
+    #
+    # def test_calculate_otlp_transaction_name_env_trans_truncated(self, mocker):
+    #     mock_apm_config = self.get_mock_apm_config(
+    #         mocker,
+    #         "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo",
+    #     )
+    #     assert "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooo" == ResponseTimeProcessor(
+    #         mock_apm_config,
+    #     ).calculate_otlp_transaction_name("foo-span")
+    #
+    # def test_calculate_otlp_transaction_name_env_lambda(self, mocker):
+    #     mock_apm_config = self.get_mock_apm_config(
+    #         mocker,
+    #         outer_txn_retval=None,
+    #         lambda_function_name="foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo",
+    #     )
+    #     assert "foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooo" == ResponseTimeProcessor(
+    #         mock_apm_config,
+    #     ).calculate_otlp_transaction_name("foo-span")
+    #
+    # def test_calculate_otlp_transaction_name_env_lambda_truncated(self, mocker):
+    #     mock_apm_config = self.get_mock_apm_config(
+    #         mocker,
+    #         outer_txn_retval=None,
+    #         lambda_function_name="foo-lambda-name",
+    #     )
+    #     assert "foo-lambda-name" == ResponseTimeProcessor(
+    #         mock_apm_config,
+    #     ).calculate_otlp_transaction_name("foo-span")
+    #
+    # def test_calculate_otlp_transaction_name_span_name(self, mocker):
+    #     mock_apm_config = self.get_mock_apm_config(
+    #         mocker,
+    #         outer_txn_retval=None,
+    #         lambda_function_name=None,
+    #     )
+    #     assert "foo-span" == ResponseTimeProcessor(
+    #         mock_apm_config,
+    #     ).calculate_otlp_transaction_name("foo-span")
+    #
+    # def test_calculate_otlp_transaction_name_span_name_truncated(self, mocker):
+    #     mock_apm_config = self.get_mock_apm_config(
+    #         mocker,
+    #         outer_txn_retval=None,
+    #         lambda_function_name=None,
+    #     )
+    #     assert "foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooooo" == ResponseTimeProcessor(
+    #         mock_apm_config,
+    #     ).calculate_otlp_transaction_name("foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo")
+    #
+    # def test_calculate_otlp_transaction_name_empty(self, mocker):
+    #     mock_apm_config = self.get_mock_apm_config(
+    #         mocker,
+    #         outer_txn_retval=None,
+    #         lambda_function_name=None,
+    #     )
+    #     assert "unknown" == ResponseTimeProcessor(
+    #         mock_apm_config,
+    #     ).calculate_otlp_transaction_name("")
 
     def patch_for_on_end(
         self,
@@ -119,10 +119,10 @@ class TestResponseTimeProcessor:
         get_retval="foo",
         missing_http_attrs=False,
     ):
-        mocker.patch(
-            "solarwinds_apm.trace.ResponseTimeProcessor.calculate_otlp_transaction_name",
-            return_value="foo",
-        )
+        # mocker.patch(
+        #     "solarwinds_apm.trace.ResponseTimeProcessor.calculate_otlp_transaction_name",
+        #     return_value="foo",
+        # )
 
         mock_has_error = mocker.patch(
             "solarwinds_apm.trace.ResponseTimeProcessor.has_error"
@@ -171,7 +171,8 @@ class TestResponseTimeProcessor:
             mock_basic_span.configure_mock(
                 **{
                     "attributes": {
-                        "http.method": None
+                        "http.method": None,
+                        "TransactionName": "foo"
                     },
                 }
             )
@@ -179,10 +180,12 @@ class TestResponseTimeProcessor:
             mock_basic_span.configure_mock(
                 **{
                     "attributes": {
-                        "http.method": "foo-method"
+                        "http.method": "foo-method",
+                        "TransactionName": "foo"
                     },
                 }
             )
+
 
         mock_get_meter = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.get_meter"
@@ -246,7 +249,8 @@ class TestResponseTimeProcessor:
             **{
                 "parent": mock_parent,
                 "attributes": {
-                    "http.method": "foo-method"
+                    "http.method": "foo-method",
+                    "TransactionName": "foo"
                 }
             }
         )
@@ -290,7 +294,8 @@ class TestResponseTimeProcessor:
             **{
                 "parent": mock_parent,
                 "attributes": {
-                    "http.method": "foo-method"
+                    "http.method": "foo-method",
+                    "TransactionName": "foo"
                 }
             }
         )
@@ -334,7 +339,8 @@ class TestResponseTimeProcessor:
             **{
                 "parent": mock_parent,
                 "attributes": {
-                    "http.method": "foo-method"
+                    "http.method": "foo-method",
+                    "TransactionName": "foo"
                 }
             }
         )
@@ -371,7 +377,8 @@ class TestResponseTimeProcessor:
             **{
                 "parent": None,
                 "attributes": {
-                    "http.method": "foo-method"
+                    "http.method": "foo-method",
+                    "TransactionName": "foo"
                 }
             }
         )
