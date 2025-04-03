@@ -8,12 +8,15 @@ import logging
 from typing import TYPE_CHECKING
 
 from opentelemetry.metrics import get_meter
+from opentelemetry.sdk.trace import SpanProcessor
+from opentelemetry.semconv.trace import SpanAttributes
+from opentelemetry.trace import SpanKind, StatusCode
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_TRANSACTION_ATTR_KEY,
+    INTL_SWO_TRANSACTION_ATTR_MAX,
     INTL_SWO_TRANSACTION_NAME_ATTR,
 )
-from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
@@ -24,8 +27,13 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class ResponseTimeProcessor(_SwBaseMetricsProcessor):
+class ResponseTimeProcessor(SpanProcessor):
     """SolarWinds span processor for recording response_time metrics."""
+
+    _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
+    _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
+
+    _HTTP_SPAN_STATUS_UNAVAILABLE = 0
 
     def __init__(
         self,
@@ -43,6 +51,69 @@ class ResponseTimeProcessor(_SwBaseMetricsProcessor):
             description="measures the duration of an inbound HTTP request",
             unit="ms",
         )
+
+    def is_span_http(self, span: "ReadableSpan") -> bool:
+        """This span from inbound HTTP request if from a SERVER by some http.method"""
+        if span.kind == SpanKind.SERVER and span.attributes.get(
+            self._HTTP_METHOD, None
+        ):
+            return True
+        return False
+
+    def get_http_status_code(self, span: "ReadableSpan") -> int:
+        """Calculate HTTP status_code from span or default to UNAVAILABLE"""
+        status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
+        # Something went wrong in OTel or instrumented service crashed early
+        # if no status_code in attributes of HTTP span
+        if not status_code:
+            status_code = self._HTTP_SPAN_STATUS_UNAVAILABLE
+        return status_code
+
+    def has_error(self, span: "ReadableSpan") -> bool:
+        """Calculate if this span instance has_error"""
+        if span.status.status_code == StatusCode.ERROR:
+            return True
+        return False
+
+    def calculate_span_time(
+        self,
+        start_time: int,
+        end_time: int,
+        time_conversion: int = 1e3,
+    ) -> int:
+        """Calculate span time (via time_conversion e.g. 1e3, 1e6)
+        using start and end time in nanoseconds (ns). OTel span
+        start/end_time are optional."""
+        if not start_time or not end_time:
+            return 0
+        ms_start_time = int(start_time // time_conversion)
+        ms_end_time = int(end_time // time_conversion)
+        return ms_end_time - ms_start_time
+
+    def calculate_otlp_transaction_name(
+        self,
+        span_name: str,
+    ) -> str:
+        """Calculate transaction name for OTLP metrics following this order
+        of decreasing precedence, truncated to 255 char:
+
+        1. SW_APM_TRANSACTION_NAME
+        2. AWS_LAMBDA_FUNCTION_NAME
+        3. automated naming from span name
+        4. "unknown" backup, to match core lib
+
+        See also _SwSampler.calculate_otlp_transaction_name
+        """
+        if self.env_transaction_name:
+            return self.env_transaction_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
+
+        if self.lambda_function_name:
+            return self.lambda_function_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
+
+        if span_name:
+            return span_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
+
+        return "unknown"
 
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports OTLP trace metrics"""

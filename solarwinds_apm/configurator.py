@@ -71,7 +71,6 @@ from solarwinds_apm.response_propagator import (
 from solarwinds_apm.trace import (
     ResponseTimeProcessor,
     ServiceEntrySpanProcessor,
-    SolarWindsInboundMetricsSpanProcessor,
 )
 from solarwinds_apm.tracer_provider import SolarwindsTracerProvider
 from solarwinds_apm.version import __version__
@@ -139,9 +138,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             # This processor only defines on_start
             self._configure_service_entry_span_processor()
 
-            self._configure_inbound_metrics_span_processor(
-                apm_config,
-            )
             self._configure_response_time_processor(
                 apm_config,
             )
@@ -205,37 +201,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure ServiceEntrySpanProcessor"""
         trace.get_tracer_provider().add_span_processor(
             ServiceEntrySpanProcessor()
-        )
-
-    def _configure_inbound_metrics_span_processor(
-        self,
-        apm_config: SolarWindsApmConfig,
-    ) -> None:
-        """Configure SolarWindsInboundMetricsSpanProcessor only if solarwinds_exporter
-        for traces will also be loaded.
-
-        Note: if config's extension is no-op, the processor will run
-        but will not export inbound metrics."""
-        # SolarWindsDistro._configure does setdefault before this is called
-        environ_exporter = os.environ.get(
-            OTEL_TRACES_EXPORTER,
-        )
-        if not environ_exporter:
-            logger.debug(
-                "No OTEL_TRACES_EXPORTER set, skipping init of inbound metrics processor."
-            )
-            return
-        environ_exporter_names = environ_exporter.split(",")
-        if INTL_SWO_DEFAULT_TRACES_EXPORTER not in environ_exporter_names:
-            logger.debug(
-                "Skipping init of inbound metrics processor because not exporting AO-proto traces."
-            )
-            return
-
-        trace.get_tracer_provider().add_span_processor(
-            SolarWindsInboundMetricsSpanProcessor(
-                apm_config,
-            )
         )
 
     def _configure_response_time_processor(
