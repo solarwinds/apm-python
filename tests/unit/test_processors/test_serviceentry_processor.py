@@ -205,6 +205,26 @@ class TestServiceEntrySpanProcessor():
             "foo-set-return",
         )
 
+    def test_on_start_sw_apm_transaction_name(self, mocker):
+        mock_pool, mock_context = self.patch_for_on_start(mocker)
+        mocker.patch(
+            "solarwinds_apm.trace.serviceentry_processor.get_transaction_name_pool",
+            return_value=mock_pool,
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "attributes.get": mocker.Mock(return_value=None)
+            }
+        )
+        mocker.patch.dict(os.environ, {"SW_APM_TRANSACTION_NAME": "sw-apm-transaction"})
+        processor = ServiceEntrySpanProcessor()
+        processor.set_default_transaction_name = mocker.Mock()
+        processor.on_start(mock_span, None)
+        processor.set_default_transaction_name.assert_called_once_with(
+            mock_span, mock_pool, "sw-apm-transaction"[:INTL_SWO_TRANSACTION_ATTR_MAX]
+        )
+
     def test_on_start_faas_name(self, mocker):
         mock_pool, mock_context = self.patch_for_on_start(mocker)
         mocker.patch(

@@ -65,7 +65,20 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         span: "ReadableSpan",
         parent_context: context.Context | None = None,
     ) -> None:
-        """If entry span, caches it at its trace ID. Used for custom transaction naming."""
+        """Calculates default transaction name for span and metrics following this order
+        of decreasing precedence, truncated to 255 char:
+
+        1. SW_APM_TRANSACTION_NAME
+        2. Any instrumentor-set span attributes for FaaS
+        3. AWS_LAMBDA_FUNCTION_NAME
+        4. Any instrumentor-set span attributes for HTTP
+        5. Span name (default)
+        6. "other" (when the transaction name pool limit reached)
+
+        Also caches entry span at its trace ID for custom transaction naming with SDK.
+
+        If entry span, caches it at its trace ID. Used for custom transaction naming.
+        """
         # Only caches for service entry spans
         parent_span_context = span.parent
         if (
