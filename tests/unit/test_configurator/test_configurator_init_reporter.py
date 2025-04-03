@@ -27,7 +27,6 @@ from solarwinds_apm import configurator
 #                 "max_flush_wait_time": "foo",
 #                 "events_flush_interval": "foo",
 #                 "max_request_size_bytes": "foo",
-#                 "reporter": "foo",
 #                 "host": "foo",
 #                 "service_key": "foo",
 #                 "certificates": "foo-certs",
@@ -37,8 +36,6 @@ from solarwinds_apm import configurator
 #                 "token_bucket_capacity": -1,
 #                 "token_bucket_rate": -1,
 #                 "file_single": "foo",
-#                 "ec2_metadata_timeout": "foo",
-#                 "grpc_proxy": "foo",
 #                 "stdout_clear_nonblocking": 0,
 #                 "metric_format": "bar",
 #             }

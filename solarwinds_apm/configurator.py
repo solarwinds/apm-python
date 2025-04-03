@@ -542,8 +542,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         #     "token_bucket_capacity": -1,  # always unset
         #     "token_bucket_rate": -1,  # always unset
         #     "file_single": apm_config.get("reporter_file_single"),
-        #     "ec2_metadata_timeout": apm_config.get("ec2_metadata_timeout"),
-        #     "grpc_proxy": apm_config.get("proxy"),
         #     "stdout_clear_nonblocking": 0,
         #     "metric_format": apm_config.metric_format,
         # }

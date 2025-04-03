@@ -714,16 +714,7 @@ class SolarWindsApmConfig:
         )
         key = keys[-1]
         try:
-            if keys == ["ec2_metadata_timeout"]:
-                timeout = int(val)
-                if timeout not in range(0, 3001):
-                    raise ValueError
-                self.__config[key] = timeout
-            elif keys == ["proxy"]:
-                if not isinstance(val, str) or not val.startswith("http://"):
-                    raise ValueError
-                self.__config[key] = val
-            elif keys == ["tracing_mode"]:
+            if keys == ["tracing_mode"]:
                 if not isinstance(val, str):
                     raise ValueError
                 val = val.lower()
@@ -745,15 +736,6 @@ class SolarWindsApmConfig:
                     OboeTracingMode.get_oboe_trigger_trace_mode(val)
                 )
                 self.__config[key] = oboe_trigger_trace
-            elif keys == ["reporter"]:
-                if not isinstance(val, str) or val.lower() not in (
-                    "udp",
-                    "ssl",
-                    "null",
-                    "file",
-                ):
-                    raise ValueError
-                self.__config[key] = val.lower()
             elif keys == ["debug_level"]:
                 val = int(val)
                 if not apm_logging.ApmLoggingLevel.is_valid_level(val):
