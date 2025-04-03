@@ -4,6 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+# pylint: disable=too-many-lines
+
 import json
 import logging
 import os
@@ -94,7 +96,7 @@ class SolarWindsApmConfig:
             "transaction_filters": [],
             "transaction_name": None,
             "export_logs_enabled": False,
-            "export_metrics_enabled": False,
+            "export_metrics_enabled": True,
         }
         self.is_lambda = self.calculate_is_lambda()
         self.lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
@@ -131,6 +133,33 @@ class SolarWindsApmConfig:
             )
             return True
         return False
+
+    @classmethod
+    def calculate_metrics_enabled(
+        cls,
+        is_legacy: bool = False,
+        cnf_dict: dict = None,
+    ) -> bool:
+        """Return if export of instrumentor metrics telemetry enabled.
+        Invalid boolean values are ignored.
+        Order of precedence: Environment Variable > config file > default.
+        Default is True.
+        Optional cnf_dict is presumably already from a config file, else a call
+        to get_cnf_dict() is made for a fresh read."""
+        metrics_enabled = True
+        if cnf_dict is None:
+            cnf_dict = cls.get_cnf_dict()
+        if cnf_dict:
+            cnf_enabled = cls.convert_to_bool(
+                cnf_dict.get("export_metrics_enabled")
+            )
+            metrics_enabled = (
+                cnf_enabled if cnf_enabled is not None else metrics_enabled
+            )
+        env_enabled = cls.convert_to_bool(
+            os.environ.get("SW_APM_EXPORT_METRICS_ENABLED")
+        )
+        return env_enabled if env_enabled is not None else metrics_enabled
 
     def _calculate_agent_enabled_config_lambda(self) -> bool:
         """Checks if agent is enabled/disabled based on config in lambda environment:
@@ -442,21 +471,6 @@ class SolarWindsApmConfig:
                 return False
         return self.get("export_logs_enabled")
 
-    def _calculate_metrics_enabled(self) -> bool:
-        """Return if export of metrics telemetry enabled, based on collector.
-        Always False if AO collector, else use current config."""
-        host = self.get("collector")
-        if host:
-            if (
-                INTL_SWO_AO_COLLECTOR in host
-                or INTL_SWO_AO_STG_COLLECTOR in host
-            ):
-                logger.warning(
-                    "AO collector detected. Defaulting to disabled OTLP metrics export."
-                )
-                return False
-        return self.get("export_metrics_enabled")
-
     def mask_service_key(self) -> str:
         """Return masked service key except first 4 and last 4 chars"""
         service_key = self.__config.get("service_key")
@@ -530,13 +544,14 @@ class SolarWindsApmConfig:
         )
         return value if value is not None else default
 
-    def get_cnf_dict(self) -> Any:
+    @classmethod
+    def get_cnf_dict(cls) -> Any:
         """Load Python dict from confg file (json), if any"""
         cnf_filepath = os.environ.get("SW_APM_CONFIG_FILE")
         cnf_dict = None
 
         if not cnf_filepath:
-            cnf_filepath = self._CONFIG_FILE_DEFAULT
+            cnf_filepath = cls._CONFIG_FILE_DEFAULT
             if not os.path.isfile(cnf_filepath):
                 logger.debug("No config file at %s; skipping", cnf_filepath)
                 return cnf_dict

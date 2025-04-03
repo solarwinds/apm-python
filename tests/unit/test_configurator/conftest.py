@@ -6,6 +6,8 @@
 
 import pytest
 
+from solarwinds_apm.apm_config import SolarWindsApmConfig
+
 # ==================================================================
 # Configurator stdlib fixtures
 # ==================================================================
@@ -196,6 +198,7 @@ def get_apmconfig_mocks(
             "is_lambda": is_lambda,
             "extension": mock_ext,
             "oboe_api": mocker.Mock(),
+            "convert_to_bool": SolarWindsApmConfig.convert_to_bool,
         }
     )
     return mock_apmconfig
@@ -216,6 +219,16 @@ def mock_apmconfig_enabled(mocker):
         "solarwinds_apm.configurator.SolarWindsApmConfig",
         get_apmconfig_mocks(
             mocker,
+        )
+    )
+
+@pytest.fixture(name="mock_apmconfig_enabled_export_logs_false")
+def mock_apmconfig_enabled_export_logs_false(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsApmConfig",
+        get_apmconfig_mocks(
+            mocker,
+            export_logs_enabled=False
         )
     )
 
@@ -353,8 +366,8 @@ def mock_fw_versions(mocker):
         side_effect=add_fw_versions
     )
 
-@pytest.fixture(name="mock_config_serviceentryid_processor")
-def mock_config_serviceentryid_processor(mocker):
+@pytest.fixture(name="mock_config_serviceentry_processor")
+def mock_config_serviceentry_processor(mocker):
     return mocker.patch(
         "solarwinds_apm.configurator.SolarWindsConfigurator._configure_service_entry_span_processor"
     )
@@ -381,6 +394,12 @@ def mock_config_metrics_exp(mocker):
 def mock_config_logs_exp(mocker):
     return mocker.patch(
         "solarwinds_apm.configurator.SolarWindsConfigurator._configure_logs_exporter"
+    )
+
+@pytest.fixture(name="mock_config_logs_handler")
+def mock_config_logs_handler(mocker):
+    return mocker.patch(
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_logs_handler"
     )
 
 @pytest.fixture(name="mock_config_propagator")

@@ -7,14 +7,7 @@ updates:
     interval: weekly
 
   groups:
-    otel-instrumentors:
-      patterns:
-        - "opentelemetry-instrumentation-*"
-      update-types:
-        - minor
-        - patch
-
-    otel-utils:
+    otel-dependencies:
       patterns:
         - "opentelemetry-*"
       update-types:
@@ -27,22 +20,7 @@ updates:
     interval: weekly
 
   groups:
-    otel-core:
-      patterns:
-        - "opentelemetry-api"
-        - "opentelemetry-sdk"
-      update-types:
-        - minor
-        - patch
-
-    otel-instrumentors:
-      patterns:
-        - "opentelemetry-instrumentation-*"
-      update-types:
-        - minor
-        - patch
-
-    otel-utils:
+    otel-dependencies:
       patterns:
         - "opentelemetry-*"
       update-types:
