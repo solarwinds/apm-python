@@ -359,12 +359,6 @@ def mock_config_serviceentryid_processor(mocker):
         "solarwinds_apm.configurator.SolarWindsConfigurator._configure_service_entry_span_processor"
     )
 
-@pytest.fixture(name="mock_config_inbound_processor")
-def mock_config_inbound_processor(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_inbound_metrics_span_processor"
-    )
-
 @pytest.fixture(name="mock_response_time_processor")
 def mock_response_time_processor(mocker):
     return mocker.patch(

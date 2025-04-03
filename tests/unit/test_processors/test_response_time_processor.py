@@ -43,6 +43,230 @@ class TestResponseTimeProcessor:
         assert processor.env_transaction_name == "foo-env-txn-name"
         assert processor.lambda_function_name == "foo-lambda-name"
 
+    def test_is_span_http_true(self, mocker):
+        mock_spankind = mocker.patch(
+            "solarwinds_apm.trace.response_time_processor.SpanKind"
+        )
+        mock_spankind.configure_mock(
+            **{
+                "SERVER": "foo"
+            }
+        )
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.trace.response_time_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_METHOD": "http.method"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "foo",
+                "attributes": {
+                    "http.method": "bar"
+                }
+            }
+        )
+        processor = ResponseTimeProcessor(mocker.Mock())
+        assert True == processor.is_span_http(mock_span)
+
+    def test_is_span_http_false_not_server_kind(self, mocker):
+        mock_spankind = mocker.patch(
+            "solarwinds_apm.trace.response_time_processor.SpanKind"
+        )
+        mock_spankind.configure_mock(
+            **{
+                "SERVER": "foo"
+            }
+        )
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.trace.response_time_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_METHOD": "http.method"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "not-foo-hehe",
+                "attributes": {
+                    "http.method": "bar"
+                }
+            }
+        )
+        processor = ResponseTimeProcessor(mocker.Mock())
+        assert False == processor.is_span_http(mock_span)
+
+    def test_is_span_http_false_no_http_method(self, mocker):
+        mock_spankind = mocker.patch(
+            "solarwinds_apm.trace.response_time_processor.SpanKind"
+        )
+        mock_spankind.configure_mock(
+            **{
+                "SERVER": "foo"
+            }
+        )
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.trace.response_time_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_METHOD": "http.method"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "foo",
+                "attributes": {
+                    "NOT.http.method.hehehehe": "bar"
+                }
+            }
+        )
+        processor = ResponseTimeProcessor(mocker.Mock())
+        assert False == processor.is_span_http(mock_span)
+
+    def test_is_span_http_false_no_server_kind_no_method(self, mocker):
+        mock_spankind = mocker.patch(
+            "solarwinds_apm.trace.response_time_processor.SpanKind"
+        )
+        mock_spankind.configure_mock(
+            **{
+                "SERVER": "foo"
+            }
+        )
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.trace.response_time_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_METHOD": "http.method"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "not-foo-hehe",
+                "attributes": {
+                    "NOT.http.method.hehehehe": "bar"
+                }
+            }
+        )
+        processor = ResponseTimeProcessor(mocker.Mock())
+        assert False == processor.is_span_http(mock_span)
+
+    def test_get_http_status_code_from_span(self, mocker):
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.trace.response_time_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_STATUS_CODE": "http.status_code"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "foo",
+                "attributes": {
+                    "http.status_code": "foo"
+                }
+            }
+        )
+        processor = ResponseTimeProcessor(mocker.Mock())
+        assert "foo" == processor.get_http_status_code(mock_span)
+
+    def test_get_http_status_code_default(self, mocker):
+        mock_spanattributes = mocker.patch(
+            "solarwinds_apm.trace.response_time_processor.SpanAttributes"
+        )
+        mock_spanattributes.configure_mock(
+            **{
+                "HTTP_STATUS_CODE": "http.status_code"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(
+            **{
+                "kind": "foo",
+                "attributes": {
+                    "NOT.http.status_code.muahaha": "foo"
+                }
+            }
+        )
+        processor = ResponseTimeProcessor(mocker.Mock())
+        assert 0 == processor.get_http_status_code(mock_span)
+
+    def test_has_error_true(self, mocker):
+        mock_statuscode = mocker.patch(
+            "solarwinds_apm.trace.response_time_processor.StatusCode"
+        )
+        mock_statuscode.configure_mock(
+            **{
+                "ERROR": "foo"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_status = mocker.Mock()
+        mock_status.configure_mock(
+            **{
+                "status_code": "foo"
+            }
+        )
+        mock_span.configure_mock(
+            **{
+                "status": mock_status
+            }
+        )
+        processor = ResponseTimeProcessor(mocker.Mock())
+        assert True == processor.has_error(mock_span)
+
+    def test_has_error_false(self, mocker):
+        mock_statuscode = mocker.patch(
+            "solarwinds_apm.trace.response_time_processor.StatusCode"
+        )
+        mock_statuscode.configure_mock(
+            **{
+                "ERROR": "foo"
+            }
+        )
+        mock_span = mocker.Mock()
+        mock_status = mocker.Mock()
+        mock_status.configure_mock(
+            **{
+                "status_code": "not-foo-hehehe"
+            }
+        )
+        mock_span.configure_mock(
+            **{
+                "status": mock_status
+            }
+        )
+        processor = ResponseTimeProcessor(mocker.Mock())
+        assert False == processor.has_error(mock_span)
+
+    def test_calculate_span_time_missing(self, mocker):
+        processor = ResponseTimeProcessor(mocker.Mock())
+        assert 0 == processor.calculate_span_time(0, 0)
+        assert 0 == processor.calculate_span_time(0, 1000)
+        assert 0 == processor.calculate_span_time(1000, 0)
+
+    def test_calculate_span_time_default_1e3(self, mocker):
+        processor = ResponseTimeProcessor(mocker.Mock())
+        assert 1 == processor.calculate_span_time(2000, 3000)
+
+    def test_calculate_span_time_1e6(self, mocker):
+        processor = ResponseTimeProcessor(mocker.Mock())
+        assert 1 == processor.calculate_span_time(
+            2000000,
+            3000000,
+            1e6,
+        )
+
     def test_calculate_otlp_transaction_name_env_trans(self, mocker):
         mock_apm_config = self.get_mock_apm_config(
             mocker,
