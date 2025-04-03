@@ -17,6 +17,7 @@ from typing import Any
 
 from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
+from opentelemetry._logs._internal import NoOpLoggerProvider
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
@@ -33,6 +34,7 @@ from opentelemetry.instrumentation.propagators import (
     set_global_response_propagator,
 )
 from opentelemetry.metrics import set_meter_provider
+from opentelemetry.metrics._internal import NoOpMeterProvider
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
@@ -360,12 +362,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             logger.error(
                 "APM Python library disabled. Cannot set metrics exporters."
             )
+            set_meter_provider(NoOpMeterProvider())
             return
 
         if not apm_config.get("export_metrics_enabled"):
             logger.debug(
                 "APM OTLP metrics export disabled. Skipping init of metrics exporters"
             )
+            set_meter_provider(NoOpMeterProvider())
             return
 
         # SolarWindsDistro._configure does setdefault before this is called
@@ -376,6 +380,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             logger.debug(
                 "No OTEL_METRICS_EXPORTER set, skipping init of metrics exporters"
             )
+            set_meter_provider(NoOpMeterProvider())
             return
         environ_exporter_names = environ_exporter.split(",")
 
@@ -449,6 +454,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             logger.error(
                 "APM Python library disabled. Cannot set logs exporters."
             )
+            set_logger_provider(NoOpLoggerProvider())
             return
 
         otel_ev = os.environ.get(
@@ -460,6 +466,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             logger.debug(
                 "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED false. Skipping init of logs exporters"
             )
+            set_logger_provider(NoOpLoggerProvider())
             return
 
         # If otel_ev is True, ignore sw_enabled.
@@ -469,6 +476,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             logger.debug(
                 "APM OTLP logs export disabled. Skipping init of logs exporters"
             )
+            set_logger_provider(NoOpLoggerProvider())
             return
 
         # SolarWindsDistro._configure does setdefault before this is called
@@ -479,6 +487,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             logger.debug(
                 "No OTEL_LOGS_EXPORTER set, skipping init of logs exporters"
             )
+            set_logger_provider(NoOpLoggerProvider())
             return
 
         environ_exporter_names = environ_exporter.split(",")
