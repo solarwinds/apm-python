@@ -15,7 +15,7 @@ from __future__ import annotations
 # import enum
 import logging
 
-from opentelemetry.sdk import metrics
+from opentelemetry.metrics import get_meter_provider
 
 # from opentelemetry.context.context import Context as OtelContext
 from opentelemetry.sdk.trace.sampling import (  # Decision,; Sampler,; SamplingResult,
@@ -645,11 +645,11 @@ class ParentBasedSwSampler(ParentBased):
         sampler = None
         if apm_config.is_lambda:
             sampler = JsonSampler(
-                meter_provider=metrics.MeterProvider(), config=configuration
+                meter_provider=get_meter_provider(), config=configuration
             )
         else:
             sampler = HttpSampler(
-                meter_provider=metrics.MeterProvider(),
+                meter_provider=get_meter_provider(),
                 config=configuration,
                 initial=None,
             )
