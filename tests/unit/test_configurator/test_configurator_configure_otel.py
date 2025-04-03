@@ -50,7 +50,6 @@ class TestConfiguratorConfigureOtelComponents:
         mock_fwkv_manager,
         mock_extension,
         mock_apmconfig_disabled,
-        mock_oboe_api_obj,
 
         mock_config_serviceentryid_processor,
         mock_config_inbound_processor,
@@ -66,7 +65,6 @@ class TestConfiguratorConfigureOtelComponents:
             mock_fwkv_manager,
             mock_apmconfig_disabled,
             mock_extension.Reporter,
-            mock_oboe_api_obj,
         )
 
         mock_config_serviceentryid_processor.assert_not_called()

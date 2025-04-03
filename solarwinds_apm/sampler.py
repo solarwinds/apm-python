@@ -634,7 +634,6 @@ class ParentBasedSwSampler(ParentBased):
         self,
         apm_config: "SolarWindsApmConfig",
         reporter,
-        oboe_api,
     ):
         """
         Uses HttpSampler/JsonSampler if no parent span.

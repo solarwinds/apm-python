@@ -95,7 +95,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure SolarWinds APM and OTel components"""
         apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
-        # oboe_api = apm_config.oboe_api
 
         # Reporter may be no-op e.g. disabled, lambda
         # reporter = self._initialize_solarwinds_reporter(apm_config)
@@ -103,9 +102,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             apm_fwkv_manager,
             apm_config,
             None,
-            None,
             # reporter,
-            # oboe_api,
         )
 
         # if apm_config.is_lambda:
@@ -127,13 +124,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
         reporter: Any = None,
-        oboe_api: Any = None,
     ) -> None:
         """Configure OTel sampler, exporter, propagator, response propagator"""
         self._configure_sampler(
             apm_config,
             reporter,
-            oboe_api,
         )
         if apm_config.agent_enabled:
             # set MeterProvider first via metrics_exporter config
@@ -165,7 +160,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self,
         apm_config: SolarWindsApmConfig,
         reporter,
-        oboe_api,
     ) -> None:
         """Always configure SolarWinds OTel sampler, or none if disabled"""
         if not apm_config.agent_enabled:
@@ -180,7 +174,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                         name=self._DEFAULT_SW_TRACES_SAMPLER,
                     )
                 )
-            ).load()(apm_config, reporter, oboe_api)
+            ).load()(apm_config, reporter)
         except Exception as ex:
             logger.exception("A exception was raised: %s", ex)
             logger.exception(
