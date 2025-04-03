@@ -7,19 +7,18 @@
 import logging
 from typing import TYPE_CHECKING
 
+from opentelemetry.metrics import get_meter
+
 from solarwinds_apm.apm_constants import (
     INTL_SWO_TRANSACTION_ATTR_KEY,
     INTL_SWO_TRANSACTION_ATTR_MAX,
 )
-from solarwinds_apm.apm_meter_manager import SolarWindsMeterManager
 from solarwinds_apm.trace.base_metrics_processor import _SwBaseMetricsProcessor
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
     from solarwinds_apm.apm_config import SolarWindsApmConfig
-
-    # from solarwinds_apm.extension.oboe import OboeAPI
 
 
 logger = logging.getLogger(__name__)
@@ -31,16 +30,18 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
     def __init__(
         self,
         apm_config: "SolarWindsApmConfig",
-        oboe_api,
     ) -> None:
         super().__init__()
         self.service_name = apm_config.service_name
         # SW_APM_TRANSACTION_NAME and AWS_LAMBDA_FUNCTION_NAME
         self.env_transaction_name = apm_config.get("transaction_name")
         self.lambda_function_name = apm_config.lambda_function_name
-        self.apm_meters = SolarWindsMeterManager(
-            apm_config,
-            oboe_api,
+
+        self._meter_response_times = get_meter("sw.apm.request.metrics")
+        self.response_time = self._meter_response_times.create_histogram(
+            name="trace.service.response_time",
+            description="measures the duration of an inbound HTTP request",
+            unit="ms",
         )
 
     def calculate_otlp_transaction_name(
@@ -106,7 +107,7 @@ class SolarWindsOTLPMetricsSpanProcessor(_SwBaseMetricsProcessor):
             if request_method:
                 meter_attrs.update({self._HTTP_METHOD: request_method})
 
-        self.apm_meters.response_time.record(
+        self.response_time.record(
             amount=span_time,
             attributes=meter_attrs,
         )

@@ -120,7 +120,6 @@ class TestConfiguratorSpanProcessors:
         self,
         mocker,
         mock_apmconfig_enabled,
-        mock_meter_manager,
     ):
         # Save any exporters in os for later
         old_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
@@ -140,7 +139,6 @@ class TestConfiguratorSpanProcessors:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_otlp_metrics_span_processors(
             mock_apmconfig_enabled,
-            mock_meter_manager,
         )
         trace_mocks.get_tracer_provider.assert_not_called()
         trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
@@ -154,7 +152,6 @@ class TestConfiguratorSpanProcessors:
         self,
         mocker,
         mock_apmconfig_enabled,
-        mock_meter_manager,
     ):
         # Save any exporters in os for later
         old_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
@@ -174,7 +171,6 @@ class TestConfiguratorSpanProcessors:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_otlp_metrics_span_processors(
             mock_apmconfig_enabled,
-            mock_meter_manager,
         )
         trace_mocks.get_tracer_provider.assert_has_calls(
             [
@@ -188,7 +184,6 @@ class TestConfiguratorSpanProcessors:
         )
         mock_otlp_processor.assert_called_once_with(
             mock_apmconfig_enabled,
-            mock_meter_manager,
         )
 
         # Restore the os exporters
