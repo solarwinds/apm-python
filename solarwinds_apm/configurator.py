@@ -61,7 +61,6 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_SUPPORT_EMAIL,
 )
-from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
 
 # from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.response_propagator import (
@@ -93,13 +92,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
-        apm_fwkv_manager = SolarWindsFrameworkKvManager()
         apm_config = SolarWindsApmConfig()
 
         # Reporter may be no-op e.g. disabled, lambda
         # reporter = self._initialize_solarwinds_reporter(apm_config)
         self._configure_otel_components(
-            apm_fwkv_manager,
             apm_config,
             None,
             # reporter,
@@ -121,7 +118,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     # TODO update pylint disable when drop py38 support
     def _configure_otel_components(
         self,
-        apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
         reporter: Any = None,
     ) -> None:
@@ -143,7 +139,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
             self._configure_traces_exporter(
                 reporter,
-                apm_fwkv_manager,
                 apm_config,
             )
 
@@ -247,7 +242,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_traces_exporter(
         self,
         reporter,
-        apm_fwkv_manager: SolarWindsFrameworkKvManager,
         apm_config: SolarWindsApmConfig,
     ) -> None:
         """Configure traces exporters if agent enabled.
