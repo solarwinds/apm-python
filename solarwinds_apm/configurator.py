@@ -59,7 +59,6 @@ from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_PROPAGATORS,
-    INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_SUPPORT_EMAIL,
 )
 from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
@@ -276,29 +275,15 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         for exporter_name in environ_exporter_names:
             exporter = None
             try:
-                if exporter_name == INTL_SWO_DEFAULT_TRACES_EXPORTER:
-                    exporter = next(
-                        iter(
-                            entry_points(
-                                group="opentelemetry_traces_exporter",
-                                name=exporter_name,
-                            )
+                exporter = next(
+                    iter(
+                        # pylint: disable=too-many-function-args
+                        entry_points(
+                            group="opentelemetry_traces_exporter",
+                            name=exporter_name,
                         )
-                    ).load()(
-                        reporter,
-                        apm_fwkv_manager,
-                        apm_config,
                     )
-                else:
-                    exporter = next(
-                        iter(
-                            # pylint: disable=too-many-function-args
-                            entry_points(
-                                group="opentelemetry_traces_exporter",
-                                name=exporter_name,
-                            )
-                        )
-                    ).load()()
+                ).load()()
             except Exception as ex:
                 logger.exception("A exception was raised: %s", ex)
                 # At this point any non-default OTEL_TRACES_EXPORTER has
