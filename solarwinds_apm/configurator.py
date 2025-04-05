@@ -41,7 +41,15 @@ from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
 )
-from opentelemetry.sdk.metrics import Histogram, MeterProvider
+from opentelemetry.sdk.metrics import (
+    Counter,
+    Histogram,
+    MeterProvider,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     PeriodicExportingMetricReader,
@@ -428,8 +436,15 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             return
         environ_exporter_names = environ_exporter.split(",")
 
-        # Report all histograms with delta aggregation, including response_time
-        temporality_delta = {Histogram: AggregationTemporality.DELTA}
+        # Report all meters with delta aggregation as preferred temporality
+        temporality_delta = {
+            Counter: AggregationTemporality.DELTA,
+            UpDownCounter: AggregationTemporality.DELTA,
+            Histogram: AggregationTemporality.DELTA,
+            ObservableCounter: AggregationTemporality.DELTA,
+            ObservableUpDownCounter: AggregationTemporality.DELTA,
+            ObservableGauge: AggregationTemporality.DELTA,
+        }
         metric_readers = []
         for exporter_name in environ_exporter_names:
             exporter = None
