@@ -38,7 +38,7 @@ def _pod_name() -> str:
     return os.uname().nodename
 
 
-def _pod_uid(mount_info) -> str | None:
+def _pod_uid(mount_info: str) -> str | None:
     env = os.getenv(UID_ENV)
     if env:
         logger.debug("read pod uid from env")
@@ -70,7 +70,7 @@ def _pod_uid(mount_info) -> str | None:
     return None
 
 
-def _pod_namespace(namespace) -> str | None:
+def _pod_namespace(namespace: str) -> str | None:
     env = os.getenv(NAMESPACE_ENV)
     if env:
         logger.debug("read pod namespace from env")
@@ -90,7 +90,9 @@ class K8sResourceDetector(ResourceDetector):
     and returns them in a Resource.
     """
 
-    def __init__(self, namespace=NAMESPACE_FILE, mountinfo=MOUNTINFO_FILE):
+    def __init__(
+        self, namespace: str = NAMESPACE_FILE, mountinfo: str = MOUNTINFO_FILE
+    ):
         super().__init__()
         self._namespace = namespace
         self._mountinfo = mountinfo
