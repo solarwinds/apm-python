@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.6.0...HEAD)
 
-## [3.6.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.6.0) - 2025-04-07
+## [3.6.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.6.0) - 2025-04-07
 
 ### Breaking changes
 - Breaking: SWO metrics is now enabled by default if configured for OTLP; `SW_APM_EXPORT_METRICS_ENABLED` limits instrumentor metrics only ([#551](https://github.com/solarwinds/apm-python/pull/551))
