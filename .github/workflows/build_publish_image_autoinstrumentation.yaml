@@ -57,25 +57,24 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push - amd64
+      - name: Build and push - amd64, arm64
         uses: docker/build-push-action@v6
         with:
           push: true
-          load: true
           context: image
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           build-args: version=${{ env.VERSION }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Build and push - arm64
+      - name: Build locally for scan - amd64
         uses: docker/build-push-action@v6
         with:
-          push: true
+          load: true
           context: image
-          platforms: linux/arm64
+          platforms: linux/amd64
           build-args: version=${{ env.VERSION }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}-scan
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Log into Docker.io (scan)
