@@ -13,7 +13,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 from opentelemetry.semconv.resource import ResourceAttributes
 
-from solarwinds_apm.uams import UamsResourceDetector, ATTR_UAMS_CLIENT_ID, UAMS_CLIENT_URL
+from solarwinds_apm.uams import UamsResourceDetector, ATTR_UAMS_CLIENT_ID
 
 UAMS_FILE_ID = str(uuid.uuid4())
 UAMS_API_ID = str(uuid.uuid4())
