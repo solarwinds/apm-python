@@ -132,8 +132,23 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         get_resource_mocks(mocker)
         trace_mocks = get_trace_mocks(mocker)
+        mock_counter = mocker.patch(
+            "solarwinds_apm.configurator.Counter"
+        )
+        mock_updowncounter = mocker.patch(
+            "solarwinds_apm.configurator.UpDownCounter"
+        )
         mock_histogram = mocker.patch(
             "solarwinds_apm.configurator.Histogram"
+        )
+        mock_observablecounter = mocker.patch(
+            "solarwinds_apm.configurator.ObservableCounter"
+        )
+        mock_observableupdowncounter = mocker.patch(
+            "solarwinds_apm.configurator.ObservableUpDownCounter"
+        )
+        mock_observablegauge = mocker.patch(
+            "solarwinds_apm.configurator.ObservableGauge"
         )
         mock_agg_temp = mocker.patch(
             "solarwinds_apm.configurator.AggregationTemporality"
@@ -151,7 +166,12 @@ class TestConfiguratorMetricsExporter:
                 mocker.call(),
                 mocker.call()(
                     preferred_temporality={
-                        mock_histogram: "foo-delta"
+                        mock_counter: "foo-delta",
+                        mock_updowncounter: "foo-delta",
+                        mock_histogram: "foo-delta",
+                        mock_observablecounter: "foo-delta",
+                        mock_observableupdowncounter: "foo-delta",
+                        mock_observablegauge: "foo-delta",
                     }
                 )
             ]
@@ -213,8 +233,23 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         get_resource_mocks(mocker)
         trace_mocks = get_trace_mocks(mocker)
+        mock_counter = mocker.patch(
+            "solarwinds_apm.configurator.Counter"
+        )
+        mock_updowncounter = mocker.patch(
+            "solarwinds_apm.configurator.UpDownCounter"
+        )
         mock_histogram = mocker.patch(
             "solarwinds_apm.configurator.Histogram"
+        )
+        mock_observablecounter = mocker.patch(
+            "solarwinds_apm.configurator.ObservableCounter"
+        )
+        mock_observableupdowncounter = mocker.patch(
+            "solarwinds_apm.configurator.ObservableUpDownCounter"
+        )
+        mock_observablegauge = mocker.patch(
+            "solarwinds_apm.configurator.ObservableGauge"
         )
         mock_agg_temp = mocker.patch(
             "solarwinds_apm.configurator.AggregationTemporality"
@@ -232,7 +267,12 @@ class TestConfiguratorMetricsExporter:
                 mocker.call(),
                 mocker.call()(
                     preferred_temporality={
-                        mock_histogram: "foo-delta"
+                        mock_counter: "foo-delta",
+                        mock_updowncounter: "foo-delta",
+                        mock_histogram: "foo-delta",
+                        mock_observablecounter: "foo-delta",
+                        mock_observableupdowncounter: "foo-delta",
+                        mock_observablegauge: "foo-delta",
                     }
                 )
             ]
@@ -395,8 +435,23 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         get_resource_mocks(mocker)
         trace_mocks = get_trace_mocks(mocker)
+        mock_counter = mocker.patch(
+            "solarwinds_apm.configurator.Counter"
+        )
+        mock_updowncounter = mocker.patch(
+            "solarwinds_apm.configurator.UpDownCounter"
+        )
         mock_histogram = mocker.patch(
             "solarwinds_apm.configurator.Histogram"
+        )
+        mock_observablecounter = mocker.patch(
+            "solarwinds_apm.configurator.ObservableCounter"
+        )
+        mock_observableupdowncounter = mocker.patch(
+            "solarwinds_apm.configurator.ObservableUpDownCounter"
+        )
+        mock_observablegauge = mocker.patch(
+            "solarwinds_apm.configurator.ObservableGauge"
         )
         mock_agg_temp = mocker.patch(
             "solarwinds_apm.configurator.AggregationTemporality"
@@ -427,7 +482,12 @@ class TestConfiguratorMetricsExporter:
                 mocker.call(),
                 mocker.call()(
                     preferred_temporality={
-                        mock_histogram: "foo-delta"
+                        mock_counter: "foo-delta",
+                        mock_updowncounter: "foo-delta",
+                        mock_histogram: "foo-delta",
+                        mock_observablecounter: "foo-delta",
+                        mock_observableupdowncounter: "foo-delta",
+                        mock_observablegauge: "foo-delta",
                     }
                 )
             ]
@@ -513,8 +573,23 @@ class TestConfiguratorMetricsExporter:
         # Mock Otel
         get_resource_mocks(mocker)
         trace_mocks = get_trace_mocks(mocker)
+        mock_counter = mocker.patch(
+            "solarwinds_apm.configurator.Counter"
+        )
+        mock_updowncounter = mocker.patch(
+            "solarwinds_apm.configurator.UpDownCounter"
+        )
         mock_histogram = mocker.patch(
             "solarwinds_apm.configurator.Histogram"
+        )
+        mock_observablecounter = mocker.patch(
+            "solarwinds_apm.configurator.ObservableCounter"
+        )
+        mock_observableupdowncounter = mocker.patch(
+            "solarwinds_apm.configurator.ObservableUpDownCounter"
+        )
+        mock_observablegauge = mocker.patch(
+            "solarwinds_apm.configurator.ObservableGauge"
         )
         mock_agg_temp = mocker.patch(
             "solarwinds_apm.configurator.AggregationTemporality"
@@ -545,7 +620,12 @@ class TestConfiguratorMetricsExporter:
                 mocker.call(),
                 mocker.call()(
                     preferred_temporality={
-                        mock_histogram: "foo-delta"
+                        mock_counter: "foo-delta",
+                        mock_updowncounter: "foo-delta",
+                        mock_histogram: "foo-delta",
+                        mock_observablecounter: "foo-delta",
+                        mock_observableupdowncounter: "foo-delta",
+                        mock_observablegauge: "foo-delta",
                     }
                 )
             ]
