@@ -7,6 +7,9 @@
 name: "Publish APM Python Auto-Instrumentation"
 
 on:
+  push:
+    branches:
+      - NH-107152-fix-image-builds
   workflow_dispatch:
 
 permissions:
