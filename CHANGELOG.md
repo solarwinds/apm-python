@@ -4,7 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.4.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.6.0...HEAD)
+
+## [3.6.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.6.0) - 2025-04-07
+
+### Breaking changes
+- Breaking: SWO metrics is now enabled by default if configured for OTLP; `SW_APM_EXPORT_METRICS_ENABLED` limits instrumentor metrics only ([#551](https://github.com/solarwinds/apm-python/pull/551))
+
+### Added
+- Added baseline components for custom pure Python sampling ([#534](https://github.com/solarwinds/apm-python/pull/534))
+
+### Changed
+- Fixed OTLP logging component init ([#550](https://github.com/solarwinds/apm-python/pull/550))
+- Upgraded Otel Python 1.31.1/0.52b1 ([#553](https://github.com/solarwinds/apm-python/pull/553))
+- Fixed dependabot CI/CD ([#554](https://github.com/solarwinds/apm-python/pull/554))
+- Updated OTLP exporter compression to be gzip by default ([#573](https://github.com/solarwinds/apm-python/pull/573))
+- Updated all meters preferred aggregation temporality to be Delta ([#574](https://github.com/solarwinds/apm-python/pull/574))
+- Fixed image CI/CD ([#575](https://github.com/solarwinds/apm-python/pull/575))
 
 ## [3.5.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.5.0) - 2025-03-14
 
