@@ -47,6 +47,8 @@ dependencies = [
     'opentelemetry-exporter-otlp == 1.31.1',
     'opentelemetry-instrumentation == 0.52b1',
     'opentelemetry-instrumentation-logging == 0.52b1',
+    'opentelemetry-sdk-extension-aws',
+    'opentelemetry-resource-detector-azure',
 ]
 
 [project.urls]
@@ -69,6 +71,10 @@ solarwinds_exporter = "solarwinds_apm.exporter:SolarWindsSpanExporter"
 
 [project.entry-points.opentelemetry_traces_sampler]
 solarwinds_sampler = "solarwinds_apm.sampler:ParentBasedSwSampler"
+
+[project.entry-points.opentelemetry_resource_detector]
+uams = "solarwinds_apm.uams:UamsResourceDetector"
+k8s = "solarwinds_apm.k8s:K8sResourceDetector"
 
 [tool.setuptools]
 license-files = ["LICENSE"]
