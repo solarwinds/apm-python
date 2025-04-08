@@ -12,7 +12,7 @@ import math
 import os
 import platform
 import sys
-from typing import Any, Type, Union
+from typing import Any, Optional, Type, Union
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
@@ -31,7 +31,12 @@ from opentelemetry.instrumentation.propagators import (
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
-from opentelemetry.sdk._configuration import _OTelSDKConfigurator
+from opentelemetry.sdk._configuration import (
+    _get_exporter_names,
+    _import_exporters,
+    _init_logging,
+    _OTelSDKConfigurator,
+)
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
 )
@@ -87,9 +92,28 @@ logger = logging.getLogger(__name__)
 class SolarWindsConfigurator(_OTelSDKConfigurator):
     """OpenTelemetry Configurator for initializing APM logger and SolarWinds-reporting SDK components"""
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.apm_config = SolarWindsApmConfig()
+
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
-        self.apm_config = SolarWindsApmConfig()
+        # Duplicated from _OTelSDKConfigurator in order to support custom settings
+        trace_exporter_names = kwargs.get("trace_exporter_names", [])
+        metric_exporter_names = kwargs.get("metric_exporter_names", [])
+        log_exporter_names = kwargs.get("log_exporter_names", [])
+
+        span_exporters, metric_exporters, log_exporters = _import_exporters(
+            trace_exporter_names + _get_exporter_names("traces"),
+            metric_exporter_names + _get_exporter_names("metrics"),
+            log_exporter_names + _get_exporter_names("logs"),
+        )
+
+        # Custom initialization of OTel components
+        apm_sampler = ParentBasedSwSampler(
+            self.apm_config,
+            None,  # TODO NH-104999 remove later
+        )
         apm_resource = Resource.create(
             {
                 "sw.apm.version": __version__,
@@ -97,9 +121,15 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "service.name": self.apm_config.service_name,
             }
         )
-        apm_sampler = ParentBasedSwSampler(
-            self.apm_config,
-            None,  # TODO NH-104999 remove later
+        self._custom_init_tracing(
+            exporters=span_exporters,
+            id_generator=kwargs.get("id_generator"),
+            sampler=apm_sampler,
+            resource=apm_resource,
+        )
+        self._custom_init_metrics(
+            exporters_or_readers=metric_exporters,
+            resource=apm_resource,
         )
 
         # Only emit log event telemetry (auto-instrument logs) if feature enabled,
@@ -118,13 +148,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         elif sw_log_enabled:
             setup_logging_handler = True
 
-        # Use inherited configure function to initialize common OTel components
-        super()._configure(
-            sampler=apm_sampler,
-            resource_attributes=apm_resource.attributes,
-            setup_logging_handler=setup_logging_handler,
-            **kwargs,
-        )
+        _init_logging(log_exporters, apm_resource, setup_logging_handler)
 
         # Set up additional custom SW components
         self._configure_service_entry_span_processor()
@@ -132,15 +156,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self._configure_propagator()
         self._configure_response_propagator()
 
-    # TODO: not an instance method!
-    def _init_tracing(
+    # TODO rm disable when Python 3.8 dropped
+    # pylint: disable=consider-alternative-union-syntax,deprecated-typing-alias
+    def _custom_init_tracing(
         self,
         exporters: dict[str, Type[SpanExporter]],
-        id_generator: IdGenerator | None = None,
-        sampler: Sampler | None = None,
-        resource: Resource | None = None,
+        id_generator: Optional[IdGenerator] = None,
+        sampler: Optional[Sampler] = None,
+        resource: Optional[Resource] = None,
     ):
-        """APM SWO override of default distro span export init"""
+        """APM SWO custom span export init, based on _OTelSDKConfigurator"""
         provider = SolarwindsTracerProvider(
             id_generator=id_generator,
             sampler=sampler,
@@ -159,15 +184,14 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     BatchSpanProcessor(exporter_class(**exporter_args))
                 )
 
-    # TODO: not an instance method!
-    def _init_metrics(
+    def _custom_init_metrics(
         self,
         exporters_or_readers: dict[
             str, Union[Type[MetricExporter], Type[MetricReader]]
         ],
-        resource: Resource | None = None,
+        resource: Optional[Resource] = None,
     ):
-        """APM SWO override of default distro metrics export init"""
+        """APM SWO custom metrics export init, based on _OTelSDKConfigurator"""
         metric_readers = []
 
         for _, exporter_or_reader_class in exporters_or_readers.items():
@@ -186,22 +210,21 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 metric_readers.append(
                     exporter_or_reader_class(**exporter_args)
                 )
+            elif self.apm_config.is_lambda:
+                # Inf interval to not invoke periodic collection
+                metric_readers.append(
+                    PeriodicExportingMetricReader(
+                        exporter_or_reader_class(**exporter_args),
+                        export_interval_millis=math.inf,
+                    )
+                )
             else:
-                if self.apm_config.is_lambda:
-                    # Inf interval to not invoke periodic collection
-                    metric_readers.append(
-                        PeriodicExportingMetricReader(
-                            exporter_or_reader_class(**exporter_args),
-                            export_interval_millis=math.inf,
-                        )
+                # Use default interval 60s else OTEL_METRIC_EXPORT_INTERVAL
+                metric_readers.append(
+                    PeriodicExportingMetricReader(
+                        exporter_or_reader_class(**exporter_args),
                     )
-                else:
-                    # Use default interval 60s else OTEL_METRIC_EXPORT_INTERVAL
-                    metric_readers.append(
-                        PeriodicExportingMetricReader(
-                            exporter_or_reader_class(**exporter_args),
-                        )
-                    )
+                )
 
         provider = MeterProvider(
             resource=resource, metric_readers=metric_readers
