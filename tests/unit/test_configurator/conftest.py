@@ -445,13 +445,6 @@ def mock_report_init(mocker):
         "solarwinds_apm.configurator.SolarWindsConfigurator._report_init_event"
     )
 
-@pytest.fixture(name="mock_fwkv_manager_init")
-def mock_fwkv_manager_init(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsFrameworkKvManager"
-    )
-
-
 # ==================================================================
 # Configurator APM Python other mocks
 # ==================================================================
@@ -461,10 +454,4 @@ def mock_apm_version(mocker):
     return mocker.patch(
         "solarwinds_apm.configurator.__version__",
         new="0.0.0",
-    )
-
-@pytest.fixture(name="mock_fwkv_manager")
-def mock_fwkv_manager(mocker):
-    return mocker.patch(
-        "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager"
     )
