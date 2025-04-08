@@ -264,7 +264,11 @@ class TestConfiguratorConfigureOtelComponents:
             exporters_or_readers={},
             resource=mock_resource,
         )
-        mock_init_logging.assert_called_once()
+        mock_init_logging.assert_called_once_with(
+            {},
+            mock_resource,
+            False,
+        )
         mock_config_propagator.assert_called_once()
         mock_config_response_propagator.assert_called_once()
 
