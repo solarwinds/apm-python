@@ -10,7 +10,6 @@ from solarwinds_apm import configurator
 #     def test_configurator_configure_init_lambda(
 #         self,
 #         mocker,
-#         mock_fwkv_manager_init,
 #         mock_init_sw_reporter,
 #         mock_config_otel_components,
 #         mock_create_init,
@@ -29,7 +28,6 @@ from solarwinds_apm import configurator
 #         test_configurator = configurator.SolarWindsConfigurator()
 #         test_configurator._configure()
 #
-#         mock_fwkv_manager_init.assert_called_once()
 #         apmconfig_init.assert_called_once()
 #         mock_init_sw_reporter.assert_called_once()
 #         mock_config_otel_components.assert_called_once()
@@ -39,7 +37,6 @@ from solarwinds_apm import configurator
 #     def test_configurator_configure_init_success(
 #         self,
 #         mocker,
-#         mock_fwkv_manager_init,
 #         mock_init_sw_reporter,
 #         mock_config_otel_components,
 #         mock_create_init,
@@ -58,7 +55,6 @@ from solarwinds_apm import configurator
 #         test_configurator = configurator.SolarWindsConfigurator()
 #         test_configurator._configure()
 #
-#         mock_fwkv_manager_init.assert_called_once()
 #         apmconfig_init.assert_called_once()
 #         mock_init_sw_reporter.assert_called_once()
 #         mock_config_otel_components.assert_called_once()
@@ -68,7 +64,6 @@ from solarwinds_apm import configurator
 #     def test_configurator_configure_init_failure(
 #         self,
 #         mocker,
-#         mock_fwkv_manager_init,
 #         mock_init_sw_reporter,
 #         mock_config_otel_components,
 #         mock_create_init_fail,
@@ -97,7 +92,6 @@ from solarwinds_apm import configurator
 #         test_configurator = configurator.SolarWindsConfigurator()
 #         test_configurator._configure()
 #
-#         mock_fwkv_manager_init.assert_called_once()
 #         apmconfig_init.assert_called_once()
 #         mock_init_sw_reporter.assert_called_once()
 #         mock_config_otel_components.assert_called_once()

@@ -16,7 +16,6 @@ class TestConfiguratorConfigureOtelComponents:
     def helper_test_configure_otel_components_logs_enabled(
         self,
         mocker,
-        mock_fwkv_manager,
         mock_extension,
         mock_apmconfig_enabled,
 
@@ -39,7 +38,6 @@ class TestConfiguratorConfigureOtelComponents:
         )
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_otel_components(
-            mock_fwkv_manager,
             mock_apmconfig_enabled,
             mock_extension.Reporter,
         )
@@ -47,7 +45,6 @@ class TestConfiguratorConfigureOtelComponents:
         mock_config_serviceentry_processor.assert_called_once()
         mock_config_traces_exp.assert_called_once_with(
             mock_extension.Reporter,
-            mock_fwkv_manager,
             mock_apmconfig_enabled,
         )
         mock_config_metrics_exp.assert_called_once_with(mock_apmconfig_enabled)
@@ -62,7 +59,6 @@ class TestConfiguratorConfigureOtelComponents:
     def test_configure_otel_components_logs_enabled_true_by_otel_sw_default(
         self,
         mocker,
-        mock_fwkv_manager,
         mock_extension,
         mock_apmconfig_enabled_export_logs_false,
 
@@ -76,7 +72,6 @@ class TestConfiguratorConfigureOtelComponents:
     ):
         self.helper_test_configure_otel_components_logs_enabled(
             mocker,
-            mock_fwkv_manager,
             mock_extension,
             mock_apmconfig_enabled_export_logs_false,
             mock_config_serviceentry_processor,
@@ -92,7 +87,6 @@ class TestConfiguratorConfigureOtelComponents:
 
     def test_configure_otel_components_logs_enabled_otel_none_sw_default(self,
         mocker,
-        mock_fwkv_manager,
         mock_extension,
         mock_apmconfig_enabled_export_logs_false,
 
@@ -106,7 +100,6 @@ class TestConfiguratorConfigureOtelComponents:
     ):
         self.helper_test_configure_otel_components_logs_enabled(
             mocker,
-            mock_fwkv_manager,
             mock_extension,
             mock_apmconfig_enabled_export_logs_false,
             mock_config_serviceentry_processor,
@@ -122,7 +115,6 @@ class TestConfiguratorConfigureOtelComponents:
 
     def test_configure_otel_components_logs_enabled_otel_none_sw_true(self,
         mocker,
-        mock_fwkv_manager,
         mock_extension,
         mock_apmconfig_enabled,
 
@@ -136,7 +128,6 @@ class TestConfiguratorConfigureOtelComponents:
     ):
         self.helper_test_configure_otel_components_logs_enabled(
             mocker,
-            mock_fwkv_manager,
             mock_extension,
             mock_apmconfig_enabled,
             mock_config_serviceentry_processor,
@@ -152,7 +143,6 @@ class TestConfiguratorConfigureOtelComponents:
 
     def test_configure_otel_components_logs_enabled_otel_false_sw_default(self,
         mocker,
-        mock_fwkv_manager,
         mock_extension,
         mock_apmconfig_enabled_export_logs_false,
 
@@ -166,7 +156,6 @@ class TestConfiguratorConfigureOtelComponents:
     ):
         self.helper_test_configure_otel_components_logs_enabled(
             mocker,
-            mock_fwkv_manager,
             mock_extension,
             mock_apmconfig_enabled_export_logs_false,
             mock_config_serviceentry_processor,
@@ -182,7 +171,6 @@ class TestConfiguratorConfigureOtelComponents:
 
     def test_configure_otel_components_logs_enabled_otel_false_sw_true(self,
         mocker,
-        mock_fwkv_manager,
         mock_extension,
         mock_apmconfig_enabled,
 
@@ -196,7 +184,6 @@ class TestConfiguratorConfigureOtelComponents:
     ):
         self.helper_test_configure_otel_components_logs_enabled(
             mocker,
-            mock_fwkv_manager,
             mock_extension,
             mock_apmconfig_enabled,
             mock_config_serviceentry_processor,
@@ -212,7 +199,6 @@ class TestConfiguratorConfigureOtelComponents:
 
     def test_configure_otel_components_logs_enabled_otel_invalid(self,
         mocker,
-        mock_fwkv_manager,
         mock_extension,
         mock_apmconfig_enabled_export_logs_false,
 
@@ -226,7 +212,6 @@ class TestConfiguratorConfigureOtelComponents:
     ):
         self.helper_test_configure_otel_components_logs_enabled(
             mocker,
-            mock_fwkv_manager,
             mock_extension,
             mock_apmconfig_enabled_export_logs_false,
             mock_config_serviceentry_processor,
@@ -243,7 +228,6 @@ class TestConfiguratorConfigureOtelComponents:
     def test_configure_otel_components_agent_enabled(
         self,
         mocker,
-        mock_fwkv_manager,
         mock_apmconfig_enabled,
 
         mock_config_serviceentry_processor,
@@ -257,7 +241,6 @@ class TestConfiguratorConfigureOtelComponents:
     ):
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_otel_components(
-            mock_fwkv_manager,
             mock_apmconfig_enabled,
         )
 
@@ -266,7 +249,6 @@ class TestConfiguratorConfigureOtelComponents:
         #     mock_apmconfig_enabled,
         # )
         # mock_config_traces_exp.assert_called_once_with(
-        #     mock_fwkv_manager,
         #     mock_apmconfig_enabled,
         # )
         # mock_config_metrics_exp.assert_called_once_with(mock_apmconfig_enabled)
@@ -277,7 +259,6 @@ class TestConfiguratorConfigureOtelComponents:
     def test_configure_otel_components_agent_disabled(
         self,
         mocker,
-        mock_fwkv_manager,
         mock_extension,
         mock_apmconfig_disabled,
 
@@ -292,7 +273,6 @@ class TestConfiguratorConfigureOtelComponents:
     ):
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_otel_components(
-            mock_fwkv_manager,
             mock_apmconfig_disabled,
             mock_extension.Reporter,
         )

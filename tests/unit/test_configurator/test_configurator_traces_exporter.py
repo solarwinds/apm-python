@@ -18,7 +18,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_fwkv_manager,
         mock_apmconfig_disabled,
         mock_bsprocessor,
     ):
@@ -28,7 +27,6 @@ class TestConfiguratorTracesExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
             mock_extension.Reporter,
-            mock_fwkv_manager,
             mock_apmconfig_disabled,
         )
         mock_bsprocessor.assert_not_called()
@@ -39,7 +37,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_fwkv_manager,
         mock_apmconfig_enabled,
         mock_bsprocessor,
     ):
@@ -54,7 +51,6 @@ class TestConfiguratorTracesExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
             mock_extension.Reporter,
-            mock_fwkv_manager,
             mock_apmconfig_enabled,
         )
         mock_bsprocessor.assert_not_called()
@@ -69,7 +65,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_fwkv_manager,
         mock_apmconfig_enabled,
         mock_bsprocessor,
     ):
@@ -101,7 +96,6 @@ class TestConfiguratorTracesExporter:
         with pytest.raises(Exception):
             test_configurator._configure_traces_exporter(
                 mock_extension.Reporter,
-                mock_fwkv_manager,
                 mock_apmconfig_enabled,
             )
 
@@ -117,7 +111,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_fwkv_manager,
         mock_apmconfig_enabled,
         mock_bsprocessor,
     ):
@@ -155,7 +148,6 @@ class TestConfiguratorTracesExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
             mock_extension.Reporter,
-            mock_fwkv_manager,
             mock_apmconfig_enabled,
         )
         mock_bsprocessor.assert_called_once()
@@ -170,7 +162,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_fwkv_manager,
         mock_apmconfig_enabled_is_lambda,
         mock_bsprocessor,
         mock_ssprocessor,
@@ -209,7 +200,6 @@ class TestConfiguratorTracesExporter:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_traces_exporter(
             mock_extension.Reporter,
-            mock_fwkv_manager,
             mock_apmconfig_enabled_is_lambda,
         )
         mock_bsprocessor.assert_not_called()
@@ -225,7 +215,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_fwkv_manager,
         mock_apmconfig_enabled,
         mock_bsprocessor,
     ):
@@ -282,7 +271,6 @@ class TestConfiguratorTracesExporter:
         with pytest.raises(Exception):
             test_configurator._configure_traces_exporter(
                 mock_extension.Reporter,
-                mock_fwkv_manager,
                 mock_apmconfig_enabled,
             )
         # Only called once before exception
@@ -307,7 +295,6 @@ class TestConfiguratorTracesExporter:
         self,
         mocker,
         mock_extension,
-        mock_fwkv_manager,
         mock_apmconfig_enabled,
         mock_bsprocessor,
     ):
@@ -363,7 +350,6 @@ class TestConfiguratorTracesExporter:
         with pytest.raises(Exception):
             test_configurator._configure_traces_exporter(
                 mock_extension.Reporter,
-                mock_fwkv_manager,
                 mock_apmconfig_enabled,
             )
         mock_entry_points.assert_has_calls(

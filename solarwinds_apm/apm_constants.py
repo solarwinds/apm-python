@@ -7,17 +7,11 @@
 INTL_SWO_DEFAULT_OTLP_COLLECTOR = (
     "https://otel.collector.na-01.cloud.solarwinds.com:443"
 )
-INTL_SWO_AO_COLLECTOR = "collector.appoptics.com"
-INTL_SWO_AO_STG_COLLECTOR = "collector-stg.appoptics.com"
 INTL_SWO_COMMA = ","
 INTL_SWO_COMMA_W3C_SANITIZED = "...."
 INTL_SWO_EQUALS = "="
 INTL_SWO_EQUALS_W3C_SANITIZED = "####"
 INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN = "sw-current-trace-entry-span"
-INTL_SWO_OTEL_SCOPE_NAME = "otel.scope.name"
-INTL_SWO_OTEL_SCOPE_VERSION = "otel.scope.version"
-INTL_SWO_OTEL_STATUS_CODE = "otel.status_code"
-INTL_SWO_OTEL_STATUS_DESCRIPTION = "otel.status_description"
 INTL_SWO_TRACESTATE_KEY = "sw"
 INTL_SWO_TRANSACTION_ATTR_KEY = "sw.transaction"
 INTL_SWO_TRANSACTION_ATTR_MAX = 255

@@ -11,7 +11,6 @@ import logging
 import os
 import re
 from functools import reduce
-from pathlib import Path
 from typing import Any
 
 from opentelemetry.environment_variables import (
@@ -24,8 +23,6 @@ from opentelemetry.util._importlib_metadata import entry_points
 # import solarwinds_apm.apm_noop as noop_extension
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_constants import (
-    INTL_SWO_AO_COLLECTOR,
-    INTL_SWO_AO_STG_COLLECTOR,
     INTL_SWO_BAGGAGE_PROPAGATOR,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
@@ -417,60 +414,6 @@ class SolarWindsApmConfig:
         # Else no need to update service_key when not reporting
         return service_key
 
-    def _calculate_metric_format(self) -> int:
-        """Return one of 1 (TransactionResponseTime only) or 2 (default; ResponseTime only). Note: 0 (both) is no longer supported. Based on collector URL which may have a port e.g. foo-collector.com:443"""
-        metric_format = 2
-        host = self.get("collector")
-        if host:
-            if (
-                INTL_SWO_AO_COLLECTOR in host
-                or INTL_SWO_AO_STG_COLLECTOR in host
-            ):
-                logger.warning(
-                    "AO collector detected. Only exporting TransactionResponseTime metrics"
-                )
-                metric_format = 1
-        return metric_format
-
-    def _calculate_certificates(self) -> str:
-        """Return certificate contents from SW_APM_TRUSTEDPATH.
-        If using AO collector and trustedpath not set, use bundled default.
-        Else use empty string as default."""
-        certs = ""
-        host = self.get("collector")
-        if host:
-            if len(host.split(":")) > 1:
-                host = host.split(":")[0]
-            # if host in [INTL_SWO_AO_COLLECTOR, INTL_SWO_AO_STG_COLLECTOR]:
-            #     certs = get_public_cert()
-
-        if self.get("trustedpath"):
-            try:
-                # liboboe reporter has to determine if the cert contents are valid or not
-                certs = Path(self.get("trustedpath")).read_text(
-                    encoding="utf-8"
-                )
-            except FileNotFoundError:
-                logger.warning(
-                    "No such file at specified trustedpath. Using default certificate."
-                )
-        return certs
-
-    def _calculate_logs_enabled(self) -> bool:
-        """Return if export of logs telemetry enabled, based on collector.
-        Always False if AO collector, else use current config."""
-        host = self.get("collector")
-        if host:
-            if (
-                INTL_SWO_AO_COLLECTOR in host
-                or INTL_SWO_AO_STG_COLLECTOR in host
-            ):
-                logger.warning(
-                    "AO collector detected. Defaulting to disabled logs export."
-                )
-                return False
-        return self.get("export_logs_enabled")
-
     def mask_service_key(self) -> str:
         """Return masked service key except first 4 and last 4 chars"""
         service_key = self.__config.get("service_key")
@@ -714,16 +657,7 @@ class SolarWindsApmConfig:
         )
         key = keys[-1]
         try:
-            if keys == ["ec2_metadata_timeout"]:
-                timeout = int(val)
-                if timeout not in range(0, 3001):
-                    raise ValueError
-                self.__config[key] = timeout
-            elif keys == ["proxy"]:
-                if not isinstance(val, str) or not val.startswith("http://"):
-                    raise ValueError
-                self.__config[key] = val
-            elif keys == ["tracing_mode"]:
+            if keys == ["tracing_mode"]:
                 if not isinstance(val, str):
                     raise ValueError
                 val = val.lower()
@@ -745,15 +679,6 @@ class SolarWindsApmConfig:
                     OboeTracingMode.get_oboe_trigger_trace_mode(val)
                 )
                 self.__config[key] = oboe_trigger_trace
-            elif keys == ["reporter"]:
-                if not isinstance(val, str) or val.lower() not in (
-                    "udp",
-                    "ssl",
-                    "null",
-                    "file",
-                ):
-                    raise ValueError
-                self.__config[key] = val.lower()
             elif keys == ["debug_level"]:
                 val = int(val)
                 if not apm_logging.ApmLoggingLevel.is_valid_level(val):

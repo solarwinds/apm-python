@@ -64,7 +64,6 @@ from opentelemetry.util._importlib_metadata import entry_points, version
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import INTL_SWO_DEFAULT_PROPAGATORS
-from solarwinds_apm.apm_fwkv_manager import SolarWindsFrameworkKvManager
 
 # from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.response_propagator import (
@@ -306,8 +305,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         #     "token_bucket_capacity": -1,  # always unset
         #     "token_bucket_rate": -1,  # always unset
         #     "file_single": apm_config.get("reporter_file_single"),
-        #     "ec2_metadata_timeout": apm_config.get("ec2_metadata_timeout"),
-        #     "grpc_proxy": apm_config.get("proxy"),
         #     "stdout_clear_nonblocking": 0,
         #     "metric_format": apm_config.metric_format,
         # }
