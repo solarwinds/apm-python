@@ -15,6 +15,8 @@ import sys
 from typing import Any, Optional, Type, Union
 
 from opentelemetry import trace
+from opentelemetry._logs import set_logger_provider
+from opentelemetry._logs._internal import NoOpLoggerProvider
 from opentelemetry.environment_variables import (
     OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
@@ -29,6 +31,7 @@ from opentelemetry.instrumentation.propagators import (
     set_global_response_propagator,
 )
 from opentelemetry.metrics import set_meter_provider
+from opentelemetry.metrics._internal import NoOpMeterProvider
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk._configuration import (
@@ -63,7 +66,7 @@ from opentelemetry.sdk.trace.export import (
 )
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.sdk.trace.sampling import Sampler
-from opentelemetry.trace import set_tracer_provider
+from opentelemetry.trace import NoOpTracerProvider, set_tracer_provider
 from opentelemetry.util._importlib_metadata import entry_points, version
 
 from solarwinds_apm import apm_logging
@@ -98,6 +101,15 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
+        if not self.apm_config.agent_enabled:
+            logger.warning(
+                "SWO APM agent disabled. Not configuring OpenTelemetry."
+            )
+            set_tracer_provider(NoOpTracerProvider())
+            set_meter_provider(NoOpMeterProvider())
+            set_logger_provider(NoOpLoggerProvider())
+            return
+
         # Duplicated from _OTelSDKConfigurator in order to support custom settings
         trace_exporter_names = kwargs.get("trace_exporter_names", [])
         metric_exporter_names = kwargs.get("metric_exporter_names", [])
