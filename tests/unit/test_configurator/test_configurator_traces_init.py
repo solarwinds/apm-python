@@ -4,371 +4,158 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-import os
-import pytest
-
 from solarwinds_apm import configurator
 
-# otel fixtures
-from .fixtures.trace import get_trace_mocks
-
-
-class TestConfiguratorTracesExporter:
-    def test_configure_traces_exporter_disabled(
+class TestConfiguratorTracingInit:
+    def test_custom_init_tracing_none(
         self,
         mocker,
-        mock_extension,
-        mock_apmconfig_disabled,
-        mock_bsprocessor,
-    ):
-        # Mock Otel
-        trace_mocks = get_trace_mocks(mocker)
-
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_traces_exporter(
-            mock_extension.Reporter,
-            mock_apmconfig_disabled,
-        )
-        mock_bsprocessor.assert_not_called()
-        trace_mocks.get_tracer_provider.assert_not_called()
-        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
-
-    def test_configure_traces_exporter_none(
-        self,
-        mocker,
-        mock_extension,
         mock_apmconfig_enabled,
         mock_bsprocessor,
+        mock_ssprocessor,
     ):
-        # Save any EXPORTER env var for later
-        old_traces_exporter = os.environ.get("OTEL_TRACES_EXPORTER", None)
-        if old_traces_exporter:
-            del os.environ["OTEL_TRACES_EXPORTER"]
+        mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsApmConfig",
+            return_value=mock_apmconfig_enabled,
+        )
 
         # Mock Otel
-        trace_mocks = get_trace_mocks(mocker)
+        mock_tracerprovider = mocker.Mock()
+        mock_tracerprovider_instance = mocker.Mock()
+        mock_tracerprovider.return_value = mock_tracerprovider_instance
+        mocker.patch(
+            "solarwinds_apm.configurator.SolarwindsTracerProvider",
+            new=mock_tracerprovider,
+        )
+        mock_set_tracer_provider = mocker.patch(
+            "solarwinds_apm.configurator.set_tracer_provider",
+        )
+        mock_apm_sampler = mocker.Mock()
+        mock_resource = mocker.Mock()
 
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_traces_exporter(
-            mock_extension.Reporter,
-            mock_apmconfig_enabled,
+        test_configurator._custom_init_tracing(
+            exporters={},
+            id_generator=None,
+            sampler=mock_apm_sampler,
+            resource=mock_resource,
         )
+        mock_tracerprovider.assert_called_once_with(
+            id_generator=None,
+            sampler=mock_apm_sampler,
+            resource=mock_resource,
+        )
+        mock_set_tracer_provider.assert_called_once()
+        mock_tracerprovider_instance.add_span_processor.assert_not_called()
         mock_bsprocessor.assert_not_called()
-        trace_mocks.get_tracer_provider.assert_not_called()
-        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
+        mock_ssprocessor.assert_not_called()
 
-        # Restore old EXPORTER
-        if old_traces_exporter:
-            os.environ["OTEL_TRACES_EXPORTER"] = old_traces_exporter
-
-    def test_configure_traces_exporter_invalid(
+    def test_custom_init_tracing_not_is_lambda(
         self,
         mocker,
-        mock_extension,
         mock_apmconfig_enabled,
         mock_bsprocessor,
+        mock_ssprocessor,
     ):
-        # Save any EXPORTER env var for later
-        old_traces_exporter = os.environ.get("OTEL_TRACES_EXPORTER", None)
-        if old_traces_exporter:
-            del os.environ["OTEL_TRACES_EXPORTER"]
-
-        # Mock entry points
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_entry_points.configure_mock(
-            side_effect=StopIteration("mock error")
-        )
-        mocker.patch.dict(
-            os.environ,
-            {
-                "OTEL_TRACES_EXPORTER": "invalid_exporter"
-            }
+        mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsApmConfig",
+            return_value=mock_apmconfig_enabled,
         )
 
         # Mock Otel
-        trace_mocks = get_trace_mocks(mocker)
+        mock_tracerprovider = mocker.Mock()
+        mock_tracerprovider_instance = mocker.Mock()
+        mock_tracerprovider.return_value = mock_tracerprovider_instance
+        mocker.patch(
+            "solarwinds_apm.configurator.SolarwindsTracerProvider",
+            new=mock_tracerprovider,
+        )
+        mock_set_tracer_provider = mocker.patch(
+            "solarwinds_apm.configurator.set_tracer_provider",
+        )
+        mock_apm_sampler = mocker.Mock()
+        mock_resource = mocker.Mock()
+
+        # Mock span exporter class
+        class MockExporter():
+            def __init__(self, *args, **kwargs):
+                pass
+
+        # Spy on MockExporter
+        mock_exporter_spy = mocker.spy(MockExporter, "__init__")
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
-
-        with pytest.raises(Exception):
-            test_configurator._configure_traces_exporter(
-                mock_extension.Reporter,
-                mock_apmconfig_enabled,
-            )
-
-        mock_bsprocessor.assert_not_called()
-        trace_mocks.get_tracer_provider.assert_not_called()
-        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
-
-        # Restore old EXPORTER
-        if old_traces_exporter:
-            os.environ["OTEL_TRACES_EXPORTER"] = old_traces_exporter
-
-    def test_configure_traces_exporter_valid(
-        self,
-        mocker,
-        mock_extension,
-        mock_apmconfig_enabled,
-        mock_bsprocessor,
-    ):
-        # Save any EXPORTER env var for later
-        old_traces_exporter = os.environ.get("OTEL_TRACES_EXPORTER", None)
-        if old_traces_exporter:
-            del os.environ["OTEL_TRACES_EXPORTER"]
-
-        # Mock entry points
-        mock_exporter_class = mocker.MagicMock()
-        mock_exporter_entry_point = mocker.Mock()
-        mock_exporter_entry_point.configure_mock(
-            **{
-                "load": mock_exporter_class
-            }
+        test_configurator._custom_init_tracing(
+            exporters={"valid_exporter": MockExporter},
+            id_generator=None,
+            sampler=mock_apm_sampler,
+            resource=mock_resource,
         )
-        mock_points = iter([mock_exporter_entry_point])
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.entry_points"
+        mock_tracerprovider.assert_called_once_with(
+            id_generator=None,
+            sampler=mock_apm_sampler,
+            resource=mock_resource,
         )
-        mock_entry_points.configure_mock(
-            return_value=mock_points
+        mock_set_tracer_provider.assert_called_once()
+        mock_tracerprovider_instance.add_span_processor.assert_called_once_with(
+            mock_bsprocessor.return_value,
         )
-        mocker.patch.dict(
-            os.environ,
-            {
-                "OTEL_TRACES_EXPORTER": "valid_exporter"
-            }
-        )
-
-        # Mock Otel
-        trace_mocks = get_trace_mocks(mocker)
-
-        # Test!
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_traces_exporter(
-            mock_extension.Reporter,
-            mock_apmconfig_enabled,
-        )
+        mock_exporter_spy.assert_called_once()
         mock_bsprocessor.assert_called_once()
-        trace_mocks.get_tracer_provider.assert_called_once()
-        trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
-        
-        # Restore old EXPORTER
-        if old_traces_exporter:
-            os.environ["OTEL_TRACES_EXPORTER"] = old_traces_exporter
+        mock_ssprocessor.assert_not_called()
 
-    def test_configure_traces_exporter_valid_lambda(
+    def test_custom_init_tracing_is_lambda(
         self,
         mocker,
-        mock_extension,
         mock_apmconfig_enabled_is_lambda,
         mock_bsprocessor,
         mock_ssprocessor,
     ):
-        # Save any EXPORTER env var for later
-        old_traces_exporter = os.environ.get("OTEL_TRACES_EXPORTER", None)
-        if old_traces_exporter:
-            del os.environ["OTEL_TRACES_EXPORTER"]
-
-        # Mock entry points
-        mock_exporter_class = mocker.MagicMock()
-        mock_exporter_entry_point = mocker.Mock()
-        mock_exporter_entry_point.configure_mock(
-            **{
-                "load": mock_exporter_class
-            }
-        )
-        mock_points = iter([mock_exporter_entry_point])
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.entry_points"
-        )
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
-        mocker.patch.dict(
-            os.environ,
-            {
-                "OTEL_TRACES_EXPORTER": "valid_exporter"
-            }
+        mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsApmConfig",
+            return_value=mock_apmconfig_enabled_is_lambda,
         )
 
         # Mock Otel
-        trace_mocks = get_trace_mocks(mocker)
+        mock_tracerprovider = mocker.Mock()
+        mock_tracerprovider_instance = mocker.Mock()
+        mock_tracerprovider.return_value = mock_tracerprovider_instance
+        mocker.patch(
+            "solarwinds_apm.configurator.SolarwindsTracerProvider",
+            new=mock_tracerprovider,
+        )
+        mock_set_tracer_provider = mocker.patch(
+            "solarwinds_apm.configurator.set_tracer_provider",
+        )
+        mock_apm_sampler = mocker.Mock()
+        mock_resource = mocker.Mock()
+
+        # Mock span exporter class
+        class MockExporter():
+            def __init__(self, *args, **kwargs):
+                pass
+
+        # Spy on MockExporter
+        mock_exporter_spy = mocker.spy(MockExporter, "__init__")
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_traces_exporter(
-            mock_extension.Reporter,
-            mock_apmconfig_enabled_is_lambda,
+        test_configurator._custom_init_tracing(
+            exporters={"valid_exporter": MockExporter},
+            id_generator=None,
+            sampler=mock_apm_sampler,
+            resource=mock_resource,
         )
+        mock_tracerprovider.assert_called_once_with(
+            id_generator=None,
+            sampler=mock_apm_sampler,
+            resource=mock_resource,
+        )
+        mock_set_tracer_provider.assert_called_once()
+        mock_tracerprovider_instance.add_span_processor.assert_called_once_with(
+            mock_ssprocessor.return_value,
+        )
+        mock_exporter_spy.assert_called_once()
         mock_bsprocessor.assert_not_called()
         mock_ssprocessor.assert_called_once()
-        trace_mocks.get_tracer_provider.assert_called_once()
-        trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
-        
-        # Restore old EXPORTER
-        if old_traces_exporter:
-            os.environ["OTEL_TRACES_EXPORTER"] = old_traces_exporter
-
-    def test_configure_traces_exporter_invalid_valid_mixed(
-        self,
-        mocker,
-        mock_extension,
-        mock_apmconfig_enabled,
-        mock_bsprocessor,
-    ):
-        # Save any EXPORTER env var for later
-        old_traces_exporter = os.environ.get("OTEL_TRACES_EXPORTER", None)
-        if old_traces_exporter:
-            del os.environ["OTEL_TRACES_EXPORTER"]
-
-
-        # Mock entry points
-        mock_exporter_class = mocker.MagicMock()
-        mock_exporter_entry_point = mocker.Mock()
-        mock_exporter_entry_point.configure_mock(
-            **{
-                "load": mock_exporter_class
-            }
-        )
-        mock_exporter_class_invalid = mocker.Mock()
-        mock_exporter_class_invalid.configure_mock(
-            side_effect=Exception("mock error invalid exporter")
-        )
-        mock_exporter_entry_point_invalid = mocker.Mock()
-        mock_exporter_entry_point_invalid.configure_mock(
-            **{
-                "load": mock_exporter_class_invalid
-            }
-        )
-
-        mock_points = iter(
-            [
-                mock_exporter_entry_point_invalid,
-                mock_exporter_entry_point,
-            ]
-        )
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.entry_points"
-        )
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
-
-        mocker.patch.dict(
-            os.environ,
-            {
-                "OTEL_TRACES_EXPORTER": "invalid_exporter,valid_exporter"
-            }
-        )
-        
-        # Mock Otel
-        trace_mocks = get_trace_mocks(mocker)
-
-        # Test!
-        test_configurator = configurator.SolarWindsConfigurator()
-        with pytest.raises(Exception):
-            test_configurator._configure_traces_exporter(
-                mock_extension.Reporter,
-                mock_apmconfig_enabled,
-            )
-        # Only called once before exception
-        mock_entry_points.assert_has_calls(
-            [
-                mocker.call(
-                    group="opentelemetry_traces_exporter",
-                    name="invalid_exporter",
-                ),
-            ]
-        )
-        # Not called at all
-        mock_bsprocessor.assert_not_called()
-        trace_mocks.get_tracer_provider.assert_not_called()
-        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
-
-        # Restore old EXPORTER
-        if old_traces_exporter:
-            os.environ["OTEL_TRACES_EXPORTER"] = old_traces_exporter
-
-    def test_configure_traces_exporter_valid_invalid_mixed(
-        self,
-        mocker,
-        mock_extension,
-        mock_apmconfig_enabled,
-        mock_bsprocessor,
-    ):
-        # Save any EXPORTER env var for later
-        old_traces_exporter = os.environ.get("OTEL_TRACES_EXPORTER", None)
-        if old_traces_exporter:
-            del os.environ["OTEL_TRACES_EXPORTER"]
-
-        # Mock entry points
-        mock_exporter_class = mocker.MagicMock()
-        mock_exporter_entry_point = mocker.Mock()
-        mock_exporter_entry_point.configure_mock(
-            **{
-                "load": mock_exporter_class
-            }
-        )
-        mock_exporter_class_invalid = mocker.Mock()
-        mock_exporter_class_invalid.configure_mock(
-            side_effect=Exception("mock error invalid exporter")
-        )
-        mock_exporter_entry_point_invalid = mocker.Mock()
-        mock_exporter_entry_point_invalid.configure_mock(
-            **{
-                "load": mock_exporter_class_invalid
-            }
-        )
-
-        mock_points = iter(
-            [
-                mock_exporter_entry_point,
-                mock_exporter_entry_point_invalid,
-            ]
-        )
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.entry_points"
-        )
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
-
-        mocker.patch.dict(
-            os.environ,
-            {
-                "OTEL_TRACES_EXPORTER": "valid_exporter,invalid_exporter"
-            }
-        )
-        
-        # Mock Otel
-        trace_mocks = get_trace_mocks(mocker)
-
-        # Test!
-        test_configurator = configurator.SolarWindsConfigurator()
-        with pytest.raises(Exception):
-            test_configurator._configure_traces_exporter(
-                mock_extension.Reporter,
-                mock_apmconfig_enabled,
-            )
-        mock_entry_points.assert_has_calls(
-            [
-                mocker.call(
-                    group="opentelemetry_traces_exporter",
-                    name="valid_exporter",
-                ),
-                mocker.call(
-                    group="opentelemetry_traces_exporter",
-                    name="invalid_exporter",
-                ),
-            ]
-        )
-        # Ends up called once for the valid exporter
-        mock_bsprocessor.assert_called_once()
-        trace_mocks.get_tracer_provider.assert_called_once()
-        trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
-
-        # Restore old EXPORTER
-        if old_traces_exporter:
-            os.environ["OTEL_TRACES_EXPORTER"] = old_traces_exporter
