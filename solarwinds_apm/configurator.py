@@ -12,7 +12,7 @@ import math
 import os
 import platform
 import sys
-from typing import Any, Optional, Type, Union
+from typing import Any, Dict, Optional, Type, Union
 
 from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
@@ -172,7 +172,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     # pylint: disable=consider-alternative-union-syntax,deprecated-typing-alias
     def _custom_init_tracing(
         self,
-        exporters: dict[str, Type[SpanExporter]],
+        exporters: Dict[str, Type[SpanExporter]],
         id_generator: Optional[IdGenerator] = None,
         sampler: Optional[Sampler] = None,
         resource: Optional[Resource] = None,
@@ -198,7 +198,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _custom_init_metrics(
         self,
-        exporters_or_readers: dict[
+        exporters_or_readers: Dict[
             str, Union[Type[MetricExporter], Type[MetricReader]]
         ],
         resource: Optional[Resource] = None,
