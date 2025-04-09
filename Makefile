@@ -168,10 +168,11 @@ check-sdist-local:
 # in the corresponding repo of the Docker images: https://github.com/pypa/manylinux#example.
 manylinux-wheels:
 	@echo -e "Generating python agent package any-linux wheels for 64 bit systems"
-	@set -e; for PYBIN in cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311 cp312-cp312; do /opt/python/$${PYBIN}/bin/pip -v wheel . -w ./tmp_dist/ --no-deps; done
-	@echo -e "Tagging wheels with $(wheel_tag)"
-	@set -e; for whl in ./tmp_dist/*.whl; do auditwheel repair --plat $(wheel_tag) "$$whl" -w ./dist/; done
-	@rm -rf ./tmp_dist
+	@set -e; for PYBIN in cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311 cp312-cp312; do /opt/python/$${PYBIN}/bin/pip -v wheel . -w ./dist/ --no-deps; done
+#	@set -e; for PYBIN in cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311 cp312-cp312; do /opt/python/$${PYBIN}/bin/pip -v wheel . -w ./tmp_dist/ --no-deps; done
+#	@echo -e "Tagging wheels with $(wheel_tag)"
+#	@set -e; for whl in ./tmp_dist/*.whl; do auditwheel repair --plat $(wheel_tag) "$$whl" -w ./dist/; done
+#	@rm -rf ./tmp_dist
 	@echo -e "\nDone."
 
 # Check local package wheel contents, without install
