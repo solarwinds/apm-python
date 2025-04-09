@@ -102,7 +102,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
         if not self.apm_config.agent_enabled:
-            logger.warning(
+            # ApmConfig will log a more informative Info message if disabled
+            logger.debug(
                 "SWO APM agent disabled. Not configuring OpenTelemetry."
             )
             set_tracer_provider(NoOpTracerProvider())
