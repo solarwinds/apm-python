@@ -285,6 +285,16 @@ class TestConfiguratorConfigureOtelComponents:
         mock_config_propagator,
         mock_config_response_propagator,
     ):
+        mock_apm_sampler = mocker.Mock()
+        mocker.patch(
+            "solarwinds_apm.configurator.ParentBasedSwSampler",
+            return_value=mock_apm_sampler,
+        )
+        mock_resource = mocker.Mock()
+        mocker.patch(
+            "solarwinds_apm.configurator.Resource.create",
+            return_value=mock_resource,
+        )
         mocker.patch(
             "solarwinds_apm.configurator.SolarWindsApmConfig",
             return_value=mock_apmconfig_disabled,
@@ -292,6 +302,8 @@ class TestConfiguratorConfigureOtelComponents:
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure()
 
+        mock_apm_sampler.assert_not_called()
+        mock_resource.assert_not_called()
         mock_config_serviceentry_processor.assert_not_called()
         mock_response_time_processor.assert_not_called()
         mock_custom_init_tracing.assert_not_called()
