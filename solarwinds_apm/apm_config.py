@@ -25,7 +25,6 @@ from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_constants import (
     INTL_SWO_BAGGAGE_PROPAGATOR,
     INTL_SWO_DEFAULT_PROPAGATORS,
-    INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_PROPAGATOR,
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
@@ -267,24 +266,18 @@ class SolarWindsApmConfig:
 
         environ_exporter_names = environ_exporter.split(",")
         try:
-            # If not using the default exporters,
-            # can any arbitrary list BUT
-            # outside-SW exporters must be loadable by OTel
+            # Exporters must be loadable by OTel
             for environ_exporter_name in environ_exporter_names:
                 try:
-                    if (
-                        environ_exporter_name
-                        != INTL_SWO_DEFAULT_TRACES_EXPORTER
-                    ):
-                        next(
-                            iter(
-                                # pylint: disable=too-many-function-args
-                                entry_points(
-                                    group="opentelemetry_traces_exporter",
-                                    name=environ_exporter_name,
-                                )
+                    next(
+                        iter(
+                            # pylint: disable=too-many-function-args
+                            entry_points(
+                                group="opentelemetry_traces_exporter",
+                                name=environ_exporter_name,
                             )
                         )
+                    )
                 except StopIteration:
                     logger.error(
                         "Failed to load configured OTEL_TRACES_EXPORTER. Tracing disabled."
