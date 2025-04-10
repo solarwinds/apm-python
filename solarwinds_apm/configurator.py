@@ -21,6 +21,12 @@ from opentelemetry.environment_variables import (
     OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
 )
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter as GrpcSpanExporter,
+)
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter as HttpSpanExporter,
+)
 from opentelemetry.instrumentation.dependencies import (
     get_dist_dependency_conflicts,
 )
@@ -42,6 +48,8 @@ from opentelemetry.sdk._configuration import (
 )
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+    OTEL_EXPORTER_OTLP_PROTOCOL,
+    OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
 )
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -72,6 +80,7 @@ from opentelemetry.util._importlib_metadata import entry_points, version
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import INTL_SWO_DEFAULT_PROPAGATORS
+from solarwinds_apm.exporter import SolarWindsSpanExporter
 
 # from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.response_propagator import (
@@ -87,6 +96,11 @@ from solarwinds_apm.version import __version__
 
 # if TYPE_CHECKING:
 #     from solarwinds_apm.extension.oboe import Event, OboeAPI, Reporter
+
+_SPAN_EXPORTER_BY_OTLP_PROTOCOL = {
+    "grpc": GrpcSpanExporter,
+    "http/protobuf": HttpSpanExporter,
+}
 
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
@@ -187,6 +201,31 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         set_tracer_provider(provider)
 
         for _, exporter_class in exporters.items():
+            # TODO NH-107047 Remove this warning, class, entry point
+            if exporter_class == SolarWindsSpanExporter:
+                logger.warning(
+                    "SolarWindsSpanExporter is deprecated; configuration ignored. Initializing OTLP exporter instead."
+                )
+                # Check env vars for OTLP traces protocol (grpc/http),
+                # which could be setdefault from custom distro,
+                # to select correct OTLP exporter. Else OTLP HTTP default.
+                otlp_protocol = os.environ.get(
+                    OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+                ) or os.environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
+                if not otlp_protocol:
+                    otlp_protocol = "http/protobuf"
+                otlp_protocol = otlp_protocol.strip()
+
+                if otlp_protocol in _SPAN_EXPORTER_BY_OTLP_PROTOCOL:
+                    exporter_class = _SPAN_EXPORTER_BY_OTLP_PROTOCOL[
+                        otlp_protocol
+                    ]
+                else:
+                    logger.debug(
+                        "Unknown OTLP protocol; defaulting to HTTP SpanExporter."
+                    )
+                    exporter_class = HttpSpanExporter
+
             exporter_args = {}
             if self.apm_config.is_lambda:
                 provider.add_span_processor(
