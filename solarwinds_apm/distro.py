@@ -26,6 +26,7 @@ from opentelemetry.instrumentation.logging.environment_variables import (
 from opentelemetry.instrumentation.version import __version__ as inst_version
 from opentelemetry.metrics import NoOpMeterProvider
 from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
@@ -46,6 +47,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_OTLP_EXPORTER,
     INTL_SWO_DEFAULT_OTLP_EXPORTER_GRPC,
     INTL_SWO_DEFAULT_PROPAGATORS,
+    INTL_SWO_DEFAULT_RESOURCE_DETECTORS,
     INTL_SWO_DEFAULT_TRACES_EXPORTER,
 )
 from solarwinds_apm.version import __version__ as apm_version
@@ -228,6 +230,11 @@ class SolarWindsDistro(BaseDistro):
         environ.setdefault(
             OTEL_PYTHON_LOG_FORMAT,
             "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s trace_flags=%(otelTraceSampled)02d resource.service.name=%(otelServiceName)s] - %(message)s",
+        )
+        # Default for ResourceDetector
+        environ.setdefault(
+            OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
+            ",".join(INTL_SWO_DEFAULT_RESOURCE_DETECTORS),
         )
 
         # TODO: Support other signal types when available
