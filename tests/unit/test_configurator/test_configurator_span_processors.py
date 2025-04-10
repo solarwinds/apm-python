@@ -8,24 +8,24 @@ import os
 
 from solarwinds_apm import configurator
 
-# otel fixtures
-from .fixtures.trace import get_trace_mocks
-
-
 class TestConfiguratorSpanProcessors:
     def test_configure_service_entry_span_processor(
         self,
         mocker,
     ):
-        trace_mocks = get_trace_mocks(mocker)
+        mock_tracerprovider = mocker.Mock()
+        mock_get_tracer_provider = mocker.patch(
+            "solarwinds_apm.configurator.trace.get_tracer_provider",
+            return_value=mock_tracerprovider,
+        )
         mocker.patch(
             "solarwinds_apm.configurator.ServiceEntrySpanProcessor"
         )
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_service_entry_span_processor()
-        trace_mocks.get_tracer_provider.assert_called_once()
-        trace_mocks.get_tracer_provider().add_span_processor.assert_called_once()
+        mock_get_tracer_provider.assert_called_once()
+        mock_tracerprovider.add_span_processor.assert_called_once()
 
     def test_configure_response_time_processor_exporters_not_set(
         self,
@@ -40,20 +40,22 @@ class TestConfiguratorSpanProcessors:
             "OTEL_METRICS_EXPORTER": "",
         })
 
-        trace_mocks = get_trace_mocks(mocker)
+        mock_tracerprovider = mocker.Mock()
+        mock_get_tracer_provider = mocker.patch(
+            "solarwinds_apm.configurator.trace.get_tracer_provider",
+            return_value=mock_tracerprovider,
+        )
         mock_processor_instance = mocker.Mock()
-        mock_otlp_processor = mocker.patch(
+        mock_rt_processor = mocker.patch(
             "solarwinds_apm.configurator.ResponseTimeProcessor",
             return_value=mock_processor_instance,
         )
 
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_response_time_processor(
-            mock_apmconfig_enabled,
-        )
-        trace_mocks.get_tracer_provider.assert_not_called()
-        trace_mocks.get_tracer_provider().add_span_processor.assert_not_called()
-        mock_otlp_processor.assert_not_called()
+        test_configurator._configure_response_time_processor()
+        mock_get_tracer_provider.assert_not_called()
+        mock_tracerprovider.add_span_processor.assert_not_called()
+        mock_rt_processor.assert_not_called()
 
         # Restore the os exporters
         if old_exporter:
@@ -72,30 +74,24 @@ class TestConfiguratorSpanProcessors:
             "OTEL_METRICS_EXPORTER": "foo_exporter",
         })
 
-        trace_mocks = get_trace_mocks(mocker)
+        mock_tracerprovider = mocker.Mock()
+        mock_get_tracer_provider = mocker.patch(
+            "solarwinds_apm.configurator.trace.get_tracer_provider",
+            return_value=mock_tracerprovider,
+        )
         mock_processor_instance = mocker.Mock()
-        mock_otlp_processor = mocker.patch(
+        mock_rt_processor = mocker.patch(
             "solarwinds_apm.configurator.ResponseTimeProcessor",
             return_value=mock_processor_instance,
         )
 
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_response_time_processor(
-            mock_apmconfig_enabled,
+        test_configurator._configure_response_time_processor()
+        mock_get_tracer_provider.assert_called_once()
+        mock_tracerprovider.add_span_processor.assert_called_once_with(
+            mock_processor_instance,
         )
-        trace_mocks.get_tracer_provider.assert_has_calls(
-            [
-                mocker.call(),
-            ]
-        )
-        trace_mocks.get_tracer_provider().add_span_processor.assert_has_calls(
-            [
-                mocker.call(mock_processor_instance),
-            ]
-        )
-        mock_otlp_processor.assert_called_once_with(
-            mock_apmconfig_enabled,
-        )
+        mock_rt_processor.assert_called_once()
 
         # Restore the os exporters
         if old_exporter:

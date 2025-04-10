@@ -16,19 +16,18 @@ class TestConfiguratorConfigureOtelComponents:
     def helper_test_configure_otel_components_logs_enabled(
         self,
         mocker,
-        mock_extension,
         mock_apmconfig_enabled,
 
         mock_config_serviceentry_processor,
-        mock_config_traces_exp,
-        mock_config_metrics_exp,
-        mock_config_logs_exp,
-        mock_config_logs_handler,
+        mock_custom_init_tracing,
+        mock_custom_init_metrics,
+        mock_init_logging,
         mock_config_propagator,
         mock_config_response_propagator,
 
         logging_env,
         logging_assert,
+        mock_convert_to_bool=None,
     ):
         mocker.patch.dict(
             os.environ,
@@ -36,77 +35,90 @@ class TestConfiguratorConfigureOtelComponents:
                 _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: logging_env,
             }
         )
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_otel_components(
-            mock_apmconfig_enabled,
-            mock_extension.Reporter,
+        mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsApmConfig",
+            return_value=mock_apmconfig_enabled,
         )
+        mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsApmConfig.convert_to_bool",
+            return_value=mock_convert_to_bool,
+        )
+        mock_apm_sampler = mocker.Mock()
+        mocker.patch(
+            "solarwinds_apm.configurator.ParentBasedSwSampler",
+            return_value=mock_apm_sampler,
+        )
+        mock_resource = mocker.Mock()
+        mocker.patch(
+            "solarwinds_apm.configurator.Resource.create",
+            return_value=mock_resource,
+        )
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure()
 
         mock_config_serviceentry_processor.assert_called_once()
-        mock_config_traces_exp.assert_called_once_with(
-            mock_extension.Reporter,
-            mock_apmconfig_enabled,
+        mock_custom_init_tracing.assert_called_once_with(
+            exporters={},
+            id_generator=None,
+            sampler=mock_apm_sampler,
+            resource=mock_resource,
         )
-        mock_config_metrics_exp.assert_called_once_with(mock_apmconfig_enabled)
-        mock_config_logs_exp.assert_called_once_with(mock_apmconfig_enabled)
-        if logging_assert:
-            mock_config_logs_handler.assert_called_once()
-        else:
-            mock_config_logs_handler.assert_not_called()
+        mock_custom_init_metrics.assert_called_once_with(
+            exporters_or_readers={},
+            resource=mock_resource,
+        )
+        mock_init_logging.assert_called_once_with(
+            {},
+            mock_resource,
+            logging_assert,
+        )
         mock_config_propagator.assert_called_once()
         mock_config_response_propagator.assert_called_once()
 
     def test_configure_otel_components_logs_enabled_true_by_otel_sw_default(
         self,
         mocker,
-        mock_extension,
         mock_apmconfig_enabled_export_logs_false,
 
         mock_config_serviceentry_processor,
-        mock_config_traces_exp,
-        mock_config_metrics_exp,
-        mock_config_logs_exp,
-        mock_config_logs_handler,
+        mock_custom_init_tracing,
+        mock_custom_init_metrics,
+        mock_init_logging,
         mock_config_propagator,
         mock_config_response_propagator,
     ):
         self.helper_test_configure_otel_components_logs_enabled(
             mocker,
-            mock_extension,
             mock_apmconfig_enabled_export_logs_false,
             mock_config_serviceentry_processor,
-            mock_config_traces_exp,
-            mock_config_metrics_exp,
-            mock_config_logs_exp,
-            mock_config_logs_handler,
+            mock_custom_init_tracing,
+            mock_custom_init_metrics,
+            mock_init_logging,
             mock_config_propagator,
             mock_config_response_propagator,
             "true",
+            True,
             True,
         )
 
     def test_configure_otel_components_logs_enabled_otel_none_sw_default(self,
         mocker,
-        mock_extension,
         mock_apmconfig_enabled_export_logs_false,
 
         mock_config_serviceentry_processor,
-        mock_config_traces_exp,
-        mock_config_metrics_exp,
-        mock_config_logs_exp,
-        mock_config_logs_handler,
+        mock_custom_init_tracing,
+        mock_custom_init_metrics,
+        mock_init_logging,
         mock_config_propagator,
         mock_config_response_propagator,
     ):
         self.helper_test_configure_otel_components_logs_enabled(
             mocker,
-            mock_extension,
             mock_apmconfig_enabled_export_logs_false,
             mock_config_serviceentry_processor,
-            mock_config_traces_exp,
-            mock_config_metrics_exp,
-            mock_config_logs_exp,
-            mock_config_logs_handler,
+            mock_custom_init_tracing,
+            mock_custom_init_metrics,
+            mock_init_logging,
             mock_config_propagator,
             mock_config_response_propagator,
             "",
@@ -115,26 +127,22 @@ class TestConfiguratorConfigureOtelComponents:
 
     def test_configure_otel_components_logs_enabled_otel_none_sw_true(self,
         mocker,
-        mock_extension,
         mock_apmconfig_enabled,
 
         mock_config_serviceentry_processor,
-        mock_config_traces_exp,
-        mock_config_metrics_exp,
-        mock_config_logs_exp,
-        mock_config_logs_handler,
+        mock_custom_init_tracing,
+        mock_custom_init_metrics,
+        mock_init_logging,
         mock_config_propagator,
         mock_config_response_propagator,
     ):
         self.helper_test_configure_otel_components_logs_enabled(
             mocker,
-            mock_extension,
             mock_apmconfig_enabled,
             mock_config_serviceentry_processor,
-            mock_config_traces_exp,
-            mock_config_metrics_exp,
-            mock_config_logs_exp,
-            mock_config_logs_handler,
+            mock_custom_init_tracing,
+            mock_custom_init_metrics,
+            mock_init_logging,
             mock_config_propagator,
             mock_config_response_propagator,
             "",
@@ -143,26 +151,22 @@ class TestConfiguratorConfigureOtelComponents:
 
     def test_configure_otel_components_logs_enabled_otel_false_sw_default(self,
         mocker,
-        mock_extension,
         mock_apmconfig_enabled_export_logs_false,
 
         mock_config_serviceentry_processor,
-        mock_config_traces_exp,
-        mock_config_metrics_exp,
-        mock_config_logs_exp,
-        mock_config_logs_handler,
+        mock_custom_init_tracing,
+        mock_custom_init_metrics,
+        mock_init_logging,
         mock_config_propagator,
         mock_config_response_propagator,
     ):
         self.helper_test_configure_otel_components_logs_enabled(
             mocker,
-            mock_extension,
             mock_apmconfig_enabled_export_logs_false,
             mock_config_serviceentry_processor,
-            mock_config_traces_exp,
-            mock_config_metrics_exp,
-            mock_config_logs_exp,
-            mock_config_logs_handler,
+            mock_custom_init_tracing,
+            mock_custom_init_metrics,
+            mock_init_logging,
             mock_config_propagator,
             mock_config_response_propagator,
             "false",
@@ -171,54 +175,47 @@ class TestConfiguratorConfigureOtelComponents:
 
     def test_configure_otel_components_logs_enabled_otel_false_sw_true(self,
         mocker,
-        mock_extension,
         mock_apmconfig_enabled,
 
         mock_config_serviceentry_processor,
-        mock_config_traces_exp,
-        mock_config_metrics_exp,
-        mock_config_logs_exp,
-        mock_config_logs_handler,
+        mock_custom_init_tracing,
+        mock_custom_init_metrics,
+        mock_init_logging,
         mock_config_propagator,
         mock_config_response_propagator,
     ):
         self.helper_test_configure_otel_components_logs_enabled(
             mocker,
-            mock_extension,
             mock_apmconfig_enabled,
             mock_config_serviceentry_processor,
-            mock_config_traces_exp,
-            mock_config_metrics_exp,
-            mock_config_logs_exp,
-            mock_config_logs_handler,
+            mock_custom_init_tracing,
+            mock_custom_init_metrics,
+            mock_init_logging,
             mock_config_propagator,
             mock_config_response_propagator,
             "false",
             False,  # should be false because OTEL explicitly false, even if SW true
+            False,
         )
 
     def test_configure_otel_components_logs_enabled_otel_invalid(self,
         mocker,
-        mock_extension,
         mock_apmconfig_enabled_export_logs_false,
 
         mock_config_serviceentry_processor,
-        mock_config_traces_exp,
-        mock_config_metrics_exp,
-        mock_config_logs_exp,
-        mock_config_logs_handler,
+        mock_custom_init_tracing,
+        mock_custom_init_metrics,
+        mock_init_logging,
         mock_config_propagator,
         mock_config_response_propagator,
     ):
         self.helper_test_configure_otel_components_logs_enabled(
             mocker,
-            mock_extension,
             mock_apmconfig_enabled_export_logs_false,
             mock_config_serviceentry_processor,
-            mock_config_traces_exp,
-            mock_config_metrics_exp,
-            mock_config_logs_exp,
-            mock_config_logs_handler,
+            mock_custom_init_tracing,
+            mock_custom_init_metrics,
+            mock_init_logging,
             mock_config_propagator,
             mock_config_response_propagator,
             "not-a-bool-string",
@@ -232,56 +229,85 @@ class TestConfiguratorConfigureOtelComponents:
 
         mock_config_serviceentry_processor,
         mock_response_time_processor,
-        mock_config_traces_exp,
-        mock_config_metrics_exp,
-        mock_config_logs_exp,
-        mock_config_logs_handler,
+        mock_custom_init_tracing,
+        mock_custom_init_metrics,
+        mock_init_logging,
         mock_config_propagator,
         mock_config_response_propagator,
     ):
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_otel_components(
-            mock_apmconfig_enabled,
+        mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsApmConfig",
+            return_value=mock_apmconfig_enabled,
         )
+        mock_apm_sampler = mocker.Mock()
+        mocker.patch(
+            "solarwinds_apm.configurator.ParentBasedSwSampler",
+            return_value=mock_apm_sampler,
+        )
+        mock_resource = mocker.Mock()
+        mocker.patch(
+            "solarwinds_apm.configurator.Resource.create",
+            return_value=mock_resource,
+        )
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure()
 
-        # mock_config_serviceentry_processor.assert_called_once()
-        # mock_response_time_processor.assert_called_once_with(
-        #     mock_apmconfig_enabled,
-        # )
-        # mock_config_traces_exp.assert_called_once_with(
-        #     mock_apmconfig_enabled,
-        # )
-        # mock_config_metrics_exp.assert_called_once_with(mock_apmconfig_enabled)
-        # mock_config_logs_exp.assert_called_once_with(mock_apmconfig_enabled)
-        # mock_config_propagator.assert_called_once()
-        # mock_config_response_propagator.assert_called_once()
+        mock_config_serviceentry_processor.assert_called_once()
+        mock_response_time_processor.assert_called_once_with()
+        mock_custom_init_tracing.assert_called_once_with(
+            exporters={},
+            id_generator=None,
+            sampler=mock_apm_sampler,
+            resource=mock_resource,
+        )
+        mock_custom_init_metrics.assert_called_once_with(
+            exporters_or_readers={},
+            resource=mock_resource,
+        )
+        mock_init_logging.assert_called_once_with(
+            {},
+            mock_resource,
+            False,
+        )
+        mock_config_propagator.assert_called_once()
+        mock_config_response_propagator.assert_called_once()
 
     def test_configure_otel_components_agent_disabled(
         self,
         mocker,
-        mock_extension,
         mock_apmconfig_disabled,
 
         mock_config_serviceentry_processor,
         mock_response_time_processor,
-        mock_config_traces_exp,
-        mock_config_metrics_exp,
-        mock_config_logs_exp,
-        mock_config_logs_handler,
+        mock_custom_init_tracing,
+        mock_custom_init_metrics,
+        mock_init_logging,
         mock_config_propagator,
         mock_config_response_propagator,
     ):
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure_otel_components(
-            mock_apmconfig_disabled,
-            mock_extension.Reporter,
+        mock_apm_sampler = mocker.Mock()
+        mocker.patch(
+            "solarwinds_apm.configurator.ParentBasedSwSampler",
+            return_value=mock_apm_sampler,
         )
+        mock_resource = mocker.Mock()
+        mocker.patch(
+            "solarwinds_apm.configurator.Resource.create",
+            return_value=mock_resource,
+        )
+        mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsApmConfig",
+            return_value=mock_apmconfig_disabled,
+        )
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure()
 
+        mock_apm_sampler.assert_not_called()
+        mock_resource.assert_not_called()
         mock_config_serviceentry_processor.assert_not_called()
         mock_response_time_processor.assert_not_called()
-        mock_config_traces_exp.assert_not_called()
-        mock_config_metrics_exp.assert_not_called()
-        mock_config_logs_exp.assert_not_called()
-        mock_config_logs_handler.assert_not_called()
+        mock_custom_init_tracing.assert_not_called()
+        mock_custom_init_metrics.assert_not_called()
+        mock_init_logging.assert_not_called()
         mock_config_propagator.assert_not_called()
         mock_config_response_propagator.assert_not_called()

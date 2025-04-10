@@ -4,7 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-"""Module to initialize OpenTelemetry SDK components and liboboe to work with SolarWinds backend"""
+"""Module to initialize OpenTelemetry SDK components for SolarWinds backend"""
 
 import importlib
 import logging
@@ -12,17 +12,14 @@ import math
 import os
 import platform
 import sys
-import time
-from typing import Any
+from typing import Any, Dict, Optional, Type, Union
 
 from opentelemetry import trace
-from opentelemetry._logs import get_logger_provider, set_logger_provider
+from opentelemetry._logs import set_logger_provider
 from opentelemetry._logs._internal import NoOpLoggerProvider
 from opentelemetry.environment_variables import (
-    OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
-    OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.instrumentation.dependencies import (
     get_dist_dependency_conflicts,
@@ -37,35 +34,50 @@ from opentelemetry.metrics import set_meter_provider
 from opentelemetry.metrics._internal import NoOpMeterProvider
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
-from opentelemetry.sdk._configuration import _OTelSDKConfigurator
-from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
-from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+from opentelemetry.sdk._configuration import (
+    _get_exporter_names,
+    _import_exporters,
+    _init_logging,
+    _OTelSDKConfigurator,
+)
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
 )
-from opentelemetry.sdk.metrics import Histogram, MeterProvider
+from opentelemetry.sdk.metrics import (
+    Counter,
+    Histogram,
+    MeterProvider,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
+    MetricExporter,
+    MetricReader,
     PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     SimpleSpanProcessor,
+    SpanExporter,
 )
+from opentelemetry.sdk.trace.id_generator import IdGenerator
+from opentelemetry.sdk.trace.sampling import Sampler
+from opentelemetry.trace import NoOpTracerProvider, set_tracer_provider
 from opentelemetry.util._importlib_metadata import entry_points, version
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
-from solarwinds_apm.apm_constants import (
-    INTL_SWO_DEFAULT_PROPAGATORS,
-    INTL_SWO_SUPPORT_EMAIL,
-)
+from solarwinds_apm.apm_constants import INTL_SWO_DEFAULT_PROPAGATORS
 
 # from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
+from solarwinds_apm.sampler import ParentBasedSwSampler
 from solarwinds_apm.trace import (
     ResponseTimeProcessor,
     ServiceEntrySpanProcessor,
@@ -83,130 +95,154 @@ logger = logging.getLogger(__name__)
 class SolarWindsConfigurator(_OTelSDKConfigurator):
     """OpenTelemetry Configurator for initializing APM logger and SolarWinds-reporting SDK components"""
 
-    # Agent process start time, which is supposed to be a constant. -- don't modify it.
-    _AGENT_START_TIME = time.time() * 1e6
-    # Cannot set as env default because not part of OTel Python _KNOWN_SAMPLERS
-    # https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-sdk/src/opentelemetry/sdk/trace/sampling.py#L364-L380
-    _DEFAULT_SW_TRACES_SAMPLER = "solarwinds_sampler"
-    _STDLIB_PKGS = ["asyncio", "threading"]
+    def __init__(self) -> None:
+        super().__init__()
+        self.apm_config = SolarWindsApmConfig()
 
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
-        apm_config = SolarWindsApmConfig()
-
-        # Reporter may be no-op e.g. disabled, lambda
-        # reporter = self._initialize_solarwinds_reporter(apm_config)
-        self._configure_otel_components(
-            apm_config,
-            None,
-            # reporter,
-        )
-
-        # if apm_config.is_lambda:
-        #     logger.debug("No init event in lambda")
-        #     return
-
-        # Report reporter init status event after everything is done.
-        # init_event = self._create_init_event(reporter, apm_config)
-        # if init_event:
-        #     self._report_init_event(reporter, init_event)
-        # else:
-        #     logger.error(
-        #         "There was an issue with generating the reporter init message."
-        #     )
-
-    # TODO update pylint disable when drop py38 support
-    def _configure_otel_components(
-        self,
-        apm_config: SolarWindsApmConfig,
-        reporter: Any = None,
-    ) -> None:
-        """Configure OTel sampler, exporter, propagator, response propagator"""
-        self._configure_sampler(
-            apm_config,
-            reporter,
-        )
-        if apm_config.agent_enabled:
-            # set MeterProvider first via metrics_exporter config
-            self._configure_metrics_exporter(apm_config)
-
-            # This processor only defines on_start
-            self._configure_service_entry_span_processor()
-
-            self._configure_response_time_processor(
-                apm_config,
+        if not self.apm_config.agent_enabled:
+            # ApmConfig will log a more informative Info message if disabled
+            logger.debug(
+                "SWO APM agent disabled. Not configuring OpenTelemetry."
             )
-
-            self._configure_traces_exporter(
-                reporter,
-                apm_config,
-            )
-
-            # Always setup logging provider and exporters when agent enabled
-            self._configure_logs_exporter(apm_config)
-
-            # Only emit log event telemetry (auto-instrument logs) if feature enabled,
-            # with settings precedence: OTEL_* > SW_APM_EXPORT_LOGS_ENABLED.
-            # We don't set a default, so this could be None
-            otel_log_enabled = SolarWindsApmConfig.convert_to_bool(
-                os.environ.get(
-                    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
-                )
-            )
-            # SW config is False by default
-            sw_log_enabled = apm_config.get("export_logs_enabled")
-            if otel_log_enabled is not None:
-                if otel_log_enabled is True:
-                    self._configure_logs_handler()
-            elif sw_log_enabled:
-                self._configure_logs_handler()
-
-            self._configure_propagator()
-            self._configure_response_propagator()
-        else:
-            # Warning: This may still set OTEL_PROPAGATORS if set because OTel API
-            logger.error("Tracing disabled. Not setting propagators.")
-
-    def _configure_sampler(
-        self,
-        apm_config: SolarWindsApmConfig,
-        reporter,
-    ) -> None:
-        """Always configure SolarWinds OTel sampler, or none if disabled"""
-        if not apm_config.agent_enabled:
-            logger.error("Tracing disabled. Using OTel no-op tracer provider.")
-            trace.set_tracer_provider(trace.NoOpTracerProvider())
+            set_tracer_provider(NoOpTracerProvider())
+            set_meter_provider(NoOpMeterProvider())
+            set_logger_provider(NoOpLoggerProvider())
             return
-        try:
-            sampler = next(
-                iter(
-                    entry_points(
-                        group="opentelemetry_traces_sampler",
-                        name=self._DEFAULT_SW_TRACES_SAMPLER,
+
+        # Duplicated from _OTelSDKConfigurator in order to support custom settings
+        trace_exporter_names = kwargs.get("trace_exporter_names", [])
+        metric_exporter_names = kwargs.get("metric_exporter_names", [])
+        log_exporter_names = kwargs.get("log_exporter_names", [])
+
+        span_exporters, metric_exporters, log_exporters = _import_exporters(
+            trace_exporter_names + _get_exporter_names("traces"),
+            metric_exporter_names + _get_exporter_names("metrics"),
+            log_exporter_names + _get_exporter_names("logs"),
+        )
+
+        # Custom initialization of OTel components
+        apm_sampler = ParentBasedSwSampler(
+            self.apm_config,
+            None,  # TODO NH-104999 remove later
+        )
+        apm_resource = Resource.create(
+            {
+                "sw.apm.version": __version__,
+                "sw.data.module": "apm",
+                "service.name": self.apm_config.service_name,
+            }
+        )
+        self._custom_init_tracing(
+            exporters=span_exporters,
+            id_generator=kwargs.get("id_generator"),
+            sampler=apm_sampler,
+            resource=apm_resource,
+        )
+        self._custom_init_metrics(
+            exporters_or_readers=metric_exporters,
+            resource=apm_resource,
+        )
+
+        # Only emit log event telemetry (auto-instrument logs) if feature enabled,
+        # with settings precedence: OTEL_* > SW_APM_EXPORT_LOGS_ENABLED.
+        # TODO NH-107164 drop support of SW config, and super() will only check OTEL config
+        setup_logging_handler = False
+        # We don't set a default, so this could be None
+        otel_log_enabled = SolarWindsApmConfig.convert_to_bool(
+            os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED)
+        )
+        # SW config is False by default
+        sw_log_enabled = self.apm_config.get("export_logs_enabled")
+        if otel_log_enabled is not None:
+            if otel_log_enabled is True:
+                setup_logging_handler = True
+        elif sw_log_enabled:
+            setup_logging_handler = True
+
+        _init_logging(log_exporters, apm_resource, setup_logging_handler)
+
+        # Set up additional custom SW components
+        self._configure_service_entry_span_processor()
+        self._configure_response_time_processor()
+        self._configure_propagator()
+        self._configure_response_propagator()
+
+    # TODO rm disable when Python 3.8 dropped
+    # pylint: disable=consider-alternative-union-syntax,deprecated-typing-alias
+    def _custom_init_tracing(
+        self,
+        exporters: Dict[str, Type[SpanExporter]],
+        id_generator: Optional[IdGenerator] = None,
+        sampler: Optional[Sampler] = None,
+        resource: Optional[Resource] = None,
+    ):
+        """APM SWO custom span export init, based on _OTelSDKConfigurator"""
+        provider = SolarwindsTracerProvider(
+            id_generator=id_generator,
+            sampler=sampler,
+            resource=resource,
+        )
+        set_tracer_provider(provider)
+
+        for _, exporter_class in exporters.items():
+            exporter_args = {}
+            if self.apm_config.is_lambda:
+                provider.add_span_processor(
+                    SimpleSpanProcessor(exporter_class(**exporter_args))
+                )
+            else:
+                provider.add_span_processor(
+                    BatchSpanProcessor(exporter_class(**exporter_args))
+                )
+
+    def _custom_init_metrics(
+        self,
+        exporters_or_readers: Dict[
+            str, Union[Type[MetricExporter], Type[MetricReader]]
+        ],
+        resource: Optional[Resource] = None,
+    ):
+        """APM SWO custom metrics export init, based on _OTelSDKConfigurator"""
+        metric_readers = []
+
+        for _, exporter_or_reader_class in exporters_or_readers.items():
+            exporter_args = {
+                "preferred_temporality": {
+                    Counter: AggregationTemporality.DELTA,
+                    UpDownCounter: AggregationTemporality.DELTA,
+                    Histogram: AggregationTemporality.DELTA,
+                    ObservableCounter: AggregationTemporality.DELTA,
+                    ObservableUpDownCounter: AggregationTemporality.DELTA,
+                    ObservableGauge: AggregationTemporality.DELTA,
+                }
+            }
+
+            if issubclass(exporter_or_reader_class, MetricReader):
+                metric_readers.append(
+                    exporter_or_reader_class(**exporter_args)
+                )
+            elif self.apm_config.is_lambda:
+                # Inf interval to not invoke periodic collection
+                metric_readers.append(
+                    PeriodicExportingMetricReader(
+                        exporter_or_reader_class(**exporter_args),
+                        export_interval_millis=math.inf,
                     )
                 )
-            ).load()(apm_config, reporter)
-        except Exception as ex:
-            logger.exception("A exception was raised: %s", ex)
-            logger.exception(
-                "Failed to load configured sampler %s. "
-                "Please reinstall or contact %s.",
-                self._DEFAULT_SW_TRACES_SAMPLER,
-                INTL_SWO_SUPPORT_EMAIL,
-            )
-            raise
-        trace.set_tracer_provider(
-            tracer_provider=SolarwindsTracerProvider(
-                sampler=sampler,
-                resource=Resource.create(
-                    {
-                        "sw.apm.version": __version__,
-                        "sw.data.module": "apm",
-                        "service.name": apm_config.service_name,
-                    }
-                ),
-            ),
+            else:
+                # Use default interval 60s else OTEL_METRIC_EXPORT_INTERVAL
+                metric_readers.append(
+                    PeriodicExportingMetricReader(
+                        exporter_or_reader_class(**exporter_args),
+                    )
+                )
+
+        provider = MeterProvider(
+            resource=resource, metric_readers=metric_readers
         )
+        set_meter_provider(provider)
 
     def _configure_service_entry_span_processor(
         self,
@@ -218,7 +254,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _configure_response_time_processor(
         self,
-        apm_config: SolarWindsApmConfig,
     ) -> None:
         """Configure ResponseTimeProcessor if metrics exporters are configured and set up
         i.e. by _configure_metrics_exporter
@@ -235,224 +270,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         trace.get_tracer_provider().add_span_processor(
             ResponseTimeProcessor(
-                apm_config,
+                self.apm_config,
             )
         )
-
-    def _configure_traces_exporter(
-        self,
-        reporter,
-        apm_config: SolarWindsApmConfig,
-    ) -> None:
-        """Configure traces exporters if agent enabled.
-        Links to global TracerProvider.
-
-        Initialization of SolarWinds exporter requires a liboboe reporter
-        If `reporter` is no-op, the SW exporter will not export spans."""
-        if not apm_config.agent_enabled:
-            logger.error(
-                "APM Python library disabled. Cannot set traces exporters."
-            )
-            return
-
-        # SolarWindsDistro._configure does setdefault before this is called
-        environ_exporter = os.environ.get(
-            OTEL_TRACES_EXPORTER,
-        )
-        if not environ_exporter:
-            logger.debug(
-                "No OTEL_TRACES_EXPORTER set, skipping init of traces exporter."
-            )
-            return
-        environ_exporter_names = environ_exporter.split(",")
-
-        for exporter_name in environ_exporter_names:
-            exporter = None
-            try:
-                exporter = next(
-                    iter(
-                        # pylint: disable=too-many-function-args
-                        entry_points(
-                            group="opentelemetry_traces_exporter",
-                            name=exporter_name,
-                        )
-                    )
-                ).load()()
-            except Exception as ex:
-                logger.exception("A exception was raised: %s", ex)
-                # At this point any non-default OTEL_TRACES_EXPORTER has
-                # been checked by ApmConfig so exception here means
-                # something quite wrong
-                logger.exception(
-                    "Failed to load configured OTEL_TRACES_EXPORTER. "
-                    "Please reinstall or contact %s.",
-                    INTL_SWO_SUPPORT_EMAIL,
-                )
-                raise
-
-            if apm_config.is_lambda:
-                logger.debug(
-                    "Setting trace with SimpleSpanProcessor using %s",
-                    exporter_name,
-                )
-                span_processor = SimpleSpanProcessor(exporter)
-            else:
-                logger.debug(
-                    "Setting trace with BatchSpanProcessor using %s",
-                    exporter_name,
-                )
-                span_processor = BatchSpanProcessor(exporter)
-
-            trace.get_tracer_provider().add_span_processor(span_processor)
-
-    def _configure_metrics_exporter(
-        self,
-        apm_config: SolarWindsApmConfig,
-    ) -> None:
-        """Configure OTel OTLP metrics exporters.
-        Links to new metric readers and global MeterProvider."""
-        # SolarWindsDistro._configure does setdefault before this is called
-        environ_exporter = os.environ.get(
-            OTEL_METRICS_EXPORTER,
-        )
-        if not environ_exporter:
-            logger.debug(
-                "No OTEL_METRICS_EXPORTER set, skipping init of metrics exporters"
-            )
-            set_meter_provider(NoOpMeterProvider())
-            return
-        environ_exporter_names = environ_exporter.split(",")
-
-        # Report all histograms with delta aggregation, including response_time
-        temporality_delta = {Histogram: AggregationTemporality.DELTA}
-        metric_readers = []
-        for exporter_name in environ_exporter_names:
-            exporter = None
-            try:
-                exporter = next(
-                    iter(
-                        entry_points(
-                            group="opentelemetry_metrics_exporter",
-                            name=exporter_name,
-                        )
-                    )
-                ).load()(preferred_temporality=temporality_delta)
-            except Exception as ex:
-                logger.exception("A exception was raised: %s", ex)
-                logger.exception(
-                    "Failed to load configured OTEL_METRICS_EXPORTER. "
-                    "Please reinstall or contact %s.",
-                    INTL_SWO_SUPPORT_EMAIL,
-                )
-                raise
-
-            logger.debug(
-                "Creating PeriodicExportingMetricReader using %s",
-                exporter_name,
-            )
-
-            reader = None
-            if apm_config.is_lambda:
-                # Inf interval to not invoke periodic collection
-                reader = PeriodicExportingMetricReader(
-                    exporter,
-                    export_interval_millis=math.inf,
-                )
-            else:
-                # Use default interval 60s else OTEL_METRIC_EXPORT_INTERVAL
-                reader = PeriodicExportingMetricReader(
-                    exporter,
-                )
-            metric_readers.append(reader)
-
-        # Use configured Resource attributes then merge with
-        # custom service.name and sw.trace_span_mode
-        resource = trace.get_tracer_provider().get_tracer(__name__).resource
-        sw_resource = Resource.create(
-            {
-                "sw.apm.version": __version__,
-                "sw.data.module": "apm",
-                "service.name": apm_config.service_name,
-            }
-        ).merge(resource)
-
-        provider = MeterProvider(
-            resource=sw_resource,
-            metric_readers=metric_readers,
-        )
-        set_meter_provider(provider)
-
-    def _configure_logs_exporter(
-        self,
-        apm_config: SolarWindsApmConfig,
-    ) -> None:
-        """Configure OTel OTLP logs exporters. Links to new global LoggerProvider."""
-        # SolarWindsDistro._configure does setdefault before this is called
-        environ_exporter = os.environ.get(
-            OTEL_LOGS_EXPORTER,
-        )
-        if not environ_exporter:
-            logger.debug(
-                "No OTEL_LOGS_EXPORTER set, skipping init of logs exporters"
-            )
-            set_logger_provider(NoOpLoggerProvider())
-            return
-
-        environ_exporter_names = environ_exporter.split(",")
-
-        # Use configured Resource attributes then merge with
-        # custom service.name and sw.trace_span_mode
-        resource = trace.get_tracer_provider().get_tracer(__name__).resource
-        sw_resource = Resource.create(
-            {
-                "sw.apm.version": __version__,
-                "sw.data.module": "apm",
-                "service.name": apm_config.service_name,
-            }
-        ).merge(resource)
-
-        logger_provider = LoggerProvider(
-            resource=sw_resource,
-        )
-        set_logger_provider(logger_provider)
-
-        for exporter_name in environ_exporter_names:
-            exporter = None
-            try:
-                exporter = next(
-                    iter(
-                        entry_points(
-                            group="opentelemetry_logs_exporter",
-                            name=exporter_name,
-                        )
-                    )
-                ).load()()
-            except Exception as ex:
-                logger.exception("A exception was raised: %s", ex)
-                logger.exception(
-                    "Failed to load configured OTEL_LOGS_EXPORTER. "
-                    "Please reinstall or contact %s.",
-                    INTL_SWO_SUPPORT_EMAIL,
-                )
-                raise
-
-            logger.debug(
-                "Setting logs with BatchLogRecordProcessor using %s",
-                exporter_name,
-            )
-            logs_processor = BatchLogRecordProcessor(exporter)
-
-            logger_provider.add_log_record_processor(logs_processor)
-
-    def _configure_logs_handler(self) -> None:
-        """Create and attach Otel LoggingHandler to emit log event telemetry"""
-        logger.debug("Attaching OTel handler to root logger.")
-        logger_provider = get_logger_provider()
-        log_handler = LoggingHandler(
-            level=logging.NOTSET,
-            logger_provider=logger_provider,
-        )
-        logging.getLogger().addHandler(log_handler)
 
     def _configure_propagator(self) -> None:
         """Configure CompositePropagator with SolarWinds and other propagators, default or environment configured"""

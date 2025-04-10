@@ -186,6 +186,8 @@ def get_apmconfig_mocks(
             return export_metrics_enabled
         elif param == "export_logs_enabled":
             return export_logs_enabled
+        elif param == "service_key":
+            return "foo:bar"
         else:
             return "foo"
 
@@ -378,28 +380,22 @@ def mock_response_time_processor(mocker):
         "solarwinds_apm.configurator.SolarWindsConfigurator._configure_response_time_processor"
     )
 
-@pytest.fixture(name="mock_config_traces_exp")
-def mock_config_traces_exp(mocker):
+@pytest.fixture(name="mock_custom_init_tracing")
+def mock_custom_init_tracing(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_traces_exporter"
+        "solarwinds_apm.configurator.SolarWindsConfigurator._custom_init_tracing"
     )
 
-@pytest.fixture(name="mock_config_metrics_exp")
-def mock_config_metrics_exp(mocker):
+@pytest.fixture(name="mock_custom_init_metrics")
+def mock_custom_init_metrics(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_metrics_exporter"
+        "solarwinds_apm.configurator.SolarWindsConfigurator._custom_init_metrics"
     )
 
-@pytest.fixture(name="mock_config_logs_exp")
-def mock_config_logs_exp(mocker):
+@pytest.fixture(name="mock_init_logging")
+def mock_init_logging(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_logs_exporter"
-    )
-
-@pytest.fixture(name="mock_config_logs_handler")
-def mock_config_logs_handler(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_logs_handler"
+        "solarwinds_apm.configurator._init_logging"
     )
 
 @pytest.fixture(name="mock_config_propagator")
@@ -418,12 +414,6 @@ def mock_config_response_propagator(mocker):
 def mock_init_sw_reporter(mocker):
     return mocker.patch(
         "solarwinds_apm.configurator.SolarWindsConfigurator._initialize_solarwinds_reporter"
-    )
-
-@pytest.fixture(name="mock_config_otel_components")
-def mock_config_otel_components(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_otel_components"
     )
 
 @pytest.fixture(name="mock_create_init")
