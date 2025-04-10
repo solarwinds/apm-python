@@ -38,7 +38,6 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_OTLP_COLLECTOR,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_RESOURCE_DETECTORS,
-    INTL_SWO_DEFAULT_TRACES_EXPORTER,
 )
 from solarwinds_apm.version import __version__ as apm_version
 
@@ -124,6 +123,7 @@ class SolarWindsDistro(BaseDistro):
             INTL_SWO_DEFAULT_OTLP_COLLECTOR,
         )
 
+        # TODO NH-107555 Only set headers if SWO export endpoint is set
         header_token = self._get_token_from_service_key()
         if not header_token:
             logger.debug("Setting OTLP export defaults without SWO token")
