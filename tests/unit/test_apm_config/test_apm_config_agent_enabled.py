@@ -27,14 +27,6 @@ class TestSolarWindsApmConfigAgentEnabled:
         mocker.patch.dict(os.environ, {
             "SW_APM_AGENT_ENABLED": "true",
         })
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )
@@ -66,14 +58,6 @@ class TestSolarWindsApmConfigAgentEnabled:
         if old_collector:
             del os.environ["SW_APM_COLLECTOR"]
 
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mocker.patch.dict(os.environ, {
             "SW_APM_SERVICE_KEY": "valid:key-will-be-used",
         })
@@ -122,15 +106,6 @@ class TestSolarWindsApmConfigAgentEnabled:
         if old_collector:
             del os.environ["SW_APM_COLLECTOR"]
 
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
-
         mock_get_cnf_dict = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
         )
@@ -166,14 +141,6 @@ class TestSolarWindsApmConfigAgentEnabled:
             "SW_APM_SERVICE_KEY": "invalidkey",
             "SW_APM_AGENT_ENABLED": "true",
         })
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )
@@ -196,14 +163,6 @@ class TestSolarWindsApmConfigAgentEnabled:
         mocker.patch.dict(os.environ, {
             "SW_APM_SERVICE_KEY": "valid:key",
         })
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )
@@ -227,14 +186,6 @@ class TestSolarWindsApmConfigAgentEnabled:
             "SW_APM_SERVICE_KEY": "valid:key",
             "SW_APM_AGENT_ENABLED": "true",
         })
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )
@@ -254,14 +205,6 @@ class TestSolarWindsApmConfigAgentEnabled:
             "SW_APM_SERVICE_KEY": "valid:key",
             "SW_APM_AGENT_ENABLED": "false",
         })
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )
@@ -281,14 +224,6 @@ class TestSolarWindsApmConfigAgentEnabled:
             "SW_APM_SERVICE_KEY": "valid:key",
             "SW_APM_AGENT_ENABLED": "fALsE",
         })
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )
@@ -308,14 +243,6 @@ class TestSolarWindsApmConfigAgentEnabled:
         mocker,
         fixture_cnf_dict_enabled_false,
     ):
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mocker.patch.dict(os.environ, {
             "SW_APM_SERVICE_KEY": "valid:key",
         })
@@ -345,14 +272,6 @@ class TestSolarWindsApmConfigAgentEnabled:
         mocker,
         fixture_cnf_dict_enabled_false_mixed_case,
     ):
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mocker.patch.dict(os.environ, {
             "SW_APM_SERVICE_KEY": "valid:key",
         })
@@ -383,14 +302,6 @@ class TestSolarWindsApmConfigAgentEnabled:
         fixture_cnf_dict_enabled_false,
         mock_env_vars,
     ):
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mocker.patch.dict(os.environ, {
             "SW_APM_SERVICE_KEY": "valid:key",
             "SW_APM_AGENT_ENABLED": "true",
@@ -420,14 +331,6 @@ class TestSolarWindsApmConfigAgentEnabled:
         mocker,
         fixture_cnf_dict,
     ):
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mocker.patch.dict(os.environ, {
             "SW_APM_SERVICE_KEY": "valid:key",
             "SW_APM_AGENT_ENABLED": "false",
@@ -461,18 +364,9 @@ class TestSolarWindsApmConfigAgentEnabled:
     ):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": "foo,tracecontext,bar,solarwinds_propagator",
-            "OTEL_TRACES_EXPORTER": "solarwinds_exporter,foo",
             "SW_APM_SERVICE_KEY": "valid:key",
             "SW_APM_AGENT_ENABLED": "true",
         })
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )
@@ -572,66 +466,6 @@ class TestSolarWindsApmConfigAgentEnabled:
             "OTEL_PROPAGATORS": "tracecontext,baggage,solarwinds_propagator",
             "SW_APM_SERVICE_KEY": "valid:key",
         })
-        mock_apm_logging = mocker.patch(
-            "solarwinds_apm.apm_config.apm_logging"
-        )
-        mock_apm_logging.configure_mock(
-            **{
-                "set_sw_log_type": mocker.Mock(),
-                "set_sw_log_level": mocker.Mock(),
-                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
-            }
-        )
-        resulting_config = apm_config.SolarWindsApmConfig()
-        assert resulting_config._calculate_agent_enabled()
-        assert resulting_config.service_name == "key"
-
-    def test_calculate_agent_enabled_sw_but_no_such_other_exporter(
-        self,
-        mocker,
-        mock_env_vars,
-    ):
-        mocker.patch.dict(os.environ, {
-            "OTEL_TRACES_EXPORTER": "solarwinds_exporter,not-valid",
-            "SW_APM_SERVICE_KEY": "valid:key",
-        })
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_entry_points.configure_mock(
-            side_effect=StopIteration("mock error")
-        )
-        mock_apm_logging = mocker.patch(
-            "solarwinds_apm.apm_config.apm_logging"
-        )
-        mock_apm_logging.configure_mock(
-            **{
-                "set_sw_log_type": mocker.Mock(),
-                "set_sw_log_level": mocker.Mock(),
-                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
-            }
-        )
-        resulting_config = apm_config.SolarWindsApmConfig()
-        assert not resulting_config._calculate_agent_enabled()
-        assert resulting_config.service_name == ""
-
-    def test_calculate_agent_enabled_sw_and_two_other_valid_exporters(
-        self,
-        mocker,
-        mock_env_vars,
-    ):
-        mocker.patch.dict(os.environ, {
-            "OTEL_TRACES_EXPORTER": "foo,solarwinds_exporter,bar",
-            "SW_APM_SERVICE_KEY": "valid:key",
-        })
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo", "bar"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )

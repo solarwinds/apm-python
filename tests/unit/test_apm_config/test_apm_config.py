@@ -89,14 +89,6 @@ class TestSolarWindsApmConfig:
         mocker.patch.dict(os.environ, {
             "SW_APM_SERVICE_KEY": service_key,
         })
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
 
     def test__init_invalid_service_key_format(self, mocker):
         mocker.patch.dict(os.environ, {
@@ -373,14 +365,6 @@ class TestSolarWindsApmConfig:
     #     mock_logs_enabled.assert_called_once()
 
     def test_mask_service_key_no_key_empty_default(self, mocker):
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         assert apm_config.SolarWindsApmConfig().mask_service_key() == ""
 
     def test_mask_service_key_empty_key(self, mocker):

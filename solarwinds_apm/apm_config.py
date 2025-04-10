@@ -13,19 +13,14 @@ import re
 from functools import reduce
 from typing import Any
 
-from opentelemetry.environment_variables import (
-    OTEL_PROPAGATORS,
-    OTEL_TRACES_EXPORTER,
-)
+from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.util._importlib_metadata import entry_points
 
 # import solarwinds_apm.apm_noop as noop_extension
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_constants import (
     INTL_SWO_BAGGAGE_PROPAGATOR,
     INTL_SWO_DEFAULT_PROPAGATORS,
-    INTL_SWO_DEFAULT_TRACES_EXPORTER,
     INTL_SWO_PROPAGATOR,
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
 )
@@ -178,7 +173,6 @@ class SolarWindsApmConfig:
         - SW_APM_SERVICE_KEY   (required) (env var or cnf file)
         - SW_APM_AGENT_ENABLED (optional) (env var or cnf file)
         - OTEL_PROPAGATORS     (optional) (env var only)
-        - OTEL_TRACES_EXPORTER (optional) (env var only)
         """
         if self.is_lambda:
             return self._calculate_agent_enabled_config_lambda()
@@ -251,48 +245,6 @@ class SolarWindsApmConfig:
         except ValueError:
             logger.error(
                 "OTEL_PROPAGATORS must be a string of comma-separated propagator names. Tracing disabled."
-            )
-            return False
-
-        # (4) OTEL_TRACES_EXPORTER
-        # SolarWindsDistro._configure does setdefault before this is called
-        environ_exporter = os.environ.get(
-            OTEL_TRACES_EXPORTER,
-        )
-        if not environ_exporter:
-            logger.debug(
-                "No OTEL_TRACES_EXPORTER set, skipping entry point checks"
-            )
-            return True
-
-        environ_exporter_names = environ_exporter.split(",")
-        try:
-            # If not using the default exporters,
-            # can any arbitrary list BUT
-            # outside-SW exporters must be loadable by OTel
-            for environ_exporter_name in environ_exporter_names:
-                try:
-                    if (
-                        environ_exporter_name
-                        != INTL_SWO_DEFAULT_TRACES_EXPORTER
-                    ):
-                        next(
-                            iter(
-                                # pylint: disable=too-many-function-args
-                                entry_points(
-                                    group="opentelemetry_traces_exporter",
-                                    name=environ_exporter_name,
-                                )
-                            )
-                        )
-                except StopIteration:
-                    logger.error(
-                        "Failed to load configured OTEL_TRACES_EXPORTER. Tracing disabled."
-                    )
-                    return False
-        except ValueError:
-            logger.error(
-                "OTEL_TRACES_EXPORTER must be a string of comma-separated exporter names. Tracing disabled."
             )
             return False
 
