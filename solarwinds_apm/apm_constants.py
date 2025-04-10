@@ -26,6 +26,20 @@ INTL_SWO_DEFAULT_PROPAGATORS = [
     INTL_SWO_BAGGAGE_PROPAGATOR,
     INTL_SWO_PROPAGATOR,
 ]
+INTL_SWO_DEFAULT_RESOURCE_DETECTORS = [
+    "process",
+    "os",
+    "host",
+    "aws_ec2",
+    "aws_ecs",
+    "aws_eks",
+    "aws_lambda",
+    "azure_app_service",
+    "azure_functions",
+    "azure_vm",
+    "k8s",
+    "uams",
+]
 INTL_SWO_DOC_SUPPORTED_PLATFORMS = "https://documentation.solarwinds.com/en/success_center/observability/content/system_requirements/apm_requirements.htm#link3"
 INTL_SWO_DOC_TRACING_PYTHON = "https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-add-python-agent"
 INTL_SWO_SUPPORT_EMAIL = "SWO-support@solarwinds.com"
