@@ -195,9 +195,9 @@ class TestDistro:
         distro.SolarWindsDistro()._configure()
         # No env vars set, so uses all these defaults
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
-        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_http"
-        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_http"
-        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp_proto_http"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
+        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
+        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "http/protobuf"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "authorization=Bearer%20None"
@@ -238,9 +238,9 @@ class TestDistro:
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "foo"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "authorization=Bearer%20foo-token"
-        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_http"
-        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_http"
-        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp_proto_http"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
+        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
+        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_env_valid_protocol_http(self, mocker):
@@ -257,9 +257,9 @@ class TestDistro:
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "http/protobuf"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "authorization=Bearer%20foo-token"
-        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_http"
-        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_http"
-        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp_proto_http"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
+        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
+        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_env_valid_protocol_grpc(self, mocker):
@@ -278,9 +278,9 @@ class TestDistro:
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "grpc"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "authorization=Bearer%20foo-token"
-        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_http"
-        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_http"
-        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp_proto_http"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
+        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
+        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_env_exporter_and_valid_protocol_http(self, mocker):
@@ -341,9 +341,9 @@ class TestDistro:
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "http/protobuf"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://foo.bar.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "authorization=Bearer%20foo-token"
-        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_http"
-        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_http"
-        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp_proto_http"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
+        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
+        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_env_headers(self, mocker):
@@ -359,16 +359,16 @@ class TestDistro:
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "http/protobuf"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "foo=bar,baz=qux"
-        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_http"
-        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp_proto_http"
-        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp_proto_http"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
+        assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
+        assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_env_propagators(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_PROPAGATORS": "tracecontext,solarwinds_propagator,foobar"})
         distro.SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,solarwinds_propagator,foobar"
-        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp_proto_http"
+        assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_load_instrumentor_aws_lambda_not_lambda_env(self, mocker):

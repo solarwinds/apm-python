@@ -56,7 +56,7 @@ class SolarWindsDistro(BaseDistro):
     _cnf_dict = None
     _instrumentor_metrics_enabled = None
 
-    _DEFAULT_OTLP_EXPORTER = "otlp_proto_http"
+    _DEFAULT_OTLP_EXPORTER = "otlp"
     _DEFAULT_OTLP_PROTOCOL = "http/protobuf"
 
     def __new__(cls, *args, **kwargs):
