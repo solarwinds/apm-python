@@ -98,7 +98,7 @@ class TestSolarWindsReady:
         mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
         mock_tracer_provider.configure_mock(
             **{
-                "get_sampler": mocker.Mock(return_value=mock_sampler),
+                "sampler": mock_sampler,
             }
         )
         mocker.patch(
@@ -117,7 +117,7 @@ class TestSolarWindsReady:
         mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
         mock_tracer_provider.configure_mock(
             **{
-                "get_sampler": mocker.Mock(return_value=mock_sampler),
+                "sampler": mock_sampler,
             }
         )
         mocker.patch(
@@ -136,7 +136,7 @@ class TestSolarWindsReady:
         mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
         mock_tracer_provider.configure_mock(
             **{
-                "get_sampler": mocker.Mock(return_value=mock_sampler),
+                "sampler": mock_sampler,
             }
         )
         mocker.patch(
@@ -155,7 +155,7 @@ class TestSolarWindsReady:
         mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
         mock_tracer_provider.configure_mock(
             **{
-                "get_sampler": mocker.Mock(return_value=mock_sampler),
+                "sampler": mock_sampler,
             }
         )
         mocker.patch(
@@ -169,7 +169,7 @@ class TestSolarWindsReady:
         mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
         mock_tracer_provider.configure_mock(
             **{
-                "get_sampler": mocker.Mock(return_value=mock_sampler),
+                "sampler": mock_sampler,
             }
         )
         mocker.patch(

@@ -115,9 +115,10 @@ def solarwinds_ready(wait_milliseconds: int = 3000) -> Any:
     """
     tracer_provider = trace.get_tracer_provider()
     if isinstance(tracer_provider, SolarwindsTracerProvider):
-        sampler = tracer_provider.get_sampler()
-        if isinstance(sampler, (HttpSampler, JsonSampler)):
-            return sampler.wait_until_ready(int(wait_milliseconds / 1000))
+        if isinstance(tracer_provider.sampler, (HttpSampler, JsonSampler)):
+            return tracer_provider.sampler.wait_until_ready(
+                int(wait_milliseconds / 1000)
+            )
         logger.debug(
             "SolarWinds not ready because sampler is not a Solarwinds-specific sampler"
         )
