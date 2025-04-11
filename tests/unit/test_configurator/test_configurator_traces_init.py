@@ -6,11 +6,6 @@
 
 import os
 
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter as GrpcSpanExporter
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter as HttpSpanExporter
-
-
 from solarwinds_apm import configurator
 from solarwinds_apm.exporter import SolarWindsSpanExporter
 
