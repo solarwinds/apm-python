@@ -97,11 +97,6 @@ from solarwinds_apm.version import __version__
 # if TYPE_CHECKING:
 #     from solarwinds_apm.extension.oboe import Event, OboeAPI, Reporter
 
-_SPAN_EXPORTER_BY_OTLP_PROTOCOL = {
-    "grpc": GrpcSpanExporter,
-    "http/protobuf": HttpSpanExporter,
-}
-
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
 
@@ -202,7 +197,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         for _, exporter_class in exporters.items():
             # TODO NH-107047 Remove this warning, class, entry point
-            if exporter_class == SolarWindsSpanExporter:
+            if issubclass(exporter_class, SolarWindsSpanExporter):
                 logger.warning(
                     "SolarWindsSpanExporter is deprecated; configuration ignored. Initializing OTLP exporter instead."
                 )
@@ -211,15 +206,15 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 # to select correct OTLP exporter. Else OTLP HTTP default.
                 otlp_protocol = os.environ.get(
                     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
-                ) or os.environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
-                if not otlp_protocol:
-                    otlp_protocol = "http/protobuf"
+                ) or os.environ.get(
+                    OTEL_EXPORTER_OTLP_PROTOCOL, "http/protobuf"
+                )
                 otlp_protocol = otlp_protocol.strip()
 
-                if otlp_protocol in _SPAN_EXPORTER_BY_OTLP_PROTOCOL:
-                    exporter_class = _SPAN_EXPORTER_BY_OTLP_PROTOCOL[
-                        otlp_protocol
-                    ]
+                if otlp_protocol == "http/protobuf":
+                    exporter_class = HttpSpanExporter
+                elif otlp_protocol == "grpc":
+                    exporter_class = GrpcSpanExporter
                 else:
                     logger.debug(
                         "Unknown OTLP protocol; defaulting to HTTP SpanExporter."
