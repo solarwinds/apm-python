@@ -123,6 +123,7 @@ def solarwinds_ready(wait_milliseconds: int = 3000) -> bool:
             "SolarWinds not ready because sampler is not a Solarwinds-specific sampler"
         )
     logger.debug(
-        "SolarWinds not ready because tracer_provider is not a SolarwindsTracerProvider"
+        "SolarWinds not ready. Got APM TracerProvider: %s",
+        type(tracer_provider),
     )
     return False
