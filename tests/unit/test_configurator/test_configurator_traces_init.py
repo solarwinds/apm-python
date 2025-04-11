@@ -21,10 +21,13 @@ class TestConfiguratorTracingInit:
         mock_apmconfig,
         exporters=None,
         otlp_protocol=None,
+        otlp_traces_protocol=None,
     ):
         env_vars = {}
         if otlp_protocol:
             env_vars["OTEL_EXPORTER_OTLP_PROTOCOL"] = otlp_protocol
+        if otlp_traces_protocol:
+            env_vars["OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"] = otlp_traces_protocol
         mocker.patch.dict(os.environ, env_vars, clear=True)
 
         mocker.patch(
@@ -295,7 +298,34 @@ class TestConfiguratorTracingInit:
         mock_bsprocessor,
         mock_ssprocessor,
     ):
-        pass
+        mocks = self.setup_each_test(
+            mocker,
+            mock_apmconfig_enabled,
+            exporters={"valid_exporter": SolarWindsSpanExporter},
+            otlp_protocol="some-foo-protocol-is-this-even-real",
+        )
+
+        # Test!
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._custom_init_tracing(
+            exporters={"valid_exporter": SolarWindsSpanExporter},
+            id_generator=None,
+            sampler=mocks["mock_apm_sampler"],
+            resource=mocks["mock_resource"],
+        )
+        mocks["mock_tracerprovider"].assert_called_once_with(
+            id_generator=None,
+            sampler=mocks["mock_apm_sampler"],
+            resource=mocks["mock_resource"],
+        )
+        mocks["mock_set_tracer_provider"].assert_called_once()
+        mocks["mock_tracerprovider_instance"].add_span_processor.assert_called_once_with(
+            mock_bsprocessor.return_value,
+        )
+        mocks["mock_http_exporter"].assert_called_once()
+        mocks["mock_sw_exporter"].assert_not_called()
+        mock_bsprocessor.assert_called_once_with(mocks["mock_http_exporter"].return_value)
+        mock_ssprocessor.assert_not_called()
 
     def test_custom_init_tracing_legacy_traces_exporter_traces_protocol_http(
         self,
@@ -304,7 +334,34 @@ class TestConfiguratorTracingInit:
         mock_bsprocessor,
         mock_ssprocessor,
     ):
-        pass
+        mocks = self.setup_each_test(
+            mocker,
+            mock_apmconfig_enabled,
+            exporters={"valid_exporter": SolarWindsSpanExporter},
+            otlp_traces_protocol="http/protobuf",
+        )
+
+        # Test!
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._custom_init_tracing(
+            exporters={"valid_exporter": SolarWindsSpanExporter},
+            id_generator=None,
+            sampler=mocks["mock_apm_sampler"],
+            resource=mocks["mock_resource"],
+        )
+        mocks["mock_tracerprovider"].assert_called_once_with(
+            id_generator=None,
+            sampler=mocks["mock_apm_sampler"],
+            resource=mocks["mock_resource"],
+        )
+        mocks["mock_set_tracer_provider"].assert_called_once()
+        mocks["mock_tracerprovider_instance"].add_span_processor.assert_called_once_with(
+            mock_bsprocessor.return_value,
+        )
+        mocks["mock_http_exporter"].assert_called_once()
+        mocks["mock_sw_exporter"].assert_not_called()
+        mock_bsprocessor.assert_called_once_with(mocks["mock_http_exporter"].return_value)
+        mock_ssprocessor.assert_not_called()
 
     def test_custom_init_tracing_legacy_traces_exporter_traces_protocol_grpc(
         self,
@@ -313,7 +370,34 @@ class TestConfiguratorTracingInit:
         mock_bsprocessor,
         mock_ssprocessor,
     ):
-        pass
+        mocks = self.setup_each_test(
+            mocker,
+            mock_apmconfig_enabled,
+            exporters={"valid_exporter": SolarWindsSpanExporter},
+            otlp_traces_protocol="grpc",
+        )
+
+        # Test!
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._custom_init_tracing(
+            exporters={"valid_exporter": SolarWindsSpanExporter},
+            id_generator=None,
+            sampler=mocks["mock_apm_sampler"],
+            resource=mocks["mock_resource"],
+        )
+        mocks["mock_tracerprovider"].assert_called_once_with(
+            id_generator=None,
+            sampler=mocks["mock_apm_sampler"],
+            resource=mocks["mock_resource"],
+        )
+        mocks["mock_set_tracer_provider"].assert_called_once()
+        mocks["mock_tracerprovider_instance"].add_span_processor.assert_called_once_with(
+            mock_bsprocessor.return_value,
+        )
+        mocks["mock_grpc_exporter"].assert_called_once()
+        mocks["mock_sw_exporter"].assert_not_called()
+        mock_bsprocessor.assert_called_once_with(mocks["mock_grpc_exporter"].return_value)
+        mock_ssprocessor.assert_not_called()
 
     def test_custom_init_tracing_legacy_traces_exporter_traces_protocol_unknown(
         self,
@@ -322,4 +406,31 @@ class TestConfiguratorTracingInit:
         mock_bsprocessor,
         mock_ssprocessor,
     ):
-        pass
+        mocks = self.setup_each_test(
+            mocker,
+            mock_apmconfig_enabled,
+            exporters={"valid_exporter": SolarWindsSpanExporter},
+            otlp_traces_protocol="another-fake-protocol",
+        )
+
+        # Test!
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._custom_init_tracing(
+            exporters={"valid_exporter": SolarWindsSpanExporter},
+            id_generator=None,
+            sampler=mocks["mock_apm_sampler"],
+            resource=mocks["mock_resource"],
+        )
+        mocks["mock_tracerprovider"].assert_called_once_with(
+            id_generator=None,
+            sampler=mocks["mock_apm_sampler"],
+            resource=mocks["mock_resource"],
+        )
+        mocks["mock_set_tracer_provider"].assert_called_once()
+        mocks["mock_tracerprovider_instance"].add_span_processor.assert_called_once_with(
+            mock_bsprocessor.return_value,
+        )
+        mocks["mock_http_exporter"].assert_called_once()
+        mocks["mock_sw_exporter"].assert_not_called()
+        mock_bsprocessor.assert_called_once_with(mocks["mock_http_exporter"].return_value)
+        mock_ssprocessor.assert_not_called()
