@@ -11,6 +11,12 @@ from solarwinds_apm.oboe.http_sampler import HttpSampler
 
 
 class SolarwindsTracerProvider(TracerProvider):
+    def get_sampler(self):
+        """
+        Returns the current sampler.
+        """
+        return self.sampler
+
     @override
     def shutdown(self) -> None:
         if isinstance(self.sampler, HttpSampler):

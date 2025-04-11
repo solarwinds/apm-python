@@ -10,18 +10,15 @@ from typing import Any
 from opentelemetry import context
 from opentelemetry.trace import NoOpTracerProvider, get_tracer_provider
 
-# pylint: disable=import-error,no-name-in-module
-# from solarwinds_apm.extension.oboe import Context
 from solarwinds_apm.apm_constants import (
     INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
     INTL_SWO_TRANSACTION_NAME_ATTR,
 )
 from solarwinds_apm.oboe import get_transaction_name_pool
+from solarwinds_apm.oboe.http_sampler import HttpSampler
 from solarwinds_apm.oboe.transaction_name_pool import TRANSACTION_NAME_DEFAULT
+from solarwinds_apm.tracer_provider import SolarwindsTracerProvider
 from solarwinds_apm.w3c_transformer import W3CTransformer
-
-# from solarwinds_apm.apm_oboe_codes import OboeReadyCode
-
 
 logger = logging.getLogger(__name__)
 
@@ -97,45 +94,33 @@ def set_transaction_name(custom_name: str) -> bool:
     return True
 
 
-def solarwinds_ready(
-    wait_milliseconds: int = 3000,
-    integer_response: bool = False,
-) -> Any:
+def solarwinds_ready(wait_milliseconds: int = 3000) -> Any:
     """
     Wait for SolarWinds to be ready to send traces.
 
-    This may be useful in short lived background processes when it is important to capture
+    This may be useful in short-lived background processes when it is important to capture
     information during the whole time the process is running. Usually SolarWinds doesn't block an
     application while it is starting up.
 
     :param wait_milliseconds:int default 3000, the maximum time to wait in milliseconds
-    :param integer_response:bool default False to return boolean value, otherwise True to
-    return integer for detailed information
 
     :return:
-    if integer_response:int code 1 for ready; 0,2,3,4,5 for not ready
-    else:bool True for ready, False not ready
+    bool True for ready, False not ready
 
     :Example:
      from solarwinds_apm.api import solarwinds_ready
-     if not solarwinds_ready(wait_milliseconds=10000, integer_response=True):
+     if not solarwinds_ready(wait_milliseconds=10000):
         Logger.info("SolarWinds not ready after 10 seconds, no metrics will be sent")
     """
-    # TODO: Reimplement in NH-104961
-    return True
-    # rc = Context.isReady(wait_milliseconds)
-    # if not isinstance(rc, int) or rc not in OboeReadyCode.code_values():
-    #     logger.warning("Unrecognized return code: %s", rc)
-    #     return (
-    #         OboeReadyCode.OBOE_SERVER_RESPONSE_UNKNOWN[0]
-    #         if integer_response
-    #         else False
-    #     )
-    # if rc != OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]:
-    #     logger.warning(OboeReadyCode.code_values()[rc])
-    #
-    # return (
-    #     rc
-    #     if integer_response
-    #     else rc == OboeReadyCode.OBOE_SERVER_RESPONSE_OK[0]
-    # )
+    tracer_provider = get_tracer_provider()
+    if isinstance(tracer_provider, SolarwindsTracerProvider):
+        sampler = tracer_provider.get_sampler()
+        if isinstance(sampler, HttpSampler):
+            return sampler.wait_until_ready(int(wait_milliseconds / 1000))
+        logger.debug(
+            "SolarWinds not ready because sampler is not a HttpSampler"
+        )
+    logger.debug(
+        "SolarWinds not ready because tracer_provider is not a SolarwindsTracerProvider"
+    )
+    return False
