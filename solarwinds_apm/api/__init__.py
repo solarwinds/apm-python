@@ -95,7 +95,7 @@ def set_transaction_name(custom_name: str) -> bool:
     return True
 
 
-def solarwinds_ready(wait_milliseconds: int = 3000) -> Any:
+def solarwinds_ready(wait_milliseconds: int = 3000) -> bool:
     """
     Wait for SolarWinds to be ready to send traces.
 
