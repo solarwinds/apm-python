@@ -3,13 +3,23 @@
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+import unittest
+from unittest import mock
 
-from opentelemetry.trace import NoOpTracerProvider
+import opentelemetry.trace as trace_api
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.sampling import ParentBased
+from opentelemetry.trace import NoOpTracerProvider, set_tracer_provider
 
+from solarwinds_apm import configurator
 from solarwinds_apm.api import (
     set_transaction_name,
     solarwinds_ready,
 )
+from solarwinds_apm.oboe.http_sampler import HttpSampler
+from solarwinds_apm.oboe.json_sampler import JsonSampler
+from solarwinds_apm.tracer_provider import SolarwindsTracerProvider
+
 
 class TestSetTransactionName:
     def patch_set_name(
@@ -81,48 +91,102 @@ class TestSetTransactionName:
         mock_pool.registered.assert_called_once_with("bar")
         mock_current_span.set_attribute.assert_called_once_with("TransactionName", "mock-registered-name")
 
-# class TestSolarWindsReady:
-#     def patch_is_ready(
-#         self,
-#         mocker,
-#         ready_retval,
-#     ):
-#         mock_is_ready = mocker.Mock(return_value=ready_retval)
-#         mock_context = mocker.patch(
-#             "solarwinds_apm.api.Context"
-#         )
-#         mock_context.configure_mock(
-#             **{
-#                 "isReady": mock_is_ready
-#             }
-#         )
-#         return mock_is_ready
-#
-#     def test_bad_code_integer_response(self, mocker):
-#         mock_is_ready = self.patch_is_ready(mocker, "bad-code")
-#         assert solarwinds_ready(
-#             integer_response=True
-#         ) == 0
-#         mock_is_ready.assert_called_once_with(3000)
-#
-#     def test_bad_code_bool_response(self, mocker):
-#         mock_is_ready = self.patch_is_ready(mocker, "bad-code")
-#         assert solarwinds_ready() == False
-#         mock_is_ready.assert_called_once_with(3000)
-#
-#     def test_integer_response(self, mocker):
-#         mock_is_ready = self.patch_is_ready(mocker, 1)
-#         assert solarwinds_ready(
-#             integer_response=True
-#         ) == 1
-#         mock_is_ready.assert_called_once_with(3000)
-#
-#     def test_bool_response(self, mocker):
-#         mock_is_ready = self.patch_is_ready(mocker, 1)
-#         assert solarwinds_ready() == True
-#         mock_is_ready.assert_called_once_with(3000)
-#
-#     def test_wait_specified(self, mocker):
-#         mock_is_ready = self.patch_is_ready(mocker, 1)
-#         solarwinds_ready(999999)
-#         mock_is_ready.assert_called_once_with(999999)
+class TestSolarWindsReady:
+
+    def test_http_sampler_ready(self, mocker):
+        mock_sampler = mocker.Mock(spec=HttpSampler)
+        mock_sampler.configure_mock(
+            **{
+                "wait_until_ready": mocker.Mock(return_value=True)
+            }
+        )
+        mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
+        mock_tracer_provider.configure_mock(
+            **{
+                "get_sampler": mocker.Mock(return_value=mock_sampler),
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.configurator.trace.get_tracer_provider",
+            return_value=mock_tracer_provider,
+        )
+        assert solarwinds_ready() == True
+
+    def test_http_sampler_not_ready(self, mocker):
+        mock_sampler = mocker.Mock(spec=HttpSampler)
+        mock_sampler.configure_mock(
+            **{
+                "wait_until_ready": mocker.Mock(return_value=False)
+            }
+        )
+        mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
+        mock_tracer_provider.configure_mock(
+            **{
+                "get_sampler": mocker.Mock(return_value=mock_sampler),
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.configurator.trace.get_tracer_provider",
+            return_value=mock_tracer_provider,
+        )
+        assert solarwinds_ready() == False
+
+    def test_json_sampler_ready(self, mocker):
+        mock_sampler = mocker.Mock(spec=JsonSampler)
+        mock_sampler.configure_mock(
+            **{
+                "wait_until_ready": mocker.Mock(return_value=True)
+            }
+        )
+        mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
+        mock_tracer_provider.configure_mock(
+            **{
+                "get_sampler": mocker.Mock(return_value=mock_sampler),
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.configurator.trace.get_tracer_provider",
+            return_value=mock_tracer_provider,
+        )
+        assert solarwinds_ready() == True
+
+    def test_json_sampler_not_ready(self, mocker):
+        mock_sampler = mocker.Mock(spec=JsonSampler)
+        mock_sampler.configure_mock(
+            **{
+                "wait_until_ready": mocker.Mock(return_value=False)
+            }
+        )
+        mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
+        mock_tracer_provider.configure_mock(
+            **{
+                "get_sampler": mocker.Mock(return_value=mock_sampler),
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.configurator.trace.get_tracer_provider",
+            return_value=mock_tracer_provider,
+        )
+        assert solarwinds_ready() == False
+
+    def test_other_sampler(self, mocker):
+        mock_sampler = mocker.Mock(spec=ParentBased)
+        mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
+        mock_tracer_provider.configure_mock(
+            **{
+                "get_sampler": mocker.Mock(return_value=mock_sampler),
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.configurator.trace.get_tracer_provider",
+            return_value=mock_tracer_provider,
+        )
+        assert solarwinds_ready() == False
+
+    def test_other_tracer_provider(self, mocker):
+        mock_tracer_provider = mocker.Mock(spec=TracerProvider)
+        mocker.patch(
+            "solarwinds_apm.configurator.trace.get_tracer_provider",
+            return_value=mock_tracer_provider,
+        )
+        assert solarwinds_ready() == False
