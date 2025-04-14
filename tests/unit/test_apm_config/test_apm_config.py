@@ -85,6 +85,17 @@ class TestSolarWindsApmConfig:
         if old_expt_metrics:
             os.environ["SW_APM_EXPORT_METRICS_ENABLED"] = old_expt_metrics
 
+    def test__default_collector(self, mocker):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config.get("collector") == apm_config.SolarWindsApmConfig._CONFIG_COLLECTOR_DEFAULT
+
+    def test__init_collector(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": "apm.collector.eu-02.cloud.solarwinds.com"
+        })
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config.get("collector") == "apm.collector.eu-02.cloud.solarwinds.com"
+
     def _mock_service_key(self, mocker, service_key):
         mocker.patch.dict(os.environ, {
             "SW_APM_SERVICE_KEY": service_key,
