@@ -24,12 +24,6 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter as HttpSpanExporter,
 )
-from opentelemetry.instrumentation.dependencies import (
-    get_dist_dependency_conflicts,
-)
-from opentelemetry.instrumentation.environment_variables import (
-    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
-)
 from opentelemetry.instrumentation.propagators import (
     set_global_response_propagator,
 )
