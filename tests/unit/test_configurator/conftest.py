@@ -431,12 +431,6 @@ def mock_create_init_fail(mocker):
         return_value=None,
     )
 
-@pytest.fixture(name="mock_report_init")
-def mock_report_init(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._report_init_event"
-    )
-
 # ==================================================================
 # Configurator APM Python other mocks
 # ==================================================================

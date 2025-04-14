@@ -6,13 +6,10 @@
 
 """Module to initialize OpenTelemetry SDK components for SolarWinds backend"""
 
-import importlib
 import logging
 import math
 import os
-import platform
-import sys
-from typing import Any, Dict, Optional, Type, Union
+from typing import Dict, Optional, Type, Union
 
 from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
@@ -75,14 +72,12 @@ from opentelemetry.sdk.trace.export import (
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.sdk.trace.sampling import Sampler
 from opentelemetry.trace import NoOpTracerProvider, set_tracer_provider
-from opentelemetry.util._importlib_metadata import entry_points, version
+from opentelemetry.util._importlib_metadata import entry_points
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import INTL_SWO_DEFAULT_PROPAGATORS
 from solarwinds_apm.exporter import SolarWindsSpanExporter
-
-# from solarwinds_apm.apm_oboe_codes import OboeReporterCode
 from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
@@ -93,9 +88,6 @@ from solarwinds_apm.trace import (
 )
 from solarwinds_apm.tracer_provider import SolarwindsTracerProvider
 from solarwinds_apm.version import __version__
-
-# if TYPE_CHECKING:
-#     from solarwinds_apm.extension.oboe import Event, OboeAPI, Reporter
 
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
@@ -346,276 +338,3 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_response_propagator(self) -> None:
         # Set global HTTP response propagator
         set_global_response_propagator(SolarWindsTraceResponsePropagator())
-
-    def _initialize_solarwinds_reporter(
-        self,
-        apm_config: SolarWindsApmConfig,
-    ):
-        """Initialize SolarWinds reporter used by sampler and exporter, using SolarWindsApmConfig.
-        This establishes collector and sampling settings in a background thread.
-
-        Note: if config's extension is no-op, this has no effect."""
-        return None
-        # reporter_kwargs = {
-        #     "hostname_alias": apm_config.get("hostname_alias"),
-        #     "log_type": apm_config.get("log_type"),
-        #     "log_level": apm_config.get("debug_level"),
-        #     "log_file_path": apm_config.get("log_filepath"),
-        #     "max_transactions": apm_config.get("max_transactions"),
-        #     "max_flush_wait_time": apm_config.get("max_flush_wait_time"),
-        #     "events_flush_interval": apm_config.get("events_flush_interval"),
-        #     "max_request_size_bytes": apm_config.get("max_request_size_bytes"),
-        #     "reporter": apm_config.get("reporter"),
-        #     "host": apm_config.get("collector"),
-        #     "service_key": apm_config.get("service_key"),
-        #     "certificates": apm_config.certificates,
-        #     "buffer_size": apm_config.get("bufsize"),
-        #     "trace_metrics": apm_config.get("trace_metrics"),
-        #     "histogram_precision": apm_config.get("histogram_precision"),
-        #     "token_bucket_capacity": -1,  # always unset
-        #     "token_bucket_rate": -1,  # always unset
-        #     "file_single": apm_config.get("reporter_file_single"),
-        #     "stdout_clear_nonblocking": 0,
-        #     "metric_format": apm_config.metric_format,
-        # }
-        #
-        # return apm_config.extension.Reporter(**reporter_kwargs)
-
-    # pylint: disable=too-many-branches,too-many-statements
-    def _add_all_instrumented_python_framework_versions(
-        self,
-        version_keys,
-    ) -> dict:
-        """Updates version_keys with versions of Python frameworks that have been
-        instrumented with installed (bootstrapped) OTel instrumentation libraries.
-        Borrowed from opentelemetry-instrumentation sitecustomize. Intended for
-        creating init event.
-
-        Example output:
-        {
-            "Python.Urllib.Version": "3.9",
-            "Python.Requests.Version": "2.28.1",
-            "Python.Django.Version": "4.1.4",
-            "Python.Psycopg2.Version": "2.9.5 (dt dec pq3 ext lo64)",
-            "Python.Sqlite3.Version": "3.34.1",
-            "Python.Logging.Version": "0.5.1.2",
-        }
-        """
-        package_to_exclude = os.environ.get(
-            OTEL_PYTHON_DISABLED_INSTRUMENTATIONS, []
-        )
-        if isinstance(package_to_exclude, str):
-            package_to_exclude = package_to_exclude.split(",")
-            package_to_exclude = [x.strip() for x in package_to_exclude]
-
-        for entry_point in iter(
-            entry_points(group="opentelemetry_instrumentor")
-        ):
-            if entry_point.name in package_to_exclude:
-                logger.debug(
-                    "Skipping version lookup for library %s because excluded",
-                    entry_point.name,
-                )
-                continue
-
-            try:
-                conflict = get_dist_dependency_conflicts(entry_point.dist)
-                if conflict:
-                    # TODO Unnecessary tortoiseorm bootstrap will be fixed upstream
-                    # https://github.com/open-telemetry/opentelemetry-python-contrib/pull/2409
-                    if (
-                        "tortoise-orm" in conflict.required
-                        and conflict.found is None
-                    ):
-                        logger.debug(
-                            "Init event version lookup for library %s skipped due to known pydantic/tortoiseorm bootstrap conflict: %s",
-                            entry_point.name,
-                            conflict,
-                        )
-                    else:
-                        logger.debug(
-                            "Init event version lookup for library %s skipped due to conflict: %s",
-                            entry_point.name,
-                            conflict,
-                        )
-                    continue
-            except Exception as ex:  # pylint: disable=broad-except
-                logger.debug(
-                    "Init event version conflict check of %s failed, so skipping: %s",
-                    entry_point.name,
-                    ex,
-                )
-                continue
-
-            # Set up Instrumented Library Versions KVs with several special cases
-            entry_point_name = entry_point.name
-            # Some OTel instrumentation library entry point names are not exactly
-            # the same as their corresponding instrumented libraries
-            # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/README.md
-            if entry_point_name == "aiohttp-client":
-                entry_point_name = "aiohttp"
-            # Both client/server instrumentors instrument `aiohttp`
-            # so key is potentially overwritten, not duplicated
-            elif entry_point_name == "aiohttp-server":
-                entry_point_name = "aiohttp"
-            elif entry_point_name == "aio-pika":
-                entry_point_name = "aio_pika"
-            elif "grpc_" in entry_point_name:
-                entry_point_name = "grpc"
-            elif entry_point_name == "system_metrics":
-                entry_point_name = "psutil"
-            elif entry_point_name == "tortoiseorm":
-                entry_point_name = "tortoise"
-
-            # Remove any underscores and convert to UpperCamelCase
-            # e.g. aio_pika becomes Python.AioPika.Version
-            middle = "".join(
-                part.capitalize() for part in entry_point_name.split("_")
-            )
-            instr_key = f"Python.{middle}.Version"
-            try:
-                # There is no mysql version, but mysql.connector version
-                if entry_point_name == "mysql":
-                    importlib.import_module(f"{entry_point_name}.connector")
-                # urllib has a rich complex history
-                elif entry_point_name == "urllib":
-                    importlib.import_module(f"{entry_point_name}.request")
-                else:
-                    importlib.import_module(entry_point_name)
-
-                # some Python frameworks don't have top-level __version__
-                if entry_point_name in self._STDLIB_PKGS:
-                    logger.debug(
-                        "Using Python version for library %s because part of Python standard library in Python 3.8+",
-                        entry_point.name,
-                    )
-                    version_keys[instr_key] = platform.python_version()
-                # elasticsearch gives a version as (8, 5, 3) not 8.5.3
-                elif entry_point_name == "elasticsearch":
-                    version_tuple = sys.modules[entry_point_name].__version__
-                    version_keys[instr_key] = ".".join(
-                        [str(d) for d in version_tuple]
-                    )
-                elif entry_point_name == "mysql":
-                    version_keys[instr_key] = sys.modules[
-                        f"{entry_point_name}.connector"
-                    ].__version__
-                elif entry_point_name == "pyramid":
-                    version_keys[instr_key] = version(entry_point_name)
-                elif entry_point_name == "sqlite3":
-                    version_keys[instr_key] = sys.modules[
-                        entry_point_name
-                    ].sqlite_version
-                elif entry_point_name == "tornado":
-                    version_keys[instr_key] = sys.modules[
-                        entry_point_name
-                    ].version
-                elif entry_point_name == "urllib":
-                    version_keys[instr_key] = sys.modules[
-                        f"{entry_point_name}.request"
-                    ].__version__
-                else:
-                    version_keys[instr_key] = sys.modules[
-                        entry_point_name
-                    ].__version__
-
-            except (AttributeError, ImportError) as ex:
-                # could not import package for whatever reason
-                logger.warning(
-                    "Version lookup of %s failed, so skipping: %s",
-                    entry_point_name,
-                    ex,
-                )
-
-        return version_keys
-
-    # pylint: disable=too-many-locals
-    def _create_init_event(
-        self,
-        reporter,
-        apm_config: SolarWindsApmConfig,
-        layer: str = "Python",
-        keys: dict = None,
-    ) -> Any:
-        return None
-
-    #     """Create a Reporter init event if the reporter is ready."""
-    #     if apm_config.is_lambda:
-    #         logger.debug("Skipping init event in lambda")
-    #         return None
-    #
-    #     reporter_ready = False
-    #     if reporter.init_status in (
-    #         OboeReporterCode.OBOE_INIT_OK,
-    #         OboeReporterCode.OBOE_INIT_ALREADY_INIT,
-    #     ):
-    #         reporter_ready = apm_config.agent_enabled
-    #     if not reporter_ready:
-    #         if apm_config.agent_enabled:
-    #             logger.error(
-    #                 "Failed to initialize the reporter, error code=%s (%s). Not sending init message.",
-    #                 reporter.init_status,
-    #                 OboeReporterCode.get_text_code(reporter.init_status),
-    #             )
-    #         else:
-    #             logger.warning("Agent disabled. Not sending init message.")
-    #         return None
-    #
-    #     version_keys = {}
-    #     version_keys["__Init"] = True
-    #
-    #     # Use configured Resource attributes to set telemetry.sdk.*
-    #     resource_attributes = (
-    #         trace.get_tracer_provider()
-    #         .get_tracer(__name__)
-    #         .resource.attributes
-    #     )
-    #     for ra_k, ra_v in resource_attributes.items():
-    #         # Do not include OTEL SERVICE_NAME in __Init message
-    #         if ra_k != SERVICE_NAME:
-    #             version_keys[ra_k] = ra_v
-    #
-    #     # liboboe adds key Hostname for us
-    #     try:
-    #         version_keys["process.runtime.version"] = (
-    #             f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
-    #         )
-    #     except (AttributeError, IndexError) as ex:
-    #         logger.warning("Could not retrieve Python version: %s", ex)
-    #     version_keys["process.runtime.name"] = sys.implementation.name
-    #     version_keys["process.runtime.description"] = sys.version
-    #     version_keys["process.executable.path"] = sys.executable
-    #
-    #     version_keys["APM.Version"] = __version__
-    #     version_keys["APM.Extension.Version"] = (
-    #         apm_config.extension.Config.getVersionString()
-    #     )
-    #
-    #     version_keys = self._add_all_instrumented_python_framework_versions(
-    #         version_keys
-    #     )
-    #
-    #     if keys:
-    #         version_keys.update(keys)
-    #
-    #     md = apm_config.extension.Metadata.makeRandom(True)
-    #     if not md.isValid():
-    #         logger.warning(
-    #             "Warning: Could not generate Metadata for reporter init. Skipping init message."
-    #         )
-    #         return None
-    #     apm_config.extension.Context.set(md)
-    #     evt = md.createEvent()
-    #     evt.addInfo("Layer", layer)
-    #     for ver_k, ver_v in version_keys.items():
-    #         evt.addInfo(ver_k, ver_v)
-    #     return evt
-
-    def _report_init_event(
-        self,
-        reporter,
-        init_event,
-    ) -> None:
-        """Report the APM library's init event message and log its send status."""
-        status = reporter.sendStatus(init_event)
-        logger.info("Reporter initialized successfully: %s", status)

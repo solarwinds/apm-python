@@ -23,7 +23,6 @@ from opentelemetry.trace import SpanKind, Link, TraceState, TraceFlags, get_curr
 from typing_extensions import override
 
 from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_RESPONSE_KEY
-from solarwinds_apm.apm_noop import Context
 from solarwinds_apm.oboe.oboe_sampler import OboeSampler, SW_KEYS_ATTRIBUTE, \
     BUCKET_RATE_ATTRIBUTE, BUCKET_CAPACITY_ATTRIBUTE, SAMPLE_RATE_ATTRIBUTE, SAMPLE_SOURCE_ATTRIBUTE, TRACESTATE_CAPTURE_ATTRIBUTE
 from solarwinds_apm.oboe.settings import LocalSettings, Settings, SampleSource, Flags, BucketType, BucketSettings

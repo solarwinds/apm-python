@@ -16,7 +16,6 @@ from typing import Any
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.sdk.resources import Resource
 
-# import solarwinds_apm.apm_noop as noop_extension
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_constants import (
     INTL_SWO_BAGGAGE_PROPAGATOR,
