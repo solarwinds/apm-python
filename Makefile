@@ -185,9 +185,9 @@ package: sdist check-sdist-local manylinux-wheels check-wheel-local
 
 target_dir := "./tmp-lambda"
 install-lambda-modules:
-	@if [ -f ./dist/solarwinds_apm_lambda_${platform}.zip ]; then \
-		echo -e "Deleting old solarwinds_apm_lambda_${platform}.zip"; \
-		rm ./dist/solarwinds_apm_lambda_${platform}.zip; \
+	@if [ -f ./dist/solarwinds_apm_lambda.zip ]; then \
+		echo -e "Deleting old solarwinds_apm_lambda.zip"; \
+		rm ./dist/solarwinds_apm_lambda.zip; \
 	 fi
 	rm -rf ${target_dir}
 	@echo -e "Creating target directory ${target_dir} for AWS Lambda layer artifacts."
@@ -225,7 +225,7 @@ aws-lambda: export AWS_LAMBDA_FUNCTION_NAME = set-for-build
 aws-lambda: export LAMBDA_TASK_ROOT = set-for-build
 aws-lambda: check-zip install-lambda-modules check-lambda-modules
 	@if [[ ! -d dist ]]; then mkdir dist; fi
-	@pushd ${target_dir} && zip -r ../dist/solarwinds_apm_lambda_${platform}.zip . && popd
+	@pushd ${target_dir} && zip -r ../dist/solarwinds_apm_lambda.zip . && popd
 	@rm -rf ${target_dir} ./build
 	@echo -e "\nDone."
 
