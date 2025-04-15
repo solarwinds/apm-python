@@ -1,6 +1,7 @@
 opentelemetry-exporter-otlp==1.31.1
 opentelemetry-exporter-otlp-proto-http==1.31.1
 opentelemetry-instrumentation-aws-lambda==0.52b1
+opentelemetry-sdk-extension-aws==2.1.0
 packaging
 jaraco.text
 platformdirs

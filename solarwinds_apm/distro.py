@@ -38,6 +38,7 @@ from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_OTLP_COLLECTOR,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_DEFAULT_RESOURCE_DETECTORS,
+    INTL_SWO_DEFAULT_RESOURCE_DETECTORS_LAMBDA,
 )
 from solarwinds_apm.version import __version__ as apm_version
 
@@ -141,10 +142,16 @@ class SolarWindsDistro(BaseDistro):
             "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s trace_flags=%(otelTraceSampled)02d resource.service.name=%(otelServiceName)s] - %(message)s",
         )
         # Default for ResourceDetector
-        environ.setdefault(
-            OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
-            ",".join(INTL_SWO_DEFAULT_RESOURCE_DETECTORS),
-        )
+        if SolarWindsApmConfig.calculate_is_lambda():
+            environ.setdefault(
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
+                ",".join(INTL_SWO_DEFAULT_RESOURCE_DETECTORS_LAMBDA),
+            )
+        else:
+            environ.setdefault(
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
+                ",".join(INTL_SWO_DEFAULT_RESOURCE_DETECTORS),
+            )
 
         # TODO: Support other signal types when available
         # Always opt into new semconv for all instrumentors (if supported)
