@@ -18,12 +18,6 @@ from opentelemetry.environment_variables import (
     OTEL_METRICS_EXPORTER,
     OTEL_PROPAGATORS,
 )
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
-    OTLPSpanExporter as GrpcSpanExporter,
-)
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-    OTLPSpanExporter as HttpSpanExporter,
-)
 from opentelemetry.instrumentation.propagators import (
     set_global_response_propagator,
 )
@@ -71,7 +65,6 @@ from opentelemetry.util._importlib_metadata import entry_points
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import INTL_SWO_DEFAULT_PROPAGATORS
-from solarwinds_apm.exporter import SolarWindsSpanExporter
 from solarwinds_apm.response_propagator import (
     SolarWindsTraceResponsePropagator,
 )
@@ -93,6 +86,57 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def __init__(self) -> None:
         super().__init__()
         self.apm_config = SolarWindsApmConfig()
+
+    # TODO rm disable when Python 3.8 dropped
+    # pylint: disable=deprecated-typing-alias
+    def _swap_legacy_span_exporter(
+        self,
+        span_exporters: Dict[str, Type[SpanExporter]],
+    ) -> Dict:
+        """Intermediary helper to swap legacy span exporter, if configured, with an OTLP exporter if not already configured."""
+        if "solarwinds_exporter" in span_exporters:
+            logger.warning(
+                "SolarWindsSpanExporter is deprecated; configuration ignored."
+            )
+            del span_exporters["solarwinds_exporter"]
+
+            if (
+                "otlp_proto_http" in span_exporters
+                or "otlp_proto_grpc" in span_exporters
+            ):
+                logger.warning("Using already-configured OTLP span exporter.")
+            else:
+                logger.warning("Initializing OTLP span exporter instead.")
+                # Check env vars for OTLP traces protocol (grpc/http),
+                # which could be setdefault from custom distro,
+                # to select correct OTLP exporter. Else OTLP HTTP default.
+                otlp_protocol = os.environ.get(
+                    OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+                ) or os.environ.get(
+                    OTEL_EXPORTER_OTLP_PROTOCOL, "http/protobuf"
+                )
+                otlp_protocol = otlp_protocol.strip()
+                if otlp_protocol not in ["http/protobuf", "grpc"]:
+                    logger.debug(
+                        "Unknown OTLP protocol; defaulting to HTTP to init SpanExporter."
+                    )
+                    otlp_protocol = "http/protobuf"
+
+                if otlp_protocol == "http/protobuf":
+                    exporter_entry_point = "otlp_proto_http"
+                else:
+                    exporter_entry_point = "otlp_proto_grpc"
+
+                span_exporters[exporter_entry_point] = next(
+                    iter(
+                        entry_points(
+                            group="opentelemetry_traces_exporter",
+                            name=exporter_entry_point,
+                        )
+                    )
+                ).load()
+
+        return span_exporters
 
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
@@ -116,6 +160,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             metric_exporter_names + _get_exporter_names("metrics"),
             log_exporter_names + _get_exporter_names("logs"),
         )
+        # TODO NH-107047 Remove this function, the class, and its entry point
+        span_exporters = self._swap_legacy_span_exporter(span_exporters)
 
         # Custom initialization of OTel components
         apm_sampler = ParentBasedSwSampler(
@@ -182,31 +228,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         set_tracer_provider(provider)
 
         for _, exporter_class in exporters.items():
-            # TODO NH-107047 Remove this warning, class, entry point
-            if issubclass(exporter_class, SolarWindsSpanExporter):
-                logger.warning(
-                    "SolarWindsSpanExporter is deprecated; configuration ignored. Initializing OTLP exporter instead."
-                )
-                # Check env vars for OTLP traces protocol (grpc/http),
-                # which could be setdefault from custom distro,
-                # to select correct OTLP exporter. Else OTLP HTTP default.
-                otlp_protocol = os.environ.get(
-                    OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
-                ) or os.environ.get(
-                    OTEL_EXPORTER_OTLP_PROTOCOL, "http/protobuf"
-                )
-                otlp_protocol = otlp_protocol.strip()
-
-                if otlp_protocol == "http/protobuf":
-                    exporter_class = HttpSpanExporter
-                elif otlp_protocol == "grpc":
-                    exporter_class = GrpcSpanExporter
-                else:
-                    logger.debug(
-                        "Unknown OTLP protocol; defaulting to HTTP SpanExporter."
-                    )
-                    exporter_class = HttpSpanExporter
-
             exporter_args = {}
             if self.apm_config.is_lambda:
                 provider.add_span_processor(
