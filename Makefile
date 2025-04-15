@@ -196,10 +196,11 @@ install-lambda-modules:
 	/opt/python/cp312-cp312/bin/pip install setuptools
 	@echo -e "Install upstream dependencies to include in layer"
 	/opt/python/cp312-cp312/bin/pip install -t ${target_dir}/python -r lambda/requirements.txt
-	@echo -e "Install other dependencies and copy .so files to target directory."
-	/opt/python/cp312-cp312/bin/pip install -t ${target_dir}/cp312-cp312 -r lambda/requirements-so.txt
-	cp ${target_dir}/cp312-cp312/charset_normalizer/*.so ${target_dir}/python/charset_normalizer/ && cp ${target_dir}/cp312-cp312/grpc/_cython/*.so ${target_dir}/python/grpc/_cython/ && cp ${target_dir}/cp312-cp312/wrapt/*.so ${target_dir}/python/wrapt/
-	rm -rf ${target_dir}/cp312-cp312
+	/opt/python/cp312-cp312/bin/pip install -t ${target_dir}/python -r lambda/requirements-so.txt
+#	@echo -e "Install other dependencies and copy .so files to target directory."
+#	/opt/python/cp312-cp312/bin/pip install -t ${target_dir}/cp312-cp312 -r lambda/requirements-so.txt
+#	cp ${target_dir}/cp312-cp312/charset_normalizer/*.so ${target_dir}/python/charset_normalizer/ && cp ${target_dir}/cp312-cp312/grpc/_cython/*.so ${target_dir}/python/grpc/_cython/ && cp ${target_dir}/cp312-cp312/wrapt/*.so ${target_dir}/python/wrapt/
+#	rm -rf ${target_dir}/cp312-cp312
 	@echo -e "Install upstream dependencies without deps to include in layer"
 	@/opt/python/cp312-cp312/bin/pip install -t ${target_dir}/nodeps -r lambda/requirements-nodeps.txt --no-deps
 	@echo -e "Install solarwinds_apm to be packed up in zip archive to target directory."

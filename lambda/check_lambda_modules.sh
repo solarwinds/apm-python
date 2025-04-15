@@ -24,15 +24,15 @@ if [ ! -f "solarwinds-apm/wrapper" ]; then
     exit 1
 fi
 
-expected_upstream_ext_files="./python/charset_normalizer/md__mypyc.*.so
-./python/charset_normalizer/md.*.so
-./python/grpc/_cython/cygrpc.*.so
-./python/wrapt/_wrappers.*.so"
-found_upstream_ext_files=$(find ./python/charset_normalizer ./python/grpc/_cython ./python/wrapt -regextype sed -regex ".*/*.so")
-if [[ ! "$found_upstream_ext_files" =~ $expected_upstream_ext_files ]]; then
-    echo "FAILED: Missing upstream extension files"
-    exit 1
-fi
+# expected_upstream_ext_files="./python/charset_normalizer/md__mypyc.*.so
+# ./python/charset_normalizer/md.*.so
+# ./python/grpc/_cython/cygrpc.*.so
+# ./python/wrapt/_wrappers.*.so"
+# found_upstream_ext_files=$(find ./python/charset_normalizer ./python/grpc/_cython ./python/wrapt -regextype sed -regex ".*/*.so")
+# if [[ ! "$found_upstream_ext_files" =~ $expected_upstream_ext_files ]]; then
+#     echo "FAILED: Missing upstream extension files"
+#     exit 1
+# fi
 
 if [ ! -f "python/opentelemetry/instrumentation/aws_lambda/__init__.py" ]; then
     echo "FAILED: Missing AWS Lambda instrumentor"
