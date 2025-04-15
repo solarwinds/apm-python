@@ -87,6 +87,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         super().__init__()
         self.apm_config = SolarWindsApmConfig()
 
+    # TODO rm disable when Python 3.8 dropped
+    # pylint: disable=deprecated-typing-alias
     def _swap_legacy_span_exporter(
         self,
         span_exporters: Dict[str, Type[SpanExporter]],
