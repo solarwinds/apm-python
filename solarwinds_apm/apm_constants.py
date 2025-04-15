@@ -40,6 +40,12 @@ INTL_SWO_DEFAULT_RESOURCE_DETECTORS = [
     "k8s",
     "uams",
 ]
+INTL_SWO_DEFAULT_RESOURCE_DETECTORS_LAMBDA = [
+    "process",
+    "os",
+    "host",
+    "aws_lambda",
+]
 INTL_SWO_DOC_SUPPORTED_PLATFORMS = "https://documentation.solarwinds.com/en/success_center/observability/content/system_requirements/apm_requirements.htm#link3"
 INTL_SWO_DOC_TRACING_PYTHON = "https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-add-python-agent"
 INTL_SWO_SUPPORT_EMAIL = "SWO-support@solarwinds.com"
