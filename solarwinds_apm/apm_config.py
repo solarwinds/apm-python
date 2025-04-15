@@ -62,6 +62,7 @@ class SolarWindsApmConfig:
     done only once during the initialization and the properties cannot be refreshed.
     """
 
+    _CONFIG_COLLECTOR_DEFAULT = "apm.collector.na-01.cloud.solarwinds.com"
     _CONFIG_FILE_DEFAULT = "./solarwinds-apm-config.json"
     _DELIMITER = "."
     _KEY_MASK = "{}...{}:{}"
@@ -81,7 +82,7 @@ class SolarWindsApmConfig:
             "trigger_trace": OboeTracingMode.get_oboe_trigger_trace_mode(
                 "enabled"
             ),
-            "collector": "",  # the collector address in host:port format.
+            "collector": self._CONFIG_COLLECTOR_DEFAULT,
             "debug_level": apm_logging.ApmLoggingLevel.default_level(),
             "service_key": "",
             "transaction_filters": [],
