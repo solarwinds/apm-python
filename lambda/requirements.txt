@@ -8,3 +8,6 @@ packaging
 jaraco.text
 platformdirs
 setuptools
+charset_normalizer==3.4.1
+grpcio==1.70.0
+wrapt==1.17.2
