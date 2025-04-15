@@ -120,7 +120,7 @@ class SolarWindsDistro(BaseDistro):
 
         # Default collector OTLP endpoint, which HTTP exporters map to signal-specific routes
         collector = environ.get("SW_APM_COLLECTOR", None)
-        if collector is not None:
+        if collector is not None and collector.startswith("apm.collector"):
             # Collector endpoint is set, try it
             match = re.search(
                 r"\b[a-z]{2}-\d{2}(?:\.\w+(?:-\w+)*)?\b", collector
