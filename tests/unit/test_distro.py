@@ -346,6 +346,77 @@ class TestDistro:
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
+    def test_configure_env_service_key_only(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar",
+            },
+            clear=True
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
+
+    def test_configure_env_service_key_only(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar",
+            },
+            clear=True
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
+
+    def test_configure_env_service_key_and_collector_only(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar",
+                "SW_APM_COLLECTOR": "apm.collector.na-02.cloud.solarwinds.com",
+            },
+            clear=True
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-02.cloud.solarwinds.com:443"
+
+    def test_configure_env_service_key_and_collector_only_dev(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar",
+                "SW_APM_COLLECTOR": "apm.collector.na-01.dev-ssp.solarwinds.com",
+            },
+            clear=True
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.dev-ssp.solarwinds.com:443"
+
+    def test_configure_env_service_key_and_collector_only_stg(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar",
+                "SW_APM_COLLECTOR": "apm.collector.na-02.st-ssp.solarwinds.com",
+            },
+            clear=True
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-02.st-ssp.solarwinds.com:443"
+
+    def test_configure_env_service_key_and_collector_and_otel_exporter(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar",
+                "SW_APM_COLLECTOR": "apm.collector.na-02.cloud.solarwinds.com",
+                "OTEL_EXPORTER_OTLP_ENDPOINT": "https://apm.collector.na-03.cloud.solarwinds.com:443",
+            },
+            clear=True
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://apm.collector.na-03.cloud.solarwinds.com:443"
+
     def test_configure_env_headers(self, mocker):
         mocker.patch.dict(
             os.environ,
