@@ -27,7 +27,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build sdist and wheel
-      uses: ./.github/actions/package_solarwinds_apm_wheel
+      uses: ./.github/actions/package_solarwinds_apm
     - name: Package sdist and wheels for upload
       run: zip -r scan-wheel-${{ inputs.version }}.zip dist/*
     - uses: actions/upload-artifact@v4
