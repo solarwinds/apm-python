@@ -40,6 +40,7 @@ function check_agent_startup(){
 
     export SW_APM_DEBUG_LEVEL=6
     export SW_APM_SERVICE_KEY=invalid-token-for-testing-1234567890:servicename
+    export SW_APM_COLLECTOR=apm.collector.na-01.cloud.solarwinds.com
     
     # return value we expect form solarwinds_apm.api.solarwinds_ready().
     # This should normally be 1 (ready), because the collector does not send
@@ -47,7 +48,8 @@ function check_agent_startup(){
     expected_agent_return="True"
 
     TEST_EXP_LOG_MESSAGES=(
-    "There is an problem getting the API token authorized. Metrics and tracing for this agent are currently disabled. If you'd like to learn more about resolving this issue, please contact support (see https://support.solarwinds.com/working-with-support)."
+    "SolarWinds APM Python $SOLARWINDS_APM_VERSION"
+    "retrieving sampling settings from https://apm.collector.na-01.cloud.solarwinds.com/v1/settings/servicename/$HOSTNAME"
     )
 
     # unset stop on error so we can catch debug messages in case of failures
