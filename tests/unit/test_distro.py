@@ -14,6 +14,7 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER
 )
 from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_PROTOCOL,
@@ -195,6 +196,7 @@ class TestDistro:
         distro.SolarWindsDistro()._configure()
         # No env vars set, so uses all these defaults
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_EXPORTER_OTLP_COMPRESSION] == "gzip"
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"

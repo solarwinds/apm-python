@@ -27,6 +27,7 @@ from opentelemetry.instrumentation.version import __version__ as inst_version
 from opentelemetry.metrics import NoOpMeterProvider
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
+    OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_PROTOCOL,
@@ -180,6 +181,8 @@ class SolarWindsDistro(BaseDistro):
         # TODO: Support other signal types when available
         # Always opt into new semconv for all instrumentors (if supported)
         environ["OTEL_SEMCONV_STABILITY_OPT_IN"] = self.get_semconv_opt_in()
+
+        environ.setdefault(OTEL_EXPORTER_OTLP_COMPRESSION, "gzip")
 
     def load_instrumentor(self, entry_point: EntryPoint, **kwargs):
         """Takes a collection of instrumentation entry points
