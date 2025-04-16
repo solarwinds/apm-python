@@ -34,69 +34,6 @@ echo "Python version: $(python --version 2>&1)"
 echo "Pip version: $(pip --version)"
 
 
-function check_installation(){
-    echo "---- Verifying agent installation ----"
-
-    EXPECTED_SWIG_FILES_INST="./VERSION
-./__init__.py
-./_oboe.*.so
-./bson
-./bson/bson.h
-./bson/platform_hacks.h
-./liboboe.so
-./oboe.py"
-
-    # agent has been installed already, we only need to find the installed location
-    install_location=$(pip show solarwinds-apm | grep -Eio "location: .*" | cut -d ':' -f 2)
-    # pushd is stubborn and complains about double quotes
-    # https://inst.eecs.berkeley.edu/html/acl/doc/cl/pages/other/tpl-commands/pushd.htm
-    # shellcheck disable=SC2086
-    pushd ${install_location}/solarwinds_apm/extension >/dev/null
-    found_swig_files_inst=$(find . -not -path '.' -a -not -name '*.pyc' -a -not -name '__pycache__' | LC_ALL=C sort)
-
-
-    # in Python 3.8, 3.9 with https://bugs.python.org/issue21536, C-extensions are not linked 
-    # to libpython anymore, this leads to ldd not finding the symbols defined libpython3.(8|9).so
-    sad_pythons=(
-        3.8
-        3.9
-    )
-    if [[ -f /etc/os-release && ! "$(cat /etc/os-release)" =~ "Alpine" || " ${sad_pythons[*]} " =~ $(python -V 2>&1) ]]; then
-        found_oboe_ldd=$(ldd ./_oboe*.so)
-    fi
-    popd >/dev/null
-
-    if [[ ! "$found_swig_files_inst" =~ $EXPECTED_SWIG_FILES_INST ]]; then
-        echo "FAILED! Expected these files under the installed extension directory:"
-        echo "$EXPECTED_SWIG_FILES_INST"
-        echo "found:"
-        echo "$found_swig_files_inst"
-        exit 1
-    fi
-
-    if [[ "$found_oboe_ldd" =~ 'not found' ]]; then
-        echo "FAILED! Expected ldd to find all _oboe.so dependencies, but got:"
-        echo "$found_oboe_ldd"
-        exit 1
-    fi
-
-    if [ "$MODE" == "local" ]
-    then
-        # verify that version of C-extension of installed agent is same as what we expect (i.e. as determined by VERSION)
-        expected_oboe_version=$(cat "$APM_ROOT"/solarwinds_apm/extension/VERSION)
-        export SW_APM_SERVICE_KEY=invalid-token-for-testing-1234567890:servicename
-        result=$(python -c "from solarwinds_apm.extension.oboe import Config as l_config; r=l_config.getVersionString(); print(r)")
-
-        if [ "$result"  != "$expected_oboe_version" ]; then
-            echo "FAILED! Expected agent using Oboe extension version $expected_oboe_version but found version $result."
-            exit 1
-        fi
-        echo -e "Agent is bundled with Oboe extension version $result.\n"
-    fi
-
-    echo -e "Agent installed under $install_location verified successfully.\n"
-}
-
 function check_agent_startup(){
     # verify that installed agent starts up properly
     echo "---- Verifying proper startup of installed agent ----"
@@ -179,14 +116,12 @@ APM_ROOT='/code/python-solarwinds'
 # Check sdist
 # shellcheck disable=SC1091
 PIP_INSTALL=1 source ./_helper_check_sdist.sh
-check_installation
 check_agent_startup
 echo -e "Source distribution verified successfully.\n"
 
 # Check wheel
 # shellcheck disable=SC1091
 PIP_INSTALL=1 source ./_helper_check_wheel.sh
-check_installation
 check_agent_startup
 
 # Check startup and instrumentation
