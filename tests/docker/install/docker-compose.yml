@@ -10,10 +10,8 @@ x-command-install-test: &command-install-test
 x-envvars-install-test: &envvars-install-test
   MODE: ${MODE}
   SOLARWINDS_APM_VERSION: ${SOLARWINDS_APM_VERSION:-}
-  SW_APM_COLLECTOR_AO_PROD: ${SW_APM_COLLECTOR_AO_PROD}
   SW_APM_COLLECTOR_PROD: ${SW_APM_COLLECTOR_PROD}
   SW_APM_COLLECTOR_STAGING: ${SW_APM_COLLECTOR_STAGING}
-  SW_APM_SERVICE_KEY_AO_PROD: ${SW_APM_SERVICE_KEY_AO_PROD}
   SW_APM_SERVICE_KEY_PROD: ${SW_APM_SERVICE_KEY_PROD}
   SW_APM_SERVICE_KEY_STAGING: ${SW_APM_SERVICE_KEY_STAGING}
 
@@ -27,7 +25,6 @@ x-volumes-codebase: &volumes-codebase
     - ./install_tests.sh:/workspace/install_tests.sh
     - ./client.py:/workspace/client.py
     - ./app.py:/workspace/app.py
-    - ./ao_issuer_ca_public_cert.crt:/workspace/ao_issuer_ca_public_cert.crt
 
 x-workdir: &workdir
   working_dir: /workspace

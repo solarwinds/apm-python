@@ -44,17 +44,16 @@ function check_agent_startup(){
     # return value we expect form solarwinds_apm.api.solarwinds_ready().
     # This should normally be 1 (ready), because the collector does not send
     # "invalid api token" response; it sends "ok" with soft disable settings.
-    expected_agent_return=1
+    expected_agent_return="True"
 
     TEST_EXP_LOG_MESSAGES=(
-    ">> SSL Reporter using host='apm.collector.na-01.cloud.solarwinds.com' port='443' log='' clientid='inva...7890:servicename' buf='1000' maxTransactions='200' flushMaxWaitTime='5000' eventsFlushInterval='2' maxRequestSizeBytes='3000000' proxy=''"
-    "Warning: There is an problem getting the API token authorized. Metrics and tracing for this agent are currently disabled. If you'd like to learn more about resolving this issue, please contact support (see https://support.solarwinds.com/working-with-support)."
+    "There is an problem getting the API token authorized. Metrics and tracing for this agent are currently disabled. If you'd like to learn more about resolving this issue, please contact support (see https://support.solarwinds.com/working-with-support)."
     )
 
     # unset stop on error so we can catch debug messages in case of failures
     set +e
 
-    result=$(opentelemetry-instrument python -c 'from solarwinds_apm.api import solarwinds_ready; r=solarwinds_ready(wait_milliseconds=10000, integer_response=True); print(r)' 2>startup.log | tail -1)
+    result=$(opentelemetry-instrument python -c 'from solarwinds_apm.api import solarwinds_ready; r=solarwinds_ready(wait_milliseconds=10000); print(r)' 2>startup.log | tail -1)
 
     if [ "$result" != "$expected_agent_return" ]; then
         echo "FAILED! Expected solarwinds_ready to return $expected_agent_return, but got: $result"
@@ -98,10 +97,6 @@ function run_instrumented_server_and_client(){
     export SW_APM_DEBUG_LEVEL="3"
     export SW_APM_SERVICE_KEY="$2"
     export SW_APM_COLLECTOR="$3"
-    # Only set certificate trustedpath for AO prod
-    if [ "$4" = "AO Prod" ]; then
-        export SW_APM_TRUSTEDPATH="$PWD/ao_issuer_ca_public_cert.crt"
-    fi
     echo "Testing trace export from Flask to $4..."
     nohup opentelemetry-instrument flask run > log.txt 2>&1 &
     python client.py
@@ -128,4 +123,3 @@ check_agent_startup
 install_test_app_dependencies
 run_instrumented_server_and_client "8001" "$SW_APM_SERVICE_KEY_STAGING-$HOSTNAME" "$SW_APM_COLLECTOR_STAGING" "NH Staging"
 run_instrumented_server_and_client "8002" "$SW_APM_SERVICE_KEY_PROD-$HOSTNAME" "$SW_APM_COLLECTOR_PROD" "NH Prod"
-run_instrumented_server_and_client "8003" "$SW_APM_SERVICE_KEY_AO_PROD-$HOSTNAME" "$SW_APM_COLLECTOR_AO_PROD" "AO Prod"
