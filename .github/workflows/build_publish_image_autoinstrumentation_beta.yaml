@@ -1,0 +1,129 @@
+# © 2025 SolarWinds Worldwide, LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+name: "Publish Beta APM Python Auto-Instrumentation"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  packages: write
+  contents: write
+  id-token: write
+  security-events: write
+
+jobs:
+  docker_hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read solarwinds_apm version requirement
+        run: echo VERSION=$(head -n 1 image/requirements-nodeps-beta.txt | cut -d '=' -f3) >> $GITHUB_ENV
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log into Docker.io (build)
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKER_SOLARWINDS_ORG_LOGIN }}
+          password: ${{ secrets.ENOPS5919_APM_DOCKER_HUB_CI_OAT }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ github.repository_owner }}/autoinstrumentation-python
+          tags: |
+            type=raw,value=${{ env.VERSION }}-beta
+          labels: |
+            maintainer=swo-librarians
+            org.opencontainers.image.title=apm-python
+            org.opencontainers.image.description=Solarwinds OTEL distro Python agent
+            org.opencontainers.image.vendor=SolarWinds Worldwide, LLC
+
+      - name: Login to GitHub Package Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push - amd64, arm64
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: image
+          file: image/Dockerfile-beta
+          platforms: linux/amd64,linux/arm64
+          build-args: version=${{ env.VERSION }}-beta
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build locally for scan - amd64
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          context: image
+          platforms: linux/amd64
+          build-args: version=${{ env.VERSION }}-beta
+          tags: ${{ steps.meta.outputs.tags }}-scan
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Log into Docker.io (scan)
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.ENOPS5919_DOCKER_SCOUT_CI_USER }}
+          password: ${{ secrets.ENOPS5919_DOCKER_SCOUT_CI_PAT }}
+
+      - name: Analyze for critical and high CVEs - tagged image
+        id: docker-scout-image-cves
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: ${{ steps.meta.outputs.tags[0] }}
+          platform: "linux/amd64"
+          sarif-file: sarif.output.json
+
+      - name: Upload SARIF result
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: sarif.output.json
+
+  ghcr_io:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read solarwinds_apm version requirement
+        run: echo VERSION=$(head -n 1 image/requirements-nodeps-beta.txt | cut -d '=' -f3) >> $GITHUB_ENV
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Package Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: image
+          file: image/Dockerfile-beta
+          platforms: linux/amd64,linux/arm64
+          build-args: version=${{ env.VERSION }}-beta
+          tags: ghcr.io/${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}-beta
