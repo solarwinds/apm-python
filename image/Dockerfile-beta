@@ -12,7 +12,7 @@
 
 FROM python:3.12 AS build-312
 WORKDIR /operator-build
-ADD requirements-nodeps.txt .
+ADD requirements-nodeps-beta.txt .
 ADD requirements.txt .
 RUN mkdir workspace
 RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps-beta.txt
@@ -20,7 +20,7 @@ RUN pip install --target workspace -r requirements.txt
 
 FROM python:3.12-alpine AS build-musl-312
 WORKDIR /operator-build
-ADD requirements-nodeps.txt .
+ADD requirements-nodeps-beta.txt .
 ADD requirements.txt .
 RUN apk add g++ gcc python3-dev musl-dev linux-headers
 RUN mkdir workspace
