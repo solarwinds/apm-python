@@ -10,7 +10,7 @@
 # - For auto-instrumentation by container injection, the Linux command cp is
 #   used and must be availabe in the image.
 
-FROM python:3.12 AS build-312
+FROM python:3.9 AS build-39
 WORKDIR /operator-build
 ADD requirements-nodeps-beta.txt .
 ADD requirements.txt .
@@ -18,7 +18,7 @@ RUN mkdir workspace
 RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps-beta.txt
 RUN pip install --target workspace -r requirements.txt
 
-FROM python:3.12-alpine AS build-musl-312
+FROM python:3.9-alpine AS build-musl-39
 WORKDIR /operator-build
 ADD requirements-nodeps-beta.txt .
 ADD requirements.txt .
@@ -29,8 +29,8 @@ RUN pip install --target workspace -r requirements.txt
 
 FROM busybox
 
-COPY --from=build-312 /operator-build/workspace /autoinstrumentation
-COPY --from=build-musl-312 /operator-build/workspace /autoinstrumentation-musl
+COPY --from=build-39 /operator-build/workspace /autoinstrumentation
+COPY --from=build-musl-39 /operator-build/workspace /autoinstrumentation-musl
 
 RUN chmod -R go+r /autoinstrumentation
 RUN chmod -R go+r /autoinstrumentation-musl
