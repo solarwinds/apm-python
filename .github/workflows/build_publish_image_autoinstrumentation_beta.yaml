@@ -8,9 +8,6 @@ name: "Publish Beta APM Python Auto-Instrumentation"
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - update-image-builds
 
 permissions:
   packages: write
