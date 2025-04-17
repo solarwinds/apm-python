@@ -193,13 +193,13 @@ install-lambda-modules:
 	@echo -e "Creating target directory ${target_dir} for AWS Lambda layer artifacts."
 	mkdir -p ${target_dir}/python
 	@echo -e "Install setuptools"
-	/opt/python/cp312-cp312/bin/pip install setuptools
+	/opt/python/cp39-cp39/bin/pip install setuptools
 	@echo -e "Install upstream dependencies to include in layer"
-	/opt/python/cp312-cp312/bin/pip install -t ${target_dir}/python -r lambda/requirements.txt
+	/opt/python/cp39-cp39/bin/pip install -t ${target_dir}/python -r lambda/requirements.txt
 	@echo -e "Install upstream dependencies without deps to include in layer"
-	@/opt/python/cp312-cp312/bin/pip install -t ${target_dir}/nodeps -r lambda/requirements-nodeps.txt --no-deps
+	@/opt/python/cp39-cp39/bin/pip install -t ${target_dir}/nodeps -r lambda/requirements-nodeps.txt --no-deps
 	@echo -e "Install solarwinds_apm to be packed up in zip archive to target directory."
-	@/opt/python/cp312-cp312/bin/pip install . -t ${target_dir}/nodeps --no-deps
+	@/opt/python/cp39-cp39/bin/pip install . -t ${target_dir}/nodeps --no-deps
 	@echo -e "Moving no-deps dependencies, needed for full opentelemetry/instrumentation path"
 	@cp -r ${target_dir}/nodeps/* ${target_dir}/python
 	@rm -rf ${target_dir}/nodeps
