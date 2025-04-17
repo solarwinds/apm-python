@@ -17,6 +17,7 @@ from solarwinds_apm.oboe import get_transaction_name_pool
 from solarwinds_apm.oboe.http_sampler import HttpSampler
 from solarwinds_apm.oboe.json_sampler import JsonSampler
 from solarwinds_apm.oboe.transaction_name_pool import TRANSACTION_NAME_DEFAULT
+from solarwinds_apm.sampler import ParentBasedSwSampler
 from solarwinds_apm.tracer_provider import SolarwindsTracerProvider
 from solarwinds_apm.w3c_transformer import W3CTransformer
 
@@ -122,13 +123,19 @@ def solarwinds_ready(
 
     tracer_provider = trace.get_tracer_provider()
     if isinstance(tracer_provider, SolarwindsTracerProvider):
-        if isinstance(tracer_provider.sampler, (HttpSampler, JsonSampler)):
+        if isinstance(
+            tracer_provider.sampler,
+            (ParentBasedSwSampler, HttpSampler, JsonSampler),
+        ):
             return tracer_provider.sampler.wait_until_ready(
                 int(wait_milliseconds / 1000)
             )
+
         logger.debug(
             "SolarWinds not ready because sampler is not a Solarwinds-specific sampler"
         )
+        return False
+
     logger.debug(
         "SolarWinds not ready. Got APM TracerProvider: %s",
         type(tracer_provider),
