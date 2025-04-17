@@ -11,8 +11,10 @@ from solarwinds_apm.api import (
     set_transaction_name,
     solarwinds_ready,
 )
+from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.oboe.http_sampler import HttpSampler
 from solarwinds_apm.oboe.json_sampler import JsonSampler
+from solarwinds_apm.sampler import ParentBasedSwSampler
 from solarwinds_apm.tracer_provider import SolarwindsTracerProvider
 
 
@@ -87,6 +89,85 @@ class TestSetTransactionName:
         mock_current_span.set_attribute.assert_called_once_with("TransactionName", "mock-registered-name")
 
 class TestSolarWindsReady:
+    def test_parentbasedsw_sampler_ready(self, mocker):
+        def get_side_effect(param):
+            if param == "service_key":
+                return "foo:bar"
+            else:
+                return "foo"
+        mock_apmconfig = mocker.Mock(spec=SolarWindsApmConfig)
+        mock_apmconfig.service_key = "foo:bar"
+        mock_apmconfig.configure_mock(
+            **{
+                "agent_enabled": True,
+                "get": mocker.Mock(side_effect=get_side_effect),
+                "service_name": "foo-service",
+                "is_lambda": False,
+            }
+        )
+
+        mock_http_sampler = mocker.Mock(spec=HttpSampler)
+        mock_http_sampler.configure_mock(
+            **{
+                "wait_until_ready": mocker.Mock(return_value=True)
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.sampler.HttpSampler",
+            return_value=mock_http_sampler,
+        )
+        mock_sampler = ParentBasedSwSampler(mock_apmconfig, "foo")
+        mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
+        mock_tracer_provider.configure_mock(
+            **{
+                "sampler": mock_sampler,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.configurator.trace.get_tracer_provider",
+            return_value=mock_tracer_provider,
+        )
+        assert solarwinds_ready() == True
+
+    def test_parentbasedsw_not_ready(self, mocker):
+        def get_side_effect(param):
+            if param == "service_key":
+                return "foo:bar"
+            else:
+                return "foo"
+        mock_apmconfig = mocker.Mock(spec=SolarWindsApmConfig)
+        mock_apmconfig.service_key = "foo:bar"
+        mock_apmconfig.configure_mock(
+            **{
+                "agent_enabled": True,
+                "get": mocker.Mock(side_effect=get_side_effect),
+                "service_name": "foo-service",
+                "is_lambda": False,
+            }
+        )
+
+        mock_http_sampler = mocker.Mock(spec=HttpSampler)
+        mock_http_sampler.configure_mock(
+            **{
+                "wait_until_ready": mocker.Mock(return_value=False)
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.sampler.HttpSampler",
+            return_value=mock_http_sampler,
+        )
+        mock_sampler = ParentBasedSwSampler(mock_apmconfig, "foo")
+        mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
+        mock_tracer_provider.configure_mock(
+            **{
+                "sampler": mock_sampler,
+            }
+        )
+        mocker.patch(
+            "solarwinds_apm.configurator.trace.get_tracer_provider",
+            return_value=mock_tracer_provider,
+        )
+        assert solarwinds_ready() == False
 
     def test_http_sampler_ready(self, mocker):
         mock_sampler = mocker.Mock(spec=HttpSampler)

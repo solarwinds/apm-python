@@ -641,21 +641,27 @@ class ParentBasedSwSampler(ParentBased):
         Uses OTEL defaults if parent span is_local.
         """
         configuration = SolarWindsApmConfig.to_configuration(apm_config)
-        sampler = None
+        self.sampler = None
         if apm_config.is_lambda:
-            sampler = JsonSampler(
+            self.sampler = JsonSampler(
                 meter_provider=get_meter_provider(), config=configuration
             )
         else:
-            sampler = HttpSampler(
+            self.sampler = HttpSampler(
                 meter_provider=get_meter_provider(),
                 config=configuration,
                 initial=None,
             )
         super().__init__(
-            root=sampler,
-            remote_parent_sampled=sampler,
-            remote_parent_not_sampled=sampler,
+            root=self.sampler,
+            remote_parent_sampled=self.sampler,
+            remote_parent_not_sampled=self.sampler,
         )
 
     # should_sample defined by ParentBased
+
+    def wait_until_ready(self, timeout: int) -> bool:
+        """
+        Waits until the sampler is ready.
+        """
+        return self.sampler.wait_until_ready(timeout)
