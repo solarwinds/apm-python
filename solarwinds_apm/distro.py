@@ -149,14 +149,24 @@ class SolarWindsDistro(BaseDistro):
                 INTL_SWO_DEFAULT_OTLP_COLLECTOR,
             )
 
-        # TODO NH-107555 Only set headers if SWO export endpoint is set
-        header_token = self._get_token_from_service_key()
-        if not header_token:
-            logger.debug("Setting OTLP export defaults without SWO token")
-        environ.setdefault(
-            OTEL_EXPORTER_OTLP_HEADERS,
-            f"authorization=Bearer%20{header_token}",
-        )
+        # Set default headers if export endpoint is a SWO one
+        # (default or configured and resolved by above)
+        endpoint = environ.get(OTEL_EXPORTER_OTLP_ENDPOINT)
+        if endpoint is not None:
+            match = re.search(
+                r"https://otel.collector.\b[a-z]{2}-\d{2}(?:\.\w+(?:-\w+)*)?\b.solarwinds.com",
+                endpoint,
+            )
+            if match:
+                header_token = self._get_token_from_service_key()
+                if not header_token:
+                    logger.debug(
+                        "Setting OTLP export defaults without SWO token"
+                    )
+                environ.setdefault(
+                    OTEL_EXPORTER_OTLP_HEADERS,
+                    f"authorization=Bearer%20{header_token}",
+                )
 
         environ.setdefault(
             OTEL_PROPAGATORS, ",".join(INTL_SWO_DEFAULT_PROPAGATORS)

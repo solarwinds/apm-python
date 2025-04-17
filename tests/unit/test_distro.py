@@ -342,7 +342,7 @@ class TestDistro:
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "http/protobuf"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://foo.bar.com:443"
-        assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "authorization=Bearer%20foo-token"
+        assert os.environ.get(OTEL_EXPORTER_OTLP_HEADERS) is None
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
