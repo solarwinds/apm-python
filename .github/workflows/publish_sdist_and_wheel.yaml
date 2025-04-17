@@ -4,7 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-name: Publish aarch64
+name: Publish sdist and wheel
 
 on:
   workflow_call:
@@ -19,9 +19,9 @@ on:
         description: "testpypi or pypi"
 
 jobs:
-  publish_aarch64:
-    runs-on:
-      group: apm-arm-runner
+  publish_sdist_and_wheel:
+    name: Publish sdist and wheel to TestPyPI
+    runs-on: ubuntu-latest
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -36,17 +36,17 @@ jobs:
       - name: Check distribution artifacts
         run: twine check dist/*
       - if: ${{ inputs.repository-name == 'testpypi' }}
-        name: Publish aarch64 wheels to TestPyPI
+        name: Publish sdist and wheel wheels to TestPyPI
         env:
           TWINE_NON_INTERACTIVE: 1
           TWINE_REPOSITORY: testpypi
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
-        run: twine upload dist/*.whl
+        run: twine upload dist/*
       - if: ${{ inputs.repository-name == 'pypi' }}
-        name: Publish aarch64 wheels to PyPI
+        name: Publish sdist and wheel wheels to PyPI
         env:
           TWINE_NON_INTERACTIVE: 1
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.SW_APM_PYPI_UPLOAD_TOKEN }}
-        run: twine upload dist/*.whl
+        run: twine upload dist/*

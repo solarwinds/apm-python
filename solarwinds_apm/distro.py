@@ -8,6 +8,7 @@
 
 import logging
 import platform
+import re
 import sys
 from os import environ
 
@@ -26,6 +27,7 @@ from opentelemetry.instrumentation.version import __version__ as inst_version
 from opentelemetry.metrics import NoOpMeterProvider
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
+    OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_PROTOCOL,
@@ -119,10 +121,33 @@ class SolarWindsDistro(BaseDistro):
         )
 
         # Default collector OTLP endpoint, which HTTP exporters map to signal-specific routes
-        environ.setdefault(
-            OTEL_EXPORTER_OTLP_ENDPOINT,
-            INTL_SWO_DEFAULT_OTLP_COLLECTOR,
-        )
+        collector = environ.get("SW_APM_COLLECTOR", None)
+        if collector is not None and collector.startswith("apm.collector"):
+            # Collector endpoint is set, try it
+            match = re.search(
+                r"\b[a-z]{2}-\d{2}(?:\.\w+(?:-\w+)*)?\b", collector
+            )
+            if match:
+                # Set the OTLP endpoint to the collector endpoint with the correct region
+                resolved = (
+                    "https://otel.collector."
+                    + match.group()
+                    + ".solarwinds.com:443"
+                )
+                logger.debug(
+                    "Using exporter otlp collector endpoint %s", resolved
+                )
+                environ.setdefault(OTEL_EXPORTER_OTLP_ENDPOINT, resolved)
+            else:
+                environ.setdefault(
+                    OTEL_EXPORTER_OTLP_ENDPOINT,
+                    INTL_SWO_DEFAULT_OTLP_COLLECTOR,
+                )
+        else:
+            environ.setdefault(
+                OTEL_EXPORTER_OTLP_ENDPOINT,
+                INTL_SWO_DEFAULT_OTLP_COLLECTOR,
+            )
 
         # TODO NH-107555 Only set headers if SWO export endpoint is set
         header_token = self._get_token_from_service_key()
@@ -156,6 +181,8 @@ class SolarWindsDistro(BaseDistro):
         # TODO: Support other signal types when available
         # Always opt into new semconv for all instrumentors (if supported)
         environ["OTEL_SEMCONV_STABILITY_OPT_IN"] = self.get_semconv_opt_in()
+
+        environ.setdefault(OTEL_EXPORTER_OTLP_COMPRESSION, "gzip")
 
     def load_instrumentor(self, entry_point: EntryPoint, **kwargs):
         """Takes a collection of instrumentation entry points
