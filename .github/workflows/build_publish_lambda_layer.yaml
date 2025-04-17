@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-minor: ["8", "9", "10", "11"]
+        python-minor: ["8", "9", "10", "11", "12"]
         apm-env: ["lambda"]
     steps:
     - uses: actions/checkout@v4
