@@ -33,7 +33,6 @@ INTL_SWO_DEFAULT_RESOURCE_DETECTORS = [
     "aws_ec2",
     "aws_ecs",
     "aws_eks",
-    "aws_lambda",
     "azure_app_service",
     "azure_functions",
     "azure_vm",
