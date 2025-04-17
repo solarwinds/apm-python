@@ -46,8 +46,7 @@ def test_valid_service_key_samples_created_spans():
                     transaction_settings=[],
                     transaction_name=None,
                 ),
-                logger=logging.getLogger(__name__),
-                initial=None
+                initial=None,
             )
             memory_exporter = InMemorySpanExporter()
             tracer_provider = TracerProvider(sampler=sampler)
@@ -83,8 +82,7 @@ def test_invalid_service_key_does_not_sample_created_spans():
             transaction_settings=[],
             transaction_name=None,
         ),
-        logger=logging.getLogger(__name__),
-        initial=None
+        initial=None,
     )
     memory_exporter = InMemorySpanExporter()
     tracer_provider = TracerProvider(sampler=sampler)
@@ -115,8 +113,7 @@ def test_invalid_collector_does_not_sample_created_spans():
             transaction_settings=[],
             transaction_name=None,
         ),
-        logger=logging.getLogger(__name__),
-        initial=None
+        initial=None,
     )
     memory_exporter = InMemorySpanExporter()
     tracer_provider = TracerProvider(sampler=sampler)
@@ -168,7 +165,7 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
     }
     mock_response.status_code = 200
     mock_get.return_value = mock_response
-    sampler = HttpSampler(meter_provider=meter_provider, config=config, logger=logging.getLogger(__name__), initial=None)
+    sampler = HttpSampler(meter_provider=meter_provider, config=config, initial=None)
     result = sampler._fetch_from_collector()
     assert result == {
         "value": 1000000,
@@ -194,7 +191,7 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
 
 
 def test_shutdown(config, meter_provider):
-    sampler = HttpSampler(meter_provider=meter_provider, config=config, logger=logging.getLogger(__name__), initial=None)
+    sampler = HttpSampler(meter_provider=meter_provider, config=config, initial=None)
     sampler.shutdown()
     assert sampler._shutdown_event.is_set()
     sampler._daemon_thread.join(timeout=DAEMON_THREAD_JOIN_TIMEOUT)

@@ -39,12 +39,12 @@ jobs:
     name: Build sdist and x86_64
     needs: get_apm_python_version
     # Outputs artifact-name
-    uses: ./.github/workflows/build_x86_64.yaml
+    uses: ./.github/workflows/build_sdist_and_wheel.yaml
     with:
       version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
   
   scan_sdist_and_x86_64:
-    name: RL scan aarch64 build
+    name: RL scan sdist and wheel
     needs:
       - get_apm_python_version
       - build_sdist_and_x86_64
@@ -61,47 +61,15 @@ jobs:
     needs:
       - build_sdist_and_x86_64
       - scan_sdist_and_x86_64
-    uses: ./.github/workflows/publish_x86_64.yaml
+    uses: ./.github/workflows/publish_sdist_and_wheel.yaml
     with:
       artifact-name: ${{ needs.build_sdist_and_x86_64.outputs.artifact-name }}
       repository-name: pypi
     secrets: inherit
 
-  build_aarch64:
-    name: Build aarch64
-    needs: get_apm_python_version
-    # Outputs artifact-name
-    uses: ./.github/workflows/build_aarch64.yaml
-    with:
-      version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
-
-  scan_aarch64:
-    name: RL scan aarch64 build
-    needs:
-      - get_apm_python_version
-      - build_aarch64
-    uses: ./.github/workflows/reversinglabs_scan.yaml
-    with:
-      artifact-name: ${{ needs.build_aarch64.outputs.artifact-name }}
-      package-name: apm-python-pypi-aarch64
-      version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
-      rl-submit-only: false
-    secrets: inherit
-
-  publish_aarch64:
-    name: Publish aarch64 to PyPI
-    needs:
-      - build_aarch64
-      - scan_aarch64
-    uses: ./.github/workflows/publish_aarch64.yaml
-    with:
-      artifact-name: ${{ needs.build_aarch64.outputs.artifact-name }}
-      repository-name: pypi
-    secrets: inherit
-
   create_release:
     name: Create draft release
-    needs: [publish_sdist_and_x86_64, publish_aarch64]
+    needs: publish_sdist_and_x86_64
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -24,30 +24,6 @@ if [ ! -f "solarwinds-apm/wrapper" ]; then
     exit 1
 fi
 
-expected_sw_extension_files="./python/solarwinds_apm/extension/VERSION
-./python/solarwinds_apm/extension/__init__.py
-./python/solarwinds_apm/extension/_oboe.*.so
-./python/solarwinds_apm/extension/bson
-./python/solarwinds_apm/extension/bson/bson.h
-./python/solarwinds_apm/extension/bson/platform_hacks.h
-./python/solarwinds_apm/extension/liboboe.so
-./python/solarwinds_apm/extension/oboe.py"
-found_sw_extension_files=$(find ./python/solarwinds_apm/extension -not -path ./python/solarwinds_apm/extension | LC_ALL=C sort)
-if [[ ! "$found_sw_extension_files" =~ $expected_sw_extension_files ]]; then
-    echo "FAILED: Missing SolarWinds extension files"
-    exit 1
-fi
-
-expected_upstream_ext_files="./python/charset_normalizer/md.*.so
-./python/charset_normalizer/md__mypyc.*.so
-./python/grpc/_cython/cygrpc.*.so
-./python/wrapt/_wrappers.*.so"
-found_upstream_ext_files=$(find ./python/charset_normalizer ./python/grpc/_cython ./python/wrapt -regextype sed -regex ".*/*.so")
-if [[ ! "$found_upstream_ext_files" =~ $expected_upstream_ext_files ]]; then
-    echo "FAILED: Missing upstream extension files"
-    exit 1
-fi
-
 if [ ! -f "python/opentelemetry/instrumentation/aws_lambda/__init__.py" ]; then
     echo "FAILED: Missing AWS Lambda instrumentor"
     exit 1

@@ -82,13 +82,6 @@ class TestConfiguratorPropagators:
         if old_propagators:
             del os.environ["OTEL_PROPAGATORS"]
 
-        # Mock entry points
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_entry_points.configure_mock(
-            side_effect=StopIteration("mock error")
-        )
         mocker.patch.dict(
             os.environ,
             {
@@ -98,16 +91,6 @@ class TestConfiguratorPropagators:
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
-        with pytest.raises(Exception):
-            test_configurator._configure_propagator()
-            mock_entry_points.assert_has_calls(
-                [
-                    mocker.call(
-                        group="opentelemetry_propagator",
-                        name="invalid_propagator"
-                    ),
-                ]
-            )
         mock_composite_propagator.assert_not_called()
         mock_set_global_textmap.assert_not_called()
 

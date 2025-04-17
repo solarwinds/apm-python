@@ -62,53 +62,53 @@ def os_supported():
     is_x86_64_or_aarch64 = platform.machine() in ["x86_64", "aarch64"]
     return is_linux and is_x86_64_or_aarch64
 
-def link_oboe_lib(src_lib):
-    """Set up the C-extension library.
+# def link_oboe_lib(src_lib):
+#     """Set up the C-extension library.
+#
+#     Creates a .so library symlink ('liboboe.so') needed when the
+#     solarwinds_apm package is built from source. This step is needed since Oboe library is platform specific.
+#
+#     The src_lib parameter is the name of the library file under solarwinds_apm/extension the above mentioned symlink will
+#     point to. If a file with the provided name does not exist, no symlinks will be created."""
+#
+#     logger.info("Create link to platform specific liboboe library file")
+#     link_dst = 'liboboe.so'
+#     cwd = os.getcwd()
+#     try:
+#         os.chdir('./solarwinds_apm/extension/')
+#         if not os.path.exists(src_lib):
+#             raise Exception("C-extension library file {} does not exist.".format(src_lib))
+#         if os.path.exists(link_dst):
+#             # if the destination library file exists already, it needs to be deleted, otherwise linking will fail
+#             os.remove(link_dst)
+#             logger.info("Removed %s" % link_dst)
+#         os.symlink(src_lib, link_dst)
+#         logger.info("Created new link at {} to {}".format(link_dst, src_lib))
+#     except Exception as ecp:
+#         logger.info("[SETUP] failed to set up link to C-extension library: {e}".format(e=ecp))
+#     finally:
+#         os.chdir(cwd)
 
-    Creates a .so library symlink ('liboboe.so') needed when the
-    solarwinds_apm package is built from source. This step is needed since Oboe library is platform specific.
-
-    The src_lib parameter is the name of the library file under solarwinds_apm/extension the above mentioned symlink will
-    point to. If a file with the provided name does not exist, no symlinks will be created."""
-
-    logger.info("Create link to platform specific liboboe library file")
-    link_dst = 'liboboe.so'
-    cwd = os.getcwd()
-    try:
-        os.chdir('./solarwinds_apm/extension/')
-        if not os.path.exists(src_lib):
-            raise Exception("C-extension library file {} does not exist.".format(src_lib))
-        if os.path.exists(link_dst):
-            # if the destination library file exists already, it needs to be deleted, otherwise linking will fail
-            os.remove(link_dst)
-            logger.info("Removed %s" % link_dst)
-        os.symlink(src_lib, link_dst)
-        logger.info("Created new link at {} to {}".format(link_dst, src_lib))
-    except Exception as ecp:
-        logger.info("[SETUP] failed to set up link to C-extension library: {e}".format(e=ecp))
-    finally:
-        os.chdir(cwd)
-
-class CustomBuild(build_py):
-    def run(self):
-        self.run_command('build_ext')
-        build_py.run(self)
-
-class CustomBuildExt(build_ext):
-    def run(self):
-        if sys.platform == 'darwin':
-            return
-
-        platform_m = platform.machine()
-        oboe_lib = f"liboboe-1.0-"
-        if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") and os.environ.get("LAMBDA_TASK_ROOT"):
-            oboe_lib = f"{oboe_lib}lambda-"
-        if is_alpine_distro():
-            oboe_lib = f"{oboe_lib}alpine-"
-        oboe_lib = f"{oboe_lib}{platform_m}.so"
-
-        link_oboe_lib(oboe_lib)
-        build_ext.run(self)
+# class CustomBuild(build_py):
+#     def run(self):
+#         self.run_command('build_ext')
+#         build_py.run(self)
+#
+# class CustomBuildExt(build_ext):
+#     def run(self):
+#         # if sys.platform == 'darwin':
+#         #     return
+#         #
+#         # platform_m = platform.machine()
+#         # oboe_lib = f"liboboe-1.0-"
+#         # if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") and os.environ.get("LAMBDA_TASK_ROOT"):
+#         #     oboe_lib = f"{oboe_lib}lambda-"
+#         # if is_alpine_distro():
+#         #     oboe_lib = f"{oboe_lib}alpine-"
+#         # oboe_lib = f"{oboe_lib}{platform_m}.so"
+#         #
+#         # link_oboe_lib(oboe_lib)
+#         build_ext.run(self)
 
 
 if not (python_version_supported() and os_supported()):
@@ -116,35 +116,35 @@ if not (python_version_supported() and os_supported()):
         "[SETUP] This package supports only Python 3.8 and above on Linux x86_64 or aarch64. "
         "Other platform or python versions may not work as expected.")
 
-ext_modules = [
-    Extension(
-        name='solarwinds_apm.extension._oboe',
-        sources=[
-            'solarwinds_apm/extension/oboe_wrap.cxx',
-            'solarwinds_apm/extension/oboe_api.cpp'
-        ],
-        depends=[
-            'solarwinds_apm/extension/oboe_api.h',
-        ],
-        include_dirs=[
-            'solarwinds_apm/certs',
-            'solarwinds_apm/extension/bson',
-            'solarwinds_apm'
-        ],
-        libraries=['oboe', 'rt'],
-        library_dirs=['solarwinds_apm/extension'],
-        extra_compile_args=["-std=c++14"],
-        runtime_library_dirs=['$ORIGIN']
-    ),
-]
+# ext_modules = [
+#     Extension(
+#         name='solarwinds_apm.extension._oboe',
+#         sources=[
+#             'solarwinds_apm/extension/oboe_wrap.cxx',
+#             'solarwinds_apm/extension/oboe_api.cpp'
+#         ],
+#         depends=[
+#             'solarwinds_apm/extension/oboe_api.h',
+#         ],
+#         include_dirs=[
+#             'solarwinds_apm/certs',
+#             'solarwinds_apm/extension/bson',
+#             'solarwinds_apm'
+#         ],
+#         libraries=['oboe', 'rt'],
+#         library_dirs=['solarwinds_apm/extension'],
+#         extra_compile_args=["-std=c++14"],
+#         runtime_library_dirs=['$ORIGIN']
+#     ),
+# ]
 
 # Extra args in case old setuptools version
 setup(
     name="solarwinds_apm",
-    cmdclass={
-        'build_ext': CustomBuildExt,
-        'build_py': CustomBuild,
-    },
-    ext_modules=ext_modules,
+    # cmdclass={
+    #     'build_ext': CustomBuildExt,
+    #     'build_py': CustomBuild,
+    # },
+    # ext_modules=ext_modules,
     python_requires='>=3.8',
 )

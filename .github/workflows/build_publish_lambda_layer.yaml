@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-minor: ["8", "9", "10", "11"]
+        python-minor: ["8", "9", "10", "11", "12"]
         apm-env: ["lambda"]
     steps:
     - uses: actions/checkout@v4
@@ -37,21 +37,49 @@ jobs:
           'lambda/tests/requirements.txt'
     - name: Install tox
       run: pip install tox
-    - name: Build extension
-      run: make wrapper
     - name: Run tox
       run: tox -e py3${{ matrix.python-minor }}-${{ matrix.apm-env }}
 
-  build_publish_layer_x86_64:
-    needs: run_tox_tests
-    uses: ./.github/workflows/build_publish_lambda_layer_x86_64.yaml
+  get_apm_python_version:
+    name: Get APM Python version
+    # Outputs sw-apm-version
+    uses: ./.github/workflows/get_apm_python_version.yaml
+
+  build_layer:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-name: solarwinds_apm_lambda.zip
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ./.github/actions/package_lambda_solarwinds_apm
+    - uses: actions/upload-artifact@v4
+      name: Save assembled layer to build
+      with:
+        name: solarwinds_apm_lambda.zip
+        path: dist/solarwinds_apm_lambda.zip
+
+  scan_layer:
+    name: RL scan layer
+    needs:
+      - get_apm_python_version
+      - build_layer
+    uses: ./.github/workflows/reversinglabs_scan.yaml
     with:
-      publish-dest: ${{ inputs.publish-dest }}
+      artifact-name: ${{ needs.build_layer.outputs.artifact-name }}
+      package-name: apm-python-lambda
+      version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
+      rl-submit-only: true
     secrets: inherit
 
-  build_publish_layer_aarch64:
-    needs: run_tox_tests
-    uses: ./.github/workflows/build_publish_lambda_layer_aarch64.yaml
+  publish-layer:
+    uses: ./.github/workflows/publish_lambda_layer.yaml
+    needs:
+      - get_apm_python_version
+      - build_layer
+      - scan_layer
     with:
+      artifact-name: solarwinds_apm_lambda.zip
+      component-version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
+      runtimes: "python3.8 python3.9 python3.10 python3.11 python3.12"
       publish-dest: ${{ inputs.publish-dest }}
     secrets: inherit

@@ -17,10 +17,6 @@ on:
         description: 'Version of APM Python library in this release'
         required: true
         type: string
-      architecture:
-        description: 'Must be x86_64 or arm64'
-        required: true
-        type: string
       runtimes:
         description: 'Space-delimited list of compatible runtimes'
         required: true
@@ -63,14 +59,6 @@ jobs:
         run: |
           LAYER_NAME=solarwinds-apm-python
           
-          if [[ "${{ inputs.architecture }}" != "x86_64" ]] && [[ "${{ inputs.architecture }}" != "arm64" ]] ; then
-            echo "ERROR: architecture must be one of x86_64, arm64"
-            exit 1
-          else
-            LAYER_NAME=$LAYER_NAME-${{ inputs.architecture }}
-            echo "ARCH=${{ inputs.architecture }}" >> $GITHUB_ENV
-          fi
-          
           COMPONENT_VERSION_UNDERSCORES=$(echo ${{ inputs.component-version }} | sed -r 's/\./_/g')
           LAYER_NAME=$LAYER_NAME-$COMPONENT_VERSION_UNDERSCORES
           echo "LAYER_NAME=$LAYER_NAME" >> $GITHUB_ENV
@@ -100,7 +88,7 @@ jobs:
           aws lambda publish-layer-version \
             --layer-name $LAYER_NAME \
             --license-info "Apache 2.0" \
-            --compatible-architectures $ARCH \
+            --compatible-architectures arm64 x86_64 \
             --compatible-runtimes ${{ inputs.runtimes }} \
             --zip-file fileb://${{ inputs.artifact-name }} \
             --query 'LayerVersionArn' \

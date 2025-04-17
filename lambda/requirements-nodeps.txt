@@ -12,7 +12,6 @@ opentelemetry-instrumentation-elasticsearch==0.52b1
 opentelemetry-instrumentation-fastapi==0.52b1
 opentelemetry-instrumentation-falcon==0.52b1
 opentelemetry-instrumentation-flask==0.52b1
-opentelemetry-instrumentation-grpc==0.52b1
 opentelemetry-instrumentation-jinja2==0.52b1
 opentelemetry-instrumentation-logging==0.52b1
 opentelemetry-instrumentation-mysql==0.52b1
