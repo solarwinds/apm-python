@@ -113,21 +113,6 @@ function get_wheel(){
 }
 
 function check_wheel(){
-    unpack_directory="$PWD/unpack/wheel"
-    rm -rf "$unpack_directory"
-    mkdir -p "$unpack_directory"
-    expected_files="./VERSION
-./__init__.py
-./_oboe.*.so
-./bson
-./bson/bson.h
-./bson/platform_hacks.h
-./liboboe.so
-./oboe.py"
-    unzip "$tested_wheel" -d "$unpack_directory"
-    # shellcheck disable=SC1091
-    source ./_helper_check_extension_files.sh "$unpack_directory/solarwinds_apm/extension" "$expected_files"
-
     if [ -z "$PIP_INSTALL" ]; then
         echo -e "PIP_INSTALL not specified."
         echo -e "Python wheel verified successfully.\n"

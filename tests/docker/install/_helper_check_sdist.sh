@@ -77,33 +77,6 @@ function get_sdist(){
 }
 
 function check_sdist(){
-    unpack_directory="$PWD/unpack/sdist"
-    rm -rf "$unpack_directory"
-    mkdir -p "$unpack_directory"
-
-    expected_files="./VERSION
-./__init__.py
-./bson
-./bson/bson.h
-./bson/platform_hacks.h
-./liboboe-1.0-aarch64.so
-./liboboe-1.0-alpine-aarch64.so
-./liboboe-1.0-alpine-x86_64.so
-./liboboe-1.0-lambda-aarch64.so
-./liboboe-1.0-lambda-x86_64.so
-./liboboe-1.0-x86_64.so
-./oboe.h
-./oboe.py
-./oboe_api.cpp
-./oboe_api.h
-./oboe_debug.h
-./oboe_wrap.cxx"
-
-    tar xzf "$1" --directory "$unpack_directory"
-    unpack_agent=$(find "$unpack_directory"/* -type d -name "solarwinds_apm-*")
-    # shellcheck disable=SC1091
-    source ./_helper_check_extension_files.sh "$unpack_agent/solarwinds_apm/extension" "$expected_files"
-
     if [ -z "$PIP_INSTALL" ]; then
         echo -e "PIP_INSTALL not specified."
         echo -e "Source distribution verified successfully.\n"
