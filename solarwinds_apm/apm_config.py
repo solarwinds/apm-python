@@ -120,9 +120,6 @@ class SolarWindsApmConfig:
         if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") and os.environ.get(
             "LAMBDA_TASK_ROOT"
         ):
-            logger.warning(
-                "AWS Lambda is experimental in Python SolarWinds APM."
-            )
             return True
         return False
 
