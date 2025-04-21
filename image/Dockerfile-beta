@@ -12,19 +12,19 @@
 
 FROM python:3.9 AS build-39
 WORKDIR /operator-build
-ADD requirements-nodeps.txt .
+ADD requirements-nodeps-beta.txt .
 ADD requirements.txt .
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
+RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps-beta.txt
 RUN pip install --target workspace -r requirements.txt
 
 FROM python:3.9-alpine AS build-musl-39
 WORKDIR /operator-build
-ADD requirements-nodeps.txt .
+ADD requirements-nodeps-beta.txt .
 ADD requirements.txt .
 RUN apk add g++ gcc python3-dev musl-dev linux-headers
 RUN mkdir workspace
-RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
+RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps-beta.txt
 RUN pip install --target workspace -r requirements.txt
 
 FROM busybox
