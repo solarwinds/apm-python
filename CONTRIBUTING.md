@@ -31,7 +31,7 @@ A PR is ready to merge when all tests pass, any major feedback has been resolved
 
 ### Build Containers
 
-The build containers are based on the [PyPA image](https://github.com/pypa/manylinux) for `manylinux_2_28_x86_64` or `manylinux_2_28_aarch64`. Each uses [SWIG](https://www.swig.org/Doc1.3/Python.html) to compile required C/C++ libraries into a C-extension dependency.
+The build containers are based on the [PyPA image](https://github.com/pypa/manylinux) for `manylinux_2_28_x86_64` or `manylinux_2_28_aarch64`. Choose what will run best on your setup (e.g. aarch64 for Apple silicon, or x86_64 for Intel).
 
 To create and run a Docker container for testing and builds, run one of the following:
 ```bash
@@ -44,12 +44,11 @@ docker-compose run aarch64
 
 ### Regression Tests
 
-Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.8, 3.9, 3.10, 3.11 and/or 3.12 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Testing can be run inside a build container which provides all dependencies and a compiled C-extension. Here is how to set up then run unit and integration tests locally:
+Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.8, 3.9, 3.10, 3.11 and/or 3.12 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Testing can be run inside a build container which provides all dependencies. Here is how to set up then run unit and integration tests locally:
 
 1. Create and run a Docker build container as described above.
-2. Inside the build container: `make wrapper`. This downloads the version of a C/C++ dependency defined in `extension/VERSION` from SolarWinds Cloud and builds SWIG bindings.
-3. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.9 against AO prod: `make tox OPTIONS="-e py39-test"`.
-4. (WARNING: slow!) To run all tests for all supported Python environments, as well as linting and formatting: `make tox`
+2. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.9: `make tox OPTIONS="-e py39-test"`.
+3. (WARNING: slow!) To run all tests for all supported Python environments, as well as linting and formatting: `make tox`
 
 Other regular `tox` arguments can be included in `OPTIONS`. Some examples:
 
@@ -86,10 +85,9 @@ Remotely, CodeQL can be run on GitHub with the [CodeQL Analysis](https://github.
 `solarwinds-apm` can be installed and used to instrument a Python app running on your local:
 
 1. Create and run a Docker build container as described above.
-2. Inside the build container: `make wrapper`. This downloads the version of a C/C++ dependency defined in `extension/VERSION` from SolarWinds Cloud and builds SWIG bindings.
-3. In your Python app's environment/container, install your local `solarwinds-apm`. For example, if you've saved it to `~/gitrepos` then you could do:
+2. In your Python app's environment/container, install your local `solarwinds-apm`. For example, if you've saved it to `~/gitrepos` then you could do:
   ```pip install -Ie ~/gitrepos/apm-python/```
-4. Install all relevant Opentelemetry Python instrumentation libraries:
+3. Install all relevant Opentelemetry Python instrumentation libraries:
   ```opentelemetry-bootstrap --action=install```
-5. Run your application with the prefix `opentelemetry-instrument` to wrap all common Python frameworks:
+4. Run your application with the prefix `opentelemetry-instrument` to wrap all common Python frameworks:
     ```opentelemetry-instrument <command_to_run_your_service>```
