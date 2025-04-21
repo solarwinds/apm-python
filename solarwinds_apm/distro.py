@@ -59,6 +59,7 @@ class SolarWindsDistro(BaseDistro):
     """OpenTelemetry Distro for SolarWinds reporting environment"""
 
     _cnf_dict = None
+    _collector = None
     _instrumentor_metrics_enabled = None
 
     _DEFAULT_OTLP_EXPORTER = "otlp"
@@ -68,6 +69,7 @@ class SolarWindsDistro(BaseDistro):
         # Maintain singleton pattern and cache SW APM user config
         # for Distro lifecycle at auto-instrumentation
         cls._cnf_dict = SolarWindsApmConfig.get_cnf_dict()
+        cls._collector = SolarWindsApmConfig.calculate_collector(cls._cnf_dict)
         cls._instrumentor_metrics_enabled = (
             SolarWindsApmConfig.calculate_metrics_enabled(cls._cnf_dict)
         )
@@ -121,7 +123,7 @@ class SolarWindsDistro(BaseDistro):
         )
 
         # Default collector OTLP endpoint, which HTTP exporters map to signal-specific routes
-        collector = environ.get("SW_APM_COLLECTOR", None)
+        collector = self._collector
         if collector is not None and collector.startswith("apm.collector"):
             # Collector endpoint is set, try it
             match = re.search(
