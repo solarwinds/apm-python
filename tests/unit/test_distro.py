@@ -432,6 +432,52 @@ class TestDistro:
         distro.SolarWindsDistro()._configure()
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-03.cloud.solarwinds.com:443"
 
+    def test_configure_env_service_key_and_collector_from_file_no_env(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_COLLECTOR": "",
+            },
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.get_cnf_dict",
+            return_value={
+                "collector": "apm.collector.eu-01.st-ssp.solarwinds.com"
+            },
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.eu-01.st-ssp.solarwinds.com:443"
+
+    def test_configure_env_service_key_and_collector_from_env_no_file(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_COLLECTOR": "apm.collector.jp-01.st-ssp.solarwinds.com",
+            },
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.get_cnf_dict",
+            return_value={},
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.jp-01.st-ssp.solarwinds.com:443"
+
+    def test_configure_env_service_key_and_collector_from_env_and_file(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_COLLECTOR": "apm.collector.jp-01.st-ssp.solarwinds.com",
+            },
+        )
+        mocker.patch(
+            "solarwinds_apm.distro.SolarWindsApmConfig.get_cnf_dict",
+            return_value={
+                "collector": "apm.collector.eu-01.st-ssp.solarwinds.com"
+            },
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.jp-01.st-ssp.solarwinds.com:443"
+
     def test_configure_env_headers_otel_endpoint_none(self, mocker):
         mocker.patch.dict(
             os.environ,

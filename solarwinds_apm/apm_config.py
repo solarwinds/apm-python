@@ -124,6 +124,25 @@ class SolarWindsApmConfig:
         return False
 
     @classmethod
+    def calculate_collector(
+        cls,
+        cnf_dict: dict = None,
+    ) -> str:
+        """Special class method to return default/configured collector.
+        Order of precedence: Environment Variable > config file > default.
+        Default is SWO NA-01.
+        Optional cnf_dict is presumably already from a config file, else a call
+        to get_cnf_dict() is made for a fresh read."""
+        collector = cls._CONFIG_COLLECTOR_DEFAULT
+        if cnf_dict is None:
+            cnf_dict = cls.get_cnf_dict()
+        if cnf_dict:
+            cnf_collector = cnf_dict.get("collector")
+            collector = cnf_collector if cnf_collector else collector
+        env_collector = os.environ.get("SW_APM_COLLECTOR")
+        return env_collector if env_collector else collector
+
+    @classmethod
     def calculate_metrics_enabled(
         cls,
         is_legacy: bool = False,
