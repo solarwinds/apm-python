@@ -1,4 +1,4 @@
-# © 2023 SolarWinds Worldwide, LLC. All rights reserved.
+# © 2023-2025 SolarWinds Worldwide, LLC. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
 #
@@ -16,125 +16,15 @@ nothing:
 	@echo -e "          Build the agent package distribution (sdist and bdist)."
 	@echo -e "  - 'make sdist':"
 	@echo -e "          Build sdist zip archive (.tar.gz in dist/)."
-	@echo -e "  - 'make manylinux-wheels':"
-	@echo -e "          Build manylinux 64-bit Python bdist (.whl in dist/)."
+	@echo -e "  - 'make wheel':"
+	@echo -e "          Build Python bdist (.whl in dist/)."
 	@echo -e "  - 'make aws-lambda':"
 	@echo -e "          Build the AWS Lambda layer (zip archive in dist/)."
-	@echo -e "  - 'make wrapper':"
-	@echo -e "          Locally generate SWIG wrapper for C/C++ headers."
-	@echo -e "  - 'STAGING_OBOE=1 make wrapper':"
-	@echo -e "          Locally generate SWIG wrapper for C/C++ headers using liboboe VERSION from staging."
-	@echo -e "  - 'make wrapper-from-local':"
-	@echo -e "          Locally generate SWIG wrapper for C/C++ headers using neighbouring oboe checkout."
 	@echo -e "Check the Makefile for other targets/options.\n"
-
-#----------------------------------------------------------------------------------------------------------------------#
-# variable definitions and recipes for downloading of required header and library files
-#----------------------------------------------------------------------------------------------------------------------#
-
-# Platform for wheel tagging: x86_64 or aarch64
-platform := ${shell uname -p}
-ifeq (${platform},aarch64)
-    wheel_tag := manylinux_2_28_aarch64
-else
-    platform := x86_64
-    wheel_tag := manylinux_2_28_x86_64
-endif
-#
-## LIBOBOE is the name of the liboboe shared library
-#LIBOBOEALPINEAARCH := "liboboe-1.0-alpine-aarch64.so"
-#LIBOBOEALPINEX86 := "liboboe-1.0-alpine-x86_64.so"
-#LIBOBOEORGAARCH := "liboboe-1.0-aarch64.so"
-#LIBOBOEORGX86 := "liboboe-1.0-x86_64.so"
-#LIBOBOESERVERLESSAARCH := "liboboe-1.0-lambda-aarch64.so"
-#LIBOBOESERVERLESSX86 := "liboboe-1.0-lambda-x86_64.so"
-## Version of the C-library extension is stored under /solarwinds_apm/extension/VERSION (Otel export compatible as of 10.3.4)
-#OBOEVERSION := $(shell cat ./solarwinds_apm/extension/VERSION)
-#
-## specification of source of header and library files
-#ifdef STAGING_OBOE
-#    OBOEREPO := "https://agent-binaries.global.st-ssp.solarwinds.com/apm/c-lib/${OBOEVERSION}"
-#else
-#    OBOEREPO := "https://agent-binaries.cloud.solarwinds.com/apm/c-lib/${OBOEVERSION}"
-#endif
-#
-#verify-oboe-version:
-#	@echo -e "Downloading Oboe VERSION file from ${OBOEREPO}"
-#	@cd solarwinds_apm/extension; \
-#		curl -f "${OBOEREPO}/VERSION" -o "VERSION.tmp" ; \
-#		if [ $$? -ne 0 ]; then echo " **** Failed to download VERSION  ****" ; exit 1; fi; \
-#		diff -q VERSION.tmp VERSION; \
-#		if [ $$? -ne 0 ]; then \
-#			echo " **** Failed version verification! Local VERSION differs from downloaded version   ****" ; \
-#			echo "Content of local VERSION file:"; \
-#			cat VERSION; \
-#			echo "Content of downloaded VERSION file:"; \
-#			cat VERSION.tmp; \
-#			rm VERSION.tmp; \
-#			exit 1; \
-#		fi; \
-#		rm VERSION.tmp
-#	@echo -e "VERSION verification successful"
-#
-## Download the pre-compiled liboboe shared library from source specified in OBOEREPO
-#download-liboboe: verify-oboe-version
-#	@echo -e "Downloading ${LIBOBOEORGAARCH}, ${LIBOBOEORGX86}, ${LIBOBOEALPINEAARCH} and ${LIBOBOEALPINEX86} shared libraries.\n"
-#	@cd solarwinds_apm/extension; \
-#		curl -o ${LIBOBOEORGAARCH}  "${OBOEREPO}/${LIBOBOEORGAARCH}"; \
-#		if [ $$? -ne 0 ]; then echo " **** fail to download ${LIBOBOEORGAARCH} ****" ; exit 1; fi; \
-#		curl -o ${LIBOBOEORGX86}  "${OBOEREPO}/${LIBOBOEORGX86}"; \
-#		if [ $$? -ne 0 ]; then echo " **** fail to download ${LIBOBOEORGX86} ****" ; exit 1; fi; \
-#		curl -o ${LIBOBOEALPINEAARCH}  "${OBOEREPO}/${LIBOBOEALPINEAARCH}"; \
-#		if [ $$? -ne 0 ]; then echo " **** fail to download ${LIBOBOEALPINEAARCH} ****" ; exit 1; fi; \
-#		curl -o ${LIBOBOEALPINEX86}  "${OBOEREPO}/${LIBOBOEALPINEX86}"; \
-#		if [ $$? -ne 0 ]; then echo " **** fail to download ${LIBOBOEALPINEX86} ****" ; exit 1; fi; \
-#		curl -f -O "${OBOEREPO}/VERSION"; \
-#		if [ $$? -ne 0 ]; then echo " **** fail to download VERSION  ****" ; exit 1; fi
-#	@echo -e "Downloading ${LIBOBOESERVERLESSAARCH} and ${LIBOBOESERVERLESSX86} shared libraries.\n"
-#	@cd solarwinds_apm/extension; \
-#		curl -o $(LIBOBOESERVERLESSAARCH)  "${OBOEREPO}/${LIBOBOESERVERLESSAARCH}"; \
-#		if [ $$? -ne 0 ]; then echo " **** failed to download ${LIBOBOESERVERLESSAARCH} ****" ; exit 1; fi; \
-#		curl -o $(LIBOBOESERVERLESSX86)  "${OBOEREPO}/${LIBOBOESERVERLESSX86}"; \
-#		if [ $$? -ne 0 ]; then echo " **** failed to download ${LIBOBOESERVERLESSX86} ****" ; exit 1; fi;
-#
-## Download liboboe header files (Python wrapper for Oboe c-lib) from source specified in OBOEREPO
-#download-headers: verify-oboe-version download-bson-headers
-#	@echo -e "Downloading header files (.hpp, .h, .i)"
-#	@echo "Downloading files from ${OBOEREPO}:"
-#	@cd solarwinds_apm/extension; \
-#		for i in oboe.h oboe_api.h oboe_api.cpp oboe.i oboe_debug.h; do \
-#			echo "Downloading $$i"; \
-#			curl -f -O "${OBOEREPO}/include/$$i"; \
-#			if [ $$? -ne 0 ]; then echo " **** fail to download $$i ****" ; exit 1; fi; \
-#		done
-#
-## Download bson header files from source specified in OBOEREPO
-#download-bson-headers:
-#	@echo -e "Downloading bson header files (.hpp, .h)"
-#	@if [ ! -d solarwinds_apm/extension/bson ]; then \
-#		mkdir solarwinds_apm/extension/bson; \
-#		echo "Created solarwinds_apm/extension/bson"; \
-#	 fi
-#	@echo "Downloading files from ${OBOEREPO}:"
-#	@cd solarwinds_apm/extension/bson; \
-#		for i in bson.h platform_hacks.h; do \
-#			echo "Downloading $$i"; \
-#			curl -f -O "${OBOEREPO}/include/bson/$$i"; \
-#			if [ $$? -ne 0 ]; then echo " **** fail to download $$i ****" ; exit 1; fi; \
-#		done
-#
-## download all required header and library files
-#download-all: download-headers download-liboboe
 
 #----------------------------------------------------------------------------------------------------------------------#
 # check if build deps are installed
 #----------------------------------------------------------------------------------------------------------------------#
-
-#check-swig:
-#	@echo -e "Is SWIG installed?"
-#	@command -v swig >/dev/null 2>&1 || \
-#		{ echo >&2 "Swig is required to build the distribution. Aborting."; exit 1;}
-#	@echo -e "Yes."
 
 check-zip:
 	@echo -e "Is zip installed?"
@@ -145,11 +35,6 @@ check-zip:
 #----------------------------------------------------------------------------------------------------------------------#
 # recipes for building the package distribution
 #----------------------------------------------------------------------------------------------------------------------#
-
-## Build the Python wrapper from liboboe headers inside build container
-#wrapper: check-swig download-all
-#	@echo -e "Generating SWIG wrapper for C/C++ headers."
-#	@cd solarwinds_apm/extension && ./gen_bindings.sh
 
 # Create package source distribution archive
 sdist:
@@ -163,16 +48,10 @@ check-sdist-local:
 	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) ./_helper_check_sdist.sh
 	@cd $(CURR_DIR)
 
-# Build the Python agent package bdist (wheels) for 64 bit many linux systems (except Alpine).
-# The recipe builds the wheels for all Python versions available in the docker image EXCEPT py36, similarly to the example provided
-# in the corresponding repo of the Docker images: https://github.com/pypa/manylinux#example.
-manylinux-wheels:
-	@echo -e "Generating python agent package any-linux wheels for 64 bit systems"
-	@set -e; for PYBIN in cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311 cp312-cp312; do /opt/python/$${PYBIN}/bin/pip -v wheel . -w ./dist/ --no-deps; done
-#	@set -e; for PYBIN in cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311 cp312-cp312; do /opt/python/$${PYBIN}/bin/pip -v wheel . -w ./tmp_dist/ --no-deps; done
-#	@echo -e "Tagging wheels with $(wheel_tag)"
-#	@set -e; for whl in ./tmp_dist/*.whl; do auditwheel repair --plat $(wheel_tag) "$$whl" -w ./dist/; done
-#	@rm -rf ./tmp_dist
+# Build the Python library package bdist (wheel) for 64 bit linux systems using Python 3.9
+wheel:
+	@echo -e "Generating Python library wheel for 64 bit systems"
+	@/opt/python/cp39-cp39/bin/pip -v wheel . -w ./dist/ --no-deps
 	@echo -e "\nDone."
 
 # Check local package wheel contents, without install
@@ -181,7 +60,7 @@ check-wheel-local:
 	@cd $(CURR_DIR)
 
 # Build and check the full Python agent distribution (sdist and wheels)
-package: sdist check-sdist-local manylinux-wheels check-wheel-local
+package: sdist check-sdist-local wheel check-wheel-local
 
 target_dir := "./tmp-lambda"
 install-lambda-modules:
@@ -230,58 +109,6 @@ aws-lambda: check-zip install-lambda-modules check-lambda-modules
 	@echo -e "\nDone."
 
 #----------------------------------------------------------------------------------------------------------------------#
-# recipes for local development
-#----------------------------------------------------------------------------------------------------------------------#
-
-## neighbouring local liboboe directory
-#OTELOBOEREPO := /code/solarwinds-apm-liboboe/liboboe
-#
-## Copy the pre-compiled liboboe shared library from source specified in OTELOBOEREPO
-#copy-liboboe:
-#	@echo -e "Copying shared library.\n"
-#	@cd solarwinds_apm/extension; \
-#		cp "${OTELOBOEREPO}/liboboe-1.0-${platform}.so" .; \
-#		if [ $$? -ne 0 ]; then echo " **** failed to copy shared library ****" ; exit 1; fi;
-#
-## Copy liboboe header files (Python wrapper for Oboe c-lib) from source specified in OTELOBOEREPO
-#copy-headers: copy-bson-headers
-#	@echo -e "Copying header files (.hpp, .h, .i)"
-#	@echo "Copying files from ${OTELOBOEREPO}:"
-#	@cd solarwinds_apm/extension; \
-#		for i in oboe.h oboe_api.h oboe_api.cpp oboe_debug.h; do \
-#			echo "Copying $$i"; \
-#			cp "${OTELOBOEREPO}/$$i" .; \
-#			if [ $$? -ne 0 ]; then echo " **** failed to copy $$i ****" ; exit 1; fi; \
-#		done
-#	@cd solarwinds_apm/extension; \
-#		echo "Copying oboe.i"; \
-#		cp "${OTELOBOEREPO}/swig/oboe.i" .; \
-#		if [ $$? -ne 0 ]; then echo " **** failed to copy oboe.i ****" ; exit 1; fi; \
-#
-## Copy bson header files from source specified in OTELOBOEREPO
-#copy-bson-headers:
-#	@echo -e "Copying bson header files (.hpp, .h)"
-#	@if [ ! -d solarwinds_apm/extension/bson ]; then \
-#		mkdir solarwinds_apm/extension/bson; \
-#		echo "Created solarwinds_apm/extension/bson"; \
-#	 fi
-#	@echo "Copying files from ${OTELOBOEREPO}:"
-#	@cd solarwinds_apm/extension/bson; \
-#		for i in bson.h platform_hacks.h; do \
-#			echo "Copying $$i"; \
-#			cp "${OTELOBOEREPO}/bson/$$i" .; \
-#			if [ $$? -ne 0 ]; then echo " **** fail to copy $$i ****" ; exit 1; fi; \
-#		done
-#
-## copy artifacts from local oboe
-#copy-all: copy-headers copy-liboboe
-#
-## Build the Python wrapper from liboboe headers inside build container
-#wrapper-from-local: check-swig copy-all
-#	@echo -e "Generating SWIG wrapper for C/C++ headers, from local neighbouring oboe checkout"
-#	@cd solarwinds_apm/extension && ./gen_bindings.sh
-
-#----------------------------------------------------------------------------------------------------------------------#
 # variable definitions and recipes for testing, linting, cleanup
 #----------------------------------------------------------------------------------------------------------------------#
 
@@ -296,11 +123,9 @@ format:
 lint:
 	@echo -e "Not implemented."
 
-# clean up extension and intermediate build/dist files.
+# clean up intermediate build/dist files.
 clean:
-	@echo -e "Cleaning up extension and intermediate build/dist files."
-#	@cd solarwinds_apm/extension; rm -f _oboe* oboe* liboboe*so*; rm -rf bson
-#	@cd ..
+	@echo -e "Cleaning up intermediate build/dist files."
 	@find . -type f -name '*.pyc' -delete
 	@find . -type d -name '__pycache__' | xargs rm -rf
 	@find . -type d -name '*.ropeproject' | xargs rm -rf
@@ -318,4 +143,4 @@ clean-tox:
 	@rm -rf .tox/
 	@echo -e "Done."
 
-.PHONY: nothing check-zip sdist manylinux-wheels package aws-lambda publish-lambda-layer-rc tox format lint clean
+.PHONY: nothing check-zip sdist check-sdist-local wheel check-wheel-local package install-lambda-modules check-lambda-modules aws-lambda tox format lint clean clean-tox
