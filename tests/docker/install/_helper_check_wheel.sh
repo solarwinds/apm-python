@@ -46,15 +46,6 @@ then
   exit 1
 fi
 
-if [ "$PLATFORM" == "x86_64" ]
-then
-  WHEEL_FILENAME=manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
-elif [ "$PLATFORM" == "aarch64" ]
-then
-  WHEEL_FILENAME=manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl
-fi
-echo "Set WHEEL_FILENAME=$WHEEL_FILENAME based on platform for check_wheel test."
-
 function get_wheel(){
     wheel_dir="$PWD/tmp/wheel"
     rm -rf "$wheel_dir"
@@ -69,22 +60,6 @@ function get_wheel(){
         fi
 
         tested_wheel=$(find "$APM_ROOT"/dist/* -name "solarwinds_apm-$SOLARWINDS_APM_VERSION-py3-none-any.whl")
-
-        # if [ -z "$PIP_INSTALL" ]; then
-        #     echo -e "PIP_INSTALL not specified."
-        #     echo -e "Only testing the cp38 ${PLATFORM} wheel under ${APM_ROOT}/dist"
-        #     tested_wheel=$(find "$APM_ROOT"/dist/* -name "solarwinds_apm-$SOLARWINDS_APM_VERSION-cp38-cp38-$WHEEL_FILENAME")
-        # else
-        #     # we need to select the right wheel (there might be multiple wheel versions in the dist directory)
-        #     pip download \
-        #         --only-binary solarwinds_apm \
-        #         --find-links "$APM_ROOT"/dist \
-        #         --no-index \
-        #         --dest "$wheel_dir" \
-        #         --no-deps \
-        #         solarwinds_apm=="$SOLARWINDS_APM_VERSION"
-        #     tested_wheel=$(find "$wheel_dir"/* -name "solarwinds_apm-$SOLARWINDS_APM_VERSION*.*.whl")
-        # fi
 
         if [ ! -f "$tested_wheel" ]; then
             echo "FAILED: Did not find wheel for version $SOLARWINDS_APM_VERSION. Please run 'make package' before running tests."
