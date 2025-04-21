@@ -48,14 +48,14 @@ Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs i
 
 1. Create and run a Docker build container as described above.
 2. Inside the build container: `make wrapper`. This downloads the version of a C/C++ dependency defined in `extension/VERSION` from SolarWinds Cloud and builds SWIG bindings.
-3. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.9 against AO prod: `make tox OPTIONS="-e py39-nh-staging"`.
+3. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.9 against AO prod: `make tox OPTIONS="-e py39-test"`.
 4. (WARNING: slow!) To run all tests for all supported Python environments, as well as linting and formatting: `make tox`
 
 Other regular `tox` arguments can be included in `OPTIONS`. Some examples:
 
 ```
-# Recreate tox environment for Python 3.8 pointed at AO prod
-make tox OPTIONS="--recreate -e py38-ao-prod"
+# Recreate tox environment for Python 3.8 tests
+make tox OPTIONS="--recreate -e py38-test"
 
 # Run only the Scenario 8 integration test, in all environments
 make tox OPTIONS="-- tests/integration/test_scenario_1.py"

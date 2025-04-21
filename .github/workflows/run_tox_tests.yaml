@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         python-minor: ["8", "9", "10", "11", "12"]
-        apm-env: ["nh-staging"]
+        apm-env: ["test"]
     steps:
     - uses: actions/checkout@v4
     - name: Setup Python
@@ -31,7 +31,5 @@ jobs:
         cache-dependency-path: '**/dev-requirements.txt'
     - name: Install tox
       run: pip install tox
-#    - name: Build extension
-#      run: make wrapper
     - name: Run tox
       run: tox -e py3${{ matrix.python-minor }}-${{ matrix.apm-env }}

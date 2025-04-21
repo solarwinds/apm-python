@@ -285,7 +285,7 @@ aws-lambda: check-zip install-lambda-modules check-lambda-modules
 # variable definitions and recipes for testing, linting, cleanup
 #----------------------------------------------------------------------------------------------------------------------#
 
-# Example: make tox OPTIONS="-e py39-nh-staging"
+# Example: make tox OPTIONS="-e py39-test"
 # Example: make tox OPTIONS="-e lint -- --check-only"
 tox:
 	@python3.8 -m tox $(OPTIONS)
