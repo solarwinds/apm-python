@@ -278,38 +278,35 @@ class Sampler(OboeSampler):
         trace_state: "TraceState" | None = None,
     ) -> "TraceState" | None:
         """
-        Sets response headers.
+        Sets response headers and return TraceState and X-Trace options based on parent, if any
         """
-        if parent_context:
-            options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
-            if options and isinstance(options, XTraceOptions):
-                if (
-                    options.include_response
-                    and headers.x_trace_options_response
-                ):
-                    if (
-                        get_current_span(parent_context)
-                        .get_span_context()
-                        .is_valid
-                        and get_current_span(parent_context)
-                        .get_span_context()
-                        .trace_state
-                        is not None
-                    ):
-                        trace_state = (
-                            get_current_span(parent_context)
-                            .get_span_context()
-                            .trace_state
-                        )
-                    else:
-                        trace_state = TraceState()
-                    return trace_state.add(
-                        INTL_SWO_X_OPTIONS_RESPONSE_KEY,
-                        headers.x_trace_options_response.replace(
-                            INTL_SWO_EQUALS, INTL_SWO_EQUALS_W3C_SANITIZED
-                        ),
-                    )
-        return None
+        if (
+            not parent_context
+            or not get_current_span(parent_context).get_span_context().is_valid
+            or not get_current_span(parent_context)
+            .get_span_context()
+            .trace_state
+        ):
+            # No valid parent i.e. root span, or parent is remote
+            trace_state = TraceState()
+        else:
+            # Preserve parent trace_state for propagation
+            trace_state = (
+                get_current_span(parent_context).get_span_context().trace_state
+            )
+
+        # Update with x-trace-options-response if applicable
+        options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
+        if options and isinstance(options, XTraceOptions):
+            if options.include_response and headers.x_trace_options_response:
+                trace_state.add(
+                    INTL_SWO_X_OPTIONS_RESPONSE_KEY,
+                    headers.x_trace_options_response.replace(
+                        INTL_SWO_EQUALS, INTL_SWO_EQUALS_W3C_SANITIZED
+                    ),
+                )
+
+        return trace_state
 
     def update_settings(self, settings: Any) -> Settings | None:
         """
