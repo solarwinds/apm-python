@@ -16,18 +16,22 @@ from opentelemetry import trace as trace_api
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.propagate import get_global_textmap
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
-from opentelemetry.test.globals_test import reset_trace_globals
+from opentelemetry.test.globals_test import (
+    reset_metrics_globals,
+    reset_trace_globals,
+)
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.util._importlib_metadata import entry_points
 
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro
-# from solarwinds_apm.extension.oboe import OboeAPI
+from solarwinds_apm.oboe.json_sampler import JsonSampler
 from solarwinds_apm.propagator import SolarWindsPropagator
 from solarwinds_apm.sampler import ParentBasedSwSampler
 
@@ -95,16 +99,19 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         # except use TestBase InMemorySpanExporter
         apm_config = SolarWindsApmConfig()
         configurator = SolarWindsConfigurator()
-        reporter = configurator._initialize_solarwinds_reporter(apm_config)
         configurator._configure_propagator()
         configurator._configure_response_propagator()
         # This is done because set_tracer_provider cannot override the
         # current tracer provider. Has to be done here.
         reset_trace_globals()
-        sampler = next(iter(entry_points(
-            group="opentelemetry_traces_sampler",
-            name=configurator._DEFAULT_SW_TRACES_SAMPLER,
-        ))).load()(apm_config, reporter, OboeAPI())
+        reset_metrics_globals()
+        # Init JsonSampler to guarantee sampling decision for tests
+        self.meter_provider = MeterProvider()
+        sampler_configuration = SolarWindsApmConfig.to_configuration(apm_config)
+        sampler = JsonSampler(
+            self.meter_provider,
+            sampler_configuration,
+        )
         self.tracer_provider = TracerProvider(sampler=sampler)
         # Set InMemorySpanExporter for testing
         # We do NOT use SolarWindsSpanExporter
@@ -118,7 +125,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         propagators = get_global_textmap()._propagators
         assert len(propagators) == 3
         assert isinstance(propagators[2], SolarWindsPropagator)
-        assert isinstance(trace_api.get_tracer_provider().sampler, ParentBasedSwSampler)
+        assert isinstance(trace_api.get_tracer_provider().sampler, JsonSampler)
 
         # We need to instrument and create test app for every test
         self.requests_inst = RequestsInstrumentor()
