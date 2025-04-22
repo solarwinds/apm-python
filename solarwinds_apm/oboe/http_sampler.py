@@ -95,6 +95,8 @@ class HttpSampler(Sampler):
             parsed = self.update_settings(unparsed)
             if not parsed:
                 self._warn("Retrieved sampling settings are invalid.")
+            else:
+                self._last_warning_message = None
         except requests.RequestException as error:
             message = "Failed to retrieve sampling settings"
             message += f" ({error})"
