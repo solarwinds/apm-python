@@ -21,6 +21,7 @@ from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
+from opentelemetry.sdk.trace.sampling import ParentBased
 from opentelemetry.test.globals_test import (
     reset_metrics_globals,
     reset_trace_globals,
@@ -105,12 +106,17 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         # current tracer provider. Has to be done here.
         reset_trace_globals()
         reset_metrics_globals()
-        # Init JsonSampler to guarantee sampling decision for tests
+        # Init parent-based with JsonSampler to guarantee sampling decision for tests
         self.meter_provider = MeterProvider()
         sampler_configuration = SolarWindsApmConfig.to_configuration(apm_config)
-        sampler = JsonSampler(
+        json_sampler = JsonSampler(
             self.meter_provider,
             sampler_configuration,
+        )
+        sampler = ParentBased(
+            root=json_sampler,
+            remote_parent_sampled=json_sampler,
+            remote_parent_not_sampled=json_sampler,
         )
         self.tracer_provider = TracerProvider(sampler=sampler)
         # Set InMemorySpanExporter for testing
@@ -125,7 +131,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         propagators = get_global_textmap()._propagators
         assert len(propagators) == 3
         assert isinstance(propagators[2], SolarWindsPropagator)
-        assert isinstance(trace_api.get_tracer_provider().sampler, JsonSampler)
+        assert isinstance(trace_api.get_tracer_provider().sampler, ParentBased)
 
         # We need to instrument and create test app for every test
         self.requests_inst = RequestsInstrumentor()
