@@ -32,6 +32,14 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
+        # # liboboe mocked to guarantee return of "do_sample" (2nd arg)
+        # mock_decision = mock.Mock(
+        #     return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
+        # )
+        # with mock.patch(
+        #     target="solarwinds_apm.extension.oboe.Context.getDecisions",
+        #     new=mock_decision,
+        # ):
         # Request to instrumented app, no traceparent/tracestate
         resp = self.client.get(
             "/test_trace/",
