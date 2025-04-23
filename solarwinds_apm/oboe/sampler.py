@@ -295,16 +295,20 @@ class Sampler(OboeSampler):
                 get_current_span(parent_context).get_span_context().trace_state
             )
 
-        # Update with x-trace-options-response if applicable
-        options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
-        if options and isinstance(options, XTraceOptions):
-            if options.include_response and headers.x_trace_options_response:
-                trace_state.add(
-                    INTL_SWO_X_OPTIONS_RESPONSE_KEY,
-                    headers.x_trace_options_response.replace(
-                        INTL_SWO_EQUALS, INTL_SWO_EQUALS_W3C_SANITIZED
-                    ),
-                )
+        if parent_context:
+            # Update with x-trace-options-response if applicable
+            options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
+            if options and isinstance(options, XTraceOptions):
+                if (
+                    options.include_response
+                    and headers.x_trace_options_response
+                ):
+                    trace_state.add(
+                        INTL_SWO_X_OPTIONS_RESPONSE_KEY,
+                        headers.x_trace_options_response.replace(
+                            INTL_SWO_EQUALS, INTL_SWO_EQUALS_W3C_SANITIZED
+                        ),
+                    )
 
         return trace_state
 
