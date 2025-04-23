@@ -41,6 +41,7 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
+        # Mock JSON read to guarantee sample decision
         timestamp = time.time()
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
@@ -208,6 +209,7 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
+        # Mock JSON read to guarantee sample decision
         timestamp = time.time()
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
