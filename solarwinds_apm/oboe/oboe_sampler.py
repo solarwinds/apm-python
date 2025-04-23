@@ -196,9 +196,14 @@ class OboeSampler(Sampler, ABC):
         )
 
         # Capture the tracestate from the parent span and store it in the sample state
-        if trace_state is not None:
+        if (
+            parent_span.get_span_context().is_valid
+            and parent_span.get_span_context().trace_state is not None
+        ):
             sample_state.attributes[TRACESTATE_CAPTURE_ATTRIBUTE] = (
-                trace_state.delete(INTL_SWO_X_OPTIONS_RESPONSE_KEY)
+                parent_span.get_span_context()
+                .trace_state.delete(INTL_SWO_X_OPTIONS_RESPONSE_KEY)
+                .to_header()
             )
 
         self.counters.request_count.add(1, {}, parent_context)
