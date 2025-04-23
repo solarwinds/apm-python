@@ -16,7 +16,6 @@ services:
       - ALL
     volumes:
       - ./:/code/solarwinds_apm
-      - ./tests/integration/mock-settings.json:/tmp/solarwinds-apm-settings.json
     working_dir: /code/solarwinds_apm
     entrypoint: ["/bin/bash", "-c"]
     command: 
@@ -37,7 +36,6 @@ services:
       - ALL
     volumes:
       - ./:/code/solarwinds_apm
-      - ./tests/integration/mock-settings.json:/tmp/solarwinds-apm-settings.json
     working_dir: /code/solarwinds_apm
     entrypoint: ["/bin/bash", "-c"]
     command: 
