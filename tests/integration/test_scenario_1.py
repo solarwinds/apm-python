@@ -46,7 +46,8 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
                             "BucketRate":1000,
                             "MetricsFlushInterval":60,
                             "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":1000,"TriggerRelaxedBucketRate":1000,
+                            "TriggerRelaxedBucketCapacity":1000,
+                            "TriggerRelaxedBucketRate":1000,
                             "TriggerStrictBucketCapacity":1000,
                             "TriggerStrictBucketRate":100
                         },

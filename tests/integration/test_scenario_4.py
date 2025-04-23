@@ -53,7 +53,8 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
                             "BucketRate":1000,
                             "MetricsFlushInterval":60,
                             "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":1000,"TriggerRelaxedBucketRate":1000,
+                            "TriggerRelaxedBucketCapacity":1000,
+                            "TriggerRelaxedBucketRate":1000,
                             "TriggerStrictBucketCapacity":1000,
                             "TriggerStrictBucketRate":100
                         },
@@ -145,35 +146,16 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert "{:032x}".format(span_server.context.trace_id) == trace_id
         assert "{:032x}".format(span_client.context.trace_id) == trace_id
 
-        # Check service entry span tracestate has `sw` key
-        # In this test it should be tracestate_span_id, traceflags from extracted traceparent
-        expected_trace_state = trace_api.TraceState([
-            ("sw", "{}-{}".format(tracestate_span, trace_flags))
-        ])
-
-        assert span_server.context.trace_state.get("sw") == expected_trace_state.get("sw")
-
         # Check service entry span attributes
         #   :present:
-        #     service entry internal KVs, which are on all entry spans
         #     sw.tracestate_parent_id, because only set if not the root and no attributes
         #   :absent:
+        #     service entry internal KVs, which not on entry spans if non-root
         #     SWKeys, because no xtraceoptions in otel context
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == 1000
-        assert span_server.attributes["BucketRate"] == 1000
-        assert span_server.attributes["SampleRate"] == 1000000
-        assert span_server.attributes["SampleSource"] == 6
+        assert not any(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert "sw.tracestate_parent_id" in span_server.attributes
         assert span_server.attributes["sw.tracestate_parent_id"] == tracestate_span
         assert not "SWKeys" in span_server.attributes
-
-        # Check outgoing request tracestate has `sw` key
-        # In this test it should also be tracestate_span_id, traceflags from extracted traceparent
-        expected_trace_state = trace_api.TraceState([
-            ("sw", "{}-{}".format(tracestate_span, trace_flags))
-        ])
-        assert span_client.context.trace_state.get("sw") == expected_trace_state.get("sw")
 
         # Check outgoing request span attributes
         #   :absent:
@@ -221,7 +203,8 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
                             "BucketRate":1000,
                             "MetricsFlushInterval":60,
                             "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":1000,"TriggerRelaxedBucketRate":1000,
+                            "TriggerRelaxedBucketCapacity":1000,
+                            "TriggerRelaxedBucketRate":1000,
                             "TriggerStrictBucketCapacity":1000,
                             "TriggerStrictBucketRate":100
                         },
