@@ -633,7 +633,6 @@ class ParentBasedSwSampler(ParentBased):
     def __init__(
         self,
         apm_config: "SolarWindsApmConfig",
-        reporter,
     ):
         """
         Uses HttpSampler/JsonSampler if no parent span.

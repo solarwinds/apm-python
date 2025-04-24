@@ -116,7 +116,7 @@ class TestSolarWindsReady:
             "solarwinds_apm.sampler.HttpSampler",
             return_value=mock_http_sampler,
         )
-        mock_sampler = ParentBasedSwSampler(mock_apmconfig, "foo")
+        mock_sampler = ParentBasedSwSampler(mock_apmconfig)
         mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
         mock_tracer_provider.configure_mock(
             **{
@@ -156,7 +156,7 @@ class TestSolarWindsReady:
             "solarwinds_apm.sampler.HttpSampler",
             return_value=mock_http_sampler,
         )
-        mock_sampler = ParentBasedSwSampler(mock_apmconfig, "foo")
+        mock_sampler = ParentBasedSwSampler(mock_apmconfig)
         mock_tracer_provider = mocker.Mock(spec=SolarwindsTracerProvider)
         mock_tracer_provider.configure_mock(
             **{

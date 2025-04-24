@@ -14,6 +14,8 @@ from opentelemetry.sdk.trace.sampling import (
 from opentelemetry.trace.span import SpanContext, TraceState
 
 # import solarwinds_apm.extension.oboe
+from solarwinds_apm.oboe.http_sampler import HttpSampler
+from solarwinds_apm.oboe.json_sampler import JsonSampler
 from solarwinds_apm.sampler import ParentBasedSwSampler
 
 # pylint: disable=unused-import
@@ -721,11 +723,26 @@ def fixture_parent_span_context_valid_remote_no_tracestate():
 #             "foo_xto",
 #         )
 
-# class TestParentBasedSwSampler():
-#     def test_init(self, mocker):
-#         sampler = ParentBasedSwSampler(mocker.Mock(), mocker.Mock(), mocker.Mock())
-#         assert type(sampler._root) == _SwSampler
-#         assert type(sampler._remote_parent_sampled) == _SwSampler
-#         assert type(sampler._remote_parent_not_sampled) == _SwSampler
-#         assert type(sampler._local_parent_sampled) == StaticSampler
-#         assert type(sampler._local_parent_not_sampled) == StaticSampler
+
+class TestParentBasedSwSampler():
+    def test_init(self, mocker):
+        mock_apm_config = mocker.Mock()
+        mock_apm_config.get = mocker.Mock(return_value="foo")
+        mock_apm_config.is_lambda = False
+        sampler = ParentBasedSwSampler(mock_apm_config)
+        assert type(sampler._root) == HttpSampler
+        assert type(sampler._remote_parent_sampled) == HttpSampler
+        assert type(sampler._remote_parent_not_sampled) == HttpSampler
+        assert type(sampler._local_parent_sampled) == StaticSampler
+        assert type(sampler._local_parent_not_sampled) == StaticSampler
+
+    def test_init_is_lambda(self, mocker):
+        mock_apm_config = mocker.Mock()
+        mock_apm_config.get = mocker.Mock(return_value="foo")
+        mock_apm_config.is_lambda = True
+        sampler = ParentBasedSwSampler(mock_apm_config)
+        assert type(sampler._root) == JsonSampler
+        assert type(sampler._remote_parent_sampled) == JsonSampler
+        assert type(sampler._remote_parent_not_sampled) == JsonSampler
+        assert type(sampler._local_parent_sampled) == StaticSampler
+        assert type(sampler._local_parent_not_sampled) == StaticSampler

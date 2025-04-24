@@ -166,7 +166,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         # Custom initialization of OTel components
         apm_sampler = ParentBasedSwSampler(
             self.apm_config,
-            None,  # TODO NH-104999 remove later
         )
         apm_resource = Resource.create(
             {
