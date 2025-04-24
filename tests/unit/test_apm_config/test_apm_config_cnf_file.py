@@ -112,7 +112,6 @@ class TestSolarWindsApmConfigCnfFile:
         )
         mock_apm_logging.configure_mock(
             **{
-                "set_sw_log_type": mocker.Mock(),
                 "set_sw_log_level": mocker.Mock(),
                 "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
             }
@@ -176,7 +175,6 @@ class TestSolarWindsApmConfigCnfFile:
         )
         mock_apm_logging.configure_mock(
             **{
-                "set_sw_log_type": mocker.Mock(),
                 "set_sw_log_level": mocker.Mock(),
                 "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
             }
@@ -235,7 +233,6 @@ class TestSolarWindsApmConfigCnfFile:
         )
         mock_apm_logging.configure_mock(
             **{
-                "set_sw_log_type": mocker.Mock(),
                 "set_sw_log_level": mocker.Mock(),
                 "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
             }
@@ -293,7 +290,6 @@ class TestSolarWindsApmConfigCnfFile:
         )
         mock_apm_logging.configure_mock(
             **{
-                "set_sw_log_type": mocker.Mock(),
                 "set_sw_log_level": mocker.Mock(),
                 "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
             }
