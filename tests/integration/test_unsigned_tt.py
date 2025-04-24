@@ -11,6 +11,7 @@ import time
 from opentelemetry import trace as trace_api
 from unittest import mock
 
+from solarwinds_apm.oboe.settings import LocalSettings, TracingMode
 from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
 
 
@@ -289,102 +290,106 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 0
 
-    # def test_unsigned_with_tt_not_sampled_tt_disabled(self):
-    #     """
-    #     Scenario #6, not sampled with unsigned tt:
-    #     1. Decision to NOT sample with unsigned trigger trace flag is made at root/service
-    #        entry span (mocked). There is no OTel context extracted from request headers,
-    #        so this is the root and start of the trace (though not exported).
-    #     2. Some traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
-    #     3. The valid x-trace-options is handled and an x-trace-options-response
-    #        header is injected into the response.
-    #     4. No spans are exported.
-    #     """
-    #     # Use in-process test app client and mock to propagate context
-    #     # and create in-memory trace
-    #     resp = None
-    #     # Mock JSON read to guarantee sample decision
-    #     timestamp = int(time.time())
-    #     with mock.patch(
-    #         target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
-    #         return_value=[
-    #             {
-    #                 "arguments":
-    #                     {
-    #                         "BucketCapacity":2,
-    #                         "BucketRate":1,
-    #                         "MetricsFlushInterval":60,
-    #                         "SignatureKey":"",
-    #                         "TriggerRelaxedBucketCapacity":4,
-    #                         "TriggerRelaxedBucketRate":3,
-    #                         "TriggerStrictBucketCapacity":6,
-    #                         "TriggerStrictBucketRate":5,
-    #                     },
-    #                 "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-    #                 "layer":"",
-    #                 "timestamp":timestamp,
-    #                 "ttl":120,
-    #                 "type":0,
-    #                 "value":0
-    #             }
-    #         ],
-    #     ):
-    #         # Request to instrumented app with headers
-    #         resp = self.client.get(
-    #             "/test_trace/",
-    #             headers={
-    #                 "x-trace-options": "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
-    #                 "some-header": "some-value"
-    #             }
-    #         )
-    #     resp_json = json.loads(resp.data)
-    #
-    #     # Verify some-header was not altered by instrumentation
-    #     try:
-    #         assert resp_json["incoming-headers"]["some-header"] == "some-value"
-    #     except KeyError as e:
-    #         self.fail("KeyError was raised at incoming-headers check: {}".format(e))
-    #
-    #     # Verify trace context injected into test app's outgoing postman-echo call
-    #     # (added to Flask app's response data) includes:
-    #     #    - traceparent with a trace_id, span_id, and trace_flags for do_sample
-    #     #    - tracestate with same span_id and trace_flags for do_sample
-    #     assert "traceparent" in resp_json
-    #     _TRACEPARENT_HEADER_FORMAT = (
-    #         "^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$"
-    #     )
-    #     _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
-    #     traceparent_re_result = re.search(
-    #         _TRACEPARENT_HEADER_FORMAT_RE,
-    #         resp_json["traceparent"],
-    #     )
-    #     new_trace_id = traceparent_re_result.group(2)
-    #     assert new_trace_id is not None
-    #     new_span_id = traceparent_re_result.group(3)
-    #     assert new_span_id is not None
-    #     new_trace_flags = traceparent_re_result.group(4)
-    #     assert new_trace_flags == "00"
-    #
-    #     assert "tracestate" in resp_json
-    #     # In this test we know tracestate will have `sw`
-    #     # with new_span_id and new_trace_flags.
-    #     # `xtrace_options_response` is not propagated.
-    #     assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
-    #
-    #     # Verify x-trace response header has same trace_id
-    #     # though it will have different span ID because of Flask
-    #     # app's outgoing request
-    #     assert "x-trace" in resp.headers
-    #     assert new_trace_id in resp.headers["x-trace"]
-    #
-    #     # Verify x-trace-options-response response header present
-    #     assert "x-trace-options-response" in resp.headers
-    #     assert "trigger-trace=trigger-tracing-disabled" in resp.headers["x-trace-options-response"]
-    #     assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
-    #
-    #     # Verify no spans exported
-    #     spans = self.memory_exporter.get_finished_spans()
-    #     assert len(spans) == 0
+    def test_unsigned_with_tt_not_sampled_tt_disabled(self):
+        """
+        Scenario #6, not sampled with unsigned tt:
+        1. Decision to NOT sample with unsigned trigger trace flag is made at root/service
+           entry span (mocked). There is no OTel context extracted from request headers,
+           so this is the root and start of the trace (though not exported).
+        2. Some traceparent and tracestate are injected into service's outgoing request (done by OTel TraceContextTextMapPropagator).
+        3. The valid x-trace-options is handled and an x-trace-options-response
+           header is injected into the response.
+        4. No spans are exported.
+        """
+        # Use in-process test app client and mock to propagate context
+        # and create in-memory trace
+        resp = None
+        # Mock JSON read to guarantee sample decision
+        timestamp = int(time.time())
+        with mock.patch(
+                target="solarwinds_apm.oboe.sampler.Sampler.local_settings",
+                return_value=LocalSettings(tracing_mode=TracingMode.ALWAYS, trigger_mode=False)
+        ):
+            with mock.patch(
+                target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+                return_value=[
+                    {
+                        "arguments":
+                            {
+                                "BucketCapacity":2,
+                                "BucketRate":1,
+                                "MetricsFlushInterval":60,
+                                "SignatureKey":"",
+                                "TriggerRelaxedBucketCapacity":4,
+                                "TriggerRelaxedBucketRate":3,
+                                "TriggerStrictBucketCapacity":6,
+                                "TriggerStrictBucketRate":5,
+                            },
+                        "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                        "layer":"",
+                        "timestamp":timestamp,
+                        "ttl":120,
+                        "type":0,
+                        "value":0
+                    }
+                ],
+            ):
+                # Request to instrumented app with headers
+                resp = self.client.get(
+                    "/test_trace/",
+                    headers={
+                        "x-trace-options": "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
+                        "some-header": "some-value"
+                    }
+                )
+        resp_json = json.loads(resp.data)
+
+        # Verify some-header was not altered by instrumentation
+        try:
+            assert resp_json["incoming-headers"]["some-header"] == "some-value"
+        except KeyError as e:
+            self.fail("KeyError was raised at incoming-headers check: {}".format(e))
+
+        # Verify trace context injected into test app's outgoing postman-echo call
+        # (added to Flask app's response data) includes:
+        #    - traceparent with a trace_id, span_id, and trace_flags for do_sample
+        #    - tracestate with same span_id and trace_flags for do_sample
+        assert "traceparent" in resp_json
+        _TRACEPARENT_HEADER_FORMAT = (
+            "^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$"
+        )
+        _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
+        traceparent_re_result = re.search(
+            _TRACEPARENT_HEADER_FORMAT_RE,
+            resp_json["traceparent"],
+        )
+        new_trace_id = traceparent_re_result.group(2)
+        assert new_trace_id is not None
+        new_span_id = traceparent_re_result.group(3)
+        assert new_span_id is not None
+        new_trace_flags = traceparent_re_result.group(4)
+        assert new_trace_flags == "00"
+
+        assert "tracestate" in resp_json
+        # In this test we know tracestate will have `sw`
+        # with new_span_id and new_trace_flags.
+        # `xtrace_options_response` is not propagated.
+        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+
+        # Verify x-trace response header has same trace_id
+        # though it will have different span ID because of Flask
+        # app's outgoing request
+        assert "x-trace" in resp.headers
+        assert new_trace_id in resp.headers["x-trace"]
+
+        # Verify x-trace-options-response response header present
+        assert "x-trace-options-response" in resp.headers
+        assert "trigger-trace=trigger-tracing-disabled" in resp.headers["x-trace-options-response"]
+        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+
+        # Verify no spans exported
+        spans = self.memory_exporter.get_finished_spans()
+        assert len(spans) == 0
 
     def test_unsigned_without_tt_sampled(self):
         """
