@@ -6,6 +6,7 @@
 
 import re
 import json
+import time
 
 from opentelemetry import trace as trace_api
 from unittest import mock
@@ -22,26 +23,43 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
     focus on w3c trace context propagation, which is covered in other integration
     tests.
     """
-    # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-    # plus status_msg (the first "ok" string)
-    mock_decision = mock.Mock(
-        return_value=(1, 1, -1, -1, 5.0, 6.0, 1, -1, "ok", "ok", 0)
-    )
 
     def get_response(self, headers=None):
         """Helper to get test app response with mocked decision"""
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # with mock.patch(
-        #     target="solarwinds_apm.extension.oboe.Context.getDecisions",
-        #     new=self.mock_decision,
-        # ):
-        # Request to instrumented app with headers
-        resp = self.client.get(
-            "/test_trace/",
-            headers=headers,
-        )
+        # Mock JSON read to guarantee sample decision
+        timestamp = time.time()
+        with mock.patch(
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":1000,
+                            "BucketRate":1000,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":1000,
+                            "TriggerRelaxedBucketRate":1000,
+                            "TriggerStrictBucketCapacity":1000,
+                            "TriggerStrictBucketRate":100
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":1000000
+                }
+            ],
+        ):
+            # Request to instrumented app with headers
+            resp = self.client.get(
+                "/test_trace/",
+                headers=headers,
+            )
         return json.loads(resp.data)
 
     def get_new_span_id_and_trace_flags(self, resp_json):
@@ -110,8 +128,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
+        assert span_server.attributes["BucketCapacity"] == 1000
+        assert span_server.attributes["BucketRate"] == 1000
         assert span_server.attributes["SampleRate"] == -1
         assert span_server.attributes["SampleSource"] == -1
         assert not "sw.tracestate_parent_id" in span_server.attributes
@@ -191,8 +209,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
+        assert span_server.attributes["BucketCapacity"] == 1000
+        assert span_server.attributes["BucketRate"] == 1000
         assert span_server.attributes["SampleRate"] == -1
         assert span_server.attributes["SampleSource"] == -1
         assert not "sw.tracestate_parent_id" in span_server.attributes
@@ -272,8 +290,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
+        assert span_server.attributes["BucketCapacity"] == 1000
+        assert span_server.attributes["BucketRate"] == 1000
         assert span_server.attributes["SampleRate"] == -1
         assert span_server.attributes["SampleSource"] == -1
         assert not "sw.tracestate_parent_id" in span_server.attributes
@@ -350,8 +368,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
+        assert span_server.attributes["BucketCapacity"] == 1000
+        assert span_server.attributes["BucketRate"] == 1000
         assert span_server.attributes["SampleRate"] == -1
         assert span_server.attributes["SampleSource"] == -1
         assert not "sw.tracestate_parent_id" in span_server.attributes
@@ -431,8 +449,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     TriggeredTrace, because no valid trigger-trace in otel context
         #     the ignored value in the x-trace-options-header
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
+        assert span_server.attributes["BucketCapacity"] == 1000
+        assert span_server.attributes["BucketRate"] == 1000
         assert span_server.attributes["SampleRate"] == -1
         assert span_server.attributes["SampleSource"] == -1
         assert not "sw.tracestate_parent_id" in span_server.attributes
@@ -509,8 +527,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     SWKeys, because not included in xtraceoptions in otel context
         #     the ignored value in the x-trace-options-header
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
+        assert span_server.attributes["BucketCapacity"] == 1000
+        assert span_server.attributes["BucketRate"] == 1000
         assert span_server.attributes["SampleRate"] == -1
         assert span_server.attributes["SampleSource"] == -1
         assert not "sw.tracestate_parent_id" in span_server.attributes
@@ -589,8 +607,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
+        assert span_server.attributes["BucketCapacity"] == 1000
+        assert span_server.attributes["BucketRate"] == 1000
         assert span_server.attributes["SampleRate"] == -1
         assert span_server.attributes["SampleSource"] == -1
         assert not "sw.tracestate_parent_id" in span_server.attributes
@@ -676,8 +694,8 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     SWKeys, because not included in xtraceoptions in otel context
         #     the ignored value in the x-trace-options-header
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
+        assert span_server.attributes["BucketCapacity"] == 1000
+        assert span_server.attributes["BucketRate"] == 1000
         assert span_server.attributes["SampleRate"] == -1
         assert span_server.attributes["SampleSource"] == -1
         assert not "sw.tracestate_parent_id" in span_server.attributes

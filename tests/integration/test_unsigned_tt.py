@@ -6,6 +6,7 @@
 
 import re
 import json
+import time
 
 from opentelemetry import trace as trace_api
 from unittest import mock
@@ -38,23 +39,40 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # # plus status_msg (the first "ok" string)
-        # mock_decision = mock.Mock(
-        #     return_value=(1, 1, -1, -1, 5.0, 6.0, 1, -1, "ok", "ok", 0)
-        # )
-        # with mock.patch(
-        #     target="solarwinds_apm.extension.oboe.Context.getDecisions",
-        #     new=mock_decision,
-        # ):
-        # Request to instrumented app with headers
-        resp = self.client.get(
-            "/test_trace/",
-            headers={
-                "x-trace-options": "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
-                "some-header": "some-value"
-            }
-        )
+        # Mock JSON read to guarantee sample decision
+        timestamp = time.time()
+        with mock.patch(
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":1000,
+                            "BucketRate":1000,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":1000,
+                            "TriggerRelaxedBucketRate":1000,
+                            "TriggerStrictBucketCapacity":1000,
+                            "TriggerStrictBucketRate":100
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":1000000
+                }
+            ],
+        ):
+            # Request to instrumented app with headers
+            resp = self.client.get(
+                "/test_trace/",
+                headers={
+                    "x-trace-options": "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
+                    "some-header": "some-value"
+                }
+            )
         resp_json = json.loads(resp.data)
 
         # Verify some-header was not altered by instrumentation
@@ -190,23 +208,40 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # # plus status_msg (the "rate-exceeded" string)
-        # mock_decision = mock.Mock(
-        #     return_value=(1, 0, -1, -1, 5.0, 6.0, 1, -1, "rate-exceeded", "ok", -4)
-        # )
-        # with mock.patch(
-        #     target="solarwinds_apm.extension.oboe.Context.getDecisions",
-        #     new=mock_decision,
-        # ):
-        # Request to instrumented app with headers
-        resp = self.client.get(
-            "/test_trace/",
-            headers={
-                "x-trace-options": "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
-                "some-header": "some-value"
-            }
-        )
+        # Mock JSON read to guarantee sample decision
+        timestamp = time.time()
+        with mock.patch(
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":1000,
+                            "BucketRate":1000,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":1000,
+                            "TriggerRelaxedBucketRate":1000,
+                            "TriggerStrictBucketCapacity":1000,
+                            "TriggerStrictBucketRate":100
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":0
+                }
+            ],
+        ):
+            # Request to instrumented app with headers
+            resp = self.client.get(
+                "/test_trace/",
+                headers={
+                    "x-trace-options": "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
+                    "some-header": "some-value"
+                }
+            )
         resp_json = json.loads(resp.data)
 
         # Verify some-header was not altered by instrumentation
@@ -270,23 +305,40 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # # plus status_msg (the "rate-exceeded" string)
-        # mock_decision = mock.Mock(
-        #     return_value=(1, 0, -1, -1, 5.0, 6.0, 1, -1, "trigger-tracing-disabled", "ok", -3)
-        # )
-        # with mock.patch(
-        #     target="solarwinds_apm.extension.oboe.Context.getDecisions",
-        #     new=mock_decision,
-        # ):
-        # Request to instrumented app with headers
-        resp = self.client.get(
-            "/test_trace/",
-            headers={
-                "x-trace-options": "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
-                "some-header": "some-value"
-            }
-        )
+        # Mock JSON read to guarantee sample decision
+        timestamp = time.time()
+        with mock.patch(
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":1000,
+                            "BucketRate":1000,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":1000,
+                            "TriggerRelaxedBucketRate":1000,
+                            "TriggerStrictBucketCapacity":1000,
+                            "TriggerStrictBucketRate":100
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":0
+                }
+            ],
+        ):
+            # Request to instrumented app with headers
+            resp = self.client.get(
+                "/test_trace/",
+                headers={
+                    "x-trace-options": "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
+                    "some-header": "some-value"
+                }
+            )
         resp_json = json.loads(resp.data)
 
         # Verify some-header was not altered by instrumentation
@@ -354,23 +406,40 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # # plus status_msg (the first "ok" string)
-        # mock_decision = mock.Mock(
-        #     return_value=(1, 1, -1, -1, 5.0, 6.0, 0, -1, "ok", "", 0)
-        # )
-        # with mock.patch(
-        #     target="solarwinds_apm.extension.oboe.Context.getDecisions",
-        #     new=mock_decision,
-        # ):
-        # Request to instrumented app with headers
-        resp = self.client.get(
-            "/test_trace/",
-            headers={
-                "x-trace-options": "sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
-                "some-header": "some-value"
-            }
-        )
+        # Mock JSON read to guarantee sample decision
+        timestamp = time.time()
+        with mock.patch(
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":1000,
+                            "BucketRate":1000,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":1000,
+                            "TriggerRelaxedBucketRate":1000,
+                            "TriggerStrictBucketCapacity":1000,
+                            "TriggerStrictBucketRate":100
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":1000000
+                }
+            ],
+        ):
+            # Request to instrumented app with headers
+            resp = self.client.get(
+                "/test_trace/",
+                headers={
+                    "x-trace-options": "sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
+                    "some-header": "some-value"
+                }
+            )
         resp_json = json.loads(resp.data)
 
         # Verify some-header was not altered by instrumentation
@@ -451,10 +520,10 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         #     TriggeredTrace, because trigger-trace not in otel context
         #     the ignored value in the x-trace-options-header
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == -1
-        assert span_server.attributes["SampleSource"] == -1
+        assert span_server.attributes["BucketCapacity"] == 1000
+        assert span_server.attributes["BucketRate"] == 1000
+        assert span_server.attributes["SampleRate"] == 1000000
+        assert span_server.attributes["SampleSource"] == 6
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert "SWKeys" in span_server.attributes
         assert span_server.attributes["SWKeys"] == "check-id:check-1013,website-id:booking-demo"
@@ -510,23 +579,40 @@ class TestUnsignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # # plus status_msg (the "rate-exceeded" string)
-        # mock_decision = mock.Mock(
-        #     return_value=(1, 0, -1, -1, 5.0, 6.0, 0, -1, "rate-exceeded", "ok", -4)
-        # )
-        # with mock.patch(
-        #     target="solarwinds_apm.extension.oboe.Context.getDecisions",
-        #     new=mock_decision,
-        # ):
-        # Request to instrumented app with headers
-        resp = self.client.get(
-            "/test_trace/",
-            headers={
-                "x-trace-options": "sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
-                "some-header": "some-value"
-            }
-        )
+        # Mock JSON read to guarantee sample decision
+        timestamp = time.time()
+        with mock.patch(
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":1000,
+                            "BucketRate":1000,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":1000,
+                            "TriggerRelaxedBucketRate":1000,
+                            "TriggerStrictBucketCapacity":1000,
+                            "TriggerStrictBucketRate":100
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":0
+                }
+            ],
+        ):
+            # Request to instrumented app with headers
+            resp = self.client.get(
+                "/test_trace/",
+                headers={
+                    "x-trace-options": "sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo",
+                    "some-header": "some-value"
+                }
+            )
         resp_json = json.loads(resp.data)
 
         # Verify some-header was not altered by instrumentation
