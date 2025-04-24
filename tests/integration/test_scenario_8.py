@@ -571,11 +571,6 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # # plus status_msg (the "ignored" string)
-        # mock_decision = mock.Mock(
-        #     return_value=(1, 0, 3, 4, 5.0, 6.0, 1, 0, "ignored", "ok", 0)
-        # )
         # Mock JSON read to guarantee sample decision and status message
         timestamp = time.time()
         with mock.patch(
@@ -700,11 +695,6 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # # plus status_msg (the first "ok" string)
-        # mock_decision = mock.Mock(
-        #     return_value=(1, 1, -1, -1, 5.0, 6.0, 1, -1, "ok", "ok", 0)
-        # )
         # Mock JSON read to guarantee sample decision and status message
         timestamp = time.time()
         with mock.patch(
