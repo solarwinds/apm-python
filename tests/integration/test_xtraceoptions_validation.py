@@ -124,9 +124,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
         print(f"span_server.attributes = {span_server.attributes}")
         assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
         assert span_server.attributes["BucketCapacity"] == 6
@@ -204,9 +206,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
         assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
         assert span_server.attributes["BucketCapacity"] == 6
         assert span_server.attributes["BucketRate"] == 5
@@ -283,9 +287,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
         assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
         assert span_server.attributes["BucketCapacity"] == 6
         assert span_server.attributes["BucketRate"] == 5
@@ -359,9 +365,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
         assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
         assert span_server.attributes["BucketCapacity"] == 6
         assert span_server.attributes["BucketRate"] == 5
@@ -437,10 +445,12 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     service entry internal KVs, which are on all entry spans
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     TriggeredTrace, because no valid trigger-trace in otel context
         #     the ignored value in the x-trace-options-header
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
         assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
         assert span_server.attributes["BucketCapacity"] == 2
         assert span_server.attributes["BucketRate"] == 1
@@ -513,10 +523,12 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     service entry internal KVs, which are on all entry spans
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     SWKeys, because not included in xtraceoptions in otel context
         #     the ignored value in the x-trace-options-header
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
         assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
         assert span_server.attributes["BucketCapacity"] == 6
         assert span_server.attributes["BucketRate"] == 5
@@ -592,9 +604,11 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
         assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
         assert span_server.attributes["BucketCapacity"] == 6
         assert span_server.attributes["BucketRate"] == 5
@@ -676,10 +690,12 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #   :present:
         #     service entry internal KVs, which are on all entry spans
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     SWKeys, because not included in xtraceoptions in otel context
         #     the ignored value in the x-trace-options-header
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
         assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
         assert span_server.attributes["BucketCapacity"] == 6
         assert span_server.attributes["BucketRate"] == 5
