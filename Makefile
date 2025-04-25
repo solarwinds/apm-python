@@ -39,7 +39,7 @@ check-zip:
 # Create package source distribution archive
 sdist:
 	@echo -e "Generating python agent sdist package"
-	@python3.8 setup.py sdist
+	@python3.8 -m build --sdist
 	@echo -e "\nDone."
 
 # Check local package source distribution archive contents, without install
