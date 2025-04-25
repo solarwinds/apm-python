@@ -563,6 +563,64 @@ class TestSolarWindsApmConfig:
         # Updates everything after first delim
         assert result == "weird-key:bar-service"
 
+    def test__validate_log_filepath_none(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
+        mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "")
+        test_config._validate_log_filepath()
+        mock_exists.assert_not_called()
+        mock_makedirs.assert_not_called()
+        assert test_config.get("log_filepath") == ""
+
+    def test__validate_log_filepath_no_parent_path(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
+        mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "foo")
+        test_config._validate_log_filepath()
+        mock_exists.assert_not_called()
+        mock_makedirs.assert_not_called()
+        assert test_config.get("log_filepath") == "foo"
+
+    def test__validate_log_filepath_path_exists(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=True)
+        mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "/path/to/foo")
+        test_config._validate_log_filepath()
+        mock_exists.assert_called_once_with("/path/to")
+        mock_makedirs.assert_not_called()
+        assert test_config.get("log_filepath") == "/path/to/foo"
+
+    def test__validate_log_filepath_create_path(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
+        mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "/path/to/foo")
+        test_config._validate_log_filepath()
+        mock_exists.assert_called_once_with("/path/to")
+        mock_makedirs.assert_called_once_with("/path/to")
+        assert test_config.get("log_filepath") == "/path/to/foo"
+
+    def test__validate_log_filepath_cannot_create_reset_settings(self, mocker):
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
+        mock_makedirs = mocker.patch(
+            "solarwinds_apm.apm_config.os.makedirs",
+            side_effect=FileNotFoundError("mock error")
+        )
+
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._set_config_value("log_filepath", "/path/to/foo")
+        test_config._validate_log_filepath()
+        mock_exists.assert_called_once_with("/path/to")
+        mock_makedirs.assert_called_once_with("/path/to")
+        assert test_config.get("log_filepath") == ""
+
     def test_convert_to_bool_bool_true(self):
         test_config = apm_config.SolarWindsApmConfig()
         assert test_config.convert_to_bool(True)
