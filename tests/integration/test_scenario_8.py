@@ -48,21 +48,21 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # and create in-memory trace
         resp = None
         # Mock JSON read to guarantee sample decision and status message
-        timestamp = time.time()
+        timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
                     "arguments":
                         {
-                            "BucketCapacity":1000,
-                            "BucketRate":1000,
+                            "BucketCapacity":2,
+                            "BucketRate":1,
                             "MetricsFlushInterval":60,
                             "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":1000,
-                            "TriggerRelaxedBucketRate":1000,
-                            "TriggerStrictBucketCapacity":1000,
-                            "TriggerStrictBucketRate":100
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
                         },
                     "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
                     "layer":"",
@@ -244,21 +244,21 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # and create in-memory trace
         resp = None
         # Mock JSON read to guarantee sample decision and status message
-        timestamp = time.time()
+        timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
                     "arguments":
                         {
-                            "BucketCapacity":1000,
-                            "BucketRate":1000,
+                            "BucketCapacity":2,
+                            "BucketRate":1,
                             "MetricsFlushInterval":60,
                             "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":1000,
-                            "TriggerRelaxedBucketRate":1000,
-                            "TriggerStrictBucketCapacity":1000,
-                            "TriggerStrictBucketRate":100
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
                         },
                     "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
                     "layer":"",
@@ -376,21 +376,21 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # and create in-memory trace
         resp = None
         # Mock JSON read to guarantee sample decision and status message
-        timestamp = time.time()
+        timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
                     "arguments":
                         {
-                            "BucketCapacity":1000,
-                            "BucketRate":1000,
+                            "BucketCapacity":2,
+                            "BucketRate":1,
                             "MetricsFlushInterval":60,
                             "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":1000,
-                            "TriggerRelaxedBucketRate":1000,
-                            "TriggerStrictBucketCapacity":1000,
-                            "TriggerStrictBucketRate":100
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
                         },
                     "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
                     "layer":"",
@@ -572,21 +572,21 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # and create in-memory trace
         resp = None
         # Mock JSON read to guarantee sample decision and status message
-        timestamp = time.time()
+        timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
                     "arguments":
                         {
-                            "BucketCapacity":1000,
-                            "BucketRate":1000,
+                            "BucketCapacity":2,
+                            "BucketRate":1,
                             "MetricsFlushInterval":60,
                             "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":1000,
-                            "TriggerRelaxedBucketRate":1000,
-                            "TriggerStrictBucketCapacity":1000,
-                            "TriggerStrictBucketRate":100
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
                         },
                     "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
                     "layer":"",
@@ -696,21 +696,21 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # and create in-memory trace
         resp = None
         # Mock JSON read to guarantee sample decision and status message
-        timestamp = time.time()
+        timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
                     "arguments":
                         {
-                            "BucketCapacity":1000,
-                            "BucketRate":1000,
+                            "BucketCapacity":2,
+                            "BucketRate":1,
                             "MetricsFlushInterval":60,
                             "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":1000,
-                            "TriggerRelaxedBucketRate":1000,
-                            "TriggerStrictBucketCapacity":1000,
-                            "TriggerStrictBucketRate":100
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
                         },
                     "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
                     "layer":"",
@@ -813,8 +813,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         #     the ignored value in the x-trace-options-header
         assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
         assert not any(attr_key in span_server.attributes for attr_key in ["SampleRate", "SampleSource"])
-        assert span_server.attributes["BucketCapacity"] == 1000
-        assert span_server.attributes["BucketRate"] == 100
+        assert span_server.attributes["BucketCapacity"] == 6
+        assert span_server.attributes["BucketRate"] == 5
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert "SWKeys" in span_server.attributes
         assert span_server.attributes["SWKeys"] == "check-id:check-1013,website-id:booking-demo"
@@ -871,7 +871,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # and create in-memory trace
         resp = None
         # Mock JSON read to guarantee sample decision and status message
-        timestamp = time.time()
+        timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[

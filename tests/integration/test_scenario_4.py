@@ -42,21 +42,21 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         # and create in-memory trace
         resp = None
         # Mock JSON read to guarantee sample decision
-        timestamp = time.time()
+        timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
                     "arguments":
                         {
-                            "BucketCapacity":1000,
-                            "BucketRate":1000,
+                            "BucketCapacity":2,
+                            "BucketRate":1,
                             "MetricsFlushInterval":60,
                             "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":1000,
-                            "TriggerRelaxedBucketRate":1000,
-                            "TriggerStrictBucketCapacity":1000,
-                            "TriggerStrictBucketRate":100
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
                         },
                     "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
                     "layer":"",
@@ -192,21 +192,21 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         # and create in-memory trace
         resp = None
         # Mock JSON read to guarantee sample decision
-        timestamp = time.time()
+        timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
                     "arguments":
                         {
-                            "BucketCapacity":1000,
-                            "BucketRate":1000,
+                            "BucketCapacity":2,
+                            "BucketRate":1,
                             "MetricsFlushInterval":60,
                             "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":1000,
-                            "TriggerRelaxedBucketRate":1000,
-                            "TriggerStrictBucketCapacity":1000,
-                            "TriggerStrictBucketRate":100
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
                         },
                     "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
                     "layer":"",

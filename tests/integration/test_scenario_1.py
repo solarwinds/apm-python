@@ -35,21 +35,21 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         # and create in-memory trace
         resp = None
         # Mock JSON read to guarantee sample decision
-        timestamp = time.time()
+        timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
                     "arguments":
                         {
-                            "BucketCapacity":1000,
-                            "BucketRate":1000,
+                            "BucketCapacity":2,
+                            "BucketRate":1,
                             "MetricsFlushInterval":60,
                             "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":1000,
-                            "TriggerRelaxedBucketRate":1000,
-                            "TriggerStrictBucketCapacity":1000,
-                            "TriggerStrictBucketRate":100
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
                         },
                     "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
                     "layer":"",
@@ -128,8 +128,8 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     SWKeys, because no xtraceoptions in otel context
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == 1000
-        assert span_server.attributes["BucketRate"] == 1000
+        assert span_server.attributes["BucketCapacity"] == 2
+        assert span_server.attributes["BucketRate"] == 1
         assert span_server.attributes["SampleRate"] == 1000000
         assert span_server.attributes["SampleSource"] == 6
         assert not "sw.tracestate_parent_id" in span_server.attributes
