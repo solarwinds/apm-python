@@ -162,7 +162,6 @@ class TestSolarWindsApmConfigServiceNameLambda:
 
     def test__calculate_service_name_lambda_otel_name_ok(
         self,
-        mocker,
     ):
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._calculate_service_name_lambda(
