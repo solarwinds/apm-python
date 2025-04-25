@@ -330,12 +330,14 @@ class SolarWindsApmConfig:
         """
         service_name = ""
         if agent_enabled:
-            # OTel SDK default service.name is "unknown_service" in-code:
+            # OTel SDK default service.name starts with "unknown_service" in-code:
             # https://github.com/open-telemetry/opentelemetry-python/blob/f5fb6b1353929cf8039b1d38f97450866357d901/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py#L175
             otel_service_name = otel_resource.attributes.get(
                 "service.name", None
             )
-            if otel_service_name and otel_service_name == "unknown_service":
+            if otel_service_name and otel_service_name.startswith(
+                "unknown_service"
+            ):
                 # When agent_enabled, assume service_key exists and is formatted correctly.
                 service_name = self.__config.get("service_key", ":").split(
                     ":"
