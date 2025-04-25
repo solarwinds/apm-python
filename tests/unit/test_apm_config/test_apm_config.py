@@ -340,7 +340,6 @@ class TestSolarWindsApmConfig:
         result = str(apm_config.SolarWindsApmConfig())
         assert "vali...long:key" in result
         assert "agent_enabled" in result
-        # assert "solarwinds_apm.extension.oboe.Context" in result
 
     # pylint:disable=unused-argument
     def test_set_config_value_invalid_key(self, caplog, setup_caplog, mock_env_vars):
