@@ -33,7 +33,7 @@ def set_transaction_name(custom_name: str) -> bool:
     config file.
 
     Any uppercase to lowercase conversions or special character replacements
-    are done by the platform. Any truncations are done by the core extension.
+    are done by the platform.
 
     :custom_name:str, custom transaction name to apply
 
