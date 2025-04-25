@@ -136,53 +136,6 @@ def get_apmconfig_mocks(
     export_logs_enabled=True,
     export_metrics_enabled=True,
 ):
-    # mock the extension that is linked to ApmConfig
-    mock_ext_config = mocker.Mock()
-    mock_ext_config.configure_mock(
-        **{
-            "getVersionString": mocker.Mock(return_value="1.1.1")
-        }
-    )
-
-    mock_ext_context = mocker.Mock()
-    mock_ext_context.configure_mock(
-        **{
-            "set": mocker.Mock()
-        }
-    )
-
-    mock_event = mocker.Mock()
-    mock_event.configure_mock(
-        **{
-            "addInfo": mocker.Mock()
-        }
-    )
-    mock_create_event = mocker.Mock(return_value=mock_event)
-
-    mock_make_random = mocker.Mock()
-    mock_make_random.configure_mock(
-        **{
-            "isValid": mocker.Mock(return_value=md_is_valid),
-            "createEvent": mock_create_event
-        }
-    )
-
-    mock_ext_metadata = mocker.Mock()
-    mock_ext_metadata.configure_mock(
-        **{
-            "makeRandom": mock_make_random
-        }
-    )
-
-    mock_ext = mocker.Mock()
-    mock_ext.configure_mock(
-        **{
-            "Config": mock_ext_config,
-            "Context": mock_ext_context,
-            "Metadata": mock_ext_metadata,
-        }
-    )
-
     def get_side_effect(param):
         if param == "export_metrics_enabled":
             return export_metrics_enabled
@@ -200,7 +153,6 @@ def get_apmconfig_mocks(
             "get": mocker.Mock(side_effect=get_side_effect),
             "service_name": "foo-service",
             "is_lambda": is_lambda,
-            "extension": mock_ext,
             "oboe_api": mocker.Mock(),
             "convert_to_bool": SolarWindsApmConfig.convert_to_bool,
         }
@@ -298,62 +250,17 @@ def mock_apmconfig_metrics_enabled_none(mocker):
 
 @pytest.fixture(name="mock_apmconfig_enabled_reporter_settings")
 def mock_apmconfig_enabled_reporter_settings(mocker):
-    mock_reporter = mocker.Mock()
-    mock_ext = mocker.Mock()
-    mock_ext.configure_mock(
-        **{
-            "Reporter": mock_reporter
-        }
-    )
-
     mock_apmconfig = mocker.Mock()
     mock_apmconfig.configure_mock(
         **{
             "agent_enabled": True,
             "certificates": "foo-certs",
-            "extension": mock_ext,
             "get": mocker.Mock(return_value="foo"),
             "service_name": "foo-service",
             "metric_format": "bar"
         }
     )
     return mock_apmconfig
-
-# ==================================================================
-# Configurator APM Python extension mocks
-# ==================================================================
-
-def get_extension_mocks(
-    mocker,
-    status_code=0,
-):
-    mock_reporter = mocker.Mock()
-    mock_reporter.configure_mock(
-        **{
-            "init_status": status_code,
-            "sendStatus": mocker.Mock()
-        }
-    )
-
-    mock_ext = mocker.Mock()
-    mock_ext.configure_mock(
-        **{
-            "Reporter": mock_reporter
-        }
-    )
-    return mock_ext
-
-@pytest.fixture(name="mock_extension")
-def mock_extension(mocker):
-    return get_extension_mocks(mocker)
-
-@pytest.fixture(name="mock_extension_status_code_already_init")
-def mock_extension_status_code_already_init(mocker):
-    return get_extension_mocks(mocker, -1)
-
-@pytest.fixture(name="mock_extension_status_code_invalid_protocol")
-def mock_extension_status_code_invalid_protocol(mocker):
-    return get_extension_mocks(mocker, 2)
 
 # ==================================================================
 # Configurator APM Python configurator mocks
