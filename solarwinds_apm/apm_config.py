@@ -89,6 +89,7 @@ class SolarWindsApmConfig:
             "transaction_name": None,
             "export_logs_enabled": False,
             "export_metrics_enabled": True,
+            "log_filepath": "",
         }
         self.is_lambda = self.calculate_is_lambda()
         self.lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
@@ -110,6 +111,10 @@ class SolarWindsApmConfig:
         )
 
         # Update and apply logging settings to Python logger
+        self._validate_log_filepath()
+        apm_logging.update_sw_log_handler(
+            self.__config["log_filepath"],
+        )
         apm_logging.set_sw_log_level(self.__config["debug_level"])
 
         logger.debug("Set ApmConfig as: %s", self)
@@ -418,6 +423,27 @@ class SolarWindsApmConfig:
                 cnf_v = self.mask_service_key()
             config_masked[cnf_k] = cnf_v
         return config_masked
+
+    def _validate_log_filepath(
+        self,
+    ) -> None:
+        """Checks logFilepath validity else fileHandler will fail.
+        If path up to file does not exist, creates directory.
+        If that's not possible, switch to default empty logFilepath.
+        """
+        log_filepath = os.path.dirname(self.__config["log_filepath"])
+        if log_filepath:
+            if not os.path.exists(log_filepath):
+                try:
+                    os.makedirs(log_filepath)
+                    logger.debug(
+                        "Created directory path from provided SW_APM_LOG_FILEPATH / logFilepath."
+                    )
+                except FileNotFoundError:
+                    logger.error(
+                        "Could not create log file directory path from provided SW_APM_LOG_FILEPATH / logFilepath. Using default log settings."
+                    )
+                    self.__config["log_filepath"] = ""
 
     def __str__(self) -> str:
         """String representation of ApmConfig is config with masked service key,
