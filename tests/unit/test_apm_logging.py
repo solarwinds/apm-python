@@ -62,3 +62,42 @@ class TestSetSwLog:
             )
 
         return mock_apm_logger, mock_rfhandler
+
+    def test_update_sw_log_handler_no_log_filepath(self, mocker):
+        mock_apm_logger, mock_rfhandler = self.get_mock_logger_and_rfhandler(mocker)
+
+        apm_logging.update_sw_log_handler("")
+        mock_rfhandler.assert_not_called()
+        mock_apm_logger.addHandler.assert_not_called()
+        mock_apm_logger.removeHandler.assert_not_called()
+        mock_apm_logger.error.assert_not_called()
+        mock_apm_logger.warning.assert_not_called()
+
+    def test_update_sw_log_handler_filenotfounderror(self, mocker):
+        mock_apm_logger, mock_rfhandler = self.get_mock_logger_and_rfhandler(
+            mocker,
+            error=True,
+        )
+
+        apm_logging.update_sw_log_handler("foo")
+        mock_rfhandler.assert_called_once_with(
+            filename='foo', maxBytes=0, backupCount=0
+        )
+        mock_apm_logger.addHandler.assert_not_called()
+        mock_apm_logger.removeHandler.assert_not_called()
+        mock_apm_logger.error.assert_called_once_with(
+            "Could not write logs to file; please check configured SW_APM_LOG_FILEPATH / logFilepath."
+        )
+        mock_apm_logger.warning.assert_not_called()
+
+    def test_update_sw_log_handler_update_handlers(self, mocker):
+        mock_apm_logger, mock_rfhandler = self.get_mock_logger_and_rfhandler(mocker)
+
+        apm_logging.update_sw_log_handler("foo")
+        mock_rfhandler.assert_called_once_with(
+            filename='foo', maxBytes=0, backupCount=0
+        )
+        mock_apm_logger.addHandler.assert_called_once()
+        mock_apm_logger.removeHandler.assert_called_once()
+        mock_apm_logger.error.assert_not_called()
+        mock_apm_logger.warning.assert_not_called()
