@@ -73,9 +73,7 @@ class JsonSampler(Sampler):
         if time.time() + 10 < self._expiry:
             return
         try:
-            with open(self._path, "r", encoding="utf-8") as file:
-                contents = file.read()
-            unparsed = json.loads(contents)
+            unparsed = self._read()
         except (FileNotFoundError, json.JSONDecodeError) as error:
             logger.debug("missing or invalid settings file %s", str(error))
             return
@@ -87,3 +85,8 @@ class JsonSampler(Sampler):
         parsed = self.update_settings(unparsed[0])
         if parsed:
             self._expiry = parsed.timestamp + parsed.ttl
+
+    def _read(self):
+        with open(self._path, "r", encoding="utf-8") as file:
+            contents = file.read()
+        return json.loads(contents)

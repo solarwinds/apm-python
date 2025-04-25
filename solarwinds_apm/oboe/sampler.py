@@ -35,6 +35,8 @@ from opentelemetry.trace import Link, SpanKind, TraceState, get_current_span
 from typing_extensions import override
 
 from solarwinds_apm.apm_constants import (
+    INTL_SWO_COMMA,
+    INTL_SWO_COMMA_W3C_SANITIZED,
     INTL_SWO_EQUALS,
     INTL_SWO_EQUALS_W3C_SANITIZED,
     INTL_SWO_X_OPTIONS_KEY,
@@ -307,6 +309,8 @@ class Sampler(OboeSampler):
                         INTL_SWO_X_OPTIONS_RESPONSE_KEY,
                         headers.x_trace_options_response.replace(
                             INTL_SWO_EQUALS, INTL_SWO_EQUALS_W3C_SANITIZED
+                        ).replace(
+                            INTL_SWO_COMMA, INTL_SWO_COMMA_W3C_SANITIZED
                         ),
                     )
         return None
