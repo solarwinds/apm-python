@@ -451,7 +451,6 @@ class SolarWindsApmConfig:
         apm_config = {
             "__config": self._config_mask_service_key(),
             "agent_enabled": self.agent_enabled,
-            # "context": str(self.context),
             "service_name": self.service_name,
         }
         return json.dumps(apm_config)
