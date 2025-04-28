@@ -34,7 +34,7 @@ from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro
 from solarwinds_apm.oboe.json_sampler import JsonSampler
 from solarwinds_apm.propagator import SolarWindsPropagator
-from solarwinds_apm.sampler import ParentBasedSwSampler
+
 
 
 class TestBaseSwHeadersAndAttributes(TestBase):
