@@ -76,7 +76,11 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             # Make sure we don't install py3.6's pip on ubuntu
             # Official get-pip documentation:
             # https://pip.pypa.io/en/stable/installation/#get-pip-py
-            wget https://bootstrap.pypa.io/get-pip.py
+            if [ "$python_version" = "3.8" ]; then
+                wget https://bootstrap.pypa.io/pip/3.8/get-pip.py
+            else
+                wget https://bootstrap.pypa.io/get-pip.py
+            fi
             python get-pip.py
             pip install --upgrade pip >/dev/null
 
