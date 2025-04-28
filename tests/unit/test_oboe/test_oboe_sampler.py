@@ -11,7 +11,7 @@ import logging
 import os
 import time
 from collections.abc import Sequence
-from unittest.mock import Mock
+
 
 import pytest
 from opentelemetry import trace
