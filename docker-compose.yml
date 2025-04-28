@@ -16,16 +16,16 @@ services:
       - ALL
     volumes:
       - ./:/code/solarwinds_apm
-      - ../solarwinds-apm-liboboe/:/code/solarwinds-apm-liboboe
     working_dir: /code/solarwinds_apm
     entrypoint: ["/bin/bash", "-c"]
     command: 
     - |
+       # build for sdist builds
        # boto3 for interaction with AWS
        # twine to upload to TestPyPi
        # tox for automated tests
        python3.8 -m pip install --upgrade pip
-       python3.8 -m pip install --default-timeout=100 boto3 twine tox
+       python3.8 -m pip install --default-timeout=100 build boto3 twine tox
        /bin/bash
 
   aarch64:
@@ -37,14 +37,14 @@ services:
       - ALL
     volumes:
       - ./:/code/solarwinds_apm
-      - ../solarwinds-apm-liboboe/:/code/solarwinds-apm-liboboe
     working_dir: /code/solarwinds_apm
     entrypoint: ["/bin/bash", "-c"]
     command: 
     - |
+       # build for sdist builds
        # boto3 for interaction with AWS
        # twine to upload to TestPyPi
        # tox for automated tests
        python3.8 -m pip install --upgrade pip
-       python3.8 -m pip install --default-timeout=100 boto3 twine tox
+       python3.8 -m pip install --default-timeout=100 build boto3 twine tox
        /bin/bash

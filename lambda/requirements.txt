@@ -1,8 +1,11 @@
 opentelemetry-exporter-otlp==1.31.1
-opentelemetry-exporter-otlp-proto-grpc==1.31.1
 opentelemetry-exporter-otlp-proto-http==1.31.1
 opentelemetry-instrumentation-aws-lambda==0.52b1
+opentelemetry-sdk-extension-aws==2.1.0
 packaging
 jaraco.text
 platformdirs
 setuptools
+charset_normalizer==3.4.1
+grpcio==1.70.0
+wrapt==1.17.2

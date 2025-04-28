@@ -6,6 +6,8 @@
 
 import re
 import json
+import time
+from unittest import mock
 
 from opentelemetry import trace as trace_api
 from unittest import mock
@@ -45,14 +47,31 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # plus status_msg (the "ignored" string)
-        mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ignored", "ok", 0)
-        )
+        # Mock JSON read to guarantee sample decision and status message
+        timestamp = int(time.time())
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=mock_decision,
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":2,
+                            "BucketRate":1,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":1000000,
+                }
+            ],
         ):
             # Request to instrumented app with headers
             resp = self.client.get(
@@ -147,7 +166,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check service entry span tracestate has `sw` and `xtrace_options_response` key.
         # In this test it should be span_id, traceflags from extracted traceparent.
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "{}-{}".format(tracestate_span, trace_flags)),
@@ -159,15 +178,12 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check service entry span attributes
         #   :present:
-        #     service entry internal KVs, which are on all entry spans
         #     sw.tracestate_parent_id, because only set if not root and no attributes
         #     custom-*, because included in xtraceoptions in otel context
         #     SWKeys, because included in xtraceoptions in otel context
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == 3
-        assert span_server.attributes["SampleSource"] == 4
+        #   :absent:
+        #     service entry internal KVs, which not on entry spans if non-root
+        assert not any(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert "sw.tracestate_parent_id" in span_server.attributes
         assert span_server.attributes["sw.tracestate_parent_id"] == tracestate_span
         assert "custom-from" in span_server.attributes
@@ -177,7 +193,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check service entry span tracestate has `sw` and `xtrace_options_response` key.
         # In this test it should also be span_id, traceflags from extracted traceparent
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "{}-{}".format(tracestate_span, trace_flags)),
@@ -227,14 +243,31 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # plus status_msg (the "ignored" string)
-        mock_decision = mock.Mock(
-            return_value=(1, 0, 3, 4, 5.0, 6.0, 1, 0, "ignored", "ok", 0)
-        )
+        # Mock JSON read to guarantee sample decision and status message
+        timestamp = int(time.time())
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=mock_decision,
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":2,
+                            "BucketRate":1,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":0,
+                }
+            ],
         ):
             # Request to instrumented app with headers
             resp = self.client.get(
@@ -342,14 +375,31 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # plus status_msg (the "ignored" string)
-        mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ignored", "ok", 0)
-        )
+        # Mock JSON read to guarantee sample decision and status message
+        timestamp = int(time.time())
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=mock_decision,
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":2,
+                            "BucketRate":1,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":1000000,
+                }
+            ],
         ):
             # Request to instrumented app with headers
             resp = self.client.get(
@@ -445,7 +495,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check service entry span tracestate has `sw` and `xtrace_options_response` keys
         # In this test it should be span_id, traceflags from extracted traceparent.
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "{}-{}".format(tracestate_span, trace_flags)),
@@ -457,15 +507,12 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check service entry span attributes
         #   :present:
-        #     service entry internal KVs, which are on all entry spans
         #     sw.tracestate_parent_id, because only set if not root and no attributes
         #     custom-*, because included in xtraceoptions in otel context
         #     SWKeys, because included in xtraceoptions in otel context
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == 3
-        assert span_server.attributes["SampleSource"] == 4
+        #   :absent:
+        #     service entry internal KVs, which not on entry spans if non-root
+        assert not any(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert "sw.tracestate_parent_id" in span_server.attributes
         assert span_server.attributes["sw.tracestate_parent_id"] == tracestate_span
         assert "custom-from" in span_server.attributes
@@ -475,7 +522,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check outgoing request tracestate has `sw` and `xtrace_options_response` keys
         # In this test it should also be span_id, traceflags from extracted traceparent
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("sw", "{}-{}".format(tracestate_span, trace_flags)),
@@ -524,14 +571,31 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # plus status_msg (the "ignored" string)
-        mock_decision = mock.Mock(
-            return_value=(1, 0, 3, 4, 5.0, 6.0, 1, 0, "ignored", "ok", 0)
-        )
+        # Mock JSON read to guarantee sample decision and status message
+        timestamp = int(time.time())
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=mock_decision,
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":2,
+                            "BucketRate":1,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":0,
+                }
+            ],
         ):
             # Request to instrumented app with headers
             resp = self.client.get(
@@ -631,14 +695,31 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # plus status_msg (the first "ok" string)
-        mock_decision = mock.Mock(
-            return_value=(1, 1, -1, -1, 5.0, 6.0, 1, -1, "ok", "ok", 0)
-        )
+        # Mock JSON read to guarantee sample decision and status message
+        timestamp = int(time.time())
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=mock_decision,
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":2,
+                            "BucketRate":1,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":1000000,
+                }
+            ],
         ):
             # Request to instrumented app with headers
             resp = self.client.get(
@@ -711,7 +792,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `xtrace_options_response` key but no `sw` key
         # because no valid parent context.
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
@@ -722,18 +803,18 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check root span attributes
         #   :present:
-        #     service entry internal KVs, which are on all entry spans
+        #     service entry internal KVs for Bucket* only
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
         #   :absent:
+        #     service entry internal KVs for Sample*
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == -1
-        assert span_server.attributes["SampleSource"] == -1
+        assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
+        assert not any(attr_key in span_server.attributes for attr_key in ["SampleRate", "SampleSource"])
+        assert span_server.attributes["BucketCapacity"] == 6
+        assert span_server.attributes["BucketRate"] == 5
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert "SWKeys" in span_server.attributes
         assert span_server.attributes["SWKeys"] == "check-id:check-1013,website-id:booking-demo"
@@ -745,7 +826,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
 
         # Check root span tracestate has `xtrace_options_response` key but no `sw` key
         # because no valid parent context.
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####this-will-be-ignored"),
@@ -789,14 +870,31 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-        # plus status_msg (the "rate-exceeded" string)
-        mock_decision = mock.Mock(
-            return_value=(1, 0, -1, -1, 5.0, 6.0, 1, -1, "rate-exceeded", "ok", -4)
-        )
+        # Mock JSON read to guarantee sample decision and status message
+        timestamp = int(time.time())
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=mock_decision,
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":0,
+                            "BucketRate":0,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":0,
+                            "TriggerRelaxedBucketRate":0,
+                            "TriggerStrictBucketCapacity":0,
+                            "TriggerStrictBucketRate":0
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":0,
+                }
+            ],
         ):
             # Request to instrumented app with headers
             resp = self.client.get(

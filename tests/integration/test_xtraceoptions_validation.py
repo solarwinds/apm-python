@@ -6,6 +6,7 @@
 
 import re
 import json
+import time
 
 from opentelemetry import trace as trace_api
 from unittest import mock
@@ -22,20 +23,37 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
     focus on w3c trace context propagation, which is covered in other integration
     tests.
     """
-    # liboboe mocked to guarantee return of "do_sample" (2nd arg),
-    # plus status_msg (the first "ok" string)
-    mock_decision = mock.Mock(
-        return_value=(1, 1, -1, -1, 5.0, 6.0, 1, -1, "ok", "ok", 0)
-    )
 
     def get_response(self, headers=None):
         """Helper to get test app response with mocked decision"""
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
+        # Mock JSON read to guarantee sample decision
+        timestamp = int(time.time())
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=self.mock_decision,
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":2,
+                            "BucketRate":1,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":1000000
+                }
+            ],
         ):
             # Request to instrumented app with headers
             resp = self.client.get(
@@ -93,7 +111,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         span_client = spans[0]
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####foo"),
@@ -106,14 +124,15 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == -1
-        assert span_server.attributes["SampleSource"] == -1
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
+        print(f"span_server.attributes = {span_server.attributes}")
+        assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
+        assert span_server.attributes["BucketCapacity"] == 6
+        assert span_server.attributes["BucketRate"] == 5
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert "SWKeys" in span_server.attributes
         assert span_server.attributes["SWKeys"] == "029734wr70:9wqj21,0d9j1"
@@ -126,7 +145,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert "foo" not in span_server.attributes
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####foo"),
@@ -174,7 +193,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         span_client = spans[0]
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####foo"),
@@ -187,14 +206,14 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == -1
-        assert span_server.attributes["SampleSource"] == -1
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
+        assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
+        assert span_server.attributes["BucketCapacity"] == 6
+        assert span_server.attributes["BucketRate"] == 5
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert "SWKeys" in span_server.attributes
         assert span_server.attributes["SWKeys"] == "02973r70:1b2a3"
@@ -207,7 +226,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert "foo" not in span_server.attributes
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####foo"),
@@ -255,10 +274,10 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         span_client = spans[0]
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
-            ("xtrace_options_response", "trigger-trace####ok"),
+            ("xtrace_options_response", "trigger-trace####ok;ignored####sw-keys....custom-something"),
         ])
         assert span_server.context.trace_state == expected_trace_state
 
@@ -268,14 +287,14 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == -1
-        assert span_server.attributes["SampleSource"] == -1
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
+        assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
+        assert span_server.attributes["BucketCapacity"] == 6
+        assert span_server.attributes["BucketRate"] == 5
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert "SWKeys" in span_server.attributes
         assert span_server.attributes["SWKeys"] == "keep_this"
@@ -286,10 +305,10 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert "foo" not in span_server.attributes
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
-            ("xtrace_options_response", "trigger-trace####ok"),
+            ("xtrace_options_response", "trigger-trace####ok;ignored####sw-keys....custom-something"),
         ])
         assert span_client.context.trace_state == expected_trace_state
 
@@ -333,7 +352,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         span_client = spans[0]
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok"),
@@ -346,14 +365,14 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == -1
-        assert span_server.attributes["SampleSource"] == -1
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
+        assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
+        assert span_server.attributes["BucketCapacity"] == 6
+        assert span_server.attributes["BucketRate"] == 5
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert "SWKeys" in span_server.attributes
         assert span_server.attributes["SWKeys"] == "g049sj345=0spd"
@@ -366,7 +385,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert "foo" not in span_server.attributes
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok"),
@@ -414,7 +433,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         span_client = spans[0]
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####not-requested;ignored####trigger-trace"),
@@ -426,15 +445,15 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     service entry internal KVs, which are on all entry spans
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     TriggeredTrace, because no valid trigger-trace in otel context
         #     the ignored value in the x-trace-options-header
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == -1
-        assert span_server.attributes["SampleSource"] == -1
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
+        assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
+        assert span_server.attributes["BucketCapacity"] == 2
+        assert span_server.attributes["BucketRate"] == 1
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert "SWKeys" in span_server.attributes
         assert span_server.attributes["SWKeys"] == "g049sj345=0spd"
@@ -445,7 +464,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert "TriggeredTrace" not in span_server.attributes
 
         # Check client span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####not-requested;ignored####trigger-trace"),
@@ -492,7 +511,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         span_client = spans[0]
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####bar'"),
@@ -504,15 +523,15 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     service entry internal KVs, which are on all entry spans
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     SWKeys, because not included in xtraceoptions in otel context
         #     the ignored value in the x-trace-options-header
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == -1
-        assert span_server.attributes["SampleSource"] == -1
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
+        assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
+        assert span_server.attributes["BucketCapacity"] == 6
+        assert span_server.attributes["BucketRate"] == 5
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert "SWKeys" not in span_server.attributes
         assert "custom-foo" in span_server.attributes
@@ -524,7 +543,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert "bar'" not in span_server.attributes
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####bar'"),
@@ -572,7 +591,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         span_client = spans[0]
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####1....2....3....4....5"),
@@ -585,14 +604,14 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #     SWKeys, because included in xtraceoptions in otel context
         #     custom-*, because included in xtraceoptions in otel context
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == -1
-        assert span_server.attributes["SampleSource"] == -1
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
+        assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
+        assert span_server.attributes["BucketCapacity"] == 6
+        assert span_server.attributes["BucketRate"] == 5
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert "SWKeys" in span_server.attributes
         assert span_server.attributes["SWKeys"] == "02973r70:9wqj21,0d9j1"
@@ -608,7 +627,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert "5" not in span_server.attributes
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####1....2....3....4....5"),
@@ -660,7 +679,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         span_client = spans[0]
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####custom- key....custom-key 7"),
@@ -671,15 +690,15 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         #   :present:
         #     service entry internal KVs, which are on all entry spans
         #     TriggeredTrace, because trigger-trace in otel context
+        #     Bucket* in attributes, because trigger trace is sampled
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     SWKeys, because not included in xtraceoptions in otel context
         #     the ignored value in the x-trace-options-header
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == -1
-        assert span_server.attributes["SampleSource"] == -1
+        #     SampleRate, SampleSource in attributes, because it is a trigger trace
+        assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
+        assert span_server.attributes["BucketCapacity"] == 6
+        assert span_server.attributes["BucketRate"] == 5
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert "SWKeys" not in span_server.attributes
         assert "TriggeredTrace" in span_server.attributes
@@ -688,7 +707,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert "custom-key 7" not in span_server.attributes
 
         # Check root span tracestate has `xtrace_options_response` key
-        # SWO APM uses TraceState to stash the trigger trace response so it's available 
+        # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
         expected_trace_state = trace_api.TraceState([
             ("xtrace_options_response", "trigger-trace####ok;ignored####custom- key....custom-key 7"),

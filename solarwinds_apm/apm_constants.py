@@ -7,26 +7,17 @@
 INTL_SWO_DEFAULT_OTLP_COLLECTOR = (
     "https://otel.collector.na-01.cloud.solarwinds.com:443"
 )
-INTL_SWO_AO_COLLECTOR = "collector.appoptics.com"
-INTL_SWO_AO_STG_COLLECTOR = "collector-stg.appoptics.com"
-INTL_SWO_CURRENT_TRACE_ENTRY_SPAN_ID = "sw-current-trace-entry-span-id"
 INTL_SWO_COMMA = ","
 INTL_SWO_COMMA_W3C_SANITIZED = "...."
 INTL_SWO_EQUALS = "="
 INTL_SWO_EQUALS_W3C_SANITIZED = "####"
-INTL_SWO_LIBOBOE_TXN_NAME_KEY_PREFIX = "oboe"
-INTL_SWO_OTEL_SCOPE_NAME = "otel.scope.name"
-INTL_SWO_OTEL_SCOPE_VERSION = "otel.scope.version"
-INTL_SWO_OTEL_STATUS_CODE = "otel.status_code"
-INTL_SWO_OTEL_STATUS_DESCRIPTION = "otel.status_description"
+INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN = "sw-current-trace-entry-span"
 INTL_SWO_TRACESTATE_KEY = "sw"
 INTL_SWO_TRANSACTION_ATTR_KEY = "sw.transaction"
 INTL_SWO_TRANSACTION_ATTR_MAX = 255
+INTL_SWO_TRANSACTION_NAME_ATTR = "TransactionName"
 INTL_SWO_X_OPTIONS_KEY = "sw_xtraceoptions"
 INTL_SWO_X_OPTIONS_RESPONSE_KEY = "xtrace_options_response"
-INTL_SWO_DEFAULT_OTLP_EXPORTER = "otlp_proto_http"
-INTL_SWO_DEFAULT_OTLP_EXPORTER_GRPC = "otlp_proto_grpc"
-INTL_SWO_DEFAULT_TRACES_EXPORTER = "solarwinds_exporter"
 INTL_SWO_TRACECONTEXT_PROPAGATOR = "tracecontext"
 INTL_SWO_BAGGAGE_PROPAGATOR = "baggage"
 INTL_SWO_PROPAGATOR = "solarwinds_propagator"
@@ -34,6 +25,25 @@ INTL_SWO_DEFAULT_PROPAGATORS = [
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
     INTL_SWO_BAGGAGE_PROPAGATOR,
     INTL_SWO_PROPAGATOR,
+]
+INTL_SWO_DEFAULT_RESOURCE_DETECTORS = [
+    "process",
+    "os",
+    "host",
+    "aws_ec2",
+    "aws_ecs",
+    "aws_eks",
+    "azure_app_service",
+    "azure_functions",
+    "azure_vm",
+    "k8s",
+    "uams",
+]
+INTL_SWO_DEFAULT_RESOURCE_DETECTORS_LAMBDA = [
+    "process",
+    "os",
+    "host",
+    "aws_lambda",
 ]
 INTL_SWO_DOC_SUPPORTED_PLATFORMS = "https://documentation.solarwinds.com/en/success_center/observability/content/system_requirements/apm_requirements.htm#link3"
 INTL_SWO_DOC_TRACING_PYTHON = "https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-add-python-agent"

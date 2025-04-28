@@ -56,15 +56,13 @@ def lint_and_format(args):
             (
                 "pylint",
                 "--rcfile=.pylintrc_py38",
-                "--ignore",
-                "solarwinds_apm/extension",
                 "solarwinds_apm",
             ),
             args.allowexitcodes,
         ) 
     else:
         run_subprocess(
-            ("pylint", "--ignore", "solarwinds_apm/extension", "solarwinds_apm"),
+            ("pylint", "solarwinds_apm"),
             args.allowexitcodes,
         )
 

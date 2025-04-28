@@ -1,13 +1,7 @@
-from .inbound_metrics_processor import SolarWindsInboundMetricsSpanProcessor
-from .otlp_metrics_processor import SolarWindsOTLPMetricsSpanProcessor
-from .serviceentry_processor import ServiceEntryIdSpanProcessor
-from .txnname_calculator_processor import TxnNameCalculatorProcessor
-from .txnname_cleanup_processor import TxnNameCleanupProcessor
+from .response_time_processor import ResponseTimeProcessor
+from .serviceentry_processor import ServiceEntrySpanProcessor
 
 __all__ = [
-    "ServiceEntryIdSpanProcessor",
-    "SolarWindsInboundMetricsSpanProcessor",
-    "SolarWindsOTLPMetricsSpanProcessor",
-    "TxnNameCalculatorProcessor",
-    "TxnNameCleanupProcessor",
+    "ServiceEntrySpanProcessor",
+    "ResponseTimeProcessor",
 ]

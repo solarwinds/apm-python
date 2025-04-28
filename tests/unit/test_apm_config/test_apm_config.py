@@ -6,15 +6,14 @@
 
 import logging
 import os
+import re
+
 import pytest
 
 from opentelemetry.sdk.resources import Resource
 
 from solarwinds_apm import apm_config
-from solarwinds_apm.apm_constants import (
-    INTL_SWO_AO_COLLECTOR,
-    INTL_SWO_AO_STG_COLLECTOR,
-)
+from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting
 
 # pylint: disable=unused-import
 from .fixtures.env_vars import fixture_mock_env_vars
@@ -47,9 +46,6 @@ class TestSolarWindsApmConfig:
         old_debug_level = os.environ.get("SW_APM_DEBUG_LEVEL")
         if old_debug_level:
             del os.environ["SW_APM_DEBUG_LEVEL"]
-        old_log_type = os.environ.get("SW_APM_LOG_TYPE")
-        if old_log_type:
-            del os.environ["SW_APM_LOG_TYPE"]
         old_collector = os.environ.get("SW_APM_COLLECTOR", None)
         if old_collector:
             del os.environ["SW_APM_COLLECTOR"]
@@ -75,8 +71,6 @@ class TestSolarWindsApmConfig:
             os.environ["SW_APM_TRANSACTION_NAME"] = old_env_trans_name
         if old_debug_level:
             os.environ["SW_APM_DEBUG_LEVEL"] = old_debug_level
-        if old_log_type:
-            os.environ["SW_APM_LOG_TYPE"] = old_log_type
         if old_collector:
             os.environ["SW_APM_COLLECTOR"] = old_collector
         if old_trustedpath:
@@ -86,18 +80,21 @@ class TestSolarWindsApmConfig:
         if old_expt_metrics:
             os.environ["SW_APM_EXPORT_METRICS_ENABLED"] = old_expt_metrics
 
+    def test__default_collector(self, mocker):
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config.get("collector") == apm_config.SolarWindsApmConfig._CONFIG_COLLECTOR_DEFAULT
+
+    def test__init_collector(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_COLLECTOR": "apm.collector.eu-02.cloud.solarwinds.com"
+        })
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config.get("collector") == "apm.collector.eu-02.cloud.solarwinds.com"
+
     def _mock_service_key(self, mocker, service_key):
         mocker.patch.dict(os.environ, {
             "SW_APM_SERVICE_KEY": service_key,
         })
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
 
     def test__init_invalid_service_key_format(self, mocker):
         mocker.patch.dict(os.environ, {
@@ -261,386 +258,7 @@ class TestSolarWindsApmConfig:
         assert config.lambda_function_name == "foo-lambda"
         assert config.get("transaction_name") == "foo-trans-name"
 
-    def test__init_oboe_api_and_options_defaults(self, mocker):
-        mock_level = mocker.PropertyMock()
-        mock_type = mocker.PropertyMock()
-        mock_logging_options = mocker.Mock()
-        type(mock_logging_options).level = mock_level
-        type(mock_logging_options).type = mock_type
-
-        mock_oboe_api_options_obj = mocker.Mock()
-        type(mock_oboe_api_options_obj).logging_options = mock_logging_options
-
-        mock_oboe_api_options_swig = mocker.Mock(
-            return_value=mock_oboe_api_options_obj
-        )
-        mock_oboe_api_swig = mocker.Mock()
-        mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
-            return_value=(
-                "unused",
-                mocker.Mock(),
-                mock_oboe_api_swig,
-                mock_oboe_api_options_swig,
-            )
-        )
-
-        apm_config.SolarWindsApmConfig()
-        mock_oboe_api_options_swig.assert_called_once()
-        # default values used
-        mock_level.assert_called_once_with(2)
-        mock_type.assert_called_once_with(0)
-        mock_oboe_api_swig.assert_called_once()
-
-    def test__init_oboe_api_and_options_configured_invalid(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_DEBUG_LEVEL": "not-valid",
-            "SW_APM_LOG_TYPE": "nor-this",
-        })
-
-        mock_level = mocker.PropertyMock()
-        mock_type = mocker.PropertyMock()
-        mock_logging_options = mocker.Mock()
-        type(mock_logging_options).level = mock_level
-        type(mock_logging_options).type = mock_type
-
-        mock_oboe_api_options_obj = mocker.Mock()
-        type(mock_oboe_api_options_obj).logging_options = mock_logging_options
-
-        mock_oboe_api_options_swig = mocker.Mock(
-            return_value=mock_oboe_api_options_obj
-        )
-        mock_oboe_api_swig = mocker.Mock()
-        mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
-            return_value=(
-                "unused",
-                mocker.Mock(),
-                mock_oboe_api_swig,
-                mock_oboe_api_options_swig,
-            )
-        )
-
-        apm_config.SolarWindsApmConfig()
-        mock_oboe_api_options_swig.assert_called_once()
-        # default values used instead
-        mock_level.assert_called_once_with(2)
-        mock_type.assert_called_once_with(0)
-        mock_oboe_api_swig.assert_called_once()
-
-    def test__init_oboe_api_and_options_configured_valid(self, mocker):
-        # Save any debug_level, log_type env var for later
-        mocker.patch.dict(os.environ, {
-            "SW_APM_DEBUG_LEVEL": "6",
-            "SW_APM_LOG_TYPE": "1",
-        })
-
-        mock_level = mocker.PropertyMock()
-        mock_type = mocker.PropertyMock()
-        mock_logging_options = mocker.Mock()
-        type(mock_logging_options).level = mock_level
-        type(mock_logging_options).type = mock_type
-
-        mock_oboe_api_options_obj = mocker.Mock()
-        type(mock_oboe_api_options_obj).logging_options = mock_logging_options
-
-        mock_oboe_api_options_swig = mocker.Mock(
-            return_value=mock_oboe_api_options_obj
-        )
-        mock_oboe_api_swig = mocker.Mock()
-        mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig._get_extension_components",
-            return_value=(
-                "unused",
-                mocker.Mock(),
-                mock_oboe_api_swig,
-                mock_oboe_api_options_swig,
-            )
-        )
-        mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_settings"
-        )
-
-        apm_config.SolarWindsApmConfig()
-        mock_oboe_api_options_swig.assert_called_once()
-        mock_level.assert_called_once_with(6)
-        mock_type.assert_called_once_with(1)
-        mock_oboe_api_swig.assert_called_once()
-
-    def test__init_ao_settings_helpers_called(self, mocker):
-        mock_metric_format = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_metric_format"
-        )
-        mock_certs = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_certificates"
-        )
-        mock_logs_enabled = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_logs_enabled"
-        )
-
-        apm_config.SolarWindsApmConfig()
-        mock_metric_format.assert_called_once()
-        mock_certs.assert_called_once()
-        mock_logs_enabled.assert_called_once()
-
-    def test_calculate_metric_format_no_collector(self, mocker):
-        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 2
-
-    def test_calculate_metric_format_not_ao(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "foo-collector-not-ao"
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 2
-
-    def test_calculate_metric_format_ao_prod(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 1
-
-    def test_calculate_metric_format_ao_staging(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 1
-
-    def test_calculate_metric_format_ao_prod_with_port(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR)
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metric_format() == 1
-
-    def test_calculate_certificates_no_collector(self):
-        # Save any collector and trustedpath in os for later
-        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == ""
-
-    def test_calculate_certificates_not_ao(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "foo-collector-not-ao"
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == ""
-
-    def test_calculate_certificates_ao_prod_no_trustedpath(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR
-        })
-        mock_get_public_cert = mocker.patch(
-            "solarwinds_apm.apm_config.get_public_cert"
-        )
-        mock_get_public_cert.configure_mock(return_value="foo")
-        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
-
-    def test_calculate_certificates_ao_staging_no_trustedpath(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR
-        })
-        mock_get_public_cert = mocker.patch(
-            "solarwinds_apm.apm_config.get_public_cert"
-        )
-        mock_get_public_cert.configure_mock(return_value="foo")
-        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
-
-    def test_calculate_certificates_ao_prod_with_port_no_trustedpath(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR)
-        })
-        mock_get_public_cert = mocker.patch(
-            "solarwinds_apm.apm_config.get_public_cert"
-        )
-        mock_get_public_cert.configure_mock(return_value="foo")
-        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
-
-    def test_calculate_certificates_not_ao_trustedpath_file_missing(self, mocker):
-        """Non-AO collector, trustedpath set, but file missing --> use empty string"""
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "foo-collector-not-ao",
-            "SW_APM_TRUSTEDPATH": "/no/file/here"
-        })
-        mock_read_text = mocker.Mock()
-        mock_read_text.side_effect = FileNotFoundError("no file there")
-        mock_pathlib_path = mocker.Mock()
-        mock_pathlib_path.configure_mock(
-            **{
-                "read_text": mock_read_text
-            }
-        )
-        mocker.patch("solarwinds_apm.apm_config.Path").configure_mock(return_value=mock_pathlib_path)
-        mock_get_public_cert = mocker.patch(
-            "solarwinds_apm.apm_config.get_public_cert"
-        )
-        mock_get_public_cert.configure_mock(return_value="foo")
-        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == ""
-
-    def test_calculate_certificates_ao_prod_trustedpath_file_missing(self, mocker):
-        """AO collector, trustedpath set, but file missing --> use bundled cert"""
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR,
-            "SW_APM_TRUSTEDPATH": "/no/file/here"
-        })
-        mock_read_text = mocker.Mock()
-        mock_read_text.side_effect = FileNotFoundError("no file there")
-        mock_pathlib_path = mocker.Mock()
-        mock_pathlib_path.configure_mock(
-            **{
-                "read_text": mock_read_text
-            }
-        )
-        mocker.patch("solarwinds_apm.apm_config.Path").configure_mock(return_value=mock_pathlib_path)
-        mock_get_public_cert = mocker.patch(
-            "solarwinds_apm.apm_config.get_public_cert"
-        )
-        mock_get_public_cert.configure_mock(return_value="foo")
-        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "foo"
-
-    def test_calculate_certificates_not_ao_trustedpath_file_present(self, mocker):
-        """Note: if file exists, same behaviour if file contains valid cert or not"""
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "foo-collector-not-ao",
-            "SW_APM_TRUSTEDPATH": "/there/is/a/file/here"
-        })
-        mock_read_text = mocker.Mock()
-        mock_read_text.configure_mock(return_value="bar")
-        mock_pathlib_path = mocker.Mock()
-        mock_pathlib_path.configure_mock(
-            **{
-                "read_text": mock_read_text
-            }
-        )
-        mocker.patch("solarwinds_apm.apm_config.Path").configure_mock(return_value=mock_pathlib_path)
-        mock_get_public_cert = mocker.patch(
-            "solarwinds_apm.apm_config.get_public_cert"
-        )
-        mock_get_public_cert.configure_mock(return_value="foo")
-        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "bar"
-
-    def test_calculate_certificates_ao_prod_trustedpath_file_present(self, mocker):
-        """Note: if file exists, same behaviour if file contains valid cert or not"""
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR,
-            "SW_APM_TRUSTEDPATH": "/there/is/a/file/here"
-        })
-        mock_read_text = mocker.Mock()
-        mock_read_text.configure_mock(return_value="bar")
-        mock_pathlib_path = mocker.Mock()
-        mock_pathlib_path.configure_mock(
-            **{
-                "read_text": mock_read_text
-            }
-        )
-        mocker.patch("solarwinds_apm.apm_config.Path").configure_mock(return_value=mock_pathlib_path)
-        mock_get_public_cert = mocker.patch(
-            "solarwinds_apm.apm_config.get_public_cert"
-        )
-        mock_get_public_cert.configure_mock(return_value="foo")
-        assert apm_config.SolarWindsApmConfig()._calculate_certificates() == "bar"
-
-    def test_calculate_logs_enabled_no_collector_enabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "",
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == True
-
-    def test_calculate_logs_enabled_no_collector_disabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "",
-            "SW_APM_EXPORT_LOGS_ENABLED": "false",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_logs_enabled_not_ao_enabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "some-other-collector",
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == True
-
-    def test_calculate_logs_enabled_not_ao_disabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "some-other-collector",
-            "SW_APM_EXPORT_LOGS_ENABLED": "false",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_logs_enabled_ao_prod(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR,
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_logs_enabled_ao_staging(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR,
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_logs_enabled_ao_prod_with_port(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR),
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_logs_enabled() == False
-
-    def test_calculate_metrics_enabled_no_collector_enabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "",
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == True
-
-    def test_calculate_metrics_enabled_no_collector_disabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "",
-            "SW_APM_EXPORT_METRICS_ENABLED": "false",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
-    def test_calculate_metrics_enabled_not_ao_enabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "some-other-collector",
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == True
-
-    def test_calculate_metrics_enabled_not_ao_disabled(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "some-other-collector",
-            "SW_APM_EXPORT_METRICS_ENABLED": "false",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
-    def test_calculate_metrics_enabled_ao_prod(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_COLLECTOR,
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
-    def test_calculate_metrics_enabled_ao_staging(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": INTL_SWO_AO_STG_COLLECTOR,
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
-    def test_calculate_metrics_enabled_ao_prod_with_port(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_COLLECTOR": "{}:123".format(INTL_SWO_AO_COLLECTOR),
-            "SW_APM_EXPORT_METRICS_ENABLED": "true",
-        })
-        assert apm_config.SolarWindsApmConfig()._calculate_metrics_enabled() == False
-
     def test_mask_service_key_no_key_empty_default(self, mocker):
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.apm_config.entry_points"
-        )
-        mock_points = mocker.MagicMock()
-        mock_points.__iter__.return_value = ["foo"]
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
         assert apm_config.SolarWindsApmConfig().mask_service_key() == ""
 
     def test_mask_service_key_empty_key(self, mocker):
@@ -722,7 +340,6 @@ class TestSolarWindsApmConfig:
         result = str(apm_config.SolarWindsApmConfig())
         assert "vali...long:key" in result
         assert "agent_enabled" in result
-        assert "solarwinds_apm.extension.oboe.Context" in result
 
     # pylint:disable=unused-argument
     def test_set_config_value_invalid_key(self, caplog, setup_caplog, mock_env_vars):
@@ -730,20 +347,6 @@ class TestSolarWindsApmConfig:
         test_config._set_config_value("invalid_key", "foo")
         assert test_config.get("invalid_key", None) is None
         assert "Ignore invalid configuration key" in caplog.text
-
-    # pylint:disable=unused-argument
-    def test_set_config_value_default_ec2(self, caplog, setup_caplog, mock_env_vars):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("ec2_metadata_timeout", "9999")
-        assert test_config.get("ec2_metadata_timeout") == 1000
-        assert "Ignore config option" in caplog.text
-
-    # pylint:disable=unused-argument
-    def test_set_config_value_default_proxy(self, caplog, setup_caplog, mock_env_vars):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("proxy", "not-valid-url")
-        assert test_config.get("proxy") == ""
-        assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
     def test_set_config_value_default_tracing_mode(self, caplog, setup_caplog, mock_env_vars):
@@ -760,27 +363,10 @@ class TestSolarWindsApmConfig:
         assert "Ignore config option" in caplog.text
 
     # pylint:disable=unused-argument
-    def test_set_config_value_default_reporter(self, caplog, setup_caplog, mock_env_vars):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("reporter", "not-valid-mode")
-        assert test_config.get("reporter") == ""
-        assert "Ignore config option" in caplog.text
-
-    # pylint:disable=unused-argument
     def test_set_config_value_default_debug_level(self, caplog, setup_caplog, mock_env_vars):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("debug_level", "not-valid-level")
         assert test_config.get("debug_level") == 2
-        assert "Ignore config option" in caplog.text
-    def test_set_config_value_default_log_type(
-        self,
-        caplog,
-        setup_caplog,
-        mock_env_vars,
-    ):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("log_type", "not-valid-level")
-        assert test_config.get("log_type") == 0
         assert "Ignore config option" in caplog.text
 
     def test_set_config_value_default_export_logs_enabled(
@@ -976,71 +562,51 @@ class TestSolarWindsApmConfig:
         # Updates everything after first delim
         assert result == "weird-key:bar-service"
 
-    def test_update_log_settings(self, mocker):
-        mock_log_filepath = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_filepath"
-        )
-        mock_log_type = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig.update_log_type"
-        )
-        # init includes update_log_settings()
-        apm_config.SolarWindsApmConfig()
-        mock_log_filepath.assert_called_once()
-        mock_log_type.assert_called_once()
-
-    def test_update_log_filepath_none(self, mocker):
+    def test__validate_log_filepath_none(self, mocker):
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
 
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("log_filepath", "")
-        test_config._set_config_value("log_type", 2)
-        test_config.update_log_filepath()
+        test_config._validate_log_filepath()
         mock_exists.assert_not_called()
         mock_makedirs.assert_not_called()
         assert test_config.get("log_filepath") == ""
-        assert test_config.get("log_type") == 2
 
-    def test_update_log_filepath_no_parent_path(self, mocker):
+    def test__validate_log_filepath_no_parent_path(self, mocker):
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
 
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("log_filepath", "foo")
-        test_config._set_config_value("log_type", 2)
-        test_config.update_log_filepath()
+        test_config._validate_log_filepath()
         mock_exists.assert_not_called()
         mock_makedirs.assert_not_called()
         assert test_config.get("log_filepath") == "foo"
-        assert test_config.get("log_type") == 2
 
-    def test_update_log_filepath_path_exists(self, mocker):
+    def test__validate_log_filepath_path_exists(self, mocker):
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=True)
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
 
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("log_filepath", "/path/to/foo")
-        test_config._set_config_value("log_type", 2)
-        test_config.update_log_filepath()
+        test_config._validate_log_filepath()
         mock_exists.assert_called_once_with("/path/to")
         mock_makedirs.assert_not_called()
         assert test_config.get("log_filepath") == "/path/to/foo"
-        assert test_config.get("log_type") == 2
 
-    def test_update_log_filepath_create_path(self, mocker):
+    def test__validate_log_filepath_create_path(self, mocker):
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
 
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("log_filepath", "/path/to/foo")
-        test_config._set_config_value("log_type", 2)
-        test_config.update_log_filepath()
+        test_config._validate_log_filepath()
         mock_exists.assert_called_once_with("/path/to")
         mock_makedirs.assert_called_once_with("/path/to")
         assert test_config.get("log_filepath") == "/path/to/foo"
-        assert test_config.get("log_type") == 2
 
-    def test_update_log_filepath_cannot_create_reset_settings(self, mocker):
+    def test__validate_log_filepath_cannot_create_reset_settings(self, mocker):
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
         mock_makedirs = mocker.patch(
             "solarwinds_apm.apm_config.os.makedirs",
@@ -1049,76 +615,10 @@ class TestSolarWindsApmConfig:
 
         test_config = apm_config.SolarWindsApmConfig()
         test_config._set_config_value("log_filepath", "/path/to/foo")
-        test_config._set_config_value("log_type", 2)
-        test_config.update_log_filepath()
+        test_config._validate_log_filepath()
         mock_exists.assert_called_once_with("/path/to")
         mock_makedirs.assert_called_once_with("/path/to")
         assert test_config.get("log_filepath") == ""
-        assert test_config.get("log_type") == 0
-
-    def test_update_log_type_no_change(self):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("debug_level", 2)
-        test_config._set_config_value("log_type", 0)
-        test_config._set_config_value("log_filepath", "")
-        test_config.update_log_type()
-        assert test_config.get("debug_level") == 2
-        assert test_config.get("log_type") == 0
-        assert test_config.get("log_filepath") == ""
-
-    def test_update_log_type_disabled(self):        
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("debug_level", -1)
-        test_config._set_config_value("log_type", 0)
-        test_config._set_config_value("log_filepath", "")
-        test_config.update_log_type()
-        assert test_config.get("debug_level") == -1
-        assert test_config.get("log_type") == 4
-        assert test_config.get("log_filepath") == ""
-
-    def test_update_log_type_log_filepath(self):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("debug_level", 1)
-        test_config._set_config_value("log_type", 0)
-        test_config._set_config_value("log_filepath", "some-file-path")
-        test_config.update_log_type()
-        assert test_config.get("debug_level") == 1
-        assert test_config.get("log_type") == 2
-        assert test_config.get("log_filepath") == "some-file-path"
-
-    def test_update_log_type_log_filepath_but_disabled(self):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("debug_level", -1)
-        test_config._set_config_value("log_type", 0)
-        test_config._set_config_value("log_filepath", "some-file-path")
-        test_config.update_log_type()
-        assert test_config.get("debug_level") == -1
-        assert test_config.get("log_type") == 4
-        assert test_config.get("log_filepath") == "some-file-path"
-
-    def test_update_log_filepath_for_reporter_empty(self):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("log_filepath", "")
-        test_config.update_log_filepath_for_reporter()
-        assert test_config.get("log_filepath") == ""
-
-    def test_update_log_filepath_for_reporter_no_ext(self):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("log_filepath", "/path/to/foo")
-        test_config.update_log_filepath_for_reporter()
-        assert test_config.get("log_filepath") == "/path/to/foo_ext"
-
-    def test_update_log_filepath_for_reporter_ext(self):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("log_filepath", "/path/to/foo.log")
-        test_config.update_log_filepath_for_reporter()
-        assert test_config.get("log_filepath") == "/path/to/foo_ext.log"
-
-    def test_update_log_filepath_for_reporter_ext_multiple_dots(self):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._set_config_value("log_filepath", "/path/to/foo.abc.def.xyz")
-        test_config.update_log_filepath_for_reporter()
-        assert test_config.get("log_filepath") == "/path/to/foo.abc.def_ext.xyz"
 
     def test_convert_to_bool_bool_true(self):
         test_config = apm_config.SolarWindsApmConfig()
@@ -1151,3 +651,81 @@ class TestSolarWindsApmConfig:
     def test_convert_to_bool_str_false_mixed_case(self):
         test_config = apm_config.SolarWindsApmConfig()
         assert not test_config.convert_to_bool("fAlSE")
+
+@pytest.fixture
+def apm():
+    return apm_config.SolarWindsApmConfig()
+
+def test_to_configuration_default(apm):
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert isinstance(config, Configuration)
+    assert config.enabled == apm.agent_enabled
+    assert config.service == apm.service_name
+    assert config.collector == apm.get("collector")
+    assert config.headers["Authorization"].startswith("Bearer ")
+    assert config.tracing_mode == (apm.get("tracing_mode") != 0)
+    assert config.trigger_trace_enabled == (apm.get("trigger_trace") == 1)
+    assert config.transaction_name == apm.get("transaction_name")
+    assert isinstance(config.transaction_settings, list)
+
+def test_to_configuration_with_service_key(apm):
+    apm._set_config_value("service_key", "test_token:test_service")
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.headers["Authorization"] == "Bearer test_token"
+
+def test_to_configuration_with_transaction_filters(apm):
+    apm._set_config_value("transaction_filters", [
+        {"tracing_mode": 1, "regex": re.compile(".*")}
+    ])
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert len(config.transaction_settings) == 1
+    assert isinstance(config.transaction_settings[0], TransactionSetting)
+    assert config.transaction_settings[0].tracing is True
+
+def test_to_configuration_with_disabled_tracing(apm):
+    apm._set_config_value("tracing_mode", "disabled")
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.tracing_mode is False
+
+def test_to_configuration_with_disabled_trigger_trace(apm):
+    apm._set_config_value("trigger_trace", "disabled")
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.trigger_trace_enabled is False
+
+def test_to_configuration_with_empty_transaction_filters(apm):
+    apm._set_config_value("transaction_filters", [])
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert isinstance(config.transaction_settings, list)
+    assert len(config.transaction_settings) == 0
+
+def test_to_configuration_with_multiple_transaction_filters(apm):
+    apm._set_config_value("transaction_filters", [
+        {"tracing_mode": 1, "regex": re.compile(".*")},
+        {"tracing_mode": 0, "regex": re.compile("foo")}
+    ])
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert len(config.transaction_settings) == 2
+    assert isinstance(config.transaction_settings[0], TransactionSetting)
+    assert config.transaction_settings[0].tracing is True
+    assert isinstance(config.transaction_settings[1], TransactionSetting)
+    assert config.transaction_settings[1].tracing is False
+
+def test_to_configuration_with_invalid_service_key(apm):
+    apm._set_config_value("service_key", "invalid_format")
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.headers["Authorization"] == "Bearer invalid_format"
+
+def test_to_configuration_with_empty_service_key(apm):
+    apm._set_config_value("service_key", "")
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.headers["Authorization"] == "Bearer "
+
+def test_to_configuration_with_disabled_agent(apm):
+    apm.agent_enabled = False
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.enabled is False
+
+def test_to_configuration_with_enabled_agent(apm):
+    apm.agent_enabled = True
+    config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
+    assert config.enabled is True

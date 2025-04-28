@@ -76,9 +76,11 @@ def mock_composite_propagator(mocker):
 
 @pytest.fixture(name="mock_bsprocessor")
 def mock_bsprocessor(mocker):
-    return mocker.patch(
+    mock_bsp = mocker.patch(
         "solarwinds_apm.configurator.BatchSpanProcessor",
     )
+    mock_bsp.return_value = mocker.Mock()
+    return mock_bsp
 
 @pytest.fixture(name="mock_ssprocessor")
 def mock_ssprocessor(mocker):
@@ -134,58 +136,13 @@ def get_apmconfig_mocks(
     export_logs_enabled=True,
     export_metrics_enabled=True,
 ):
-    # mock the extension that is linked to ApmConfig
-    mock_ext_config = mocker.Mock()
-    mock_ext_config.configure_mock(
-        **{
-            "getVersionString": mocker.Mock(return_value="1.1.1")
-        }
-    )
-
-    mock_ext_context = mocker.Mock()
-    mock_ext_context.configure_mock(
-        **{
-            "set": mocker.Mock()
-        }
-    )
-
-    mock_event = mocker.Mock()
-    mock_event.configure_mock(
-        **{
-            "addInfo": mocker.Mock()
-        }
-    )
-    mock_create_event = mocker.Mock(return_value=mock_event)
-
-    mock_make_random = mocker.Mock()
-    mock_make_random.configure_mock(
-        **{
-            "isValid": mocker.Mock(return_value=md_is_valid),
-            "createEvent": mock_create_event
-        }
-    )
-
-    mock_ext_metadata = mocker.Mock()
-    mock_ext_metadata.configure_mock(
-        **{
-            "makeRandom": mock_make_random
-        }
-    )
-
-    mock_ext = mocker.Mock()
-    mock_ext.configure_mock(
-        **{
-            "Config": mock_ext_config,
-            "Context": mock_ext_context,
-            "Metadata": mock_ext_metadata,
-        }
-    )
-
     def get_side_effect(param):
         if param == "export_metrics_enabled":
             return export_metrics_enabled
         elif param == "export_logs_enabled":
             return export_logs_enabled
+        elif param == "service_key":
+            return "foo:bar"
         else:
             return "foo"
 
@@ -196,7 +153,6 @@ def get_apmconfig_mocks(
             "get": mocker.Mock(side_effect=get_side_effect),
             "service_name": "foo-service",
             "is_lambda": is_lambda,
-            "extension": mock_ext,
             "oboe_api": mocker.Mock(),
             "convert_to_bool": SolarWindsApmConfig.convert_to_bool,
         }
@@ -294,62 +250,17 @@ def mock_apmconfig_metrics_enabled_none(mocker):
 
 @pytest.fixture(name="mock_apmconfig_enabled_reporter_settings")
 def mock_apmconfig_enabled_reporter_settings(mocker):
-    mock_reporter = mocker.Mock()
-    mock_ext = mocker.Mock()
-    mock_ext.configure_mock(
-        **{
-            "Reporter": mock_reporter
-        }
-    )
-
     mock_apmconfig = mocker.Mock()
     mock_apmconfig.configure_mock(
         **{
             "agent_enabled": True,
             "certificates": "foo-certs",
-            "extension": mock_ext,
             "get": mocker.Mock(return_value="foo"),
             "service_name": "foo-service",
             "metric_format": "bar"
         }
     )
     return mock_apmconfig
-
-# ==================================================================
-# Configurator APM Python extension mocks
-# ==================================================================
-
-def get_extension_mocks(
-    mocker,
-    status_code=0,
-):
-    mock_reporter = mocker.Mock()
-    mock_reporter.configure_mock(
-        **{
-            "init_status": status_code,
-            "sendStatus": mocker.Mock()
-        }
-    )
-
-    mock_ext = mocker.Mock()
-    mock_ext.configure_mock(
-        **{
-            "Reporter": mock_reporter
-        }
-    )
-    return mock_ext
-
-@pytest.fixture(name="mock_extension")
-def mock_extension(mocker):
-    return get_extension_mocks(mocker)
-
-@pytest.fixture(name="mock_extension_status_code_already_init")
-def mock_extension_status_code_already_init(mocker):
-    return get_extension_mocks(mocker, -1)
-
-@pytest.fixture(name="mock_extension_status_code_invalid_protocol")
-def mock_extension_status_code_invalid_protocol(mocker):
-    return get_extension_mocks(mocker, 2)
 
 # ==================================================================
 # Configurator APM Python configurator mocks
@@ -366,46 +277,34 @@ def mock_fw_versions(mocker):
         side_effect=add_fw_versions
     )
 
-@pytest.fixture(name="mock_config_serviceentryid_processor")
-def mock_config_serviceentryid_processor(mocker):
+@pytest.fixture(name="mock_config_serviceentry_processor")
+def mock_config_serviceentry_processor(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_service_entry_id_span_processor"
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_service_entry_span_processor"
     )
 
-@pytest.fixture(name="mock_config_inbound_processor")
-def mock_config_inbound_processor(mocker):
+@pytest.fixture(name="mock_response_time_processor")
+def mock_response_time_processor(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_inbound_metrics_span_processor"
+        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_response_time_processor"
     )
 
-@pytest.fixture(name="mock_config_otlp_processors")
-def mock_config_otlp_processors(mocker):
+@pytest.fixture(name="mock_custom_init_tracing")
+def mock_custom_init_tracing(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_otlp_metrics_span_processors"
+        "solarwinds_apm.configurator.SolarWindsConfigurator._custom_init_tracing"
     )
 
-@pytest.fixture(name="mock_config_traces_exp")
-def mock_config_traces_exp(mocker):
+@pytest.fixture(name="mock_custom_init_metrics")
+def mock_custom_init_metrics(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_traces_exporter"
+        "solarwinds_apm.configurator.SolarWindsConfigurator._custom_init_metrics"
     )
 
-@pytest.fixture(name="mock_config_metrics_exp")
-def mock_config_metrics_exp(mocker):
+@pytest.fixture(name="mock_init_logging")
+def mock_init_logging(mocker):
     return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_metrics_exporter"
-    )
-
-@pytest.fixture(name="mock_config_logs_exp")
-def mock_config_logs_exp(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_logs_exporter"
-    )
-
-@pytest.fixture(name="mock_config_logs_handler")
-def mock_config_logs_handler(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_logs_handler"
+        "solarwinds_apm.configurator._init_logging"
     )
 
 @pytest.fixture(name="mock_config_propagator")
@@ -426,12 +325,6 @@ def mock_init_sw_reporter(mocker):
         "solarwinds_apm.configurator.SolarWindsConfigurator._initialize_solarwinds_reporter"
     )
 
-@pytest.fixture(name="mock_config_otel_components")
-def mock_config_otel_components(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._configure_otel_components"
-    )
-
 @pytest.fixture(name="mock_create_init")
 def mock_create_init(mocker):
     return mocker.patch(
@@ -445,30 +338,6 @@ def mock_create_init_fail(mocker):
         return_value=None,
     )
 
-@pytest.fixture(name="mock_report_init")
-def mock_report_init(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsConfigurator._report_init_event"
-    )
-
-
-@pytest.fixture(name="mock_txn_name_manager_init")
-def mock_txn_name_manager_init(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsTxnNameManager"
-    )
-
-@pytest.fixture(name="mock_fwkv_manager_init")
-def mock_fwkv_manager_init(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsFrameworkKvManager"
-    )
-
-@pytest.fixture(name="mock_oboe_api_obj")
-def mock_oboe_api_obj(mocker):
-    return mocker.Mock()
-
-
 # ==================================================================
 # Configurator APM Python other mocks
 # ==================================================================
@@ -478,22 +347,4 @@ def mock_apm_version(mocker):
     return mocker.patch(
         "solarwinds_apm.configurator.__version__",
         new="0.0.0",
-    )
-
-@pytest.fixture(name="mock_fwkv_manager")
-def mock_fwkv_manager(mocker):
-    return mocker.patch(
-        "solarwinds_apm.apm_fwkv_manager.SolarWindsFrameworkKvManager"
-    )
-
-@pytest.fixture(name="mock_meter_manager")
-def mock_meter_manager(mocker):
-    return mocker.patch(
-        "solarwinds_apm.apm_meter_manager.SolarWindsMeterManager"
-    )
-
-@pytest.fixture(name="mock_txn_name_manager")
-def mock_txn_name_manager(mocker):
-    return mocker.patch(
-        "solarwinds_apm.apm_txname_manager.SolarWindsTxnNameManager"
     )

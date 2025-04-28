@@ -30,7 +30,5 @@ jobs:
         cache-dependency-path: '**/dev-requirements.txt'
     - name: Install tox
       run: pip install tox
-    - name: Build extension
-      run: make wrapper
     - name: Run tox lint
       run: tox -e py3${{ matrix.python-minor }}-lint -- --check-only

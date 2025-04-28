@@ -10,7 +10,6 @@ import re
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from enum import IntEnum, auto
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.metrics import MeterProvider
@@ -24,7 +23,6 @@ from opentelemetry.trace import Link, SpanKind, TraceFlags, get_current_span
 from opentelemetry.trace.span import Span, TraceState
 from typing_extensions import override
 
-from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_RESPONSE_KEY
 from solarwinds_apm.oboe.dice import _Dice
 from solarwinds_apm.oboe.metrics import Counters
 from solarwinds_apm.oboe.settings import (
@@ -46,6 +44,9 @@ from solarwinds_apm.oboe.trace_options import (
     stringify_trace_options_response,
     validate_signature,
 )
+from solarwinds_apm.w3c_transformer import W3CTransformer
+
+logger = logging.getLogger(__name__)
 
 TRACESTATE_REGEXP = r"^[0-9a-f]{16}-[0-9a-f]{2}$"
 DICE_SCALE = 1_000_000
@@ -58,12 +59,6 @@ SAMPLE_SOURCE_ATTRIBUTE = "SampleSource"
 BUCKET_CAPACITY_ATTRIBUTE = "BucketCapacity"
 BUCKET_RATE_ATTRIBUTE = "BucketRate"
 TRIGGERED_TRACE_ATTRIBUTE = "TriggeredTrace"
-
-
-class SpanType(IntEnum):
-    ROOT = auto()
-    ENTRY = auto()
-    LOCAL = auto()
 
 
 class SampleState:
@@ -142,23 +137,8 @@ class SampleState:
         )
 
 
-def _span_type(parent_span: Span | None = None) -> SpanType:
-    """
-    Determine the type of span based on the parent span.
-    """
-    parent_span_context = (
-        parent_span.get_span_context() if parent_span else None
-    )
-    if parent_span_context is None or not parent_span_context.is_valid:
-        return SpanType.ROOT
-    if parent_span_context.is_remote:
-        return SpanType.ENTRY
-    return SpanType.LOCAL
-
-
 class OboeSampler(Sampler, ABC):
-    def __init__(self, meter_provider: MeterProvider, logger: logging.Logger):
-        self._logger = logger
+    def __init__(self, meter_provider: MeterProvider):
         self._counters = Counters(meter_provider=meter_provider)
         self._buckets = {
             BucketType.DEFAULT: _TokenBucket(),
@@ -166,14 +146,6 @@ class OboeSampler(Sampler, ABC):
             BucketType.TRIGGER_STRICT: _TokenBucket(),
         }
         self._settings: Settings | None = None
-
-    @property
-    def logger(self):
-        return self._logger
-
-    @logger.setter
-    def logger(self, new_logger):
-        self._logger = new_logger
 
     @property
     def counters(self):
@@ -211,11 +183,6 @@ class OboeSampler(Sampler, ABC):
         trace_state: "TraceState" | None = None,
     ) -> "SamplingResult":
         parent_span = get_current_span(parent_context)
-        span_type = _span_type(parent_span)
-        self.logger.debug(f"span type is {SpanType(span_type).name}")
-
-        if span_type == SpanType.LOCAL:
-            return self._handle_local_span(parent_span)
 
         sample_state = self._initialize_sample_state(
             parent_context,
@@ -229,9 +196,14 @@ class OboeSampler(Sampler, ABC):
         )
 
         # Capture the tracestate from the parent span and store it in the sample state
-        if trace_state is not None:
+        if (
+            parent_span.get_span_context().is_valid
+            and parent_span.get_span_context().trace_state is not None
+        ):
             sample_state.attributes[TRACESTATE_CAPTURE_ATTRIBUTE] = (
-                trace_state.delete(INTL_SWO_X_OPTIONS_RESPONSE_KEY)
+                W3CTransformer.remove_response_from_sw(
+                    parent_span.get_span_context().trace_state
+                ).to_header()
             )
 
         self.counters.request_count.add(1, {}, parent_context)
@@ -273,7 +245,7 @@ class OboeSampler(Sampler, ABC):
         else:
             self.disabled_algo(sample_state)
 
-        self.logger.debug("final sampling state %s", sample_state)
+        logger.debug("final sampling state %s", sample_state)
         new_trace_state = self.set_response_headers_from_sample_state(
             sample_state,
             parent_context,
@@ -289,17 +261,6 @@ class OboeSampler(Sampler, ABC):
             attributes=sample_state.attributes,
             trace_state=new_trace_state,
         )
-
-    def _handle_local_span(self, parent_span: Span | None) -> "SamplingResult":
-        """
-        Handle local spans by checking if the parent span is sampled.
-        """
-        if (
-            parent_span
-            and parent_span.get_span_context().trace_flags & TraceFlags.SAMPLED
-        ):
-            return SamplingResult(decision=Decision.RECORD_AND_SAMPLE)
-        return SamplingResult(decision=Decision.DROP)
 
     def _initialize_sample_state(
         self,
@@ -369,9 +330,7 @@ class OboeSampler(Sampler, ABC):
                 auth=None, trigger_trace=None, ignored=None
             ),
         )
-        self.logger.debug(
-            "X-Trace-Options present %s", sample_state.trace_options
-        )
+        logger.debug("X-Trace-Options present %s", sample_state.trace_options)
         if sample_state.headers.x_trace_options_signature:
             sample_state.trace_options.response.auth = validate_signature(
                 sample_state.headers.x_trace_options,
@@ -385,7 +344,7 @@ class OboeSampler(Sampler, ABC):
                 sample_state.trace_options.timestamp,
             )
             if sample_state.trace_options.response.auth != Auth.OK:
-                self.logger.debug(
+                logger.debug(
                     "X-Trace-Options-Signature invalid; tracing disabled"
                 )
                 new_trace_state = self.set_response_headers_from_sample_state(
@@ -431,14 +390,12 @@ class OboeSampler(Sampler, ABC):
         """
         Handle the case where settings are unavailable.
         """
-        self.logger.warning("settings unavailable; sampling disabled")
+        logger.warning("settings unavailable; sampling disabled")
         if (
             sample_state.trace_options
             and sample_state.trace_options.trigger_trace
         ):
-            self.logger.debug(
-                "trigger trace requested but settings unavailable"
-            )
+            logger.debug("trigger trace requested but settings unavailable")
             sample_state.trace_options.response.trigger_trace = (
                 TriggerTrace.SETTINGS_NOT_AVAILABLE
             )
@@ -487,26 +444,24 @@ class OboeSampler(Sampler, ABC):
             s.trace_state[:16] if s.trace_state else None
         )
         if s.trace_options and s.trace_options.trigger_trace:
-            self.logger.debug("trigger trace requested but ignored")
+            logger.debug("trigger trace requested but ignored")
             s.trace_options.response.trigger_trace = TriggerTrace.IGNORED
 
         if s.settings and s.settings.flags & Flags.SAMPLE_THROUGH_ALWAYS:
-            self.logger.debug(
-                "SAMPLE_THROUGH_ALWAYS is set; parent-based sampling"
-            )
+            logger.debug("SAMPLE_THROUGH_ALWAYS is set; parent-based sampling")
             flags = int(s.trace_state[-2:], 16)
             if flags & TraceFlags.SAMPLED:
-                self.logger.debug("parent is sampled; record and sample")
+                logger.debug("parent is sampled; record and sample")
                 self.counters.trace_count.add(1, {}, parent_context)
                 self.counters.through_trace_count.add(1, {}, parent_context)
                 return Decision.RECORD_AND_SAMPLE
-            self.logger.debug("parent is not sampled; record only")
+            logger.debug("parent is not sampled; record only")
             return Decision.RECORD_ONLY
-        self.logger.debug("SAMPLE_THROUGH_ALWAYS is unset; sampling disabled")
+        logger.debug("SAMPLE_THROUGH_ALWAYS is unset; sampling disabled")
         if s.settings and s.settings.flags & Flags.SAMPLE_START:
-            self.logger.debug("SAMPLE_START is set; record")
+            logger.debug("SAMPLE_START is set; record")
             return Decision.RECORD_ONLY
-        self.logger.debug("SAMPLE_START is unset; don't record")
+        logger.debug("SAMPLE_START is unset; don't record")
         return Decision.DROP
 
     def trigger_trace_algo(
@@ -516,25 +471,25 @@ class OboeSampler(Sampler, ABC):
         Determine the sampling decision based on the TRIGGER_TRACE flag.
         """
         if s.settings and s.settings.flags & Flags.TRIGGERED_TRACE:
-            self.logger.debug("TRIGGERED_TRACE set; trigger tracing")
+            logger.debug("TRIGGERED_TRACE set; trigger tracing")
             bucket: _TokenBucket
             if s.trace_options and s.trace_options.response.auth:
-                self.logger.debug("signed request; using relaxed rate")
+                logger.debug("signed request; using relaxed rate")
                 bucket = self.buckets[BucketType.TRIGGER_RELAXED]
             else:
-                self.logger.debug("unsigned request; using strict rate")
+                logger.debug("unsigned request; using strict rate")
                 bucket = self.buckets[BucketType.TRIGGER_STRICT]
             s.attributes[TRIGGERED_TRACE_ATTRIBUTE] = True
             s.attributes[BUCKET_CAPACITY_ATTRIBUTE] = bucket.capacity
             s.attributes[BUCKET_RATE_ATTRIBUTE] = bucket.rate
             if bucket.consume():
-                self.logger.debug("sufficient capacity; record and sample")
+                logger.debug("sufficient capacity; record and sample")
                 self.counters.triggered_trace_count.add(1, {}, parent_context)
                 self.counters.trace_count.add(1, {}, parent_context)
                 return TriggerTrace.OK, Decision.RECORD_AND_SAMPLE
-            self.logger.debug("insufficient capacity; record only")
+            logger.debug("insufficient capacity; record only")
             return TriggerTrace.RATE_EXCEEDED, Decision.RECORD_ONLY
-        self.logger.debug("TRIGGERED_TRACE unset; record only")
+        logger.debug("TRIGGERED_TRACE unset; record only")
         return TriggerTrace.TRIGGER_TRACING_DISABLED, Decision.RECORD_ONLY
 
     def dice_roll_algo(self, s: SampleState, parent_context: "Context" | None):
@@ -548,20 +503,20 @@ class OboeSampler(Sampler, ABC):
         s.attributes[SAMPLE_SOURCE_ATTRIBUTE] = s.settings.sample_source
         self.counters.sample_count.add(1, {}, parent_context)
         if dice.roll():
-            self.logger.debug("dice roll success; checking capacity")
+            logger.debug("dice roll success; checking capacity")
             bucket = self.buckets[BucketType.DEFAULT]
             s.attributes[BUCKET_CAPACITY_ATTRIBUTE] = bucket.capacity
             s.attributes[BUCKET_RATE_ATTRIBUTE] = bucket.rate
             if bucket.consume():
-                self.logger.debug("sufficient capacity; record and sample")
+                logger.debug("sufficient capacity; record and sample")
                 self.counters.trace_count.add(1, {}, parent_context)
                 return Decision.RECORD_AND_SAMPLE
-            self.logger.debug("insufficient capacity; record only")
+            logger.debug("insufficient capacity; record only")
             self.counters.token_bucket_exhaustion_count.add(
                 1, {}, parent_context
             )
             return Decision.RECORD_ONLY
-        self.logger.debug("dice roll failure; record only")
+        logger.debug("dice roll failure; record only")
         return Decision.RECORD_ONLY
 
     def disabled_algo(self, s: SampleState):
@@ -569,16 +524,16 @@ class OboeSampler(Sampler, ABC):
         Determine the sampling decision when sampling is disabled
         """
         if s.trace_options and s.trace_options.trigger_trace:
-            self.logger.debug("trigger trace requested but tracing disabled")
+            logger.debug("trigger trace requested but tracing disabled")
             s.trace_options.response.trigger_trace = (
                 TriggerTrace.TRACING_DISABLED
             )
 
         if s.settings and s.settings.flags & Flags.SAMPLE_THROUGH_ALWAYS:
-            self.logger.debug("SAMPLE_THROUGH_ALWAYS is set; record")
+            logger.debug("SAMPLE_THROUGH_ALWAYS is set; record")
             s.decision = Decision.RECORD_ONLY
         else:
-            self.logger.debug("SAMPLE_THROUGH_ALWAYS is unset; don't record")
+            logger.debug("SAMPLE_THROUGH_ALWAYS is unset; don't record")
             s.decision = Decision.DROP
 
     def update_settings(self, settings: Settings):
@@ -614,7 +569,7 @@ class OboeSampler(Sampler, ABC):
         if self.settings is None:
             return None
         if time.time() > self.settings.timestamp + self.settings.ttl:
-            self.logger.debug("settings expired; removing")
+            logger.debug("settings expired; removing")
             self.settings = None
             return None
         return merge(

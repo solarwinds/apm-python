@@ -6,9 +6,10 @@
 
 import re
 import json
+import time
+from unittest import mock
 
 from opentelemetry import trace as trace_api
-from unittest import mock
 
 from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
 
@@ -21,7 +22,7 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
 
     def test_scenario_4_sampled(self):
         """
-        Scenario #4, sampled: 
+        Scenario #4, sampled:
         1. Decision to sample is continued at service entry span (mocked). This is
            not the root span because it continues an existing OTel context.
         2. traceparent and tracestate headers in the request to the test app are
@@ -40,13 +41,31 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # liboboe mocked to guarantee return of "do_sample" (2nd arg)
-        mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
-        )
+        # Mock JSON read to guarantee sample decision
+        timestamp = int(time.time())
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=mock_decision,
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":2,
+                            "BucketRate":1,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":1000000
+                }
+            ],
         ):
             # Request to instrumented app with headers
             resp = self.client.get(
@@ -127,34 +146,16 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert "{:032x}".format(span_server.context.trace_id) == trace_id
         assert "{:032x}".format(span_client.context.trace_id) == trace_id
 
-        # Check service entry span tracestate has `sw` key
-        # In this test it should be tracestate_span_id, traceflags from extracted traceparent
-        expected_trace_state = trace_api.TraceState([
-            ("sw", "{}-{}".format(tracestate_span, trace_flags))
-        ])
-        assert span_server.context.trace_state.get("sw") == expected_trace_state.get("sw")
-
         # Check service entry span attributes
         #   :present:
-        #     service entry internal KVs, which are on all entry spans
         #     sw.tracestate_parent_id, because only set if not the root and no attributes
         #   :absent:
+        #     service entry internal KVs, which not on entry spans if non-root
         #     SWKeys, because no xtraceoptions in otel context
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == 3
-        assert span_server.attributes["SampleSource"] == 4
+        assert not any(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
         assert "sw.tracestate_parent_id" in span_server.attributes
         assert span_server.attributes["sw.tracestate_parent_id"] == tracestate_span
         assert not "SWKeys" in span_server.attributes
-
-        # Check outgoing request tracestate has `sw` key
-        # In this test it should also be tracestate_span_id, traceflags from extracted traceparent
-        expected_trace_state = trace_api.TraceState([
-            ("sw", "{}-{}".format(tracestate_span, trace_flags))
-        ])
-        assert span_client.context.trace_state.get("sw") == expected_trace_state.get("sw")
 
         # Check outgoing request span attributes
         #   :absent:
@@ -190,13 +191,31 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # liboboe mocked to guarantee return of "do_sample" (2nd arg)
-        mock_decision = mock.Mock(
-            return_value=(1, 0, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
-        )
+        # Mock JSON read to guarantee sample decision
+        timestamp = int(time.time())
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=mock_decision,
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":2,
+                            "BucketRate":1,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":0
+                }
+            ],
         ):
             # Request to instrumented app with headers
             resp = self.client.get(

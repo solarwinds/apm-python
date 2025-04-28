@@ -6,9 +6,10 @@
 
 import re
 import json
+import time
+from unittest import mock
 
 from opentelemetry import trace as trace_api
-from unittest import mock
 
 from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
 
@@ -33,13 +34,31 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
         resp = None
-        # liboboe mocked to guarantee return of "do_sample" (2nd arg)
-        mock_decision = mock.Mock(
-            return_value=(1, 1, 3, 4, 5.0, 6.0, 1, 0, "ok", "ok", 0)
-        )
+        # Mock JSON read to guarantee sample decision
+        timestamp = int(time.time())
         with mock.patch(
-            target="solarwinds_apm.extension.oboe.Context.getDecisions",
-            new=mock_decision,
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments":
+                        {
+                            "BucketCapacity":2,
+                            "BucketRate":1,
+                            "MetricsFlushInterval":60,
+                            "SignatureKey":"",
+                            "TriggerRelaxedBucketCapacity":4,
+                            "TriggerRelaxedBucketRate":3,
+                            "TriggerStrictBucketCapacity":6,
+                            "TriggerStrictBucketRate":5,
+                        },
+                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer":"",
+                    "timestamp":timestamp,
+                    "ttl":120,
+                    "type":0,
+                    "value":1000000
+                }
+            ],
         ):
             # Request to instrumented app, no traceparent/tracestate
             resp = self.client.get(
@@ -109,10 +128,10 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     SWKeys, because no xtraceoptions in otel context
         assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert span_server.attributes["BucketCapacity"] == "6.0"
-        assert span_server.attributes["BucketRate"] == "5.0"
-        assert span_server.attributes["SampleRate"] == 3
-        assert span_server.attributes["SampleSource"] == 4
+        assert span_server.attributes["BucketCapacity"] == 2
+        assert span_server.attributes["BucketRate"] == 1
+        assert span_server.attributes["SampleRate"] == 1000000
+        assert span_server.attributes["SampleSource"] == 6
         assert not "sw.tracestate_parent_id" in span_server.attributes
         assert not "SWKeys" in span_server.attributes
 

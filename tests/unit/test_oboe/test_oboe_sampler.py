@@ -23,8 +23,7 @@ from opentelemetry.trace import SpanKind, Link, TraceState, TraceFlags, get_curr
 from typing_extensions import override
 
 from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_RESPONSE_KEY
-from solarwinds_apm.apm_noop import Context
-from solarwinds_apm.oboe.oboe_sampler import _span_type, SpanType, OboeSampler, SW_KEYS_ATTRIBUTE, \
+from solarwinds_apm.oboe.oboe_sampler import OboeSampler, SW_KEYS_ATTRIBUTE, \
     BUCKET_RATE_ATTRIBUTE, BUCKET_CAPACITY_ATTRIBUTE, SAMPLE_RATE_ATTRIBUTE, SAMPLE_SOURCE_ATTRIBUTE, TRACESTATE_CAPTURE_ATTRIBUTE
 from solarwinds_apm.oboe.settings import LocalSettings, Settings, SampleSource, Flags, BucketType, BucketSettings
 from solarwinds_apm.oboe.trace_options import RequestHeaders, ResponseHeaders
@@ -73,60 +72,6 @@ def make_request_headers(options=MakeRequestHeaders()) -> RequestHeaders:
     return headers
 
 
-class TestSpanType:
-    def test_identifies_no_parent_as_ROOT(self):
-        span_type = _span_type(None)
-        assert span_type == SpanType.ROOT
-
-    def test_identifies_invalid_parent_as_ROOT(self):
-        mock_get_span_context = Mock()
-        mock_get_span_context.configure_mock(
-            **{
-                "is_valid": False,
-            }
-        )
-        mock_span = Mock()
-        mock_span.configure_mock(
-            **{
-                "get_span_context.return_value": mock_get_span_context
-            }
-        )
-        span_type = _span_type(mock_span)
-        assert span_type == SpanType.ROOT
-
-    def test_identifies_remote_parent_as_ENTRY(self):
-        mock_get_span_context = Mock()
-        mock_get_span_context.configure_mock(
-            **{
-                "is_remote": True,
-            }
-        )
-        mock_span = Mock()
-        mock_span.configure_mock(
-            **{
-                "get_span_context.return_value": mock_get_span_context
-            }
-        )
-        span_type = _span_type(mock_span)
-        assert span_type == SpanType.ENTRY
-
-    def test_identifies_local_parent_as_LOCAL(self):
-        mock_get_span_context = Mock()
-        mock_get_span_context.configure_mock(
-            **{
-                "is_remote": False,
-            }
-        )
-        mock_span = Mock()
-        mock_span.configure_mock(
-            **{
-                "get_span_context.return_value": mock_get_span_context
-            }
-        )
-        span_type = _span_type(mock_span)
-        assert span_type == SpanType.LOCAL
-
-
 def check_counters(sampler, counter_names):
     counters = set(counter_names)
     sampler.metric_reader.collect()
@@ -172,20 +117,20 @@ class TestSampler(OboeSampler):
             metric_readers=[self._metric_reader],
             exemplar_filter=AlwaysOnExemplarFilter()
         )
-        super().__init__(meter_provider=meter_provider, logger=logging.getLogger(__name__))
+        super().__init__(meter_provider=meter_provider)
         self._local_settings = options.local_settings
         self._request_headers = options.request_headers
         if options.settings:
             self.update_settings(options.settings)
         self._response_headers = None
 
-    def _create_parent(self, trace_flags: trace.TraceFlags, is_remote=False, sw=None) -> Context | None:
+    def _create_parent(self, trace_flags: trace.TraceFlags, is_remote=False, sw=None, other_trace_state=False, xtrace_options_response=False) -> Context | None:
         if trace_flags is None:
             return None
-        return trace.set_span_in_context(self._create_parent_span(trace_flags, is_remote, sw))
+        return trace.set_span_in_context(self._create_parent_span(trace_flags, is_remote, sw, other_trace_state, xtrace_options_response))
 
     @staticmethod
-    def _create_parent_span(trace_flags: trace.TraceFlags, is_remote=False, sw=None) -> trace.NonRecordingSpan:
+    def _create_parent_span(trace_flags: trace.TraceFlags, is_remote=False, sw=None, other_trace_state=False, xtrace_options_response=False) -> trace.NonRecordingSpan:
         generator = RandomIdGenerator()
         trace_id = generator.generate_trace_id()
         span_id = generator.generate_span_id()
@@ -196,6 +141,15 @@ class TestSampler(OboeSampler):
         elif isinstance(sw, bool):
             trace_state = TraceState(
                 [("sw", format(span_id, "016x") + "-0" + ("1" if trace_flags == TraceFlags.SAMPLED else "0"))])
+        if other_trace_state:
+            if trace_state is None:
+                trace_state = TraceState()
+            trace_state = trace_state.add("vendor1", "value1").add("vendor2", "value2")
+        if xtrace_options_response:
+            if trace_state is None:
+                trace_state = TraceState()
+            trace_state = trace_state.add(INTL_SWO_X_OPTIONS_RESPONSE_KEY, "response")
+
         span_context = trace.SpanContext(trace_id=trace_id, span_id=span_id, is_remote=is_remote,
                                          trace_flags=trace_flags, trace_state=trace_state)
         return trace.NonRecordingSpan(span_context)
@@ -247,40 +201,6 @@ class TestSampler(OboeSampler):
 
     def __str__(self):
         return f"Test Sampler"
-
-
-class TestLocalSpan:
-    @pytest.fixture
-    def local_span(self):
-        return TestSampler(TestSamplerOptions(
-            settings=Settings(
-                sample_rate=0,
-                sample_source=SampleSource.LOCAL_DEFAULT,
-                flags=Flags.OK,
-                buckets={},
-                signature_key=None,
-                timestamp=int(time.time()),
-                ttl=10
-            ),
-            local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
-            request_headers=RequestHeaders(x_trace_options=None, x_trace_options_signature=None)
-        ))
-
-    def test_respects_parent_sampled(self, local_span):
-        ctxt = local_span._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=False)
-        sample = local_span.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id,
-                                          "local_span_respects_parent_sampled")
-        assert sample.decision.is_sampled()
-        assert sample.decision.is_recording()
-        check_counters(local_span, [])
-
-    def test_respects_parent_not_sampled(self, local_span):
-        ctxt = local_span._create_parent(trace_flags=TraceFlags.DEFAULT, is_remote=False)
-        sample = local_span.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id,
-                                          "local_span_respects_parent_not_sampled")
-        assert not sample.decision.is_sampled()
-        assert not sample.decision.is_recording()
-        check_counters(local_span, [])
 
 
 class TestInvalidXTraceOptionsSignature:
@@ -432,11 +352,12 @@ class TestEntrySpan:
             local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
             request_headers=make_request_headers(MakeRequestHeaders())
         ))
-        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True)
-        vendor_trace_state = TraceState().add("vendor1", "value1").add("vendor2", "value2")
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True, sw=True, other_trace_state=True, xtrace_options_response=True)
         sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id,
-                                       "respects_parent_sampled", None, None, None, vendor_trace_state.add(INTL_SWO_X_OPTIONS_RESPONSE_KEY, "response"))
-        assert sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE) == vendor_trace_state
+                                       "respects_parent_sampled", None, None, None, None)
+        assert "vendor2=value2,vendor1=value1" in sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE)
+        assert "sw=" in sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE)
+        assert INTL_SWO_X_OPTIONS_RESPONSE_KEY not in sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE)
 
     def test_sw_w3c_tracestate_without_x_trace_options_response(self):
         sampler = TestSampler(TestSamplerOptions(
@@ -452,11 +373,12 @@ class TestEntrySpan:
             local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
             request_headers=make_request_headers(MakeRequestHeaders())
         ))
-        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True)
-        vendor_trace_state = TraceState().add("vendor1", "value1").add("vendor2", "value2")
+        ctxt = sampler._create_parent(trace_flags=TraceFlags.SAMPLED, is_remote=True, sw=True, other_trace_state=True)
         sample = sampler.should_sample(ctxt, get_current_span(ctxt).get_span_context().trace_id,
-                                       "respects_parent_sampled", None, None, None, vendor_trace_state)
-        assert sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE) == vendor_trace_state
+                                       "respects_parent_sampled", None, None, None, None)
+        assert "vendor2=value2,vendor1=value1" in sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE)
+        assert "sw=" in sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE)
+        assert INTL_SWO_X_OPTIONS_RESPONSE_KEY not in sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE)
 
 
 class TestEntrySpanWithValidSwContextXTraceOptions:

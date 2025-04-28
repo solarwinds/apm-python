@@ -22,6 +22,8 @@ from typing_extensions import override
 from solarwinds_apm.oboe.configuration import Configuration
 from solarwinds_apm.oboe.sampler import Sampler
 
+logger = logging.getLogger(__name__)
+
 PATH = os.path.join(tempfile.gettempdir(), "solarwinds-apm-settings.json")
 
 
@@ -30,13 +32,11 @@ class JsonSampler(Sampler):
         self,
         meter_provider: MeterProvider,
         config: Configuration,
-        logger: logging.Logger,
         path: str = PATH,
     ):
         super().__init__(
             meter_provider=meter_provider,
             config=config,
-            logger=logger,
             initial=None,
         )
         self._path = path
@@ -73,19 +73,20 @@ class JsonSampler(Sampler):
         if time.time() + 10 < self._expiry:
             return
         try:
-            with open(self._path, "r", encoding="utf-8") as file:
-                contents = file.read()
-            unparsed = json.loads(contents)
+            unparsed = self._read()
         except (FileNotFoundError, json.JSONDecodeError) as error:
-            self.logger.debug(
-                "missing or invalid settings file %s", str(error)
-            )
+            logger.debug("missing or invalid settings file %s", str(error))
             return
 
         if not isinstance(unparsed, list) or len(unparsed) != 1:
-            self.logger.debug("invalid settings file %s", str(unparsed))
+            logger.debug("invalid settings file %s", str(unparsed))
             return
 
         parsed = self.update_settings(unparsed[0])
         if parsed:
             self._expiry = parsed.timestamp + parsed.ttl
+
+    def _read(self):
+        with open(self._path, "r", encoding="utf-8") as file:
+            contents = file.read()
+        return json.loads(contents)
