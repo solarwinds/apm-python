@@ -90,7 +90,6 @@ class TestConfiguratorPropagators:
         )
 
         # Test!
-        test_configurator = configurator.SolarWindsConfigurator()
         mock_composite_propagator.assert_not_called()
         mock_set_global_textmap.assert_not_called()
 
