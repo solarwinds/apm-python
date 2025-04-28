@@ -23,7 +23,6 @@ keywords = [
   "traceview",
   "tracelytics",
   "oboe",
-#  "liboboe",
   "instrumentation",
   "performance",
   "opentelemetry",
