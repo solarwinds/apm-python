@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import logging
+
 import os
 import time
 from collections.abc import Sequence
