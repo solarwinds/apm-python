@@ -7,7 +7,7 @@
 import os
 
 from solarwinds_apm import configurator
-from solarwinds_apm.exporter import SolarWindsSpanExporter
+
 
 class TestConfiguratorTracingInit:
     def setup_each_test(
