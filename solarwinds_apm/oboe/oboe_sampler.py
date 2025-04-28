@@ -23,7 +23,6 @@ from opentelemetry.trace import Link, SpanKind, TraceFlags, get_current_span
 from opentelemetry.trace.span import Span, TraceState
 from typing_extensions import override
 
-from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_RESPONSE_KEY
 from solarwinds_apm.oboe.dice import _Dice
 from solarwinds_apm.oboe.metrics import Counters
 from solarwinds_apm.oboe.settings import (
@@ -45,6 +44,7 @@ from solarwinds_apm.oboe.trace_options import (
     stringify_trace_options_response,
     validate_signature,
 )
+from solarwinds_apm.w3c_transformer import W3CTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -201,9 +201,9 @@ class OboeSampler(Sampler, ABC):
             and parent_span.get_span_context().trace_state is not None
         ):
             sample_state.attributes[TRACESTATE_CAPTURE_ATTRIBUTE] = (
-                parent_span.get_span_context()
-                .trace_state.delete(INTL_SWO_X_OPTIONS_RESPONSE_KEY)
-                .to_header()
+                W3CTransformer.remove_response_from_sw(
+                    parent_span.get_span_context().trace_state
+                ).to_header()
             )
 
         self.counters.request_count.add(1, {}, parent_context)
