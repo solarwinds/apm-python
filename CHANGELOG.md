@@ -4,7 +4,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-3.6.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-4.0.0...HEAD)
+
+## [4.0.0.11](https://github.com/solarwinds/apm-python/releases/tag/rel-4.0.0) - 2025-04-28
+
+### Breaking changes
+
+- Breaking: APM Python is now pure Python ([#556](https://github.com/solarwinds/apm-python/pull/556))
+- Breaking: Removed c-lib extension and legacy components ([#549](https://github.com/solarwinds/apm-python/pull/549), [#612](https://github.com/solarwinds/apm-python/pull/612), [#614](https://github.com/solarwinds/apm-python/pull/614))
+- Breaking: Removed discontinued OboeAPI ([#565](https://github.com/solarwinds/apm-python/pull/565))
+- Breaking: Changed SolarWindsSpanExporter to no-op for future removal ([#572](https://github.com/solarwinds/apm-python/pull/572))
+- Breaking: Changed default export protocol to OTLP HTTP for all signals ([#580](https://github.com/solarwinds/apm-python/pull/580))
+- Breaking: Removed legacy configuration logic ([#570](https://github.com/solarwinds/apm-python/pull/570), [#571](https://github.com/solarwinds/apm-python/pull/571), [#583](https://github.com/solarwinds/apm-python/pull/583))
+- Breaking: AWS Lambda builds without architecture in layer name ([#594](https://github.com/solarwinds/apm-python/pull/594))
+- Breaking: Removed discontinued grpcio-using dependencies from Lambda builds ([#591](https://github.com/solarwinds/apm-python/pull/591))
+- Breaking: Updated local development setup for pure Python ([#603](https://github.com/solarwinds/apm-python/pull/603))
+
+
+### Added
+
+- Added ApmConfig mapping for pure Python sampler ([#552](https://github.com/solarwinds/apm-python/pull/552), [#589](https://github.com/solarwinds/apm-python/pull/589))
+- Added pure Python transaction name pool ([#559](https://github.com/solarwinds/apm-python/pull/559))
+- Added suppression of tracing when HTTP getSettings ([#560](https://github.com/solarwinds/apm-python/pull/560))
+- Added resource detection for AWS, Azure, Kubernetes, UAMS written to resource attributes ([#577](https://github.com/solarwinds/apm-python/pull/577), [#596](https://github.com/solarwinds/apm-python/pull/596))
+- Added internal deduction of export endpoint from SW_APM_COLLECTOR ([#590](https://github.com/solarwinds/apm-python/pull/590), [#602](https://github.com/solarwinds/apm-python/pull/602))
+
+### Changed
+
+- Updated custom transaction naming as pure Python ([#558](https://github.com/solarwinds/apm-python/pull/558))
+- Simplified spankind check ([#561](https://github.com/solarwinds/apm-python/pull/561))
+- Updated `http.route` assignment based on semconv ([#562](https://github.com/solarwinds/apm-python/pull/562))
+- Updated to register NoOp provider if not exporting ([#566](https://github.com/solarwinds/apm-python/pull/566))
+- Fixed counter metrics init ([#564](https://github.com/solarwinds/apm-python/pull/564))
+- Refactored ResponseTime metrics and request counters ([#563](https://github.com/solarwinds/apm-python/pull/563), [#567](https://github.com/solarwinds/apm-python/pull/567), [#568](https://github.com/solarwinds/apm-python/pull/568))
+- Fixed transaction name environment config support ([#569](https://github.com/solarwinds/apm-python/pull/569))
+- Redesigned custom Configurator ([#578](https://github.com/solarwinds/apm-python/pull/578), [#581](https://github.com/solarwinds/apm-python/pull/581))
+- Updated `solarwinds_ready` API function for pure Python ([#582](https://github.com/solarwinds/apm-python/pull/582), [#584](https://github.com/solarwinds/apm-python/pull/584), [#599](https://github.com/solarwinds/apm-python/pull/599))
+- Updated Lambda dependencies and builds for resource detection ([#593](https://github.com/solarwinds/apm-python/pull/593))
+- Fixed Configurator exporter loading to prevent ImportError ([#592](https://github.com/solarwinds/apm-python/pull/592))
+- Updated smoke tests / verify_install for pure Python ([#595](https://github.com/solarwinds/apm-python/pull/595))
+- Updated PyPI sdist, wheel publishes in pure Python ([#597](https://github.com/solarwinds/apm-python/pull/597))
+- Update autoinstrumentation-python image builds for pure Python, beta testing ([#598](https://github.com/solarwinds/apm-python/pull/598))
+- Updated default OTel export header assignment for SWO vs other ([#601](https://github.com/solarwinds/apm-python/pull/601))
+- Fixed HttpSampler warning message ([#604](https://github.com/solarwinds/apm-python/pull/604))
+- Fixed `sw.w3c.tracestate` attribute assignment ([#606](https://github.com/solarwinds/apm-python/pull/606))
+- Updated integration tests ([#605](https://github.com/solarwinds/apm-python/pull/605))
+- Updated units, descriptions of APM counters ([#608](https://github.com/solarwinds/apm-python/pull/608))
+- Updated sampler init ([#609](https://github.com/solarwinds/apm-python/pull/609))
+- Updated `SW_APM_LOG_FILEPATH` support for Pure Python ([#613](https://github.com/solarwinds/apm-python/pull/613))
+- Fixed tracestate KV deletion ([#617](https://github.com/solarwinds/apm-python/pull/617))
+
+### Removed
+
+- Removed warning log for Lambda mode ([#600](https://github.com/solarwinds/apm-python/pull/600))
+- Removed unnecessary tests ([#611](https://github.com/solarwinds/apm-python/pull/611), [#610](https://github.com/solarwinds/apm-python/pull/610), [#615](https://github.com/solarwinds/apm-python/pull/615))
+- Removed setup.py usage for builds ([#616](https://github.com/solarwinds/apm-python/pull/616))
 
 ## [3.6.0](https://github.com/solarwinds/apm-python/releases/tag/rel-3.6.0) - 2025-04-07
 
