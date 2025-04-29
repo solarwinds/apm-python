@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-4.0.0...HEAD)
 
-## [4.0.0.11](https://github.com/solarwinds/apm-python/releases/tag/rel-4.0.0) - 2025-04-28
+## [4.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.0.0) - 2025-04-29
 
 ### Breaking changes
 
@@ -19,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Breaking: AWS Lambda builds without architecture in layer name ([#594](https://github.com/solarwinds/apm-python/pull/594))
 - Breaking: Removed discontinued grpcio-using dependencies from Lambda builds ([#591](https://github.com/solarwinds/apm-python/pull/591))
 - Breaking: Updated local development setup for pure Python ([#603](https://github.com/solarwinds/apm-python/pull/603))
-
 
 ### Added
 
