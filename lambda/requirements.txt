@@ -36,7 +36,9 @@ opentelemetry-instrumentation-tornado==0.52b1
 opentelemetry-instrumentation-wsgi==0.52b1
 
 # Additional APM dependencies
+opentelemetry-instrumentation-botocore==0.52b1
 opentelemetry-instrumentation-logging==0.52b1
+opentelemetry-instrumentation-system-metrics==0.52b1
 opentelemetry-sdk-extension-aws == 2.1.0
 opentelemetry-resource-detector-azure == 0.1.5
 psutil >= 5
