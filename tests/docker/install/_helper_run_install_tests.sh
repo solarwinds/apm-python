@@ -30,8 +30,8 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
     if grep Alpine /etc/os-release; then
         # test deps
         apk add bash
-        # agent deps
-        apk add python3-dev g++ make curl
+        # agent deps - APM dep on psutil, so Alpine need linux-headers
+        apk add python3 curl linux-headers
 
         pip install --upgrade pip >/dev/null
 
@@ -42,9 +42,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
         # agent and test deps
         dnf install -y \
-            "python$python_version_no_dot-devel" \
-            gcc \
-            gcc-c++ \
+            "python$python_version_no_dot" \
             unzip \
             findutils
         dnf install -y "python$python_version_no_dot-pip" "python$python_version_no_dot-setuptools"
@@ -62,12 +60,10 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             apt-get update -y
             TZ=America
             ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+            # distutils needed for pip installation from pypa
             apt-get install -y \
                 "python$python_version" \
                 "python$python_version-distutils" \
-                "python$python_version-dev" \
-                python3-setuptools \
-                build-essential \
                 unzip \
                 wget \
                 curl
@@ -93,11 +89,8 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         yum update -y
         if grep "Amazon Linux 2023" /etc/os-release; then
             yum install -y \
-                python3-devel \
+                python3 \
                 python3-pip \
-                python3-setuptools \
-                gcc \
-                gcc-c++ \
                 unzip \
                 findutils \
                 tar \
