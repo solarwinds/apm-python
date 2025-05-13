@@ -3,7 +3,7 @@
 These files provide containers and scripts to test installation of packaged `solarwinds-apm`, from local or from registry. Here is how to set up and run install tests locally:
 
 1. Set test mode to install from one of:
-   * `export MODE=local` (default; must be built in project `dist/`)
+   * `export MODE=local` (default; this will build sdist and wheel in project `dist/`)
    * `export MODE=testpypi`
    * `export MODE=pypi`
 2. Optionally set the APM library version to install, e.g. `export SOLARWINDS_APM_VERSION=0.6.0`. If not provided, the install tests will use what's set in `version.py` (local) or the latest version (registry).

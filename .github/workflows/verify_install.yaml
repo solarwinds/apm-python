@@ -7,16 +7,22 @@
 name: Verify Installation
 
 on:
+  push:
+    branches:
+      - main
+  pull_request:
+    type: [opened, reopened]
   workflow_dispatch:
     inputs:
       install-registry:
         required: true
-        description: 'Registry used for install tests, one of: pypi, testpypi'
+        description: 'Registry/Source used for install tests, one of: pypi, testpypi, local (contents of current branch)'
         type: choice
-        default: 'pypi'
+        default: 'local'
         options:
         - pypi
         - testpypi
+        - local
       solarwinds-version:
         required: false
         description: 'Optional solarwinds-apm version, e.g. 0.0.3.2'
@@ -160,12 +166,13 @@ jobs:
       image: "${{ matrix.image }}"
       options: --hostname "${{ matrix.hostname }}"
     steps:
-      - if: ${{ matrix.image == 'amazonlinux:2023' }}
-        run: yum install -y tar gzip
+      - if: contains(matrix.image, 'amazonlinux')
+        name: Install AmazonLinux deps to use checkout
+        run: yum install -y tar gzip 
       - uses: actions/checkout@v4
       - name: Setup and run install test
         working-directory: ./tests/docker/install
-        run: ./_helper_run_install_tests.sh
+        run: APM_ROOT=$GITHUB_WORKSPACE ./_helper_run_install_tests.sh
         shell: sh
         env:
           MODE: ${{ github.event.inputs.install-registry }}

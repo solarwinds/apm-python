@@ -107,8 +107,22 @@ function run_instrumented_server_and_client(){
 
 # START TESTING ===========================================
 HOSTNAME=$(cat /etc/hostname)
-# docker-compose-set root of local solarwinds_apm package
-APM_ROOT='/code/python-solarwinds'
+# Default to docker-compose-set root of local solarwinds_apm package
+if [ -z "$APM_ROOT" ]
+then
+    APM_ROOT="/code/python-solarwinds"
+    echo "Using default APM_ROOT: $APM_ROOT"
+else
+    echo "Using configured APM_ROOT: $APM_ROOT"
+fi
+
+if [[ "$MODE" == "local" ]]
+then
+    echo "Local mode: installing sdist and wheel locally"
+    pip install build
+    python -m build $APM_ROOT --sdist
+    pip -v wheel $APM_ROOT -w $APM_ROOT/dist --no-deps
+fi
 
 # Check sdist
 # shellcheck disable=SC1091

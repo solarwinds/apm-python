@@ -30,8 +30,8 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
     if grep Alpine /etc/os-release; then
         # test deps
         apk add bash
-        # agent deps - APM dep on psutil, so Alpine need linux-headers
-        apk add python3 curl linux-headers
+        # agent deps - APM deps on psutil, so Alpine needs more deps
+        apk add python3 curl linux-headers gcc musl-dev
 
         pip install --upgrade pip >/dev/null
 
