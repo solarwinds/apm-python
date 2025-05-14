@@ -106,7 +106,12 @@ function run_instrumented_server_and_client(){
 
 
 # START TESTING ===========================================
-HOSTNAME=$(cat /etc/hostname)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    HOSTNAME=$(scutil --get LocalHostName)
+else
+    HOSTNAME=$(cat /etc/hostname)
+fi
+
 # Default to docker-compose-set root of local solarwinds_apm package
 if [ -z "$APM_ROOT" ]
 then

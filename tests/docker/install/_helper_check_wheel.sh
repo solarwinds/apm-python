@@ -38,6 +38,7 @@ fi
 VALID_PLATFORMS=(
     "x86_64"
     "aarch64"
+    "arm64"
 )
 PLATFORM=$(uname -m)
 if [[ ! " ${VALID_PLATFORMS[*]} " =~ ${PLATFORM} ]]

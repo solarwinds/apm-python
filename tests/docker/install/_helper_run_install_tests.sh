@@ -18,12 +18,21 @@
 # stop on error
 set -e
 
-# get Python version from container hostname, e.g. "3.10"
-python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')
-# no-dot Python version, e.g. "310"
-python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
+if [[ "$OSTYPE" == "darwin"* ]];
+then
+    # On macOS, use GitHub Actions environment variable
+    python_version=$PYTHON_VERSION
+    python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
+    pretty_name="macOS $(sw_vers -productVersion)"
+else
+    # get Python version from container hostname, e.g. "3.10"
+    python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')
+    # no-dot Python version, e.g. "310"
+    python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
+    # get pretty name from linux release
+    pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
+fi
 
-pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
 echo "Installing test dependencies for Python $python_version on $pretty_name"
 # setup dependencies quietly
 {
