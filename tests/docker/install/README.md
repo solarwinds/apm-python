@@ -1,6 +1,6 @@
 # Installation tests
 
-These files provide containers and scripts to test installation of packaged `solarwinds-apm`, from local or from registry. Here is how to set up and run install tests locally:
+These files provide containers and scripts to test installation of packaged `solarwinds-apm` with system-metrics opt-in (`solarwinds-apm[system-metrics]`), from local or from registry. Here is how to set up and run install tests locally:
 
 1. Set test mode to install from one of:
    * `export MODE=local` (default; this will build sdist and wheel in project `dist/`)
