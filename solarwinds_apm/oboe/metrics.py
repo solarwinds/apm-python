@@ -37,7 +37,7 @@ class Counters:
         )
         self._token_bucket_exhaustion_count = self._meter.create_counter(
             name="trace.service.tokenbucket_exhaustion_count",
-            description="Count of requests that were not traced",
+            description="Count of requests that were not traced due to token bucket exhaustion",
             unit="{request}",
         )
 
