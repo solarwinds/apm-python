@@ -68,7 +68,7 @@ function get_wheel(){
             exit 1
         fi
     else
-        pip_options=(--only-binary solarwinds-apm --dest "$wheel_dir")
+        pip_options=(--only-binary solarwinds-apm[system-metrics] --dest "$wheel_dir")
         if [ "$MODE" == "testpypi" ]
         then
             pip_options+=(--extra-index-url https://test.pypi.org/simple/)
@@ -76,9 +76,9 @@ function get_wheel(){
 
         if [ -z "$SOLARWINDS_APM_VERSION" ]
         then
-            pip_options+=(solarwinds-apm)
+            pip_options+=(solarwinds-apm[system-metrics])
         else
-            pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
+            pip_options+=(solarwinds-apm[system-metrics]=="$SOLARWINDS_APM_VERSION")
         fi
 
         # shellcheck disable=SC2048

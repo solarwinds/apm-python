@@ -58,16 +58,16 @@ function Get-Wheel {
         return $tested_wheel
     }
     else {
-        $pip_options = @("--only-binary", "solarwinds-apm", "--dest", $wheel_dir)
+        $pip_options = @("--only-binary", "solarwinds-apm[system-metrics]", "--dest", $wheel_dir)
         if ($env:MODE -eq "testpypi") {
             $pip_options += "--extra-index-url", "https://test.pypi.org/simple/"
         }
         
         if ($env:SOLARWINDS_APM_VERSION) {
-            $pip_options += "solarwinds-apm==$env:SOLARWINDS_APM_VERSION"
+            $pip_options += "solarwinds-apm[system-metrics]==$env:SOLARWINDS_APM_VERSION"
         }
         else {
-            $pip_options += "solarwinds-apm"
+            $pip_options += "solarwinds-apm[system-metrics]"
         }
 
         pip download $pip_options
