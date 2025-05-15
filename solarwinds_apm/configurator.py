@@ -249,6 +249,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         for _, exporter_or_reader_class in exporters_or_readers.items():
             exporter_args = {
+                "max_export_batch_size": 50,
                 "preferred_temporality": {
                     Counter: AggregationTemporality.DELTA,
                     UpDownCounter: AggregationTemporality.DELTA,
@@ -256,7 +257,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     ObservableCounter: AggregationTemporality.DELTA,
                     ObservableUpDownCounter: AggregationTemporality.DELTA,
                     ObservableGauge: AggregationTemporality.DELTA,
-                }
+                },
             }
 
             if issubclass(exporter_or_reader_class, MetricReader):
