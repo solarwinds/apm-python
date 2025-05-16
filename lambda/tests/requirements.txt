@@ -1,2 +1,2 @@
-opentelemetry-instrumentation-aws-lambda == 0.52b1
+opentelemetry-instrumentation-aws-lambda == 0.54b1
 opentelemetry-propagator-aws-xray == 1.0.2
