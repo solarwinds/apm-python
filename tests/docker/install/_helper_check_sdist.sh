@@ -56,7 +56,7 @@ function get_sdist(){
             exit 1
         fi
     else
-        pip_options=(--no-binary solarwinds-apm[system-metrics] --dest "$sdist_dir")
+        pip_options=(--no-binary solarwinds-apm --dest "$sdist_dir")
         if [ "$MODE" == "testpypi" ]
         then
             pip_options+=(--extra-index-url https://test.pypi.org/simple/)
@@ -64,9 +64,9 @@ function get_sdist(){
 
         if [ -z "$SOLARWINDS_APM_VERSION" ]
         then
-            pip_options+=(solarwinds-apm[system-metrics])
+            pip_options+=(solarwinds-apm)
         else
-            pip_options+=(solarwinds-apm[system-metrics]=="$SOLARWINDS_APM_VERSION")
+            pip_options+=(solarwinds-apm=="$SOLARWINDS_APM_VERSION")
         fi
 
         # shellcheck disable=SC2048

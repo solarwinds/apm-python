@@ -96,7 +96,7 @@ print(r)
 
 
 function Install-TestAppDependencies {
-    pip install flask requests
+    pip install flask requests psutil
     opentelemetry-bootstrap --action=install
 }
 

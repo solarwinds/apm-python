@@ -50,11 +50,6 @@ dependencies = [
     'opentelemetry-resource-detector-azure == 0.1.5',
 ]
 
-[project.optional-dependencies]
-system-metrics = [
-    'psutil >= 5',
-]
-
 [project.urls]
 Homepage = "https://www.solarwinds.com/solarwinds-observability/use-cases/python-performance-monitoring"
 Download = "https://pypi.org/project/solarwinds-apm/"
