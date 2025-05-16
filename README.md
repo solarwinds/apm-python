@@ -14,17 +14,14 @@ SolarWinds APM captures OpenTelemetry distributed traces and metrics from your a
 
 To install `solarwinds-apm` and all relevant Opentelemetry Python instrumentation libraries:
 ```
-pip install solarwinds-apm
+pip install solarwinds-apm "psutil>=5.0"
 opentelemetry-bootstrap --action=install
 ```
-
-To opt into system metrics generation, specify `pip install solarwinds-apm[system-metrics]`.
-
 `solarwinds-apm` already includes OpenTelemetry and therefore doesn't need to be installed separately. Python agent installation should be done _after_ installation of all other service dependencies. This is so `opentelemetry-bootstrap` detects those packages and installs their corresponding instrumentation libraries. For example:
 
 ```
 pip install -r requirements.txt           # installs all other dependencies
-pip install solarwinds-apm
+pip install solarwinds-apm "psutil>=5.0"
 opentelemetry-bootstrap --action=install
 ```
 
