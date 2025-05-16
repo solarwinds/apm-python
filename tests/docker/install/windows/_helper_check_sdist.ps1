@@ -48,16 +48,16 @@ function Get-Sdist {
         return $sdist_tar
     }
     else {
-        $pip_options = @("--no-binary", "solarwinds-apm[system-metrics]", "--dest", $sdist_dir)
+        $pip_options = @("--no-binary", "solarwinds-apm", "--dest", $sdist_dir)
         if ($env:MODE -eq "testpypi") {
             $pip_options += "--extra-index-url", "https://test.pypi.org/simple/"
         }
 
         if ($env:SOLARWINDS_APM_VERSION) {
-            $pip_options += "solarwinds-apm[system-metrics]==$env:SOLARWINDS_APM_VERSION"
+            $pip_options += "solarwinds-apm==$env:SOLARWINDS_APM_VERSION"
         }
         else {
-            $pip_options += "solarwinds-apm[system-metrics]"
+            $pip_options += "solarwinds-apm"
         }
 
         pip download $pip_options

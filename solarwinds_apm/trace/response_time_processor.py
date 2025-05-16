@@ -48,7 +48,7 @@ class ResponseTimeProcessor(SpanProcessor):
         self._meter_response_times = get_meter("sw.apm.request.metrics")
         self.response_time = self._meter_response_times.create_histogram(
             name="trace.service.response_time",
-            description="measures the duration of an inbound HTTP request",
+            description="Duration of each entry span for the service, typically meaning the time taken to process an inbound request.",
             unit="ms",
         )
 
