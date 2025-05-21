@@ -24,9 +24,6 @@ if (-not $env:APM_ROOT) {
 }
 
 function Get-Sdist {
-    $sdist_dir = Join-Path $PWD "tmp\sdist"
-    if (Test-Path $sdist_dir) { Remove-Item -Recurse -Force $sdist_dir }
-
     if ($env:MODE -eq "local") {
         # optionally test a previous version on local for debugging
         if (-not $env:SOLARWINDS_APM_VERSION) {
@@ -48,20 +45,24 @@ function Get-Sdist {
         return $sdist_tar
     }
     else {
-        $pip_options = @("--no-binary", "solarwinds-apm", "--dest", $sdist_dir)
+        $sdist_dir = Join-Path $PWD "tmp\sdist"
+        if (Test-Path $sdist_dir) { Remove-Item -Recurse -Force $sdist_dir }
+        New-Item -ItemType Directory -Force -Path $sdist_dir | Out-Null
+
+        $pip_cmd = "pip download --no-binary solarwinds-apm --dest `"$sdist_dir`""
         if ($env:MODE -eq "testpypi") {
-            $pip_options += "--extra-index-url", "https://test.pypi.org/simple/"
+            $pip_cmd += " --extra-index-url https://test.pypi.org/simple/"
         }
 
         if ($env:SOLARWINDS_APM_VERSION) {
-            $pip_options += "solarwinds-apm==$env:SOLARWINDS_APM_VERSION"
+            $pip_cmd += " solarwinds-apm==$env:SOLARWINDS_APM_VERSION"
         }
         else {
-            $pip_options += "solarwinds-apm"
+            $pip_cmd += " solarwinds-apm"
         }
 
-        pip download $pip_options
-        $sdist_tar = Get-ChildItem -Path $sdist_dir -Filter "solarwinds_apm-*.tar.gz"
+        Invoke-Expression $pip_cmd | Out-Null
+        $sdist_tar = Get-ChildItem -Path $sdist_dir -Filter "solarwinds_apm-*.tar.gz" | Select-Object -First 1
         return $sdist_tar.FullName
     }
 }

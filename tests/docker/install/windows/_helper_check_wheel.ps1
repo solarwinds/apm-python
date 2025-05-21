@@ -32,9 +32,6 @@ if ($VALID_PLATFORMS -notcontains $PLATFORM) {
 }
 
 function Get-Wheel {
-    $wheel_dir = Join-Path $PWD "tmp\wheel"
-    if (Test-Path $wheel_dir) { Remove-Item -Recurse -Force $wheel_dir }
-
     if ($env:MODE -eq "local") {
         # optionally test a previous version on local for debugging
         if (-not $env:SOLARWINDS_APM_VERSION) {
@@ -58,20 +55,24 @@ function Get-Wheel {
         return $tested_wheel
     }
     else {
-        $pip_options = @("--only-binary", "solarwinds-apm", "--dest", $wheel_dir)
+        $wheel_dir = Join-Path $PWD "tmp\wheel"
+        if (Test-Path $wheel_dir) { Remove-Item -Recurse -Force $wheel_dir }
+        New-Item -ItemType Directory -Force -Path $wheel_dir | Out-Null
+
+        $pip_cmd = "pip download --only-binary solarwinds-apm --dest `"$wheel_dir`""
         if ($env:MODE -eq "testpypi") {
-            $pip_options += "--extra-index-url", "https://test.pypi.org/simple/"
-        }
-        
-        if ($env:SOLARWINDS_APM_VERSION) {
-            $pip_options += "solarwinds-apm==$env:SOLARWINDS_APM_VERSION"
-        }
-        else {
-            $pip_options += "solarwinds-apm"
+            $pip_cmd += " --extra-index-url https://test.pypi.org/simple/"
         }
 
-        pip download $pip_options
-        $tested_wheel = Get-ChildItem -Path $wheel_dir -Filter "solarwinds_apm-*.whl"
+        if ($env:SOLARWINDS_APM_VERSION) {
+            $pip_cmd += " solarwinds-apm==$env:SOLARWINDS_APM_VERSION"
+        }
+        else {
+            $pip_cmd += " solarwinds-apm"
+        }
+
+        Invoke-Expression $pip_cmd | Out-Null
+        $tested_wheel = Get-ChildItem -Path $wheel_dir -Filter "solarwinds_apm-*.whl" | Select-Object -First 1
     }
     return $tested_wheel.FullName
 }
