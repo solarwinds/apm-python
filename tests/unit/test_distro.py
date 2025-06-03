@@ -17,6 +17,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
     OTEL_EXPORTER_OTLP_PROTOCOL,
 )
 
@@ -203,6 +204,7 @@ class TestDistro:
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "http/protobuf"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "authorization=Bearer%20None"
+        assert os.environ[OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION] == "base2_exponential_bucket_histogram"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http"
 
     def test_configure_env_exporter(self, mocker):
@@ -694,6 +696,16 @@ class TestDistro:
         distro.SolarWindsDistro()._configure()
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "http://my-export-endpoint"
         assert os.environ.get(OTEL_EXPORTER_OTLP_HEADERS) is None
+
+    def test_configure_env_metrics_default_histogram_aggregation(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION": "foo",
+            }
+        )
+        distro.SolarWindsDistro()._configure()
+        assert os.environ[OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION] == "foo"
 
     def test_configure_env_propagators(self, mocker):
         mocker.patch.dict(os.environ, {"OTEL_PROPAGATORS": "tracecontext,solarwinds_propagator,foobar"})
