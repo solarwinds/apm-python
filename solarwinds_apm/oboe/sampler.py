@@ -215,6 +215,7 @@ class Sampler(OboeSampler):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> LocalSettings:
+        # pylint: disable=too-many-positional-arguments
         """
         Returns local settings.
         """
@@ -253,6 +254,7 @@ class Sampler(OboeSampler):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> RequestHeaders:
+        # pylint: disable=too-many-positional-arguments
         """
         Returns request headers.
         """
@@ -279,6 +281,7 @@ class Sampler(OboeSampler):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> "TraceState" | None:
+        # pylint: disable=too-many-positional-arguments
         """
         Sets response headers.
         """

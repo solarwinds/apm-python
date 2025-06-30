@@ -30,6 +30,7 @@ class TraceOptions:
         custom: dict[str, str],
         ignored: list[tuple[str, str | None]],
     ):
+        # pylint: disable=too-many-positional-arguments
         self._trigger_trace = trigger_trace
         self._timestamp = timestamp
         self._sw_keys = sw_keys
@@ -166,6 +167,7 @@ class TraceOptionsWithResponse(TraceOptions):
         ignored: list[tuple[str, str | None]],
         response: TraceOptionsResponse,
     ):
+        # pylint: disable=too-many-positional-arguments
         super().__init__(trigger_trace, timestamp, sw_keys, custom, ignored)
         self._response = response
 

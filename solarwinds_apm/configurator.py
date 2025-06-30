@@ -9,7 +9,6 @@
 import logging
 import math
 import os
-from typing import Optional, Union
 
 from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
@@ -211,9 +210,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _custom_init_tracing(
         self,
         exporters: dict[str, type[SpanExporter]],
-        id_generator: Optional[IdGenerator] = None,
-        sampler: Optional[Sampler] = None,
-        resource: Optional[Resource] = None,
+        id_generator: IdGenerator | None = None,
+        sampler: Sampler | None = None,
+        resource: Resource | None = None,
     ):
         """APM SWO custom span export init, based on _OTelSDKConfigurator"""
         provider = SolarwindsTracerProvider(
@@ -237,9 +236,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _custom_init_metrics(
         self,
         exporters_or_readers: dict[
-            str, Union[type[MetricExporter], type[MetricReader]]
+            str, type[MetricExporter] | type[MetricReader]
         ],
-        resource: Optional[Resource] = None,
+        resource: Resource | None = None,
     ):
         """APM SWO custom metrics export init, based on _OTelSDKConfigurator"""
         metric_readers = []

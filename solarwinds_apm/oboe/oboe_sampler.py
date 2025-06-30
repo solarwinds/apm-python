@@ -71,6 +71,7 @@ class SampleState:
         headers: RequestHeaders,
         trace_options: TraceOptionsWithResponse | None,
     ):
+        # pylint: disable=too-many-positional-arguments
         self._decision = decision
         self._attributes = attributes
         self._settings = settings
@@ -182,6 +183,7 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> "SamplingResult":
+        # pylint: disable=too-many-positional-arguments
         parent_span = get_current_span(parent_context)
 
         sample_state = self._initialize_sample_state(
@@ -273,6 +275,7 @@ class OboeSampler(Sampler, ABC):
         trace_state: "TraceState" | None,
         parent_span: Span | None,
     ) -> SampleState:
+        # pylint: disable=too-many-positional-arguments
         """
         Initialize a SampleState object with the given parameters.
         """
@@ -316,6 +319,7 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ):
+        # pylint: disable=too-many-positional-arguments
         """
         Process the X-Trace-Options header and set the appropriate response
         """
@@ -387,6 +391,7 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None,
         trace_state: "TraceState" | None,
     ) -> "SamplingResult":
+        # pylint: disable=too-many-positional-arguments
         """
         Handle the case where settings are unavailable.
         """
@@ -563,6 +568,7 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> Settings | None:
+        # pylint: disable=too-many-positional-arguments
         """
         Get the settings within the ttl if available.
         """
@@ -596,6 +602,7 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> LocalSettings:
+        # pylint: disable=too-many-positional-arguments
         """
         Interface for inherited class to override
         """
@@ -611,6 +618,7 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> RequestHeaders:
+        # pylint: disable=too-many-positional-arguments
         """
         Interface for inherited class to override
         """
@@ -626,6 +634,7 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> "TraceState" | None:
+        # pylint: disable=too-many-positional-arguments
         """
         Set the response headers based on the sample state
         """
@@ -657,6 +666,7 @@ class OboeSampler(Sampler, ABC):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> "TraceState" | None:
+        # pylint: disable=too-many-positional-arguments
         """
         Interface for inherited class to override
         """

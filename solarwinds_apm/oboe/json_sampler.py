@@ -54,6 +54,7 @@ class JsonSampler(Sampler):
         links: Sequence["Link"] | None = None,
         trace_state: "TraceState" | None = None,
     ) -> "SamplingResult":
+        # pylint: disable=too-many-positional-arguments
         self._loop()
         return super().should_sample(
             parent_context,

@@ -45,6 +45,7 @@ class Configuration:
         transaction_name: Callable[[], str] | None,
         transaction_settings: list[TransactionSetting],
     ):
+        # pylint: disable=too-many-positional-arguments
         self._enabled = enabled
         self._service = service
         self._collector = collector

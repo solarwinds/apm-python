@@ -74,6 +74,7 @@ class Settings:
         timestamp: int,
         ttl: int,
     ):
+        # pylint: disable=too-many-positional-arguments
         self._sample_rate = sample_rate
         self._sample_source = sample_source
         self._flags = flags
