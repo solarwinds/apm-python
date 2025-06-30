@@ -13,7 +13,7 @@
 #   * CentOS 8 being at end-of-life and needing a mirror re-point
 #   * Ubuntu not having agent install deps
 #
-# Note: centos8 can only install Python 3.8, 3.9
+# Note: centos8 can only install Python 3.9
 
 # stop on error
 set -e
@@ -81,11 +81,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             # Make sure we don't install py3.6's pip on ubuntu
             # Official get-pip documentation:
             # https://pip.pypa.io/en/stable/installation/#get-pip-py
-            if [ "$python_version" = "3.8" ]; then
-                wget https://bootstrap.pypa.io/pip/3.8/get-pip.py
-            else
-                wget https://bootstrap.pypa.io/get-pip.py
-            fi
+            wget https://bootstrap.pypa.io/get-pip.py
             python get-pip.py
             pip install --upgrade pip >/dev/null
 

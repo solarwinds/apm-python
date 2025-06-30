@@ -5,7 +5,7 @@ An [OpenTelemetry Python](https://opentelemetry-python.readthedocs.io/) distribu
 
 ----
 ## Requirements
-All published artifacts support Python 3.8 or higher. A full list of system requirements is available at [SolarWinds Observability System Requirements](https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-sysreqs-python-agent).
+All published artifacts support Python 3.9 or higher. A full list of system requirements is available at [SolarWinds Observability System Requirements](https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-sysreqs-python-agent).
 
 See [CONTRIBUTING.md](https://github.com/solarwinds/apm-python/blob/main/CONTRIBUTING.md) for how to build for development.
 

@@ -34,46 +34,6 @@ services:
   # install test matrix
   # each service is a combination of python version and distro to test.
   #--------------------------------------------------------------------
-
-  #--------------------------------------------------------------------
-  # Python 3.8
-  #--------------------------------------------------------------------
-
-  py3.8-install-debian10:
-    hostname: "py3.8-debian10"
-    image: "python:3.8-buster"
-    << : [*command-install-test, *workdir, *volumes-codebase]
-    environment:
-      << : *envvars-install-test
-
-  py3.8-install-debian11:
-    hostname: "py3.8-debian11"
-    image: "python:3.8-bullseye"
-    << : [*command-install-test, *workdir, *volumes-codebase]
-    environment:
-      << : *envvars-install-test
-
-  py3.8-install-ubuntu20.04:
-    hostname: "py3.8-ubuntu20.04"
-    image: "ubuntu:20.04"
-    << : [*command-install-test, *workdir, *volumes-codebase]
-    environment:
-      << : *envvars-install-test
-
-  py3.8-install-alpine3.12:
-    hostname: "py3.8-alpine3.12"
-    image: "python:3.8-alpine3.12"
-    << : [*command-install-test, *workdir, *volumes-codebase]
-    environment:
-      << : *envvars-install-test
-
-  py3.8-install-alpine3.13:
-    hostname: "py3.8-alpine3.13"
-    image: "python:3.8-alpine3.13"
-    << : [*command-install-test, *workdir, *volumes-codebase]
-    environment:
-      << : *envvars-install-test
-
   #--------------------------------------------------------------------
   # Python 3.9
   #--------------------------------------------------------------------

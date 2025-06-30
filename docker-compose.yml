@@ -24,8 +24,8 @@ services:
        # boto3 for interaction with AWS
        # twine to upload to TestPyPi
        # tox for automated tests
-       python3.8 -m pip install --upgrade pip
-       python3.8 -m pip install --default-timeout=100 build boto3 twine tox
+       python3.9 -m pip install --upgrade pip
+       python3.9 -m pip install --default-timeout=100 build boto3 twine tox
        /bin/bash
 
   aarch64:
@@ -45,6 +45,6 @@ services:
        # boto3 for interaction with AWS
        # twine to upload to TestPyPi
        # tox for automated tests
-       python3.8 -m pip install --upgrade pip
-       python3.8 -m pip install --default-timeout=100 build boto3 twine tox
+       python3.9 -m pip install --upgrade pip
+       python3.9 -m pip install --default-timeout=100 build boto3 twine tox
        /bin/bash

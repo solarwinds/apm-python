@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 
 from opentelemetry import trace
 from opentelemetry.context.context import Context
@@ -119,11 +118,9 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
             carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()
         )
 
-    # Note: this inherits deprecated `typing` use by OTel,
-    #       for compatibility with Python3.8 else TypeError
     @property
     def fields(
         self,
-    ) -> typing.Set[str]:  # pylint: disable=deprecated-typing-alias
+    ) -> set[str]:
         """Returns a set with the fields set in `inject`"""
         return {self._TRACESTATE_HEADER_NAME}
