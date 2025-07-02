@@ -254,15 +254,7 @@ class SolarWindsDistro(BaseDistro):
         if self._instrumentor_metrics_enabled is False:
             kwargs["meter_provider"] = self._meter_provider
 
-        try:
-            instrumentor: BaseInstrumentor = entry_point.load()
-        except Exception as ex:  # pylint: disable=broad-except
-            logger.error(
-                "Could not load instrumentor %s: %s",
-                entry_point.name,
-                ex,
-            )
-            return
+        instrumentor: BaseInstrumentor = entry_point.load()
         instrumentor().instrument(**kwargs)
 
     def get_enable_commenter_env_map(self) -> dict:
