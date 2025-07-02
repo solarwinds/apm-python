@@ -39,7 +39,7 @@ check-zip:
 # Create package source distribution archive
 sdist:
 	@echo -e "Generating python agent sdist package"
-	@python3.8 -m build --sdist
+	@python3.9 -m build --sdist
 	@echo -e "\nDone."
 
 # Check local package source distribution archive contents, without install
@@ -113,7 +113,7 @@ aws-lambda: check-zip install-lambda-modules check-lambda-modules
 # Example: make tox OPTIONS="-e py39-test"
 # Example: make tox OPTIONS="-e lint -- --check-only"
 tox:
-	@python3.8 -m tox $(OPTIONS)
+	@python3.9 -m tox $(OPTIONS)
 
 format:
 	@echo -e "Not implemented."
