@@ -75,7 +75,6 @@ disable=missing-docstring,
       too-few-public-methods, # Might be good to re-enable this later.
       too-many-instance-attributes,
       too-many-arguments,
-      too-many-positional-arguments, # TODO remove when drop py38 support
       duplicate-code,
       ungrouped-imports, # Leave this up to isort
       wrong-import-order, # Leave this up to isort
@@ -464,6 +463,10 @@ valid-metaclass-classmethod-first-arg=cls
 
 # Maximum number of arguments for function / method.
 max-args=5
+
+# Maximum number of positional arguments for function / method.
+# Higher due to complexity of APM sampler
+max-positional-arguments=10
 
 # Maximum number of attributes for a class (see R0902).
 max-attributes=7

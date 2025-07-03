@@ -5,7 +5,7 @@ An [OpenTelemetry Python](https://opentelemetry-python.readthedocs.io/) distribu
 
 ----
 ## Requirements
-All published artifacts support Python 3.8 or higher. A full list of system requirements is available at [SolarWinds Observability System Requirements](https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-sysreqs-python-agent).
+All published artifacts support Python 3.9 or higher. A full list of system requirements is available at [SolarWinds Observability System Requirements](https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-sysreqs-python-agent).
 
 See [CONTRIBUTING.md](https://github.com/solarwinds/apm-python/blob/main/CONTRIBUTING.md) for how to build for development.
 
@@ -14,15 +14,14 @@ SolarWinds APM captures OpenTelemetry distributed traces and metrics from your a
 
 To install `solarwinds-apm` and all relevant Opentelemetry Python instrumentation libraries:
 ```
-pip install solarwinds-apm
+pip install solarwinds-apm "psutil>=5.0"
 opentelemetry-bootstrap --action=install
 ```
-
 `solarwinds-apm` already includes OpenTelemetry and therefore doesn't need to be installed separately. Python agent installation should be done _after_ installation of all other service dependencies. This is so `opentelemetry-bootstrap` detects those packages and installs their corresponding instrumentation libraries. For example:
 
 ```
 pip install -r requirements.txt           # installs all other dependencies
-pip install solarwinds-apm
+pip install solarwinds-apm "psutil>=5.0"
 opentelemetry-bootstrap --action=install
 ```
 

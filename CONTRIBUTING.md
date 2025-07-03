@@ -44,7 +44,7 @@ docker-compose run aarch64
 
 ### Regression Tests
 
-Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.8, 3.9, 3.10, 3.11 and/or 3.12 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Testing can be run inside a build container which provides all dependencies. Here is how to set up then run unit and integration tests locally:
+Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.9, 3.10, 3.11 and/or 3.12 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Testing can be run inside a build container which provides all dependencies. Here is how to set up then run unit and integration tests locally:
 
 1. Create and run a Docker build container as described above.
 2. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.9: `make tox OPTIONS="-e py39-test"`.
@@ -53,8 +53,8 @@ Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs i
 Other regular `tox` arguments can be included in `OPTIONS`. Some examples:
 
 ```
-# Recreate tox environment for Python 3.8 tests
-make tox OPTIONS="--recreate -e py38-test"
+# Recreate tox environment for Python 3.9 tests
+make tox OPTIONS="--recreate -e py39-test"
 
 # Run only the Scenario 8 integration test, in all environments
 make tox OPTIONS="-- tests/integration/test_scenario_1.py"
@@ -72,10 +72,10 @@ Code formatting and linting are run using `black`, `isort`, `flake8`, and `pylin
 ./run_docker_dev.sh
 make tox OPTIONS="-e py312-lint -- --check-only"
 
-# Run formatting and linting tools for Python 3.8,
+# Run formatting and linting tools for Python 3.9,
 # and automatically fix issues if possible:
 ./run_docker_dev.sh
-make tox OPTIONS="-e py38-lint"
+make tox OPTIONS="-e py39-lint"
 ```
 
 Remotely, CodeQL can be run on GitHub with the [CodeQL Analysis](https://github.com/solarwinds/apm-python/actions/workflows/codeql_analysis.yaml) workflow.

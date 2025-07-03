@@ -13,25 +13,34 @@
 #   * CentOS 8 being at end-of-life and needing a mirror re-point
 #   * Ubuntu not having agent install deps
 #
-# Note: centos8 can only install Python 3.8, 3.9
+# Note: centos8 can only install Python 3.9
 
 # stop on error
 set -e
 
-# get Python version from container hostname, e.g. "3.10"
-python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')
-# no-dot Python version, e.g. "310"
-python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
+if [[ "$OSTYPE" == "darwin"* ]];
+then
+    # On macOS, use GitHub Actions environment variable
+    python_version=$PYTHON_VERSION
+    python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
+    pretty_name="macOS $(sw_vers -productVersion)"
+else
+    # get Python version from container hostname, e.g. "3.10"
+    python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')
+    # no-dot Python version, e.g. "310"
+    python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
+    # get pretty name from linux release
+    pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
+fi
 
-pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
 echo "Installing test dependencies for Python $python_version on $pretty_name"
 # setup dependencies quietly
 {
     if grep Alpine /etc/os-release; then
         # test deps
         apk add bash
-        # agent deps
-        apk add python3-dev g++ make curl
+        # agent deps - we install psutil for this test, so Alpine needs more deps
+        apk add python3 curl linux-headers gcc musl-dev
 
         pip install --upgrade pip >/dev/null
 
@@ -42,9 +51,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
         # agent and test deps
         dnf install -y \
-            "python$python_version_no_dot-devel" \
-            gcc \
-            gcc-c++ \
+            "python$python_version_no_dot" \
             unzip \
             findutils
         dnf install -y "python$python_version_no_dot-pip" "python$python_version_no_dot-setuptools"
@@ -62,12 +69,10 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             apt-get update -y
             TZ=America
             ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+            # distutils needed for pip installation from pypa
             apt-get install -y \
                 "python$python_version" \
                 "python$python_version-distutils" \
-                "python$python_version-dev" \
-                python3-setuptools \
-                build-essential \
                 unzip \
                 wget \
                 curl
@@ -76,11 +81,7 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
             # Make sure we don't install py3.6's pip on ubuntu
             # Official get-pip documentation:
             # https://pip.pypa.io/en/stable/installation/#get-pip-py
-            if [ "$python_version" = "3.8" ]; then
-                wget https://bootstrap.pypa.io/pip/3.8/get-pip.py
-            else
-                wget https://bootstrap.pypa.io/get-pip.py
-            fi
+            wget https://bootstrap.pypa.io/get-pip.py
             python get-pip.py
             pip install --upgrade pip >/dev/null
 
@@ -93,11 +94,8 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         yum update -y
         if grep "Amazon Linux 2023" /etc/os-release; then
             yum install -y \
-                python3-devel \
+                python3 \
                 python3-pip \
-                python3-setuptools \
-                gcc \
-                gcc-c++ \
                 unzip \
                 findutils \
                 tar \

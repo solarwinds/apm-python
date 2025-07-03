@@ -12,7 +12,7 @@ import os
 from typing import TYPE_CHECKING
 
 from opentelemetry import context
-from opentelemetry.sdk.trace import SpanProcessor
+from opentelemetry.sdk.trace import Span, SpanProcessor
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.semconv.trace import SpanAttributes
 
@@ -42,7 +42,7 @@ class ServiceEntrySpanProcessor(SpanProcessor):
 
     def set_default_transaction_name(
         self,
-        span: "ReadableSpan",
+        span: Span,
         pool: "TransactionNamePool",
         attribute_value: str,
         resolve: bool = False,
@@ -62,7 +62,7 @@ class ServiceEntrySpanProcessor(SpanProcessor):
 
     def on_start(
         self,
-        span: "ReadableSpan",
+        span: Span,
         parent_context: context.Context | None = None,
     ) -> None:
         """Calculates default transaction name for span and metrics following this order

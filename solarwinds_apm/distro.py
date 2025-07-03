@@ -30,6 +30,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
     OTEL_EXPORTER_OTLP_PROTOCOL,
 )
 from opentelemetry.sdk.version import __version__ as sdk_version
@@ -120,6 +121,12 @@ class SolarWindsDistro(BaseDistro):
         environ.setdefault(OTEL_LOGS_EXPORTER, self._DEFAULT_OTLP_EXPORTER)
         environ.setdefault(
             OTEL_EXPORTER_OTLP_PROTOCOL, self._DEFAULT_OTLP_PROTOCOL
+        )
+
+        # Default histogram aggregation as exponential
+        environ.setdefault(
+            OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
+            "base2_exponential_bucket_histogram",
         )
 
         # Default collector OTLP endpoint, which HTTP exporters map to signal-specific routes

@@ -12,32 +12,32 @@ class Counters:
         self._meter = meter_provider.get_meter("sw.apm.sampling.metrics")
         self._request_count = self._meter.create_counter(
             name="trace.service.request_count",
-            description="Count of all requests to the service",
+            description="Count of all requests.",
             unit="{request}",
         )
         self._sample_count = self._meter.create_counter(
             name="trace.service.samplecount",
-            description="Count of sampled requests",
+            description="Count of requests that went through sampling, which excludes those with a valid upstream decision or trigger traced.",
             unit="{request}",
         )
         self._trace_count = self._meter.create_counter(
             name="trace.service.tracecount",
-            description="Count of traces generated from requests",
+            description="Count of all traces.",
             unit="{trace}",
         )
         self._through_trace_count = self._meter.create_counter(
             name="trace.service.through_trace_count",
-            description="Count of requests that carried valid upstream sampling decision",
+            description="Count of requests with a valid upstream decision, thus passed through sampling.",
             unit="{request}",
         )
         self._triggered_trace_count = self._meter.create_counter(
             name="trace.service.triggered_trace_count",
-            description="Count of trigger traces",
+            description="Count of triggered traces.",
             unit="{trace}",
         )
         self._token_bucket_exhaustion_count = self._meter.create_counter(
             name="trace.service.tokenbucket_exhaustion_count",
-            description="Count of requests that were not traced",
+            description="Count of requests that were not traced due to token bucket rate limiting.",
             unit="{request}",
         )
 

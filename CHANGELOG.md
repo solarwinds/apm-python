@@ -4,7 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-4.0.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-4.1.0...HEAD)
+
+## [4.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.1.0) - 2025-05-21
+
+### Added
+- Added local installation option to Verify Install CI/CD ([#635](https://github.com/solarwinds/apm-python/pull/635))
+- Added Windows coverage to Verify Install CI/CD ([#636](https://github.com/solarwinds/apm-python/pull/636))
+- Added macOS coverage to Verify Install CI/CD ([#637](https://github.com/solarwinds/apm-python/pull/637))
+- Added `psutil` dependency ([#629](https://github.com/solarwinds/apm-python/pull/629))
+
+### Changed
+- Simplify Lambda builds ([#630](https://github.com/solarwinds/apm-python/pull/630))
+- Simplify Verify Install CI/CD ([#633](https://github.com/solarwinds/apm-python/pull/633))
+- Fixed function signature ([#634](https://github.com/solarwinds/apm-python/pull/634))
+- Fixed sampling/response time metrics descriptions ([#639](https://github.com/solarwinds/apm-python/pull/639), [#640](https://github.com/solarwinds/apm-python/pull/640))
+- Updated Verify Install CI/CD, requirements for system-metrics ([#629](https://github.com/solarwinds/apm-python/pull/629), [#638](https://github.com/solarwinds/apm-python/pull/638), [#641](https://github.com/solarwinds/apm-python/pull/641))
+- Upgraded to OpenTelemetry 1.33.1/0.54b1 ([#644](https://github.com/solarwinds/apm-python/pull/644))
+- Changed `psutil` dependency ([#638](https://github.com/solarwinds/apm-python/pull/638))
+
+### Removed
+- Removed system-metrics default instrumentation in k8s ([#642](https://github.com/solarwinds/apm-python/pull/642))
+- Removed `psutil` dependency ([#641](https://github.com/solarwinds/apm-python/pull/641))
 
 ## [4.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.0.0) - 2025-04-29
 

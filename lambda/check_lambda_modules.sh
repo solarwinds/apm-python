@@ -39,9 +39,7 @@ fi
 
 # These packages also follow PEP 420 better
 expected_otel_files_pep420="./python/opentelemetry/exporter/otlp/proto/common/version/__init__.py
-./python/opentelemetry/exporter/otlp/proto/grpc/version/__init__.py
 ./python/opentelemetry/exporter/otlp/proto/http/version/__init__.py
-./python/opentelemetry/exporter/otlp/version/__init__.py
 ./python/opentelemetry/sdk/version/__init__.py"
 found_otel_files_pep420=$(find ./python/opentelemetry/exporter ./python/opentelemetry/sdk -regextype sed -regex ".*/version/__init__.py" | sort -k1)
 if [[ ! "$found_otel_files_pep420" =~ $expected_otel_files_pep420 ]]; then

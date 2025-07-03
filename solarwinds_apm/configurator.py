@@ -9,7 +9,7 @@
 import logging
 import math
 import os
-from typing import Dict, Optional, Type, Union
+from typing import Optional, Union
 
 from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
@@ -87,12 +87,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         super().__init__()
         self.apm_config = SolarWindsApmConfig()
 
-    # TODO rm disable when Python 3.8 dropped
-    # pylint: disable=deprecated-typing-alias
     def _swap_legacy_span_exporter(
         self,
-        span_exporters: Dict[str, Type[SpanExporter]],
-    ) -> Dict:
+        span_exporters: dict[str, type[SpanExporter]],
+    ) -> dict:
         """Intermediary helper to swap legacy span exporter, if configured, with an OTLP exporter if not already configured."""
         if "solarwinds_exporter" in span_exporters:
             logger.warning(
@@ -209,11 +207,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self._configure_propagator()
         self._configure_response_propagator()
 
-    # TODO rm disable when Python 3.8 dropped
-    # pylint: disable=consider-alternative-union-syntax,deprecated-typing-alias
+    # TODO rm disable when Python 3.9 dropped
+    # pylint: disable=consider-alternative-union-syntax
     def _custom_init_tracing(
         self,
-        exporters: Dict[str, Type[SpanExporter]],
+        exporters: dict[str, type[SpanExporter]],
         id_generator: Optional[IdGenerator] = None,
         sampler: Optional[Sampler] = None,
         resource: Optional[Resource] = None,
@@ -239,8 +237,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
     def _custom_init_metrics(
         self,
-        exporters_or_readers: Dict[
-            str, Union[Type[MetricExporter], Type[MetricReader]]
+        exporters_or_readers: dict[
+            str, Union[type[MetricExporter], type[MetricReader]]
         ],
         resource: Optional[Resource] = None,
     ):
