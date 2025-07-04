@@ -4,7 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-4.1.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-4.2.0...HEAD)
+
+## [4.2.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.2.0) - 2025-07-04
+
+### Changed
+
+- Updated default histogram aggregation to exponential ([#650](https://github.com/solarwinds/apm-python/pull/650))
+- Upgraded to OTel Python 1.34.1/0.55b1 ([#657](https://github.com/solarwinds/apm-python/pull/657))
+- Removed unnecessary try-except when auto-instrumentation handles all exceptions ([#660](https://github.com/solarwinds/apm-python/pull/660))
+- Updated pylint max-positional-arguments ([#661](https://github.com/solarwinds/apm-python/pull/661))
 
 ## [4.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.1.0) - 2025-05-21
 
