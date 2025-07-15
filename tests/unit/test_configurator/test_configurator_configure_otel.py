@@ -5,12 +5,90 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 import os
+import uuid
 
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
 )
+from opentelemetry.sdk.resources import Resource
 
 from solarwinds_apm import configurator
+
+
+class TestConfiguratorCreateApmResource:
+    def test_create_apm_resource_basic(self, mocker, mock_apmconfig_enabled):
+        mocker.patch(
+            "solarwinds_apm.configurator.__version__",
+            new="1.2.3",
+        )
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator.apm_config = mock_apmconfig_enabled
+        result = test_configurator._create_apm_resource()
+
+        assert result.attributes["sw.apm.version"] == "1.2.3"
+        assert result.attributes["sw.data.module"] == "apm"
+        assert result.attributes["service.name"] == "foo-service"
+        assert "service.instance.id" in result.attributes
+        instance_id = result.attributes["service.instance.id"]
+        assert isinstance(instance_id, str)
+        # Should not raise ValueError if valid UUID
+        uuid.UUID(instance_id)
+
+    def test_create_apm_resource_with_existing_instance_id_use_existing(self, mocker, mock_apmconfig_enabled):
+        mocker.patch(
+            "solarwinds_apm.configurator.__version__",
+            new="1.2.3",
+        )
+        existing_instance_id = "existing-instance-id"
+        # Mock return of Resource.create like a ResourceDetector set service.instance.id
+        mock_initial_resource = Resource.create({
+            "sw.apm.version": "1.2.3",
+            "sw.data.module": "apm",
+            "service.name": "foo-service",
+            "service.instance.id": existing_instance_id,
+        })
+        mock_resource_create = mocker.patch(
+            "solarwinds_apm.configurator.Resource.create",
+            return_value=mock_initial_resource,
+        )
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator.apm_config = mock_apmconfig_enabled
+        result = test_configurator._create_apm_resource()
+
+        assert result.attributes["service.instance.id"] == existing_instance_id
+        mock_resource_create.assert_called_once_with({
+            "sw.apm.version": "1.2.3",
+            "sw.data.module": "apm",
+            "service.name": "foo-service",
+        })
+
+    def test_create_apm_resource_without_existing_instance_id_generate_new(self, mocker, mock_apmconfig_enabled):
+        mocker.patch(
+            "solarwinds_apm.configurator.__version__",
+            new="1.2.3",
+        )
+        mock_uuid = "test-uuid-value"
+        mock_uuid4 = mocker.patch(
+            "solarwinds_apm.configurator.uuid.uuid4",
+            return_value=mock_uuid,
+        )
+        # Mock return of Resource.create like no resource detectors set instance ID
+        mock_initial_resource = Resource.create({
+            "sw.apm.version": "1.2.3",
+            "sw.data.module": "apm",
+            "service.name": "foo-service",
+        })
+        mocker.patch(
+            "solarwinds_apm.configurator.Resource.create",
+            return_value=mock_initial_resource,
+        )
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator.apm_config = mock_apmconfig_enabled
+        result = test_configurator._create_apm_resource()
+
+        assert result.attributes["service.instance.id"] == str(mock_uuid)
+        mock_uuid4.assert_called_once()
+
 
 class TestConfiguratorConfigureOtelComponents:
     def helper_test_configure_otel_components_logs_enabled(
