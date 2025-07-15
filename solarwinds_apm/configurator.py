@@ -9,6 +9,7 @@
 import logging
 import math
 import os
+import uuid
 from typing import Optional, Union
 
 from opentelemetry import trace
@@ -170,6 +171,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 "sw.apm.version": __version__,
                 "sw.data.module": "apm",
                 "service.name": self.apm_config.service_name,
+                "service.instance.id": str(uuid.uuid4()),
             }
         )
         self._custom_init_tracing(
