@@ -127,8 +127,9 @@ class TestConfiguratorConfigureOtelComponents:
             return_value=mock_apm_sampler,
         )
         mock_resource = mocker.Mock()
-        mocker.patch(
-            "solarwinds_apm.configurator.Resource.create",
+        mocker.patch.object(
+            configurator.SolarWindsConfigurator,
+            "_create_apm_resource",
             return_value=mock_resource,
         )
         test_configurator = configurator.SolarWindsConfigurator()
@@ -323,8 +324,9 @@ class TestConfiguratorConfigureOtelComponents:
             return_value=mock_apm_sampler,
         )
         mock_resource = mocker.Mock()
-        mocker.patch(
-            "solarwinds_apm.configurator.Resource.create",
+        mocker.patch.object(
+            configurator.SolarWindsConfigurator,
+            "_create_apm_resource",
             return_value=mock_resource,
         )
         test_configurator = configurator.SolarWindsConfigurator()
@@ -369,8 +371,9 @@ class TestConfiguratorConfigureOtelComponents:
             return_value=mock_apm_sampler,
         )
         mock_resource = mocker.Mock()
-        mocker.patch(
-            "solarwinds_apm.configurator.Resource.create",
+        mocker.patch.object(
+            configurator.SolarWindsConfigurator,
+            "_create_apm_resource",
             return_value=mock_resource,
         )
         mocker.patch(
