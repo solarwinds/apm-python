@@ -9,6 +9,7 @@
 import logging
 import math
 import os
+import uuid
 from typing import Optional, Union
 
 from opentelemetry import trace
@@ -136,6 +137,25 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
         return span_exporters
 
+    def _create_apm_resource(self) -> Resource:
+        """Helper to create new OTel Resource for telemetry providers"""
+        apm_resource = Resource.create(
+            {
+                "sw.apm.version": __version__,
+                "sw.data.module": "apm",
+                "service.name": self.apm_config.service_name,
+            }
+        )
+        # Prioritize service.instance.id set by any Resource Detectors
+        updated_apm_resource = apm_resource.merge(
+            Resource(
+                {"service.instance.id": str(uuid.uuid4())}
+                if "service.instance.id" not in apm_resource.attributes
+                else {}
+            )
+        )
+        return updated_apm_resource
+
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OTel components"""
         if not self.apm_config.agent_enabled:
@@ -165,13 +185,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_sampler = ParentBasedSwSampler(
             self.apm_config,
         )
-        apm_resource = Resource.create(
-            {
-                "sw.apm.version": __version__,
-                "sw.data.module": "apm",
-                "service.name": self.apm_config.service_name,
-            }
-        )
+        apm_resource = self._create_apm_resource()
+
         self._custom_init_tracing(
             exporters=span_exporters,
             id_generator=kwargs.get("id_generator"),
