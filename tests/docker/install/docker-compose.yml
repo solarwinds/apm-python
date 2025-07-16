@@ -217,9 +217,16 @@ services:
   # Python 3.13
   #--------------------------------------------------------------------
 
-  py3.13-install-amazon2023:
-    hostname: "py3.13-amazon2023"
+  py3.13-install-amazon2023-arm64:
+    hostname: "py3.13-amazon2023-arm64"
     image: "amazon/aws-lambda-python:3.13-arm64"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.13-install-amazon2023-x86-64:
+    hostname: "py3.13-amazon2023-x86-64"
+    image: "amazon/aws-lambda-python:3.13-x86-64"
     << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
