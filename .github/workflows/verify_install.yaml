@@ -128,7 +128,7 @@ jobs:
           - hostname: py3.13-amazon2023-arm64
             image: amazon/aws-lambda-python:3.13-arm64
           - hostname: py3.13-amazon2023-x86-64
-            image: amazon/aws-lambda-python:3.13-x86-64
+            image: amazon/aws-lambda-python:3.13-x86_64
           - hostname: py3.13-debian11
             image: python:3.13-bullseye
           - hostname: py3.13-debian12
