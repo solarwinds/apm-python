@@ -174,7 +174,7 @@ jobs:
       image: "${{ matrix.image }}"
       options: --hostname "${{ matrix.hostname }}"
     steps:
-      - if: contains(matrix.image, 'amazonlinux')
+      - if: contains(matrix.image, 'amazonlinux') || contains(matrix.image, 'aws-lambda-python')
         name: Install AmazonLinux deps to use checkout
         run: dnf install -y tar gzip 
       - uses: actions/checkout@v4
