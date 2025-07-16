@@ -211,3 +211,43 @@ services:
     << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
+
+
+  #--------------------------------------------------------------------
+  # Python 3.13
+  #--------------------------------------------------------------------
+
+  py3.13-install-amazon2023:
+    hostname: "py3.13-amazon2023"
+    image: "amazon/aws-lambda-python:3.13-arm64"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.13-install-debian11:
+    hostname: "py3.13-debian11"
+    image: "python:3.13-bullseye"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.13-install-debian12:
+    hostname: "py3.13-debian12"
+    image: "python:3.13-bookworm"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.13-install-alpine3.19:
+    hostname: "py3.13-alpine3.19"
+    image: "python:3.13-alpine3.19"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.13-install-alpine3.20:
+    hostname: "py3.13-alpine3.20"
+    image: "python:3.13-alpine3.20"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
