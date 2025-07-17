@@ -69,6 +69,12 @@ jobs:
           - py3.12-alpine3.20
           - py3.12-debian11
           - py3.12-debian12
+          - py3.13-amazon2023-arm64
+          - py3.13-amazon2023-x86-64
+          - py3.13-debian11
+          - py3.13-debian12
+          - py3.13-alpine3.19
+          - py3.13-alpine3.20
         arch:
           - x64
           - arm64
@@ -119,8 +125,20 @@ jobs:
             image: python:3.12-bullseye
           - hostname: py3.12-debian12
             image: python:3.12-bookworm
-        # Note: JavaScript Actions (checkout) in Alpine only supported in x64
-        exclude:         
+          - hostname: py3.13-amazon2023-arm64
+            image: amazon/aws-lambda-python:3.13-arm64
+          - hostname: py3.13-amazon2023-x86-64
+            image: amazon/aws-lambda-python:3.13-x86_64
+          - hostname: py3.13-debian11
+            image: python:3.13-bullseye
+          - hostname: py3.13-debian12
+            image: python:3.13-bookworm
+          - hostname: py3.13-alpine3.19
+            image: python:3.13-alpine3.19
+          - hostname: py3.13-alpine3.20
+            image: python:3.13-alpine3.20
+        exclude:
+          # Note: JavaScript Actions (checkout) in Alpine only supported in x64
           - hostname: py3.9-alpine3.12
             arch: arm64
           - hostname: py3.9-alpine3.13
@@ -143,13 +161,22 @@ jobs:
             arch: arm64
           - hostname: py3.12-alpine3.20
             arch: arm64
+          - hostname: py3.13-alpine3.19
+            arch: arm64
+          - hostname: py3.13-alpine3.20
+            arch: arm64
+          # Mutual excludes for arch-specific Amazon hosts
+          - hostname: py3.13-amazon2023-arm64
+            arch: x64
+          - hostname: py3.13-amazon2023-x86-64
+            arch: arm64
     container:
       image: "${{ matrix.image }}"
       options: --hostname "${{ matrix.hostname }}"
     steps:
-      - if: contains(matrix.image, 'amazonlinux')
+      - if: contains(matrix.image, 'amazonlinux') || contains(matrix.image, 'aws-lambda-python')
         name: Install AmazonLinux deps to use checkout
-        run: yum install -y tar gzip 
+        run: dnf install -y tar gzip 
       - uses: actions/checkout@v4
       - name: Setup and run install test
         working-directory: ./tests/docker/install
