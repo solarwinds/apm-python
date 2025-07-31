@@ -23,10 +23,6 @@ from solarwinds_apm.oboe.configuration import Configuration
 from solarwinds_apm.oboe.sampler import Sampler
 
 REQUEST_TIMEOUT = 10  # 10s
-RETRY_INITIAL_TIMEOUT = 0.5  # 500ms
-RETRY_MAX_TIMEOUT = 60  # 60s
-RETRY_MAX_ATTEMPTS = 20
-MULTIPLIER = 1.5
 
 DAEMON_THREAD_JOIN_TIMEOUT = 10  # 10s
 REQUEST_INTERVAL = 60  # 60s
