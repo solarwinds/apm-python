@@ -4,12 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-4.2.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-4.3.0...HEAD)
+
+## [4.3.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.3.0) - 2025-08-06
+
+### Changed
+- Updated configurator Resource creation with `service.instance.id` ([#666](https://github.com/solarwinds/apm-python/pull/666))
+- Updated Lambda layer tags and testing for Python 3.13 ([#667](https://github.com/solarwinds/apm-python/pull/667))
+- Upgraded to OTel Python 1.35.0/0.56b0 ([#668](https://github.com/solarwinds/apm-python/pull/668))
+- Cleaned up constants ([#669](https://github.com/solarwinds/apm-python/pull/669))
+- Upgraded to OTel Python 1.36.0/0.57b0 ([#672](https://github.com/solarwinds/apm-python/pull/672))
 
 ## [4.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.2.0) - 2025-07-15
 
 ### Changed
-
 - Updated default histogram aggregation to exponential ([#650](https://github.com/solarwinds/apm-python/pull/650))
 - Upgraded to OTel Python 1.34.1/0.55b1 ([#657](https://github.com/solarwinds/apm-python/pull/657))
 - Removed unnecessary try-except when auto-instrumentation handles all exceptions ([#660](https://github.com/solarwinds/apm-python/pull/660))
