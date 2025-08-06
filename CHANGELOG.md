@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-4.3.0...HEAD)
 
-## [4.3.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.3.0) - 2025-08-06
+## [4.3.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.3.0) - 2025-08-07
 
 ### Changed
 - Updated configurator Resource creation with `service.instance.id` ([#666](https://github.com/solarwinds/apm-python/pull/666))
