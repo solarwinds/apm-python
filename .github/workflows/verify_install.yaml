@@ -46,7 +46,6 @@ jobs:
     strategy:
       matrix:
         hostname:
-          - py3.9-alpine3.12
           - py3.9-alpine3.13
           - py3.9-alpine3.16
           - py3.9-alpine3.17
@@ -79,8 +78,6 @@ jobs:
           - x64
           - arm64
         include:
-          - hostname: py3.9-alpine3.12
-            image: python:3.9-alpine3.12
           - hostname: py3.9-alpine3.13
             image: python:3.9-alpine3.13
           - hostname: py3.9-alpine3.16
@@ -139,8 +136,6 @@ jobs:
             image: python:3.13-alpine3.20
         exclude:
           # Note: JavaScript Actions (checkout) in Alpine only supported in x64
-          - hostname: py3.9-alpine3.12
-            arch: arm64
           - hostname: py3.9-alpine3.13
             arch: arm64
           - hostname: py3.9-alpine3.16
