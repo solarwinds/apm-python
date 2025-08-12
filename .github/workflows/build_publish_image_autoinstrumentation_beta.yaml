@@ -19,7 +19,7 @@ jobs:
   docker_hub:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Read solarwinds_apm version requirement
         run: echo VERSION=$(head -n 1 image/requirements-nodeps-beta.txt | cut -d '=' -f3) >> $GITHUB_ENV
@@ -100,7 +100,7 @@ jobs:
   ghcr_io:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Read solarwinds_apm version requirement
         run: echo VERSION=$(head -n 1 image/requirements-nodeps-beta.txt | cut -d '=' -f3) >> $GITHUB_ENV
