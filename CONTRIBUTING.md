@@ -48,7 +48,8 @@ Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs i
 
 1. Create and run a Docker build container as described above.
 2. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.9: `make tox OPTIONS="-e py39-test"`.
-3. (WARNING: slow!) To run all tests for all supported Python environments, as well as linting and formatting: `make tox`
+3. To run tests specific to Lambda instrumentation in Python 3.13: `make tox OPTIONS="-e py313-lambda"`.
+4. (WARNING: slow!) To run all tests for all supported Python environments, as well as linting and formatting: `make tox`
 
 Other regular `tox` arguments can be included in `OPTIONS`. Some examples:
 
@@ -77,6 +78,8 @@ make tox OPTIONS="-e py312-lint -- --check-only"
 ./run_docker_dev.sh
 make tox OPTIONS="-e py39-lint"
 ```
+
+`ruff` is also available to fix formatting: `make tox OPTIONS="-e ruff"`.
 
 Remotely, CodeQL can be run on GitHub with the [CodeQL Analysis](https://github.com/solarwinds/apm-python/actions/workflows/codeql_analysis.yaml) workflow.
 
