@@ -4,20 +4,11 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+
 def get_logging_mocks(mocker):
     mock_logger = mocker.Mock()
-    mock_logger.configure_mock(
-        **{
-            "addHandler": mocker.Mock()
-        }
-    )
+    mock_logger.configure_mock(**{"addHandler": mocker.Mock()})
     mock_get_logger = mocker.Mock(return_value=mock_logger)
-    mock_logging = mocker.patch(
-        "solarwinds_apm.configurator.logging"
-    )
-    mock_logging.configure_mock(
-        **{
-            "getLogger": mock_get_logger
-        }
-    )
+    mock_logging = mocker.patch("solarwinds_apm.configurator.logging")
+    mock_logging.configure_mock(**{"getLogger": mock_get_logger})
     return mock_logging

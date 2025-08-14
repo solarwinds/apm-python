@@ -4,9 +4,10 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+
 def get_trace_mocks(mocker):
     mock_add_span_processor = mocker.Mock()
-  
+
     mock_attributes = mocker.PropertyMock()
     mock_attributes.return_value = {"foo": "bar"}
     mock_resource = mocker.PropertyMock()
@@ -22,9 +23,7 @@ def get_trace_mocks(mocker):
             "get_tracer": mock_get_tracer,
         }
     )
-    mock_get_tracer_provider = mocker.Mock(
-        return_value=mock_tracer_provider
-    )
+    mock_get_tracer_provider = mocker.Mock(return_value=mock_tracer_provider)
     mock_set_tracer_provider = mocker.Mock()
     mock_noop_tracer_provider = mocker.Mock()
     mock_trace = mocker.patch(

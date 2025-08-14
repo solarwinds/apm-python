@@ -6,13 +6,14 @@
 
 from solarwinds_apm.semconv.trace import get_url_attrs
 
+
 class Test_semconv_trace:
     def test_get_url_attrs__new_path(self):
         attributes = {
             "url.scheme": "foo",
             "server.address": "bar",
             "server.port": "baz",
-            "url.path": "/qux"
+            "url.path": "/qux",
         }
         scheme, host, port, target = get_url_attrs(attributes)
         assert scheme == "foo"
@@ -25,7 +26,7 @@ class Test_semconv_trace:
             "url.scheme": "foo",
             "server.address": "bar",
             "server.port": "baz",
-            "url.query": "/qux"
+            "url.query": "/qux",
         }
         scheme, host, port, target = get_url_attrs(attributes)
         assert scheme == "foo"
@@ -38,7 +39,7 @@ class Test_semconv_trace:
             "http.scheme": "foo",
             "net.host.name": "bar",
             "net.host.port": "baz",
-            "http.target": "/qux"
+            "http.target": "/qux",
         }
         scheme, host, port, target = get_url_attrs(attributes)
         assert scheme == "foo"
@@ -63,7 +64,7 @@ class Test_semconv_trace:
             "http.scheme": "OLD",
             "net.host.name": "OLD",
             "net.host.port": "OLD",
-            "http.target": "/OLD"
+            "http.target": "/OLD",
         }
         scheme, host, port, target = get_url_attrs(attributes)
         assert scheme == "foo"

@@ -7,7 +7,7 @@
 from solarwinds_apm.traceoptions import XTraceOptions
 
 
-class TestXTraceOptions():
+class TestXTraceOptions:
     def test_init_no_headers_defaults(self):
         xto = XTraceOptions()
         assert xto.ignored == []
@@ -90,11 +90,13 @@ class TestXTraceOptions():
 
     def test_init_swkeys_containing_semicolon_ignore_after(self):
         xto = XTraceOptions(
-            "sw-keys=check-id:check-1013,website-id;booking-demo" ,
+            "sw-keys=check-id:check-1013,website-id;booking-demo",
             "bar",
         )
         assert xto.ignored == ["booking-demo"]
-        assert xto.options_header == "sw-keys=check-id:check-1013,website-id;booking-demo"
+        assert (
+            xto.options_header == "sw-keys=check-id:check-1013,website-id;booking-demo"
+        )
         assert xto.signature == "bar"
         assert xto.custom_kvs == {}
         assert xto.sw_keys == "check-id:check-1013,website-id"
@@ -114,10 +116,7 @@ class TestXTraceOptions():
         assert xto.include_response
 
     def test_init_custom_key_match_stored_in_options_header_and_custom_kvs_strip(self):
-        xto = XTraceOptions(
-            "custom-awesome-key=   foo  ",
-            "bar"
-        )
+        xto = XTraceOptions("custom-awesome-key=   foo  ", "bar")
         assert xto.ignored == []
         assert xto.options_header == "custom-awesome-key=   foo  "
         assert xto.signature == "bar"
@@ -158,7 +157,9 @@ class TestXTraceOptions():
             "bar",
         )
         assert xto.ignored == ["custom- key", "custom-key 7"]
-        assert xto.options_header == "custom- key=this_is_bad;custom-key 7=this_is_bad_too"
+        assert (
+            xto.options_header == "custom- key=this_is_bad;custom-key 7=this_is_bad_too"
+        )
         assert xto.signature == "bar"
         assert xto.custom_kvs == {}
         assert xto.sw_keys == ""
@@ -205,7 +206,10 @@ class TestXTraceOptions():
             "bar",
         )
         assert xto.ignored == []
-        assert xto.options_header == "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo"
+        assert (
+            xto.options_header
+            == "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo"
+        )
         assert xto.signature == "bar"
         assert xto.custom_kvs == {}
         assert xto.sw_keys == "check-id:check-1013,website-id:booking-demo"
@@ -233,7 +237,10 @@ class TestXTraceOptions():
             "bar",
         )
         assert xto.ignored == []
-        assert xto.options_header == "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;ts=1564432370"
+        assert (
+            xto.options_header
+            == "trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;ts=1564432370"
+        )
         assert xto.signature == "bar"
         assert xto.custom_kvs == {}
         assert xto.sw_keys == "check-id:check-1013,website-id:booking-demo"
@@ -247,7 +254,10 @@ class TestXTraceOptions():
             "bar",
         )
         assert xto.ignored == ["foo"]
-        assert xto.options_header == " trigger-trace ;  custom-something=value; custom-OtherThing = other val ;  sw-keys = 029734wr70:9wqj21,0d9j1   ; ts = 12345 ; foo = bar "
+        assert (
+            xto.options_header
+            == " trigger-trace ;  custom-something=value; custom-OtherThing = other val ;  sw-keys = 029734wr70:9wqj21,0d9j1   ; ts = 12345 ; foo = bar "
+        )
         assert xto.signature == "bar"
         assert xto.custom_kvs == {
             "custom-something": "value",
@@ -264,7 +274,10 @@ class TestXTraceOptions():
             "bar",
         )
         assert xto.ignored == ["foo"]
-        assert xto.options_header == ";foo=bar;;;custom-something=value_thing;;sw-keys=02973r70:1b2a3;;;;custom-key=val;ts=12345;;;;;;;trigger-trace;;;"
+        assert (
+            xto.options_header
+            == ";foo=bar;;;custom-something=value_thing;;sw-keys=02973r70:1b2a3;;;;custom-key=val;ts=12345;;;;;;;trigger-trace;;;"
+        )
         assert xto.signature == "bar"
         assert xto.custom_kvs == {
             "custom-something": "value_thing",
@@ -281,7 +294,10 @@ class TestXTraceOptions():
             "bar",
         )
         assert xto.ignored == []
-        assert xto.options_header == "ts=123;custom-something=keep_this_0;sw-keys=keep_this;sw-keys=029734wrqj21,0d9;custom-something=otherval;ts=456"
+        assert (
+            xto.options_header
+            == "ts=123;custom-something=keep_this_0;sw-keys=keep_this;sw-keys=029734wrqj21,0d9;custom-something=otherval;ts=456"
+        )
         assert xto.signature == "bar"
         assert xto.custom_kvs == {
             "custom-something": "keep_this_0",
@@ -297,7 +313,10 @@ class TestXTraceOptions():
             "bar",
         )
         assert xto.ignored == []
-        assert xto.options_header == "trigger-trace;custom-something=value_thing=4;custom-OtherThing=other val;sw-keys=g049sj345=0spd"
+        assert (
+            xto.options_header
+            == "trigger-trace;custom-something=value_thing=4;custom-OtherThing=other val;sw-keys=g049sj345=0spd"
+        )
         assert xto.signature == "bar"
         assert xto.custom_kvs == {
             "custom-something": "value_thing=4",
@@ -331,7 +350,10 @@ class TestXTraceOptions():
             "bar",
         )
         assert xto.ignored == ["1", "2", "3", "4", "5"]
-        assert xto.options_header == ";trigger-trace;custom-something=value_thing;sw-keys=02973r70:9wqj21,0d9j1;1;2;3;4;5;=custom-key=val?;="
+        assert (
+            xto.options_header
+            == ";trigger-trace;custom-something=value_thing;sw-keys=02973r70:9wqj21,0d9j1;1;2;3;4;5;=custom-key=val?;="
+        )
         assert xto.signature == "bar"
         assert xto.custom_kvs == {
             "custom-something": "value_thing",

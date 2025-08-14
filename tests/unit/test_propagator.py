@@ -13,37 +13,28 @@ from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_KEY
 from solarwinds_apm.propagator import SolarWindsPropagator
 
 
-class TestSolarWindsPropagator():
-
+class TestSolarWindsPropagator:
     def test_extract_new_context_no_xtraceoptions(self):
         mock_carrier = dict()
         result = SolarWindsPropagator().extract(mock_carrier)
         assert isinstance(result, Context)
 
     def test_extract_new_context_xtraceoptions_and_signature(self):
-        mock_carrier = {
-            "x-trace-options": "foo",
-            "x-trace-options-signature": "bar"
-        }
+        mock_carrier = {"x-trace-options": "foo", "x-trace-options-signature": "bar"}
         result = SolarWindsPropagator().extract(mock_carrier)
         actual_xto = result.get(INTL_SWO_X_OPTIONS_KEY)
         assert actual_xto.options_header == "foo"
         assert actual_xto.signature == "bar"
 
     def test_extract_new_context_no_xtraceoptions_yes_signature(self):
-        mock_carrier = {
-            "x-trace-options-signature": "bar"
-        }
+        mock_carrier = {"x-trace-options-signature": "bar"}
         result = SolarWindsPropagator().extract(mock_carrier)
         actual_xto = result.get(INTL_SWO_X_OPTIONS_KEY)
         assert actual_xto.options_header == ""
         assert actual_xto.signature == "bar"
 
     def test_extract_existing_context(self):
-        mock_carrier = {
-            "x-trace-options": "foo",
-            "x-trace-options-signature": "bar"
-        }
+        mock_carrier = {"x-trace-options": "foo", "x-trace-options-signature": "bar"}
         mock_otel_context = {
             "foo_key": "foo_value",
             "sw_xtraceoptions": "dont_know_why_this_here_but_will_be_replaced",
@@ -77,13 +68,9 @@ class TestSolarWindsPropagator():
             )
         mock_get_current_span = mocker.Mock()
         mock_get_current_span.configure_mock(
-            **{
-                "get_span_context.return_value": mock_get_span_context
-            }
+            **{"get_span_context.return_value": mock_get_span_context}
         )
-        mock_trace = mocker.patch(
-            "solarwinds_apm.propagator.trace"
-        )
+        mock_trace = mocker.patch("solarwinds_apm.propagator.trace")
         mock_trace.configure_mock(
             **{
                 "get_current_span.return_value": mock_get_current_span,
@@ -97,11 +84,7 @@ class TestSolarWindsPropagator():
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
-        mock_setter.configure_mock(
-            **{
-                "set": mock_set
-            }
-        )
+        mock_setter.configure_mock(**{"set": mock_set})
         SolarWindsPropagator().inject(
             mock_carrier,
             mock_context,
@@ -117,52 +100,48 @@ class TestSolarWindsPropagator():
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
-        mock_setter.configure_mock(
-            **{
-                "set": mock_set
-            }
-        )
+        mock_setter.configure_mock(**{"set": mock_set})
         SolarWindsPropagator().inject(
             mock_carrier,
             mock_context,
             mock_setter,
         )
         # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
-        mock_set.assert_has_calls([
-            call(
-                mock_carrier,
-                "tracestate",
-                TraceState([("sw", "1000100010001000-01")]).to_header(),
-            ),
-        ])
+        mock_set.assert_has_calls(
+            [
+                call(
+                    mock_carrier,
+                    "tracestate",
+                    TraceState([("sw", "1000100010001000-01")]).to_header(),
+                ),
+            ]
+        )
 
     def test_inject_existing_tracestate_no_sw(self, mocker):
         """sw added to start, foo=bar kept, xtrace_options_response removed"""
         self.mock_otel_context(mocker, True)
-        mock_carrier = {
-            "tracestate": "xtrace_options_response=abc123,foo=bar"
-        }
+        mock_carrier = {"tracestate": "xtrace_options_response=abc123,foo=bar"}
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
-        mock_setter.configure_mock(
-            **{
-                "set": mock_set
-            }
-        )
+        mock_setter.configure_mock(**{"set": mock_set})
         SolarWindsPropagator().inject(
             mock_carrier,
             mock_context,
             mock_setter,
         )
         # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
-        mock_set.assert_has_calls([
-            call(
-                mock_carrier,
-                "tracestate",
-                TraceState([("sw", "1000100010001000-01"), ("foo", "bar")]).to_header(),
-            ),
-        ])
+        mock_set.assert_has_calls(
+            [
+                call(
+                    mock_carrier,
+                    "tracestate",
+                    TraceState(
+                        [("sw", "1000100010001000-01"), ("foo", "bar")]
+                    ).to_header(),
+                ),
+            ]
+        )
 
     def test_inject_existing_tracestate_existing_sw(self, mocker):
         """sw updated and moved to start, foo=bar kept, xtrace_options_response removed"""
@@ -173,24 +152,24 @@ class TestSolarWindsPropagator():
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
-        mock_setter.configure_mock(
-            **{
-                "set": mock_set
-            }
-        )
+        mock_setter.configure_mock(**{"set": mock_set})
         SolarWindsPropagator().inject(
             mock_carrier,
             mock_context,
             mock_setter,
         )
         # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
-        mock_set.assert_has_calls([
-            call(
-                mock_carrier,
-                "tracestate",
-                TraceState([("sw", "1000100010001000-01"), ("foo", "bar")]).to_header(),
-            ),
-        ])
+        mock_set.assert_has_calls(
+            [
+                call(
+                    mock_carrier,
+                    "tracestate",
+                    TraceState(
+                        [("sw", "1000100010001000-01"), ("foo", "bar")]
+                    ).to_header(),
+                ),
+            ]
+        )
 
     def test_inject_existing_tracestate_dict_no_stringvalue(self, mocker):
         """sw added to start, foo=bar kept, xtrace_options_response removed"""
@@ -203,24 +182,22 @@ class TestSolarWindsPropagator():
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
-        mock_setter.configure_mock(
-            **{
-                "set": mock_set
-            }
-        )
+        mock_setter.configure_mock(**{"set": mock_set})
         SolarWindsPropagator().inject(
             mock_carrier,
             mock_context,
             mock_setter,
         )
         # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
-        mock_set.assert_has_calls([
-            call(
-                mock_carrier,
-                "tracestate",
-                TraceState([("sw", "1000100010001000-01")]).to_header(),
-            ),
-        ])
+        mock_set.assert_has_calls(
+            [
+                call(
+                    mock_carrier,
+                    "tracestate",
+                    TraceState([("sw", "1000100010001000-01")]).to_header(),
+                ),
+            ]
+        )
 
     def test_inject_existing_tracestate_dict_no_sw(self, mocker):
         """sw added to start, foo=bar kept, xtrace_options_response removed"""
@@ -233,24 +210,24 @@ class TestSolarWindsPropagator():
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
-        mock_setter.configure_mock(
-            **{
-                "set": mock_set
-            }
-        )
+        mock_setter.configure_mock(**{"set": mock_set})
         SolarWindsPropagator().inject(
             mock_carrier,
             mock_context,
             mock_setter,
         )
         # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
-        mock_set.assert_has_calls([
-            call(
-                mock_carrier,
-                "tracestate",
-                TraceState([("sw", "1000100010001000-01"), ("foo", "bar")]).to_header(),
-            ),
-        ])
+        mock_set.assert_has_calls(
+            [
+                call(
+                    mock_carrier,
+                    "tracestate",
+                    TraceState(
+                        [("sw", "1000100010001000-01"), ("foo", "bar")]
+                    ).to_header(),
+                ),
+            ]
+        )
 
     def test_inject_existing_tracestate_dict_existing_sw(self, mocker):
         """sw updated and moved to start, foo=bar kept, xtrace_options_response removed"""
@@ -263,21 +240,21 @@ class TestSolarWindsPropagator():
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
-        mock_setter.configure_mock(
-            **{
-                "set": mock_set
-            }
-        )
+        mock_setter.configure_mock(**{"set": mock_set})
         SolarWindsPropagator().inject(
             mock_carrier,
             mock_context,
             mock_setter,
         )
         # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
-        mock_set.assert_has_calls([
-            call(
-                mock_carrier,
-                "tracestate",
-                TraceState([("sw", "1000100010001000-01"), ("foo", "bar")]).to_header(),
-            ),
-        ])
+        mock_set.assert_has_calls(
+            [
+                call(
+                    mock_carrier,
+                    "tracestate",
+                    TraceState(
+                        [("sw", "1000100010001000-01"), ("foo", "bar")]
+                    ).to_header(),
+                ),
+            ]
+        )

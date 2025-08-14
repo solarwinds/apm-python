@@ -6,8 +6,8 @@
 
 from solarwinds_apm.trace import ResponseTimeProcessor
 
-class TestResponseTimeProcessor:
 
+class TestResponseTimeProcessor:
     def get_mock_apm_config(
         self,
         mocker,
@@ -15,6 +15,7 @@ class TestResponseTimeProcessor:
         lambda_function_name="unused",
     ):
         mock_apm_config = mocker.Mock()
+
         def outer_side_effect(cnf_key):
             return outer_txn_retval
 
@@ -47,27 +48,14 @@ class TestResponseTimeProcessor:
         mock_spankind = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.SpanKind"
         )
-        mock_spankind.configure_mock(
-            **{
-                "SERVER": "foo"
-            }
-        )
+        mock_spankind.configure_mock(**{"SERVER": "foo"})
         mock_spanattributes = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.SpanAttributes"
         )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_METHOD": "http.method"
-            }
-        )
+        mock_spanattributes.configure_mock(**{"HTTP_METHOD": "http.method"})
         mock_span = mocker.Mock()
         mock_span.configure_mock(
-            **{
-                "kind": "foo",
-                "attributes": {
-                    "http.method": "bar"
-                }
-            }
+            **{"kind": "foo", "attributes": {"http.method": "bar"}}
         )
         processor = ResponseTimeProcessor(mocker.Mock())
         assert True == processor.is_span_http(mock_span)
@@ -76,27 +64,14 @@ class TestResponseTimeProcessor:
         mock_spankind = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.SpanKind"
         )
-        mock_spankind.configure_mock(
-            **{
-                "SERVER": "foo"
-            }
-        )
+        mock_spankind.configure_mock(**{"SERVER": "foo"})
         mock_spanattributes = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.SpanAttributes"
         )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_METHOD": "http.method"
-            }
-        )
+        mock_spanattributes.configure_mock(**{"HTTP_METHOD": "http.method"})
         mock_span = mocker.Mock()
         mock_span.configure_mock(
-            **{
-                "kind": "not-foo-hehe",
-                "attributes": {
-                    "http.method": "bar"
-                }
-            }
+            **{"kind": "not-foo-hehe", "attributes": {"http.method": "bar"}}
         )
         processor = ResponseTimeProcessor(mocker.Mock())
         assert False == processor.is_span_http(mock_span)
@@ -105,27 +80,14 @@ class TestResponseTimeProcessor:
         mock_spankind = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.SpanKind"
         )
-        mock_spankind.configure_mock(
-            **{
-                "SERVER": "foo"
-            }
-        )
+        mock_spankind.configure_mock(**{"SERVER": "foo"})
         mock_spanattributes = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.SpanAttributes"
         )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_METHOD": "http.method"
-            }
-        )
+        mock_spanattributes.configure_mock(**{"HTTP_METHOD": "http.method"})
         mock_span = mocker.Mock()
         mock_span.configure_mock(
-            **{
-                "kind": "foo",
-                "attributes": {
-                    "NOT.http.method.hehehehe": "bar"
-                }
-            }
+            **{"kind": "foo", "attributes": {"NOT.http.method.hehehehe": "bar"}}
         )
         processor = ResponseTimeProcessor(mocker.Mock())
         assert False == processor.is_span_http(mock_span)
@@ -134,26 +96,16 @@ class TestResponseTimeProcessor:
         mock_spankind = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.SpanKind"
         )
-        mock_spankind.configure_mock(
-            **{
-                "SERVER": "foo"
-            }
-        )
+        mock_spankind.configure_mock(**{"SERVER": "foo"})
         mock_spanattributes = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.SpanAttributes"
         )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_METHOD": "http.method"
-            }
-        )
+        mock_spanattributes.configure_mock(**{"HTTP_METHOD": "http.method"})
         mock_span = mocker.Mock()
         mock_span.configure_mock(
             **{
                 "kind": "not-foo-hehe",
-                "attributes": {
-                    "NOT.http.method.hehehehe": "bar"
-                }
+                "attributes": {"NOT.http.method.hehehehe": "bar"},
             }
         )
         processor = ResponseTimeProcessor(mocker.Mock())
@@ -163,19 +115,10 @@ class TestResponseTimeProcessor:
         mock_spanattributes = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.SpanAttributes"
         )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_STATUS_CODE": "http.status_code"
-            }
-        )
+        mock_spanattributes.configure_mock(**{"HTTP_STATUS_CODE": "http.status_code"})
         mock_span = mocker.Mock()
         mock_span.configure_mock(
-            **{
-                "kind": "foo",
-                "attributes": {
-                    "http.status_code": "foo"
-                }
-            }
+            **{"kind": "foo", "attributes": {"http.status_code": "foo"}}
         )
         processor = ResponseTimeProcessor(mocker.Mock())
         assert "foo" == processor.get_http_status_code(mock_span)
@@ -184,19 +127,10 @@ class TestResponseTimeProcessor:
         mock_spanattributes = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.SpanAttributes"
         )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_STATUS_CODE": "http.status_code"
-            }
-        )
+        mock_spanattributes.configure_mock(**{"HTTP_STATUS_CODE": "http.status_code"})
         mock_span = mocker.Mock()
         mock_span.configure_mock(
-            **{
-                "kind": "foo",
-                "attributes": {
-                    "NOT.http.status_code.muahaha": "foo"
-                }
-            }
+            **{"kind": "foo", "attributes": {"NOT.http.status_code.muahaha": "foo"}}
         )
         processor = ResponseTimeProcessor(mocker.Mock())
         assert 0 == processor.get_http_status_code(mock_span)
@@ -205,23 +139,11 @@ class TestResponseTimeProcessor:
         mock_statuscode = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.StatusCode"
         )
-        mock_statuscode.configure_mock(
-            **{
-                "ERROR": "foo"
-            }
-        )
+        mock_statuscode.configure_mock(**{"ERROR": "foo"})
         mock_span = mocker.Mock()
         mock_status = mocker.Mock()
-        mock_status.configure_mock(
-            **{
-                "status_code": "foo"
-            }
-        )
-        mock_span.configure_mock(
-            **{
-                "status": mock_status
-            }
-        )
+        mock_status.configure_mock(**{"status_code": "foo"})
+        mock_span.configure_mock(**{"status": mock_status})
         processor = ResponseTimeProcessor(mocker.Mock())
         assert True == processor.has_error(mock_span)
 
@@ -229,23 +151,11 @@ class TestResponseTimeProcessor:
         mock_statuscode = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.StatusCode"
         )
-        mock_statuscode.configure_mock(
-            **{
-                "ERROR": "foo"
-            }
-        )
+        mock_statuscode.configure_mock(**{"ERROR": "foo"})
         mock_span = mocker.Mock()
         mock_status = mocker.Mock()
-        mock_status.configure_mock(
-            **{
-                "status_code": "not-foo-hehehe"
-            }
-        )
-        mock_span.configure_mock(
-            **{
-                "status": mock_status
-            }
-        )
+        mock_status.configure_mock(**{"status_code": "not-foo-hehehe"})
+        mock_span.configure_mock(**{"status": mock_status})
         processor = ResponseTimeProcessor(mocker.Mock())
         assert False == processor.has_error(mock_span)
 
@@ -281,9 +191,12 @@ class TestResponseTimeProcessor:
             mocker,
             "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo",
         )
-        assert "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooo" == ResponseTimeProcessor(
-            mock_apm_config,
-        ).calculate_otlp_transaction_name("foo-span")
+        assert (
+            "foo-txn-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooo"
+            == ResponseTimeProcessor(
+                mock_apm_config,
+            ).calculate_otlp_transaction_name("foo-span")
+        )
 
     def test_calculate_otlp_transaction_name_env_lambda(self, mocker):
         mock_apm_config = self.get_mock_apm_config(
@@ -291,9 +204,12 @@ class TestResponseTimeProcessor:
             outer_txn_retval=None,
             lambda_function_name="foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo",
         )
-        assert "foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooo" == ResponseTimeProcessor(
-            mock_apm_config,
-        ).calculate_otlp_transaction_name("foo-span")
+        assert (
+            "foo-lambda-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooo"
+            == ResponseTimeProcessor(
+                mock_apm_config,
+            ).calculate_otlp_transaction_name("foo-span")
+        )
 
     def test_calculate_otlp_transaction_name_env_lambda_truncated(self, mocker):
         mock_apm_config = self.get_mock_apm_config(
@@ -321,9 +237,14 @@ class TestResponseTimeProcessor:
             outer_txn_retval=None,
             lambda_function_name=None,
         )
-        assert "foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooooo" == ResponseTimeProcessor(
-            mock_apm_config,
-        ).calculate_otlp_transaction_name("foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo")
+        assert (
+            "foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofooooo"
+            == ResponseTimeProcessor(
+                mock_apm_config,
+            ).calculate_otlp_transaction_name(
+                "foo-span-ffoooofofooooooofooofooooofofofofoooooofoooooooooffoffooooooffffofooooofffooooooofoooooffoofofoooooofffofooofoffoooofooofoooooooooooooofooffoooofofooofoooofoofooffooooofoofooooofoooooffoofffoffoooooofoooofoooffooffooofofooooooffffooofoooooofoooooofooofoooofoo"
+            )
+        )
 
     def test_calculate_otlp_transaction_name_empty(self, mocker):
         mock_apm_config = self.get_mock_apm_config(
@@ -381,7 +302,7 @@ class TestResponseTimeProcessor:
             **{
                 "__setitem__": mock_set,
                 "__delitem__": mock_del,
-                "get": mocker.Mock(return_value=get_retval)
+                "get": mocker.Mock(return_value=get_retval),
             }
         )
 
@@ -389,10 +310,7 @@ class TestResponseTimeProcessor:
         if missing_http_attrs:
             mock_basic_span.configure_mock(
                 **{
-                    "attributes": {
-                        "http.method": None,
-                        "TransactionName": "foo"
-                    },
+                    "attributes": {"http.method": None, "TransactionName": "foo"},
                 }
             )
         else:
@@ -400,34 +318,27 @@ class TestResponseTimeProcessor:
                 **{
                     "attributes": {
                         "http.method": "foo-method",
-                        "TransactionName": "foo"
+                        "TransactionName": "foo",
                     },
                 }
             )
-
 
         mock_get_meter = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.get_meter"
         )
         mock_meter = mocker.Mock()
         mock_get_meter.return_value = mock_meter
-        mock_histogram= mocker.Mock()
+        mock_histogram = mocker.Mock()
         mock_meter.create_histogram.return_value = mock_histogram
         mock_histogram.record = mocker.Mock()
 
-        return mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            mock_basic_span
+        return mock_txname_manager, mock_apm_config, mock_histogram, mock_basic_span
 
     def test_on_end_valid_local_parent_span(self, mocker):
         """Only scenario to skip OTLP metrics generation (not entry span)"""
-        mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            _ = self.patch_for_on_end(
-                mocker,
-            )
+        mock_txname_manager, mock_apm_config, mock_histogram, _ = self.patch_for_on_end(
+            mocker,
+        )
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -436,11 +347,7 @@ class TestResponseTimeProcessor:
                 "is_remote": False,
             }
         )
-        mock_span.configure_mock(
-            **{
-                "parent": mock_parent
-            }
-        )
+        mock_span.configure_mock(**{"parent": mock_parent})
 
         processor = ResponseTimeProcessor(
             mock_apm_config,
@@ -450,12 +357,9 @@ class TestResponseTimeProcessor:
         mock_histogram.record.assert_not_called()
 
     def test_on_end_valid_remote_parent_span(self, mocker):
-        mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            _ = self.patch_for_on_end(
-                mocker,
-            )
+        mock_txname_manager, mock_apm_config, mock_histogram, _ = self.patch_for_on_end(
+            mocker,
+        )
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -467,10 +371,7 @@ class TestResponseTimeProcessor:
         mock_span.configure_mock(
             **{
                 "parent": mock_parent,
-                "attributes": {
-                    "http.method": "foo-method",
-                    "TransactionName": "foo"
-                }
+                "attributes": {"http.method": "foo-method", "TransactionName": "foo"},
             }
         )
 
@@ -485,22 +386,19 @@ class TestResponseTimeProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': True,
-                        'http.status_code': 200,
-                        'http.method': 'foo-method',
-                        'sw.transaction': 'foo'
-                    }
+                        "sw.is_error": True,
+                        "http.status_code": 200,
+                        "http.method": "foo-method",
+                        "sw.transaction": "foo",
+                    },
                 )
             ]
         )
 
     def test_on_end_invalid_remote_parent_span(self, mocker):
-        mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            _ = self.patch_for_on_end(
-                mocker,
-            )
+        mock_txname_manager, mock_apm_config, mock_histogram, _ = self.patch_for_on_end(
+            mocker,
+        )
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -512,10 +410,7 @@ class TestResponseTimeProcessor:
         mock_span.configure_mock(
             **{
                 "parent": mock_parent,
-                "attributes": {
-                    "http.method": "foo-method",
-                    "TransactionName": "foo"
-                }
+                "attributes": {"http.method": "foo-method", "TransactionName": "foo"},
             }
         )
 
@@ -530,22 +425,19 @@ class TestResponseTimeProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': True,
-                        'http.status_code': 200,
-                        'http.method': 'foo-method',
-                        'sw.transaction': 'foo'
-                    }
+                        "sw.is_error": True,
+                        "http.status_code": 200,
+                        "http.method": "foo-method",
+                        "sw.transaction": "foo",
+                    },
                 )
             ]
         )
 
     def test_on_end_invalid_local_parent_span(self, mocker):
-        mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            _ = self.patch_for_on_end(
-                mocker,
-            )
+        mock_txname_manager, mock_apm_config, mock_histogram, _ = self.patch_for_on_end(
+            mocker,
+        )
         mock_span = mocker.Mock()
         mock_parent = mocker.Mock()
         mock_parent.configure_mock(
@@ -557,10 +449,7 @@ class TestResponseTimeProcessor:
         mock_span.configure_mock(
             **{
                 "parent": mock_parent,
-                "attributes": {
-                    "http.method": "foo-method",
-                    "TransactionName": "foo"
-                }
+                "attributes": {"http.method": "foo-method", "TransactionName": "foo"},
             }
         )
 
@@ -575,30 +464,24 @@ class TestResponseTimeProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': True,
-                        'http.status_code': 200,
-                        'http.method': 'foo-method',
-                        'sw.transaction': 'foo'
-                    }
+                        "sw.is_error": True,
+                        "http.status_code": 200,
+                        "http.method": "foo-method",
+                        "sw.transaction": "foo",
+                    },
                 )
             ]
         )
 
     def test_on_end_missing_parent(self, mocker):
-        mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            _ = self.patch_for_on_end(
-                mocker,
-            )
+        mock_txname_manager, mock_apm_config, mock_histogram, _ = self.patch_for_on_end(
+            mocker,
+        )
         mock_span = mocker.Mock()
         mock_span.configure_mock(
             **{
                 "parent": None,
-                "attributes": {
-                    "http.method": "foo-method",
-                    "TransactionName": "foo"
-                }
+                "attributes": {"http.method": "foo-method", "TransactionName": "foo"},
             }
         )
 
@@ -613,36 +496,34 @@ class TestResponseTimeProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': True,
-                        'http.status_code': 200,
-                        'http.method': 'foo-method',
-                        'sw.transaction': 'foo'
-                    }
+                        "sw.is_error": True,
+                        "http.status_code": 200,
+                        "http.method": "foo-method",
+                        "sw.transaction": "foo",
+                    },
                 )
             ]
         )
 
     def test_on_end_missing_txn_name(self, mocker):
-        mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            mock_basic_span = self.patch_for_on_end(
+        mock_txname_manager, mock_apm_config, mock_histogram, mock_basic_span = (
+            self.patch_for_on_end(
                 mocker,
                 get_retval=None,
             )
+        )
         processor = ResponseTimeProcessor(
             mock_apm_config,
         )
         processor.on_end(mock_basic_span)
 
     def test_on_end_txn_name_wrong_type(self, mocker):
-        mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            mock_basic_span = self.patch_for_on_end(
+        mock_txname_manager, mock_apm_config, mock_histogram, mock_basic_span = (
+            self.patch_for_on_end(
                 mocker,
                 get_retval="some-str",
             )
+        )
 
         processor = ResponseTimeProcessor(
             mock_apm_config,
@@ -650,15 +531,14 @@ class TestResponseTimeProcessor:
         processor.on_end(mock_basic_span)
 
     def test_on_end_is_span_http_has_error(self, mocker):
-        mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            mock_basic_span = self.patch_for_on_end(
+        mock_txname_manager, mock_apm_config, mock_histogram, mock_basic_span = (
+            self.patch_for_on_end(
                 mocker,
                 has_error=True,
                 is_span_http=True,
             )
-        
+        )
+
         processor = ResponseTimeProcessor(
             mock_apm_config,
         )
@@ -670,25 +550,24 @@ class TestResponseTimeProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': True,
-                        'http.status_code': 200,
-                        'http.method': 'foo-method',
-                        'sw.transaction': 'foo'
-                    }
+                        "sw.is_error": True,
+                        "http.status_code": 200,
+                        "http.method": "foo-method",
+                        "sw.transaction": "foo",
+                    },
                 )
             ]
         )
 
     def test_on_end_is_span_http_not_has_error(self, mocker):
-        mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            mock_basic_span = self.patch_for_on_end(
+        mock_txname_manager, mock_apm_config, mock_histogram, mock_basic_span = (
+            self.patch_for_on_end(
                 mocker,
                 has_error=False,
                 is_span_http=True,
             )
-        
+        )
+
         processor = ResponseTimeProcessor(
             mock_apm_config,
         )
@@ -700,25 +579,24 @@ class TestResponseTimeProcessor:
                 mocker.call(
                     amount=123,
                     attributes={
-                        'sw.is_error': False,
-                        'http.status_code': 200,
-                        'http.method': 'foo-method',
-                        'sw.transaction': 'foo'
-                    }
+                        "sw.is_error": False,
+                        "http.status_code": 200,
+                        "http.method": "foo-method",
+                        "sw.transaction": "foo",
+                    },
                 )
             ]
         )
 
     def test_on_end_is_span_http_no_status_code_no_method(self, mocker):
-        mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            mock_basic_span = self.patch_for_on_end(
+        mock_txname_manager, mock_apm_config, mock_histogram, mock_basic_span = (
+            self.patch_for_on_end(
                 mocker,
                 has_error=True,
                 is_span_http=True,
                 missing_http_attrs=True,
             )
+        )
 
         processor = ResponseTimeProcessor(
             mock_apm_config,
@@ -730,24 +608,20 @@ class TestResponseTimeProcessor:
             [
                 mocker.call(
                     amount=123,
-                    attributes={
-                        'sw.is_error': True,
-                        'sw.transaction': 'foo'
-                    }
+                    attributes={"sw.is_error": True, "sw.transaction": "foo"},
                 )
             ]
         )
 
     def test_on_end_not_is_span_http_has_error(self, mocker):
-        mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            mock_basic_span = self.patch_for_on_end(
+        mock_txname_manager, mock_apm_config, mock_histogram, mock_basic_span = (
+            self.patch_for_on_end(
                 mocker,
                 has_error=True,
                 is_span_http=False,
             )
-        
+        )
+
         processor = ResponseTimeProcessor(
             mock_apm_config,
         )
@@ -758,24 +632,20 @@ class TestResponseTimeProcessor:
             [
                 mocker.call(
                     amount=123,
-                    attributes={
-                        'sw.is_error': True,
-                        'sw.transaction': 'foo'
-                    }
+                    attributes={"sw.is_error": True, "sw.transaction": "foo"},
                 )
             ]
         )
 
     def test_on_end_not_is_span_http_not_has_error(self, mocker):
-        mock_txname_manager, \
-            mock_apm_config, \
-            mock_histogram, \
-            mock_basic_span = self.patch_for_on_end(
+        mock_txname_manager, mock_apm_config, mock_histogram, mock_basic_span = (
+            self.patch_for_on_end(
                 mocker,
                 has_error=False,
                 is_span_http=False,
             )
-        
+        )
+
         processor = ResponseTimeProcessor(
             mock_apm_config,
         )
@@ -786,10 +656,7 @@ class TestResponseTimeProcessor:
             [
                 mocker.call(
                     amount=123,
-                    attributes={
-                        'sw.is_error': False,
-                        'sw.transaction': 'foo'
-                    }
+                    attributes={"sw.is_error": False, "sw.transaction": "foo"},
                 )
             ]
         )

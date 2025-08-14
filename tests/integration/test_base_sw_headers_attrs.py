@@ -36,19 +36,13 @@ from solarwinds_apm.oboe.json_sampler import JsonSampler
 from solarwinds_apm.propagator import SolarWindsPropagator
 
 
-
 class TestBaseSwHeadersAndAttributes(TestBase):
     """
     Base class for testing SolarWinds custom distro header propagation
     and span attributes calculation from decision and headers.
     """
 
-    SW_SETTINGS_KEYS = [
-        "BucketCapacity",
-        "BucketRate",
-        "SampleRate",
-        "SampleSource"
-    ]
+    SW_SETTINGS_KEYS = ["BucketCapacity", "BucketRate", "SampleRate", "SampleSource"]
 
     @staticmethod
     def _test_trace():
@@ -57,7 +51,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
             # WSGI capitalizes incoming HTTP headers
             incoming_headers.update({k.lower(): v.lower()})
 
-        resp = requests.get(f"http://postman-echo.com/headers")
+        resp = requests.get("http://postman-echo.com/headers")
 
         #  The return type must be a string, dict, tuple, Response instance, or WSGI callable
         # (not CaseInsensitiveDict)
@@ -66,7 +60,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
             "tracestate": resp.request.headers["tracestate"],
             "incoming-headers": incoming_headers,
         }
-    
+
     def _setup_endpoints(self):
         # pylint: disable=no-member
         self.app.route("/test_trace/")(self._test_trace)
@@ -79,9 +73,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         # Load OTel env vars entry points
         argument_otel_environment_variable = {}
         for entry_point in iter(
-            entry_points(
-                group="opentelemetry_environment_variables"
-            )
+            entry_points(group="opentelemetry_environment_variables")
         ):
             environment_variable_module = entry_point.load()
             for attribute in dir(environment_variable_module):
@@ -94,7 +86,10 @@ class TestBaseSwHeadersAndAttributes(TestBase):
 
         # Load Distro
         SolarWindsDistro().configure()
-        assert os.environ["OTEL_PROPAGATORS"] == "tracecontext,baggage,solarwinds_propagator"
+        assert (
+            os.environ["OTEL_PROPAGATORS"]
+            == "tracecontext,baggage,solarwinds_propagator"
+        )
 
         # Load Configurator to Configure SW custom SDK components
         # except use TestBase InMemorySpanExporter
@@ -137,13 +132,9 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         self.requests_inst = RequestsInstrumentor()
         self.flask_inst = FlaskInstrumentor()
         self.flask_inst.uninstrument()
-        self.flask_inst.instrument(
-            tracer_provider=trace_api.get_tracer_provider()
-        )
+        self.flask_inst.instrument(tracer_provider=trace_api.get_tracer_provider())
         self.requests_inst.uninstrument()
-        self.requests_inst.instrument(
-            tracer_provider=trace_api.get_tracer_provider()
-        )
+        self.requests_inst.instrument(tracer_provider=trace_api.get_tracer_provider())
         self.app = flask.Flask(__name__)
         self._setup_endpoints()
         self.client = Client(self.app, Response)

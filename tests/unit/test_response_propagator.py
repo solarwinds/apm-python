@@ -9,7 +9,7 @@ from unittest.mock import call
 from solarwinds_apm.response_propagator import SolarWindsTraceResponsePropagator
 
 
-class TestSwTraceResponsePropagator():
+class TestSwTraceResponsePropagator:
     def mock_otel_trace_and_sw(self, mocker, valid_span_context=True) -> None:
         """Shared mocks for OTel trace and some sw parts"""
         # Mock sw parts external to response propagator inject
@@ -19,42 +19,30 @@ class TestSwTraceResponsePropagator():
             "solarwinds_apm.response_propagator.W3CTransformer"
         )
         mock_w3ctransformer_cls.configure_mock(
-            **{
-                "traceparent_from_context": mock_traceparent
-            }
+            **{"traceparent_from_context": mock_traceparent}
         )
         mocker.patch(
             "solarwinds_apm.response_propagator.SolarWindsTraceResponsePropagator.recover_response_from_tracestate",
-            return_value="my_recovered_response"
+            return_value="my_recovered_response",
         )
 
         # Mock OTel trace API and current span context
         mock_get_span_context = mocker.Mock()
-        mock_get_span_context.configure_mock(
-            **{
-                "trace_state": "my_trace_state"
-            }
-        )
+        mock_get_span_context.configure_mock(**{"trace_state": "my_trace_state"})
         mock_get_current_span = mocker.Mock()
         if valid_span_context:
             mock_get_current_span.configure_mock(
-                **{
-                    "get_span_context.return_value": mock_get_span_context
-                }
+                **{"get_span_context.return_value": mock_get_span_context}
             )
         else:
             mock_get_current_span.configure_mock(
-                **{
-                    "get_span_context.return_value": "INVALID"
-                }
+                **{"get_span_context.return_value": "INVALID"}
             )
-        mock_trace = mocker.patch(
-            "solarwinds_apm.response_propagator.trace"
-        )
+        mock_trace = mocker.patch("solarwinds_apm.response_propagator.trace")
         mock_trace.configure_mock(
             **{
                 "get_current_span.return_value": mock_get_current_span,
-                "INVALID_SPAN_CONTEXT": "INVALID"
+                "INVALID_SPAN_CONTEXT": "INVALID",
             }
         )
 
@@ -65,11 +53,7 @@ class TestSwTraceResponsePropagator():
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
-        mock_setter.configure_mock(
-            **{
-                "set": mock_set
-            }
-        )
+        mock_setter.configure_mock(**{"set": mock_set})
         SolarWindsTraceResponsePropagator().inject(
             mock_carrier,
             mock_context,
@@ -85,11 +69,7 @@ class TestSwTraceResponsePropagator():
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
-        mock_setter.configure_mock(
-            **{
-                "set": mock_set
-            }
-        )
+        mock_setter.configure_mock(**{"set": mock_set})
         SolarWindsTraceResponsePropagator().inject(
             mock_carrier,
             mock_context,
@@ -98,28 +78,28 @@ class TestSwTraceResponsePropagator():
         SolarWindsTraceResponsePropagator.recover_response_from_tracestate.assert_called_once_with(
             "my_trace_state",
         )
-        mock_set.assert_has_calls([
-            call(
-                mock_carrier,
-                "x-trace",
-                "my_x_trace",
-            ),
-            call(
-                mock_carrier,
-                "x-trace-options-response",
-                "my_recovered_response",
-            ),
-            call(
-                mock_carrier,
-                "Access-Control-Expose-Headers",
-                "x-trace,x-trace-options-response"
-            ),
-        ])
+        mock_set.assert_has_calls(
+            [
+                call(
+                    mock_carrier,
+                    "x-trace",
+                    "my_x_trace",
+                ),
+                call(
+                    mock_carrier,
+                    "x-trace-options-response",
+                    "my_recovered_response",
+                ),
+                call(
+                    mock_carrier,
+                    "Access-Control-Expose-Headers",
+                    "x-trace,x-trace-options-response",
+                ),
+            ]
+        )
 
     def test_recover_response_from_tracestate(self, mocker):
         result = SolarWindsTraceResponsePropagator().recover_response_from_tracestate(
-            {
-                "xtrace_options_response": "bar####baz....qux####quux"
-            }
+            {"xtrace_options_response": "bar####baz....qux####quux"}
         )
         assert result == "bar=baz,qux=quux"

@@ -6,6 +6,7 @@
 
 from solarwinds_apm import apm_logging
 
+
 class TestApmLoggingLevel:
     def test_default_level(self):
         assert apm_logging.ApmLoggingLevel.default_level() == 2
@@ -36,9 +37,7 @@ class TestSetSwLog:
         mocker,
         error=False,
     ):
-        mock_apm_logger = mocker.patch(
-            "solarwinds_apm.apm_logging.logger"
-        )
+        mock_apm_logger = mocker.patch("solarwinds_apm.apm_logging.logger")
         mock_warning = mocker.Mock()
         mock_error = mocker.Mock()
         mock_addhandler = mocker.Mock()
@@ -54,7 +53,7 @@ class TestSetSwLog:
         if error:
             mock_rfhandler = mocker.patch(
                 "solarwinds_apm.apm_logging.RotatingFileHandler",
-                side_effect=FileNotFoundError("mock error")
+                side_effect=FileNotFoundError("mock error"),
             )
         else:
             mock_rfhandler = mocker.patch(
@@ -81,7 +80,7 @@ class TestSetSwLog:
 
         apm_logging.update_sw_log_handler("foo")
         mock_rfhandler.assert_called_once_with(
-            filename='foo', maxBytes=0, backupCount=0
+            filename="foo", maxBytes=0, backupCount=0
         )
         mock_apm_logger.addHandler.assert_not_called()
         mock_apm_logger.removeHandler.assert_not_called()
@@ -95,7 +94,7 @@ class TestSetSwLog:
 
         apm_logging.update_sw_log_handler("foo")
         mock_rfhandler.assert_called_once_with(
-            filename='foo', maxBytes=0, backupCount=0
+            filename="foo", maxBytes=0, backupCount=0
         )
         mock_apm_logger.addHandler.assert_called_once()
         mock_apm_logger.removeHandler.assert_called_once()

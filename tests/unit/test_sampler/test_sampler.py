@@ -11,7 +11,7 @@ from solarwinds_apm.oboe.json_sampler import JsonSampler
 from solarwinds_apm.sampler import ParentBasedSwSampler
 
 
-class TestParentBasedSwSampler():
+class TestParentBasedSwSampler:
     def test_init(self, mocker):
         mock_apm_config = mocker.Mock()
         mock_apm_config.get = mocker.Mock(return_value="foo")

@@ -551,7 +551,10 @@ class SolarWindsApmConfig:
         for filter in txn_settings:
             if set(filter) != set(["regex", "tracing"]) or filter[
                 "tracing"
-            ] not in ["enabled", "disabled"]:
+            ] not in [
+                "enabled",
+                "disabled",
+            ]:
                 logger.warning(
                     "Invalid transaction filter rule. Ignoring: %s", filter
                 )
