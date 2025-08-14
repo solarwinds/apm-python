@@ -15,29 +15,47 @@ from opentelemetry.sdk.metrics._internal.export import InMemoryMetricReader
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
-from opentelemetry.semconv._incubating.attributes.http_attributes import HTTP_METHOD, HTTP_STATUS_CODE, HTTP_SCHEME, \
-    HTTP_TARGET
+from opentelemetry.semconv._incubating.attributes.http_attributes import (
+    HTTP_METHOD,
+    HTTP_STATUS_CODE,
+    HTTP_SCHEME,
+    HTTP_TARGET,
+)
 from opentelemetry.semconv._incubating.attributes.net_attributes import NET_HOST_NAME
-from opentelemetry.semconv.attributes.http_attributes import HTTP_REQUEST_METHOD, HTTP_RESPONSE_STATUS_CODE
+from opentelemetry.semconv.attributes.http_attributes import (
+    HTTP_REQUEST_METHOD,
+    HTTP_RESPONSE_STATUS_CODE,
+)
 from opentelemetry.semconv.attributes.server_attributes import SERVER_ADDRESS
 from opentelemetry.semconv.attributes.url_attributes import URL_SCHEME, URL_PATH
 from opentelemetry.trace import SpanKind
 
 from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting
 from solarwinds_apm.oboe.sampler import http_span_metadata, parse_settings, Sampler
-from solarwinds_apm.oboe.settings import Settings, SampleSource, Flags, BucketType, BucketSettings
+from solarwinds_apm.oboe.settings import (
+    Settings,
+    SampleSource,
+    Flags,
+    BucketType,
+    BucketSettings,
+)
 
 
 class TestSampler(Sampler):
-    def __init__(self, meter_provider: MeterProvider, config: Configuration, initial: Any):
+    def __init__(
+        self, meter_provider: MeterProvider, config: Configuration, initial: Any
+    ):
         super().__init__(meter_provider=meter_provider, config=config, initial=initial)
 
     def __str__(self):
         raise Exception("Test sampler")
 
 
-def options(tracing: bool | None, trigger_trace: bool,
-            transaction_settings: list[TransactionSetting]) -> Configuration:
+def options(
+    tracing: bool | None,
+    trigger_trace: bool,
+    transaction_settings: list[TransactionSetting],
+) -> Configuration:
     return Configuration(
         tracing_mode=tracing,
         trigger_trace_enabled=trigger_trace,
@@ -64,7 +82,7 @@ def settings(enabled: bool, signature_key: str | None):
             "SignatureKey": signature_key,
         },
         "timestamp": int(time.time()),
-        "ttl": 60
+        "ttl": 60,
     }
 
 
@@ -153,13 +171,16 @@ class TestParseSettingsName:
             },
             "timestamp": timestamp,
             "ttl": 120,
-            "warning": "warning"
+            "warning": "warning",
         }
         output, warnings = parse_settings(settings)
         assert output == Settings(
             sample_rate=500_000,
             sample_source=SampleSource.REMOTE,
-            flags=Flags.SAMPLE_START | Flags.SAMPLE_THROUGH_ALWAYS | Flags.TRIGGERED_TRACE | Flags.OVERRIDE,
+            flags=Flags.SAMPLE_START
+            | Flags.SAMPLE_THROUGH_ALWAYS
+            | Flags.TRIGGERED_TRACE
+            | Flags.OVERRIDE,
             buckets={
                 BucketType.DEFAULT: BucketSettings(capacity=0.2, rate=0.1),
                 BucketType.TRIGGER_RELAXED: BucketSettings(capacity=20, rate=10),
@@ -167,7 +188,7 @@ class TestParseSettingsName:
             },
             signature_key="key",
             timestamp=timestamp,
-            ttl=120
+            ttl=120,
         )
         assert warnings == "warning"
 
@@ -176,18 +197,22 @@ class TestSamplerName:
     def test_respects_enabled_settings_when_no_config_or_transaction_settings(self):
         meter_provider = MeterProvider(
             metric_readers=[InMemoryMetricReader()],
-            exemplar_filter=AlwaysOnExemplarFilter()
+            exemplar_filter=AlwaysOnExemplarFilter(),
         )
         sampler = TestSampler(
             meter_provider=meter_provider,
             config=options(tracing=None, trigger_trace=False, transaction_settings=[]),
-            initial=settings(enabled=True, signature_key=None)
+            initial=settings(enabled=True, signature_key=None),
         )
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
-        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-        tracer = trace.get_tracer("respects_enabled_settings_when_no_config_or_transaction_settings",
-                                  tracer_provider=tracer_provider)
+        tracer_provider.add_span_processor(
+            span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+        )
+        tracer = trace.get_tracer(
+            "respects_enabled_settings_when_no_config_or_transaction_settings",
+            tracer_provider=tracer_provider,
+        )
         with tracer.start_as_current_span("test") as span:
             assert span.is_recording()
         spans = memory_exporter.get_finished_spans()
@@ -202,18 +227,22 @@ class TestSamplerName:
     def test_respects_disabled_settings_when_no_config_or_transaction_settings(self):
         meter_provider = MeterProvider(
             metric_readers=[InMemoryMetricReader()],
-            exemplar_filter=AlwaysOnExemplarFilter()
+            exemplar_filter=AlwaysOnExemplarFilter(),
         )
         sampler = TestSampler(
             meter_provider=meter_provider,
             config=options(tracing=None, trigger_trace=True, transaction_settings=[]),
-            initial=settings(enabled=False, signature_key=None)
+            initial=settings(enabled=False, signature_key=None),
         )
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
-        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-        tracer = trace.get_tracer("respects_disabled_settings_when_no_config_or_transaction_settings",
-                                  tracer_provider=tracer_provider)
+        tracer_provider.add_span_processor(
+            span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+        )
+        tracer = trace.get_tracer(
+            "respects_disabled_settings_when_no_config_or_transaction_settings",
+            tracer_provider=tracer_provider,
+        )
         with tracer.start_as_current_span("test") as span:
             assert not span.is_recording()
         spans = memory_exporter.get_finished_spans()
@@ -222,18 +251,22 @@ class TestSamplerName:
     def test_respects_enabled_config_when_no_transaction_settings(self):
         meter_provider = MeterProvider(
             metric_readers=[InMemoryMetricReader()],
-            exemplar_filter=AlwaysOnExemplarFilter()
+            exemplar_filter=AlwaysOnExemplarFilter(),
         )
         sampler = TestSampler(
             meter_provider=meter_provider,
             config=options(tracing=True, trigger_trace=True, transaction_settings=[]),
-            initial=settings(enabled=False, signature_key=None)
+            initial=settings(enabled=False, signature_key=None),
         )
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
-        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-        tracer = trace.get_tracer("respects_enabled_config_when_no_transaction_settings",
-                                  tracer_provider=tracer_provider)
+        tracer_provider.add_span_processor(
+            span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+        )
+        tracer = trace.get_tracer(
+            "respects_enabled_config_when_no_transaction_settings",
+            tracer_provider=tracer_provider,
+        )
         with tracer.start_as_current_span("test") as span:
             assert span.is_recording()
         spans = memory_exporter.get_finished_spans()
@@ -248,18 +281,22 @@ class TestSamplerName:
     def test_respects_disabled_config_when_no_transaction_settings(self):
         meter_provider = MeterProvider(
             metric_readers=[InMemoryMetricReader()],
-            exemplar_filter=AlwaysOnExemplarFilter()
+            exemplar_filter=AlwaysOnExemplarFilter(),
         )
         sampler = TestSampler(
             meter_provider=meter_provider,
             config=options(tracing=False, trigger_trace=False, transaction_settings=[]),
-            initial=settings(enabled=True, signature_key=None)
+            initial=settings(enabled=True, signature_key=None),
         )
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
-        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-        tracer = trace.get_tracer("respects_disabled_config_when_no_transaction_settings",
-                                  tracer_provider=tracer_provider)
+        tracer_provider.add_span_processor(
+            span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+        )
+        tracer = trace.get_tracer(
+            "respects_disabled_config_when_no_transaction_settings",
+            tracer_provider=tracer_provider,
+        )
         with tracer.start_as_current_span("test") as span:
             assert not span.is_recording()
         spans = memory_exporter.get_finished_spans()
@@ -268,18 +305,28 @@ class TestSamplerName:
     def test_respects_enabled_matching_transaction_setting(self):
         meter_provider = MeterProvider(
             metric_readers=[InMemoryMetricReader()],
-            exemplar_filter=AlwaysOnExemplarFilter()
+            exemplar_filter=AlwaysOnExemplarFilter(),
         )
         sampler = TestSampler(
             meter_provider=meter_provider,
-            config=options(tracing=False, trigger_trace=False,
-                           transaction_settings=[TransactionSetting(tracing=True, matcher=lambda s: True)]),
-            initial=settings(enabled=False, signature_key=None)
+            config=options(
+                tracing=False,
+                trigger_trace=False,
+                transaction_settings=[
+                    TransactionSetting(tracing=True, matcher=lambda s: True)
+                ],
+            ),
+            initial=settings(enabled=False, signature_key=None),
         )
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
-        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-        tracer = trace.get_tracer("respects_enabled_matching_transaction_setting", tracer_provider=tracer_provider)
+        tracer_provider.add_span_processor(
+            span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+        )
+        tracer = trace.get_tracer(
+            "respects_enabled_matching_transaction_setting",
+            tracer_provider=tracer_provider,
+        )
         with tracer.start_as_current_span("test") as span:
             assert span.is_recording()
         spans = memory_exporter.get_finished_spans()
@@ -294,18 +341,28 @@ class TestSamplerName:
     def test_respects_disabled_matching_transaction_setting(self):
         meter_provider = MeterProvider(
             metric_readers=[InMemoryMetricReader()],
-            exemplar_filter=AlwaysOnExemplarFilter()
+            exemplar_filter=AlwaysOnExemplarFilter(),
         )
         sampler = TestSampler(
             meter_provider=meter_provider,
-            config=options(tracing=True, trigger_trace=True,
-                           transaction_settings=[TransactionSetting(tracing=False, matcher=lambda s: True)]),
-            initial=settings(enabled=True, signature_key=None)
+            config=options(
+                tracing=True,
+                trigger_trace=True,
+                transaction_settings=[
+                    TransactionSetting(tracing=False, matcher=lambda s: True)
+                ],
+            ),
+            initial=settings(enabled=True, signature_key=None),
         )
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
-        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-        tracer = trace.get_tracer("respects_disabled_matching_transaction_setting", tracer_provider=tracer_provider)
+        tracer_provider.add_span_processor(
+            span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+        )
+        tracer = trace.get_tracer(
+            "respects_disabled_matching_transaction_setting",
+            tracer_provider=tracer_provider,
+        )
         with tracer.start_as_current_span("test") as span:
             assert not span.is_recording()
         spans = memory_exporter.get_finished_spans()
@@ -314,20 +371,29 @@ class TestSamplerName:
     def test_respects_first_matching_transaction_setting(self):
         meter_provider = MeterProvider(
             metric_readers=[InMemoryMetricReader()],
-            exemplar_filter=AlwaysOnExemplarFilter()
+            exemplar_filter=AlwaysOnExemplarFilter(),
         )
         sampler = TestSampler(
             meter_provider=meter_provider,
-            config=options(tracing=False, trigger_trace=False, transaction_settings=[
-                TransactionSetting(tracing=True, matcher=lambda s: True),
-                TransactionSetting(tracing=False, matcher=lambda s: True),
-            ]),
-            initial=settings(enabled=False, signature_key=None)
+            config=options(
+                tracing=False,
+                trigger_trace=False,
+                transaction_settings=[
+                    TransactionSetting(tracing=True, matcher=lambda s: True),
+                    TransactionSetting(tracing=False, matcher=lambda s: True),
+                ],
+            ),
+            initial=settings(enabled=False, signature_key=None),
         )
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
-        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-        tracer = trace.get_tracer("respects_first_matching_transaction_setting", tracer_provider=tracer_provider)
+        tracer_provider.add_span_processor(
+            span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+        )
+        tracer = trace.get_tracer(
+            "respects_first_matching_transaction_setting",
+            tracer_provider=tracer_provider,
+        )
         with tracer.start_as_current_span("test") as span:
             assert span.is_recording()
         spans = memory_exporter.get_finished_spans()
@@ -342,19 +408,29 @@ class TestSamplerName:
     def test_matches_non_http_spans(self):
         meter_provider = MeterProvider(
             metric_readers=[InMemoryMetricReader()],
-            exemplar_filter=AlwaysOnExemplarFilter()
+            exemplar_filter=AlwaysOnExemplarFilter(),
         )
         sampler = TestSampler(
             meter_provider=meter_provider,
-            config=options(tracing=False, trigger_trace=False, transaction_settings=[
-                TransactionSetting(tracing=True, matcher=lambda s: s == "CLIENT:test"),
-            ]),
-            initial=settings(enabled=False, signature_key=None)
+            config=options(
+                tracing=False,
+                trigger_trace=False,
+                transaction_settings=[
+                    TransactionSetting(
+                        tracing=True, matcher=lambda s: s == "CLIENT:test"
+                    ),
+                ],
+            ),
+            initial=settings(enabled=False, signature_key=None),
         )
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
-        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-        tracer = trace.get_tracer("matches_non_http_spans", tracer_provider=tracer_provider)
+        tracer_provider.add_span_processor(
+            span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+        )
+        tracer = trace.get_tracer(
+            "matches_non_http_spans", tracer_provider=tracer_provider
+        )
         with tracer.start_as_current_span("test", kind=SpanKind.CLIENT) as span:
             assert span.is_recording()
         spans = memory_exporter.get_finished_spans()
@@ -369,59 +445,85 @@ class TestSamplerName:
     def test_matches_http_spans(self):
         meter_provider = MeterProvider(
             metric_readers=[InMemoryMetricReader()],
-            exemplar_filter=AlwaysOnExemplarFilter()
+            exemplar_filter=AlwaysOnExemplarFilter(),
         )
         sampler = TestSampler(
             meter_provider=meter_provider,
-            config=options(tracing=False, trigger_trace=False, transaction_settings=[
-                TransactionSetting(tracing=True, matcher=lambda s: s == "http://localhost/test"),
-            ]),
-            initial=settings(enabled=False, signature_key=None)
+            config=options(
+                tracing=False,
+                trigger_trace=False,
+                transaction_settings=[
+                    TransactionSetting(
+                        tracing=True, matcher=lambda s: s == "http://localhost/test"
+                    ),
+                ],
+            ),
+            initial=settings(enabled=False, signature_key=None),
         )
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
-        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+        tracer_provider.add_span_processor(
+            span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+        )
         tracer = trace.get_tracer("matches_http_spans", tracer_provider=tracer_provider)
-        with tracer.start_as_current_span("test", kind=SpanKind.SERVER, attributes={
-            HTTP_METHOD: "GET",
-            URL_SCHEME: "http",
-            SERVER_ADDRESS: "localhost",
-            URL_PATH: "/test",
-        }) as span:
+        with tracer.start_as_current_span(
+            "test",
+            kind=SpanKind.SERVER,
+            attributes={
+                HTTP_METHOD: "GET",
+                URL_SCHEME: "http",
+                SERVER_ADDRESS: "localhost",
+                URL_PATH: "/test",
+            },
+        ) as span:
             assert span.is_recording()
         spans = memory_exporter.get_finished_spans()
         assert len(spans) == 1
-        assert spans[0].attributes['SampleRate'] == 1_000_000
-        assert spans[0].attributes['SampleSource'] == 6
-        assert spans[0].attributes['BucketCapacity'] == 10
-        assert spans[0].attributes['BucketRate'] == 1
+        assert spans[0].attributes["SampleRate"] == 1_000_000
+        assert spans[0].attributes["SampleSource"] == 6
+        assert spans[0].attributes["BucketCapacity"] == 10
+        assert spans[0].attributes["BucketRate"] == 1
 
     def test_matches_deprecated_http_spans(self):
         meter_provider = MeterProvider(
             metric_readers=[InMemoryMetricReader()],
-            exemplar_filter=AlwaysOnExemplarFilter()
+            exemplar_filter=AlwaysOnExemplarFilter(),
         )
         sampler = TestSampler(
             meter_provider=meter_provider,
-            config=options(tracing=False, trigger_trace=False, transaction_settings=[
-                TransactionSetting(tracing=True, matcher=lambda s: s == "http://localhost/test"),
-            ]),
-            initial=settings(enabled=False, signature_key=None)
+            config=options(
+                tracing=False,
+                trigger_trace=False,
+                transaction_settings=[
+                    TransactionSetting(
+                        tracing=True, matcher=lambda s: s == "http://localhost/test"
+                    ),
+                ],
+            ),
+            initial=settings(enabled=False, signature_key=None),
         )
         memory_exporter = InMemorySpanExporter()
         tracer_provider = TracerProvider(sampler=sampler)
-        tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
-        tracer = trace.get_tracer("matches_deprecated_http_spans", tracer_provider=tracer_provider)
-        with tracer.start_as_current_span("test", kind=SpanKind.SERVER, attributes={
-            HTTP_REQUEST_METHOD: "GET",
-            URL_SCHEME: "http",
-            SERVER_ADDRESS: "localhost",
-            URL_PATH: "/test",
-        }) as span:
+        tracer_provider.add_span_processor(
+            span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+        )
+        tracer = trace.get_tracer(
+            "matches_deprecated_http_spans", tracer_provider=tracer_provider
+        )
+        with tracer.start_as_current_span(
+            "test",
+            kind=SpanKind.SERVER,
+            attributes={
+                HTTP_REQUEST_METHOD: "GET",
+                URL_SCHEME: "http",
+                SERVER_ADDRESS: "localhost",
+                URL_PATH: "/test",
+            },
+        ) as span:
             assert span.is_recording()
         spans = memory_exporter.get_finished_spans()
         assert len(spans) == 1
-        assert spans[0].attributes['SampleRate'] == 1_000_000
-        assert spans[0].attributes['SampleSource'] == 6
-        assert spans[0].attributes['BucketCapacity'] == 10
-        assert spans[0].attributes['BucketRate'] == 1
+        assert spans[0].attributes["SampleRate"] == 1_000_000
+        assert spans[0].attributes["SampleSource"] == 6
+        assert spans[0].attributes["BucketCapacity"] == 10
+        assert spans[0].attributes["BucketRate"] == 1

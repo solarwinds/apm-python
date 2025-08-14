@@ -26,11 +26,7 @@ class TestConfiguratorPropagators:
         # Mock entry points
         mock_propagator_class = mocker.MagicMock()
         mock_propagator_entry_point = mocker.Mock()
-        mock_propagator_entry_point.configure_mock(
-            **{
-                "load": mock_propagator_class
-            }
-        )
+        mock_propagator_entry_point.configure_mock(**{"load": mock_propagator_class})
         mock_points = iter(
             [
                 mock_propagator_entry_point,
@@ -38,12 +34,8 @@ class TestConfiguratorPropagators:
                 mock_propagator_entry_point,
             ]
         )
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.entry_points"
-        )
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
+        mock_entry_points = mocker.patch("solarwinds_apm.configurator.entry_points")
+        mock_entry_points.configure_mock(return_value=mock_points)
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
@@ -54,10 +46,7 @@ class TestConfiguratorPropagators:
                     group="opentelemetry_propagator",
                     name="tracecontext",
                 ),
-                mocker.call(
-                    group="opentelemetry_propagator",
-                    name="baggage"
-                ),
+                mocker.call(group="opentelemetry_propagator", name="baggage"),
                 mocker.call(
                     group="opentelemetry_propagator",
                     name="solarwinds_propagator",
@@ -82,12 +71,7 @@ class TestConfiguratorPropagators:
         if old_propagators:
             del os.environ["OTEL_PROPAGATORS"]
 
-        mocker.patch.dict(
-            os.environ,
-            {
-                "OTEL_PROPAGATORS": "invalid_propagator"
-            }
-        )
+        mocker.patch.dict(os.environ, {"OTEL_PROPAGATORS": "invalid_propagator"})
 
         # Test!
         mock_composite_propagator.assert_not_called()
@@ -111,39 +95,23 @@ class TestConfiguratorPropagators:
         # Mock entry points
         mock_propagator_class = mocker.MagicMock()
         mock_propagator_entry_point = mocker.Mock()
-        mock_propagator_entry_point.configure_mock(
-            **{
-                "load": mock_propagator_class
-            }
-        )
+        mock_propagator_entry_point.configure_mock(**{"load": mock_propagator_class})
         mock_points = iter(
             [
                 mock_propagator_entry_point,
             ]
         )
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.entry_points"
-        )
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
+        mock_entry_points = mocker.patch("solarwinds_apm.configurator.entry_points")
+        mock_entry_points.configure_mock(return_value=mock_points)
 
-        mocker.patch.dict(
-            os.environ,
-            {
-                "OTEL_PROPAGATORS": "valid_propagator"
-            }
-        )
+        mocker.patch.dict(os.environ, {"OTEL_PROPAGATORS": "valid_propagator"})
 
         # Test!
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_propagator()
         mock_entry_points.assert_has_calls(
             [
-                mocker.call(
-                    group="opentelemetry_propagator",
-                    name="valid_propagator"
-                ),
+                mocker.call(group="opentelemetry_propagator", name="valid_propagator"),
             ]
         )
         mock_composite_propagator.assert_called_once()
@@ -164,33 +132,18 @@ class TestConfiguratorPropagators:
         if old_propagators:
             del os.environ["OTEL_PROPAGATORS"]
 
-
         # Mock entry points
         mock_propagator_class = mocker.MagicMock()
         mock_propagator_entry_point = mocker.Mock()
-        mock_propagator_entry_point.configure_mock(
-            **{
-                "load": mock_propagator_class
-            }
-        )
+        mock_propagator_entry_point.configure_mock(**{"load": mock_propagator_class})
         mock_points = iter(
-            [
-                mock_propagator_entry_point,
-                Exception("mock error invalid propagator")
-            ]
+            [mock_propagator_entry_point, Exception("mock error invalid propagator")]
         )
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.entry_points"
-        )
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
+        mock_entry_points = mocker.patch("solarwinds_apm.configurator.entry_points")
+        mock_entry_points.configure_mock(return_value=mock_points)
 
         mocker.patch.dict(
-            os.environ,
-            {
-                "OTEL_PROPAGATORS": "valid_propagator,invalid_propagator"
-            }
+            os.environ, {"OTEL_PROPAGATORS": "valid_propagator,invalid_propagator"}
         )
 
         # Test!
@@ -200,7 +153,7 @@ class TestConfiguratorPropagators:
         mock_entry_points.assert_has_calls(
             [
                 mocker.call(
-                    group="opentelemetry_propagator", 
+                    group="opentelemetry_propagator",
                     name="valid_propagator",
                 ),
                 mocker.call(
@@ -211,7 +164,6 @@ class TestConfiguratorPropagators:
         )
         mock_composite_propagator.assert_not_called()
         mock_set_global_textmap.assert_not_called()
-
 
         # Restore old PROPAGATOR
         if old_propagators:

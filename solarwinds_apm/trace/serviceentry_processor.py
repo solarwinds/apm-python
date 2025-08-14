@@ -108,9 +108,7 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         elif http_route:
             self.set_default_transaction_name(span, pool, http_route)
         elif url_path:
-            self.set_default_transaction_name(
-                span, pool, url_path, resolve=True
-            )
+            self.set_default_transaction_name(span, pool, url_path, resolve=True)
         else:
             self.set_default_transaction_name(span, pool, span.name)
 

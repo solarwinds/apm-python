@@ -237,9 +237,7 @@ class OboeSampler(Sampler, ABC):
         if sample_state.trace_state and re.match(
             TRACESTATE_REGEXP, sample_state.trace_state
         ):
-            sample_state.decision = self.parent_based_algo(
-                sample_state, parent_context
-            )
+            sample_state.decision = self.parent_based_algo(sample_state, parent_context)
         elif sample_state.settings.flags & Flags.SAMPLE_START:
             self._handle_sample_start(sample_state, parent_context)
         else:
@@ -326,9 +324,7 @@ class OboeSampler(Sampler, ABC):
             sw_keys=parsed.sw_keys,
             custom=parsed.custom,
             ignored=parsed.ignored,
-            response=TraceOptionsResponse(
-                auth=None, trigger_trace=None, ignored=None
-            ),
+            response=TraceOptionsResponse(auth=None, trigger_trace=None, ignored=None),
         )
         logger.debug("X-Trace-Options present %s", sample_state.trace_options)
         if sample_state.headers.x_trace_options_signature:
@@ -337,16 +333,13 @@ class OboeSampler(Sampler, ABC):
                 sample_state.headers.x_trace_options_signature,
                 (
                     sample_state.settings.signature_key
-                    if sample_state.settings
-                    and sample_state.settings.signature_key
+                    if sample_state.settings and sample_state.settings.signature_key
                     else None
                 ),
                 sample_state.trace_options.timestamp,
             )
             if sample_state.trace_options.response.auth != Auth.OK:
-                logger.debug(
-                    "X-Trace-Options-Signature invalid; tracing disabled"
-                )
+                logger.debug("X-Trace-Options-Signature invalid; tracing disabled")
                 new_trace_state = self.set_response_headers_from_sample_state(
                     sample_state,
                     parent_context,
@@ -391,10 +384,7 @@ class OboeSampler(Sampler, ABC):
         Handle the case where settings are unavailable.
         """
         logger.warning("settings unavailable; sampling disabled")
-        if (
-            sample_state.trace_options
-            and sample_state.trace_options.trigger_trace
-        ):
+        if sample_state.trace_options and sample_state.trace_options.trigger_trace:
             logger.debug("trigger trace requested but settings unavailable")
             sample_state.trace_options.response.trigger_trace = (
                 TriggerTrace.SETTINGS_NOT_AVAILABLE
@@ -421,22 +411,15 @@ class OboeSampler(Sampler, ABC):
         """
         Handle the case where the SAMPLE_START flag is set.
         """
-        if (
-            sample_state.trace_options
-            and sample_state.trace_options.trigger_trace
-        ):
+        if sample_state.trace_options and sample_state.trace_options.trigger_trace:
             (
                 sample_state.trace_options.response.trigger_trace,
                 sample_state.decision,
             ) = self.trigger_trace_algo(sample_state, parent_context)
         else:
-            sample_state.decision = self.dice_roll_algo(
-                sample_state, parent_context
-            )
+            sample_state.decision = self.dice_roll_algo(sample_state, parent_context)
 
-    def parent_based_algo(
-        self, s: SampleState, parent_context: "Context" | None
-    ):
+    def parent_based_algo(self, s: SampleState, parent_context: "Context" | None):
         """
         Determine the sampling decision based on the parent span.
         """
@@ -464,9 +447,7 @@ class OboeSampler(Sampler, ABC):
         logger.debug("SAMPLE_START is unset; don't record")
         return Decision.DROP
 
-    def trigger_trace_algo(
-        self, s: SampleState, parent_context: "Context" | None
-    ):
+    def trigger_trace_algo(self, s: SampleState, parent_context: "Context" | None):
         """
         Determine the sampling decision based on the TRIGGER_TRACE flag.
         """
@@ -496,9 +477,7 @@ class OboeSampler(Sampler, ABC):
         """
         Determine the sampling decision based on a dice roll.
         """
-        dice = _Dice(
-            rate=s.settings.sample_rate if s.settings else 0, scale=DICE_SCALE
-        )
+        dice = _Dice(rate=s.settings.sample_rate if s.settings else 0, scale=DICE_SCALE)
         s.attributes[SAMPLE_RATE_ATTRIBUTE] = dice.rate
         s.attributes[SAMPLE_SOURCE_ATTRIBUTE] = s.settings.sample_source
         self.counters.sample_count.add(1, {}, parent_context)
@@ -512,9 +491,7 @@ class OboeSampler(Sampler, ABC):
                 self.counters.trace_count.add(1, {}, parent_context)
                 return Decision.RECORD_AND_SAMPLE
             logger.debug("insufficient capacity; record only")
-            self.counters.token_bucket_exhaustion_count.add(
-                1, {}, parent_context
-            )
+            self.counters.token_bucket_exhaustion_count.add(1, {}, parent_context)
             return Decision.RECORD_ONLY
         logger.debug("dice roll failure; record only")
         return Decision.RECORD_ONLY
@@ -525,9 +502,7 @@ class OboeSampler(Sampler, ABC):
         """
         if s.trace_options and s.trace_options.trigger_trace:
             logger.debug("trigger trace requested but tracing disabled")
-            s.trace_options.response.trigger_trace = (
-                TriggerTrace.TRACING_DISABLED
-            )
+            s.trace_options.response.trigger_trace = TriggerTrace.TRACING_DISABLED
 
         if s.settings and s.settings.flags & Flags.SAMPLE_THROUGH_ALWAYS:
             logger.debug("SAMPLE_THROUGH_ALWAYS is set; record")
@@ -540,16 +515,12 @@ class OboeSampler(Sampler, ABC):
         """
         Update the sampler settings if the new settings are more recent.
         """
-        if settings.timestamp > (
-            self.settings.timestamp if self.settings else 0
-        ):
+        if settings.timestamp > (self.settings.timestamp if self.settings else 0):
             self.settings = settings
             for bucket_type, bucket in self.buckets.items():
                 if bucket_type in self.settings.buckets:
                     bucket.update(
-                        new_capacity=self.settings.buckets[
-                            bucket_type
-                        ].capacity,
+                        new_capacity=self.settings.buckets[bucket_type].capacity,
                         new_rate=self.settings.buckets[bucket_type].rate,
                     )
 
@@ -631,8 +602,8 @@ class OboeSampler(Sampler, ABC):
         """
         headers = ResponseHeaders(x_trace_options_response=None)
         if s.trace_options:
-            headers.x_trace_options_response = (
-                stringify_trace_options_response(s.trace_options.response)
+            headers.x_trace_options_response = stringify_trace_options_response(
+                s.trace_options.response
             )
         return self.set_response_headers(
             headers,

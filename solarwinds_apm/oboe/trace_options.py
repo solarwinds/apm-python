@@ -216,8 +216,7 @@ class RequestHeaders:
             return NotImplemented
         return (
             self._x_trace_options == other._x_trace_options
-            and self._x_trace_options_signature
-            == other._x_trace_options_signature
+            and self._x_trace_options_signature == other._x_trace_options_signature
         )
 
     def __str__(self):
@@ -239,9 +238,7 @@ class ResponseHeaders:
     def __eq__(self, other):
         if not isinstance(other, ResponseHeaders):
             return NotImplemented
-        return (
-            self._x_trace_options_response == other._x_trace_options_response
-        )
+        return self._x_trace_options_response == other._x_trace_options_response
 
     def __str__(self):
         return f"x_trace_options_response={self._x_trace_options_response}"
@@ -309,9 +306,7 @@ def parse_timestamp(trace_options, key, value):
                 raise ValueError
             trace_options.timestamp = int(ts)
         except ValueError:
-            logger.debug(
-                "invalid trace option for timestamp, should be an integer"
-            )
+            logger.debug("invalid trace option for timestamp, should be an integer")
             trace_options.ignored.append((key, value))
 
 
@@ -350,9 +345,7 @@ def stringify_trace_options_response(
     """
     kvs = {
         "auth": (
-            trace_options_response.auth.value
-            if trace_options_response.auth
-            else None
+            trace_options_response.auth.value if trace_options_response.auth else None
         ),
         "trigger-trace": (
             trace_options_response.trigger_trace.value
@@ -376,9 +369,7 @@ def validate_signature(header, signature, key, timestamp):
         return Auth.NO_SIGNATURE_KEY
     if timestamp is None or abs(int(time.time()) - timestamp) > 5 * 60:
         return Auth.BAD_TIMESTAMP
-    digest = hmac.new(
-        str.encode(key), str.encode(header), hashlib.sha1
-    ).hexdigest()
+    digest = hmac.new(str.encode(key), str.encode(header), hashlib.sha1).hexdigest()
     if signature == digest:
         return Auth.OK
     return Auth.BAD_SIGNATURE

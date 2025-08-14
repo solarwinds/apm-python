@@ -96,7 +96,7 @@ class TestConfiguratorTracingInit:
         )
 
         # Mock span exporter class
-        class MockExporter():
+        class MockExporter:
             def __init__(self, *args, **kwargs):
                 pass
 
@@ -117,7 +117,9 @@ class TestConfiguratorTracingInit:
             resource=mocks["mock_apm_sampler"],
         )
         mocks["mock_set_tracer_provider"].assert_called_once()
-        mocks["mock_tracerprovider_instance"].add_span_processor.assert_called_once_with(
+        mocks[
+            "mock_tracerprovider_instance"
+        ].add_span_processor.assert_called_once_with(
             mock_bsprocessor.return_value,
         )
         mock_exporter_spy.assert_called_once()
@@ -137,7 +139,7 @@ class TestConfiguratorTracingInit:
         )
 
         # Mock span exporter class
-        class MockExporter():
+        class MockExporter:
             def __init__(self, *args, **kwargs):
                 pass
 
@@ -158,7 +160,9 @@ class TestConfiguratorTracingInit:
             resource=mocks["mock_resource"],
         )
         mocks["mock_set_tracer_provider"].assert_called_once()
-        mocks["mock_tracerprovider_instance"].add_span_processor.assert_called_once_with(
+        mocks[
+            "mock_tracerprovider_instance"
+        ].add_span_processor.assert_called_once_with(
             mock_ssprocessor.return_value,
         )
         mock_exporter_spy.assert_called_once()

@@ -34,19 +34,23 @@ class TestConfiguratorCreateApmResource:
         # Should not raise ValueError if valid UUID
         uuid.UUID(instance_id)
 
-    def test_create_apm_resource_with_existing_instance_id_use_existing(self, mocker, mock_apmconfig_enabled):
+    def test_create_apm_resource_with_existing_instance_id_use_existing(
+        self, mocker, mock_apmconfig_enabled
+    ):
         mocker.patch(
             "solarwinds_apm.configurator.__version__",
             new="1.2.3",
         )
         existing_instance_id = "existing-instance-id"
         # Mock return of Resource.create like a ResourceDetector set service.instance.id
-        mock_initial_resource = Resource.create({
-            "sw.apm.version": "1.2.3",
-            "sw.data.module": "apm",
-            "service.name": "foo-service",
-            "service.instance.id": existing_instance_id,
-        })
+        mock_initial_resource = Resource.create(
+            {
+                "sw.apm.version": "1.2.3",
+                "sw.data.module": "apm",
+                "service.name": "foo-service",
+                "service.instance.id": existing_instance_id,
+            }
+        )
         mock_resource_create = mocker.patch(
             "solarwinds_apm.configurator.Resource.create",
             return_value=mock_initial_resource,
@@ -56,13 +60,17 @@ class TestConfiguratorCreateApmResource:
         result = test_configurator._create_apm_resource()
 
         assert result.attributes["service.instance.id"] == existing_instance_id
-        mock_resource_create.assert_called_once_with({
-            "sw.apm.version": "1.2.3",
-            "sw.data.module": "apm",
-            "service.name": "foo-service",
-        })
+        mock_resource_create.assert_called_once_with(
+            {
+                "sw.apm.version": "1.2.3",
+                "sw.data.module": "apm",
+                "service.name": "foo-service",
+            }
+        )
 
-    def test_create_apm_resource_without_existing_instance_id_generate_new(self, mocker, mock_apmconfig_enabled):
+    def test_create_apm_resource_without_existing_instance_id_generate_new(
+        self, mocker, mock_apmconfig_enabled
+    ):
         mocker.patch(
             "solarwinds_apm.configurator.__version__",
             new="1.2.3",
@@ -73,11 +81,13 @@ class TestConfiguratorCreateApmResource:
             return_value=mock_uuid,
         )
         # Mock return of Resource.create like no resource detectors set instance ID
-        mock_initial_resource = Resource.create({
-            "sw.apm.version": "1.2.3",
-            "sw.data.module": "apm",
-            "service.name": "foo-service",
-        })
+        mock_initial_resource = Resource.create(
+            {
+                "sw.apm.version": "1.2.3",
+                "sw.data.module": "apm",
+                "service.name": "foo-service",
+            }
+        )
         mocker.patch(
             "solarwinds_apm.configurator.Resource.create",
             return_value=mock_initial_resource,
@@ -95,14 +105,12 @@ class TestConfiguratorConfigureOtelComponents:
         self,
         mocker,
         mock_apmconfig_enabled,
-
         mock_config_serviceentry_processor,
         mock_custom_init_tracing,
         mock_custom_init_metrics,
         mock_init_logging,
         mock_config_propagator,
         mock_config_response_propagator,
-
         logging_env,
         logging_assert,
         mock_convert_to_bool=None,
@@ -111,7 +119,7 @@ class TestConfiguratorConfigureOtelComponents:
             os.environ,
             {
                 _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: logging_env,
-            }
+            },
         )
         mocker.patch(
             "solarwinds_apm.configurator.SolarWindsApmConfig",
@@ -158,7 +166,6 @@ class TestConfiguratorConfigureOtelComponents:
         self,
         mocker,
         mock_apmconfig_enabled_export_logs_false,
-
         mock_config_serviceentry_processor,
         mock_custom_init_tracing,
         mock_custom_init_metrics,
@@ -180,10 +187,10 @@ class TestConfiguratorConfigureOtelComponents:
             True,
         )
 
-    def test_configure_otel_components_logs_enabled_otel_none_sw_default(self,
+    def test_configure_otel_components_logs_enabled_otel_none_sw_default(
+        self,
         mocker,
         mock_apmconfig_enabled_export_logs_false,
-
         mock_config_serviceentry_processor,
         mock_custom_init_tracing,
         mock_custom_init_metrics,
@@ -204,10 +211,10 @@ class TestConfiguratorConfigureOtelComponents:
             False,
         )
 
-    def test_configure_otel_components_logs_enabled_otel_none_sw_true(self,
+    def test_configure_otel_components_logs_enabled_otel_none_sw_true(
+        self,
         mocker,
         mock_apmconfig_enabled,
-
         mock_config_serviceentry_processor,
         mock_custom_init_tracing,
         mock_custom_init_metrics,
@@ -228,10 +235,10 @@ class TestConfiguratorConfigureOtelComponents:
             True,  # true because SW next in precedence
         )
 
-    def test_configure_otel_components_logs_enabled_otel_false_sw_default(self,
+    def test_configure_otel_components_logs_enabled_otel_false_sw_default(
+        self,
         mocker,
         mock_apmconfig_enabled_export_logs_false,
-
         mock_config_serviceentry_processor,
         mock_custom_init_tracing,
         mock_custom_init_metrics,
@@ -252,10 +259,10 @@ class TestConfiguratorConfigureOtelComponents:
             False,
         )
 
-    def test_configure_otel_components_logs_enabled_otel_false_sw_true(self,
+    def test_configure_otel_components_logs_enabled_otel_false_sw_true(
+        self,
         mocker,
         mock_apmconfig_enabled,
-
         mock_config_serviceentry_processor,
         mock_custom_init_tracing,
         mock_custom_init_metrics,
@@ -277,10 +284,10 @@ class TestConfiguratorConfigureOtelComponents:
             False,
         )
 
-    def test_configure_otel_components_logs_enabled_otel_invalid(self,
+    def test_configure_otel_components_logs_enabled_otel_invalid(
+        self,
         mocker,
         mock_apmconfig_enabled_export_logs_false,
-
         mock_config_serviceentry_processor,
         mock_custom_init_tracing,
         mock_custom_init_metrics,
@@ -305,7 +312,6 @@ class TestConfiguratorConfigureOtelComponents:
         self,
         mocker,
         mock_apmconfig_enabled,
-
         mock_config_serviceentry_processor,
         mock_response_time_processor,
         mock_custom_init_tracing,
@@ -356,7 +362,6 @@ class TestConfiguratorConfigureOtelComponents:
         self,
         mocker,
         mock_apmconfig_disabled,
-
         mock_config_serviceentry_processor,
         mock_response_time_processor,
         mock_custom_init_tracing,

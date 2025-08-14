@@ -26,9 +26,7 @@ class NameItem:
 
     def __eq__(self, other):
         if isinstance(other, NameItem):
-            return (
-                self._timestamp == other.timestamp and self._name == other.name
-            )
+            return self._timestamp == other.timestamp and self._name == other.name
         return NotImplemented
 
 
@@ -55,10 +53,7 @@ class TransactionNamePool:
 
     def _housekeep(self):
         now = int(time.time())
-        while (
-            len(self._min_heap) > 0
-            and self._min_heap[0].timestamp + self._ttl < now
-        ):
+        while len(self._min_heap) > 0 and self._min_heap[0].timestamp + self._ttl < now:
             item = heapq.heappop(self._min_heap)
             if isinstance(item, NameItem):
                 del self._pool[item.name]

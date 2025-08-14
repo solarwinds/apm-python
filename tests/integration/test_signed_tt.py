@@ -11,7 +11,6 @@ import time
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from unittest import mock
 
 from solarwinds_apm.oboe.settings import LocalSettings, TracingMode
 from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
@@ -47,36 +46,37 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"key",
-                            "TriggerRelaxedBucketCapacity":4,
-                            "TriggerRelaxedBucketRate":3,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5,
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":1000000
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "key",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 1000000,
                 }
             ],
         ):
             x_trace_options = f"trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo;ts={timestamp}"
-            x_trace_options_signature = hmac.new(str.encode("key"), str.encode(x_trace_options), hashlib.sha1).hexdigest()
+            x_trace_options_signature = hmac.new(
+                str.encode("key"), str.encode(x_trace_options), hashlib.sha1
+            ).hexdigest()
             # Request to instrumented app with headers
             resp = self.client.get(
                 "/test_trace/",
                 headers={
                     "x-trace-options": x_trace_options,
                     "x-trace-options-signature": x_trace_options_signature,
-                    "some-header": "some-value"
-                }
+                    "some-header": "some-value",
+                },
             )
         resp_json = json.loads(resp.data)
 
@@ -110,7 +110,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # In this test we know tracestate will have `sw`
         # with new_span_id and new_trace_flags.
         # `xtrace_options_response` is not propagated.
-        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+        assert resp_json["tracestate"] == "sw={}-{}".format(
+            new_span_id, new_trace_flags
+        )
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -121,7 +123,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # Verify x-trace-options-response response header present
         assert "x-trace-options-response" in resp.headers
         assert "trigger-trace=ok" in resp.headers["x-trace-options-response"]
-        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+        assert (
+            "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+        )
 
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
         spans = self.memory_exporter.get_finished_spans()
@@ -137,12 +141,21 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # because no valid parent context.
         # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
-        expected_trace_state = trace_api.TraceState([
-            ("xtrace_options_response", "auth####ok;trigger-trace####ok;ignored####this-will-be-ignored"),
-        ])
+        expected_trace_state = trace_api.TraceState(
+            [
+                (
+                    "xtrace_options_response",
+                    "auth####ok;trigger-trace####ok;ignored####this-will-be-ignored",
+                ),
+            ]
+        )
         actual_trace_state = span_server.context.trace_state
-        assert actual_trace_state.get("sw") == expected_trace_state.get("sw")  # both None
-        assert actual_trace_state.get("xtrace_options_response") == expected_trace_state.get("xtrace_options_response")
+        assert actual_trace_state.get("sw") == expected_trace_state.get(
+            "sw"
+        )  # both None
+        assert actual_trace_state.get(
+            "xtrace_options_response"
+        ) == expected_trace_state.get("xtrace_options_response")
 
         # Check root span attributes
         #   :present:
@@ -155,12 +168,18 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     the ignored value in the x-trace-options-header
         #     SampleRate, SampleSource in attributes, because it is a trigger trace
-        assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity","BucketRate"])
+        assert all(
+            attr_key in span_server.attributes
+            for attr_key in ["BucketCapacity", "BucketRate"]
+        )
         assert span_server.attributes["BucketCapacity"] == 4
         assert span_server.attributes["BucketRate"] == 3
-        assert not "sw.tracestate_parent_id" in span_server.attributes
+        assert "sw.tracestate_parent_id" not in span_server.attributes
         assert "SWKeys" in span_server.attributes
-        assert span_server.attributes["SWKeys"] == "check-id:check-1013,website-id:booking-demo"
+        assert (
+            span_server.attributes["SWKeys"]
+            == "check-id:check-1013,website-id:booking-demo"
+        )
         assert "custom-awesome-key" in span_server.attributes
         assert span_server.attributes["custom-awesome-key"] == "foo"
         assert "TriggeredTrace" in span_server.attributes
@@ -171,12 +190,21 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # because no valid parent context.
         # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
-        expected_trace_state = trace_api.TraceState([
-            ("xtrace_options_response", "auth####ok;trigger-trace####ok;ignored####this-will-be-ignored"),
-        ])
+        expected_trace_state = trace_api.TraceState(
+            [
+                (
+                    "xtrace_options_response",
+                    "auth####ok;trigger-trace####ok;ignored####this-will-be-ignored",
+                ),
+            ]
+        )
         actual_trace_state = span_client.context.trace_state
-        assert actual_trace_state.get("sw") == expected_trace_state.get("sw")  # both None
-        assert actual_trace_state.get("xtrace_options_response") == expected_trace_state.get("xtrace_options_response")
+        assert actual_trace_state.get("sw") == expected_trace_state.get(
+            "sw"
+        )  # both None
+        assert actual_trace_state.get(
+            "xtrace_options_response"
+        ) == expected_trace_state.get("xtrace_options_response")
 
         # Check outgoing request span attributes
         #   :absent:
@@ -186,11 +214,13 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         #     custom-*, because only written for service entry spans
         #     TriggeredTrace, because only written for service entry spans
         #     the ignored value in the x-trace-options-header
-        assert not any(attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert not "sw.tracestate_parent_id" in span_client.attributes
-        assert not "SWKeys" in span_client.attributes
-        assert not "custom-awesome-key" in span_client.attributes
-        assert not "TriggeredTrace" in span_client.attributes
+        assert not any(
+            attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS
+        )
+        assert "sw.tracestate_parent_id" not in span_client.attributes
+        assert "SWKeys" not in span_client.attributes
+        assert "custom-awesome-key" not in span_client.attributes
+        assert "TriggeredTrace" not in span_client.attributes
         assert "this-will-be-ignored" not in span_client.attributes
 
         # Check span_id of the outgoing request span (client span) matches
@@ -223,37 +253,37 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"key",
-                            "TriggerRelaxedBucketCapacity":4,
-                            "TriggerRelaxedBucketRate":3,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":1_000_000
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "key",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 1_000_000,
                 }
             ],
         ):
             x_trace_options = f"sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo;ts={timestamp}"
-            x_trace_options_signature = hmac.new(str.encode("key"), str.encode(x_trace_options),
-                                                 hashlib.sha1).hexdigest()
+            x_trace_options_signature = hmac.new(
+                str.encode("key"), str.encode(x_trace_options), hashlib.sha1
+            ).hexdigest()
             # Request to instrumented app with headers
             resp = self.client.get(
                 "/test_trace/",
                 headers={
                     "x-trace-options": x_trace_options,
                     "x-trace-options-signature": x_trace_options_signature,
-                    "some-header": "some-value"
-                }
+                    "some-header": "some-value",
+                },
             )
         resp_json = json.loads(resp.data)
 
@@ -301,7 +331,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # Verify x-trace-options-response response header present
         assert "x-trace-options-response" in resp.headers
         assert "trigger-trace=not-requested" in resp.headers["x-trace-options-response"]
-        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+        assert (
+            "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+        )
 
         # Verify spans exported: service entry (root) + outgoing request (child with local parent)
         spans = self.memory_exporter.get_finished_spans()
@@ -317,12 +349,21 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # because no valid parent context.
         # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
-        expected_trace_state = trace_api.TraceState([
-            ("xtrace_options_response", "auth####ok;trigger-trace####not-requested;ignored####this-will-be-ignored"),
-        ])
+        expected_trace_state = trace_api.TraceState(
+            [
+                (
+                    "xtrace_options_response",
+                    "auth####ok;trigger-trace####not-requested;ignored####this-will-be-ignored",
+                ),
+            ]
+        )
         actual_trace_state = span_server.context.trace_state
-        assert actual_trace_state.get("sw") == expected_trace_state.get("sw")  # both None
-        assert actual_trace_state.get("xtrace_options_response") == expected_trace_state.get("xtrace_options_response")
+        assert actual_trace_state.get("sw") == expected_trace_state.get(
+            "sw"
+        )  # both None
+        assert actual_trace_state.get(
+            "xtrace_options_response"
+        ) == expected_trace_state.get("xtrace_options_response")
 
         # Check root span attributes
         #   :present:
@@ -335,12 +376,18 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         #     TriggeredTrace, because trigger-trace not in otel context
         #     the ignored value in the x-trace-options-header
         #     SampleRate, SampleSource in attributes, because it is a trigger trace
-        assert all(attr_key in span_server.attributes for attr_key in ["BucketCapacity", "BucketRate"])
+        assert all(
+            attr_key in span_server.attributes
+            for attr_key in ["BucketCapacity", "BucketRate"]
+        )
         assert span_server.attributes["BucketCapacity"] == 2
         assert span_server.attributes["BucketRate"] == 1
-        assert not "sw.tracestate_parent_id" in span_server.attributes
+        assert "sw.tracestate_parent_id" not in span_server.attributes
         assert "SWKeys" in span_server.attributes
-        assert span_server.attributes["SWKeys"] == "check-id:check-1013,website-id:booking-demo"
+        assert (
+            span_server.attributes["SWKeys"]
+            == "check-id:check-1013,website-id:booking-demo"
+        )
         assert "custom-awesome-key" in span_server.attributes
         assert span_server.attributes["custom-awesome-key"] == "foo"
         assert "TriggeredTrace" not in span_server.attributes
@@ -350,12 +397,21 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # because no valid parent context.
         # SWO APM uses TraceState to stash the trigger trace response so it's available
         # at the time of custom injecting the x-trace-options-response header.
-        expected_trace_state = trace_api.TraceState([
-            ("xtrace_options_response", "auth####ok;trigger-trace####not-requested;ignored####this-will-be-ignored"),
-        ])
+        expected_trace_state = trace_api.TraceState(
+            [
+                (
+                    "xtrace_options_response",
+                    "auth####ok;trigger-trace####not-requested;ignored####this-will-be-ignored",
+                ),
+            ]
+        )
         actual_trace_state = span_client.context.trace_state
-        assert actual_trace_state.get("sw") == expected_trace_state.get("sw")  # both None
-        assert actual_trace_state.get("xtrace_options_response") == expected_trace_state.get("xtrace_options_response")
+        assert actual_trace_state.get("sw") == expected_trace_state.get(
+            "sw"
+        )  # both None
+        assert actual_trace_state.get(
+            "xtrace_options_response"
+        ) == expected_trace_state.get("xtrace_options_response")
 
         # Check outgoing request span attributes
         #   :absent:
@@ -365,11 +421,13 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         #     custom-*, because only written for service entry spans
         #     TriggeredTrace, because only written for service entry spans
         #     the ignored value in the x-trace-options-header
-        assert not any(attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert not "sw.tracestate_parent_id" in span_client.attributes
-        assert not "SWKeys" in span_client.attributes
-        assert not "custom-awesome-key" in span_client.attributes
-        assert not "TriggeredTrace" in span_client.attributes
+        assert not any(
+            attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS
+        )
+        assert "sw.tracestate_parent_id" not in span_client.attributes
+        assert "SWKeys" not in span_client.attributes
+        assert "custom-awesome-key" not in span_client.attributes
+        assert "TriggeredTrace" not in span_client.attributes
         assert "this-will-be-ignored" not in span_client.attributes
 
         # Check span_id of the outgoing request span (client span) matches
@@ -396,37 +454,37 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"key",
-                            "TriggerRelaxedBucketCapacity":0,
-                            "TriggerRelaxedBucketRate":0,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5,
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":0
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "key",
+                        "TriggerRelaxedBucketCapacity": 0,
+                        "TriggerRelaxedBucketRate": 0,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 0,
                 }
             ],
         ):
             x_trace_options = f"trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo;ts={timestamp}"
-            x_trace_options_signature = hmac.new(str.encode("key"), str.encode(x_trace_options),
-                                                 hashlib.sha1).hexdigest()
+            x_trace_options_signature = hmac.new(
+                str.encode("key"), str.encode(x_trace_options), hashlib.sha1
+            ).hexdigest()
             # Request to instrumented app with headers
             resp = self.client.get(
                 "/test_trace/",
                 headers={
                     "x-trace-options": x_trace_options,
                     "x-trace-options-signature": x_trace_options_signature,
-                    "some-header": "some-value"
-                }
+                    "some-header": "some-value",
+                },
             )
         resp_json = json.loads(resp.data)
 
@@ -460,7 +518,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # In this test we know tracestate will have `sw`
         # with new_span_id and new_trace_flags.
         # `xtrace_options_response` is not propagated.
-        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+        assert resp_json["tracestate"] == "sw={}-{}".format(
+            new_span_id, new_trace_flags
+        )
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -472,7 +532,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         assert "x-trace-options-response" in resp.headers
         assert "auth=ok" in resp.headers["x-trace-options-response"]
         assert "trigger-trace=rate-exceeded" in resp.headers["x-trace-options-response"]
-        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+        assert (
+            "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+        )
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
@@ -495,43 +557,45 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
 
         with mock.patch(
             target="solarwinds_apm.oboe.sampler.Sampler.local_settings",
-            return_value=LocalSettings(tracing_mode=TracingMode.NEVER, trigger_mode=False)
+            return_value=LocalSettings(
+                tracing_mode=TracingMode.NEVER, trigger_mode=False
+            ),
         ):
             with mock.patch(
                 target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
                 return_value=[
                     {
-                        "arguments":
-                            {
-                                "BucketCapacity":2,
-                                "BucketRate":1,
-                                "MetricsFlushInterval":60,
-                                "SignatureKey":"key",
-                                "TriggerRelaxedBucketCapacity":4,
-                                "TriggerRelaxedBucketRate":3,
-                                "TriggerStrictBucketCapacity":6,
-                                "TriggerStrictBucketRate":5
-                            },
-                        "flags":"",
-                        "layer":"",
-                        "timestamp":timestamp,
-                        "ttl":120,
-                        "type":0,
-                        "value":1_000_000
+                        "arguments": {
+                            "BucketCapacity": 2,
+                            "BucketRate": 1,
+                            "MetricsFlushInterval": 60,
+                            "SignatureKey": "key",
+                            "TriggerRelaxedBucketCapacity": 4,
+                            "TriggerRelaxedBucketRate": 3,
+                            "TriggerStrictBucketCapacity": 6,
+                            "TriggerStrictBucketRate": 5,
+                        },
+                        "flags": "",
+                        "layer": "",
+                        "timestamp": timestamp,
+                        "ttl": 120,
+                        "type": 0,
+                        "value": 1_000_000,
                     }
                 ],
             ):
                 x_trace_options = f"trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo;ts={timestamp}"
-                x_trace_options_signature = hmac.new(str.encode("key"), str.encode(x_trace_options),
-                                                     hashlib.sha1).hexdigest()
+                x_trace_options_signature = hmac.new(
+                    str.encode("key"), str.encode(x_trace_options), hashlib.sha1
+                ).hexdigest()
                 # Request to instrumented app with headers
                 resp = self.client.get(
                     "/test_trace/",
                     headers={
                         "x-trace-options": x_trace_options,
                         "x-trace-options-signature": x_trace_options_signature,
-                        "some-header": "some-value"
-                    }
+                        "some-header": "some-value",
+                    },
                 )
         resp_json = json.loads(resp.data)
 
@@ -565,7 +629,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # In this test we know tracestate will have `sw`
         # with new_span_id and new_trace_flags.
         # `xtrace_options_response` is not propagated.
-        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+        assert resp_json["tracestate"] == "sw={}-{}".format(
+            new_span_id, new_trace_flags
+        )
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -576,8 +642,12 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # Verify x-trace-options-response response header present
         assert "x-trace-options-response" in resp.headers
         assert "auth=ok" in resp.headers["x-trace-options-response"]
-        assert "trigger-trace=tracing-disabled" in resp.headers["x-trace-options-response"]
-        assert "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+        assert (
+            "trigger-trace=tracing-disabled" in resp.headers["x-trace-options-response"]
+        )
+        assert (
+            "ignored=this-will-be-ignored" in resp.headers["x-trace-options-response"]
+        )
 
         # Verify no spans exported
         spans = self.memory_exporter.get_finished_spans()
@@ -604,23 +674,22 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":4,
-                            "TriggerRelaxedBucketRate":3,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5,
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":0
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 0,
                 }
             ],
         ):
@@ -630,8 +699,8 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
                 headers={
                     "x-trace-options": f"trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo;ts={timestamp}",
                     "x-trace-options-signature": "bad-sig",
-                    "some-header": "some-value"
-                }
+                    "some-header": "some-value",
+                },
             )
         resp_json = json.loads(resp.data)
 
@@ -665,7 +734,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # In this test we know tracestate will have `sw`
         # with new_span_id and new_trace_flags.
         # `xtrace_options_response` is not propagated.
-        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+        assert resp_json["tracestate"] == "sw={}-{}".format(
+            new_span_id, new_trace_flags
+        )
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -704,23 +775,22 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":4,
-                            "TriggerRelaxedBucketRate":3,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5,
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":0
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 0,
                 }
             ],
         ):
@@ -730,8 +800,8 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
                 headers={
                     "x-trace-options": f"sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo;ts={timestamp}",
                     "x-trace-options-signature": "bad-sig",
-                    "some-header": "some-value"
-                }
+                    "some-header": "some-value",
+                },
             )
         resp_json = json.loads(resp.data)
 
@@ -807,36 +877,37 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"key",
-                            "TriggerRelaxedBucketCapacity":4,
-                            "TriggerRelaxedBucketRate":3,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5,
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":0
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "key",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 0,
                 }
             ],
         ):
             x_trace_options = f"trigger-trace;sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo;ts={timestamp-5*60-1}"
-            x_trace_options_signature = hmac.new(str.encode("key"), str.encode(x_trace_options), hashlib.sha1).hexdigest()
+            x_trace_options_signature = hmac.new(
+                str.encode("key"), str.encode(x_trace_options), hashlib.sha1
+            ).hexdigest()
             # Request to instrumented app with headers
             resp = self.client.get(
                 "/test_trace/",
                 headers={
                     "x-trace-options": x_trace_options,
                     "x-trace-options-signature": x_trace_options_signature,
-                    "some-header": "some-value"
-                }
+                    "some-header": "some-value",
+                },
             )
         resp_json = json.loads(resp.data)
 
@@ -870,7 +941,9 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
         # In this test we know tracestate will have `sw`
         # with new_span_id and new_trace_flags.
         # `xtrace_options_response` is not propagated.
-        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+        assert resp_json["tracestate"] == "sw={}-{}".format(
+            new_span_id, new_trace_flags
+        )
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -909,29 +982,29 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"key",
-                            "TriggerRelaxedBucketCapacity":4,
-                            "TriggerRelaxedBucketRate":3,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5,
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":0
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "key",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 0,
                 }
             ],
         ):
             x_trace_options = f"sw-keys=check-id:check-1013,website-id:booking-demo;this-will-be-ignored;custom-awesome-key=foo;ts={timestamp - 5 * 60 - 1}"
-            x_trace_options_signature = hmac.new(str.encode("key"), str.encode(x_trace_options),
-                                                 hashlib.sha1).hexdigest()
+            x_trace_options_signature = hmac.new(
+                str.encode("key"), str.encode(x_trace_options), hashlib.sha1
+            ).hexdigest()
 
             # Request to instrumented app with headers
             resp = self.client.get(
@@ -939,8 +1012,8 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
                 headers={
                     "x-trace-options": x_trace_options,
                     "x-trace-options-signature": x_trace_options_signature,
-                    "some-header": "some-value"
-                }
+                    "some-header": "some-value",
+                },
             )
         resp_json = json.loads(resp.data)
 
@@ -1016,23 +1089,22 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"key",
-                            "TriggerRelaxedBucketCapacity":4,
-                            "TriggerRelaxedBucketRate":3,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5,
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":0
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "key",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 0,
                 }
             ],
         ):
@@ -1041,8 +1113,8 @@ class TestSignedWithOrWithoutTt(TestBaseSwHeadersAndAttributes):
                 "/test_trace/",
                 headers={
                     "x-trace-options-signature": "good-sig-but-no-ts",
-                    "some-header": "some-value"
-                }
+                    "some-header": "some-value",
+                },
             )
         resp_json = json.loads(resp.data)
         # Verify some-header was not altered by instrumentation

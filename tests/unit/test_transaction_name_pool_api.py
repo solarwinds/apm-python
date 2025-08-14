@@ -9,6 +9,7 @@ from solarwinds_apm.oboe import (
     TransactionNamePool,
 )
 
+
 def test_get_transaction_name_pool():
     local_pool = TransactionNamePool()
     global_pool = get_transaction_name_pool()

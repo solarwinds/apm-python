@@ -9,6 +9,7 @@ import pytest
 
 from solarwinds_apm import configurator
 
+
 class TestConfiguratorSwapLegacySpanExporter:
     @pytest.fixture(autouse=True)
     def clear_env_vars(self):
@@ -27,12 +28,8 @@ class TestConfiguratorSwapLegacySpanExporter:
                 mock_exporter_entry_point,
             ]
         )
-        mock_entry_points = mocker.patch(
-            "solarwinds_apm.configurator.entry_points"
-        )
-        mock_entry_points.configure_mock(
-            return_value=mock_points
-        )
+        mock_entry_points = mocker.patch("solarwinds_apm.configurator.entry_points")
+        mock_entry_points.configure_mock(return_value=mock_points)
         return {
             "mock_exporter_class": mock_exporter_class,
             "mock_entry_points": mock_entry_points,
@@ -99,7 +96,7 @@ class TestConfiguratorSwapLegacySpanExporter:
         mocks["mock_entry_points"].assert_has_calls(
             [
                 mocker.call(
-                    group="opentelemetry_traces_exporter", 
+                    group="opentelemetry_traces_exporter",
                     name="otlp_proto_http",
                 ),
             ]
@@ -108,9 +105,7 @@ class TestConfiguratorSwapLegacySpanExporter:
     def test_swap_legacy_span_exporter_sw_only_invalid_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
-            {
-                "OTEL_EXPORTER_OTLP_PROTOCOL": "invalid-proto"
-            },
+            {"OTEL_EXPORTER_OTLP_PROTOCOL": "invalid-proto"},
             clear=True,
         )
         mocks = self.mocks(mocker)
@@ -120,13 +115,11 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "foo",
             }
         )
-        assert result == {
-            "otlp_proto_http": mocks["mock_exporter_class"]
-        }
+        assert result == {"otlp_proto_http": mocks["mock_exporter_class"]}
         mocks["mock_entry_points"].assert_has_calls(
             [
                 mocker.call(
-                    group="opentelemetry_traces_exporter", 
+                    group="opentelemetry_traces_exporter",
                     name="otlp_proto_http",
                 ),
             ]
@@ -135,9 +128,7 @@ class TestConfiguratorSwapLegacySpanExporter:
     def test_swap_legacy_span_exporter_sw_only_http_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
-            {
-                "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf"
-            },
+            {"OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf"},
             clear=True,
         )
         mocks = self.mocks(mocker)
@@ -147,13 +138,11 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "foo",
             }
         )
-        assert result == {
-            "otlp_proto_http": mocks["mock_exporter_class"]
-        }
+        assert result == {"otlp_proto_http": mocks["mock_exporter_class"]}
         mocks["mock_entry_points"].assert_has_calls(
             [
                 mocker.call(
-                    group="opentelemetry_traces_exporter", 
+                    group="opentelemetry_traces_exporter",
                     name="otlp_proto_http",
                 ),
             ]
@@ -162,9 +151,7 @@ class TestConfiguratorSwapLegacySpanExporter:
     def test_swap_legacy_span_exporter_sw_only_grpc_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
-            {
-                "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc"
-            },
+            {"OTEL_EXPORTER_OTLP_PROTOCOL": "grpc"},
             clear=True,
         )
         mocks = self.mocks(mocker)
@@ -174,13 +161,11 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "foo",
             }
         )
-        assert result == {
-            "otlp_proto_grpc": mocks["mock_exporter_class"]
-        }
+        assert result == {"otlp_proto_grpc": mocks["mock_exporter_class"]}
         mocks["mock_entry_points"].assert_has_calls(
             [
                 mocker.call(
-                    group="opentelemetry_traces_exporter", 
+                    group="opentelemetry_traces_exporter",
                     name="otlp_proto_grpc",
                 ),
             ]
@@ -195,17 +180,13 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "bar",
             }
         )
-        assert result == {
-            "otlp_proto_http": "foo"
-        }
+        assert result == {"otlp_proto_http": "foo"}
         mocks["mock_entry_points"].assert_not_called()
 
     def test_swap_legacy_span_exporter_otlp_and_sw_invalid_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
-            {
-                "OTEL_EXPORTER_OTLP_PROTOCOL": "invalid-protocol"
-            },
+            {"OTEL_EXPORTER_OTLP_PROTOCOL": "invalid-protocol"},
             clear=True,
         )
         mocks = self.mocks(mocker)
@@ -216,17 +197,13 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "bar",
             }
         )
-        assert result == {
-            "otlp_proto_http": "foo"
-        }
+        assert result == {"otlp_proto_http": "foo"}
         mocks["mock_entry_points"].assert_not_called()
 
     def test_swap_legacy_span_exporter_otlp_and_sw_http_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
-            {
-                "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf"
-            },
+            {"OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf"},
             clear=True,
         )
         mocks = self.mocks(mocker)
@@ -237,17 +214,13 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "bar",
             }
         )
-        assert result == {
-            "otlp_proto_grpc": "foo"
-        }
+        assert result == {"otlp_proto_grpc": "foo"}
         mocks["mock_entry_points"].assert_not_called()
 
     def test_swap_legacy_span_exporter_otlp_and_sw_grpc_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
-            {
-                "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc"
-            },
+            {"OTEL_EXPORTER_OTLP_PROTOCOL": "grpc"},
             clear=True,
         )
         mocks = self.mocks(mocker)
@@ -258,9 +231,7 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "bar",
             }
         )
-        assert result == {
-            "otlp_proto_http": "foo"
-        }
+        assert result == {"otlp_proto_http": "foo"}
         mocks["mock_entry_points"].assert_not_called()
 
     def test_swap_legacy_span_exporter_sw_only_no_traces_protocol(self, mocker):
@@ -276,7 +247,7 @@ class TestConfiguratorSwapLegacySpanExporter:
         mocks["mock_entry_points"].assert_has_calls(
             [
                 mocker.call(
-                    group="opentelemetry_traces_exporter", 
+                    group="opentelemetry_traces_exporter",
                     name="otlp_proto_http",
                 ),
             ]
@@ -285,9 +256,7 @@ class TestConfiguratorSwapLegacySpanExporter:
     def test_swap_legacy_span_exporter_sw_only_invalid_traces_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
-            {
-                "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL": "invalid-protocol"
-            },
+            {"OTEL_EXPORTER_OTLP_TRACES_PROTOCOL": "invalid-protocol"},
             clear=True,
         )
         mocks = self.mocks(mocker)
@@ -302,7 +271,7 @@ class TestConfiguratorSwapLegacySpanExporter:
         mocks["mock_entry_points"].assert_has_calls(
             [
                 mocker.call(
-                    group="opentelemetry_traces_exporter", 
+                    group="opentelemetry_traces_exporter",
                     name="otlp_proto_http",
                 ),
             ]
@@ -311,9 +280,7 @@ class TestConfiguratorSwapLegacySpanExporter:
     def test_swap_legacy_span_exporter_sw_only_http_traces_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
-            {
-                "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL": "http/protobuf"
-            },
+            {"OTEL_EXPORTER_OTLP_TRACES_PROTOCOL": "http/protobuf"},
             clear=True,
         )
         mocks = self.mocks(mocker)
@@ -323,13 +290,11 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "foo",
             }
         )
-        assert result == {
-            "otlp_proto_http": mocks["mock_exporter_class"]
-        }
+        assert result == {"otlp_proto_http": mocks["mock_exporter_class"]}
         mocks["mock_entry_points"].assert_has_calls(
             [
                 mocker.call(
-                    group="opentelemetry_traces_exporter", 
+                    group="opentelemetry_traces_exporter",
                     name="otlp_proto_http",
                 ),
             ]
@@ -338,9 +303,7 @@ class TestConfiguratorSwapLegacySpanExporter:
     def test_swap_legacy_span_exporter_sw_only_grpc_traces_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
-            {
-                "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL": "grpc"
-            },
+            {"OTEL_EXPORTER_OTLP_TRACES_PROTOCOL": "grpc"},
             clear=True,
         )
         mocks = self.mocks(mocker)
@@ -350,24 +313,22 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "foo",
             }
         )
-        assert result == {
-            "otlp_proto_grpc": mocks["mock_exporter_class"]
-        }
+        assert result == {"otlp_proto_grpc": mocks["mock_exporter_class"]}
         mocks["mock_entry_points"].assert_has_calls(
             [
                 mocker.call(
-                    group="opentelemetry_traces_exporter", 
+                    group="opentelemetry_traces_exporter",
                     name="otlp_proto_grpc",
                 ),
             ]
         )
 
-    def test_swap_legacy_span_exporter_otlp_and_sw_invalid_traces_protocol(self, mocker):
+    def test_swap_legacy_span_exporter_otlp_and_sw_invalid_traces_protocol(
+        self, mocker
+    ):
         mocker.patch.dict(
             os.environ,
-            {
-                "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL": "invalid-protocol"
-            },
+            {"OTEL_EXPORTER_OTLP_TRACES_PROTOCOL": "invalid-protocol"},
             clear=True,
         )
         mocks = self.mocks(mocker)
@@ -378,17 +339,13 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "bar",
             }
         )
-        assert result == {
-            "otlp_proto_http": "foo"
-        }
+        assert result == {"otlp_proto_http": "foo"}
         mocks["mock_entry_points"].assert_not_called()
 
     def test_swap_legacy_span_exporter_otlp_and_sw_http_traces_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
-            {
-                "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL": "http/protobuf"
-            },
+            {"OTEL_EXPORTER_OTLP_TRACES_PROTOCOL": "http/protobuf"},
             clear=True,
         )
         mocks = self.mocks(mocker)
@@ -399,17 +356,13 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "bar",
             }
         )
-        assert result == {
-            "otlp_proto_grpc": "foo"
-        }
+        assert result == {"otlp_proto_grpc": "foo"}
         mocks["mock_entry_points"].assert_not_called()
 
     def test_swap_legacy_span_exporter_otlp_and_sw_grpc_traces_protocol(self, mocker):
         mocker.patch.dict(
             os.environ,
-            {
-                "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL": "grpc"
-            },
+            {"OTEL_EXPORTER_OTLP_TRACES_PROTOCOL": "grpc"},
             clear=True,
         )
         mocks = self.mocks(mocker)
@@ -420,12 +373,12 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "bar",
             }
         )
-        assert result == {
-            "otlp_proto_http": "foo"
-        }
+        assert result == {"otlp_proto_http": "foo"}
         mocks["mock_entry_points"].assert_not_called()
 
-    def test_swap_legacy_span_exporter_sw_only_general_and_traces_protocol(self, mocker):
+    def test_swap_legacy_span_exporter_sw_only_general_and_traces_protocol(
+        self, mocker
+    ):
         mocker.patch.dict(
             os.environ,
             {
@@ -441,19 +394,19 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "foo",
             }
         )
-        assert result == {
-            "otlp_proto_grpc": mocks["mock_exporter_class"]
-        }
+        assert result == {"otlp_proto_grpc": mocks["mock_exporter_class"]}
         mocks["mock_entry_points"].assert_has_calls(
             [
                 mocker.call(
-                    group="opentelemetry_traces_exporter", 
+                    group="opentelemetry_traces_exporter",
                     name="otlp_proto_grpc",
                 ),
             ]
         )
 
-    def test_swap_legacy_span_exporter_otlp_and_sw_grpc_general_and_traces_protocol(self, mocker):
+    def test_swap_legacy_span_exporter_otlp_and_sw_grpc_general_and_traces_protocol(
+        self, mocker
+    ):
         mocker.patch.dict(
             os.environ,
             {
@@ -470,7 +423,5 @@ class TestConfiguratorSwapLegacySpanExporter:
                 "solarwinds_exporter": "bar",
             }
         )
-        assert result == {
-            "otlp_proto_grpc": "foo"
-        }
+        assert result == {"otlp_proto_grpc": "foo"}
         mocks["mock_entry_points"].assert_not_called()

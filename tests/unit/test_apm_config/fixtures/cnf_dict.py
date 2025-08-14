@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.fixture
 def fixture_cnf_dict():
     return {
@@ -13,6 +14,7 @@ def fixture_cnf_dict():
         "exportLogsEnabled": True,
     }
 
+
 @pytest.fixture
 def fixture_cnf_dict_enabled_false():
     return {
@@ -25,6 +27,7 @@ def fixture_cnf_dict_enabled_false():
         "logTraceId": "always",
         "exportLogsEnabled": False,
     }
+
 
 @pytest.fixture
 def fixture_cnf_dict_enabled_false_mixed_case():

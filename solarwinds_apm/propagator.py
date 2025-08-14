@@ -47,9 +47,9 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         if context is None:
             context = Context()
 
-        xtraceoptions_header = getter.get(
-            carrier, self._XTRACEOPTIONS_HEADER_NAME
-        ) or [""]
+        xtraceoptions_header = getter.get(carrier, self._XTRACEOPTIONS_HEADER_NAME) or [
+            ""
+        ]
         signature_header = getter.get(
             carrier, self._XTRACEOPTIONS_SIGNATURE_HEADER_NAME
         ) or [""]
@@ -99,9 +99,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
                     "Updating trace state for injection with %s",
                     sw_value,
                 )
-                trace_state = trace_state.update(
-                    INTL_SWO_TRACESTATE_KEY, sw_value
-                )
+                trace_state = trace_state.update(INTL_SWO_TRACESTATE_KEY, sw_value)
 
             else:
                 # If not, add sw KV to beginning of list
@@ -109,15 +107,11 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
                     "Adding KV to trace state for injection with %s",
                     sw_value,
                 )
-                trace_state = trace_state.add(
-                    INTL_SWO_TRACESTATE_KEY, sw_value
-                )
+                trace_state = trace_state.add(INTL_SWO_TRACESTATE_KEY, sw_value)
 
         # Remove any xtrace_options_response stored for ResponsePropagator
         trace_state = W3CTransformer.remove_response_from_sw(trace_state)
-        setter.set(
-            carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header()
-        )
+        setter.set(carrier, self._TRACESTATE_HEADER_NAME, trace_state.to_header())
 
     # Note: this inherits deprecated `typing` use by OTel,
     #       for compatibility with Python3.8 else TypeError

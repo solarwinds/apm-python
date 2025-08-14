@@ -12,7 +12,9 @@ import sys
 
 
 def parse_args(args=None):
-    parser = argparse.ArgumentParser(description="Lint and format everything, autofixing if possible.")
+    parser = argparse.ArgumentParser(
+        description="Lint and format everything, autofixing if possible."
+    )
     parser.add_argument("--check-only", action="store_true")
     parser.add_argument("--allowexitcodes", action="append", default=[0])
     parser.set_defaults(parser=parser)

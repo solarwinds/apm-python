@@ -29,16 +29,14 @@ def test_valid_service_key_samples_created_spans():
             service = l[1]
             meter_provider = MeterProvider(
                 metric_readers=[InMemoryMetricReader()],
-                exemplar_filter=AlwaysOnExemplarFilter()
+                exemplar_filter=AlwaysOnExemplarFilter(),
             )
             sampler = HttpSampler(
                 meter_provider=meter_provider,
                 config=Configuration(
                     collector="https://apm.collector.na-01.cloud.solarwinds.com",
                     service=service,
-                    headers={
-                        "Authorization": f"Bearer {bearer}"
-                    },
+                    headers={"Authorization": f"Bearer {bearer}"},
                     enabled=True,
                     trigger_trace_enabled=True,
                     tracing_mode=None,
@@ -49,7 +47,9 @@ def test_valid_service_key_samples_created_spans():
             )
             memory_exporter = InMemorySpanExporter()
             tracer_provider = TracerProvider(sampler=sampler)
-            tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+            tracer_provider.add_span_processor(
+                span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+            )
             tracer = trace.get_tracer("test", tracer_provider=tracer_provider)
             sampler.wait_until_ready(1)
             with tracer.start_as_current_span("test") as span:
@@ -65,16 +65,14 @@ def test_valid_service_key_samples_created_spans():
 def test_invalid_service_key_does_not_sample_created_spans():
     meter_provider = MeterProvider(
         metric_readers=[InMemoryMetricReader()],
-        exemplar_filter=AlwaysOnExemplarFilter()
+        exemplar_filter=AlwaysOnExemplarFilter(),
     )
     sampler = HttpSampler(
         meter_provider=meter_provider,
         config=Configuration(
             collector="https://apm.collector.na-01.cloud.solarwinds.com",
             service="apm-python-test",
-            headers={
-                "Authorization": "Bearer oh-no"
-            },
+            headers={"Authorization": "Bearer oh-no"},
             enabled=True,
             trigger_trace_enabled=True,
             tracing_mode=None,
@@ -85,7 +83,9 @@ def test_invalid_service_key_does_not_sample_created_spans():
     )
     memory_exporter = InMemorySpanExporter()
     tracer_provider = TracerProvider(sampler=sampler)
-    tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+    tracer_provider.add_span_processor(
+        span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+    )
     tracer = trace.get_tracer("test", tracer_provider=tracer_provider)
     sampler.wait_until_ready(1)
     with tracer.start_as_current_span("test") as span:
@@ -97,15 +97,14 @@ def test_invalid_service_key_does_not_sample_created_spans():
 def test_invalid_collector_does_not_sample_created_spans():
     meter_provider = MeterProvider(
         metric_readers=[InMemoryMetricReader()],
-        exemplar_filter=AlwaysOnExemplarFilter()
+        exemplar_filter=AlwaysOnExemplarFilter(),
     )
     sampler = HttpSampler(
         meter_provider=meter_provider,
         config=Configuration(
             collector="https://collector.invalid",
             service="apm-python-test",
-            headers={
-            },
+            headers={},
             enabled=True,
             trigger_trace_enabled=True,
             tracing_mode=None,
@@ -116,7 +115,9 @@ def test_invalid_collector_does_not_sample_created_spans():
     )
     memory_exporter = InMemorySpanExporter()
     tracer_provider = TracerProvider(sampler=sampler)
-    tracer_provider.add_span_processor(span_processor=SimpleSpanProcessor(span_exporter=memory_exporter))
+    tracer_provider.add_span_processor(
+        span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+    )
     tracer = trace.get_tracer("test", tracer_provider=tracer_provider)
     sampler.wait_until_ready(1)
     with tracer.start_as_current_span("test") as span:
@@ -144,7 +145,7 @@ def meter_provider():
     return MeterProvider()
 
 
-@patch('requests.get')
+@patch("requests.get")
 def test_fetch_from_collector_success(mock_get, config, meter_provider):
     mock_response = MagicMock()
     mock_response.json.return_value = {
@@ -159,8 +160,8 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
             "TriggerRelaxedBucketRate": 1,
             "TriggerStrictBucketCapacity": 6,
             "TriggerStrictBucketRate": 0.1,
-            "SignatureKey": "signature"
-        }
+            "SignatureKey": "signature",
+        },
     }
     mock_response.status_code = 200
     mock_get.return_value = mock_response
@@ -178,13 +179,14 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
             "TriggerRelaxedBucketRate": 1,
             "TriggerStrictBucketCapacity": 6,
             "TriggerStrictBucketRate": 0.1,
-            "SignatureKey": "signature"
-        }
+            "SignatureKey": "signature",
+        },
     }
     mock_get.assert_called_with(
         f"https://apm.collector.na-01.cloud.solarwinds.com/v1/settings/test_service/{socket.gethostname()}",
         headers={"Authorization": "Bearer test_token"},
-        timeout=10)
+        timeout=10,
+    )
     # one in constructor and one in test case
     assert mock_get.call_count == 2
 

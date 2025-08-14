@@ -21,13 +21,14 @@ from solarwinds_apm.k8s import K8sResourceDetector
 NAMESPACE_FILE = os.path.join(tempfile.gettempdir(), "solarwinds-apm-k8s-namespace")
 MOUNTINFO_FILE = os.path.join(tempfile.gettempdir(), "solarwinds-apm-mountinfo")
 
-ENV_NAMESPACE = ''.join(random.choices(string.hexdigits, k=16))
-FILE_NAMESPACE = ''.join(random.choices(string.hexdigits, k=16))
+ENV_NAMESPACE = "".join(random.choices(string.hexdigits, k=16))
+FILE_NAMESPACE = "".join(random.choices(string.hexdigits, k=16))
 
 ENV_UID = str(uuid.uuid4())
 FILE_UID = str(uuid.uuid4())
 
-ENV_NAME = ''.join(random.choices(string.hexdigits, k=8))
+ENV_NAME = "".join(random.choices(string.hexdigits, k=8))
+
 
 @pytest.fixture(autouse=True)
 def cleanup():
@@ -36,9 +37,11 @@ def cleanup():
         os.remove(NAMESPACE_FILE)
         os.remove(MOUNTINFO_FILE)
 
+
 def file_namespace():
     with open(NAMESPACE_FILE, "w") as f:
         f.write(f"{FILE_NAMESPACE}\n")
+
 
 def file_uid():
     with open(MOUNTINFO_FILE, "w") as f:
@@ -71,12 +74,16 @@ def file_uid():
 628 765 0:151 / /sys/firmware ro,relatime - tmpfs tmpfs ro,context="system_u:object_r:data_t:s0:c171,c852"
     """)
 
+
 def test_detects_attributes_from_env(mocker):
-    mocker.patch.dict(os.environ, {
-        'SW_K8S_POD_NAMESPACE': ENV_NAMESPACE,
-        'SW_K8S_POD_UID': ENV_UID,
-        'SW_K8S_POD_NAME': ENV_NAME,
-    })
+    mocker.patch.dict(
+        os.environ,
+        {
+            "SW_K8S_POD_NAMESPACE": ENV_NAMESPACE,
+            "SW_K8S_POD_UID": ENV_UID,
+            "SW_K8S_POD_NAME": ENV_NAME,
+        },
+    )
 
     k8s_detector = K8sResourceDetector(NAMESPACE_FILE, MOUNTINFO_FILE)
     resource = k8s_detector.detect()
@@ -86,6 +93,7 @@ def test_detects_attributes_from_env(mocker):
         ResourceAttributes.K8S_POD_UID: ENV_UID,
         ResourceAttributes.K8S_POD_NAME: ENV_NAME,
     }
+
 
 def test_detects_attributes_from_files():
     file_namespace()
@@ -103,12 +111,16 @@ def test_detects_attributes_from_files():
 
     assert resource.attributes == expected_attributes
 
+
 def test_prefers_env_over_files(mocker):
-    mocker.patch.dict(os.environ, {
-        'SW_K8S_POD_NAMESPACE': ENV_NAMESPACE,
-        'SW_K8S_POD_UID': ENV_UID,
-        'SW_K8S_POD_NAME': ENV_NAME,
-    })
+    mocker.patch.dict(
+        os.environ,
+        {
+            "SW_K8S_POD_NAMESPACE": ENV_NAMESPACE,
+            "SW_K8S_POD_UID": ENV_UID,
+            "SW_K8S_POD_NAME": ENV_NAME,
+        },
+    )
     file_namespace()
     file_uid()
 
@@ -121,11 +133,15 @@ def test_prefers_env_over_files(mocker):
         ResourceAttributes.K8S_POD_NAME: ENV_NAME,
     }
 
+
 def test_doesnt_detect_uid_or_name_without_namespace(mocker):
-    mocker.patch.dict(os.environ, {
-        'SW_K8S_POD_UID': ENV_UID,
-        'SW_K8S_POD_NAME': ENV_NAME,
-    })
+    mocker.patch.dict(
+        os.environ,
+        {
+            "SW_K8S_POD_UID": ENV_UID,
+            "SW_K8S_POD_NAME": ENV_NAME,
+        },
+    )
     file_uid()
 
     k8s_detector = K8sResourceDetector(NAMESPACE_FILE, MOUNTINFO_FILE)

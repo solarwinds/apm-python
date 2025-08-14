@@ -12,6 +12,7 @@ from opentelemetry import trace
 app = Flask(__name__)
 tracer = trace.get_tracer(__name__)
 
+
 @app.route("/test/")
 def test_trace():
     """Makes request traced by autoinstrumentation

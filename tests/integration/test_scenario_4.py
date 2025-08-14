@@ -47,23 +47,22 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":4,
-                            "TriggerRelaxedBucketRate":3,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5,
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":1000000
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 1000000,
                 }
             ],
         ):
@@ -73,8 +72,8 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
                 headers={
                     "traceparent": traceparent,
                     "tracestate": tracestate,
-                    "some-header": "some-value"
-                }
+                    "some-header": "some-value",
+                },
             )
         resp_json = json.loads(resp.data)
 
@@ -108,7 +107,9 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert "tracestate" in resp_json
         # In this test we know there is only `sw` in tracestate
         # and its value will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+        assert resp_json["tracestate"] == "sw={}-{}".format(
+            new_span_id, new_trace_flags
+        )
 
         # Verify the OTel context extracted from the original request are continued by
         # the trace context injected into test app's outgoing postman-echo call
@@ -152,19 +153,23 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         #   :absent:
         #     service entry internal KVs, which not on entry spans if non-root
         #     SWKeys, because no xtraceoptions in otel context
-        assert not any(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert not any(
+            attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS
+        )
         assert "sw.tracestate_parent_id" in span_server.attributes
         assert span_server.attributes["sw.tracestate_parent_id"] == tracestate_span
-        assert not "SWKeys" in span_server.attributes
+        assert "SWKeys" not in span_server.attributes
 
         # Check outgoing request span attributes
         #   :absent:
         #     service entry internal KVs, which are only on entry spans
         #     sw.tracestate_parent_id, because cannot be set without attributes at decision
         #     SWKeys, because no xtraceoptions in otel context
-        assert not any(attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert not "sw.tracestate_parent_id" in span_client.attributes
-        assert not "SWKeys" in span_client.attributes
+        assert not any(
+            attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS
+        )
+        assert "sw.tracestate_parent_id" not in span_client.attributes
+        assert "SWKeys" not in span_client.attributes
 
         # Check span_id of the outgoing request span (client span) matches
         # the span_id portion in the outgoing tracestate header, which
@@ -197,23 +202,22 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":4,
-                            "TriggerRelaxedBucketRate":3,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5,
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":0
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 0,
                 }
             ],
         ):
@@ -223,8 +227,8 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
                 headers={
                     "traceparent": traceparent,
                     "tracestate": tracestate,
-                    "some-header": "some-value"
-                }
+                    "some-header": "some-value",
+                },
             )
         resp_json = json.loads(resp.data)
 
@@ -258,7 +262,9 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert "tracestate" in resp_json
         # In this test we know there is only `sw` in tracestate
         # and its value will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+        assert resp_json["tracestate"] == "sw={}-{}".format(
+            new_span_id, new_trace_flags
+        )
 
         # Verify the OTel context extracted from the original request are continued by
         # the trace context injected into test app's outgoing postman-echo call

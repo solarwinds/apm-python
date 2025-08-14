@@ -119,9 +119,7 @@ class SolarWindsDistro(BaseDistro):
         environ.setdefault(OTEL_TRACES_EXPORTER, self._DEFAULT_OTLP_EXPORTER)
         environ.setdefault(OTEL_METRICS_EXPORTER, self._DEFAULT_OTLP_EXPORTER)
         environ.setdefault(OTEL_LOGS_EXPORTER, self._DEFAULT_OTLP_EXPORTER)
-        environ.setdefault(
-            OTEL_EXPORTER_OTLP_PROTOCOL, self._DEFAULT_OTLP_PROTOCOL
-        )
+        environ.setdefault(OTEL_EXPORTER_OTLP_PROTOCOL, self._DEFAULT_OTLP_PROTOCOL)
 
         # Default histogram aggregation as exponential
         environ.setdefault(
@@ -133,19 +131,13 @@ class SolarWindsDistro(BaseDistro):
         collector = self._collector
         if collector is not None and collector.startswith("apm.collector"):
             # Collector endpoint is set, try it
-            match = re.search(
-                r"\b[a-z]{2}-\d{2}(?:\.\w+(?:-\w+)*)?\b", collector
-            )
+            match = re.search(r"\b[a-z]{2}-\d{2}(?:\.\w+(?:-\w+)*)?\b", collector)
             if match:
                 # Set the OTLP endpoint to the collector endpoint with the correct region
                 resolved = (
-                    "https://otel.collector."
-                    + match.group()
-                    + ".solarwinds.com:443"
+                    "https://otel.collector." + match.group() + ".solarwinds.com:443"
                 )
-                logger.debug(
-                    "Using exporter otlp collector endpoint %s", resolved
-                )
+                logger.debug("Using exporter otlp collector endpoint %s", resolved)
                 environ.setdefault(OTEL_EXPORTER_OTLP_ENDPOINT, resolved)
             else:
                 environ.setdefault(
@@ -169,17 +161,13 @@ class SolarWindsDistro(BaseDistro):
             if match:
                 header_token = self._get_token_from_service_key()
                 if not header_token:
-                    logger.debug(
-                        "Setting OTLP export defaults without SWO token"
-                    )
+                    logger.debug("Setting OTLP export defaults without SWO token")
                 environ.setdefault(
                     OTEL_EXPORTER_OTLP_HEADERS,
                     f"authorization=Bearer%20{header_token}",
                 )
 
-        environ.setdefault(
-            OTEL_PROPAGATORS, ",".join(INTL_SWO_DEFAULT_PROPAGATORS)
-        )
+        environ.setdefault(OTEL_PROPAGATORS, ",".join(INTL_SWO_DEFAULT_PROPAGATORS))
         # Default for LoggingInstrumentor
         environ.setdefault(
             OTEL_PYTHON_LOG_FORMAT,
@@ -234,9 +222,7 @@ class SolarWindsDistro(BaseDistro):
                     # Assumes this value can be empty
                     # Note: Django ORM reads options in settings.py instead
                     # https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/django/django.html
-                    kwargs["commenter_options"] = (
-                        self.detect_commenter_options()
-                    )
+                    kwargs["commenter_options"] = self.detect_commenter_options()
             if entry_point_setting.get("enable_attribute_commenter") is True:
                 kwargs["enable_attribute_commenter"] = True
 
@@ -304,13 +290,9 @@ class SolarWindsDistro(BaseDistro):
 
                     instrumentor_name = key.strip().lower()
                     if instrumentor_name in _SQLCOMMENTERS:
-                        env_v_bool = SolarWindsApmConfig.convert_to_bool(
-                            value.strip()
-                        )
+                        env_v_bool = SolarWindsApmConfig.convert_to_bool(value.strip())
                         if env_v_bool is not None:
-                            env_commenter_map[instrumentor_name][
-                                key_name
-                            ] = env_v_bool
+                            env_commenter_map[instrumentor_name][key_name] = env_v_bool
 
         parse_env_items("SW_APM_ENABLED_SQLCOMMENT", "enable_commenter")
         parse_env_items(

@@ -4,19 +4,12 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+
 def get_resource_mocks(mocker):
     mock_new_res = mocker.Mock()
-    mock_new_res.configure_mock(
-        **{
-            "merge": {"foo-merged": "yay"}
-        }
-    )
+    mock_new_res.configure_mock(**{"merge": {"foo-merged": "yay"}})
     mock_res = mocker.patch(
         "solarwinds_apm.configurator.Resource",
     )
-    mock_res.configure_mock(
-        **{
-            "create": mock_new_res
-        }
-    )
+    mock_res.configure_mock(**{"create": mock_new_res})
     return mock_res

@@ -12,8 +12,8 @@ from solarwinds_apm.apm_constants import (
 )
 from solarwinds_apm.trace import ServiceEntrySpanProcessor
 
-class TestServiceEntrySpanProcessor():
 
+class TestServiceEntrySpanProcessor:
     def patch_for_on_start(self, mocker):
         mock_pool = mocker.Mock()
         mock_registered = mocker.Mock(return_value="mock-registered-name")
@@ -44,11 +44,7 @@ class TestServiceEntrySpanProcessor():
             "solarwinds_apm.trace.serviceentry_processor.W3CTransformer"
         )
         mock_ts_id = mocker.Mock(return_value="some-id")
-        mock_w3c.configure_mock(
-            **{
-                "trace_and_span_id_from_context": mock_ts_id
-            }
-        )
+        mock_w3c.configure_mock(**{"trace_and_span_id_from_context": mock_ts_id})
         return mock_get_transaction_name_pool, mock_otel_context
 
     def test_on_start_valid_local_parent_span(self, mocker):
@@ -99,7 +95,7 @@ class TestServiceEntrySpanProcessor():
             [
                 mocker.call("faas.name", None),
                 mocker.call("http.route", None),
-                mocker.call("url.path", None)
+                mocker.call("url.path", None),
             ]
         )
         mock_context.set_value.assert_called_once_with(
@@ -133,7 +129,7 @@ class TestServiceEntrySpanProcessor():
             [
                 mocker.call("faas.name", None),
                 mocker.call("http.route", None),
-                mocker.call("url.path", None)
+                mocker.call("url.path", None),
             ]
         )
         mock_context.set_value.assert_called_once_with(
@@ -167,7 +163,7 @@ class TestServiceEntrySpanProcessor():
             [
                 mocker.call("faas.name", None),
                 mocker.call("http.route", None),
-                mocker.call("url.path", None)
+                mocker.call("url.path", None),
             ]
         )
         mock_context.set_value.assert_called_once_with(
@@ -194,7 +190,7 @@ class TestServiceEntrySpanProcessor():
             [
                 mocker.call("faas.name", None),
                 mocker.call("http.route", None),
-                mocker.call("url.path", None)
+                mocker.call("url.path", None),
             ]
         )
         mock_context.set_value.assert_called_once_with(
@@ -212,11 +208,7 @@ class TestServiceEntrySpanProcessor():
             return_value=mock_pool,
         )
         mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "attributes.get": mocker.Mock(return_value=None)
-            }
-        )
+        mock_span.configure_mock(**{"attributes.get": mocker.Mock(return_value=None)})
         mocker.patch.dict(os.environ, {"SW_APM_TRANSACTION_NAME": "sw-apm-transaction"})
         processor = ServiceEntrySpanProcessor()
         processor.set_default_transaction_name = mocker.Mock()
@@ -235,7 +227,9 @@ class TestServiceEntrySpanProcessor():
         mock_span.configure_mock(
             **{
                 "attributes.get": mocker.Mock(
-                    side_effect=lambda key, default=None: "faas-value" if key == "faas.name" else default
+                    side_effect=lambda key, default=None: "faas-value"
+                    if key == "faas.name"
+                    else default
                 )
             }
         )
@@ -253,11 +247,7 @@ class TestServiceEntrySpanProcessor():
             return_value=mock_pool,
         )
         mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "attributes.get": mocker.Mock(return_value=None)
-            }
-        )
+        mock_span.configure_mock(**{"attributes.get": mocker.Mock(return_value=None)})
         mocker.patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "lambda-function"})
         processor = ServiceEntrySpanProcessor()
         processor.set_default_transaction_name = mocker.Mock()
@@ -276,7 +266,9 @@ class TestServiceEntrySpanProcessor():
         mock_span.configure_mock(
             **{
                 "attributes.get": mocker.Mock(
-                    side_effect=lambda key, default=None: "http-route" if key == "http.route" else default
+                    side_effect=lambda key, default=None: "http-route"
+                    if key == "http.route"
+                    else default
                 )
             }
         )
@@ -297,7 +289,9 @@ class TestServiceEntrySpanProcessor():
         mock_span.configure_mock(
             **{
                 "attributes.get": mocker.Mock(
-                    side_effect=lambda key, default=None: "url-path" if key == "url.path" else default
+                    side_effect=lambda key, default=None: "url-path"
+                    if key == "url.path"
+                    else default
                 )
             }
         )

@@ -47,9 +47,7 @@ def set_transaction_name(custom_name: str) -> bool:
      result = set_transaction_name("my-foo-name")
     """
     if not custom_name:
-        logger.warning(
-            "Cannot set custom transaction name as empty string; ignoring"
-        )
+        logger.warning("Cannot set custom transaction name as empty string; ignoring")
         return False
 
     tracer_provider = get_tracer_provider()
@@ -60,9 +58,7 @@ def set_transaction_name(custom_name: str) -> bool:
         )
         return True
 
-    current_trace_entry_span = context.get_value(
-        INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN
-    )
+    current_trace_entry_span = context.get_value(INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN)
     if not current_trace_entry_span:
         logger.warning(
             "Cannot set custom transaction name %s because OTel service entry span not started; ignoring",
@@ -73,9 +69,7 @@ def set_transaction_name(custom_name: str) -> bool:
     logger.debug(
         "Setting attribute %s for span %s as %s",
         INTL_SWO_TRANSACTION_NAME_ATTR,
-        W3CTransformer.trace_and_span_id_from_context(
-            current_trace_entry_span.context
-        ),
+        W3CTransformer.trace_and_span_id_from_context(current_trace_entry_span.context),
         custom_name,
     )
 
