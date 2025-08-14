@@ -67,13 +67,21 @@ def http_span_metadata(kind: SpanKind, attributes: Attributes):
         HTTP_REQUEST_METHOD in attributes or HTTP_METHOD in attributes
     ):
         return {"http": False}
-    method = str(attributes.get(HTTP_METHOD, attributes.get(HTTP_REQUEST_METHOD, "")))
-    status = int(
-        attributes.get(HTTP_RESPONSE_STATUS_CODE, attributes.get(HTTP_STATUS_CODE, 0))
+    method = str(
+        attributes.get(HTTP_METHOD, attributes.get(HTTP_REQUEST_METHOD, ""))
     )
-    scheme = str(attributes.get(URL_SCHEME, attributes.get(HTTP_SCHEME, "http")))
+    status = int(
+        attributes.get(
+            HTTP_RESPONSE_STATUS_CODE, attributes.get(HTTP_STATUS_CODE, 0)
+        )
+    )
+    scheme = str(
+        attributes.get(URL_SCHEME, attributes.get(HTTP_SCHEME, "http"))
+    )
     hostname = str(
-        attributes.get(SERVER_ADDRESS, attributes.get(NET_HOST_NAME, "localhost"))
+        attributes.get(
+            SERVER_ADDRESS, attributes.get(NET_HOST_NAME, "localhost")
+        )
     )
     path = str(attributes.get(URL_PATH, attributes.get(HTTP_TARGET, "")))
     url = f"{scheme}://{hostname}{path}"
@@ -128,7 +136,10 @@ def parse_settings(unparsed: Any) -> tuple[Settings, str | None] | None:
                 capacity=args["TriggerRelaxedBucketCapacity"],
                 rate=args["TriggerRelaxedBucketRate"],
             )
-        if "TriggerStrictBucketCapacity" in args and "TriggerStrictBucketRate" in args:
+        if (
+            "TriggerStrictBucketCapacity" in args
+            and "TriggerStrictBucketRate" in args
+        ):
             buckets[BucketType.TRIGGER_STRICT] = BucketSettings(
                 capacity=args["TriggerStrictBucketCapacity"],
                 rate=args["TriggerStrictBucketRate"],
@@ -160,7 +171,9 @@ class Sampler(OboeSampler):
         super().__init__(meter_provider=meter_provider)
         if config.tracing_mode is not None:
             self._tracing_mode = (
-                TracingMode.ALWAYS if config.tracing_mode else TracingMode.NEVER
+                TracingMode.ALWAYS
+                if config.tracing_mode
+                else TracingMode.NEVER
             )
         else:
             self._tracing_mode = None
@@ -171,9 +184,7 @@ class Sampler(OboeSampler):
             self.update_settings(initial)
 
     def __str__(self) -> str:
-        return (
-            f"Sampler{self._tracing_mode}({self._trigger_mode}) {super().__str__(self)}"
-        )
+        return f"Sampler{self._tracing_mode}({self._trigger_mode}) {super().__str__(self)}"
 
     @property
     def tracing_mode(self):
@@ -210,12 +221,19 @@ class Sampler(OboeSampler):
         settings = LocalSettings(
             tracing_mode=self.tracing_mode, trigger_mode=self.trigger_mode
         )
-        if self.transaction_settings is None or len(self.transaction_settings) == 0:
+        if (
+            self.transaction_settings is None
+            or len(self.transaction_settings) == 0
+        ):
             return settings
         meta = http_span_metadata(kind, attributes)
-        identifier = meta["url"] if meta["http"] else f"{SpanKind(kind).name}:{name}"
+        identifier = (
+            meta["url"] if meta["http"] else f"{SpanKind(kind).name}:{name}"
+        )
         for transaction_setting in self.transaction_settings:
-            if transaction_setting.matcher and transaction_setting.matcher(identifier):
+            if transaction_setting.matcher and transaction_setting.matcher(
+                identifier
+            ):
                 settings.tracing_mode = (
                     TracingMode.ALWAYS
                     if transaction_setting.tracing
@@ -245,7 +263,9 @@ class Sampler(OboeSampler):
                     x_trace_options=options.options_header,
                     x_trace_options_signature=options.signature,
                 )
-        return RequestHeaders(x_trace_options=None, x_trace_options_signature=None)
+        return RequestHeaders(
+            x_trace_options=None, x_trace_options_signature=None
+        )
 
     @override
     def set_response_headers(
@@ -265,9 +285,14 @@ class Sampler(OboeSampler):
         if parent_context:
             options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
             if options and isinstance(options, XTraceOptions):
-                if options.include_response and headers.x_trace_options_response:
+                if (
+                    options.include_response
+                    and headers.x_trace_options_response
+                ):
                     if (
-                        get_current_span(parent_context).get_span_context().is_valid
+                        get_current_span(parent_context)
+                        .get_span_context()
+                        .is_valid
                         and get_current_span(parent_context)
                         .get_span_context()
                         .trace_state
@@ -284,7 +309,9 @@ class Sampler(OboeSampler):
                         INTL_SWO_X_OPTIONS_RESPONSE_KEY,
                         headers.x_trace_options_response.replace(
                             INTL_SWO_EQUALS, INTL_SWO_EQUALS_W3C_SANITIZED
-                        ).replace(INTL_SWO_COMMA, INTL_SWO_COMMA_W3C_SANITIZED),
+                        ).replace(
+                            INTL_SWO_COMMA, INTL_SWO_COMMA_W3C_SANITIZED
+                        ),
                     )
         return None
 

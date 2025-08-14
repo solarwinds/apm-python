@@ -208,7 +208,9 @@ def _merge(remote: Settings, local: LocalSettings) -> Settings:
     """
     Merges remote and local sampling settings. If possible, sets Flags by order of precedence (remote > local) unless remote has set an override
     """
-    flags = local.tracing_mode if local.tracing_mode is not None else remote.flags
+    flags = (
+        local.tracing_mode if local.tracing_mode is not None else remote.flags
+    )
 
     if local.trigger_mode:
         flags |= Flags.TRIGGERED_TRACE

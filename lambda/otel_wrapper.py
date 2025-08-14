@@ -59,7 +59,9 @@ if path is None:
 try:
     (mod_name, handler_name) = path.rsplit(".", 1)
 except ValueError as e:
-    raise HandlerError("Bad path '{}' for ORIG_HANDLER: {}".format(path, str(e)))
+    raise HandlerError(
+        "Bad path '{}' for ORIG_HANDLER: {}".format(path, str(e))
+    )
 
 modified_mod_name = modify_module_name(mod_name)
 handler_module = import_module(modified_mod_name)

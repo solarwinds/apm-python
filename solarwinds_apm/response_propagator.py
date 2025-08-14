@@ -30,7 +30,9 @@ logger = logging.getLogger(__name__)
 class SolarWindsTraceResponsePropagator(ResponsePropagator):
     """Propagator that injects SW values into HTTP responses"""
 
-    _HTTP_HEADER_ACCESS_CONTROL_EXPOSE_HEADERS = "Access-Control-Expose-Headers"
+    _HTTP_HEADER_ACCESS_CONTROL_EXPOSE_HEADERS = (
+        "Access-Control-Expose-Headers"
+    )
     _XTRACE_HEADER_NAME = "x-trace"
     _XTRACEOPTIONS_RESPONSE_HEADER_NAME = "x-trace-options-response"
 
@@ -58,7 +60,9 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
             span_context.trace_state
         )
         if xtraceoptions_response:
-            exposed_headers.append(f"{self._XTRACEOPTIONS_RESPONSE_HEADER_NAME}")
+            exposed_headers.append(
+                f"{self._XTRACEOPTIONS_RESPONSE_HEADER_NAME}"
+            )
             setter.set(
                 carrier,
                 self._XTRACEOPTIONS_RESPONSE_HEADER_NAME,

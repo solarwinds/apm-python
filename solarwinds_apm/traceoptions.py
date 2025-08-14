@@ -60,7 +60,9 @@ class XTraceOptions:
                 option_key = option_kv[0].strip()
                 if option_key == self._XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE:
                     if len(option_kv) > 1:
-                        logger.debug("trigger-trace must be standalone flag. Ignoring.")
+                        logger.debug(
+                            "trigger-trace must be standalone flag. Ignoring."
+                        )
                         self.ignored.append(
                             self._XTRACEOPTIONS_HEADER_KEY_TRIGGER_TRACE
                         )

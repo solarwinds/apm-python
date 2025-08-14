@@ -79,7 +79,9 @@ class SolarWindsApmConfig:
         # Update the config with default values
         self.__config = {
             "tracing_mode": OboeTracingMode.get_oboe_trace_mode("unset"),
-            "trigger_trace": OboeTracingMode.get_oboe_trigger_trace_mode("enabled"),
+            "trigger_trace": OboeTracingMode.get_oboe_trigger_trace_mode(
+                "enabled"
+            ),
             "collector": self._CONFIG_COLLECTOR_DEFAULT,
             "debug_level": apm_logging.ApmLoggingLevel.default_level(),
             "service_key": "",
@@ -161,7 +163,9 @@ class SolarWindsApmConfig:
         if cnf_dict is None:
             cnf_dict = cls.get_cnf_dict()
         if cnf_dict:
-            cnf_enabled = cls.convert_to_bool(cnf_dict.get("export_metrics_enabled"))
+            cnf_enabled = cls.convert_to_bool(
+                cnf_dict.get("export_metrics_enabled")
+            )
             metrics_enabled = (
                 cnf_enabled if cnf_enabled is not None else metrics_enabled
             )
@@ -200,7 +204,9 @@ class SolarWindsApmConfig:
             return False
         # Key must be at least one char + ":" + at least one other char
         key_parts = [
-            p for p in self.__config.get("service_key", "").split(":") if len(p) > 0
+            p
+            for p in self.__config.get("service_key", "").split(":")
+            if len(p) > 0
         ]
         if len(key_parts) != 2:
             logger.error("Incorrect service key format. Tracing disabled.")
@@ -240,7 +246,9 @@ class SolarWindsApmConfig:
 
                 if environ_propagators.index(
                     INTL_SWO_PROPAGATOR
-                ) < environ_propagators.index(INTL_SWO_TRACECONTEXT_PROPAGATOR):
+                ) < environ_propagators.index(
+                    INTL_SWO_TRACECONTEXT_PROPAGATOR
+                ):
                     logger.error(
                         "tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled."
                     )
@@ -329,10 +337,16 @@ class SolarWindsApmConfig:
         if agent_enabled:
             # OTel SDK default service.name starts with "unknown_service" in-code:
             # https://github.com/open-telemetry/opentelemetry-python/blob/f5fb6b1353929cf8039b1d38f97450866357d901/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py#L175
-            otel_service_name = otel_resource.attributes.get("service.name", None)
-            if otel_service_name and otel_service_name.startswith("unknown_service"):
+            otel_service_name = otel_resource.attributes.get(
+                "service.name", None
+            )
+            if otel_service_name and otel_service_name.startswith(
+                "unknown_service"
+            ):
                 # When agent_enabled, assume service_key exists and is formatted correctly.
-                service_name = self.__config.get("service_key", ":").split(":")[1]
+                service_name = self.__config.get("service_key", ":").split(
+                    ":"
+                )[1]
             else:
                 service_name = otel_service_name
         return service_name
@@ -530,14 +544,20 @@ class SolarWindsApmConfig:
             logger.debug("No transaction filters provided by config.")
             return
         if not isinstance(txn_settings, list):
-            logger.warning("Transaction filters must be a list of filters. Ignoring.")
+            logger.warning(
+                "Transaction filters must be a list of filters. Ignoring."
+            )
             return
         for filter in txn_settings:
-            if set(filter) != set(["regex", "tracing"]) or filter["tracing"] not in [
+            if set(filter) != set(["regex", "tracing"]) or filter[
+                "tracing"
+            ] not in [
                 "enabled",
                 "disabled",
             ]:
-                logger.warning("Invalid transaction filter rule. Ignoring: %s", filter)
+                logger.warning(
+                    "Invalid transaction filter rule. Ignoring: %s", filter
+                )
                 continue
 
             txn_filter = {}
@@ -571,7 +591,8 @@ class SolarWindsApmConfig:
 
             # only the first filter for given `regex` will be used
             if txn_filter_re not in [
-                cfilter["regex"] for cfilter in self.__config["transaction_filters"]
+                cfilter["regex"]
+                for cfilter in self.__config["transaction_filters"]
             ]:
                 txn_filter["regex"] = txn_filter_re
                 self.__config["transaction_filters"].append(txn_filter)
@@ -584,7 +605,9 @@ class SolarWindsApmConfig:
     def update_with_env_var(self) -> None:
         """Update the settings with environment variables."""
         # agent_enabled is special
-        env_agent_enabled = self.convert_to_bool(os.environ.get("SW_APM_AGENT_ENABLED"))
+        env_agent_enabled = self.convert_to_bool(
+            os.environ.get("SW_APM_AGENT_ENABLED")
+        )
         if env_agent_enabled is not None:
             self.agent_enabled = env_agent_enabled
 
@@ -650,7 +673,9 @@ class SolarWindsApmConfig:
                     val = "enabled" if val == "always" else "disabled"
                 if val not in ["enabled", "disabled"]:
                     raise ValueError
-                oboe_trigger_trace = OboeTracingMode.get_oboe_trigger_trace_mode(val)
+                oboe_trigger_trace = (
+                    OboeTracingMode.get_oboe_trigger_trace_mode(val)
+                )
                 self.__config[key] = oboe_trigger_trace
             elif keys == ["debug_level"]:
                 val = int(val)

@@ -111,7 +111,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 # to select correct OTLP exporter. Else OTLP HTTP default.
                 otlp_protocol = os.environ.get(
                     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
-                ) or os.environ.get(OTEL_EXPORTER_OTLP_PROTOCOL, "http/protobuf")
+                ) or os.environ.get(
+                    OTEL_EXPORTER_OTLP_PROTOCOL, "http/protobuf"
+                )
                 otlp_protocol = otlp_protocol.strip()
                 if otlp_protocol not in ["http/protobuf", "grpc"]:
                     logger.debug(
@@ -158,7 +160,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         """Configure SolarWinds APM and OTel components"""
         if not self.apm_config.agent_enabled:
             # ApmConfig will log a more informative Info message if disabled
-            logger.debug("SWO APM agent disabled. Not configuring OpenTelemetry.")
+            logger.debug(
+                "SWO APM agent disabled. Not configuring OpenTelemetry."
+            )
             set_tracer_provider(NoOpTracerProvider())
             set_meter_provider(NoOpMeterProvider())
             set_logger_provider(NoOpLoggerProvider())
@@ -269,7 +273,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             }
 
             if issubclass(exporter_or_reader_class, MetricReader):
-                metric_readers.append(exporter_or_reader_class(**exporter_args))
+                metric_readers.append(
+                    exporter_or_reader_class(**exporter_args)
+                )
             elif self.apm_config.is_lambda:
                 # Inf interval to not invoke periodic collection
                 metric_readers.append(
@@ -286,14 +292,18 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     )
                 )
 
-        provider = MeterProvider(resource=resource, metric_readers=metric_readers)
+        provider = MeterProvider(
+            resource=resource, metric_readers=metric_readers
+        )
         set_meter_provider(provider)
 
     def _configure_service_entry_span_processor(
         self,
     ) -> None:
         """Configure ServiceEntrySpanProcessor"""
-        trace.get_tracer_provider().add_span_processor(ServiceEntrySpanProcessor())
+        trace.get_tracer_provider().add_span_processor(
+            ServiceEntrySpanProcessor()
+        )
 
     def _configure_response_time_processor(
         self,
