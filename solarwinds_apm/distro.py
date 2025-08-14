@@ -308,9 +308,9 @@ class SolarWindsDistro(BaseDistro):
                             value.strip()
                         )
                         if env_v_bool is not None:
-                            env_commenter_map[instrumentor_name][key_name] = (
-                                env_v_bool
-                            )
+                            env_commenter_map[instrumentor_name][
+                                key_name
+                            ] = env_v_bool
 
         parse_env_items("SW_APM_ENABLED_SQLCOMMENT", "enable_commenter")
         parse_env_items(

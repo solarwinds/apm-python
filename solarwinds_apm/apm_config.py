@@ -720,8 +720,9 @@ class SolarWindsApmConfig:
             if isinstance(transaction_filter, dict):
                 transaction_setting = TransactionSetting(
                     tracing=transaction_filter.get("tracing_mode") == 1,
-                    matcher=lambda s,
-                    regex=transaction_filter.get("regex"): regex.match(s),
+                    matcher=lambda s, regex=transaction_filter.get(
+                        "regex"
+                    ): regex.match(s),
                 )
                 transaction_settings.append(transaction_setting)
         return Configuration(
