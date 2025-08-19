@@ -46,14 +46,14 @@ class JsonSampler(Sampler):
     @override
     def should_sample(
         self,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: "TraceState" | None = None,
-    ) -> "SamplingResult":
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> SamplingResult:
         self._loop()
         return super().should_sample(
             parent_context,
@@ -87,6 +87,6 @@ class JsonSampler(Sampler):
             self._expiry = parsed.timestamp + parsed.ttl
 
     def _read(self):
-        with open(self._path, "r", encoding="utf-8") as file:
+        with open(self._path, encoding="utf-8") as file:
             contents = file.read()
         return json.loads(contents)

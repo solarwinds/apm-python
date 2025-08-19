@@ -218,9 +218,11 @@ class SolarWindsDistro(BaseDistro):
         # If we're in Lambda environment, then we skip loading
         # AwsLambdaInstrumentor because we assume the wrapper
         # has done it for us already
-        if entry_point.name == "aws-lambda":
-            if SolarWindsApmConfig.calculate_is_lambda():
-                return
+        if (
+            entry_point.name == "aws-lambda"
+            and SolarWindsApmConfig.calculate_is_lambda()
+        ):
+            return
 
         if entry_point.name in _SQLCOMMENTERS:
             entry_point_setting = self.get_enable_commenter_env_map().get(
@@ -308,9 +310,10 @@ class SolarWindsDistro(BaseDistro):
                             value.strip()
                         )
                         if env_v_bool is not None:
-                            env_commenter_map[instrumentor_name][
-                                key_name
-                            ] = env_v_bool
+                            instrumentor_config = env_commenter_map[
+                                instrumentor_name
+                            ]
+                            instrumentor_config[key_name] = env_v_bool
 
         parse_env_items("SW_APM_ENABLED_SQLCOMMENT", "enable_commenter")
         parse_env_items(

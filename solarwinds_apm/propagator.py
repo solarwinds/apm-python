@@ -93,7 +93,7 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         else:
             trace_state = TraceState.from_header([trace_state_header])
             # Check if trace_state already contains sw KV
-            if INTL_SWO_TRACESTATE_KEY in trace_state.keys():
+            if INTL_SWO_TRACESTATE_KEY in trace_state:
                 # If so, modify current span_id and trace_flags, and move to beginning of list
                 logger.debug(
                     "Updating trace state for injection with %s",

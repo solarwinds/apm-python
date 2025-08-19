@@ -97,3 +97,45 @@ exclude = '''
   )/
 )
 '''
+
+[tool.ruff]
+line-length = 79
+exclude = [
+    ".tox",
+    "build", 
+    "scripts",
+    "tests",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
+# To match .flake8 config
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "N",
+    "UP",
+    "B",
+    "C4",
+    "PIE",
+    "SIM",
+]
+ignore = [
+    "E501",
+    "E203",
+    "B008",  # for Resource.create() test compatibility
+    "UP006", # Use `set` instead of `typing.Set` type annotation, for compatibility with upstream SDK state
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["solarwinds_apm"]
+force-single-line = false
+
+[tool.ruff.format]
+# To match black config
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

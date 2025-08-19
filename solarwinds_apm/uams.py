@@ -33,7 +33,7 @@ UAMS_CLIENT_ID_FIELD = "uamsclient_id"
 
 def _read_from_file(uams_file: str) -> dict:
     try:
-        with open(uams_file, "r", encoding="utf-8") as file:
+        with open(uams_file, encoding="utf-8") as file:
             uams_id = file.read().strip()
             return {
                 ATTR_UAMS_CLIENT_ID: uams_id,
