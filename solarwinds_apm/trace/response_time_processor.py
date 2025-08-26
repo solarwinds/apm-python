@@ -54,11 +54,10 @@ class ResponseTimeProcessor(SpanProcessor):
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
         """This span from inbound HTTP request if from a SERVER by some http.method"""
-        if span.kind == SpanKind.SERVER and span.attributes.get(
-            self._HTTP_METHOD, None
-        ):
-            return True
-        return False
+        return bool(
+            span.kind == SpanKind.SERVER
+            and span.attributes.get(self._HTTP_METHOD, None)
+        )
 
     def get_http_status_code(self, span: "ReadableSpan") -> int:
         """Calculate HTTP status_code from span or default to UNAVAILABLE"""
@@ -71,9 +70,7 @@ class ResponseTimeProcessor(SpanProcessor):
 
     def has_error(self, span: "ReadableSpan") -> bool:
         """Calculate if this span instance has_error"""
-        if span.status.status_code == StatusCode.ERROR:
-            return True
-        return False
+        return span.status.status_code == StatusCode.ERROR
 
     def calculate_span_time(
         self,

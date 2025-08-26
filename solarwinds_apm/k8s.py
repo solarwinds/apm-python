@@ -48,23 +48,22 @@ def _pod_uid(mount_info: str) -> str | None:
         logger.debug("can't read pod uid on windows")
         return None
 
-    with suppress(Exception):
-        with open(mount_info, "r", encoding="utf-8") as file:
-            for line in file:
-                fields = line.split(" ")
-                if len(fields) < 10:
-                    continue
+    with suppress(Exception), open(mount_info, encoding="utf-8") as file:
+        for line in file:
+            fields = line.split(" ")
+            if len(fields) < 10:
+                continue
 
-                identity, parent_id, _, root = fields[:4]
-                if not identity.isdigit() or not parent_id.isdigit():
-                    continue
+            identity, parent_id, _, root = fields[:4]
+            if not identity.isdigit() or not parent_id.isdigit():
+                continue
 
-                if "kube" not in root:
-                    continue
+            if "kube" not in root:
+                continue
 
-                match = UID_REGEX.search(root)
-                if match:
-                    return match.group(0)
+            match = UID_REGEX.search(root)
+            if match:
+                return match.group(0)
 
     logger.debug("can't read pod uid")
     return None
@@ -76,10 +75,9 @@ def _pod_namespace(namespace: str) -> str | None:
         logger.debug("read pod namespace from env")
         return env
 
-    with suppress(Exception):
-        with open(namespace, "r", encoding="utf-8") as file:
-            logger.debug("read pod namespace from file")
-            return file.read().strip()
+    with suppress(Exception), open(namespace, encoding="utf-8") as file:
+        logger.debug("read pod namespace from file")
+        return file.read().strip()
 
     logger.debug("can't read pod namespace")
     return None

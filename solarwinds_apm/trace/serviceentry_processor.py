@@ -43,7 +43,7 @@ class ServiceEntrySpanProcessor(SpanProcessor):
     def set_default_transaction_name(
         self,
         span: Span,
-        pool: "TransactionNamePool",
+        pool: TransactionNamePool,
         attribute_value: str,
         resolve: bool = False,
     ) -> None:
@@ -138,7 +138,7 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         )
         self.context_tokens[entry_trace_span_id] = token
 
-    def on_end(self, span: "ReadableSpan") -> None:
+    def on_end(self, span: ReadableSpan) -> None:
         # Only attempt for service entry spans
         parent_span_context = span.parent
         if (

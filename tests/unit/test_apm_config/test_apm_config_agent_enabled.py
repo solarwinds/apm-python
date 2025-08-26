@@ -422,6 +422,24 @@ class TestSolarWindsApmConfigAgentEnabled:
         assert not resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == ""
 
+    def test_calculate_agent_enabled_sw_after_tracecontext_propagator(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": "tracecontext,solarwinds_propagator",
+            "SW_APM_SERVICE_KEY": "valid:key",
+        })
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
+        resulting_config = apm_config.SolarWindsApmConfig()
+        assert resulting_config._calculate_agent_enabled()
+        assert resulting_config.service_name == "key"
+
     def test_calculate_agent_enabled_sw_before_baggage_propagator(self, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": "tracecontext,solarwinds_propagator,baggage",

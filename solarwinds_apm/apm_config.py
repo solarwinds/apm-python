@@ -122,11 +122,10 @@ class SolarWindsApmConfig:
     @classmethod
     def calculate_is_lambda(cls) -> bool:
         """Checks if agent is running in an AWS Lambda environment."""
-        if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") and os.environ.get(
-            "LAMBDA_TASK_ROOT"
-        ):
-            return True
-        return False
+        return bool(
+            os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+            and os.environ.get("LAMBDA_TASK_ROOT")
+        )
 
     @classmethod
     def calculate_collector(
@@ -254,14 +253,15 @@ class SolarWindsApmConfig:
                     )
                     return False
 
-                if INTL_SWO_BAGGAGE_PROPAGATOR in environ_propagators:
-                    if environ_propagators.index(
-                        INTL_SWO_PROPAGATOR
-                    ) < environ_propagators.index(INTL_SWO_BAGGAGE_PROPAGATOR):
-                        logger.error(
-                            "baggage must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled."
-                        )
-                        return False
+                if (
+                    INTL_SWO_BAGGAGE_PROPAGATOR in environ_propagators
+                    and environ_propagators.index(INTL_SWO_PROPAGATOR)
+                    < environ_propagators.index(INTL_SWO_BAGGAGE_PROPAGATOR)
+                ):
+                    logger.error(
+                        "baggage must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled."
+                    )
+                    return False
 
         except ValueError:
             logger.error(
@@ -432,18 +432,17 @@ class SolarWindsApmConfig:
         If that's not possible, switch to default empty logFilepath.
         """
         log_filepath = os.path.dirname(self.__config["log_filepath"])
-        if log_filepath:
-            if not os.path.exists(log_filepath):
-                try:
-                    os.makedirs(log_filepath)
-                    logger.debug(
-                        "Created directory path from provided SW_APM_LOG_FILEPATH / logFilepath."
-                    )
-                except FileNotFoundError:
-                    logger.error(
-                        "Could not create log file directory path from provided SW_APM_LOG_FILEPATH / logFilepath. Using default log settings."
-                    )
-                    self.__config["log_filepath"] = ""
+        if log_filepath and not os.path.exists(log_filepath):
+            try:
+                os.makedirs(log_filepath)
+                logger.debug(
+                    "Created directory path from provided SW_APM_LOG_FILEPATH / logFilepath."
+                )
+            except FileNotFoundError:
+                logger.error(
+                    "Could not create log file directory path from provided SW_APM_LOG_FILEPATH / logFilepath. Using default log settings."
+                )
+                self.__config["log_filepath"] = ""
 
     def __str__(self) -> str:
         """String representation of ApmConfig is config with masked service key,
@@ -549,7 +548,7 @@ class SolarWindsApmConfig:
             )
             return
         for filter in txn_settings:
-            if set(filter) != set(["regex", "tracing"]) or filter[
+            if set(filter) != {"regex", "tracing"} or filter[
                 "tracing"
             ] not in ["enabled", "disabled"]:
                 logger.warning(
@@ -715,11 +714,10 @@ class SolarWindsApmConfig:
         transaction_settings = []
         for transaction_filter in filters:
             if isinstance(transaction_filter, dict):
+                regex_pattern = transaction_filter.get("regex")
                 transaction_setting = TransactionSetting(
                     tracing=transaction_filter.get("tracing_mode") == 1,
-                    matcher=lambda s, regex=transaction_filter.get(
-                        "regex"
-                    ): regex.match(s),
+                    matcher=lambda s, regex=regex_pattern: regex.match(s),
                 )
                 transaction_settings.append(transaction_setting)
         return Configuration(
