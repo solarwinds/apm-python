@@ -1,6 +1,9 @@
-[![PyPI version](https://badge.fury.io/py/solarwinds-apm.svg)](https://badge.fury.io/py/solarwinds-apm) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/solarwinds-apm) [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?color=red)](https://github.com/solarwinds/apm-python/blob/main/LICENSE)
-
 # Python solarwinds-apm
+
+[![Minimum Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Release](https://img.shields.io/github/v/release/solarwinds/apm-python?include_prereleases&style=)](https://github.com/solarwinds/apm-python/releases/)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?color=red)](https://github.com/solarwinds/apm-python/blob/main/LICENSE)
+
 An [OpenTelemetry Python](https://opentelemetry-python.readthedocs.io/) distribution for SolarWinds Observability. Provides automatic configuration, instrumentation, and APM data export for Python applications.
 
 ----
