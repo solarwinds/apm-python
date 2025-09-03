@@ -13,6 +13,9 @@ import typing
 from opentelemetry import trace
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
+from opentelemetry.trace.propagation.tracecontext import (
+    TraceContextTextMapPropagator,
+)
 from opentelemetry.trace.span import TraceState
 
 from solarwinds_apm.apm_constants import (
@@ -25,9 +28,9 @@ from solarwinds_apm.w3c_transformer import W3CTransformer
 logger = logging.getLogger(__name__)
 
 
-class SolarWindsPropagator(textmap.TextMapPropagator):
-    """Extracts and injects SolarWinds headers for trace propagation.
-    Must be used in composite with TraceContextTextMapPropagator.
+class SolarWindsPropagator(TraceContextTextMapPropagator):
+    """Extracts and injects SolarWinds headers and W3C trace context
+    headers for trace propagation.
     """
 
     _INVALID_SPAN_ID = 0x0000000000000000
@@ -41,9 +44,11 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         context: Context | None = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
-        """Extracts sw trace options and signature from carrier into OTel
-        Context. Note: tracestate is extracted by TraceContextTextMapPropagator
+        """Extracts traceparent, tracestate, sw trace options, and signature
+        from carrier into OTel Context.
         """
+        context = super().extract(carrier, context, getter)
+
         if context is None:
             context = Context()
 
@@ -67,9 +72,12 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         context: Context | None = None,
         setter: textmap.Setter = textmap.default_setter,
     ) -> None:
-        """Injects valid sw tracestate from carrier into carrier for HTTP request, to get
-        tracestate injected by previous propagators. Excludes any xtraceoptions_response
-        if in tracestate."""
+        """Injects traceparent, tracestate with valid sw into carrier
+        for HTTP request. Excludes any xtraceoptions_response if in
+        tracestate.
+        """
+        super().inject(carrier, context, setter)
+
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
         sw_value = W3CTransformer.sw_from_context(span_context)
@@ -126,4 +134,4 @@ class SolarWindsPropagator(textmap.TextMapPropagator):
         self,
     ) -> typing.Set[str]:  # pylint: disable=deprecated-typing-alias
         """Returns a set with the fields set in `inject`"""
-        return {self._TRACESTATE_HEADER_NAME}
+        return super().fields
