@@ -229,7 +229,8 @@ class SolarWindsApmConfig:
             ).split(",")
             # If not using the default propagators,
             # can any arbitrary list BUT
-            # must include solarwinds_propagator
+            # (a) must include solarwinds_propagator
+            # (b) must not include tracecontext, which may conflict
             if environ_propagators != INTL_SWO_DEFAULT_PROPAGATORS:
                 if INTL_SWO_PROPAGATOR not in environ_propagators:
                     logger.error(
