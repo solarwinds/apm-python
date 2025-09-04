@@ -239,7 +239,7 @@ class SolarWindsApmConfig:
 
                 if INTL_SWO_TRACECONTEXT_PROPAGATOR in environ_propagators:
                     logger.warning(
-                        "It is unnecessary to configure tracecontext in OTEL_PROPAGATORS when using SolarWinds APM, which has built-in w3c context propagation."
+                        "It is unnecessary to configure tracecontext in OTEL_PROPAGATORS when using SolarWinds APM, which has built-in w3c context propagation. Please update your configuration."
                     )
 
         except ValueError:
