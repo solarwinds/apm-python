@@ -97,7 +97,7 @@ def set_transaction_name(custom_name: str) -> bool:
 
 
 def solarwinds_ready(
-    wait_milliseconds: int = 3000, integer_response: bool = False
+    wait_milliseconds: int = 3000,
 ) -> bool:
     """
     Wait for SolarWinds to be ready to send traces.
@@ -107,21 +107,15 @@ def solarwinds_ready(
     application while it is starting up.
 
     :param wait_milliseconds:int default 3000, the maximum time to wait in milliseconds
-    :param integer_response:bool default False, we are dropping this support, please see updated docs
 
     :return:
     bool True for ready, False not ready
 
     :Example:
      from solarwinds_apm.api import solarwinds_ready
-     if not solarwinds_ready(wait_milliseconds=10000, integer_response=False):
+     if not solarwinds_ready(wait_milliseconds=10000):
         Logger.info("SolarWinds not ready after 10 seconds, no metrics will be sent")
     """
-    if integer_response:
-        logger.warning(
-            "support of integer_response is dropped, please see updated docs"
-        )
-
     tracer_provider = trace.get_tracer_provider()
     if isinstance(tracer_provider, SolarwindsTracerProvider):
         if isinstance(
