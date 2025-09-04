@@ -52,15 +52,11 @@ class TestConfiguratorPropagators:
             [
                 mocker.call(
                     group="opentelemetry_propagator",
-                    name="tracecontext",
+                    name="solarwinds_propagator",
                 ),
                 mocker.call(
                     group="opentelemetry_propagator",
                     name="baggage"
-                ),
-                mocker.call(
-                    group="opentelemetry_propagator",
-                    name="solarwinds_propagator",
                 ),
             ]
         )

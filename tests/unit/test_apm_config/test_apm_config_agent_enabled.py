@@ -4,7 +4,9 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import logging
 import os
+import pytest
 
 from solarwinds_apm import apm_config
 
@@ -17,6 +19,14 @@ from .fixtures.cnf_dict import (
 
 # pylint: disable=unused-import
 from .fixtures.env_vars import fixture_mock_env_vars
+
+
+_tracecontext_warning = "It is unnecessary to configure tracecontext in OTEL_PROPAGATORS when using SolarWinds APM, which has built-in w3c context propagation."
+
+@pytest.fixture
+def setup_caplog():
+    apm_logger = logging.getLogger("solarwinds_apm")
+    apm_logger.propagate = True
 
 class TestSolarWindsApmConfigAgentEnabled:
     def test_calculate_agent_enabled_service_key_missing(self, mocker):
@@ -401,10 +411,10 @@ class TestSolarWindsApmConfigAgentEnabled:
             }
         )
         resulting_config = apm_config.SolarWindsApmConfig()
-        assert not resulting_config._calculate_agent_enabled()
-        assert resulting_config.service_name == ""
+        assert resulting_config._calculate_agent_enabled()
+        assert resulting_config.service_name == "key"
 
-    def test_calculate_agent_enabled_sw_before_tracecontext_propagator(self, mocker):
+    def test_calculate_agent_enabled_sw_before_tracecontext_propagator(self, caplog, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": "solarwinds_propagator,tracecontext",
             "SW_APM_SERVICE_KEY": "valid:key",
@@ -419,10 +429,11 @@ class TestSolarWindsApmConfigAgentEnabled:
             }
         )
         resulting_config = apm_config.SolarWindsApmConfig()
-        assert not resulting_config._calculate_agent_enabled()
-        assert resulting_config.service_name == ""
+        assert resulting_config._calculate_agent_enabled()
+        assert resulting_config.service_name == "key"
+        assert _tracecontext_warning in caplog.text
 
-    def test_calculate_agent_enabled_sw_after_tracecontext_propagator(self, mocker):
+    def test_calculate_agent_enabled_sw_after_tracecontext_propagator(self, caplog, mocker):
         mocker.patch.dict(os.environ, {
             "OTEL_PROPAGATORS": "tracecontext,solarwinds_propagator",
             "SW_APM_SERVICE_KEY": "valid:key",
@@ -439,43 +450,4 @@ class TestSolarWindsApmConfigAgentEnabled:
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == "key"
-
-    def test_calculate_agent_enabled_sw_before_baggage_propagator(self, mocker):
-        mocker.patch.dict(os.environ, {
-            "OTEL_PROPAGATORS": "tracecontext,solarwinds_propagator,baggage",
-            "SW_APM_SERVICE_KEY": "valid:key",
-        })
-        mock_apm_logging = mocker.patch(
-            "solarwinds_apm.apm_config.apm_logging"
-        )
-        mock_apm_logging.configure_mock(
-            **{
-                "set_sw_log_level": mocker.Mock(),
-                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
-            }
-        )
-        resulting_config = apm_config.SolarWindsApmConfig()
-        assert not resulting_config._calculate_agent_enabled()
-        assert resulting_config.service_name == ""
-
-    def test_calculate_agent_enabled_sw_after_baggage_propagator(
-        self,
-        mocker,
-        mock_env_vars,
-    ):
-        mocker.patch.dict(os.environ, {
-            "OTEL_PROPAGATORS": "tracecontext,baggage,solarwinds_propagator",
-            "SW_APM_SERVICE_KEY": "valid:key",
-        })
-        mock_apm_logging = mocker.patch(
-            "solarwinds_apm.apm_config.apm_logging"
-        )
-        mock_apm_logging.configure_mock(
-            **{
-                "set_sw_log_level": mocker.Mock(),
-                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
-            }
-        )
-        resulting_config = apm_config.SolarWindsApmConfig()
-        assert resulting_config._calculate_agent_enabled()
-        assert resulting_config.service_name == "key"
+        assert _tracecontext_warning in caplog.text

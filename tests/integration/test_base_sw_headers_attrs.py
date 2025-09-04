@@ -94,7 +94,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
 
         # Load Distro
         SolarWindsDistro().configure()
-        assert os.environ["OTEL_PROPAGATORS"] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ["OTEL_PROPAGATORS"] == "solarwinds_propagator,baggage"
 
         # Load Configurator to Configure SW custom SDK components
         # except use TestBase InMemorySpanExporter
@@ -129,8 +129,8 @@ class TestBaseSwHeadersAndAttributes(TestBase):
 
         # Make sure SW SDK components were set
         propagators = get_global_textmap()._propagators
-        assert len(propagators) == 3
-        assert isinstance(propagators[2], SolarWindsPropagator)
+        assert len(propagators) == 2
+        assert isinstance(propagators[0], SolarWindsPropagator)
         assert isinstance(trace_api.get_tracer_provider().sampler, ParentBased)
 
         # We need to instrument and create test app for every test
