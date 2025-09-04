@@ -49,9 +49,6 @@ class SolarWindsPropagator(TraceContextTextMapPropagator):
         """
         context = super().extract(carrier, context, getter)
 
-        if context is None:
-            context = Context()
-
         xtraceoptions_header = getter.get(
             carrier, self._XTRACEOPTIONS_HEADER_NAME
         ) or [""]
