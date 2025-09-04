@@ -243,7 +243,7 @@ class SolarWindsApmConfig:
                         "It is unnecessary to configure tracecontext in "
                         "OTEL_PROPAGATORS when using SolarWinds APM >= 4.4.0, "
                         "which has built-in w3c context propagation. Please "
-                        "update your configuration."
+                        "update your configuration. Tracing disabled."
                     )
                     return False
 
