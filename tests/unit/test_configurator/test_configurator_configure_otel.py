@@ -176,7 +176,7 @@ class TestConfiguratorConfigureOtelComponents:
             mock_config_propagator,
             mock_config_response_propagator,
             "true",
-            True,
+            True,  # True because OTEL log instrumentation set to true
             True,
         )
 
@@ -201,7 +201,7 @@ class TestConfiguratorConfigureOtelComponents:
             mock_config_propagator,
             mock_config_response_propagator,
             "",
-            False,
+            None,  # none because OTEL log instrumentation not set
         )
 
     def test_configure_otel_components_logs_enabled_otel_none_sw_true(self,
@@ -225,7 +225,7 @@ class TestConfiguratorConfigureOtelComponents:
             mock_config_propagator,
             mock_config_response_propagator,
             "",
-            True,  # true because SW next in precedence
+            None,  # none because OTEL log instrumentation not set
         )
 
     def test_configure_otel_components_logs_enabled_otel_false_sw_default(self,
@@ -249,6 +249,7 @@ class TestConfiguratorConfigureOtelComponents:
             mock_config_propagator,
             mock_config_response_propagator,
             "false",
+            False,  # False because OTEL log instrumentation False
             False,
         )
 
@@ -298,7 +299,7 @@ class TestConfiguratorConfigureOtelComponents:
             mock_config_propagator,
             mock_config_response_propagator,
             "not-a-bool-string",
-            False,
+            None,  # None because OTEL log instrumentation not valid bool
         )
 
     def test_configure_otel_components_agent_enabled(
@@ -317,6 +318,11 @@ class TestConfiguratorConfigureOtelComponents:
         mocker.patch(
             "solarwinds_apm.configurator.SolarWindsApmConfig",
             return_value=mock_apmconfig_enabled,
+        )
+        # Mock return of _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+        mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsApmConfig.convert_to_bool",
+            return_value=False,
         )
         mock_apm_sampler = mocker.Mock()
         mocker.patch(
