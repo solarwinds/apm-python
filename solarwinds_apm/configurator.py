@@ -198,21 +198,21 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             resource=apm_resource,
         )
 
-        # Only emit log event telemetry (auto-instrument logs) if feature enabled,
-        # with settings precedence: OTEL_* > SW_APM_EXPORT_LOGS_ENABLED.
-        # TODO NH-107164 drop support of SW config, and super() will only check OTEL config
-        setup_logging_handler = False
-        # We don't set a default, so this could be None
-        otel_log_enabled = SolarWindsApmConfig.convert_to_bool(
-            os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED)
+        # Only emit log event telemetry (auto-instrument logs) if feature enabled.
+        # Distro does not set a default, so this could be None
+        setup_logging_handler = SolarWindsApmConfig.convert_to_bool(
+            os.environ.get(
+                _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, False
+            )
         )
-        # SW config is False by default
+        # TODO NH-101930 remove this check
         sw_log_enabled = self.apm_config.get("export_logs_enabled")
-        if otel_log_enabled is not None:
-            if otel_log_enabled is True:
-                setup_logging_handler = True
-        elif sw_log_enabled:
-            setup_logging_handler = True
+        if sw_log_enabled:
+            logger.warning(
+                "Support for SW_APM_EXPORT_LOG_ENABLED / exportLogsEnabled "
+                "has been dropped. Please update use "
+                "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED instead."
+            )
 
         _init_logging(log_exporters, apm_resource, setup_logging_handler)
 

@@ -4,7 +4,9 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import logging
 import os
+import pytest
 import uuid
 
 from opentelemetry.sdk.environment_variables import (
@@ -13,6 +15,12 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import Resource
 
 from solarwinds_apm import configurator
+
+
+@pytest.fixture
+def setup_caplog():
+    apm_logger = logging.getLogger("solarwinds_apm")
+    apm_logger.propagate = True
 
 
 class TestConfiguratorCreateApmResource:
@@ -156,6 +164,8 @@ class TestConfiguratorConfigureOtelComponents:
 
     def test_configure_otel_components_logs_enabled_true_by_otel_sw_default(
         self,
+        caplog,
+        setup_caplog,
         mocker,
         mock_apmconfig_enabled_export_logs_false,
 
@@ -176,12 +186,15 @@ class TestConfiguratorConfigureOtelComponents:
             mock_config_propagator,
             mock_config_response_propagator,
             "true",
-            True,
+            True,  # True because OTEL log instrumentation set to true
             True,
         )
+        assert "Support for SW_APM_EXPORT_LOG_ENABLED / exportLogsEnabled has been dropped" not in caplog.text
 
     def test_configure_otel_components_logs_enabled_otel_none_sw_default(self,
         mocker,
+        caplog,
+        setup_caplog,
         mock_apmconfig_enabled_export_logs_false,
 
         mock_config_serviceentry_processor,
@@ -201,10 +214,13 @@ class TestConfiguratorConfigureOtelComponents:
             mock_config_propagator,
             mock_config_response_propagator,
             "",
-            False,
+            None,  # none because OTEL log instrumentation not set
         )
+        assert "Support for SW_APM_EXPORT_LOG_ENABLED / exportLogsEnabled has been dropped" not in caplog.text
 
     def test_configure_otel_components_logs_enabled_otel_none_sw_true(self,
+        caplog,
+        setup_caplog,
         mocker,
         mock_apmconfig_enabled,
 
@@ -225,11 +241,14 @@ class TestConfiguratorConfigureOtelComponents:
             mock_config_propagator,
             mock_config_response_propagator,
             "",
-            True,  # true because SW next in precedence
+            None,  # none because OTEL log instrumentation not set
         )
+        assert "Support for SW_APM_EXPORT_LOG_ENABLED / exportLogsEnabled has been dropped" in caplog.text
 
     def test_configure_otel_components_logs_enabled_otel_false_sw_default(self,
         mocker,
+        caplog,
+        setup_caplog,
         mock_apmconfig_enabled_export_logs_false,
 
         mock_config_serviceentry_processor,
@@ -249,10 +268,14 @@ class TestConfiguratorConfigureOtelComponents:
             mock_config_propagator,
             mock_config_response_propagator,
             "false",
+            False,  # False because OTEL log instrumentation False
             False,
         )
+        assert "Support for SW_APM_EXPORT_LOG_ENABLED / exportLogsEnabled has been dropped" not in caplog.text
 
     def test_configure_otel_components_logs_enabled_otel_false_sw_true(self,
+        caplog,
+        setup_caplog,
         mocker,
         mock_apmconfig_enabled,
 
@@ -276,9 +299,12 @@ class TestConfiguratorConfigureOtelComponents:
             False,  # should be false because OTEL explicitly false, even if SW true
             False,
         )
+        assert "Support for SW_APM_EXPORT_LOG_ENABLED / exportLogsEnabled has been dropped" in caplog.text
 
     def test_configure_otel_components_logs_enabled_otel_invalid(self,
         mocker,
+        caplog,
+        setup_caplog,
         mock_apmconfig_enabled_export_logs_false,
 
         mock_config_serviceentry_processor,
@@ -298,8 +324,9 @@ class TestConfiguratorConfigureOtelComponents:
             mock_config_propagator,
             mock_config_response_propagator,
             "not-a-bool-string",
-            False,
+            None,  # None because OTEL log instrumentation not valid bool
         )
+        assert "Support for SW_APM_EXPORT_LOG_ENABLED / exportLogsEnabled has been dropped" not in caplog.text
 
     def test_configure_otel_components_agent_enabled(
         self,
@@ -317,6 +344,11 @@ class TestConfiguratorConfigureOtelComponents:
         mocker.patch(
             "solarwinds_apm.configurator.SolarWindsApmConfig",
             return_value=mock_apmconfig_enabled,
+        )
+        # Mock return of _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+        mocker.patch(
+            "solarwinds_apm.configurator.SolarWindsApmConfig.convert_to_bool",
+            return_value=False,
         )
         mock_apm_sampler = mocker.Mock()
         mocker.patch(

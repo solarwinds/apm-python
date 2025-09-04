@@ -139,6 +139,7 @@ def get_apmconfig_mocks(
     def get_side_effect(param):
         if param == "export_metrics_enabled":
             return export_metrics_enabled
+        # TODO NH-101930 remove export_logs_enabled
         elif param == "export_logs_enabled":
             return export_logs_enabled
         elif param == "service_key":
