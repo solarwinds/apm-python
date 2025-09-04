@@ -196,7 +196,7 @@ class TestDistro:
         mocker.patch.dict(os.environ, {})
         distro.SolarWindsDistro()._configure()
         # No env vars set, so uses all these defaults
-        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_PROPAGATORS] == "solarwinds_propagator,baggage"
         assert os.environ[OTEL_EXPORTER_OTLP_COMPRESSION] == "gzip"
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
@@ -218,7 +218,7 @@ class TestDistro:
                 }
         )
         distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_PROPAGATORS] == "solarwinds_propagator,baggage"
         assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
         assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
         assert os.environ[OTEL_LOGS_EXPORTER] == "qux"
@@ -237,7 +237,7 @@ class TestDistro:
             clear=True
         )
         distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_PROPAGATORS] == "solarwinds_propagator,baggage"
         # Invalid protocol still set; let upstream Configurator handle it
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "foo"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
@@ -257,7 +257,7 @@ class TestDistro:
             clear=True
         )
         distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_PROPAGATORS] == "solarwinds_propagator,baggage"
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "http/protobuf"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "authorization=Bearer%20foo-token"
@@ -276,7 +276,7 @@ class TestDistro:
             clear=True
         )
         distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_PROPAGATORS] == "solarwinds_propagator,baggage"
         # Distro will only setdefault PROTOCOL as grpc
         # and will still setdefault EXPORTERS as http like default distro
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "grpc"
@@ -300,7 +300,7 @@ class TestDistro:
             clear=True
         )
         distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_PROPAGATORS] == "solarwinds_propagator,baggage"
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "http/protobuf"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "authorization=Bearer%20foo-token"
@@ -322,7 +322,7 @@ class TestDistro:
             clear=True
         )
         distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_PROPAGATORS] == "solarwinds_propagator,baggage"
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "grpc"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "authorization=Bearer%20foo-token"
@@ -341,7 +341,7 @@ class TestDistro:
             clear=True
         )
         distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_PROPAGATORS] == "solarwinds_propagator,baggage"
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "http/protobuf"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://foo.bar.com:443"
         assert os.environ.get(OTEL_EXPORTER_OTLP_HEADERS) is None
@@ -548,7 +548,7 @@ class TestDistro:
             }
         )
         distro.SolarWindsDistro()._configure()
-        assert os.environ[OTEL_PROPAGATORS] == "tracecontext,baggage,solarwinds_propagator"
+        assert os.environ[OTEL_PROPAGATORS] == "solarwinds_propagator,baggage"
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "http/protobuf"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "foo=bar,baz=qux"
