@@ -38,6 +38,7 @@ INTL_SWO_DEFAULT_RESOURCE_DETECTORS = [
     "azure_vm",
     "k8s",
     "uams",
+    "container",
 ]
 INTL_SWO_DEFAULT_RESOURCE_DETECTORS_LAMBDA = [
     "process",
