@@ -60,9 +60,6 @@ solarwinds_configurator = "solarwinds_apm.configurator:SolarWindsConfigurator"
 [project.entry-points.opentelemetry_propagator]
 solarwinds_propagator = "solarwinds_apm.propagator:SolarWindsPropagator"
 
-[project.entry-points.opentelemetry_traces_exporter]
-solarwinds_exporter = "solarwinds_apm.exporter:SolarWindsSpanExporter"
-
 [project.entry-points.opentelemetry_traces_sampler]
 solarwinds_sampler = "solarwinds_apm.sampler:ParentBasedSwSampler"
 

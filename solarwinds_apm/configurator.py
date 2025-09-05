@@ -34,8 +34,6 @@ from opentelemetry.sdk._configuration import (
 )
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
-    OTEL_EXPORTER_OTLP_PROTOCOL,
-    OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
 )
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -88,55 +86,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         super().__init__()
         self.apm_config = SolarWindsApmConfig()
 
-    def _swap_legacy_span_exporter(
-        self,
-        span_exporters: dict[str, type[SpanExporter]],
-    ) -> dict:
-        """Intermediary helper to swap legacy span exporter, if configured, with an OTLP exporter if not already configured."""
-        if "solarwinds_exporter" in span_exporters:
-            logger.warning(
-                "SolarWindsSpanExporter is deprecated; configuration ignored."
-            )
-            del span_exporters["solarwinds_exporter"]
-
-            if (
-                "otlp_proto_http" in span_exporters
-                or "otlp_proto_grpc" in span_exporters
-            ):
-                logger.warning("Using already-configured OTLP span exporter.")
-            else:
-                logger.warning("Initializing OTLP span exporter instead.")
-                # Check env vars for OTLP traces protocol (grpc/http),
-                # which could be setdefault from custom distro,
-                # to select correct OTLP exporter. Else OTLP HTTP default.
-                otlp_protocol = os.environ.get(
-                    OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
-                ) or os.environ.get(
-                    OTEL_EXPORTER_OTLP_PROTOCOL, "http/protobuf"
-                )
-                otlp_protocol = otlp_protocol.strip()
-                if otlp_protocol not in ["http/protobuf", "grpc"]:
-                    logger.debug(
-                        "Unknown OTLP protocol; defaulting to HTTP to init SpanExporter."
-                    )
-                    otlp_protocol = "http/protobuf"
-
-                if otlp_protocol == "http/protobuf":
-                    exporter_entry_point = "otlp_proto_http"
-                else:
-                    exporter_entry_point = "otlp_proto_grpc"
-
-                span_exporters[exporter_entry_point] = next(
-                    iter(
-                        entry_points(
-                            group="opentelemetry_traces_exporter",
-                            name=exporter_entry_point,
-                        )
-                    )
-                ).load()
-
-        return span_exporters
-
     def _create_apm_resource(self) -> Resource:
         """Helper to create new OTel Resource for telemetry providers"""
         apm_resource = Resource.create(
@@ -178,8 +127,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             metric_exporter_names + _get_exporter_names("metrics"),
             log_exporter_names + _get_exporter_names("logs"),
         )
-        # TODO NH-107047 Remove this function, the class, and its entry point
-        span_exporters = self._swap_legacy_span_exporter(span_exporters)
 
         # Custom initialization of OTel components
         apm_sampler = ParentBasedSwSampler(
