@@ -120,7 +120,6 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         )
         self.tracer_provider = TracerProvider(sampler=sampler)
         # Set InMemorySpanExporter for testing
-        # We do NOT use SolarWindsSpanExporter
         self.memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleSpanProcessor(self.memory_exporter)
         self.tracer_provider.add_span_processor(span_processor)
