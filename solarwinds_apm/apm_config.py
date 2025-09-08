@@ -231,7 +231,7 @@ class SolarWindsApmConfig:
             # can any arbitrary list BUT
             # (a) must include solarwinds_propagator
             # (b) must not include tracecontext, which may conflict
-            if environ_propagators != INTL_SWO_DEFAULT_PROPAGATORS:
+            if set(environ_propagators) != set(INTL_SWO_DEFAULT_PROPAGATORS):
                 if INTL_SWO_PROPAGATOR not in environ_propagators:
                     logger.error(
                         "Must include solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled."

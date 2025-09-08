@@ -430,3 +430,39 @@ class TestSolarWindsApmConfigAgentEnabled:
         assert not resulting_config._calculate_agent_enabled()
         assert resulting_config.service_name == ""
         assert "It is unnecessary to configure tracecontext in OTEL_PROPAGATORS when using SolarWinds APM >= 4.4.0, which has built-in w3c context propagation" in caplog.text
+
+    def test_calculate_agent_enabled_sw_and_baggage_propagator(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": "solarwinds_propagator,baggage",
+            "SW_APM_SERVICE_KEY": "valid:key",
+        })
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
+        resulting_config = apm_config.SolarWindsApmConfig()
+        assert resulting_config._calculate_agent_enabled()
+        assert resulting_config.service_name == "key"
+
+    def test_calculate_agent_enabled_baggage_and_sw_propagator(self, mocker):
+        mocker.patch.dict(os.environ, {
+            "OTEL_PROPAGATORS": "baggage,solarwinds_propagator",
+            "SW_APM_SERVICE_KEY": "valid:key",
+        })
+        mock_apm_logging = mocker.patch(
+            "solarwinds_apm.apm_config.apm_logging"
+        )
+        mock_apm_logging.configure_mock(
+            **{
+                "set_sw_log_level": mocker.Mock(),
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+            }
+        )
+        resulting_config = apm_config.SolarWindsApmConfig()
+        assert resulting_config._calculate_agent_enabled()
+        assert resulting_config.service_name == "key"

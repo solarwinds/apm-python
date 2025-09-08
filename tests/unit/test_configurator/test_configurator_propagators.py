@@ -149,6 +149,130 @@ class TestConfiguratorPropagators:
         if old_propagators:
             os.environ["OTEL_PROPAGATORS"] = old_propagators
 
+    def test_configure_propagator_valid_baggage_sw(
+        self,
+        mocker,
+        mock_composite_propagator,
+        mock_set_global_textmap,
+    ):
+        # Save any PROPAGATOR env var for later
+        old_propagators = os.environ.get("OTEL_PROPAGATORS", None)
+        if old_propagators:
+            del os.environ["OTEL_PROPAGATORS"]
+
+        # Mock entry points
+        mock_propagator_class = mocker.MagicMock()
+        mock_propagator_entry_point = mocker.Mock()
+        mock_propagator_entry_point.configure_mock(
+            **{
+                "load": mock_propagator_class
+            }
+        )
+        mock_points = iter(
+            [
+                mock_propagator_entry_point,
+                mock_propagator_entry_point,
+                mock_propagator_entry_point,
+            ]
+        )
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
+        )
+        mock_entry_points.configure_mock(
+            return_value=mock_points
+        )
+
+        mocker.patch.dict(
+            os.environ,
+            {
+                "OTEL_PROPAGATORS": "baggage,solarwinds_propagator"
+            }
+        )
+
+        # Test!
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure_propagator()
+        mock_entry_points.assert_has_calls(
+            [
+                mocker.call(
+                    group="opentelemetry_propagator",
+                    name="baggage"
+                ),
+                mocker.call(
+                    group="opentelemetry_propagator",
+                    name="solarwinds_propagator"
+                ),
+            ]
+        )
+        mock_composite_propagator.assert_called_once()
+        mock_set_global_textmap.assert_called_once()
+
+        # Restore old PROPAGATOR
+        if old_propagators:
+            os.environ["OTEL_PROPAGATORS"] = old_propagators
+
+    def test_configure_propagator_valid_sw_baggage(
+        self,
+        mocker,
+        mock_composite_propagator,
+        mock_set_global_textmap,
+    ):
+        # Save any PROPAGATOR env var for later
+        old_propagators = os.environ.get("OTEL_PROPAGATORS", None)
+        if old_propagators:
+            del os.environ["OTEL_PROPAGATORS"]
+
+        # Mock entry points
+        mock_propagator_class = mocker.MagicMock()
+        mock_propagator_entry_point = mocker.Mock()
+        mock_propagator_entry_point.configure_mock(
+            **{
+                "load": mock_propagator_class
+            }
+        )
+        mock_points = iter(
+            [
+                mock_propagator_entry_point,
+                mock_propagator_entry_point,
+                mock_propagator_entry_point,
+            ]
+        )
+        mock_entry_points = mocker.patch(
+            "solarwinds_apm.configurator.entry_points"
+        )
+        mock_entry_points.configure_mock(
+            return_value=mock_points
+        )
+
+        mocker.patch.dict(
+            os.environ,
+            {
+                "OTEL_PROPAGATORS": "solarwinds_propagator,baggage"
+            }
+        )
+
+        # Test!
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator._configure_propagator()
+        mock_entry_points.assert_has_calls(
+            [
+                mocker.call(
+                    group="opentelemetry_propagator",
+                    name="solarwinds_propagator"
+                ),
+                mocker.call(
+                    group="opentelemetry_propagator",
+                    name="baggage"
+                ),
+            ]
+        )
+        mock_composite_propagator.assert_called_once()
+        mock_set_global_textmap.assert_called_once()
+
+        # Restore old PROPAGATOR
+        if old_propagators:
+            os.environ["OTEL_PROPAGATORS"] = old_propagators
+
     def test_configure_propagator_valid_invalid_mixed(
         self,
         mocker,
