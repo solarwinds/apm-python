@@ -680,6 +680,7 @@ class SolarWindsApmConfig:
                 self.__config[key] = val
             elif keys == ["transaction_name"]:
                 self.__config[key] = val
+            # TODO NH-101930 remove export_logs_enabled
             elif keys in [["export_logs_enabled"], ["export_metrics_enabled"]]:
                 val = self.convert_to_bool(val)
                 if val not in (True, False):
