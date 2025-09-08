@@ -132,16 +132,11 @@ def get_apmconfig_mocks(
     mocker,
     enabled=True,
     is_lambda=False,
-    md_is_valid=True,
-    export_logs_enabled=True,
     export_metrics_enabled=True,
 ):
     def get_side_effect(param):
         if param == "export_metrics_enabled":
             return export_metrics_enabled
-        # TODO NH-101930 remove export_logs_enabled
-        elif param == "export_logs_enabled":
-            return export_logs_enabled
         elif param == "service_key":
             return "foo:bar"
         else:
@@ -179,16 +174,6 @@ def mock_apmconfig_enabled(mocker):
         )
     )
 
-@pytest.fixture(name="mock_apmconfig_enabled_export_logs_false")
-def mock_apmconfig_enabled_export_logs_false(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsApmConfig",
-        get_apmconfig_mocks(
-            mocker,
-            export_logs_enabled=False
-        )
-    )
-
 @pytest.fixture(name="mock_apmconfig_enabled_md_invalid")
 def mock_apmconfig_enabled_md_invalid(mocker):
     return mocker.patch(
@@ -206,26 +191,6 @@ def mock_apmconfig_enabled_is_lambda(mocker):
         get_apmconfig_mocks(
             mocker,
             is_lambda=True,
-        )
-    )
-
-@pytest.fixture(name="mock_apmconfig_logs_enabled_false")
-def mock_apmconfig_logs_enabled_false(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsApmConfig",
-        get_apmconfig_mocks(
-            mocker,
-            export_logs_enabled=False
-        )
-    )
-
-@pytest.fixture(name="mock_apmconfig_logs_enabled_none")
-def mock_apmconfig_logs_enabled_none(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsApmConfig",
-        get_apmconfig_mocks(
-            mocker,
-            export_logs_enabled=None
         )
     )
 

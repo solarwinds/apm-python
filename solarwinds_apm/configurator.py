@@ -152,15 +152,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, False
             )
         )
-        # TODO NH-101930 remove this check
-        sw_log_enabled = self.apm_config.get("export_logs_enabled")
-        if sw_log_enabled:
-            logger.warning(
-                "Support for SW_APM_EXPORT_LOG_ENABLED / exportLogsEnabled "
-                "has been dropped. Please update use "
-                "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED instead."
-            )
-
         _init_logging(log_exporters, apm_resource, setup_logging_handler)
 
         # Set up additional custom SW components
