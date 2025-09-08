@@ -18,7 +18,6 @@ from opentelemetry.sdk.resources import Resource
 
 from solarwinds_apm import apm_logging
 from solarwinds_apm.apm_constants import (
-    INTL_SWO_BAGGAGE_PROPAGATOR,
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_PROPAGATOR,
     INTL_SWO_TRACECONTEXT_PROPAGATOR,
@@ -229,36 +228,21 @@ class SolarWindsApmConfig:
             ).split(",")
             # If not using the default propagators,
             # can any arbitrary list BUT
-            # (a) must include tracecontext and solarwinds_propagator
-            # (b) tracecontext must be before solarwinds_propagator
-            # (c) baggage, if configured, must be before solarwinds_propagator
-            if environ_propagators != INTL_SWO_DEFAULT_PROPAGATORS:
-                if (
-                    INTL_SWO_TRACECONTEXT_PROPAGATOR not in environ_propagators
-                    or INTL_SWO_PROPAGATOR not in environ_propagators
-                ):
+            # (a) must include solarwinds_propagator
+            # (b) must not include tracecontext, which may conflict
+            if set(environ_propagators) != set(INTL_SWO_DEFAULT_PROPAGATORS):
+                if INTL_SWO_PROPAGATOR not in environ_propagators:
                     logger.error(
-                        "Must include tracecontext and solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled."
+                        "Must include solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled."
                     )
                     return False
 
-                if environ_propagators.index(
-                    INTL_SWO_PROPAGATOR
-                ) < environ_propagators.index(
-                    INTL_SWO_TRACECONTEXT_PROPAGATOR
-                ):
+                if INTL_SWO_TRACECONTEXT_PROPAGATOR in environ_propagators:
                     logger.error(
-                        "tracecontext must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled."
-                    )
-                    return False
-
-                if (
-                    INTL_SWO_BAGGAGE_PROPAGATOR in environ_propagators
-                    and environ_propagators.index(INTL_SWO_PROPAGATOR)
-                    < environ_propagators.index(INTL_SWO_BAGGAGE_PROPAGATOR)
-                ):
-                    logger.error(
-                        "baggage must be before solarwinds_propagator in OTEL_PROPAGATORS to use SolarWinds APM. Tracing disabled."
+                        "It is unnecessary to configure tracecontext in "
+                        "OTEL_PROPAGATORS when using SolarWinds APM >= 4.4.0, "
+                        "which has built-in w3c context propagation. Please "
+                        "update your configuration. Tracing disabled."
                     )
                     return False
 
