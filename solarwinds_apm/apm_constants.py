@@ -30,6 +30,7 @@ INTL_SWO_DEFAULT_RESOURCE_DETECTORS = [
     "process",
     "os",
     "host",
+    "container",
     "aws_ec2",
     "aws_ecs",
     "aws_eks",
@@ -38,7 +39,6 @@ INTL_SWO_DEFAULT_RESOURCE_DETECTORS = [
     "azure_vm",
     "k8s",
     "uams",
-    "container",
 ]
 INTL_SWO_DEFAULT_RESOURCE_DETECTORS_LAMBDA = [
     "process",
