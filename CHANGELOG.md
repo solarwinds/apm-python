@@ -4,7 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-4.3.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-5.0.0...HEAD)
+
+## [5.0.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.0.0) - 2025-09-09
+
+### Added
+- Added ruff CI/CD ([#682](https://github.com/solarwinds/apm-python/pull/682), [#685](https://github.com/solarwinds/apm-python/pull/685))
+- Added `resource-detector-containerid` to default detectors ([#691](https://github.com/solarwinds/apm-python/pull/691))
+
+### Changed
+- Fixed PyPI publishing naming ([#676](https://github.com/solarwinds/apm-python/pull/676))
+- Upgraded CI/CD actions with condition for older Alpine OS ([#679](https://github.com/solarwinds/apm-python/pull/679))
+- Breaking: `solarwinds_propagator` cannot be used with `tracecontext`; `OTEL_PROPAGATOR` configuration requirements changed ([#687](https://github.com/solarwinds/apm-python/pull/687))
+- Breaking: dropped support of `SW_APM_EXPORT_LOGS_ENABLED`, please instead use `OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED` ([#688](https://github.com/solarwinds/apm-python/pull/688), [#692](https://github.com/solarwinds/apm-python/pull/692))
+
+### Removed
+- Breaking: removed warning of already-dropped `integer_response` argument for SDK `solarwinds_ready` ([#689](https://github.com/solarwinds/apm-python/pull/689))
+- Breaking: removed already-no-op legacy span exporter ([#690](https://github.com/solarwinds/apm-python/pull/690))
+
 
 ## [4.3.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.3.0) - 2025-08-07
 
