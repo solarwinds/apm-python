@@ -29,7 +29,7 @@ INTL_SWO_DEFAULT_RESOURCE_DETECTORS = [
     "process",
     "os",
     "host",
-    "container",
+    "containerid",
     "aws_ec2",
     "aws_ecs",
     "aws_eks",
