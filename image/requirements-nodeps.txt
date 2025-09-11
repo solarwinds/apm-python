@@ -1,1 +1,1 @@
-solarwinds_apm==4.3.0
+solarwinds_apm==5.0.0

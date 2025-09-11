@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-5.0.0...HEAD)
 
-## [5.0.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.0.0) - 2025-09-09
+## [5.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.0.0) - 2025-09-10
 
 ### Added
 - Added ruff CI/CD ([#682](https://github.com/solarwinds/apm-python/pull/682), [#685](https://github.com/solarwinds/apm-python/pull/685))
