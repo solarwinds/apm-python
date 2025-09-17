@@ -180,7 +180,7 @@ def mock_apmconfig_enabled_md_invalid(mocker):
         "solarwinds_apm.configurator.SolarWindsApmConfig",
         get_apmconfig_mocks(
             mocker,
-            md_is_valid=False,
+            export_metrics_enabled=False,
         )
     )
 
