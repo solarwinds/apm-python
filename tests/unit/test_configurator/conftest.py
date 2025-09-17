@@ -174,16 +174,6 @@ def mock_apmconfig_enabled(mocker):
         )
     )
 
-@pytest.fixture(name="mock_apmconfig_enabled_md_invalid")
-def mock_apmconfig_enabled_md_invalid(mocker):
-    return mocker.patch(
-        "solarwinds_apm.configurator.SolarWindsApmConfig",
-        get_apmconfig_mocks(
-            mocker,
-            md_is_valid=False,
-        )
-    )
-
 @pytest.fixture(name="mock_apmconfig_enabled_is_lambda")
 def mock_apmconfig_enabled_is_lambda(mocker):
     return mocker.patch(
