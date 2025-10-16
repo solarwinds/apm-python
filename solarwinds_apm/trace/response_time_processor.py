@@ -114,6 +114,45 @@ class ResponseTimeProcessor(SpanProcessor):
 
         return "unknown"
 
+    def enhance_meter_attrs_with_http_span_attrs(
+        self, span: "ReadableSpan", meter_attrs: dict
+    ) -> dict:
+        """Enhances meter_attrs with span's status code, request method if available. Current span attributes take precedence over deprecated attributes for metrics attributes values. APM uses current attributes for metrics keys.
+
+        Default metrics attribute status code value is unavailable (0). No default for method and unset if not set on span.
+        """
+        status_code_new = span.attributes.get(
+            self._HTTP_RESPONSE_STATUS_CODE, None
+        )
+        status_code_old = span.attributes.get(self._HTTP_STATUS_CODE, None)
+        if status_code_new and status_code_new > 0:
+            meter_attrs.update(
+                {self._HTTP_RESPONSE_STATUS_CODE: status_code_new}
+            )
+        elif status_code_old and status_code_old > 0:
+            meter_attrs.update(
+                {self._HTTP_RESPONSE_STATUS_CODE: status_code_old}
+            )
+        # Something went wrong in OTel or instrumented service crashed early
+        # if no status_code, current nor deprecated, in attributes of HTTP span
+        else:
+            meter_attrs.update(
+                {
+                    self._HTTP_RESPONSE_STATUS_CODE: self._HTTP_SPAN_STATUS_UNAVAILABLE
+                }
+            )
+
+        request_method_new = span.attributes.get(
+            self._HTTP_REQUEST_METHOD, None
+        )
+        request_method_old = span.attributes.get(self._HTTP_METHOD, None)
+        if request_method_new:
+            meter_attrs.update({self._HTTP_REQUEST_METHOD: request_method_new})
+        elif request_method_old:
+            meter_attrs.update({self._HTTP_REQUEST_METHOD: request_method_old})
+
+        return meter_attrs
+
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports OTLP trace metrics"""
         # Only calculate OTLP metrics for service entry spans
@@ -144,43 +183,9 @@ class ResponseTimeProcessor(SpanProcessor):
 
         meter_attrs.update({INTL_SWO_TRANSACTION_ATTR_KEY: trans_name})
         if is_span_http:
-            # Get status code from span
-            # Always set with new attribute key on metric
-            status_code_new = span.attributes.get(
-                self._HTTP_RESPONSE_STATUS_CODE, None
+            meter_attrs = self.enhance_meter_attrs_with_http_span_attrs(
+                span, meter_attrs
             )
-            status_code_old = span.attributes.get(self._HTTP_STATUS_CODE, None)
-            if status_code_new and status_code_new > 0:
-                meter_attrs.update(
-                    {self._HTTP_RESPONSE_STATUS_CODE: status_code_new}
-                )
-            elif status_code_old and status_code_old > 0:
-                meter_attrs.update(
-                    {self._HTTP_RESPONSE_STATUS_CODE: status_code_old}
-                )
-            # Something went wrong in OTel or instrumented service crashed early
-            # if no status_code, current nor deprecated, in attributes of HTTP span
-            else:
-                meter_attrs.update(
-                    {
-                        self._HTTP_RESPONSE_STATUS_CODE: self._HTTP_SPAN_STATUS_UNAVAILABLE
-                    }
-                )
-
-            # Get request method from span
-            # Always set with new attribute key on metric
-            request_method_new = span.attributes.get(
-                self._HTTP_REQUEST_METHOD, None
-            )
-            request_method_old = span.attributes.get(self._HTTP_METHOD, None)
-            if request_method_new:
-                meter_attrs.update(
-                    {self._HTTP_REQUEST_METHOD: request_method_new}
-                )
-            elif request_method_old:
-                meter_attrs.update(
-                    {self._HTTP_REQUEST_METHOD: request_method_old}
-                )
 
         self.response_time.record(
             amount=span_time,

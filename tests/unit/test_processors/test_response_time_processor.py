@@ -339,6 +339,135 @@ class TestResponseTimeProcessor:
             mock_histogram, \
             mock_basic_span
 
+    def test_enhance_meter_attrs_with_http_span_attrs_new_attrs(self, mocker):
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "http.request.method": "GET",
+                "http.response.status_code": 200
+            }
+        })
+        
+        meter_attrs = {"sw.is_error": False}
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        assert result["http.response.status_code"] == 200
+        assert result["http.request.method"] == "GET"
+        assert result["sw.is_error"] == False
+
+    def test_enhance_meter_attrs_with_http_span_attrs_old_attrs(self, mocker):
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "http.method": "POST",
+                "http.status_code": 404
+            }
+        })
+        
+        meter_attrs = {"sw.is_error": True}
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        assert result["http.response.status_code"] == 404
+        assert result["http.request.method"] == "POST"
+        assert result["sw.is_error"] == True
+
+    def test_enhance_meter_attrs_with_http_span_attrs_new_preferred_over_old(self, mocker):
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "http.request.method": "GET",
+                "http.method": "POST",
+                "http.response.status_code": 200,
+                "http.status_code": 500
+            }
+        })
+        
+        meter_attrs = {}
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        assert result["http.response.status_code"] == 200
+        assert result["http.request.method"] == "GET"
+
+    def test_enhance_meter_attrs_with_http_span_attrs_zero_status_code_fallback(self, mocker):
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "http.request.method": "PUT",
+                "http.response.status_code": 0,
+                "http.status_code": 201
+            }
+        })
+        
+        meter_attrs = {}
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        assert result["http.response.status_code"] == 201
+        assert result["http.request.method"] == "PUT"
+
+    def test_enhance_meter_attrs_with_http_span_attrs_no_status_code(self, mocker):
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "http.request.method": "DELETE"
+            }
+        })
+        
+        meter_attrs = {}
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        assert result["http.response.status_code"] == 0
+        assert result["http.request.method"] == "DELETE"
+
+    def test_enhance_meter_attrs_with_http_span_attrs_no_method(self, mocker):
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "http.response.status_code": 302
+            }
+        })
+        
+        meter_attrs = {}
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        assert result["http.response.status_code"] == 302
+        assert "http.request.method" not in result
+
+    def test_enhance_meter_attrs_with_http_span_attrs_no_http_attrs(self, mocker):
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "some.other.attr": "value"
+            }
+        })
+        
+        meter_attrs = {"existing": "value"}
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        assert result["http.response.status_code"] == 0
+        assert "http.request.method" not in result
+        assert result["existing"] == "value"
+
     def test_on_end_valid_local_parent_span(self, mocker):
         """Only scenario to skip OTLP metrics generation (not entry span)"""
         mock_txname_manager, \
