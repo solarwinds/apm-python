@@ -57,7 +57,7 @@ class TestResponseTimeProcessor:
         )
         mock_spanattributes.configure_mock(
             **{
-                "HTTP_METHOD": "http.method"
+                "HTTP_REQUEST_METHOD": "http.request.method"
             }
         )
         mock_span = mocker.Mock()
@@ -65,14 +65,14 @@ class TestResponseTimeProcessor:
             **{
                 "kind": "foo",
                 "attributes": {
-                    "http.method": "bar"
+                    "http.request.method": "bar"
                 }
             }
         )
         processor = ResponseTimeProcessor(mocker.Mock())
         assert True == processor.is_span_http(mock_span)
 
-    def test_is_span_http_false_not_server_kind(self, mocker):
+    def test_is_span_http_true_old_attr(self, mocker):
         mock_spankind = mocker.patch(
             "solarwinds_apm.trace.response_time_processor.SpanKind"
         )
@@ -92,14 +92,14 @@ class TestResponseTimeProcessor:
         mock_span = mocker.Mock()
         mock_span.configure_mock(
             **{
-                "kind": "not-foo-hehe",
+                "kind": "foo",
                 "attributes": {
                     "http.method": "bar"
                 }
             }
         )
         processor = ResponseTimeProcessor(mocker.Mock())
-        assert False == processor.is_span_http(mock_span)
+        assert True == processor.is_span_http(mock_span)
 
     def test_is_span_http_false_no_http_method(self, mocker):
         mock_spankind = mocker.patch(
@@ -129,77 +129,6 @@ class TestResponseTimeProcessor:
         )
         processor = ResponseTimeProcessor(mocker.Mock())
         assert False == processor.is_span_http(mock_span)
-
-    def test_is_span_http_false_no_server_kind_no_method(self, mocker):
-        mock_spankind = mocker.patch(
-            "solarwinds_apm.trace.response_time_processor.SpanKind"
-        )
-        mock_spankind.configure_mock(
-            **{
-                "SERVER": "foo"
-            }
-        )
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.response_time_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_METHOD": "http.method"
-            }
-        )
-        mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "kind": "not-foo-hehe",
-                "attributes": {
-                    "NOT.http.method.hehehehe": "bar"
-                }
-            }
-        )
-        processor = ResponseTimeProcessor(mocker.Mock())
-        assert False == processor.is_span_http(mock_span)
-
-    def test_get_http_status_code_from_span(self, mocker):
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.response_time_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_STATUS_CODE": "http.status_code"
-            }
-        )
-        mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "kind": "foo",
-                "attributes": {
-                    "http.status_code": "foo"
-                }
-            }
-        )
-        processor = ResponseTimeProcessor(mocker.Mock())
-        assert "foo" == processor.get_http_status_code(mock_span)
-
-    def test_get_http_status_code_default(self, mocker):
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.response_time_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(
-            **{
-                "HTTP_STATUS_CODE": "http.status_code"
-            }
-        )
-        mock_span = mocker.Mock()
-        mock_span.configure_mock(
-            **{
-                "kind": "foo",
-                "attributes": {
-                    "NOT.http.status_code.muahaha": "foo"
-                }
-            }
-        )
-        processor = ResponseTimeProcessor(mocker.Mock())
-        assert 0 == processor.get_http_status_code(mock_span)
 
     def test_has_error_true(self, mocker):
         mock_statuscode = mocker.patch(
@@ -363,17 +292,7 @@ class TestResponseTimeProcessor:
             "solarwinds_apm.trace.ResponseTimeProcessor.calculate_span_time"
         )
         mock_calculate_span_time.configure_mock(return_value=123)
-
-        mock_get_http_status_code = mocker.patch(
-            "solarwinds_apm.trace.ResponseTimeProcessor.get_http_status_code"
-        )
-        if missing_http_attrs:
-            mock_get_http_status_code.configure_mock(return_value=0)
-        else:
-            mock_get_http_status_code.configure_mock(return_value=200)
-
         mock_apm_config = self.get_mock_apm_config(mocker)
-
         mock_txname_manager = mocker.Mock()
         mock_set = mocker.Mock()
         mock_del = mocker.Mock()
@@ -390,7 +309,6 @@ class TestResponseTimeProcessor:
             mock_basic_span.configure_mock(
                 **{
                     "attributes": {
-                        "http.method": None,
                         "TransactionName": "foo"
                     },
                 }
@@ -399,7 +317,8 @@ class TestResponseTimeProcessor:
             mock_basic_span.configure_mock(
                 **{
                     "attributes": {
-                        "http.method": "foo-method",
+                        "http.request.method": "foo-method",
+                        "http.response.status_code": 200,
                         "TransactionName": "foo"
                     },
                 }
@@ -469,6 +388,7 @@ class TestResponseTimeProcessor:
                 "parent": mock_parent,
                 "attributes": {
                     "http.method": "foo-method",
+                    "http.status_code": 200,
                     "TransactionName": "foo"
                 }
             }
@@ -486,8 +406,8 @@ class TestResponseTimeProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': True,
-                        'http.status_code': 200,
-                        'http.method': 'foo-method',
+                        'http.response.status_code': 200,
+                        'http.request.method': 'foo-method',
                         'sw.transaction': 'foo'
                     }
                 )
@@ -514,6 +434,7 @@ class TestResponseTimeProcessor:
                 "parent": mock_parent,
                 "attributes": {
                     "http.method": "foo-method",
+                    "http.status_code": 200,
                     "TransactionName": "foo"
                 }
             }
@@ -531,8 +452,8 @@ class TestResponseTimeProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': True,
-                        'http.status_code': 200,
-                        'http.method': 'foo-method',
+                        'http.response.status_code': 200,
+                        'http.request.method': 'foo-method',
                         'sw.transaction': 'foo'
                     }
                 )
@@ -559,6 +480,7 @@ class TestResponseTimeProcessor:
                 "parent": mock_parent,
                 "attributes": {
                     "http.method": "foo-method",
+                    "http.response.status_code": 200,
                     "TransactionName": "foo"
                 }
             }
@@ -576,8 +498,8 @@ class TestResponseTimeProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': True,
-                        'http.status_code': 200,
-                        'http.method': 'foo-method',
+                        'http.response.status_code': 200,
+                        'http.request.method': 'foo-method',
                         'sw.transaction': 'foo'
                     }
                 )
@@ -597,6 +519,7 @@ class TestResponseTimeProcessor:
                 "parent": None,
                 "attributes": {
                     "http.method": "foo-method",
+                    "http.response.status_code": 200,
                     "TransactionName": "foo"
                 }
             }
@@ -614,8 +537,8 @@ class TestResponseTimeProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': True,
-                        'http.status_code': 200,
-                        'http.method': 'foo-method',
+                        'http.response.status_code': 200,
+                        'http.request.method': 'foo-method',
                         'sw.transaction': 'foo'
                     }
                 )
@@ -671,8 +594,8 @@ class TestResponseTimeProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': True,
-                        'http.status_code': 200,
-                        'http.method': 'foo-method',
+                        'http.response.status_code': 200,
+                        'http.request.method': 'foo-method',
                         'sw.transaction': 'foo'
                     }
                 )
@@ -701,8 +624,8 @@ class TestResponseTimeProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': False,
-                        'http.status_code': 200,
-                        'http.method': 'foo-method',
+                        'http.response.status_code': 200,
+                        'http.request.method': 'foo-method',
                         'sw.transaction': 'foo'
                     }
                 )
@@ -732,6 +655,7 @@ class TestResponseTimeProcessor:
                     amount=123,
                     attributes={
                         'sw.is_error': True,
+                        'http.response.status_code': 0,
                         'sw.transaction': 'foo'
                     }
                 )
@@ -793,3 +717,192 @@ class TestResponseTimeProcessor:
                 )
             ]
         )
+
+    def test_on_end_http_new_status_code_attr(self, mocker):
+        mock_txname_manager, \
+            mock_apm_config, \
+            mock_histogram, \
+            _ = self.patch_for_on_end(
+                mocker,
+                has_error=False,
+                is_span_http=True,
+            )
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "parent": None,
+            "attributes": {
+                "http.request.method": "GET",
+                "http.response.status_code": 200,
+                "sw.transaction": "test-transaction"
+            }
+        })
+        
+        processor = ResponseTimeProcessor(mock_apm_config)
+        processor.on_end(mock_span)
+        
+        mock_histogram.record.assert_called_once()
+        call_args = mock_histogram.record.call_args
+        assert call_args[1]['attributes']['http.response.status_code'] == 200
+        assert call_args[1]['attributes']['http.request.method'] == "GET"
+
+    def test_on_end_http_old_status_code_attr(self, mocker):
+        mock_txname_manager, \
+            mock_apm_config, \
+            mock_histogram, \
+            _ = self.patch_for_on_end(
+                mocker,
+                has_error=False,
+                is_span_http=True,
+            )
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "parent": None,
+            "attributes": {
+                "http.method": "POST",
+                "http.status_code": 404,
+                "sw.transaction": "test-transaction"
+            }
+        })
+        
+        processor = ResponseTimeProcessor(mock_apm_config)
+        processor.on_end(mock_span)
+        
+        mock_histogram.record.assert_called_once()
+        call_args = mock_histogram.record.call_args
+        assert call_args[1]['attributes']['http.response.status_code'] == 404
+        assert call_args[1]['attributes']['http.request.method'] == "POST"
+
+    def test_on_end_http_new_attrs_preferred_over_old(self, mocker):
+        mock_txname_manager, \
+            mock_apm_config, \
+            mock_histogram, \
+            _ = self.patch_for_on_end(
+                mocker,
+                has_error=False,
+                is_span_http=True,
+            )
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "parent": None,
+            "attributes": {
+                "http.request.method": "GET",  # new
+                "http.method": "POST",  # old (should be ignored)
+                "http.response.status_code": 200,  # new
+                "http.status_code": 500,  # old (should be ignored)
+                "sw.transaction": "test-transaction"
+            }
+        })
+        
+        processor = ResponseTimeProcessor(mock_apm_config)
+        processor.on_end(mock_span)
+        
+        mock_histogram.record.assert_called_once()
+        call_args = mock_histogram.record.call_args
+        # Should use new attributes, not old ones
+        assert call_args[1]['attributes']['http.response.status_code'] == 200
+        assert call_args[1]['attributes']['http.request.method'] == "GET"
+
+    def test_on_end_http_zero_status_code_fallback(self, mocker):
+        mock_txname_manager, \
+            mock_apm_config, \
+            mock_histogram, \
+            _ = self.patch_for_on_end(
+                mocker,
+                has_error=False,
+                is_span_http=True,
+            )
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "parent": None,
+            "attributes": {
+                "http.request.method": "GET",
+                "http.response.status_code": 0,  # invalid
+                "http.status_code": 201,  # should be used
+                "sw.transaction": "test-transaction"
+            }
+        })
+        
+        processor = ResponseTimeProcessor(mock_apm_config)
+        processor.on_end(mock_span)
+        
+        mock_histogram.record.assert_called_once()
+        call_args = mock_histogram.record.call_args
+        assert call_args[1]['attributes']['http.response.status_code'] == 201
+
+    def test_on_end_http_no_status_code_unavailable(self, mocker):
+        mock_txname_manager, \
+            mock_apm_config, \
+            mock_histogram, \
+            _ = self.patch_for_on_end(
+                mocker,
+                has_error=False,
+                is_span_http=True,
+            )
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "parent": None,
+            "attributes": {
+                "http.request.method": "GET",
+                "sw.transaction": "test-transaction"
+            }
+        })
+        
+        processor = ResponseTimeProcessor(mock_apm_config)
+        processor.on_end(mock_span)
+        
+        mock_histogram.record.assert_called_once()
+        call_args = mock_histogram.record.call_args
+        assert call_args[1]['attributes']['http.response.status_code'] == 0
+
+    def test_on_end_http_fallback_to_old_method(self, mocker):
+        mock_txname_manager, \
+            mock_apm_config, \
+            mock_histogram, \
+            _ = self.patch_for_on_end(
+                mocker,
+                has_error=False,
+                is_span_http=True,
+            )
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "parent": None,
+            "attributes": {
+                "http.method": "DELETE",  # old attribute
+                "http.response.status_code": 204,
+                "sw.transaction": "test-transaction"
+            }
+        })
+        
+        processor = ResponseTimeProcessor(mock_apm_config)
+        processor.on_end(mock_span)
+        
+        mock_histogram.record.assert_called_once()
+        call_args = mock_histogram.record.call_args
+        assert call_args[1]['attributes']['http.request.method'] == "DELETE"
+
+    def test_on_end_non_http_span_no_http_attrs(self, mocker):
+        mock_txname_manager, \
+            mock_apm_config, \
+            mock_histogram, \
+            mock_basic_span = self.patch_for_on_end(
+                mocker,
+                has_error=False,
+                is_span_http=False,
+                missing_http_attrs=True,
+            )
+        
+        processor = ResponseTimeProcessor(mock_apm_config)
+        processor.on_end(mock_basic_span)
+        
+        mock_histogram.record.assert_called_once()
+        call_args = mock_histogram.record.call_args
+        # Should not contain HTTP attributes
+        assert 'http.response.status_code' not in call_args[1]['attributes']
+        assert 'http.request.method' not in call_args[1]['attributes']
+        assert call_args[1]['attributes']['sw.transaction'] == "foo"
