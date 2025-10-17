@@ -30,6 +30,14 @@ logger = logging.getLogger(__name__)
 class ResponseTimeProcessor(SpanProcessor):
     """SolarWinds span processor for recording response_time metrics."""
 
+    _HTTP_REQUEST_METHOD = (
+        SpanAttributes.HTTP_REQUEST_METHOD
+    )  # http.request.method
+    _HTTP_RESPONSE_STATUS_CODE = (
+        SpanAttributes.HTTP_RESPONSE_STATUS_CODE
+    )  # "http.response.status_code"
+
+    # Deprecated, but potentially still used by some instrumentors
     _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
     _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
 
@@ -53,20 +61,14 @@ class ResponseTimeProcessor(SpanProcessor):
         )
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
-        """This span from inbound HTTP request if from a SERVER by some http.method"""
+        """This span from inbound HTTP request if from a SERVER by some http.request.method or http.method"""
         return bool(
             span.kind == SpanKind.SERVER
-            and span.attributes.get(self._HTTP_METHOD, None)
+            and (
+                span.attributes.get(self._HTTP_REQUEST_METHOD, None)
+                or span.attributes.get(self._HTTP_METHOD, None)
+            )
         )
-
-    def get_http_status_code(self, span: "ReadableSpan") -> int:
-        """Calculate HTTP status_code from span or default to UNAVAILABLE"""
-        status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
-        # Something went wrong in OTel or instrumented service crashed early
-        # if no status_code in attributes of HTTP span
-        if not status_code:
-            status_code = self._HTTP_SPAN_STATUS_UNAVAILABLE
-        return status_code
 
     def has_error(self, span: "ReadableSpan") -> bool:
         """Calculate if this span instance has_error"""
@@ -112,6 +114,45 @@ class ResponseTimeProcessor(SpanProcessor):
 
         return "unknown"
 
+    def enhance_meter_attrs_with_http_span_attrs(
+        self, span: "ReadableSpan", meter_attrs: dict
+    ) -> dict:
+        """Enhances meter_attrs with span's status code, request method if available. Current span attributes take precedence over deprecated attributes for metrics attributes values. APM uses current attributes for metrics keys.
+
+        Default metrics attribute status code value is unavailable (0). No default for method and unset if not set on span.
+        """
+        status_code_new = span.attributes.get(
+            self._HTTP_RESPONSE_STATUS_CODE, None
+        )
+        status_code_old = span.attributes.get(self._HTTP_STATUS_CODE, None)
+        if status_code_new and status_code_new > 0:
+            meter_attrs.update(
+                {self._HTTP_RESPONSE_STATUS_CODE: status_code_new}
+            )
+        elif status_code_old and status_code_old > 0:
+            meter_attrs.update(
+                {self._HTTP_RESPONSE_STATUS_CODE: status_code_old}
+            )
+        # Something went wrong in OTel or instrumented service crashed early
+        # if no status_code, current nor deprecated, in attributes of HTTP span
+        else:
+            meter_attrs.update(
+                {
+                    self._HTTP_RESPONSE_STATUS_CODE: self._HTTP_SPAN_STATUS_UNAVAILABLE
+                }
+            )
+
+        request_method_new = span.attributes.get(
+            self._HTTP_REQUEST_METHOD, None
+        )
+        request_method_old = span.attributes.get(self._HTTP_METHOD, None)
+        if request_method_new:
+            meter_attrs.update({self._HTTP_REQUEST_METHOD: request_method_new})
+        elif request_method_old:
+            meter_attrs.update({self._HTTP_REQUEST_METHOD: request_method_old})
+
+        return meter_attrs
+
     def on_end(self, span: "ReadableSpan") -> None:
         """Calculates and reports OTLP trace metrics"""
         # Only calculate OTLP metrics for service entry spans
@@ -142,13 +183,9 @@ class ResponseTimeProcessor(SpanProcessor):
 
         meter_attrs.update({INTL_SWO_TRANSACTION_ATTR_KEY: trans_name})
         if is_span_http:
-            status_code = self.get_http_status_code(span)
-            # UNAVAILABLE is zero
-            if status_code > 0:
-                meter_attrs.update({self._HTTP_STATUS_CODE: status_code})
-            request_method = span.attributes.get(self._HTTP_METHOD, None)
-            if request_method:
-                meter_attrs.update({self._HTTP_METHOD: request_method})
+            meter_attrs = self.enhance_meter_attrs_with_http_span_attrs(
+                span, meter_attrs
+            )
 
         self.response_time.record(
             amount=span_time,
