@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-5.0.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-5.1.0...HEAD)
+
+## [5.1.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.1.0) - 2025-10-20
+
+### Changed
+- Upgraded to OTel Python 1.37.0/0.58b0 ([#699](https://github.com/solarwinds/apm-python/pull/699))
+- Updated style for pylint 4.0 ([#703](https://github.com/solarwinds/apm-python/pull/703))
+- Fixed APM metrics attributes calculation ([#704](https://github.com/solarwinds/apm-python/pull/704))
+- Upgraded to OTel Python 1.38.0/0.59b0 ([#705](https://github.com/solarwinds/apm-python/pull/705))
 
 ## [5.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.0.0) - 2025-09-10
 
