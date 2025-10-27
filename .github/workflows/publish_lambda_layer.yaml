@@ -67,7 +67,7 @@ jobs:
           cat $GITHUB_ENV
 
       - name: Download built layer
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: ${{ inputs.artifact-name }}
 
