@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from opentelemetry.metrics import get_meter
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.trace import SpanKind, StatusCode
+from opentelemetry.trace import SpanKind, StatusCode, set_span_in_context
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_TRANSACTION_ATTR_KEY,
@@ -187,7 +187,9 @@ class ResponseTimeProcessor(SpanProcessor):
                 span, meter_attrs
             )
 
+        active_metric_ctx = set_span_in_context(span)
         self.response_time.record(
             amount=span_time,
             attributes=meter_attrs,
+            context=active_metric_ctx,
         )
