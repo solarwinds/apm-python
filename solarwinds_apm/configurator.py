@@ -45,7 +45,7 @@ from opentelemetry.sdk.metrics import (
     UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.exemplar import (
-    AlwaysOnExemplarFilter,
+    TraceBasedExemplarFilter,
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -233,13 +233,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                     )
                 )
 
-        # Always enable always-on exemplar filtering for all metrics
-        always_exemplar_filter = AlwaysOnExemplarFilter()
+        # Always enable trace-based exemplar filtering for all metrics
+        tb_exemplar_filter = TraceBasedExemplarFilter()
 
         provider = MeterProvider(
             resource=resource,
             metric_readers=metric_readers,
-            exemplar_filter=always_exemplar_filter,
+            exemplar_filter=tb_exemplar_filter,
         )
         set_meter_provider(provider)
 
