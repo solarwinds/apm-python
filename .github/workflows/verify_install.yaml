@@ -174,7 +174,7 @@ jobs:
         run: dnf install -y tar gzip 
       # Use checkout@v4 for Alpine versions < 3.17 that don't support Node.js 24
       - if: contains(matrix.hostname, 'alpine3.13') || contains(matrix.hostname, 'alpine3.14') || contains(matrix.hostname, 'alpine3.15') || contains(matrix.hostname, 'alpine3.16')
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
       # Else use latest checkout
       - if: ${{ !(contains(matrix.hostname, 'alpine3.13') || contains(matrix.hostname, 'alpine3.14') || contains(matrix.hostname, 'alpine3.15') || contains(matrix.hostname, 'alpine3.16')) }}
         uses: actions/checkout@v6
