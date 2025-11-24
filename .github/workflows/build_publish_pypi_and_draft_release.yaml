@@ -25,7 +25,7 @@ jobs:
     name: Check if version valid
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Check version
       run: cd .github/scripts && ./is_publishable.sh ${{ github.event.inputs.version }}
 
@@ -79,7 +79,7 @@ jobs:
         with:
           app_id: ${{ vars.APPLICATION_ID }}
           private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Initialize git
         run: |
           git config user.name "GitHub Actions"
