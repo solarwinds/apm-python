@@ -23,6 +23,7 @@ class _TokenBucket:
         # (e.g., gunicorn pre-fork workers).
         if hasattr(os, "register_at_fork"):
             weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+            # pylint: disable=unnecessary-lambda
             os.register_at_fork(after_in_child=lambda: weak_reinit()())
 
     @property
