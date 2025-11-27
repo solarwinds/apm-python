@@ -351,7 +351,7 @@ class SolarWindsDistro(BaseDistro):
 
     def get_semconv_opt_in(self):
         """
-        Always returns semconv config as opt-into new, stable HTTP only
+        Always returns semconv config as opt-into new, stable HTTP and database only
 
         See also:
         https://github.com/open-telemetry/opentelemetry-python-contrib/blob/0a231e57f9722e6101194c6b38695addf23ab950/opentelemetry-instrumentation/src/opentelemetry/instrumentation/_semconv.py#L93-L99
@@ -359,4 +359,4 @@ class SolarWindsDistro(BaseDistro):
         # TODO: Support other signal types when available
         # return environ.get("OTEL_SEMCONV_STABILITY_OPT_IN")
 
-        return "http"
+        return "http,database"
