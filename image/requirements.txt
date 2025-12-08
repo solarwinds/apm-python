@@ -3,7 +3,7 @@ opentelemetry-api==1.38.0
 opentelemetry-sdk==1.38.0
 opentelemetry-instrumentation==0.59b0
 
-urllib3 < 2.6.0
+urllib3 < 2.7.0
 # We don't use the otlp_proto_grpc option since gRPC is not appropriate for
 # injected auto-instrumentation, where it has a strict dependency on the OS / Python version the artifact is built for.
 opentelemetry-exporter-otlp-proto-http==1.38.0
