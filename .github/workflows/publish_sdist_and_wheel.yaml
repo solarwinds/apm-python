@@ -20,7 +20,7 @@ on:
 
 jobs:
   publish_sdist_and_wheel:
-    name: Publish sdist and wheel to TestPyPI
+    name: Publish sdist and wheel
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact
@@ -29,24 +29,11 @@ jobs:
           name: ${{ inputs.artifact-name }}
       - name: Unzip artifact with dist
         run: unzip ${{ inputs.artifact-name }}
-      - name: Update Packaging
-        run: pip install --upgrade pip && pip install --upgrade packaging
-      - name: Install Twine
-        run: pip install --upgrade --no-cache-dir --prefer-binary twine
-      - name: Check distribution artifacts
-        run: twine check dist/*
       - if: ${{ inputs.repository-name == 'testpypi' }}
-        name: Publish sdist and wheel wheels to TestPyPI
-        env:
-          TWINE_NON_INTERACTIVE: 1
-          TWINE_REPOSITORY: testpypi
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.SW_APM_TESTPYPI_UPLOAD_TOKEN }}
-        run: twine upload dist/*
+        name: Publish sdist and wheel to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
       - if: ${{ inputs.repository-name == 'pypi' }}
-        name: Publish sdist and wheel wheels to PyPI
-        env:
-          TWINE_NON_INTERACTIVE: 1
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.SW_APM_PYPI_UPLOAD_TOKEN }}
-        run: twine upload dist/*
+        name: Publish sdist and wheel to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
