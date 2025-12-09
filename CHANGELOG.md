@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-5.1.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-5.2.0...HEAD)
+
+## [5.2.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.2.0) - 2025-12-09
+
+### Changed
+- Fixed thread safety of token bucket ([#712](https://github.com/solarwinds/apm-python/pull/712))
+- Updated distro to always opt into `database` new semconv if supported by instrumentation ([#713](https://github.com/solarwinds/apm-python/pull/713))
+- Updated workflows for PyPI trusted publishing ([#719](https://github.com/solarwinds/apm-python/pull/719))
+- Upgraded to OTel Python 1.39.0/0.60b ([#720](https://github.com/solarwinds/apm-python/pull/720))
 
 ## [5.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.1.0) - 2025-10-21
 
