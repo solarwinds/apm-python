@@ -24,10 +24,10 @@ def get_url_attrs(
     Order of precedence is new semconv > old semconv > none.
 
     Parameters:
-    attributes (Optional[Attributes]): The span attributes to extract URL components from.
+    attributes (Attributes | None): The span attributes to extract URL components from.
 
     Returns:
-    Tuple[Any, Any, Any, Any]: A tuple containing (scheme, host, port, target).
+    tuple[Any, Any, Any, Any]: A tuple containing (scheme, host, port, target).
     """
     # Upstream OTel instrumentation libraries are individually updating
     # to implement support of HTTP semconv opt-in, so APM Python checks both

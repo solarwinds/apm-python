@@ -39,7 +39,17 @@ logger = logging.getLogger(__name__)
 
 
 class ServiceEntrySpanProcessor(SpanProcessor):
+    """
+    Span processor for managing service entry spans.
+
+    Handles transaction name calculation and context tracking for service entry spans,
+    which are spans without valid local parents.
+    """
+
     def __init__(self) -> None:
+        """
+        Initialize the ServiceEntrySpanProcessor.
+        """
         self.context_tokens = {}
 
     def set_default_transaction_name(

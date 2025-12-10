@@ -30,7 +30,12 @@ logger = logging.getLogger(__name__)
 
 
 class ResponseTimeProcessor(SpanProcessor):
-    """SolarWinds span processor for recording response_time metrics."""
+    """
+    SolarWinds span processor for recording response_time metrics.
+
+    This processor calculates and reports OTLP trace metrics for service entry spans,
+    including response time, error status, and HTTP-specific attributes.
+    """
 
     _HTTP_REQUEST_METHOD = (
         SpanAttributes.HTTP_REQUEST_METHOD
@@ -49,6 +54,12 @@ class ResponseTimeProcessor(SpanProcessor):
         self,
         apm_config: "SolarWindsApmConfig",
     ) -> None:
+        """
+        Initialize the ResponseTimeProcessor.
+
+        Parameters:
+        apm_config (SolarWindsApmConfig): The APM configuration object.
+        """
         super().__init__()
         self.service_name = apm_config.service_name
         # SW_APM_TRANSACTION_NAME and AWS_LAMBDA_FUNCTION_NAME
