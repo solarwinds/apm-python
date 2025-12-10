@@ -26,7 +26,7 @@ jobs:
         python-minor: ["9", "10", "11", "12", "13"]
         apm-env: ["lambda"]
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Setup Python
       uses: actions/setup-python@v6
       with:
@@ -50,9 +50,9 @@ jobs:
     outputs:
       artifact-name: solarwinds_apm_lambda.zip
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: ./.github/actions/package_lambda_solarwinds_apm
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       name: Save assembled layer to build
       with:
         name: solarwinds_apm_lambda.zip

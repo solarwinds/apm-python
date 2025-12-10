@@ -25,12 +25,12 @@ jobs:
     outputs:
         artifact-name: scan-wheel-${{ inputs.version }}.zip
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Build sdist and wheel
       uses: ./.github/actions/package_solarwinds_apm
     - name: Package sdist and wheels for upload
       run: zip -r scan-wheel-${{ inputs.version }}.zip dist/*
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       name: Upload zip for scan and publish
       with:
         name: scan-wheel-${{ inputs.version }}.zip

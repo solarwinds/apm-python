@@ -25,7 +25,7 @@ jobs:
     name: Check if version valid
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Check version
       run: cd .github/scripts && ./is_publishable.sh ${{ github.event.inputs.version }}
 
@@ -61,11 +61,16 @@ jobs:
     needs:
       - build_sdist_and_wheel
       - scan_sdist_and_wheel
-    uses: ./.github/workflows/publish_sdist_and_wheel.yaml
-    with:
-      artifact-name: ${{ needs.build_sdist_and_wheel.outputs.artifact-name }}
-      repository-name: pypi
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{ needs.build_sdist_and_wheel.outputs.artifact-name }}
+      - name: Unzip artifact with dist
+        run: unzip ${{ needs.build_sdist_and_wheel.outputs.artifact-name }}
+      - name: Publish sdist and wheel to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
 
   create_release:
     name: Create draft release
@@ -79,7 +84,7 @@ jobs:
         with:
           app_id: ${{ vars.APPLICATION_ID }}
           private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Initialize git
         run: |
           git config user.name "GitHub Actions"
