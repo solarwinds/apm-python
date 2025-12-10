@@ -4,18 +4,29 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-"""Helpers to handle trace from upstream instrumentors conforming to new or old semantic conventions"""
+"""Helpers to handle trace from upstream instrumentors conforming to new or old semantic conventions."""
 
-from typing import Any
+from typing import Any, Optional
 
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.util.types import Attributes
 
 
 def get_url_attrs(
-    attributes: Attributes = None,
-) -> (Any, Any, Any, Any):
-    """Returns URL scheme, host, target, port from span attributes. Order of precedence is new semconv > old semconv > none"""
+    attributes: Optional[Attributes] = None,
+) -> tuple[Any, Any, Any, Any]:
+    """
+    Extract URL components from span attributes with fallback to old semantic conventions.
+
+    Returns URL scheme, host, target, and port from span attributes.
+    Order of precedence is new semconv > old semconv > none.
+
+    Parameters:
+    attributes (Optional[Attributes]): The span attributes to extract URL components from.
+
+    Returns:
+    Tuple[Any, Any, Any, Any]: A tuple containing (scheme, host, port, target).
+    """
     # Upstream OTel instrumentation libraries are individually updating
     # to implement support of HTTP semconv opt-in, so APM Python checks both
     # https://github.com/open-telemetry/opentelemetry-python-contrib/issues/936
