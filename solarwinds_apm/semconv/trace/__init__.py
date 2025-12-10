@@ -6,14 +6,16 @@
 
 """Helpers to handle trace from upstream instrumentors conforming to new or old semantic conventions."""
 
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.util.types import Attributes
 
 
 def get_url_attrs(
-    attributes: Optional[Attributes] = None,
+    attributes: Attributes | None = None,
 ) -> tuple[Any, Any, Any, Any]:
     """
     Extract URL components from span attributes with fallback to old semantic conventions.
