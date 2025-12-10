@@ -4,8 +4,12 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+"""Transaction name pool management for SolarWinds APM."""
+
+from __future__ import annotations
+
 import logging
-from typing import Optional, cast
+from typing import cast
 
 from opentelemetry.util._once import Once
 
@@ -14,13 +18,21 @@ from solarwinds_apm.oboe.transaction_name_pool import TransactionNamePool
 logger = logging.getLogger(__name__)
 
 _TRANSACTION_NAME_POOL_SET_ONCE = Once()
-# pylint: disable=consider-alternative-union-syntax
-_transaction_name_pool: Optional[TransactionNamePool] = None
+_transaction_name_pool: TransactionNamePool | None = None
 
 
 def _set_transaction_name_pool(
     transaction_name_pool: TransactionNamePool,
 ) -> None:
+    """
+    Set the global transaction name pool instance.
+
+    This function ensures the pool is set only once using the Once mechanism.
+
+    Parameters:
+    transaction_name_pool (TransactionNamePool): The transaction name pool instance to set globally.
+    """
+
     def set_tp() -> None:
         global _transaction_name_pool  # pylint: disable=global-statement
         _transaction_name_pool = transaction_name_pool
@@ -29,7 +41,14 @@ def _set_transaction_name_pool(
 
 
 def get_transaction_name_pool() -> TransactionNamePool:
-    """Gets the current global :class:`~.TransactionNamePool` object."""
+    """
+    Get the current global TransactionNamePool object.
+
+    If no pool exists, creates and initializes a new one.
+
+    Returns:
+    TransactionNamePool: The global transaction name pool instance.
+    """
     if _transaction_name_pool is None:
         transaction_name_pool = TransactionNamePool()
         _set_transaction_name_pool(transaction_name_pool)
