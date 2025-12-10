@@ -36,10 +36,11 @@ class TestConfiguratorMetricsInit:
             resource=mock_resource,
         )
         mock_pemreader.assert_not_called()
-        mock_meterprovider.assert_called_once_with(
-            resource=mock_resource,
-            metric_readers=[],
-        )
+        mock_meterprovider.assert_called_once()
+        _, kwargs = mock_meterprovider.call_args
+        assert kwargs["resource"] == mock_resource
+        assert kwargs["metric_readers"] == []
+        assert "exemplar_filter" in kwargs
 
     def test_custom_init_metrics_exporter_not_is_lambda(
         self,
@@ -119,10 +120,11 @@ class TestConfiguratorMetricsInit:
         mock_pemreader.assert_called_once_with(
             mocker.ANY,  # Allow any instance of MockExporter
         )
-        mock_meterprovider.assert_called_once_with(
-            resource=mock_resource,
-            metric_readers=[mock_pemreader.return_value],
-        )
+        mock_meterprovider.assert_called_once()
+        _, kwargs = mock_meterprovider.call_args
+        assert kwargs["resource"] == mock_resource
+        assert kwargs["metric_readers"] == [mock_pemreader.return_value]
+        assert "exemplar_filter" in kwargs
 
     def test_custom_init_metrics_exporter_is_lambda(
         self,
@@ -203,10 +205,11 @@ class TestConfiguratorMetricsInit:
             mocker.ANY,  # Allow any instance of MockExporter
             export_interval_millis=math.inf,
         )
-        mock_meterprovider.assert_called_once_with(
-            resource=mock_resource,
-            metric_readers=[mock_pemreader.return_value],
-        )
+        mock_meterprovider.assert_called_once()
+        _, kwargs = mock_meterprovider.call_args
+        assert kwargs["resource"] == mock_resource
+        assert kwargs["metric_readers"] == [mock_pemreader.return_value]
+        assert "exemplar_filter" in kwargs
 
     def test_custom_init_metrics_reader_not_is_lambda(
         self,
