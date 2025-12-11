@@ -37,15 +37,9 @@ function Get-Wheel {
         if (-not $env:SOLARWINDS_APM_VERSION) {
             # no SOLARWINDS_APM_VERSION provided, thus test version of current source code
             $version_file = Join-Path $env:APM_ROOT "solarwinds_apm\version.py"
-            $version_content = Get-Content $version_file
-            if ($version_content -match '__version__ = "(.*)"') {
-                if ($matches -and $matches.Count -gt 1) {
-                    $env:SOLARWINDS_APM_VERSION = $matches[1]
-                }
-                else {
-                    Write-Error "FAILED: Version regex matched but did not capture expected group. Matches: $matches"
-                    exit 1
-                }
+            $version_content = Get-Content $version_file -Raw
+            if ($version_content -match '__version__ = "([^"]+)"') {
+                $env:SOLARWINDS_APM_VERSION = $matches[1]
             }
             else {
                 Write-Error "FAILED: Could not extract version from $version_file. File content: $version_content"
