@@ -32,6 +32,15 @@ UAMS_CLIENT_ID_FIELD = "uamsclient_id"
 
 
 def _read_from_file(uams_file: str) -> dict:
+    """
+    Read UAMS client ID from file.
+
+    Parameters:
+    uams_file (str): Path to UAMS client ID file.
+
+    Returns:
+    dict: Dictionary with UAMS client ID and host ID attributes, or empty dict on error.
+    """
     try:
         with open(uams_file, encoding="utf-8") as file:
             uams_id = file.read().strip()
@@ -46,6 +55,12 @@ def _read_from_file(uams_file: str) -> dict:
 
 
 def _read_from_api() -> dict:
+    """
+    Read UAMS client ID from local API endpoint.
+
+    Returns:
+    dict: Dictionary with UAMS client ID and host ID attributes, or empty dict on error.
+    """
     try:
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         response = requests.get(UAMS_CLIENT_URL, timeout=1)
@@ -68,14 +83,24 @@ def _read_from_api() -> dict:
 
 
 class UamsResourceDetector(ResourceDetector):
-    """Detects attribute values only available when the app is running on k8s
-    and returns them in a Resource.
-    """
+    """Detect UAMS client attributes for SolarWinds APM resource identification."""
 
-    def __init__(self, uams=UAMS_CLIENT_PATH):
+    def __init__(self, uams: str = UAMS_CLIENT_PATH) -> None:
+        """
+        Initialize UAMS Resource Detector.
+
+        Parameters:
+        uams (str): Path to UAMS client ID file. Defaults to UAMS_CLIENT_PATH.
+        """
         super().__init__()
         self._uams = uams
 
-    def detect(self) -> "Resource":
+    def detect(self) -> Resource:
+        """
+        Detect UAMS resource attributes.
+
+        Returns:
+        Resource: Resource with UAMS client ID and host ID attributes if available.
+        """
         attributes = _read_from_file(self._uams) or _read_from_api() or {}
         return Resource(attributes)
