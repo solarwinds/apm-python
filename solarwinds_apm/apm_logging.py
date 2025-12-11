@@ -34,6 +34,8 @@ The name of the main logger is `solarwinds_apm`. Each module should create its o
 logging.getLogger(__name__) which will return a child logger of the `solarwinds_apm` logger.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from logging.handlers import RotatingFileHandler
