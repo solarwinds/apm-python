@@ -185,7 +185,6 @@ class SolarWindsApmConfig:
     @classmethod
     def calculate_metrics_enabled(
         cls,
-        is_legacy: bool = False,
         cnf_dict: dict = None,
     ) -> bool:
         """Return if export of instrumentor metrics telemetry enabled.
@@ -197,7 +196,6 @@ class SolarWindsApmConfig:
         to get_cnf_dict() is made for a fresh read.
 
         Parameters:
-        is_legacy (bool): Legacy flag (currently unused). Defaults to False.
         cnf_dict (dict): Optional configuration dictionary. Defaults to None.
 
         Returns:
