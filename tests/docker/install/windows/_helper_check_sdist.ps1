@@ -31,7 +31,17 @@ function Get-Sdist {
             $version_file = Join-Path $env:APM_ROOT "solarwinds_apm\version.py"
             $version_content = Get-Content $version_file
             if ($version_content -match '__version__ = "(.*)"') {
-                $env:SOLARWINDS_APM_VERSION = $matches[1]
+                if ($matches -and $matches.Count -gt 1) {
+                    $env:SOLARWINDS_APM_VERSION = $matches[1]
+                }
+                else {
+                    Write-Error "FAILED: Version regex matched but did not capture expected group. Matches: $matches"
+                    exit 1
+                }
+            }
+            else {
+                Write-Error "FAILED: Could not extract version from $version_file. File content: $version_content"
+                exit 1
             }
             Write-Host "No SOLARWINDS_APM_VERSION provided, thus testing source code version ($env:SOLARWINDS_APM_VERSION)"
         }
