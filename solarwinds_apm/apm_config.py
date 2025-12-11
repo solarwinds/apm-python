@@ -6,6 +6,10 @@
 
 # pylint: disable=too-many-lines
 
+"""SolarWinds APM configuration management module."""
+
+from __future__ import annotations
+
 import json
 import logging
 import os
@@ -28,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class OboeTracingMode:
-    """Provides an interface to translate the string representation of tracing_mode to the C-extension equivalent."""
+    """Provide an interface to translate string representation of tracing_mode to Oboe equivalent."""
 
     OBOE_SETTINGS_UNSET = -1
     OBOE_TRACE_DISABLED = 0
@@ -38,6 +42,15 @@ class OboeTracingMode:
 
     @classmethod
     def get_oboe_trace_mode(cls, tracing_mode: str) -> int:
+        """
+        Translate tracing_mode string to Oboe integer equivalent.
+
+        Parameters:
+        tracing_mode (str): The tracing mode string ("enabled", "disabled", or other).
+
+        Returns:
+        int: The corresponding OBOE trace mode constant.
+        """
         if tracing_mode == "enabled":
             return cls.OBOE_TRACE_ENABLED
         if tracing_mode == "disabled":
@@ -46,6 +59,15 @@ class OboeTracingMode:
 
     @classmethod
     def get_oboe_trigger_trace_mode(cls, trigger_trace_mode: str) -> int:
+        """
+        Translate trigger_trace_mode string to Oboe integer equivalent.
+
+        Parameters:
+        trigger_trace_mode (str): The trigger trace mode string ("enabled", "disabled", or other).
+
+        Returns:
+        int: The corresponding OBOE trigger trace mode constant.
+        """
         if trigger_trace_mode == "enabled":
             return cls.OBOE_TRIGGER_ENABLED
         if trigger_trace_mode == "disabled":
@@ -54,8 +76,9 @@ class OboeTracingMode:
 
 
 class SolarWindsApmConfig:
-    """SolarWinds APM Configuration Class
-    The precedence: in-code keyword arguments > Environment Variables > config file > default values.
+    """Manage SolarWinds APM configuration.
+
+    Configuration precedence: in-code keyword arguments > Environment Variables > config file > default values.
     Note that oboe doesn't read configurations by itself. The Python agent needs to
     read environment variables and/or config files and pass them into oboe. This is
     done only once during the initialization and the properties cannot be refreshed.
@@ -71,9 +94,15 @@ class SolarWindsApmConfig:
 
     def __init__(
         self,
-        otel_resource: "Resource" = Resource.create(),
+        otel_resource: Resource = Resource.create(),
         **kwargs: int,
     ) -> None:
+        """Initialize SolarWinds APM configuration.
+
+        Parameters:
+        otel_resource (Resource): OpenTelemetry resource with attributes. Defaults to empty Resource.
+        **kwargs (int): Additional configuration keyword arguments.
+        """
         self.__config = {}
         # Update the config with default values
         self.__config = {
@@ -119,7 +148,11 @@ class SolarWindsApmConfig:
 
     @classmethod
     def calculate_is_lambda(cls) -> bool:
-        """Checks if agent is running in an AWS Lambda environment."""
+        """Check if agent is running in an AWS Lambda environment.
+
+        Returns:
+        bool: True if running in AWS Lambda, False otherwise.
+        """
         return bool(
             os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
             and os.environ.get("LAMBDA_TASK_ROOT")
@@ -130,11 +163,19 @@ class SolarWindsApmConfig:
         cls,
         cnf_dict: dict = None,
     ) -> str:
-        """Special class method to return default/configured collector.
+        """Return default or configured collector endpoint.
+
         Order of precedence: Environment Variable > config file > default.
         Default is SWO NA-01.
         Optional cnf_dict is presumably already from a config file, else a call
-        to get_cnf_dict() is made for a fresh read."""
+        to get_cnf_dict() is made for a fresh read.
+
+        Parameters:
+        cnf_dict (dict): Optional configuration dictionary. Defaults to None.
+
+        Returns:
+        str: The collector endpoint URL.
+        """
         collector = cls._CONFIG_COLLECTOR_DEFAULT
         if cnf_dict is None:
             cnf_dict = cls.get_cnf_dict()
@@ -151,11 +192,20 @@ class SolarWindsApmConfig:
         cnf_dict: dict = None,
     ) -> bool:
         """Return if export of instrumentor metrics telemetry enabled.
+
         Invalid boolean values are ignored.
         Order of precedence: Environment Variable > config file > default.
         Default is True.
         Optional cnf_dict is presumably already from a config file, else a call
-        to get_cnf_dict() is made for a fresh read."""
+        to get_cnf_dict() is made for a fresh read.
+
+        Parameters:
+        is_legacy (bool): Legacy flag (currently unused). Defaults to False.
+        cnf_dict (dict): Optional configuration dictionary. Defaults to None.
+
+        Returns:
+        bool: True if metrics export is enabled, False otherwise.
+        """
         metrics_enabled = True
         if cnf_dict is None:
             cnf_dict = cls.get_cnf_dict()
@@ -172,8 +222,10 @@ class SolarWindsApmConfig:
         return env_enabled if env_enabled is not None else metrics_enabled
 
     def _calculate_agent_enabled_config_lambda(self) -> bool:
-        """Checks if agent is enabled/disabled based on config in lambda environment:
-        - SW_APM_AGENT_ENABLED (optional) (env var or cnf file)
+        """Calculate agent_enabled for Lambda environment based on configuration.
+
+        Returns:
+        bool: True if agent should be enabled, False otherwise.
         """
         if not self.agent_enabled:
             logger.info(
@@ -187,10 +239,10 @@ class SolarWindsApmConfig:
     # TODO: Account for in-code config with kwargs after alpha
     # pylint: disable=too-many-branches,too-many-return-statements
     def _calculate_agent_enabled_config(self) -> bool:
-        """Checks if agent is enabled/disabled based on config:
-        - SW_APM_SERVICE_KEY   (required) (env var or cnf file)
-        - SW_APM_AGENT_ENABLED (optional) (env var or cnf file)
-        - OTEL_PROPAGATORS     (optional) (env var only)
+        """Calculate agent_enabled for non-Lambda environment based on configuration.
+
+        Returns:
+        bool: True if agent should be enabled, False otherwise.
         """
         if self.is_lambda:
             return self._calculate_agent_enabled_config_lambda()
@@ -256,30 +308,41 @@ class SolarWindsApmConfig:
 
     # pylint: disable=too-many-branches,too-many-statements
     def _calculate_agent_enabled(self) -> bool:
-        """Checks if agent is enabled/disabled based on platform and config"""
+        """Calculate final agent_enabled value considering all configuration sources.
+
+        Returns:
+        bool: True if agent should be enabled, False otherwise.
+        """
         agent_enabled = self._calculate_agent_enabled_config()
         logger.debug("agent_enabled: %s", agent_enabled)
         return agent_enabled
 
     def _calculate_service_name_lambda(
         self,
-        otel_resource: "Resource",
+        otel_resource: Resource,
     ) -> str:
-        """Calculate `service.name` by priority system (decreasing):
-        1. OTEL_SERVICE_NAME
-        2. AWS_LAMBDA_FUNCTION_NAME
+        """Calculate service_name for Lambda environment.
 
-        Note: 1 is always set by the current lambda exec wrapper if used.
-        The wrapper also sets service_name as the function_name, if
-        former is not provided.
+        Parameters:
+        otel_resource (Resource): OpenTelemetry resource with attributes.
 
-        If exec wrapper did not do the above, the passed in OTel Resource
-        likely has a `service.name` already calculated by merging OTEL_SERVICE_NAME
-        / OTEL_RESOURCE_ATTRIBUTES with defaults.
-
-        We assume 2 is not none/empty because is_lambda check by caller should
-        be True.
+        Returns:
+        str: The calculated service name for Lambda.
         """
+        # Calculate `service.name` by priority system (decreasing):
+        # 1. OTEL_SERVICE_NAME
+        # 2. AWS_LAMBDA_FUNCTION_NAME
+        #
+        # Note: 1 is always set by the current lambda exec wrapper if used.
+        # The wrapper also sets service_name as the function_name, if
+        # former is not provided.
+        #
+        # If exec wrapper did not do the above, the passed in OTel Resource
+        # likely has a `service.name` already calculated by merging OTEL_SERVICE_NAME
+        # / OTEL_RESOURCE_ATTRIBUTES with defaults.
+        #
+        # We assume 2 is not none/empty because is_lambda check by caller should
+        # be True.
         otel_service_name = otel_resource.attributes.get("service.name", None)
 
         if not otel_service_name:
@@ -295,27 +358,35 @@ class SolarWindsApmConfig:
     def _calculate_service_name_apm_proto(
         self,
         agent_enabled: bool,
-        otel_resource: "Resource",
+        otel_resource: Resource,
     ) -> str:
-        """Calculate `service.name` by priority system (decreasing):
-        1. OTEL_SERVICE_NAME
-        2. service.name in OTEL_RESOURCE_ATTRIBUTES
-        3. service name component of SW_APM_SERVICE_KEY
-        4. empty string
+        """Calculate service_name for non-Lambda APM protocol environment.
 
-        Note: 1-3 require that SW_APM_SERVICE_KEY exists and is in the correct
-        format of "<api_token>:<service_name>". Otherwise agent_enabled: False
-        and service.name is empty string.
+        Parameters:
+        agent_enabled (bool): Whether the agent is enabled.
+        otel_resource (Resource): OpenTelemetry resource with attributes.
 
-        The passed in OTel Resource likely has a `service.name` already calculated
-        by merging OTEL_SERVICE_NAME / OTEL_RESOURCE_ATTRIBUTES with defaults.
-        Resource may also have other telemetry/arbitrary attributes that the
-        user can overwrite/add.
-
-        See also OTel SDK Resource.create and env vars:
-        * https://github.com/open-telemetry/opentelemetry-python/blob/f5fb6b1353929cf8039b1d38f97450866357d901/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py#L156-L184
-        * https://github.com/open-telemetry/opentelemetry-python/blob/8a0ce154ae27a699598cbf3ccc6396eb012902d6/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L15-L39
+        Returns:
+        str: The calculated service name.
         """
+        # Calculate `service.name` by priority system (decreasing):
+        # 1. OTEL_SERVICE_NAME
+        # 2. service.name in OTEL_RESOURCE_ATTRIBUTES
+        # 3. service name component of SW_APM_SERVICE_KEY
+        # 4. empty string
+        #
+        # Note: 1-3 require that SW_APM_SERVICE_KEY exists and is in the correct
+        # format of "<api_token>:<service_name>". Otherwise agent_enabled: False
+        # and service.name is empty string.
+        #
+        # The passed in OTel Resource likely has a `service.name` already calculated
+        # by merging OTEL_SERVICE_NAME / OTEL_RESOURCE_ATTRIBUTES with defaults.
+        # Resource may also have other telemetry/arbitrary attributes that the
+        # user can overwrite/add.
+        #
+        # See also OTel SDK Resource.create and env vars:
+        # * https://github.com/open-telemetry/opentelemetry-python/blob/f5fb6b1353929cf8039b1d38f97450866357d901/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py#L156-L184
+        # * https://github.com/open-telemetry/opentelemetry-python/blob/8a0ce154ae27a699598cbf3ccc6396eb012902d6/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L15-L39
         service_name = ""
         if agent_enabled:
             # OTel SDK default service.name starts with "unknown_service" in-code:
@@ -337,9 +408,17 @@ class SolarWindsApmConfig:
     def _calculate_service_name(
         self,
         agent_enabled: bool,
-        otel_resource: "Resource",
+        otel_resource: Resource,
     ) -> str:
-        """Calculate service_name"""
+        """Calculate service_name based on environment.
+
+        Parameters:
+        agent_enabled (bool): Whether the agent is enabled.
+        otel_resource (Resource): OpenTelemetry resource with attributes.
+
+        Returns:
+        str: The calculated service name.
+        """
         if self.is_lambda:
             return self._calculate_service_name_lambda(
                 otel_resource,
@@ -356,7 +435,16 @@ class SolarWindsApmConfig:
         service_key: str,
         service_name: str,
     ) -> str:
-        """Update service key with service name"""
+        """Update service key with service name.
+
+        Parameters:
+        agent_enabled (bool): Whether the agent is enabled.
+        service_key (str): The current service key.
+        service_name (str): The service name to insert.
+
+        Returns:
+        str: The updated service key with service name.
+        """
         if agent_enabled and service_key and service_name:
             # Only update if service_name and service_key exist and non-empty,
             # and service_key in correct format.
@@ -373,7 +461,12 @@ class SolarWindsApmConfig:
         return service_key
 
     def mask_service_key(self) -> str:
-        """Return masked service key except first 4 and last 4 chars"""
+        """
+        Return masked service key showing only first 4 and last 4 chars of API token.
+
+        Returns:
+        str: The masked service key string.
+        """
         service_key = self.__config.get("service_key")
         if not service_key:
             return ""
@@ -399,7 +492,12 @@ class SolarWindsApmConfig:
         )
 
     def _config_mask_service_key(self) -> dict:
-        """Return new config with service key masked"""
+        """
+        Return new config dictionary with service key masked.
+
+        Returns:
+        dict: A copy of the config with the service_key value masked.
+        """
         config_masked = {}
         for cnf_k, cnf_v in self.__config.items():
             if cnf_k == "service_key":
@@ -410,9 +508,10 @@ class SolarWindsApmConfig:
     def _validate_log_filepath(
         self,
     ) -> None:
-        """Checks logFilepath validity else fileHandler will fail.
-        If path up to file does not exist, creates directory.
-        If that's not possible, switch to default empty logFilepath.
+        """Check logFilepath validity and create directory if needed.
+
+        Creates directory for log file if path does not exist.
+        Resets to default empty logFilepath if directory creation fails.
         """
         log_filepath = os.path.dirname(self.__config["log_filepath"])
         if log_filepath and not os.path.exists(log_filepath):
@@ -428,8 +527,11 @@ class SolarWindsApmConfig:
                 self.__config["log_filepath"] = ""
 
     def __str__(self) -> str:
-        """String representation of ApmConfig is config with masked service key,
-        plus agent_enabled and context"""
+        """Return string representation of ApmConfig with masked service key.
+
+        Returns:
+        str: JSON string with config, agent_enabled, and service_name.
+        """
         apm_config = {
             "__config": self._config_mask_service_key(),
             "agent_enabled": self.agent_enabled,
@@ -438,7 +540,12 @@ class SolarWindsApmConfig:
         return json.dumps(apm_config)
 
     def __setitem__(self, key: str, value: str) -> None:
-        """Refresh the configurations in liboboe global struct while user changes settings."""
+        """Set configuration value.
+
+        Parameters:
+        key (str): The configuration key.
+        value (str): The configuration value.
+        """
         if key == "tracing_mode":
             self._set_config_value(key, value)
         else:
@@ -448,14 +555,38 @@ class SolarWindsApmConfig:
             )
 
     def __getitem__(self, key: str) -> Any:
+        """Get configuration value by key.
+
+        Parameters:
+        key (str): The configuration key.
+
+        Returns:
+        Any: The configuration value.
+        """
         return self.__config[key]
 
     def __delitem__(self, key: str) -> None:
+        """Delete configuration value by key.
+
+        Parameters:
+        key (str): The configuration key to delete.
+        """
         del self.__config[key]
 
-    def get(self, key: str, default: Any = None):
-        """Get the value of key. Nested keys separated by a dot are also accepted.
-        Suggestion: Use mask_service_key() to safely get service_key value"""
+    def get(self, key: str, default: Any = None) -> Any:
+        """
+        Get the value of a configuration key.
+
+        Nested keys separated by a dot are also accepted.
+        Use mask_service_key() to safely retrieve service_key value.
+
+        Parameters:
+        key (str): The configuration key (supports dot notation for nested keys).
+        default (Any): The default value to return if key is not found. Defaults to None.
+
+        Returns:
+        Any: The configuration value or default if not found.
+        """
         key = key.split(self._DELIMITER)
         value = reduce(
             lambda d, k: d.get(k, None) if isinstance(d, dict) else None,
@@ -466,7 +597,11 @@ class SolarWindsApmConfig:
 
     @classmethod
     def get_cnf_dict(cls) -> Any:
-        """Load Python dict from confg file (json), if any"""
+        """Load Python dict from config file (JSON), if any.
+
+        Returns:
+        Any: Configuration dictionary or None if no config file exists.
+        """
         cnf_filepath = os.environ.get("SW_APM_CONFIG_FILE")
         cnf_dict = None
 
@@ -491,7 +626,7 @@ class SolarWindsApmConfig:
         return cnf_dict
 
     def update_with_cnf_file(self) -> None:
-        """Update the settings with the config file (json), if any."""
+        """Update configuration settings from config file (JSON), if any."""
 
         def _snake_to_camel_case(key):
             key_parts = key.split("_")
@@ -520,7 +655,12 @@ class SolarWindsApmConfig:
         self.update_transaction_filters(cnf_dict)
 
     def update_transaction_filters(self, cnf_dict: dict) -> None:
-        """Update configured transaction_filters using config dict"""
+        """
+        Update configured transaction_filters from configuration dictionary.
+
+        Parameters:
+        cnf_dict (dict): Configuration dictionary containing transactionSettings.
+        """
         txn_settings = cnf_dict.get("transactionSettings")
         if not txn_settings:
             logger.debug("No transaction filters provided by config.")
@@ -582,7 +722,10 @@ class SolarWindsApmConfig:
         )
 
     def update_with_env_var(self) -> None:
-        """Update the settings with environment variables."""
+        """Update configuration settings from environment variables.
+
+        Reads SW_APM_* environment variables and updates corresponding config values.
+        """
         # agent_enabled is special
         env_agent_enabled = self.convert_to_bool(
             os.environ.get("SW_APM_AGENT_ENABLED")
@@ -600,13 +743,26 @@ class SolarWindsApmConfig:
             if val is not None:
                 self._set_config_value(key, val)
 
-    def update_with_kwargs(self, kwargs):
-        """Update the configuration settings with (in-code) keyword arguments"""
+    def update_with_kwargs(self, kwargs: dict) -> None:
+        """
+        Update configuration settings with in-code keyword arguments.
+
+        Parameters:
+        kwargs (dict): Keyword arguments for configuration updates.
+        """
         # TODO Implement in-code config with kwargs after alpha
 
     @classmethod
-    def convert_to_bool(cls, val):
-        """Converts given value to boolean value if bool or str representation, else None"""
+    def convert_to_bool(cls, val: bool | str | None) -> bool | None:
+        """
+        Convert value to boolean if bool or string representation.
+
+        Parameters:
+        val (bool | str | None): The value to convert.
+
+        Returns:
+        bool | None: Boolean value if convertible, None otherwise.
+        """
         if isinstance(val, bool):
             return val
         if isinstance(val, str):
@@ -619,8 +775,17 @@ class SolarWindsApmConfig:
 
     # pylint: disable=too-many-branches,too-many-statements
     def _set_config_value(self, keys_str: str, val: Any) -> Any:
-        """Sets the value of the config option indexed by 'keys' to 'val', where 'keys' is a nested key (separated by
-        self.delimiter, i.e., the position of the element to be changed in the nested dictionary)
+        """Set configuration value with validation and type conversion.
+
+        Validates and sets config option indexed by keys_str (nested key separated by delimiter).
+        Does not allow creation of new key-value pairs.
+
+        Parameters:
+        keys_str (str): Configuration key (supports dot notation for nested keys).
+        val (Any): The value to set.
+
+        Returns:
+        Any: The validated and converted value.
         """
         # _config is a nested dict, thus find most deeply nested sub dict according to the provided keys
         # by defaulting to None in d.get(), we do not allow the creation of any new (key, value) pair, even
@@ -687,7 +852,14 @@ class SolarWindsApmConfig:
 
     @classmethod
     def to_configuration(cls, apm_config) -> Configuration:
-        """Converts apm_config to Configuration"""
+        """Convert SolarWindsApmConfig to Configuration object.
+
+        Parameters:
+        apm_config: The SolarWindsApmConfig instance to convert.
+
+        Returns:
+        Configuration: Configuration object for sampler initialization.
+        """
         token = (
             apm_config.get("service_key").split(":")[0]
             if len(apm_config.get("service_key").split(":")) > 0
