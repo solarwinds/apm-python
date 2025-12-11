@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class SolarWindsTraceResponsePropagator(ResponsePropagator):
-    """Propagator that injects SW values into HTTP responses"""
+    """Inject SolarWinds trace values into HTTP responses."""
 
     _HTTP_HEADER_ACCESS_CONTROL_EXPOSE_HEADERS = (
         "Access-Control-Expose-Headers"
@@ -42,7 +42,13 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
         context: Context | None = None,
         setter: textmap.Setter = textmap.default_setter,
     ) -> None:
-        """Injects x-trace and options-response into the HTTP response carrier."""
+        """Inject x-trace and options-response into the HTTP response carrier.
+
+        Parameters:
+        carrier (textmap.CarrierT): The HTTP response carrier to inject headers into.
+        context (Context | None): Optional context to inject from. Defaults to None.
+        setter (textmap.Setter): Setter for injecting headers into carrier. Defaults to default_setter.
+        """
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
         if span_context == trace.INVALID_SPAN_CONTEXT:
@@ -75,10 +81,18 @@ class SolarWindsTraceResponsePropagator(ResponsePropagator):
         )
 
     def recover_response_from_tracestate(self, tracestate: TraceState) -> str:
-        """Use tracestate to recover xtraceoptions response by
-        converting delimiters:
+        """
+        Recover xtraceoptions response from tracestate by converting delimiters.
+
+        Converts W3C-sanitized delimiters back to original format:
         EQUALS_W3C_SANITIZED becomes EQUALS
         COMMA_W3C_SANITIZED becomes COMMA
+
+        Parameters:
+        tracestate (TraceState): The tracestate to extract response from.
+
+        Returns:
+        str: The recovered xtraceoptions response string.
         """
         sanitized = tracestate.get(INTL_SWO_X_OPTIONS_RESPONSE_KEY, None)
         if not sanitized:

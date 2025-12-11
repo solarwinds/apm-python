@@ -21,21 +21,25 @@ from solarwinds_apm.oboe.json_sampler import JsonSampler
 
 
 class ParentBasedSwSampler(ParentBased):
-    """
-    Sampler that respects its parent span's sampling decision, but otherwise
-    samples according to the configurations from the NH/AO backend.
+    """Respect parent span's sampling decision or use SolarWinds backend configuration.
 
-    Requires "SolarWindsApmConfig".
+    Requires SolarWindsApmConfig.
     """
 
     def __init__(
         self,
         apm_config: SolarWindsApmConfig,
-    ):
+    ) -> None:
         """
+        Initialize ParentBasedSwSampler with SolarWinds APM configuration.
+
+        Uses HttpSampler for non-Lambda environments or JsonSampler for Lambda.
         Uses HttpSampler/JsonSampler if no parent span.
         Uses HttpSampler/JsonSampler if parent span is_remote.
-        Uses OTEL defaults if parent span is_local.
+        Uses OpenTelemetry defaults if parent span is_local.
+
+        Parameters:
+        apm_config (SolarWindsApmConfig): The SolarWinds APM configuration.
         """
         configuration = SolarWindsApmConfig.to_configuration(apm_config)
         self.sampler = None
@@ -58,7 +62,12 @@ class ParentBasedSwSampler(ParentBased):
     # should_sample defined by ParentBased
 
     def wait_until_ready(self, timeout: int) -> bool:
-        """
-        Waits until the sampler is ready.
+        """Wait until the sampler is ready.
+
+        Parameters:
+        timeout (int): Maximum time to wait in seconds.
+
+        Returns:
+        bool: True if sampler is ready, False if timeout occurred.
         """
         return self.sampler.wait_until_ready(timeout)
