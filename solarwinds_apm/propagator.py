@@ -29,9 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class SolarWindsPropagator(TraceContextTextMapPropagator):
-    """Extracts and injects SolarWinds headers and W3C trace context
-    headers for trace propagation.
-    """
+    """Extract and inject SolarWinds headers and W3C trace context for trace propagation."""
 
     _INVALID_SPAN_ID = 0x0000000000000000
     _TRACESTATE_HEADER_NAME = "tracestate"
@@ -44,8 +42,15 @@ class SolarWindsPropagator(TraceContextTextMapPropagator):
         context: Context | None = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
-        """Extracts traceparent, tracestate, sw trace options, and signature
-        from carrier into OTel Context.
+        """Extract traceparent, tracestate, sw trace options, and signature from carrier into OTel Context.
+
+        Parameters:
+        carrier (textmap.CarrierT): The carrier to extract context from.
+        context (Context | None): Optional existing context to update. Defaults to None.
+        getter (textmap.Getter): Getter for extracting headers from carrier. Defaults to default_getter.
+
+        Returns:
+        Context: Updated context with extracted trace information.
         """
         context = super().extract(carrier, context, getter)
 
@@ -69,9 +74,14 @@ class SolarWindsPropagator(TraceContextTextMapPropagator):
         context: Context | None = None,
         setter: textmap.Setter = textmap.default_setter,
     ) -> None:
-        """Injects traceparent, tracestate with valid sw into carrier
-        for HTTP request. Excludes any xtraceoptions_response if in
-        tracestate.
+        """Inject traceparent and tracestate with valid sw into carrier for HTTP request.
+
+        Excludes any xtraceoptions_response if in tracestate.
+
+        Parameters:
+        carrier (textmap.CarrierT): The carrier to inject context into.
+        context (Context | None): Optional context to inject from. Defaults to None.
+        setter (textmap.Setter): Setter for injecting headers into carrier. Defaults to default_setter.
         """
         super().inject(carrier, context, setter)
 
@@ -130,5 +140,10 @@ class SolarWindsPropagator(TraceContextTextMapPropagator):
     def fields(
         self,
     ) -> typing.Set[str]:  # pylint: disable=deprecated-typing-alias
-        """Returns a set with the fields set in `inject`"""
+        """
+        Return the set of fields injected by this propagator.
+
+        Returns:
+        typing.Set[str]: Set of header field names.
+        """
         return super().fields
