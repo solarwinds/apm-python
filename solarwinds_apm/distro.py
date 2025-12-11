@@ -6,6 +6,8 @@
 
 """Module to configure OpenTelemetry to work with SolarWinds backend"""
 
+from __future__ import annotations
+
 import logging
 import platform
 import re
@@ -57,7 +59,7 @@ logger = logging.getLogger(__name__)
 
 
 class SolarWindsDistro(BaseDistro):
-    """OpenTelemetry Distro for SolarWinds reporting environment"""
+    """Configure OpenTelemetry distribution for SolarWinds reporting environment."""
 
     _cnf_dict = None
     _collector = None
@@ -79,8 +81,12 @@ class SolarWindsDistro(BaseDistro):
             cls._meter_provider = NoOpMeterProvider()
         return super().__new__(cls, *args, **kwargs)
 
-    def _log_python_runtime(self):
-        """Logs Python runtime info, with any warnings"""
+    def _log_python_runtime(self) -> None:
+        """
+        Log Python runtime information with version warnings.
+
+        Logs errors if Python version is obsolete.
+        """
         python_vers = platform.python_version()
         logger.info("Python %s", python_vers)
 
@@ -92,14 +98,23 @@ class SolarWindsDistro(BaseDistro):
                 python_vers,
             )
 
-    def _log_runtime(self):
-        """Logs APM Python runtime info (high debug level)"""
+    def _log_runtime(self) -> None:
+        """
+        Log APM Python runtime information.
+
+        Logs SolarWinds APM version, Python version, and OpenTelemetry versions.
+        """
         logger.info("SolarWinds APM Python %s", apm_version)
         self._log_python_runtime()
         logger.info("OpenTelemetry %s/%s", sdk_version, inst_version)
 
-    def _get_token_from_service_key(self):
-        """Return token portion of service_key if set, else None"""
+    def _get_token_from_service_key(self) -> str | None:
+        """
+        Extract token portion from service_key environment variable.
+
+        Returns:
+        str | None: The API token if service_key is valid, None otherwise.
+        """
         service_key = environ.get("SW_APM_SERVICE_KEY")
         if not service_key:
             logger.debug("Missing service key")
@@ -111,8 +126,15 @@ class SolarWindsDistro(BaseDistro):
             return None
         return key_parts[0]
 
-    def _configure(self, **kwargs):
-        """Configure default OTel exporters and propagators"""
+    def _configure(self, **kwargs: dict) -> None:
+        """
+        Configure default OpenTelemetry exporters and propagators for SolarWinds.
+
+        Sets OTLP endpoints, propagators, resource detectors, and other defaults.
+
+        Parameters:
+        **kwargs (dict): Additional configuration keyword arguments.
+        """
         self._log_runtime()
 
         # Default OTLP protocol and exporters as HTTP
@@ -204,16 +226,19 @@ class SolarWindsDistro(BaseDistro):
         environ.setdefault(OTEL_EXPORTER_OTLP_COMPRESSION, "gzip")
 
     def load_instrumentor(self, entry_point: EntryPoint, **kwargs):
-        """Takes a collection of instrumentation entry points
-        and activates them by instantiating and calling instrument()
-        on each one. This is a method override to pass additional
-        arguments to each entry point. This function is called for every
-        individual instrumentor by upstream sitecustomize.
+        """Load and activate an instrumentation entry point.
+
+        This is a method override to pass additional arguments to each entry point.
+        This function is called for every individual instrumentor by upstream sitecustomize.
 
         For enabling sqlcommenting, SW_APM_ENABLED_SQLCOMMENT enables
         individual instrumentors if in _SQLCOMMENTERS (each is false by default).
         APM Python also sets enable_attribute_commenter=True by default;
         can be opted out for each instrumentor with SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE.
+
+        Parameters:
+        entry_point (EntryPoint): The instrumentor entry point to load.
+        **kwargs: Additional keyword arguments to pass to the instrumentor.
         """
         # If we're in Lambda environment, then we skip loading
         # AwsLambdaInstrumentor because we assume the wrapper
@@ -260,8 +285,8 @@ class SolarWindsDistro(BaseDistro):
         instrumentor().instrument(**kwargs)
 
     def get_enable_commenter_env_map(self) -> dict:
-        """Return a map of which instrumentors will have sqlcomment and attribute
-        -in-attribute enabled, if implemented.
+        """Return a map of which instrumentors will have sqlcomment and attribute-in-attribute enabled.
+
         Reads env SW_APM_ENABLED_SQLCOMMENT and SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE
         each as a comma-separated string of KVs paired by equals signs,
         e.g. 'django=true,sqlalchemy=false'.
@@ -281,7 +306,11 @@ class SolarWindsDistro(BaseDistro):
 
         Default for sqlcomment is False for each instrumentor in _SQLCOMMENTERS.
         Default for adding sqlcomment to attribute is True. This has no effect
-        upstream if sqlcomment is False."""
+        upstream if sqlcomment is False.
+
+        Returns:
+        dict: Mapping of instrumentor names to their commenter configuration.
+        """
         env_commenter_map = {
             instr: {
                 "enable_commenter": False,
@@ -321,8 +350,12 @@ class SolarWindsDistro(BaseDistro):
         )
         return env_commenter_map
 
-    def detect_commenter_options(self):
-        """Returns commenter options dict parsed from environment, if any"""
+    def detect_commenter_options(self) -> dict:
+        """Return commenter options dict parsed from environment.
+
+        Returns:
+        dict: Parsed commenter options from SW_APM_OPTIONS_SQLCOMMENT.
+        """
         commenter_opts = {}
         commenter_opts_env = environ.get("SW_APM_OPTIONS_SQLCOMMENT")
 
@@ -349,9 +382,13 @@ class SolarWindsDistro(BaseDistro):
 
         return commenter_opts
 
-    def get_semconv_opt_in(self):
-        """
-        Always returns semconv config as opt-into new, stable HTTP and database only
+    def get_semconv_opt_in(self) -> str:
+        """Return semantic convention opt-in configuration.
+
+        Always returns config to opt into new, stable HTTP and database semconv only.
+
+        Returns:
+        str: Semantic convention stability opt-in string.
 
         See also:
         https://github.com/open-telemetry/opentelemetry-python-contrib/blob/0a231e57f9722e6101194c6b38695addf23ab950/opentelemetry-instrumentation/src/opentelemetry/instrumentation/_semconv.py#L93-L99
