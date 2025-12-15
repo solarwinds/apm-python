@@ -52,7 +52,7 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - uses: ./.github/actions/package_lambda_solarwinds_apm
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       name: Save assembled layer to build
       with:
         name: solarwinds_apm_lambda.zip
