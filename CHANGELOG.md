@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-5.2.1...HEAD)
 
-## [5.2.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.2.1) - 2025-12-15
+## [5.2.1](https://github.com/solarwinds/apm-python/releases/tag/rel-5.2.1) - 2025-12-16
 
 ### Added
 - Added Copilot instructions ([#723](https://github.com/solarwinds/apm-python/pull/723))
