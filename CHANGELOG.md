@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-5.2.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-5.2.1...HEAD)
+
+## [5.2.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.2.1) - 2025-12-15
+
+### Added
+- Added Copilot instructions ([#723](https://github.com/solarwinds/apm-python/pull/723))
+
+### Changed
+- Fix type hints, docstrings ([#724](https://github.com/solarwinds/apm-python/pull/724), [#725](https://github.com/solarwinds/apm-python/pull/725), [#726](https://github.com/solarwinds/apm-python/pull/726), [#727](https://github.com/solarwinds/apm-python/pull/727), [#728](https://github.com/solarwinds/apm-python/pull/728), [#729](https://github.com/solarwinds/apm-python/pull/729), [#730](https://github.com/solarwinds/apm-python/pull/730), [#731](https://github.com/solarwinds/apm-python/pull/731))
+- Upgraded to OTel Python 1.39.1/0.60b1 ([#732](https://github.com/solarwinds/apm-python/pull/732))
+- Fix tests, remove unused param ([#733](https://github.com/solarwinds/apm-python/pull/733))
 
 ## [5.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.2.0) - 2025-12-09
 
@@ -12,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed thread safety of token bucket ([#712](https://github.com/solarwinds/apm-python/pull/712))
 - Updated distro to always opt into `database` new semconv if supported by instrumentation ([#713](https://github.com/solarwinds/apm-python/pull/713))
 - Updated workflows for PyPI trusted publishing ([#719](https://github.com/solarwinds/apm-python/pull/719))
-- Upgraded to OTel Python 1.39.0/0.60b ([#720](https://github.com/solarwinds/apm-python/pull/720))
+- Upgraded to OTel Python 1.39.0/0.60b0 ([#720](https://github.com/solarwinds/apm-python/pull/720))
 
 ## [5.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.1.0) - 2025-10-21
 
