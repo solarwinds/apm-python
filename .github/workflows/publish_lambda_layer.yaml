@@ -72,13 +72,13 @@ jobs:
           name: ${{ inputs.artifact-name }}
 
       - if: ${{ inputs.publish-dest == 'staging' }}
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.LAMBDA_PUBLISHER_ARN_STAGING }}
           aws-region: ${{ matrix.aws_region }}
 
       - if: ${{ inputs.publish-dest == 'production' }}
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.LAMBDA_PUBLISHER_ARN_PROD }}
           aws-region: ${{ matrix.aws_region }}
