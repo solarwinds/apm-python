@@ -25,7 +25,7 @@ jobs:
         run: echo VERSION=$(head -n 1 image/requirements-nodeps-beta.txt | cut -d '=' -f3) >> $GITHUB_ENV
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -106,7 +106,7 @@ jobs:
         run: echo VERSION=$(head -n 1 image/requirements-nodeps-beta.txt | cut -d '=' -f3) >> $GITHUB_ENV
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
