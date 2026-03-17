@@ -20,8 +20,8 @@ from opentelemetry.semconv.trace import SpanAttributes
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
+    INTL_SWO_TRANSACTION_ATTR_KEY,
     INTL_SWO_TRANSACTION_ATTR_MAX,
-    INTL_SWO_TRANSACTION_NAME_ATTR,
 )
 from solarwinds_apm.oboe import get_transaction_name_pool
 from solarwinds_apm.oboe.transaction_name_calculator import (
@@ -78,7 +78,7 @@ class ServiceEntrySpanProcessor(SpanProcessor):
                 TRANSACTION_NAME_DEFAULT,
                 W3CTransformer.trace_and_span_id_from_context(span.context),
             )
-        span.set_attribute(INTL_SWO_TRANSACTION_NAME_ATTR, registered_name)
+        span.set_attribute(INTL_SWO_TRANSACTION_ATTR_KEY, registered_name)
 
     def on_start(
         self,
