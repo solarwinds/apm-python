@@ -13,7 +13,7 @@ from opentelemetry.trace import NoOpTracerProvider, get_tracer_provider
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
-    INTL_SWO_TRANSACTION_NAME_ATTR,
+    INTL_SWO_TRANSACTION_ATTR_KEY,
 )
 from solarwinds_apm.oboe import get_transaction_name_pool
 from solarwinds_apm.oboe.http_sampler import HttpSampler
@@ -75,7 +75,7 @@ def set_transaction_name(custom_name: str) -> bool:
 
     logger.debug(
         "Setting attribute %s for span %s as %s",
-        INTL_SWO_TRANSACTION_NAME_ATTR,
+        INTL_SWO_TRANSACTION_ATTR_KEY,
         W3CTransformer.trace_and_span_id_from_context(
             current_trace_entry_span.context
         ),
@@ -94,7 +94,7 @@ def set_transaction_name(custom_name: str) -> bool:
             ),
         )
     current_trace_entry_span.set_attribute(
-        INTL_SWO_TRANSACTION_NAME_ATTR, registered_name
+        INTL_SWO_TRANSACTION_ATTR_KEY, registered_name
     )
     return True
 

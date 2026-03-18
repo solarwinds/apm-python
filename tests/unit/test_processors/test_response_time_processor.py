@@ -309,7 +309,7 @@ class TestResponseTimeProcessor:
             mock_basic_span.configure_mock(
                 **{
                     "attributes": {
-                        "TransactionName": "foo"
+                        "sw.transaction": "foo"
                     },
                 }
             )
@@ -319,7 +319,7 @@ class TestResponseTimeProcessor:
                     "attributes": {
                         "http.request.method": "foo-method",
                         "http.response.status_code": 200,
-                        "TransactionName": "foo"
+                        "sw.transaction": "foo"
                     },
                 }
             )
@@ -518,7 +518,7 @@ class TestResponseTimeProcessor:
                 "attributes": {
                     "http.method": "foo-method",
                     "http.status_code": 200,
-                    "TransactionName": "foo"
+                    "sw.transaction": "foo"
                 }
             }
         )
@@ -564,7 +564,7 @@ class TestResponseTimeProcessor:
                 "attributes": {
                     "http.method": "foo-method",
                     "http.status_code": 200,
-                    "TransactionName": "foo"
+                    "sw.transaction": "foo"
                 }
             }
         )
@@ -610,7 +610,7 @@ class TestResponseTimeProcessor:
                 "attributes": {
                     "http.method": "foo-method",
                     "http.response.status_code": 200,
-                    "TransactionName": "foo"
+                    "sw.transaction": "foo"
                 }
             }
         )
@@ -649,7 +649,7 @@ class TestResponseTimeProcessor:
                 "attributes": {
                     "http.method": "foo-method",
                     "http.response.status_code": 200,
-                    "TransactionName": "foo"
+                    "sw.transaction": "foo"
                 }
             }
         )
