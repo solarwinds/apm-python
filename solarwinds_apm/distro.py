@@ -23,6 +23,8 @@ from opentelemetry.environment_variables import (
 from opentelemetry.instrumentation.distro import BaseDistro
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.logging.environment_variables import (
+    OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION,
+    OTEL_PYTHON_LOG_CODE_ATTRIBUTES,
     OTEL_PYTHON_LOG_FORMAT,
 )
 from opentelemetry.instrumentation.version import __version__ as inst_version
@@ -202,11 +204,15 @@ class SolarWindsDistro(BaseDistro):
         environ.setdefault(
             OTEL_PROPAGATORS, ",".join(INTL_SWO_DEFAULT_PROPAGATORS)
         )
-        # Default for LoggingInstrumentor
+        # Defaults for LoggingInstrumentor
         environ.setdefault(
             OTEL_PYTHON_LOG_FORMAT,
             "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s trace_flags=%(otelTraceSampled)02d resource.service.name=%(otelServiceName)s] - %(message)s",
         )
+        # APM opts out of log auto-instrumentation by default
+        environ.setdefault(OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION, "false")
+        # APM enables code attributes in logs by default
+        environ.setdefault(OTEL_PYTHON_LOG_CODE_ATTRIBUTES, "true")
         # Default for ResourceDetector
         if SolarWindsApmConfig.calculate_is_lambda():
             environ.setdefault(

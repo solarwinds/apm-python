@@ -33,9 +33,6 @@ from opentelemetry.sdk._configuration import (
     _init_logging,
     _OTelSDKConfigurator,
 )
-from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
-)
 from opentelemetry.sdk.metrics import (
     Counter,
     Histogram,
@@ -159,14 +156,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             resource=apm_resource,
         )
 
-        # Only emit log event telemetry (auto-instrument logs) if feature enabled.
-        # Distro does not set a default, so this could be None
-        setup_logging_handler = SolarWindsApmConfig.convert_to_bool(
-            os.environ.get(
-                _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, False
-            )
-        )
-        _init_logging(log_exporters, apm_resource, setup_logging_handler)
+        # Initialize LoggerProvider, log processors, and log exporters.
+        # As of OTel 1.40.0, auto-instrumentation of Python logging (setup_logging_handler)
+        # is handled by opentelemetry-instrumentation-logging via instrumentation, not by the
+        # deprecated LoggingHandler in the SDK. So we pass _init_logging false.
+        _init_logging(log_exporters, apm_resource, setup_logging_handler=False)
 
         # Set up additional custom SW components
         self._configure_service_entry_span_processor()

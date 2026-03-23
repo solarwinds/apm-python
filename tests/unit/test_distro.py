@@ -13,6 +13,10 @@ from opentelemetry.environment_variables import (
     OTEL_PROPAGATORS,
     OTEL_TRACES_EXPORTER
 )
+from opentelemetry.instrumentation.logging.environment_variables import (
+    OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION,
+    OTEL_PYTHON_LOG_CODE_ATTRIBUTES,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
@@ -205,6 +209,8 @@ class TestDistro:
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "authorization=Bearer%20None"
         assert os.environ[OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION] == "base2_exponential_bucket_histogram"
+        assert os.environ[OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION] == "false"
+        assert os.environ[OTEL_PYTHON_LOG_CODE_ATTRIBUTES] == "true"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http,database"
 
     def test_configure_env_exporter(self, mocker):
@@ -225,6 +231,8 @@ class TestDistro:
         assert os.environ[OTEL_EXPORTER_OTLP_PROTOCOL] == "http/protobuf"
         assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "authorization=Bearer%20foo-token"
+        assert os.environ[OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION] == "false"
+        assert os.environ[OTEL_PYTHON_LOG_CODE_ATTRIBUTES] == "true"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http,database"
 
     def test_configure_env_invalid_protocol(self, mocker):
@@ -245,6 +253,8 @@ class TestDistro:
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
+        assert os.environ[OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION] == "false"
+        assert os.environ[OTEL_PYTHON_LOG_CODE_ATTRIBUTES] == "true"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http,database"
 
     def test_configure_env_valid_protocol_http(self, mocker):
@@ -264,6 +274,8 @@ class TestDistro:
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
+        assert os.environ[OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION] == "false"
+        assert os.environ[OTEL_PYTHON_LOG_CODE_ATTRIBUTES] == "true"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http,database"
 
     def test_configure_env_valid_protocol_grpc(self, mocker):
@@ -285,6 +297,8 @@ class TestDistro:
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
+        assert os.environ[OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION] == "false"
+        assert os.environ[OTEL_PYTHON_LOG_CODE_ATTRIBUTES] == "true"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http,database"
 
     def test_configure_env_exporter_and_valid_protocol_http(self, mocker):
@@ -307,6 +321,8 @@ class TestDistro:
         assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
         assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
         assert os.environ[OTEL_LOGS_EXPORTER] == "qux"
+        assert os.environ[OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION] == "false"
+        assert os.environ[OTEL_PYTHON_LOG_CODE_ATTRIBUTES] == "true"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http,database"
 
     def test_configure_env_exporter_and_valid_protocol_grpc(self, mocker):
@@ -329,6 +345,8 @@ class TestDistro:
         assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
         assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
         assert os.environ[OTEL_LOGS_EXPORTER] == "qux"
+        assert os.environ[OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION] == "false"
+        assert os.environ[OTEL_PYTHON_LOG_CODE_ATTRIBUTES] == "true"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http,database"
 
     def test_configure_env_endpoint(self, mocker):
@@ -348,6 +366,8 @@ class TestDistro:
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
+        assert os.environ[OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION] == "false"
+        assert os.environ[OTEL_PYTHON_LOG_CODE_ATTRIBUTES] == "true"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http,database"
 
     def test_configure_env_service_key_only(self, mocker):
@@ -555,6 +575,8 @@ class TestDistro:
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
+        assert os.environ[OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION] == "false"
+        assert os.environ[OTEL_PYTHON_LOG_CODE_ATTRIBUTES] == "true"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http,database"
 
     def test_configure_env_headers_otel_headers_endpoint_default(self, mocker):
@@ -712,6 +734,8 @@ class TestDistro:
         distro.SolarWindsDistro()._configure()
         assert os.environ[OTEL_PROPAGATORS] == "tracecontext,solarwinds_propagator,foobar"
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
+        assert os.environ[OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION] == "false"
+        assert os.environ[OTEL_PYTHON_LOG_CODE_ATTRIBUTES] == "true"
         assert os.environ.get("OTEL_SEMCONV_STABILITY_OPT_IN") == "http,database"
 
     def test_load_instrumentor_aws_lambda_not_lambda_env(self, mocker):

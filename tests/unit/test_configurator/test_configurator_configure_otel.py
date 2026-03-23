@@ -9,9 +9,6 @@ import os
 import pytest
 import uuid
 
-from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
-)
 from opentelemetry.sdk.resources import Resource
 
 from solarwinds_apm import configurator
@@ -99,168 +96,6 @@ class TestConfiguratorCreateApmResource:
 
 
 class TestConfiguratorConfigureOtelComponents:
-    def helper_test_configure_otel_components_logs_enabled(
-        self,
-        mocker,
-        mock_apmconfig_enabled,
-
-        mock_config_serviceentry_processor,
-        mock_custom_init_tracing,
-        mock_custom_init_metrics,
-        mock_init_logging,
-        mock_config_propagator,
-        mock_config_response_propagator,
-
-        logging_env,
-        logging_assert,
-        mock_convert_to_bool=None,
-    ):
-        mocker.patch.dict(
-            os.environ,
-            {
-                _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: logging_env,
-            }
-        )
-        mocker.patch(
-            "solarwinds_apm.configurator.SolarWindsApmConfig",
-            return_value=mock_apmconfig_enabled,
-        )
-        mocker.patch(
-            "solarwinds_apm.configurator.SolarWindsApmConfig.convert_to_bool",
-            return_value=mock_convert_to_bool,
-        )
-        mock_apm_sampler = mocker.Mock()
-        mocker.patch(
-            "solarwinds_apm.configurator.ParentBasedSwSampler",
-            return_value=mock_apm_sampler,
-        )
-        mock_resource = mocker.Mock()
-        mocker.patch.object(
-            configurator.SolarWindsConfigurator,
-            "_create_apm_resource",
-            return_value=mock_resource,
-        )
-        test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure()
-
-        mock_config_serviceentry_processor.assert_called_once()
-        mock_custom_init_tracing.assert_called_once_with(
-            exporters={},
-            id_generator=None,
-            sampler=mock_apm_sampler,
-            resource=mock_resource,
-        )
-        mock_custom_init_metrics.assert_called_once_with(
-            exporters_or_readers={},
-            resource=mock_resource,
-        )
-        mock_init_logging.assert_called_once_with(
-            {},
-            mock_resource,
-            logging_assert,
-        )
-        mock_config_propagator.assert_called_once()
-        mock_config_response_propagator.assert_called_once()
-
-    def test_configure_otel_components_logs_enabled_true(
-        self,
-        mocker,
-        mock_apmconfig_enabled,
-
-        mock_config_serviceentry_processor,
-        mock_custom_init_tracing,
-        mock_custom_init_metrics,
-        mock_init_logging,
-        mock_config_propagator,
-        mock_config_response_propagator,
-    ):
-        self.helper_test_configure_otel_components_logs_enabled(
-            mocker,
-            mock_apmconfig_enabled,
-            mock_config_serviceentry_processor,
-            mock_custom_init_tracing,
-            mock_custom_init_metrics,
-            mock_init_logging,
-            mock_config_propagator,
-            mock_config_response_propagator,
-            "true",
-            True,  # True because OTEL log instrumentation set to true
-            True,
-        )
-
-    def test_configure_otel_components_logs_enabled_none(self,
-        mocker,
-        mock_apmconfig_enabled,
-
-        mock_config_serviceentry_processor,
-        mock_custom_init_tracing,
-        mock_custom_init_metrics,
-        mock_init_logging,
-        mock_config_propagator,
-        mock_config_response_propagator,
-    ):
-        self.helper_test_configure_otel_components_logs_enabled(
-            mocker,
-            mock_apmconfig_enabled,
-            mock_config_serviceentry_processor,
-            mock_custom_init_tracing,
-            mock_custom_init_metrics,
-            mock_init_logging,
-            mock_config_propagator,
-            mock_config_response_propagator,
-            "",
-            None,  # none because OTEL log instrumentation not set
-        )
-
-    def test_configure_otel_components_logs_enabled_otel_false(self,
-        mocker,
-        mock_apmconfig_enabled,
-
-        mock_config_serviceentry_processor,
-        mock_custom_init_tracing,
-        mock_custom_init_metrics,
-        mock_init_logging,
-        mock_config_propagator,
-        mock_config_response_propagator,
-    ):
-        self.helper_test_configure_otel_components_logs_enabled(
-            mocker,
-            mock_apmconfig_enabled,
-            mock_config_serviceentry_processor,
-            mock_custom_init_tracing,
-            mock_custom_init_metrics,
-            mock_init_logging,
-            mock_config_propagator,
-            mock_config_response_propagator,
-            "false",
-            False,  # False because OTEL log instrumentation False
-            False,
-        )
-
-    def test_configure_otel_components_logs_enabled_otel_invalid(self,
-        mocker,
-        mock_apmconfig_enabled,
-
-        mock_config_serviceentry_processor,
-        mock_custom_init_tracing,
-        mock_custom_init_metrics,
-        mock_init_logging,
-        mock_config_propagator,
-        mock_config_response_propagator,
-    ):
-        self.helper_test_configure_otel_components_logs_enabled(
-            mocker,
-            mock_apmconfig_enabled,
-            mock_config_serviceentry_processor,
-            mock_custom_init_tracing,
-            mock_custom_init_metrics,
-            mock_init_logging,
-            mock_config_propagator,
-            mock_config_response_propagator,
-            "not-a-bool-string",
-            None,  # None because OTEL log instrumentation not valid bool
-        )
-
     def test_configure_otel_components_agent_enabled(
         self,
         mocker,
@@ -277,11 +112,6 @@ class TestConfiguratorConfigureOtelComponents:
         mocker.patch(
             "solarwinds_apm.configurator.SolarWindsApmConfig",
             return_value=mock_apmconfig_enabled,
-        )
-        # Mock return of _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
-        mocker.patch(
-            "solarwinds_apm.configurator.SolarWindsApmConfig.convert_to_bool",
-            return_value=False,
         )
         mock_apm_sampler = mocker.Mock()
         mocker.patch(
@@ -309,10 +139,12 @@ class TestConfiguratorConfigureOtelComponents:
             exporters_or_readers={},
             resource=mock_resource,
         )
+        # Always passes False since logging auto-instrumentation is now handled by
+        # opentelemetry-instrumentation-logging via the distro
         mock_init_logging.assert_called_once_with(
             {},
             mock_resource,
-            False,
+            setup_logging_handler=False,
         )
         mock_config_propagator.assert_called_once()
         mock_config_response_propagator.assert_called_once()
