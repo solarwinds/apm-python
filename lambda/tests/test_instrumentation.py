@@ -29,8 +29,13 @@ from opentelemetry.propagators.aws.aws_xray_propagator import (
     TRACE_ID_FIRST_PART_LENGTH,
     TRACE_ID_VERSION,
 )
-from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.semconv.trace import SpanAttributes
+from opentelemetry.semconv._incubating.attributes.cloud_attributes import (
+    CLOUD_ACCOUNT_ID,
+    CLOUD_RESOURCE_ID,
+)
+from opentelemetry.semconv._incubating.attributes.faas_attributes import (
+    FAAS_INVOCATION_ID,
+)
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.propagation.tracecontext import (
@@ -46,15 +51,25 @@ TOX_PYTHON_DIRECTORY = os.path.dirname(os.path.dirname(which("python3")))
 
 
 class MockLambdaContext:
-    def __init__(self, aws_request_id, invoked_function_arn):
+    def __init__(self, function_name, aws_request_id, invoked_function_arn):
+        self.function_name = function_name
         self.invoked_function_arn = invoked_function_arn
         self.aws_request_id = aws_request_id
 
 
 MOCK_LAMBDA_CONTEXT = MockLambdaContext(
+    function_name="myfunction",
     aws_request_id="mock_aws_request_id",
     invoked_function_arn="arn:aws:lambda:us-east-1:123456:function:myfunction:myalias",
 )
+
+MOCK_LAMBDA_CONTEXT_ATTRIBUTES = {
+    CLOUD_RESOURCE_ID: ":".join(
+        MOCK_LAMBDA_CONTEXT.invoked_function_arn.split(":")[:7]
+    ),
+    FAAS_INVOCATION_ID: MOCK_LAMBDA_CONTEXT.aws_request_id,
+    CLOUD_ACCOUNT_ID: MOCK_LAMBDA_CONTEXT.invoked_function_arn.split(":")[4],
+}
 
 MOCK_XRAY_TRACE_ID = 0x5FB7331105E8BB83207FA31D4D9CDB4C
 MOCK_XRAY_TRACE_ID_STR = f"{MOCK_XRAY_TRACE_ID:x}"
@@ -201,21 +216,13 @@ class TestAwsLambdaInstrumentor(TestBase):
 
         self.assertEqual(len(spans), 1)
         span = spans[0]
-        self.assertEqual(span.name, os.environ[ORIG_HANDLER])
+        self.assertEqual(span.name, MOCK_LAMBDA_CONTEXT.function_name)
         self.assertEqual(span.get_span_context().trace_id, MOCK_XRAY_TRACE_ID)
         self.assertEqual(span.kind, SpanKind.SERVER)
 
         self.assertSpanHasAttributes(
             span,
-            {
-                ResourceAttributes.CLOUD_RESOURCE_ID: MOCK_LAMBDA_CONTEXT.invoked_function_arn,
-                SpanAttributes.FAAS_INVOCATION_ID: MOCK_LAMBDA_CONTEXT.aws_request_id,
-                ResourceAttributes.CLOUD_ACCOUNT_ID: MOCK_LAMBDA_CONTEXT.invoked_function_arn.split(
-                    ":"
-                )[
-                    4
-                ],
-            },
+            MOCK_LAMBDA_CONTEXT_ATTRIBUTES,
         )
 
         parent_context = span.parent
