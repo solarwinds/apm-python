@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-6.0.0...HEAD)
 
-## [6.0.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-6.0.0) - 2026-03-24
+## [6.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-6.0.0) - 2026-03-25
 
 ### Changed
 - Replaced legacy `TransactionName` attribute with `sw.transaction` ([#748](https://github.com/solarwinds/apm-python/pull/748))
