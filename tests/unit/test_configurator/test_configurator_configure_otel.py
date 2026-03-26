@@ -4,224 +4,98 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import logging
 import os
+import pytest
+import uuid
 
-from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
-)
+from opentelemetry.sdk.resources import Resource
 
 from solarwinds_apm import configurator
 
-class TestConfiguratorConfigureOtelComponents:
-    def helper_test_configure_otel_components_logs_enabled(
-        self,
-        mocker,
-        mock_apmconfig_enabled,
 
-        mock_config_serviceentry_processor,
-        mock_custom_init_tracing,
-        mock_custom_init_metrics,
-        mock_init_logging,
-        mock_config_propagator,
-        mock_config_response_propagator,
+@pytest.fixture
+def setup_caplog():
+    apm_logger = logging.getLogger("solarwinds_apm")
+    apm_logger.propagate = True
 
-        logging_env,
-        logging_assert,
-        mock_convert_to_bool=None,
-    ):
-        mocker.patch.dict(
-            os.environ,
-            {
-                _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: logging_env,
-            }
-        )
+
+class TestConfiguratorCreateApmResource:
+    def test_create_apm_resource_basic(self, mocker, mock_apmconfig_enabled):
         mocker.patch(
-            "solarwinds_apm.configurator.SolarWindsApmConfig",
-            return_value=mock_apmconfig_enabled,
-        )
-        mocker.patch(
-            "solarwinds_apm.configurator.SolarWindsApmConfig.convert_to_bool",
-            return_value=mock_convert_to_bool,
-        )
-        mock_apm_sampler = mocker.Mock()
-        mocker.patch(
-            "solarwinds_apm.configurator.ParentBasedSwSampler",
-            return_value=mock_apm_sampler,
-        )
-        mock_resource = mocker.Mock()
-        mocker.patch(
-            "solarwinds_apm.configurator.Resource.create",
-            return_value=mock_resource,
+            "solarwinds_apm.configurator.__version__",
+            new="1.2.3",
         )
         test_configurator = configurator.SolarWindsConfigurator()
-        test_configurator._configure()
+        test_configurator.apm_config = mock_apmconfig_enabled
+        result = test_configurator._create_apm_resource()
 
-        mock_config_serviceentry_processor.assert_called_once()
-        mock_custom_init_tracing.assert_called_once_with(
-            exporters={},
-            id_generator=None,
-            sampler=mock_apm_sampler,
-            resource=mock_resource,
+        assert result.attributes["sw.apm.version"] == "1.2.3"
+        assert result.attributes["sw.data.module"] == "apm"
+        assert result.attributes["service.name"] == "foo-service"
+        assert "service.instance.id" in result.attributes
+        instance_id = result.attributes["service.instance.id"]
+        assert isinstance(instance_id, str)
+        # Should not raise ValueError if valid UUID
+        uuid.UUID(instance_id)
+
+    def test_create_apm_resource_with_existing_instance_id_use_existing(self, mocker, mock_apmconfig_enabled):
+        mocker.patch(
+            "solarwinds_apm.configurator.__version__",
+            new="1.2.3",
         )
-        mock_custom_init_metrics.assert_called_once_with(
-            exporters_or_readers={},
-            resource=mock_resource,
+        existing_instance_id = "existing-instance-id"
+        # Mock return of Resource.create like a ResourceDetector set service.instance.id
+        mock_initial_resource = Resource.create({
+            "sw.apm.version": "1.2.3",
+            "sw.data.module": "apm",
+            "service.name": "foo-service",
+            "service.instance.id": existing_instance_id,
+        })
+        mock_resource_create = mocker.patch(
+            "solarwinds_apm.configurator.Resource.create",
+            return_value=mock_initial_resource,
         )
-        mock_init_logging.assert_called_once_with(
-            {},
-            mock_resource,
-            logging_assert,
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator.apm_config = mock_apmconfig_enabled
+        result = test_configurator._create_apm_resource()
+
+        assert result.attributes["service.instance.id"] == existing_instance_id
+        mock_resource_create.assert_called_once_with({
+            "sw.apm.version": "1.2.3",
+            "sw.data.module": "apm",
+            "service.name": "foo-service",
+        })
+
+    def test_create_apm_resource_without_existing_instance_id_generate_new(self, mocker, mock_apmconfig_enabled):
+        mocker.patch(
+            "solarwinds_apm.configurator.__version__",
+            new="1.2.3",
         )
-        mock_config_propagator.assert_called_once()
-        mock_config_response_propagator.assert_called_once()
-
-    def test_configure_otel_components_logs_enabled_true_by_otel_sw_default(
-        self,
-        mocker,
-        mock_apmconfig_enabled_export_logs_false,
-
-        mock_config_serviceentry_processor,
-        mock_custom_init_tracing,
-        mock_custom_init_metrics,
-        mock_init_logging,
-        mock_config_propagator,
-        mock_config_response_propagator,
-    ):
-        self.helper_test_configure_otel_components_logs_enabled(
-            mocker,
-            mock_apmconfig_enabled_export_logs_false,
-            mock_config_serviceentry_processor,
-            mock_custom_init_tracing,
-            mock_custom_init_metrics,
-            mock_init_logging,
-            mock_config_propagator,
-            mock_config_response_propagator,
-            "true",
-            True,
-            True,
+        mock_uuid = "test-uuid-value"
+        mock_uuid4 = mocker.patch(
+            "solarwinds_apm.configurator.uuid.uuid4",
+            return_value=mock_uuid,
         )
-
-    def test_configure_otel_components_logs_enabled_otel_none_sw_default(self,
-        mocker,
-        mock_apmconfig_enabled_export_logs_false,
-
-        mock_config_serviceentry_processor,
-        mock_custom_init_tracing,
-        mock_custom_init_metrics,
-        mock_init_logging,
-        mock_config_propagator,
-        mock_config_response_propagator,
-    ):
-        self.helper_test_configure_otel_components_logs_enabled(
-            mocker,
-            mock_apmconfig_enabled_export_logs_false,
-            mock_config_serviceentry_processor,
-            mock_custom_init_tracing,
-            mock_custom_init_metrics,
-            mock_init_logging,
-            mock_config_propagator,
-            mock_config_response_propagator,
-            "",
-            False,
+        # Mock return of Resource.create like no resource detectors set instance ID
+        mock_initial_resource = Resource.create({
+            "sw.apm.version": "1.2.3",
+            "sw.data.module": "apm",
+            "service.name": "foo-service",
+        })
+        mocker.patch(
+            "solarwinds_apm.configurator.Resource.create",
+            return_value=mock_initial_resource,
         )
+        test_configurator = configurator.SolarWindsConfigurator()
+        test_configurator.apm_config = mock_apmconfig_enabled
+        result = test_configurator._create_apm_resource()
 
-    def test_configure_otel_components_logs_enabled_otel_none_sw_true(self,
-        mocker,
-        mock_apmconfig_enabled,
+        assert result.attributes["service.instance.id"] == str(mock_uuid)
+        mock_uuid4.assert_called_once()
 
-        mock_config_serviceentry_processor,
-        mock_custom_init_tracing,
-        mock_custom_init_metrics,
-        mock_init_logging,
-        mock_config_propagator,
-        mock_config_response_propagator,
-    ):
-        self.helper_test_configure_otel_components_logs_enabled(
-            mocker,
-            mock_apmconfig_enabled,
-            mock_config_serviceentry_processor,
-            mock_custom_init_tracing,
-            mock_custom_init_metrics,
-            mock_init_logging,
-            mock_config_propagator,
-            mock_config_response_propagator,
-            "",
-            True,  # true because SW next in precedence
-        )
 
-    def test_configure_otel_components_logs_enabled_otel_false_sw_default(self,
-        mocker,
-        mock_apmconfig_enabled_export_logs_false,
-
-        mock_config_serviceentry_processor,
-        mock_custom_init_tracing,
-        mock_custom_init_metrics,
-        mock_init_logging,
-        mock_config_propagator,
-        mock_config_response_propagator,
-    ):
-        self.helper_test_configure_otel_components_logs_enabled(
-            mocker,
-            mock_apmconfig_enabled_export_logs_false,
-            mock_config_serviceentry_processor,
-            mock_custom_init_tracing,
-            mock_custom_init_metrics,
-            mock_init_logging,
-            mock_config_propagator,
-            mock_config_response_propagator,
-            "false",
-            False,
-        )
-
-    def test_configure_otel_components_logs_enabled_otel_false_sw_true(self,
-        mocker,
-        mock_apmconfig_enabled,
-
-        mock_config_serviceentry_processor,
-        mock_custom_init_tracing,
-        mock_custom_init_metrics,
-        mock_init_logging,
-        mock_config_propagator,
-        mock_config_response_propagator,
-    ):
-        self.helper_test_configure_otel_components_logs_enabled(
-            mocker,
-            mock_apmconfig_enabled,
-            mock_config_serviceentry_processor,
-            mock_custom_init_tracing,
-            mock_custom_init_metrics,
-            mock_init_logging,
-            mock_config_propagator,
-            mock_config_response_propagator,
-            "false",
-            False,  # should be false because OTEL explicitly false, even if SW true
-            False,
-        )
-
-    def test_configure_otel_components_logs_enabled_otel_invalid(self,
-        mocker,
-        mock_apmconfig_enabled_export_logs_false,
-
-        mock_config_serviceentry_processor,
-        mock_custom_init_tracing,
-        mock_custom_init_metrics,
-        mock_init_logging,
-        mock_config_propagator,
-        mock_config_response_propagator,
-    ):
-        self.helper_test_configure_otel_components_logs_enabled(
-            mocker,
-            mock_apmconfig_enabled_export_logs_false,
-            mock_config_serviceentry_processor,
-            mock_custom_init_tracing,
-            mock_custom_init_metrics,
-            mock_init_logging,
-            mock_config_propagator,
-            mock_config_response_propagator,
-            "not-a-bool-string",
-            False,
-        )
-
+class TestConfiguratorConfigureOtelComponents:
     def test_configure_otel_components_agent_enabled(
         self,
         mocker,
@@ -245,8 +119,9 @@ class TestConfiguratorConfigureOtelComponents:
             return_value=mock_apm_sampler,
         )
         mock_resource = mocker.Mock()
-        mocker.patch(
-            "solarwinds_apm.configurator.Resource.create",
+        mocker.patch.object(
+            configurator.SolarWindsConfigurator,
+            "_create_apm_resource",
             return_value=mock_resource,
         )
         test_configurator = configurator.SolarWindsConfigurator()
@@ -264,10 +139,12 @@ class TestConfiguratorConfigureOtelComponents:
             exporters_or_readers={},
             resource=mock_resource,
         )
+        # Always passes False since logging auto-instrumentation is now handled by
+        # opentelemetry-instrumentation-logging via the distro
         mock_init_logging.assert_called_once_with(
             {},
             mock_resource,
-            False,
+            setup_logging_handler=False,
         )
         mock_config_propagator.assert_called_once()
         mock_config_response_propagator.assert_called_once()
@@ -291,8 +168,9 @@ class TestConfiguratorConfigureOtelComponents:
             return_value=mock_apm_sampler,
         )
         mock_resource = mocker.Mock()
-        mocker.patch(
-            "solarwinds_apm.configurator.Resource.create",
+        mocker.patch.object(
+            configurator.SolarWindsConfigurator,
+            "_create_apm_resource",
             return_value=mock_resource,
         )
         mocker.patch(

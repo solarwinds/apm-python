@@ -4,11 +4,26 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+"""Metrics counters for SolarWinds APM sampling and tracing."""
+
 from opentelemetry.sdk.metrics import MeterProvider
 
 
 class Counters:
+    """
+    Container for all SolarWinds APM sampling and tracing metrics counters.
+
+    Initializes and manages OpenTelemetry counters for tracking requests,
+    samples, traces, and rate limiting events.
+    """
+
     def __init__(self, meter_provider: MeterProvider):
+        """
+        Initialize all metrics counters.
+
+        Parameters:
+        meter_provider (MeterProvider): The OpenTelemetry meter provider for creating metrics.
+        """
         self._meter = meter_provider.get_meter("sw.apm.sampling.metrics")
         self._request_count = self._meter.create_counter(
             name="trace.service.request_count",

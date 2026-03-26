@@ -6,10 +6,12 @@
 
 """Module to initialize OpenTelemetry SDK components for SolarWinds backend"""
 
+from __future__ import annotations
+
 import logging
 import math
 import os
-from typing import Optional, Union
+import uuid
 
 from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
@@ -30,11 +32,6 @@ from opentelemetry.sdk._configuration import (
     _import_exporters,
     _init_logging,
     _OTelSDKConfigurator,
-)
-from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
-    OTEL_EXPORTER_OTLP_PROTOCOL,
-    OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
 )
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -81,63 +78,46 @@ logger = logging.getLogger(__name__)
 
 
 class SolarWindsConfigurator(_OTelSDKConfigurator):
-    """OpenTelemetry Configurator for initializing APM logger and SolarWinds-reporting SDK components"""
+    """Configure OpenTelemetry SDK components for SolarWinds APM reporting."""
 
     def __init__(self) -> None:
+        """
+        Initialize the SolarWinds Configurator.
+
+        Creates APM configuration instance for SDK initialization.
+        """
         super().__init__()
         self.apm_config = SolarWindsApmConfig()
 
-    def _swap_legacy_span_exporter(
-        self,
-        span_exporters: dict[str, type[SpanExporter]],
-    ) -> dict:
-        """Intermediary helper to swap legacy span exporter, if configured, with an OTLP exporter if not already configured."""
-        if "solarwinds_exporter" in span_exporters:
-            logger.warning(
-                "SolarWindsSpanExporter is deprecated; configuration ignored."
+    def _create_apm_resource(self) -> Resource:
+        """Create new OpenTelemetry Resource for telemetry providers.
+
+        Returns:
+        Resource: Resource with SolarWinds APM attributes and service information.
+        """
+        apm_resource = Resource.create(
+            {
+                "sw.apm.version": __version__,
+                "sw.data.module": "apm",
+                "service.name": self.apm_config.service_name,
+            }
+        )
+        # Prioritize service.instance.id set by any Resource Detectors
+        updated_apm_resource = apm_resource.merge(
+            Resource(
+                {"service.instance.id": str(uuid.uuid4())}
+                if "service.instance.id" not in apm_resource.attributes
+                else {}
             )
-            del span_exporters["solarwinds_exporter"]
-
-            if (
-                "otlp_proto_http" in span_exporters
-                or "otlp_proto_grpc" in span_exporters
-            ):
-                logger.warning("Using already-configured OTLP span exporter.")
-            else:
-                logger.warning("Initializing OTLP span exporter instead.")
-                # Check env vars for OTLP traces protocol (grpc/http),
-                # which could be setdefault from custom distro,
-                # to select correct OTLP exporter. Else OTLP HTTP default.
-                otlp_protocol = os.environ.get(
-                    OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
-                ) or os.environ.get(
-                    OTEL_EXPORTER_OTLP_PROTOCOL, "http/protobuf"
-                )
-                otlp_protocol = otlp_protocol.strip()
-                if otlp_protocol not in ["http/protobuf", "grpc"]:
-                    logger.debug(
-                        "Unknown OTLP protocol; defaulting to HTTP to init SpanExporter."
-                    )
-                    otlp_protocol = "http/protobuf"
-
-                if otlp_protocol == "http/protobuf":
-                    exporter_entry_point = "otlp_proto_http"
-                else:
-                    exporter_entry_point = "otlp_proto_grpc"
-
-                span_exporters[exporter_entry_point] = next(
-                    iter(
-                        entry_points(
-                            group="opentelemetry_traces_exporter",
-                            name=exporter_entry_point,
-                        )
-                    )
-                ).load()
-
-        return span_exporters
+        )
+        return updated_apm_resource
 
     def _configure(self, **kwargs: int) -> None:
-        """Configure SolarWinds APM and OTel components"""
+        """Configure SolarWinds APM and OpenTelemetry components.
+
+        Parameters:
+        **kwargs (int): Additional configuration keyword arguments.
+        """
         if not self.apm_config.agent_enabled:
             # ApmConfig will log a more informative Info message if disabled
             logger.debug(
@@ -158,20 +138,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             metric_exporter_names + _get_exporter_names("metrics"),
             log_exporter_names + _get_exporter_names("logs"),
         )
-        # TODO NH-107047 Remove this function, the class, and its entry point
-        span_exporters = self._swap_legacy_span_exporter(span_exporters)
 
         # Custom initialization of OTel components
         apm_sampler = ParentBasedSwSampler(
             self.apm_config,
         )
-        apm_resource = Resource.create(
-            {
-                "sw.apm.version": __version__,
-                "sw.data.module": "apm",
-                "service.name": self.apm_config.service_name,
-            }
-        )
+        apm_resource = self._create_apm_resource()
+
         self._custom_init_tracing(
             exporters=span_exporters,
             id_generator=kwargs.get("id_generator"),
@@ -183,23 +156,11 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
             resource=apm_resource,
         )
 
-        # Only emit log event telemetry (auto-instrument logs) if feature enabled,
-        # with settings precedence: OTEL_* > SW_APM_EXPORT_LOGS_ENABLED.
-        # TODO NH-107164 drop support of SW config, and super() will only check OTEL config
-        setup_logging_handler = False
-        # We don't set a default, so this could be None
-        otel_log_enabled = SolarWindsApmConfig.convert_to_bool(
-            os.environ.get(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED)
-        )
-        # SW config is False by default
-        sw_log_enabled = self.apm_config.get("export_logs_enabled")
-        if otel_log_enabled is not None:
-            if otel_log_enabled is True:
-                setup_logging_handler = True
-        elif sw_log_enabled:
-            setup_logging_handler = True
-
-        _init_logging(log_exporters, apm_resource, setup_logging_handler)
+        # Initialize LoggerProvider, log processors, and log exporters.
+        # As of OTel 1.40.0, auto-instrumentation of Python logging (setup_logging_handler)
+        # is handled by opentelemetry-instrumentation-logging via instrumentation, not by the
+        # deprecated LoggingHandler in the SDK. So we pass _init_logging false.
+        _init_logging(log_exporters, apm_resource, setup_logging_handler=False)
 
         # Set up additional custom SW components
         self._configure_service_entry_span_processor()
@@ -207,16 +168,24 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         self._configure_propagator()
         self._configure_response_propagator()
 
-    # TODO rm disable when Python 3.9 dropped
-    # pylint: disable=consider-alternative-union-syntax
     def _custom_init_tracing(
         self,
         exporters: dict[str, type[SpanExporter]],
-        id_generator: Optional[IdGenerator] = None,
-        sampler: Optional[Sampler] = None,
-        resource: Optional[Resource] = None,
-    ):
-        """APM SWO custom span export init, based on _OTelSDKConfigurator"""
+        id_generator: IdGenerator | None = None,
+        sampler: Sampler | None = None,
+        resource: Resource | None = None,
+    ) -> None:
+        """
+        Initialize custom tracing with SolarWinds APM span processors.
+
+        Based on OpenTelemetry SDK Configurator with custom processors.
+
+        Parameters:
+        exporters (dict[str, type[SpanExporter]]): Span exporter classes by name.
+        id_generator (IdGenerator | None): Custom ID generator. Defaults to None.
+        sampler (Sampler | None): Custom sampler. Defaults to None.
+        resource (Resource | None): Resource attributes. Defaults to None.
+        """
         provider = SolarwindsTracerProvider(
             id_generator=id_generator,
             sampler=sampler,
@@ -238,11 +207,19 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _custom_init_metrics(
         self,
         exporters_or_readers: dict[
-            str, Union[type[MetricExporter], type[MetricReader]]
+            str, type[MetricExporter] | type[MetricReader]
         ],
-        resource: Optional[Resource] = None,
-    ):
-        """APM SWO custom metrics export init, based on _OTelSDKConfigurator"""
+        resource: Resource | None = None,
+    ) -> None:
+        """
+        Initialize custom metrics export with delta temporality.
+
+        Based on OpenTelemetry SDK Configurator with delta aggregation.
+
+        Parameters:
+        exporters_or_readers (dict[str, type[MetricExporter] | type[MetricReader]]): Metric exporter or reader classes.
+        resource (Resource | None): Resource attributes. Defaults to None.
+        """
         metric_readers = []
 
         for _, exporter_or_reader_class in exporters_or_readers.items():
@@ -286,7 +263,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_service_entry_span_processor(
         self,
     ) -> None:
-        """Configure ServiceEntrySpanProcessor"""
+        """Configure ServiceEntrySpanProcessor for the tracer provider."""
         trace.get_tracer_provider().add_span_processor(
             ServiceEntrySpanProcessor()
         )
@@ -294,8 +271,9 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _configure_response_time_processor(
         self,
     ) -> None:
-        """Configure ResponseTimeProcessor if metrics exporters are configured and set up
-        i.e. by _configure_metrics_exporter
+        """Configure ResponseTimeProcessor if metrics exporters are configured.
+
+        Only configures if OTEL_METRICS_EXPORTER is set.
         """
         # SolarWindsDistro._configure does setdefault before this is called
         environ_exporter = os.environ.get(
@@ -314,7 +292,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         )
 
     def _configure_propagator(self) -> None:
-        """Configure CompositePropagator with SolarWinds and other propagators, default or environment configured"""
+        """Configure CompositePropagator with SolarWinds and other propagators.
+
+        Uses default or environment-configured propagators.
+        """
         propagators = []
 
         # SolarWindsDistro._configure does setdefault so this shouldn't
@@ -349,5 +330,6 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         set_global_textmap(CompositePropagator(propagators))
 
     def _configure_response_propagator(self) -> None:
+        """Configure global HTTP response propagator."""
         # Set global HTTP response propagator
         set_global_response_propagator(SolarWindsTraceResponsePropagator())

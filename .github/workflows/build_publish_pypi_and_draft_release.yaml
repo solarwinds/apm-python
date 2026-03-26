@@ -25,7 +25,7 @@ jobs:
     name: Check if version valid
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Check version
       run: cd .github/scripts && ./is_publishable.sh ${{ github.event.inputs.version }}
 
@@ -35,41 +35,46 @@ jobs:
     # Outputs SW_APM_VERSION
     uses: ./.github/workflows/get_apm_python_version.yaml
 
-  build_sdist_and_x86_64:
-    name: Build sdist and x86_64
+  build_sdist_and_wheel:
+    name: Build sdist and wheel
     needs: get_apm_python_version
     # Outputs artifact-name
     uses: ./.github/workflows/build_sdist_and_wheel.yaml
     with:
       version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
   
-  scan_sdist_and_x86_64:
+  scan_sdist_and_wheel:
     name: RL scan sdist and wheel
     needs:
       - get_apm_python_version
-      - build_sdist_and_x86_64
+      - build_sdist_and_wheel
     uses: ./.github/workflows/reversinglabs_scan.yaml
     with:
-      artifact-name: ${{ needs.build_sdist_and_x86_64.outputs.artifact-name }}
-      package-name: apm-python-pypi-sdist-x86_64
+      artifact-name: ${{ needs.build_sdist_and_wheel.outputs.artifact-name }}
+      package-name: apm-python-pypi-sdist-wheel
       version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
       rl-submit-only: false
     secrets: inherit
 
-  publish_sdist_and_x86_64:
-    name: Publish sdist and x86_64 to PyPI
+  publish_sdist_and_wheel:
+    name: Publish sdist and wheel to PyPI
     needs:
-      - build_sdist_and_x86_64
-      - scan_sdist_and_x86_64
-    uses: ./.github/workflows/publish_sdist_and_wheel.yaml
-    with:
-      artifact-name: ${{ needs.build_sdist_and_x86_64.outputs.artifact-name }}
-      repository-name: pypi
-    secrets: inherit
+      - build_sdist_and_wheel
+      - scan_sdist_and_wheel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.build_sdist_and_wheel.outputs.artifact-name }}
+      - name: Unzip artifact with dist
+        run: unzip ${{ needs.build_sdist_and_wheel.outputs.artifact-name }}
+      - name: Publish sdist and wheel to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
 
   create_release:
     name: Create draft release
-    needs: publish_sdist_and_x86_64
+    needs: publish_sdist_and_wheel
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -79,7 +84,7 @@ jobs:
         with:
           app_id: ${{ vars.APPLICATION_ID }}
           private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Initialize git
         run: |
           git config user.name "GitHub Actions"

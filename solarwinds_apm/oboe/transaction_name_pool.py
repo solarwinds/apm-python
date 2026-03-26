@@ -1,3 +1,5 @@
+"""Transaction name pool with TTL-based expiration using a min-heap."""
+
 import heapq
 import time
 from functools import total_ordering
@@ -5,7 +7,20 @@ from functools import total_ordering
 
 @total_ordering
 class NameItem:
+    """
+    An item in the transaction name pool with timestamp tracking.
+
+    Used for TTL-based expiration in the heap-based pool.
+    """
+
     def __init__(self, name: str, timestamp: int):
+        """
+        Initialize a NameItem.
+
+        Parameters:
+        name (str): The transaction name.
+        timestamp (int): The timestamp when this name was added or last updated.
+        """
         self._name = name
         self._timestamp = timestamp
 
@@ -39,6 +54,13 @@ TRANSACTION_NAME_DEFAULT = "other"
 
 
 class TransactionNamePool:
+    """
+    Pool for managing transaction names with TTL-based expiration.
+
+    Maintains a limited-size pool of transaction names using a min-heap for
+    efficient TTL-based cleanup.
+    """
+
     def __init__(
         self,
         max_size: int = TRANSACTION_NAME_POOL_MAX,
@@ -46,6 +68,15 @@ class TransactionNamePool:
         max_length: int = TRANSACTION_NAME_MAX_LENGTH,
         default: str = TRANSACTION_NAME_DEFAULT,
     ):
+        """
+        Initialize the TransactionNamePool.
+
+        Parameters:
+        max_size (int): Maximum number of transaction names to store. Defaults to TRANSACTION_NAME_POOL_MAX.
+        ttl (int): Time-to-live in seconds for each name. Defaults to TRANSACTION_NAME_POOL_TTL.
+        max_length (int): Maximum length for transaction names. Defaults to TRANSACTION_NAME_MAX_LENGTH.
+        default (str): Default name to return when pool is full. Defaults to TRANSACTION_NAME_DEFAULT.
+        """
         self._min_heap: list[NameItem] = []
         self._pool: dict[str, NameItem] = {}
         self._max_size = max_size
@@ -54,6 +85,11 @@ class TransactionNamePool:
         self._default = default
 
     def _housekeep(self):
+        """
+        Remove expired transaction names from the pool.
+
+        Checks the heap and removes names that have exceeded their TTL.
+        """
         now = int(time.time())
         while (
             len(self._min_heap) > 0
@@ -64,6 +100,18 @@ class TransactionNamePool:
                 del self._pool[item.name]
 
     def registered(self, name: str) -> str:
+        """
+        Register a transaction name in the pool or refresh its timestamp.
+
+        If the name exists, updates its timestamp. If the pool is full, returns the default name.
+        Otherwise, adds the name to the pool.
+
+        Parameters:
+        name (str): The transaction name to register, truncated to max_length.
+
+        Returns:
+        str: The registered name if successful, or the default name if the pool is full.
+        """
         # housekeep pool for every call
         self._housekeep()
         name = name[: self._max_length]

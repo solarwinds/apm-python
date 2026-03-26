@@ -4,6 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+"""Constants for SolarWinds APM configuration and context propagation."""
+
 INTL_SWO_DEFAULT_OTLP_COLLECTOR = (
     "https://otel.collector.na-01.cloud.solarwinds.com:443"
 )
@@ -15,21 +17,20 @@ INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN = "sw-current-trace-entry-span"
 INTL_SWO_TRACESTATE_KEY = "sw"
 INTL_SWO_TRANSACTION_ATTR_KEY = "sw.transaction"
 INTL_SWO_TRANSACTION_ATTR_MAX = 255
-INTL_SWO_TRANSACTION_NAME_ATTR = "TransactionName"
 INTL_SWO_X_OPTIONS_KEY = "sw_xtraceoptions"
 INTL_SWO_X_OPTIONS_RESPONSE_KEY = "xtrace_options_response"
 INTL_SWO_TRACECONTEXT_PROPAGATOR = "tracecontext"
 INTL_SWO_BAGGAGE_PROPAGATOR = "baggage"
 INTL_SWO_PROPAGATOR = "solarwinds_propagator"
 INTL_SWO_DEFAULT_PROPAGATORS = [
-    INTL_SWO_TRACECONTEXT_PROPAGATOR,
-    INTL_SWO_BAGGAGE_PROPAGATOR,
     INTL_SWO_PROPAGATOR,
+    INTL_SWO_BAGGAGE_PROPAGATOR,
 ]
 INTL_SWO_DEFAULT_RESOURCE_DETECTORS = [
     "process",
     "os",
     "host",
+    "containerid",
     "aws_ec2",
     "aws_ecs",
     "aws_eks",

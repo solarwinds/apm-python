@@ -3,13 +3,29 @@
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+"""Configuration classes for transaction settings and APM configuration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 
 
 class TransactionSetting:
+    """
+    Configuration for individual transaction tracing settings.
+
+    Contains tracing mode and matcher function for specific transaction patterns.
+    """
+
     def __init__(self, tracing: bool, matcher: Callable[[str], bool]):
+        """
+        Initialize TransactionSetting.
+
+        Parameters:
+        tracing (bool): Whether tracing is enabled for this transaction setting.
+        matcher (Callable[[str], bool]): Function to match transaction identifiers.
+        """
         self._tracing = tracing
         self._matcher = matcher
 
@@ -34,6 +50,13 @@ class TransactionSetting:
 
 
 class Configuration:
+    """
+    Main configuration class for SolarWinds APM.
+
+    Manages all APM configuration including service settings, collector information,
+    tracing modes, and transaction-specific settings.
+    """
+
     def __init__(
         self,
         enabled: bool,
@@ -45,6 +68,19 @@ class Configuration:
         transaction_name: Callable[[], str] | None,
         transaction_settings: list[TransactionSetting],
     ):
+        """
+        Initialize Configuration.
+
+        Parameters:
+        enabled (bool): Whether APM is enabled.
+        service (str): The service name.
+        collector (str): The collector URL.
+        headers (dict[str, str]): HTTP headers for collector communication.
+        tracing_mode (bool | None): The tracing mode (True for always, False for never, None for default).
+        trigger_trace_enabled (bool): Whether trigger tracing is enabled.
+        transaction_name (Callable[[], str] | None): Function to get transaction name.
+        transaction_settings (list[TransactionSetting]): List of transaction-specific settings.
+        """
         self._enabled = enabled
         self._service = service
         self._collector = collector

@@ -4,6 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+"""X-Trace-Options header parsing and formatting for trigger tracing."""
+
 import logging
 import re
 
@@ -11,7 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 class XTraceOptions:
-    """Formats X-Trace-Options and signature for trigger tracing"""
+    """Parse and format X-Trace-Options and signature headers for trigger tracing.
+
+    Handles parsing of trigger-trace, sw-keys, custom-*, and ts options.
+    """
 
     _XTRACEOPTIONS_CUSTOM = r"^custom-[^\s]*$"
     _XTRACEOPTIONS_CUSTOM_RE = re.compile(_XTRACEOPTIONS_CUSTOM)
@@ -25,11 +30,13 @@ class XTraceOptions:
         self,
         xtraceoptions_header: str = "",
         signature_header: str = "",
-    ):
+    ) -> None:
         """
-        Args:
-          xtraceoptions_header: extracted request header value
-          signature_header: extracted request header value
+        Initialize XTraceOptions from request headers.
+
+        Parameters:
+        xtraceoptions_header (str): X-Trace-Options header value. Defaults to "".
+        signature_header (str): X-Trace-Options-Signature header value. Defaults to "".
         """
         self.ignored = []
         self.options_header = ""

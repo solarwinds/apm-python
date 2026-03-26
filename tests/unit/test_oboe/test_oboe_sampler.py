@@ -90,7 +90,7 @@ def check_counters(sampler, counter_names):
         assert counters == set()
 
 
-class TestSamplerOptions:
+class MockSamplerOptions:
     def __init__(self, settings: Settings | None = None, local_settings: LocalSettings | None = None,
                  request_headers: RequestHeaders | None = None):
         self._settings = settings
@@ -110,8 +110,8 @@ class TestSamplerOptions:
         return self._request_headers
 
 
-class TestSampler(OboeSampler):
-    def __init__(self, options: TestSamplerOptions):
+class MockSampler(OboeSampler):
+    def __init__(self, options: MockSamplerOptions):
         self._metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(
             metric_readers=[self._metric_reader],
@@ -205,7 +205,7 @@ class TestSampler(OboeSampler):
 
 class TestInvalidXTraceOptionsSignature:
     def test_rejects_missing_signature_key(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=1_000_000,
                 sample_source=SampleSource.REMOTE,
@@ -229,7 +229,7 @@ class TestInvalidXTraceOptionsSignature:
         check_counters(sampler, ["trace.service.request_count"])
 
     def test_rejects_bad_timestamp(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=1_000_000,
                 sample_source=SampleSource.REMOTE,
@@ -254,7 +254,7 @@ class TestInvalidXTraceOptionsSignature:
         check_counters(sampler, ["trace.service.request_count"])
 
     def test_rejects_bad_signature(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=1_000_000,
                 sample_source=SampleSource.REMOTE,
@@ -281,7 +281,7 @@ class TestInvalidXTraceOptionsSignature:
 
 class TestMissingSettings:
     def test_does_not_sample(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=None,
             local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
             request_headers=make_request_headers(MakeRequestHeaders())
@@ -293,7 +293,7 @@ class TestMissingSettings:
         check_counters(sampler, ["trace.service.request_count"])
 
     def test_expires_after_ttl(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -313,7 +313,7 @@ class TestMissingSettings:
         check_counters(sampler, ["trace.service.request_count"])
 
     def test_respects_x_trace_options_keys_and_values(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=None,
             local_settings=LocalSettings(trigger_mode=False, tracing_mode=None),
             request_headers=make_request_headers(
@@ -325,7 +325,7 @@ class TestMissingSettings:
         assert "trigger-trace=not-requested" in sampler.response_headers.x_trace_options_response
 
     def test_ignores_trigger_trace(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=None,
             local_settings=LocalSettings(trigger_mode=True, tracing_mode=None),
             request_headers=make_request_headers(
@@ -339,7 +339,7 @@ class TestMissingSettings:
 
 class TestEntrySpan:
     def test_sw_w3c_tracestate_with_x_trace_options_response(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -360,7 +360,7 @@ class TestEntrySpan:
         assert INTL_SWO_X_OPTIONS_RESPONSE_KEY not in sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE)
 
     def test_sw_w3c_tracestate_without_x_trace_options_response(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -383,7 +383,7 @@ class TestEntrySpan:
 
 class TestEntrySpanWithValidSwContextXTraceOptions:
     def test_respects_keys_and_values(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -405,7 +405,7 @@ class TestEntrySpanWithValidSwContextXTraceOptions:
         assert "trigger-trace=not-requested" in sampler.response_headers.x_trace_options_response
 
     def test_ignores_trigger_trace(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -430,7 +430,7 @@ class TestEntrySpanWithValidSwContextXTraceOptions:
 class TestEntrySpanWithValidSwContextSampleThroughAlwaysSet:
     @pytest.fixture()
     def sample_through_always_set(self):
-        return TestSampler(TestSamplerOptions(
+        return MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -489,7 +489,7 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysSet:
 
 class TestEntrySpanWithValidSwContextSampleThroughAlwaysUnset:
     def test_records_but_does_not_sample_when_SAMPLE_START_set(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -510,7 +510,7 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysUnset:
         check_counters(sampler, ["trace.service.request_count"])
 
     def test_does_not_record_or_sample_when_SAMPLE_START_unset(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -533,7 +533,7 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysUnset:
 
 class TestTriggerTraceRequestedTriggeredTraceSetUnsigned:
     def test_records_and_samples_when_there_is_capacity(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -564,7 +564,7 @@ class TestTriggerTraceRequestedTriggeredTraceSetUnsigned:
                                  "trace.service.triggered_trace_count"])
 
     def test_records_but_does_not_sample_when_there_is_no_capacity(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -596,7 +596,7 @@ class TestTriggerTraceRequestedTriggeredTraceSetUnsigned:
 
 class TestTriggerTraceRequestedTriggeredTraceSetSigned:
     def test_records_and_samples_when_there_is_capacity(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -629,7 +629,7 @@ class TestTriggerTraceRequestedTriggeredTraceSetSigned:
                                  "trace.service.triggered_trace_count"])
 
     def test_records_but_does_not_sample_when_there_is_no_capacity(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -662,7 +662,7 @@ class TestTriggerTraceRequestedTriggeredTraceSetSigned:
 
 class TestTriggerTraceRequestedTriggeredTraceUnset:
     def test_record_but_does_not_sample_when_TRIGGERED_TRACE_unset(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -689,7 +689,7 @@ class TestTriggerTraceRequestedTriggeredTraceUnset:
 
 class TestTriggerTraceRequestedDiceRoll:
     def test_respects_x_trace_options_keys_and_values(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -711,7 +711,7 @@ class TestTriggerTraceRequestedDiceRoll:
         assert "trigger-trace=not-requested" in sampler.response_headers.x_trace_options_response
 
     def test_records_and_samples_when_dice_success_and_sufficient_capacity(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=1_000_000,
                 sample_source=SampleSource.REMOTE,
@@ -739,7 +739,7 @@ class TestTriggerTraceRequestedDiceRoll:
                        ["trace.service.request_count", "trace.service.samplecount", "trace.service.tracecount"])
 
     def test_records_but_does_not_sample_when_dice_success_but_insufficient_capacity(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=1_000_000,
                 sample_source=SampleSource.REMOTE,
@@ -767,7 +767,7 @@ class TestTriggerTraceRequestedDiceRoll:
                                  "trace.service.tokenbucket_exhaustion_count"])
 
     def test_records_but_does_not_sample_when_dice_failure(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -796,7 +796,7 @@ class TestTriggerTraceRequestedDiceRoll:
 
 class TestTriggerTraceRequestedSampleStartUnset:
     def test_ignores_trigger_trace(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -818,7 +818,7 @@ class TestTriggerTraceRequestedSampleStartUnset:
         assert "ignored=invalid-key" in sampler.response_headers.x_trace_options_response
 
     def test_records_when_SAMPLE_THROUGH_ALWAYS_set(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,
@@ -839,7 +839,7 @@ class TestTriggerTraceRequestedSampleStartUnset:
         check_counters(sampler, ["trace.service.request_count"])
 
     def test_does_not_record_when_SAMPLE_THROUGH_ALWAYS_unset(self):
-        sampler = TestSampler(TestSamplerOptions(
+        sampler = MockSampler(MockSamplerOptions(
             settings=Settings(
                 sample_rate=0,
                 sample_source=SampleSource.LOCAL_DEFAULT,

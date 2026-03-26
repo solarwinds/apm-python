@@ -29,24 +29,21 @@ keywords = [
   "observability",
 ]
 classifiers = [
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Typing :: Typed",
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
 ]
 requires-python = ">=3.9"
 dependencies = [
-    'opentelemetry-api == 1.34.1',
-    'opentelemetry-sdk == 1.34.1',
-    'opentelemetry-exporter-otlp == 1.34.1',
-    'opentelemetry-instrumentation == 0.55b1',
-    'opentelemetry-instrumentation-logging == 0.55b1',
+    'opentelemetry-api == 1.40.0',
+    'opentelemetry-sdk == 1.40.0',
+    'opentelemetry-exporter-otlp == 1.40.0',
+    'opentelemetry-instrumentation == 0.61b0',
+    'opentelemetry-instrumentation-logging == 0.61b0',
     'opentelemetry-sdk-extension-aws == 2.1.0',
     'opentelemetry-resource-detector-azure == 0.1.5',
+    'opentelemetry-resource-detector-containerid == 0.61b0',
 ]
 
 [project.urls]
@@ -63,9 +60,6 @@ solarwinds_configurator = "solarwinds_apm.configurator:SolarWindsConfigurator"
 
 [project.entry-points.opentelemetry_propagator]
 solarwinds_propagator = "solarwinds_apm.propagator:SolarWindsPropagator"
-
-[project.entry-points.opentelemetry_traces_exporter]
-solarwinds_exporter = "solarwinds_apm.exporter:SolarWindsSpanExporter"
 
 [project.entry-points.opentelemetry_traces_sampler]
 solarwinds_sampler = "solarwinds_apm.sampler:ParentBasedSwSampler"
@@ -101,3 +95,45 @@ exclude = '''
   )/
 )
 '''
+
+[tool.ruff]
+line-length = 79
+exclude = [
+    ".tox",
+    "build", 
+    "scripts",
+    "tests",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
+# To match .flake8 config
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "N",
+    "UP",
+    "B",
+    "C4",
+    "PIE",
+    "SIM",
+]
+ignore = [
+    "E501",
+    "E203",
+    "B008",  # for Resource.create() test compatibility
+    "UP006", # Use `set` instead of `typing.Set` type annotation, for compatibility with upstream SDK state
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["solarwinds_apm"]
+force-single-line = false
+
+[tool.ruff.format]
+# To match black config
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

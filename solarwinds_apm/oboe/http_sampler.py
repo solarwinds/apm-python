@@ -3,6 +3,9 @@
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+"""HTTP-based sampler that fetches sampling settings from a remote collector."""
+
 from __future__ import annotations
 
 import logging
@@ -23,10 +26,6 @@ from solarwinds_apm.oboe.configuration import Configuration
 from solarwinds_apm.oboe.sampler import Sampler
 
 REQUEST_TIMEOUT = 10  # 10s
-RETRY_INITIAL_TIMEOUT = 0.5  # 500ms
-RETRY_MAX_TIMEOUT = 60  # 60s
-RETRY_MAX_ATTEMPTS = 20
-MULTIPLIER = 1.5
 
 DAEMON_THREAD_JOIN_TIMEOUT = 10  # 10s
 REQUEST_INTERVAL = 60  # 60s
@@ -35,12 +34,27 @@ logger = logging.getLogger(__name__)
 
 
 class HttpSampler(Sampler):
+    """
+    Sampler that retrieves sampling settings from an HTTP collector.
+
+    Runs a background daemon thread that periodically fetches settings from
+    the configured collector endpoint.
+    """
+
     def __init__(
         self,
         meter_provider: MeterProvider,
         config: Configuration,
         initial: dict[str, Any] | None,
     ):
+        """
+        Initialize the HttpSampler.
+
+        Parameters:
+        meter_provider (MeterProvider): The OpenTelemetry meter provider for metrics.
+        config (Configuration): The APM configuration.
+        initial (dict[str, Any] | None): Initial sampling settings, if available.
+        """
         super().__init__(
             meter_provider=meter_provider,
             config=config,
@@ -63,6 +77,15 @@ class HttpSampler(Sampler):
         return f"HTTP Sampler ({self._url})"
 
     def _warn(self, message: str, *args: Any):
+        """
+        Log a warning message with deduplication.
+
+        Only logs at warning level if the message is new; otherwise logs at debug level.
+
+        Parameters:
+        message (str): The warning message to log.
+        *args (Any): Additional arguments to format into the message.
+        """
         if message != self._last_warning_message:
             logger.warning("%s %s", message, str(*args))
             self._last_warning_message = message
@@ -72,6 +95,8 @@ class HttpSampler(Sampler):
     def shutdown(self):
         """
         Shutdown the daemon thread.
+
+        Signals the background thread to stop and waits for it to terminate.
         """
         self._shutdown_event.set()
         if self._daemon_thread:
@@ -80,6 +105,8 @@ class HttpSampler(Sampler):
     def _loop(self):
         """
         Main loop of the daemon thread.
+
+        Performs an initial fetch, then continues fetching at regular intervals.
         """
         # Initial fetch
         self._task()
@@ -88,7 +115,10 @@ class HttpSampler(Sampler):
 
     def _task(self):
         """
-        Fetch sampling settings from the collector and update the settings in the sampler.
+        Fetch sampling settings from the collector and update the sampler.
+
+        Retrieves settings from the remote collector and updates local sampler state.
+        Logs warnings if settings are invalid or the fetch fails.
         """
         try:
             unparsed = self._fetch_from_collector()
@@ -105,7 +135,13 @@ class HttpSampler(Sampler):
 
     def _fetch_from_collector(self):
         """
-        Fetch sampling settings from the collector.
+        Fetch sampling settings from the collector via HTTP.
+
+        Returns:
+        dict: The JSON response containing sampling settings.
+
+        Raises:
+        requests.RequestException: If the HTTP request fails.
         """
         url = f"{self._url}/v1/settings/{self._service}/{self._hostname}"
         logger.debug("retrieving sampling settings from %s", url)

@@ -174,14 +174,14 @@ class OboeSampler(Sampler, ABC):
     @override
     def should_sample(
         self,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: "TraceState" | None = None,
-    ) -> "SamplingResult":
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> SamplingResult:
         parent_span = get_current_span(parent_context)
 
         sample_state = self._initialize_sample_state(
@@ -264,13 +264,13 @@ class OboeSampler(Sampler, ABC):
 
     def _initialize_sample_state(
         self,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None,
         attributes: Attributes,
-        links: Sequence["Link"] | None,
-        trace_state: "TraceState" | None,
+        links: Sequence[Link] | None,
+        trace_state: TraceState | None,
         parent_span: Span | None,
     ) -> SampleState:
         """
@@ -308,13 +308,13 @@ class OboeSampler(Sampler, ABC):
     def _process_trace_options(
         self,
         sample_state: SampleState,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: "TraceState" | None = None,
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
     ):
         """
         Process the X-Trace-Options header and set the appropriate response
@@ -379,14 +379,14 @@ class OboeSampler(Sampler, ABC):
     def _handle_no_settings(
         self,
         sample_state: SampleState,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None,
         attributes: Attributes,
-        links: Sequence["Link"] | None,
-        trace_state: "TraceState" | None,
-    ) -> "SamplingResult":
+        links: Sequence[Link] | None,
+        trace_state: TraceState | None,
+    ) -> SamplingResult:
         """
         Handle the case where settings are unavailable.
         """
@@ -416,7 +416,7 @@ class OboeSampler(Sampler, ABC):
         )
 
     def _handle_sample_start(
-        self, sample_state: SampleState, parent_context: "Context" | None
+        self, sample_state: SampleState, parent_context: Context | None
     ):
         """
         Handle the case where the SAMPLE_START flag is set.
@@ -435,7 +435,7 @@ class OboeSampler(Sampler, ABC):
             )
 
     def parent_based_algo(
-        self, s: SampleState, parent_context: "Context" | None
+        self, s: SampleState, parent_context: Context | None
     ):
         """
         Determine the sampling decision based on the parent span.
@@ -465,7 +465,7 @@ class OboeSampler(Sampler, ABC):
         return Decision.DROP
 
     def trigger_trace_algo(
-        self, s: SampleState, parent_context: "Context" | None
+        self, s: SampleState, parent_context: Context | None
     ):
         """
         Determine the sampling decision based on the TRIGGER_TRACE flag.
@@ -492,7 +492,7 @@ class OboeSampler(Sampler, ABC):
         logger.debug("TRIGGERED_TRACE unset; record only")
         return TriggerTrace.TRIGGER_TRACING_DISABLED, Decision.RECORD_ONLY
 
-    def dice_roll_algo(self, s: SampleState, parent_context: "Context" | None):
+    def dice_roll_algo(self, s: SampleState, parent_context: Context | None):
         """
         Determine the sampling decision based on a dice roll.
         """
@@ -555,13 +555,13 @@ class OboeSampler(Sampler, ABC):
 
     def get_settings(
         self,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: "TraceState" | None = None,
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
     ) -> Settings | None:
         """
         Get the settings within the ttl if available.
@@ -588,13 +588,13 @@ class OboeSampler(Sampler, ABC):
     @abstractmethod
     def local_settings(
         self,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: "TraceState" | None = None,
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
     ) -> LocalSettings:
         """
         Interface for inherited class to override
@@ -603,13 +603,13 @@ class OboeSampler(Sampler, ABC):
     @abstractmethod
     def request_headers(
         self,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: "TraceState" | None = None,
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
     ) -> RequestHeaders:
         """
         Interface for inherited class to override
@@ -618,14 +618,14 @@ class OboeSampler(Sampler, ABC):
     def set_response_headers_from_sample_state(
         self,
         s: SampleState,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: "TraceState" | None = None,
-    ) -> "TraceState" | None:
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> TraceState | None:
         """
         Set the response headers based on the sample state
         """
@@ -649,14 +649,14 @@ class OboeSampler(Sampler, ABC):
     def set_response_headers(
         self,
         headers: ResponseHeaders,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: "TraceState" | None = None,
-    ) -> "TraceState" | None:
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> TraceState | None:
         """
         Interface for inherited class to override
         """

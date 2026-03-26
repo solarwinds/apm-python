@@ -4,6 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+"""SolarWinds APM public API for custom transaction naming and readiness checks."""
+
 import logging
 
 from opentelemetry import context, trace
@@ -11,7 +13,7 @@ from opentelemetry.trace import NoOpTracerProvider, get_tracer_provider
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
-    INTL_SWO_TRANSACTION_NAME_ATTR,
+    INTL_SWO_TRANSACTION_ATTR_KEY,
 )
 from solarwinds_apm.oboe import get_transaction_name_pool
 from solarwinds_apm.oboe.http_sampler import HttpSampler
@@ -26,25 +28,26 @@ logger = logging.getLogger(__name__)
 
 def set_transaction_name(custom_name: str) -> bool:
     """
-    Assign a custom transaction name to a current request. If multiple
-    transaction names are set on the same trace, then the last one is used.
+    Assign a custom transaction name to a current request.
+
+    If multiple transaction names are set on the same trace, then the last one is used.
     Overrides default, out-of-the-box naming based on URL/controller/action.
-    Takes precedence over transaction_name set in environment variable or
-    config file.
+    Takes precedence over transaction_name set in environment variable or config file.
 
     Any uppercase to lowercase conversions or special character replacements
     are done by the platform. Name length is limited to 256 characters;
     anything longer is truncated by APM library.
 
-    :custom_name:str, custom transaction name to apply
+    Parameters:
+    custom_name (str): The custom transaction name to apply.
 
-    :return:
-    bool True if successful name assignment or if tracing disabled,
-         False if unsuccessful due to invalid name, nonexistent span, or distro error.
+    Returns:
+    bool: True if successful name assignment or if tracing disabled,
+          False if unsuccessful due to invalid name, nonexistent span, or distro error.
 
-    :Example:
-     from solarwinds_apm.api import set_transaction_name
-     result = set_transaction_name("my-foo-name")
+    Example:
+        from solarwinds_apm.api import set_transaction_name
+        result = set_transaction_name("my-foo-name")
     """
     if not custom_name:
         logger.warning(
@@ -72,7 +75,7 @@ def set_transaction_name(custom_name: str) -> bool:
 
     logger.debug(
         "Setting attribute %s for span %s as %s",
-        INTL_SWO_TRANSACTION_NAME_ATTR,
+        INTL_SWO_TRANSACTION_ATTR_KEY,
         W3CTransformer.trace_and_span_id_from_context(
             current_trace_entry_span.context
         ),
@@ -91,13 +94,13 @@ def set_transaction_name(custom_name: str) -> bool:
             ),
         )
     current_trace_entry_span.set_attribute(
-        INTL_SWO_TRANSACTION_NAME_ATTR, registered_name
+        INTL_SWO_TRANSACTION_ATTR_KEY, registered_name
     )
     return True
 
 
 def solarwinds_ready(
-    wait_milliseconds: int = 3000, integer_response: bool = False
+    wait_milliseconds: int = 3000,
 ) -> bool:
     """
     Wait for SolarWinds to be ready to send traces.
@@ -106,22 +109,17 @@ def solarwinds_ready(
     information during the whole time the process is running. Usually SolarWinds doesn't block an
     application while it is starting up.
 
-    :param wait_milliseconds:int default 3000, the maximum time to wait in milliseconds
-    :param integer_response:bool default False, we are dropping this support, please see updated docs
+    Parameters:
+    wait_milliseconds (int): The maximum time to wait in milliseconds. Defaults to 3000.
 
-    :return:
-    bool True for ready, False not ready
+    Returns:
+    bool: True if ready, False if not ready.
 
-    :Example:
-     from solarwinds_apm.api import solarwinds_ready
-     if not solarwinds_ready(wait_milliseconds=10000, integer_response=False):
-        Logger.info("SolarWinds not ready after 10 seconds, no metrics will be sent")
+    Example:
+        from solarwinds_apm.api import solarwinds_ready
+        if not solarwinds_ready(wait_milliseconds=10000):
+            Logger.info("SolarWinds not ready after 10 seconds, no metrics will be sent")
     """
-    if integer_response:
-        logger.warning(
-            "support of integer_response is dropped, please see updated docs"
-        )
-
     tracer_provider = trace.get_tracer_provider()
     if isinstance(tracer_provider, SolarwindsTracerProvider):
         if isinstance(

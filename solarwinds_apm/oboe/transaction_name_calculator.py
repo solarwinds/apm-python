@@ -1,3 +1,5 @@
+"""Transaction name resolution utilities for URL path processing."""
+
 from __future__ import annotations
 
 import logging
@@ -7,6 +9,17 @@ logger = logging.getLogger(__name__)
 
 
 def resolve_transaction_name(uri: str) -> str:
+    """
+    Resolve a transaction name from a URI by extracting path segments.
+
+    Extracts up to the first two segments of the URI path to create a transaction name.
+
+    Parameters:
+    uri (str): The URI to parse for transaction name extraction.
+
+    Returns:
+    str: The resolved transaction name based on the URI path, or "unknown" if parsing fails.
+    """
     try:
         parsed_uri = urlparse(uri)
         if parsed_uri.path:

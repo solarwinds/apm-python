@@ -207,13 +207,13 @@ class Sampler(OboeSampler):
     @override
     def local_settings(
         self,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: "TraceState" | None = None,
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
     ) -> LocalSettings:
         """
         Returns local settings.
@@ -245,13 +245,13 @@ class Sampler(OboeSampler):
     @override
     def request_headers(
         self,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: "TraceState" | None = None,
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
     ) -> RequestHeaders:
         """
         Returns request headers.
@@ -271,48 +271,49 @@ class Sampler(OboeSampler):
     def set_response_headers(
         self,
         headers: ResponseHeaders,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: "TraceState" | None = None,
-    ) -> "TraceState" | None:
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> TraceState | None:
         """
         Sets response headers.
         """
         if parent_context:
             options = parent_context.get(INTL_SWO_X_OPTIONS_KEY)
-            if options and isinstance(options, XTraceOptions):
-                if (
+            if (
+                options
+                and isinstance(options, XTraceOptions)
+                and (
                     options.include_response
                     and headers.x_trace_options_response
+                )
+            ):
+                if (
+                    get_current_span(parent_context)
+                    .get_span_context()
+                    .is_valid
+                    and get_current_span(parent_context)
+                    .get_span_context()
+                    .trace_state
+                    is not None
                 ):
-                    if (
+                    trace_state = (
                         get_current_span(parent_context)
                         .get_span_context()
-                        .is_valid
-                        and get_current_span(parent_context)
-                        .get_span_context()
                         .trace_state
-                        is not None
-                    ):
-                        trace_state = (
-                            get_current_span(parent_context)
-                            .get_span_context()
-                            .trace_state
-                        )
-                    else:
-                        trace_state = TraceState()
-                    return trace_state.add(
-                        INTL_SWO_X_OPTIONS_RESPONSE_KEY,
-                        headers.x_trace_options_response.replace(
-                            INTL_SWO_EQUALS, INTL_SWO_EQUALS_W3C_SANITIZED
-                        ).replace(
-                            INTL_SWO_COMMA, INTL_SWO_COMMA_W3C_SANITIZED
-                        ),
                     )
+                else:
+                    trace_state = TraceState()
+                return trace_state.add(
+                    INTL_SWO_X_OPTIONS_RESPONSE_KEY,
+                    headers.x_trace_options_response.replace(
+                        INTL_SWO_EQUALS, INTL_SWO_EQUALS_W3C_SANITIZED
+                    ).replace(INTL_SWO_COMMA, INTL_SWO_COMMA_W3C_SANITIZED),
+                )
         return None
 
     def update_settings(self, settings: Any) -> Settings | None:

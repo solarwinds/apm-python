@@ -30,6 +30,12 @@ UID_REGEX = re.compile(r"[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}", re.I)
 
 
 def _pod_name() -> str:
+    """
+    Get Kubernetes pod name from environment or system hostname.
+
+    Returns:
+    str: The pod name.
+    """
     env = os.getenv(NAME_ENV)
     if env:
         logger.debug("read pod name from env")
@@ -39,6 +45,15 @@ def _pod_name() -> str:
 
 
 def _pod_uid(mount_info: str) -> str | None:
+    """
+    Get Kubernetes pod UID from environment or mountinfo file.
+
+    Parameters:
+    mount_info (str): Path to mountinfo file.
+
+    Returns:
+    str | None: The pod UID if found, None otherwise.
+    """
     env = os.getenv(UID_ENV)
     if env:
         logger.debug("read pod uid from env")
@@ -48,56 +63,74 @@ def _pod_uid(mount_info: str) -> str | None:
         logger.debug("can't read pod uid on windows")
         return None
 
-    with suppress(Exception):
-        with open(mount_info, "r", encoding="utf-8") as file:
-            for line in file:
-                fields = line.split(" ")
-                if len(fields) < 10:
-                    continue
+    with suppress(Exception), open(mount_info, encoding="utf-8") as file:
+        for line in file:
+            fields = line.split(" ")
+            if len(fields) < 10:
+                continue
 
-                identity, parent_id, _, root = fields[:4]
-                if not identity.isdigit() or not parent_id.isdigit():
-                    continue
+            identity, parent_id, _, root = fields[:4]
+            if not identity.isdigit() or not parent_id.isdigit():
+                continue
 
-                if "kube" not in root:
-                    continue
+            if "kube" not in root:
+                continue
 
-                match = UID_REGEX.search(root)
-                if match:
-                    return match.group(0)
+            match = UID_REGEX.search(root)
+            if match:
+                return match.group(0)
 
     logger.debug("can't read pod uid")
     return None
 
 
 def _pod_namespace(namespace: str) -> str | None:
+    """
+    Get Kubernetes namespace from environment or namespace file.
+
+    Parameters:
+    namespace (str): Path to namespace file.
+
+    Returns:
+    str | None: The namespace if found, None otherwise.
+    """
     env = os.getenv(NAMESPACE_ENV)
     if env:
         logger.debug("read pod namespace from env")
         return env
 
-    with suppress(Exception):
-        with open(namespace, "r", encoding="utf-8") as file:
-            logger.debug("read pod namespace from file")
-            return file.read().strip()
+    with suppress(Exception), open(namespace, encoding="utf-8") as file:
+        logger.debug("read pod namespace from file")
+        return file.read().strip()
 
     logger.debug("can't read pod namespace")
     return None
 
 
 class K8sResourceDetector(ResourceDetector):
-    """Detects attribute values only available when the app is running on k8s
-    and returns them in a Resource.
-    """
+    """Detect Kubernetes resource attributes when running in a Kubernetes environment."""
 
     def __init__(
         self, namespace: str = NAMESPACE_FILE, mountinfo: str = MOUNTINFO_FILE
-    ):
+    ) -> None:
+        """
+        Initialize K8s Resource Detector.
+
+        Parameters:
+        namespace (str): Path to namespace file. Defaults to NAMESPACE_FILE.
+        mountinfo (str): Path to mountinfo file. Defaults to MOUNTINFO_FILE.
+        """
         super().__init__()
         self._namespace = namespace
         self._mountinfo = mountinfo
 
     def detect(self) -> Resource:
+        """
+        Detect Kubernetes resource attributes.
+
+        Returns:
+        Resource: Resource with K8s namespace, pod UID, and pod name attributes if available.
+        """
         attributes = {}
 
         namespace = _pod_namespace(self._namespace)

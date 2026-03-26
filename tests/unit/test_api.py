@@ -86,7 +86,7 @@ class TestSetTransactionName:
         assert set_transaction_name("bar") == True
         mock_context.get_value.assert_called_once_with("sw-current-trace-entry-span")
         mock_pool.registered.assert_called_once_with("bar")
-        mock_current_span.set_attribute.assert_called_once_with("TransactionName", "mock-registered-name")
+        mock_current_span.set_attribute.assert_called_once_with("sw.transaction", "mock-registered-name")
 
 class TestSolarWindsReady:
     def test_parentbasedsw_sampler_ready(self, mocker):

@@ -28,7 +28,7 @@ from solarwinds_apm.oboe.sampler import http_span_metadata, parse_settings, Samp
 from solarwinds_apm.oboe.settings import Settings, SampleSource, Flags, BucketType, BucketSettings
 
 
-class TestSampler(Sampler):
+class MockSampler(Sampler):
     def __init__(self, meter_provider: MeterProvider, config: Configuration, initial: Any):
         super().__init__(meter_provider=meter_provider, config=config, initial=initial)
 
@@ -178,7 +178,7 @@ class TestSamplerName:
             metric_readers=[InMemoryMetricReader()],
             exemplar_filter=AlwaysOnExemplarFilter()
         )
-        sampler = TestSampler(
+        sampler = MockSampler(
             meter_provider=meter_provider,
             config=options(tracing=None, trigger_trace=False, transaction_settings=[]),
             initial=settings(enabled=True, signature_key=None)
@@ -204,7 +204,7 @@ class TestSamplerName:
             metric_readers=[InMemoryMetricReader()],
             exemplar_filter=AlwaysOnExemplarFilter()
         )
-        sampler = TestSampler(
+        sampler = MockSampler(
             meter_provider=meter_provider,
             config=options(tracing=None, trigger_trace=True, transaction_settings=[]),
             initial=settings(enabled=False, signature_key=None)
@@ -224,7 +224,7 @@ class TestSamplerName:
             metric_readers=[InMemoryMetricReader()],
             exemplar_filter=AlwaysOnExemplarFilter()
         )
-        sampler = TestSampler(
+        sampler = MockSampler(
             meter_provider=meter_provider,
             config=options(tracing=True, trigger_trace=True, transaction_settings=[]),
             initial=settings(enabled=False, signature_key=None)
@@ -250,7 +250,7 @@ class TestSamplerName:
             metric_readers=[InMemoryMetricReader()],
             exemplar_filter=AlwaysOnExemplarFilter()
         )
-        sampler = TestSampler(
+        sampler = MockSampler(
             meter_provider=meter_provider,
             config=options(tracing=False, trigger_trace=False, transaction_settings=[]),
             initial=settings(enabled=True, signature_key=None)
@@ -270,7 +270,7 @@ class TestSamplerName:
             metric_readers=[InMemoryMetricReader()],
             exemplar_filter=AlwaysOnExemplarFilter()
         )
-        sampler = TestSampler(
+        sampler = MockSampler(
             meter_provider=meter_provider,
             config=options(tracing=False, trigger_trace=False,
                            transaction_settings=[TransactionSetting(tracing=True, matcher=lambda s: True)]),
@@ -296,7 +296,7 @@ class TestSamplerName:
             metric_readers=[InMemoryMetricReader()],
             exemplar_filter=AlwaysOnExemplarFilter()
         )
-        sampler = TestSampler(
+        sampler = MockSampler(
             meter_provider=meter_provider,
             config=options(tracing=True, trigger_trace=True,
                            transaction_settings=[TransactionSetting(tracing=False, matcher=lambda s: True)]),
@@ -316,7 +316,7 @@ class TestSamplerName:
             metric_readers=[InMemoryMetricReader()],
             exemplar_filter=AlwaysOnExemplarFilter()
         )
-        sampler = TestSampler(
+        sampler = MockSampler(
             meter_provider=meter_provider,
             config=options(tracing=False, trigger_trace=False, transaction_settings=[
                 TransactionSetting(tracing=True, matcher=lambda s: True),
@@ -344,7 +344,7 @@ class TestSamplerName:
             metric_readers=[InMemoryMetricReader()],
             exemplar_filter=AlwaysOnExemplarFilter()
         )
-        sampler = TestSampler(
+        sampler = MockSampler(
             meter_provider=meter_provider,
             config=options(tracing=False, trigger_trace=False, transaction_settings=[
                 TransactionSetting(tracing=True, matcher=lambda s: s == "CLIENT:test"),
@@ -371,7 +371,7 @@ class TestSamplerName:
             metric_readers=[InMemoryMetricReader()],
             exemplar_filter=AlwaysOnExemplarFilter()
         )
-        sampler = TestSampler(
+        sampler = MockSampler(
             meter_provider=meter_provider,
             config=options(tracing=False, trigger_trace=False, transaction_settings=[
                 TransactionSetting(tracing=True, matcher=lambda s: s == "http://localhost/test"),
@@ -401,7 +401,7 @@ class TestSamplerName:
             metric_readers=[InMemoryMetricReader()],
             exemplar_filter=AlwaysOnExemplarFilter()
         )
-        sampler = TestSampler(
+        sampler = MockSampler(
             meter_provider=meter_provider,
             config=options(tracing=False, trigger_trace=False, transaction_settings=[
                 TransactionSetting(tracing=True, matcher=lambda s: s == "http://localhost/test"),

@@ -34,14 +34,16 @@ The name of the main logger is `solarwinds_apm`. Each module should create its o
 logging.getLogger(__name__) which will return a child logger of the `solarwinds_apm` logger.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from logging.handlers import RotatingFileHandler
 
 
 class ApmLoggingLevel:
-    """Mapping class providing a conversion between solarwinds_apm library logging level and Python logging module
-    logging levels.
+    """Map solarwinds_apm library logging level to Python logging module levels.
+
     The solarwinds_apm package has six main log levels, which are defined in the debug_levels dictionary.
     There is also a special 7th OBOE_DEBUG_DISABLE for disabling logging, as there is no "disabled" level in Python logging nor agent logging.
     """
@@ -71,14 +73,26 @@ class ApmLoggingLevel:
     }
 
     @classmethod
-    def default_level(cls):
-        """Returns integer representation of default debugging level"""
+    def default_level(cls) -> int:
+        """
+        Return the default debugging level.
+
+        Returns:
+        int: Integer representation of the default debugging level (OBOE_DEBUG_WARNING).
+        """
         return cls.debug_levels["OBOE_DEBUG_WARNING"]
 
     @classmethod
-    def is_valid_level(cls, level):
-        """Returns True if the provided level is a valid integer representation of a solarwinds_apm.sw_logging level,
-        False otherwise."""
+    def is_valid_level(cls, level: int | str) -> bool:
+        """
+        Check if the provided level is valid.
+
+        Parameters:
+        level (int | str): The level to validate.
+
+        Returns:
+        bool: True if level is a valid solarwinds_apm logging level, False otherwise.
+        """
         try:
             level = int(level)
             return bool(level in list(cls.debug_levels.values()))
@@ -86,8 +100,13 @@ class ApmLoggingLevel:
             return False
 
 
-def _create_stream_handler():
-    """Creates stream handler reporting to stderr."""
+def _create_stream_handler() -> logging.StreamHandler:
+    """
+    Create stream handler reporting to stderr.
+
+    Returns:
+    logging.StreamHandler: Configured stream handler with custom format.
+    """
     sh = logging.StreamHandler()  # get stream handler to custom logging prefix
     fm = logging.Formatter(
         "%(asctime)s [ %(name)s %(levelname)-8s p#%(process)d.%(thread)d] %(message)s"
@@ -99,8 +118,9 @@ def _create_stream_handler():
 _stream_handler = _create_stream_handler()
 
 
-def _get_logger():
-    """Creates the logger for agent-internal logging.
+def _get_logger() -> logging.Logger:
+    """Create the logger for agent-internal logging.
+
     By default, the logging level of the created logger will be set to ApmLoggingLevel.default_level().
     If the logging level of the agent-internal logger needs to be changed, this should happen through one of the
     following options only:
@@ -108,6 +128,9 @@ def _get_logger():
         - When _get_logger is invoked, SW_APM_DEBUG_LEVEL is checked and the logging level will be set to the
           value provided by the variable. If an invalid value has been provided, the logging level will not be changed.
     (2) By invoking set_sw_log_level
+
+    Returns:
+    logging.Logger: Configured logger for solarwinds_apm package.
     """
 
     # create base logger for solarwinds_apm package
@@ -141,9 +164,12 @@ def _get_logger():
 logger = _get_logger()
 
 
-def disable_logger(disable=True):
-    """Disables all logging messages from the `solarwinds_apm` package when disable is True.
-    To restoring logging, set disable as False.
+def disable_logger(disable: bool = True) -> None:
+    """
+    Disable or enable logging messages from the solarwinds_apm package.
+
+    Parameters:
+    disable (bool): True to disable logging, False to restore it. Defaults to True.
     """
     if disable:
         logger.addHandler(logging.NullHandler())
@@ -155,9 +181,12 @@ def disable_logger(disable=True):
         logger.propagate = True
 
 
-def update_sw_log_handler(log_filepath):
-    """If log_filepath is provided, APM-internal logger's stream handler
-    is swapped with a rotating file handler.
+def update_sw_log_handler(log_filepath: str) -> None:
+    """
+    Swap stream handler with rotating file handler if log_filepath is provided.
+
+    Parameters:
+    log_filepath (str): Path to the log file.
     """
     if log_filepath:
         try:
@@ -181,12 +210,18 @@ def update_sw_log_handler(log_filepath):
             )
 
 
-def set_sw_log_level(level):
-    """Set the logging level of the agent-internal logger to the provided level. This function expects the level
-    to be one of the integer representations of the levels defined in ApmLoggingLevel.debug_levels.
-    If an invalid level has been provided, the logging level will not be changed but a warning message will be emitted.
+def set_sw_log_level(level: int) -> None:
+    """
+    Set the logging level of the agent-internal logger.
 
-    This function should not be used from outside the solarwinds_apm package to modify agent logging behaviour.
+    This function expects the level to be one of the integer representations
+    defined in ApmLoggingLevel.debug_levels. If invalid, the logging level
+    will not be changed and a warning will be emitted.
+
+    This function should not be used from outside the solarwinds_apm package.
+
+    Parameters:
+    level (int): The logging level to set.
     """
     if ApmLoggingLevel.is_valid_level(level):
         logger.setLevel(ApmLoggingLevel.logging_map[level])

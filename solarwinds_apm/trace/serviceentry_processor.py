@@ -4,6 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+"""Service entry span processor for transaction name management and context tracking."""
+
 # TODO: Remove when Python < 3.10 support dropped
 from __future__ import annotations
 
@@ -18,8 +20,8 @@ from opentelemetry.semconv.trace import SpanAttributes
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
+    INTL_SWO_TRANSACTION_ATTR_KEY,
     INTL_SWO_TRANSACTION_ATTR_MAX,
-    INTL_SWO_TRANSACTION_NAME_ATTR,
 )
 from solarwinds_apm.oboe import get_transaction_name_pool
 from solarwinds_apm.oboe.transaction_name_calculator import (
@@ -37,17 +39,35 @@ logger = logging.getLogger(__name__)
 
 
 class ServiceEntrySpanProcessor(SpanProcessor):
+    """
+    Span processor for managing service entry spans.
+
+    Handles transaction name calculation and context tracking for service entry spans,
+    which are spans without valid local parents.
+    """
+
     def __init__(self) -> None:
+        """
+        Initialize the ServiceEntrySpanProcessor.
+        """
         self.context_tokens = {}
 
     def set_default_transaction_name(
         self,
         span: Span,
-        pool: "TransactionNamePool",
+        pool: TransactionNamePool,
         attribute_value: str,
         resolve: bool = False,
     ) -> None:
-        """Register transaction name and set as span attribute TransactionName"""
+        """
+        Register transaction name in pool and set as span attribute.
+
+        Parameters:
+        span (Span): The span to set the transaction name on.
+        pool (TransactionNamePool): The transaction name pool for registration.
+        attribute_value (str): The transaction name value to register.
+        resolve (bool): Whether to resolve the transaction name (e.g., for URL paths). Defaults to False.
+        """
         transaction_name = attribute_value
         if resolve:
             transaction_name = resolve_transaction_name(attribute_value)
@@ -58,16 +78,18 @@ class ServiceEntrySpanProcessor(SpanProcessor):
                 TRANSACTION_NAME_DEFAULT,
                 W3CTransformer.trace_and_span_id_from_context(span.context),
             )
-        span.set_attribute(INTL_SWO_TRANSACTION_NAME_ATTR, registered_name)
+        span.set_attribute(INTL_SWO_TRANSACTION_ATTR_KEY, registered_name)
 
     def on_start(
         self,
         span: Span,
         parent_context: context.Context | None = None,
     ) -> None:
-        """Calculates default transaction name for span and metrics following this order
-        of decreasing precedence, truncated to 255 char:
+        """
+        Calculate default transaction name and cache entry span for custom naming.
 
+        Calculates transaction name for span and metrics following this order
+        of decreasing precedence, truncated to 255 char:
         1. SW_APM_TRANSACTION_NAME
         2. Any instrumentor-set span attributes for FaaS
         3. AWS_LAMBDA_FUNCTION_NAME
@@ -75,7 +97,11 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         5. Span name (default)
         6. "other" (when the transaction name pool limit reached)
 
-        If entry span, caches it at its trace ID. Used for custom transaction naming.
+        If entry span, caches it in context for custom transaction naming.
+
+        Parameters:
+        span (Span): The span that is starting.
+        parent_context (context.Context | None): The parent context, if any. Defaults to None.
         """
         # Only caches for service entry spans
         parent_span_context = span.parent
@@ -138,7 +164,16 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         )
         self.context_tokens[entry_trace_span_id] = token
 
-    def on_end(self, span: "ReadableSpan") -> None:
+    def on_end(self, span: ReadableSpan) -> None:
+        """
+        Clean up context for service entry spans.
+
+        Detaches and removes the context token for entry spans.
+        Only processes service entry spans (spans without valid local parent).
+
+        Parameters:
+        span (ReadableSpan): The span that has ended.
+        """
         # Only attempt for service entry spans
         parent_span_context = span.parent
         if (

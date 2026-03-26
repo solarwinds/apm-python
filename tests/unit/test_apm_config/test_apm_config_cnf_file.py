@@ -129,7 +129,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("trigger_trace") == 1
         assert resulting_config.get("collector") == "foo-bar"
         assert resulting_config.get("debug_level") == 6
-        assert resulting_config.get("export_logs_enabled") == True
 
         # update_transaction_filters was called
         mock_update_txn_filters.assert_called_once_with(fixture_cnf_dict)
@@ -189,7 +188,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("tracing_mode") == -1
         assert resulting_config.get("trigger_trace") == 1
         assert resulting_config.get("debug_level") == 2
-        assert resulting_config.get("export_logs_enabled") == False
         # Meanwhile these are pretty open
         assert resulting_config.get("collector") == "False"
 
@@ -217,7 +215,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_TRIGGER_TRACE": "disabled",
             "SW_APM_COLLECTOR": "other-foo-bar",
             "SW_APM_DEBUG_LEVEL": "5",
-            "SW_APM_EXPORT_LOGS_ENABLED": "true",
         })
         mock_update_txn_filters = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
@@ -250,7 +247,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("trigger_trace") == 0
         assert resulting_config.get("collector") == "other-foo-bar"
         assert resulting_config.get("debug_level") == 5
-        assert resulting_config.get("export_logs_enabled") == True
 
         # Restore old collector
         if old_collector:
@@ -274,7 +270,6 @@ class TestSolarWindsApmConfigCnfFile:
             "SW_APM_TRIGGER_TRACE": "other-foo-bar",
             "SW_APM_COLLECTOR": "False",
             "SW_APM_DEBUG_LEVEL": "other-foo-bar",
-            "SW_APM_EXPORT_LOGS_ENABLED": "not-a-bool",
         })
         mock_update_txn_filters = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
@@ -307,7 +302,6 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("tracing_mode") == 1
         assert resulting_config.get("trigger_trace") == 1
         assert resulting_config.get("debug_level") == 6
-        assert resulting_config.get("export_logs_enabled") == True
 
         # These are still valid, so env_var > cnf_file
         assert resulting_config.get("collector") == "False"

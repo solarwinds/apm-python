@@ -106,11 +106,8 @@ function run_instrumented_server_and_client(){
 
 
 # START TESTING ===========================================
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    HOSTNAME=$(scutil --get LocalHostName)
-else
-    HOSTNAME=$(cat /etc/hostname)
-fi
+# Use Python's socket.gethostname() to match what the agent actually uses on all platforms
+HOSTNAME=$(python -c "import socket; print(socket.gethostname())")
 
 # Default to docker-compose-set root of local solarwinds_apm package
 if [ -z "$APM_ROOT" ]

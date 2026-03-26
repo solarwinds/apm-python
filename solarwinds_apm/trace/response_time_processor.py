@@ -4,6 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+"""Response time span processor for recording trace metrics."""
+
 import logging
 from typing import TYPE_CHECKING
 
@@ -15,7 +17,6 @@ from opentelemetry.trace import SpanKind, StatusCode
 from solarwinds_apm.apm_constants import (
     INTL_SWO_TRANSACTION_ATTR_KEY,
     INTL_SWO_TRANSACTION_ATTR_MAX,
-    INTL_SWO_TRANSACTION_NAME_ATTR,
 )
 
 if TYPE_CHECKING:
@@ -28,8 +29,21 @@ logger = logging.getLogger(__name__)
 
 
 class ResponseTimeProcessor(SpanProcessor):
-    """SolarWinds span processor for recording response_time metrics."""
+    """
+    SolarWinds span processor for recording response_time metrics.
 
+    This processor calculates and reports OTLP trace metrics for service entry spans,
+    including response time, error status, and HTTP-specific attributes.
+    """
+
+    _HTTP_REQUEST_METHOD = (
+        SpanAttributes.HTTP_REQUEST_METHOD
+    )  # http.request.method
+    _HTTP_RESPONSE_STATUS_CODE = (
+        SpanAttributes.HTTP_RESPONSE_STATUS_CODE
+    )  # "http.response.status_code"
+
+    # Deprecated, but potentially still used by some instrumentors
     _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
     _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
 
@@ -39,6 +53,12 @@ class ResponseTimeProcessor(SpanProcessor):
         self,
         apm_config: "SolarWindsApmConfig",
     ) -> None:
+        """
+        Initialize the ResponseTimeProcessor.
+
+        Parameters:
+        apm_config (SolarWindsApmConfig): The APM configuration object.
+        """
         super().__init__()
         self.service_name = apm_config.service_name
         # SW_APM_TRANSACTION_NAME and AWS_LAMBDA_FUNCTION_NAME
@@ -53,27 +73,36 @@ class ResponseTimeProcessor(SpanProcessor):
         )
 
     def is_span_http(self, span: "ReadableSpan") -> bool:
-        """This span from inbound HTTP request if from a SERVER by some http.method"""
-        if span.kind == SpanKind.SERVER and span.attributes.get(
-            self._HTTP_METHOD, None
-        ):
-            return True
-        return False
+        """
+        Determine if a span represents an inbound HTTP request.
 
-    def get_http_status_code(self, span: "ReadableSpan") -> int:
-        """Calculate HTTP status_code from span or default to UNAVAILABLE"""
-        status_code = span.attributes.get(self._HTTP_STATUS_CODE, None)
-        # Something went wrong in OTel or instrumented service crashed early
-        # if no status_code in attributes of HTTP span
-        if not status_code:
-            status_code = self._HTTP_SPAN_STATUS_UNAVAILABLE
-        return status_code
+        Checks if the span is from a SERVER and has http.request.method or http.method attribute.
+
+        Parameters:
+        span (ReadableSpan): The span to check.
+
+        Returns:
+        bool: True if the span is an HTTP server span, False otherwise.
+        """
+        return bool(
+            span.kind == SpanKind.SERVER
+            and (
+                span.attributes.get(self._HTTP_REQUEST_METHOD, None)
+                or span.attributes.get(self._HTTP_METHOD, None)
+            )
+        )
 
     def has_error(self, span: "ReadableSpan") -> bool:
-        """Calculate if this span instance has_error"""
-        if span.status.status_code == StatusCode.ERROR:
-            return True
-        return False
+        """
+        Check if a span has an error status.
+
+        Parameters:
+        span (ReadableSpan): The span to check.
+
+        Returns:
+        bool: True if the span status is ERROR, False otherwise.
+        """
+        return span.status.status_code == StatusCode.ERROR
 
     def calculate_span_time(
         self,
@@ -81,9 +110,19 @@ class ResponseTimeProcessor(SpanProcessor):
         end_time: int,
         time_conversion: int = 1e3,
     ) -> int:
-        """Calculate span time (via time_conversion e.g. 1e3, 1e6)
-        using start and end time in nanoseconds (ns). OTel span
-        start/end_time are optional."""
+        """
+        Calculate span duration with specified time unit conversion.
+
+        Uses start and end time in nanoseconds (ns). OTel span start/end_time are optional.
+
+        Parameters:
+        start_time (int): The span start time in nanoseconds.
+        end_time (int): The span end time in nanoseconds.
+        time_conversion (int): The conversion factor for time units (e.g., 1e3 for microseconds, 1e6 for milliseconds). Defaults to 1e3.
+
+        Returns:
+        int: The calculated span duration in the converted time unit, or 0 if start or end time is missing.
+        """
         if not start_time or not end_time:
             return 0
         ms_start_time = int(start_time // time_conversion)
@@ -94,15 +133,22 @@ class ResponseTimeProcessor(SpanProcessor):
         self,
         span_name: str,
     ) -> str:
-        """Calculate transaction name for OTLP metrics following this order
-        of decreasing precedence, truncated to 255 char:
+        """
+        Calculate transaction name for OTLP metrics with fallback hierarchy.
 
+        Follows this order of decreasing precedence, truncated to 255 char:
         1. SW_APM_TRANSACTION_NAME
         2. AWS_LAMBDA_FUNCTION_NAME
         3. automated naming from span name
         4. "unknown" backup, to match core lib
 
         See also _SwSampler.calculate_otlp_transaction_name
+
+        Parameters:
+        span_name (str): The name of the span to use as fallback.
+
+        Returns:
+        str: The calculated transaction name, truncated to 255 characters.
         """
         if self.env_transaction_name:
             return self.env_transaction_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
@@ -115,8 +161,67 @@ class ResponseTimeProcessor(SpanProcessor):
 
         return "unknown"
 
+    def enhance_meter_attrs_with_http_span_attrs(
+        self, span: "ReadableSpan", meter_attrs: dict
+    ) -> dict:
+        """
+        Enhance metrics attributes with HTTP span attributes.
+
+        Adds status code and request method from span if available.
+        Current span attributes take precedence over deprecated attributes for metrics values.
+        APM uses current attributes for metrics keys.
+
+        Default metrics attribute status code value is unavailable (0).
+        No default for method; unset if not present on span.
+
+        Parameters:
+        span (ReadableSpan): The span to extract HTTP attributes from.
+        meter_attrs (dict): The metrics attributes dictionary to enhance.
+
+        Returns:
+        dict: The enhanced metrics attributes dictionary.
+        """
+        status_code_new = span.attributes.get(
+            self._HTTP_RESPONSE_STATUS_CODE, None
+        )
+        status_code_old = span.attributes.get(self._HTTP_STATUS_CODE, None)
+        if status_code_new and status_code_new > 0:
+            meter_attrs.update(
+                {self._HTTP_RESPONSE_STATUS_CODE: status_code_new}
+            )
+        elif status_code_old and status_code_old > 0:
+            meter_attrs.update(
+                {self._HTTP_RESPONSE_STATUS_CODE: status_code_old}
+            )
+        # Something went wrong in OTel or instrumented service crashed early
+        # if no status_code, current nor deprecated, in attributes of HTTP span
+        else:
+            meter_attrs.update(
+                {
+                    self._HTTP_RESPONSE_STATUS_CODE: self._HTTP_SPAN_STATUS_UNAVAILABLE
+                }
+            )
+
+        request_method_new = span.attributes.get(
+            self._HTTP_REQUEST_METHOD, None
+        )
+        request_method_old = span.attributes.get(self._HTTP_METHOD, None)
+        if request_method_new:
+            meter_attrs.update({self._HTTP_REQUEST_METHOD: request_method_new})
+        elif request_method_old:
+            meter_attrs.update({self._HTTP_REQUEST_METHOD: request_method_old})
+
+        return meter_attrs
+
     def on_end(self, span: "ReadableSpan") -> None:
-        """Calculates and reports OTLP trace metrics"""
+        """
+        Calculate and report OTLP trace metrics for service entry spans.
+
+        Only processes service entry spans (spans without valid local parent).
+
+        Parameters:
+        span (ReadableSpan): The span that has ended.
+        """
         # Only calculate OTLP metrics for service entry spans
         parent_span_context = span.parent
         if (
@@ -126,7 +231,7 @@ class ResponseTimeProcessor(SpanProcessor):
         ):
             return
 
-        trans_name = span.attributes.get(INTL_SWO_TRANSACTION_NAME_ATTR, None)
+        trans_name = span.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY, None)
 
         meter_attrs = {}
         has_error = self.has_error(span)
@@ -145,13 +250,9 @@ class ResponseTimeProcessor(SpanProcessor):
 
         meter_attrs.update({INTL_SWO_TRANSACTION_ATTR_KEY: trans_name})
         if is_span_http:
-            status_code = self.get_http_status_code(span)
-            # UNAVAILABLE is zero
-            if status_code > 0:
-                meter_attrs.update({self._HTTP_STATUS_CODE: status_code})
-            request_method = span.attributes.get(self._HTTP_METHOD, None)
-            if request_method:
-                meter_attrs.update({self._HTTP_METHOD: request_method})
+            meter_attrs = self.enhance_meter_attrs_with_http_span_attrs(
+                span, meter_attrs
+            )
 
         self.response_time.record(
             amount=span_time,

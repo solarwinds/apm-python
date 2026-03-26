@@ -91,17 +91,27 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         fi
 
     elif grep "Amazon Linux" /etc/os-release; then
-        yum update -y
         if grep "Amazon Linux 2023" /etc/os-release; then
-            yum install -y \
+            dnf update -y
+            dnf install -y \
                 python3 \
                 python3-pip \
                 unzip \
                 findutils \
                 tar \
-                gzip
-            update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-            # cannot symlink/update-alternatives nor upgrade pip
+                gzip \
+                bash \
+                chkconfig
+
+            if command -v update-alternatives >/dev/null 2>&1; then
+                update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+            else
+                # For AWS Lambda images or other minimal images, use symlinks
+                command -v python ||
+                    ln -s /usr/bin/python3 /usr/local/bin/python
+                command -v pip ||
+                    ln -s /usr/bin/pip3 /usr/local/bin/pip
+            fi
         else
             echo "ERROR: Testing on Amazon <2023 not supported."
             exit 1

@@ -4,7 +4,73 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-4.1.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-6.0.0...HEAD)
+
+## [6.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-6.0.0) - 2026-03-25
+
+### Changed
+- Replaced legacy `TransactionName` attribute with `sw.transaction` ([#748](https://github.com/solarwinds/apm-python/pull/748))
+- Breaking: upgraded to OTel Python 1.40.0/0.61.b0 and changed Logging SDK configuration ([#749](https://github.com/solarwinds/apm-python/pull/749))
+
+## [5.2.1](https://github.com/solarwinds/apm-python/releases/tag/rel-5.2.1) - 2025-12-16
+
+### Added
+- Added Copilot instructions ([#723](https://github.com/solarwinds/apm-python/pull/723))
+
+### Changed
+- Fix type hints, docstrings ([#724](https://github.com/solarwinds/apm-python/pull/724), [#725](https://github.com/solarwinds/apm-python/pull/725), [#726](https://github.com/solarwinds/apm-python/pull/726), [#727](https://github.com/solarwinds/apm-python/pull/727), [#728](https://github.com/solarwinds/apm-python/pull/728), [#729](https://github.com/solarwinds/apm-python/pull/729), [#730](https://github.com/solarwinds/apm-python/pull/730), [#731](https://github.com/solarwinds/apm-python/pull/731))
+- Upgraded to OTel Python 1.39.1/0.60b1 ([#732](https://github.com/solarwinds/apm-python/pull/732))
+- Fix tests, remove unused param ([#733](https://github.com/solarwinds/apm-python/pull/733))
+
+## [5.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.2.0) - 2025-12-09
+
+### Changed
+- Fixed thread safety of token bucket ([#712](https://github.com/solarwinds/apm-python/pull/712))
+- Updated distro to always opt into `database` new semconv if supported by instrumentation ([#713](https://github.com/solarwinds/apm-python/pull/713))
+- Updated workflows for PyPI trusted publishing ([#719](https://github.com/solarwinds/apm-python/pull/719))
+- Upgraded to OTel Python 1.39.0/0.60b0 ([#720](https://github.com/solarwinds/apm-python/pull/720))
+
+## [5.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.1.0) - 2025-10-21
+
+### Changed
+- Upgraded to OTel Python 1.37.0/0.58b0 ([#699](https://github.com/solarwinds/apm-python/pull/699))
+- Updated style for pylint 4.0 ([#703](https://github.com/solarwinds/apm-python/pull/703))
+- Fixed APM metrics attributes calculation ([#704](https://github.com/solarwinds/apm-python/pull/704))
+- Upgraded to OTel Python 1.38.0/0.59b0 ([#705](https://github.com/solarwinds/apm-python/pull/705))
+
+## [5.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-5.0.0) - 2025-09-10
+
+### Added
+- Added ruff CI/CD ([#682](https://github.com/solarwinds/apm-python/pull/682), [#685](https://github.com/solarwinds/apm-python/pull/685))
+- Added `resource-detector-containerid` to default detectors ([#691](https://github.com/solarwinds/apm-python/pull/691))
+
+### Changed
+- Fixed PyPI publishing naming ([#676](https://github.com/solarwinds/apm-python/pull/676))
+- Upgraded CI/CD actions with condition for older Alpine OS ([#679](https://github.com/solarwinds/apm-python/pull/679))
+- Breaking: `solarwinds_propagator` cannot be used with `tracecontext`; `OTEL_PROPAGATOR` configuration requirements changed ([#687](https://github.com/solarwinds/apm-python/pull/687))
+- Breaking: dropped support of `SW_APM_EXPORT_LOGS_ENABLED`, please instead use `OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED` ([#688](https://github.com/solarwinds/apm-python/pull/688), [#692](https://github.com/solarwinds/apm-python/pull/692))
+
+### Removed
+- Breaking: removed warning of already-dropped `integer_response` argument for SDK `solarwinds_ready` ([#689](https://github.com/solarwinds/apm-python/pull/689))
+- Breaking: removed already-no-op legacy span exporter ([#690](https://github.com/solarwinds/apm-python/pull/690))
+
+
+## [4.3.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.3.0) - 2025-08-07
+
+### Changed
+- Updated configurator Resource creation with `service.instance.id` ([#666](https://github.com/solarwinds/apm-python/pull/666))
+- Updated Lambda layer tags and testing for Python 3.13 ([#667](https://github.com/solarwinds/apm-python/pull/667))
+- Upgraded to OTel Python 1.35.0/0.56b0 ([#668](https://github.com/solarwinds/apm-python/pull/668))
+- Cleaned up constants ([#669](https://github.com/solarwinds/apm-python/pull/669))
+- Upgraded to OTel Python 1.36.0/0.57b0 ([#672](https://github.com/solarwinds/apm-python/pull/672))
+
+## [4.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.2.0) - 2025-07-15
+
+### Changed
+- Updated default histogram aggregation to exponential ([#650](https://github.com/solarwinds/apm-python/pull/650))
+- Upgraded to OTel Python 1.34.1/0.55b1 ([#657](https://github.com/solarwinds/apm-python/pull/657))
+- Removed unnecessary try-except when auto-instrumentation handles all exceptions ([#660](https://github.com/solarwinds/apm-python/pull/660))
+- Updated pylint max-positional-arguments ([#661](https://github.com/solarwinds/apm-python/pull/661))
 
 ## [4.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-4.1.0) - 2025-05-21
 
