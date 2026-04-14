@@ -393,9 +393,16 @@ class SolarWindsApmConfig:
                 "unknown_service"
             ):
                 # When agent_enabled, assume service_key exists and is formatted correctly.
-                service_name = self.__config.get("service_key", ":").split(
-                    ":"
-                )[1]
+                # This is a precaution.
+                try:
+                    service_name = self.__config.get("service_key", ":").split(
+                        ":"
+                    )[1]
+                except IndexError:
+                    logger.warning(
+                        "Failed to extract service name from service_key, using default"
+                    )
+                    service_name = ""
             else:
                 service_name = otel_service_name
         return service_name
@@ -443,14 +450,24 @@ class SolarWindsApmConfig:
         if agent_enabled and service_key and service_name:
             # Only update if service_name and service_key exist and non-empty,
             # and service_key in correct format.
-            key_parts = service_key.split(":")
+            try:
+                key_parts = service_key.split(":")
+            except AttributeError:
+                logger.debug("Service key is not a valid string. Skipping.")
+                return service_key
             if len(key_parts) < 2:
                 logger.debug(
                     "Service key is not in the correct format to update its own service name. Skipping."
                 )
                 return service_key
 
-            return ":".join([service_key.split(":")[0], service_name])
+            try:
+                return ":".join([service_key.split(":")[0], service_name])
+            except (AttributeError, IndexError):
+                logger.debug(
+                    "Failed to update service key with service name. Skipping."
+                )
+                return service_key
 
         # Else no need to update service_key when not reporting
         return service_key
@@ -465,12 +482,15 @@ class SolarWindsApmConfig:
         service_key = self.__config.get("service_key")
         if not service_key:
             return ""
-        if service_key.strip() == "":
-            return service_key
 
-        key_parts = service_key.split(":")
+        try:
+            if service_key.strip() == "":
+                return service_key
+            key_parts = service_key.split(":")
+        except AttributeError:
+            return ""
         if len(key_parts) < 2:
-            bad_format_key = key_parts[0]
+            bad_format_key = key_parts[0] if key_parts else ""
             if len(bad_format_key) < 5:
                 return self._KEY_MASK_BAD_FORMAT_SHORT.format(bad_format_key)
             return self._KEY_MASK_BAD_FORMAT.format(
@@ -624,7 +644,10 @@ class SolarWindsApmConfig:
         """Update configuration settings from config file (JSON), if any."""
 
         def _snake_to_camel_case(key):
-            key_parts = key.split("_")
+            try:
+                key_parts = key.split("_")
+            except AttributeError:
+                return key
             camel_head = key_parts[0]
             camel_body = "".join(part.title() for part in key_parts[1:])
             return f"{camel_head}{camel_body}"
@@ -855,11 +878,14 @@ class SolarWindsApmConfig:
         Returns:
         Configuration: Configuration object for sampler initialization.
         """
-        token = (
-            apm_config.get("service_key").split(":")[0]
-            if len(apm_config.get("service_key").split(":")) > 0
-            else ""
-        )
+        try:
+            token = (
+                apm_config.get("service_key").split(":")[0]
+                if len(apm_config.get("service_key").split(":")) > 0
+                else ""
+            )
+        except (AttributeError, IndexError):
+            token = ""
         filters = apm_config.get("transaction_filters")
         transaction_settings = []
         for transaction_filter in filters:

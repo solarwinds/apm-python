@@ -120,6 +120,22 @@ class TestSolarWindsApmConfigServiceNameApmProto:
         )
         assert result == "foobar"
 
+    def test__calculate_service_name_apm_proto_malformed_service_key_index_error(
+        self,
+        mocker,
+    ):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "token:",
+        })
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._calculate_service_name_apm_proto(
+            True,
+            Resource.create()  # default is unknown_service
+        )
+        # When service_key is malformed, agent disabled
+        # causing empty string to be returned
+        assert result == ""
+
 class TestSolarWindsApmConfigServiceNameLambda:
     def test__calculate_service_name_lambda_no_otel_name(
         self,

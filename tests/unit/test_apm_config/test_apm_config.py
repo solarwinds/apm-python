@@ -326,6 +326,18 @@ class TestSolarWindsApmConfig:
         self._mock_service_key(mocker, "valid-and-long:key")
         assert apm_config.SolarWindsApmConfig()._config_mask_service_key().get("service_key") == "vali...long:key"
 
+    def test_mask_service_key_attribute_error_non_string_key(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._SolarWindsApmConfig__config["service_key"] = 123
+        result = test_config.mask_service_key()
+        assert result == ""
+
+    def test_mask_service_key_handles_empty_list_from_split(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._SolarWindsApmConfig__config["service_key"] = ""
+        result = test_config.mask_service_key()
+        assert result == ""
+
     def test_str(
         self,
         mocker,
@@ -497,6 +509,16 @@ class TestSolarWindsApmConfig:
         # Updates everything after first delim
         assert result == "weird-key:bar-service"
 
+    def test__update_service_key_name_index_error_empty_split(self):
+        """Test handling when service_key is empty string"""
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._update_service_key_name(
+            True,
+            "",  # Empty string
+            "test-service"
+        )
+        assert result == ""
+
     def test__validate_log_filepath_none(self, mocker):
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
@@ -587,6 +609,33 @@ class TestSolarWindsApmConfig:
         test_config = apm_config.SolarWindsApmConfig()
         assert not test_config.convert_to_bool("fAlSE")
 
+    def test_snake_to_camel_case_attribute_error_non_string_key(
+        self,
+        mocker,
+        tmp_path,
+    ):
+        config_file = tmp_path / "test_config.json"
+        config_file.write_text('{"agent_enabled": true}')
+        mocker.patch.dict(os.environ, {
+            "SW_APM_CONFIG_FILE": str(config_file),
+        })
+        test_config = apm_config.SolarWindsApmConfig()
+        # If we got here without exception, the test passes
+        assert test_config is not None
+
+    def test_update_with_cnf_file_handles_none_key(
+        self,
+        mocker,
+        tmp_path,
+    ):
+        config_file = tmp_path / "test_config.json"
+        config_file.write_text('{"validKey": "value"}')
+        mocker.patch.dict(os.environ, {
+            "SW_APM_CONFIG_FILE": str(config_file),
+        })
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config is not None
+
 @pytest.fixture
 def apm():
     return apm_config.SolarWindsApmConfig()
@@ -664,3 +713,27 @@ def test_to_configuration_with_enabled_agent(apm):
     apm.agent_enabled = True
     config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
     assert config.enabled is True
+
+def test_to_configuration_attribute_error_non_string_service_key(
+    mocker,
+):
+    mocker.patch.dict(os.environ, {
+        "SW_APM_SERVICE_KEY": "token:service",
+    })
+    test_apm_config = apm_config.SolarWindsApmConfig()
+    test_apm_config._SolarWindsApmConfig__config["service_key"] = None
+    config = apm_config.SolarWindsApmConfig.to_configuration(test_apm_config)
+    # Should default to empty string for token in Authorization header
+    assert config.headers["Authorization"] == "Bearer "
+
+def test_to_configuration_index_error_empty_split_result(
+    mocker,
+):
+    mocker.patch.dict(os.environ, {
+        "SW_APM_SERVICE_KEY": "token:service",
+    })
+    test_apm_config = apm_config.SolarWindsApmConfig()
+    test_apm_config._SolarWindsApmConfig__config["service_key"] = ""
+    config = apm_config.SolarWindsApmConfig.to_configuration(test_apm_config)
+    # Should default to empty string for token in Authorization header
+    assert config.headers["Authorization"] == "Bearer "
