@@ -61,6 +61,8 @@ class XTraceOptions:
                 traceoptions = re.split(r";+", xtraceoptions_header)
             except (TypeError, AttributeError) as exc:
                 logger.debug("Failed to parse x-trace-options header: %s", exc)
+                self.options_header = ""
+                self.include_response = False
                 return
             for option in traceoptions:
                 # KVs (e.g. sw-keys or custom-key1) are assigned by equals
