@@ -463,13 +463,7 @@ class SolarWindsApmConfig:
                 )
                 return service_key
 
-            try:
-                return ":".join([service_key.split(":")[0], service_name])
-            except (AttributeError, IndexError):
-                logger.debug(
-                    "Failed to update service key with service name. Skipping."
-                )
-                return service_key
+            return ":".join([key_parts[0], service_name])
 
         # Else no need to update service_key when not reporting
         return service_key

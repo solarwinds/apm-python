@@ -503,16 +503,6 @@ class TestSolarWindsApmConfig:
         # Updates everything after first delim
         assert result == "weird-key:bar-service"
 
-    def test__update_service_key_name_index_error_empty_split(self):
-        """Test handling when service_key is empty string"""
-        test_config = apm_config.SolarWindsApmConfig()
-        result = test_config._update_service_key_name(
-            True,
-            "",  # Empty string
-            "test-service"
-        )
-        assert result == ""
-
     def test__validate_log_filepath_none(self, mocker):
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
