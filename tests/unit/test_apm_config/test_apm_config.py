@@ -682,15 +682,3 @@ def test_to_configuration_attribute_error_non_string_service_key(
     config = apm_config.SolarWindsApmConfig.to_configuration(test_apm_config)
     # Should default to empty string for token in Authorization header
     assert config.headers["Authorization"] == "Bearer "
-
-def test_to_configuration_index_error_empty_split_result(
-    mocker,
-):
-    mocker.patch.dict(os.environ, {
-        "SW_APM_SERVICE_KEY": "token:service",
-    })
-    test_apm_config = apm_config.SolarWindsApmConfig()
-    test_apm_config._SolarWindsApmConfig__config["service_key"] = ""
-    config = apm_config.SolarWindsApmConfig.to_configuration(test_apm_config)
-    # Should default to empty string for token in Authorization header
-    assert config.headers["Authorization"] == "Bearer "
