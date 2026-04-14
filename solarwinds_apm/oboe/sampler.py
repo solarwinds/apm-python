@@ -70,11 +70,14 @@ def http_span_metadata(kind: SpanKind, attributes: Attributes):
     method = str(
         attributes.get(HTTP_METHOD, attributes.get(HTTP_REQUEST_METHOD, ""))
     )
-    status = int(
-        attributes.get(
-            HTTP_RESPONSE_STATUS_CODE, attributes.get(HTTP_STATUS_CODE, 0)
+    try:
+        status = int(
+            attributes.get(
+                HTTP_RESPONSE_STATUS_CODE, attributes.get(HTTP_STATUS_CODE, 0)
+            )
         )
-    )
+    except (ValueError, TypeError):
+        status = 0
     scheme = str(
         attributes.get(URL_SCHEME, attributes.get(HTTP_SCHEME, "http"))
     )

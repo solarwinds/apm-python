@@ -376,9 +376,15 @@ def validate_signature(header, signature, key, timestamp):
         return Auth.NO_SIGNATURE_KEY
     if timestamp is None or abs(int(time.time()) - timestamp) > 5 * 60:
         return Auth.BAD_TIMESTAMP
-    digest = hmac.new(
-        str.encode(key), str.encode(header), hashlib.sha1
-    ).hexdigest()
+    try:
+        digest = hmac.new(
+            str.encode(key), str.encode(header), hashlib.sha1
+        ).hexdigest()
+    except (AttributeError, TypeError) as exc:
+        logger.warning(
+            "Failed to encode key or header for signature validation: %s", exc
+        )
+        return Auth.BAD_SIGNATURE
     if signature == digest:
         return Auth.OK
     return Auth.BAD_SIGNATURE

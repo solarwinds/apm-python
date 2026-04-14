@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import socket
 import threading
@@ -65,7 +66,13 @@ class HttpSampler(Sampler):
             self._url = f"https://{self._url}"
         self._service = config.service
         self._headers = config.headers
-        self._hostname = socket.gethostname()
+        try:
+            self._hostname = socket.gethostname()
+        except OSError as exc:
+            logger.warning(
+                "Failed to get hostname, using 'localhost': %s", exc
+            )
+            self._hostname = "localhost"
         self._last_warning_message = None
         self._shutdown_event = threading.Event()
         self._daemon_thread = threading.Thread(
@@ -152,4 +159,10 @@ class HttpSampler(Sampler):
         detach(token)
         response.raise_for_status()
         logger.debug("received sampling settings response %s", response.text)
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError as exc:
+            logger.warning(
+                "Failed to parse JSON response from sampling settings: %s", exc
+            )
+            return {}

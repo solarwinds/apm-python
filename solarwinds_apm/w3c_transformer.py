@@ -45,7 +45,10 @@ class W3CTransformer:
         Returns:
         str: The span ID portion of the sw value.
         """
-        return sw_val.split("-")[0]
+        try:
+            return sw_val.split("-")[0]
+        except (AttributeError, IndexError):
+            return ""
 
     @classmethod
     def trace_flags_from_int(cls, trace_flags: int) -> str:
