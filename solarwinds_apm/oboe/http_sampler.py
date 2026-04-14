@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import socket
 import threading
@@ -161,7 +160,7 @@ class HttpSampler(Sampler):
         logger.debug("received sampling settings response %s", response.text)
         try:
             return response.json()
-        except (ValueError, json.JSONDecodeError) as exc:
+        except ValueError as exc:
             logger.warning(
                 "Failed to parse JSON response from sampling settings: %s", exc
             )
