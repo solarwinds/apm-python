@@ -593,33 +593,6 @@ class TestSolarWindsApmConfig:
         test_config = apm_config.SolarWindsApmConfig()
         assert not test_config.convert_to_bool("fAlSE")
 
-    def test_snake_to_camel_case_attribute_error_non_string_key(
-        self,
-        mocker,
-        tmp_path,
-    ):
-        config_file = tmp_path / "test_config.json"
-        config_file.write_text('{"agent_enabled": true}')
-        mocker.patch.dict(os.environ, {
-            "SW_APM_CONFIG_FILE": str(config_file),
-        })
-        test_config = apm_config.SolarWindsApmConfig()
-        # If we got here without exception, the test passes
-        assert test_config is not None
-
-    def test_update_with_cnf_file_handles_none_key(
-        self,
-        mocker,
-        tmp_path,
-    ):
-        config_file = tmp_path / "test_config.json"
-        config_file.write_text('{"validKey": "value"}')
-        mocker.patch.dict(os.environ, {
-            "SW_APM_CONFIG_FILE": str(config_file),
-        })
-        test_config = apm_config.SolarWindsApmConfig()
-        assert test_config is not None
-
 @pytest.fixture
 def apm():
     return apm_config.SolarWindsApmConfig()

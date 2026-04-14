@@ -640,10 +640,7 @@ class SolarWindsApmConfig:
         """Update configuration settings from config file (JSON), if any."""
 
         def _snake_to_camel_case(key):
-            try:
-                key_parts = key.split("_")
-            except AttributeError:
-                return key
+            key_parts = key.split("_")
             camel_head = key_parts[0]
             camel_body = "".join(part.title() for part in key_parts[1:])
             return f"{camel_head}{camel_body}"
