@@ -7,7 +7,7 @@
 """Provides functionality to transform OpenTelemetry Data to SolarWinds Observability data."""
 
 from opentelemetry.sdk.trace import SpanContext
-from opentelemetry.trace.span import TraceState
+from opentelemetry.trace.span import INVALID_SPAN_ID, TraceState
 
 from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_RESPONSE_KEY
 
@@ -43,12 +43,13 @@ class W3CTransformer:
         sw_val (str): The sw tracestate value (format: "<span_id>-<flags>").
 
         Returns:
-        str: The span ID portion of the sw value.
+        str: The span ID portion of the sw value, or all-zero fallback when
+             input is not parseable.
         """
         try:
             return sw_val.split("-")[0]
-        except (AttributeError, IndexError):
-            return ""
+        except (AttributeError, TypeError):
+            return cls._SPAN_ID_HEX.format(INVALID_SPAN_ID)
 
     @classmethod
     def trace_flags_from_int(cls, trace_flags: int) -> str:
