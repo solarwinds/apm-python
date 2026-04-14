@@ -393,15 +393,17 @@ class SolarWindsApmConfig:
                 "unknown_service"
             ):
                 # When agent_enabled, assume service_key exists and is formatted correctly.
-                # This is a precaution.
-                try:
-                    service_name = self.__config.get("service_key", ":").split(
-                        ":"
-                    )[1]
-                except IndexError:
-                    logger.warning(
-                        "Failed to extract service name from service_key, using default"
-                    )
+                # This is a precaution. Validate defensively instead of relying on
+                # exception handling so unexpected non-string values cannot crash
+                # the instrumented application.
+                service_key = self.__config.get("service_key", ":")
+                if isinstance(service_key, str):
+                    service_key_parts = service_key.split(":", 1)
+                    if len(service_key_parts) > 1:
+                        service_name = service_key_parts[1]
+                    else:
+                        service_name = ""
+                else:
                     service_name = ""
             else:
                 service_name = otel_service_name
