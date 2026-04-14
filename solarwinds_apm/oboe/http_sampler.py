@@ -161,7 +161,7 @@ class HttpSampler(Sampler):
         logger.debug("received sampling settings response %s", response.text)
         try:
             return response.json()
-        except json.JSONDecodeError as exc:
+        except (ValueError, json.JSONDecodeError) as exc:
             logger.warning(
                 "Failed to parse JSON response from sampling settings: %s", exc
             )

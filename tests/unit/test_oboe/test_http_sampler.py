@@ -3,6 +3,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+import json
 import os
 import socket
 from unittest.mock import patch, MagicMock
@@ -187,6 +188,34 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
         timeout=10)
     # one in constructor and one in test case
     assert mock_get.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "json_error",
+    [
+        ValueError("invalid json"),
+        json.JSONDecodeError("invalid json", "", 0),
+    ],
+)
+@patch("requests.get")
+def test_fetch_from_collector_invalid_json_returns_empty_dict_and_thread_survives(
+    mock_get, config, meter_provider, json_error
+):
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.side_effect = json_error
+    mock_get.return_value = mock_response
+
+    sampler = HttpSampler(meter_provider=meter_provider, config=config, initial=None)
+    try:
+        result = sampler._fetch_from_collector()
+        assert result == {}
+
+        # Verify parse failures in periodic work do not terminate the daemon thread.
+        sampler._task()
+        assert sampler._daemon_thread.is_alive()
+    finally:
+        sampler.shutdown()
 
 
 def test_shutdown(config, meter_provider):
