@@ -332,12 +332,6 @@ class TestSolarWindsApmConfig:
         result = test_config.mask_service_key()
         assert result == ""
 
-    def test_mask_service_key_handles_empty_list_from_split(self):
-        test_config = apm_config.SolarWindsApmConfig()
-        test_config._SolarWindsApmConfig__config["service_key"] = ""
-        result = test_config.mask_service_key()
-        assert result == ""
-
     def test_str(
         self,
         mocker,
