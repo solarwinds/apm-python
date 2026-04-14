@@ -121,12 +121,4 @@ class JsonSampler(Sampler):
         """
         with open(self._path, encoding="utf-8") as file:
             contents = file.read()
-        try:
-            return json.loads(contents)
-        except json.JSONDecodeError as exc:
-            logger.warning(
-                "Failed to parse JSON from settings file %s: %s",
-                self._path,
-                exc,
-            )
-            raise
+        return json.loads(contents)
