@@ -44,6 +44,17 @@ class TestXTraceOptions():
         assert xto.timestamp == 0
         assert not xto.include_response
 
+    def test_init_invalid_non_string_header_treated_as_absent(self):
+        xto = XTraceOptions(123, "bar")
+        assert xto.ignored == []
+        assert xto.options_header == ""
+        assert xto.signature == "bar"
+        assert xto.custom_kvs == {}
+        assert xto.sw_keys == ""
+        assert xto.trigger_trace == 0
+        assert xto.timestamp == 0
+        assert not xto.include_response
+
     def test_init_xtraceoption_and_signature(self):
         xto = XTraceOptions("foo", "bar")
         assert xto.ignored == ["foo"]

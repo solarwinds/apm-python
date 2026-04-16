@@ -449,7 +449,14 @@ class OboeSampler(Sampler, ABC):
 
         if s.settings and s.settings.flags & Flags.SAMPLE_THROUGH_ALWAYS:
             logger.debug("SAMPLE_THROUGH_ALWAYS is set; parent-based sampling")
-            flags = int(s.trace_state[-2:], 16)
+            try:
+                flags = int(s.trace_state[-2:], 16)
+            except (ValueError, IndexError, TypeError) as exc:
+                logger.warning(
+                    "Failed to parse trace flags from trace_state; record only: %s",
+                    exc,
+                )
+                return Decision.RECORD_ONLY
             if flags & TraceFlags.SAMPLED:
                 logger.debug("parent is sampled; record and sample")
                 self.counters.trace_count.add(1, {}, parent_context)

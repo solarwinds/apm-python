@@ -57,7 +57,13 @@ class XTraceOptions:
             # If x-trace-options header given, set response header
             self.include_response = True
 
-            traceoptions = re.split(r";+", xtraceoptions_header)
+            try:
+                traceoptions = re.split(r";+", xtraceoptions_header)
+            except (TypeError, AttributeError) as exc:
+                logger.debug("Failed to parse x-trace-options header: %s", exc)
+                self.options_header = ""
+                self.include_response = False
+                return
             for option in traceoptions:
                 # KVs (e.g. sw-keys or custom-key1) are assigned by equals
                 option_kv = option.split("=", 1)
@@ -106,7 +112,7 @@ class XTraceOptions:
                     try:
                         if not self.timestamp:
                             self.timestamp = int(option_kv[1])
-                    except ValueError:
+                    except (ValueError, IndexError):
                         logger.debug("ts must be base 10 int. Ignoring.")
                         self.ignored.append(self._XTRACEOPTIONS_HEADER_KEY_TS)
 

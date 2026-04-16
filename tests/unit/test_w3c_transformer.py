@@ -31,6 +31,9 @@ class TestW3CTransformer():
     def test_span_id_from_sw(self):
         assert W3CTransformer.span_id_from_sw("foo-bar") == "foo"
 
+    def test_span_id_from_sw_invalid_type_returns_zero_fallback(self):
+        assert W3CTransformer.span_id_from_sw(None) == "{:016x}".format(0)
+
     def test_trace_flags_from_int(self):
         assert W3CTransformer.trace_flags_from_int(1) == "01"
 
