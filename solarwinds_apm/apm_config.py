@@ -872,11 +872,7 @@ class SolarWindsApmConfig:
         Configuration: Configuration object for sampler initialization.
         """
         try:
-            token = (
-                apm_config.get("service_key").split(":")[0]
-                if len(apm_config.get("service_key").split(":")) > 0
-                else ""
-            )
+            token = apm_config.get("service_key").split(":")[0]
         except (AttributeError, IndexError):
             token = ""
         filters = apm_config.get("transaction_filters")

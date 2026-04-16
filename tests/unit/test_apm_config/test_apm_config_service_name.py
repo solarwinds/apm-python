@@ -138,9 +138,6 @@ class TestSolarWindsApmConfigServiceNameApmProto:
         self,
         mocker,
     ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "valid:service",
-        })
         test_config = apm_config.SolarWindsApmConfig()
         test_config._SolarWindsApmConfig__config["service_key"] = 123
         result = test_config._calculate_service_name_apm_proto(
