@@ -326,6 +326,12 @@ class TestSolarWindsApmConfig:
         self._mock_service_key(mocker, "valid-and-long:key")
         assert apm_config.SolarWindsApmConfig()._config_mask_service_key().get("service_key") == "vali...long:key"
 
+    def test_mask_service_key_attribute_error_non_string_key(self):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._SolarWindsApmConfig__config["service_key"] = 123
+        result = test_config.mask_service_key()
+        assert result == ""
+
     def test_str(
         self,
         mocker,
@@ -664,3 +670,15 @@ def test_to_configuration_with_enabled_agent(apm):
     apm.agent_enabled = True
     config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
     assert config.enabled is True
+
+def test_to_configuration_attribute_error_non_string_service_key(
+    mocker,
+):
+    mocker.patch.dict(os.environ, {
+        "SW_APM_SERVICE_KEY": "token:service",
+    })
+    test_apm_config = apm_config.SolarWindsApmConfig()
+    test_apm_config._SolarWindsApmConfig__config["service_key"] = None
+    config = apm_config.SolarWindsApmConfig.to_configuration(test_apm_config)
+    # Should default to empty string for token in Authorization header
+    assert config.headers["Authorization"] == "Bearer "
