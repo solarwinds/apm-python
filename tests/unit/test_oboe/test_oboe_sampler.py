@@ -75,12 +75,18 @@ def make_request_headers(options=MakeRequestHeaders()) -> RequestHeaders:
 def check_counters(sampler, counter_names):
     counters = set(counter_names)
     sampler.metric_reader.collect()
+    metrics_data = sampler.metric_reader.get_metrics_data()
     if counters == set():
-        assert sampler.metric_reader.get_metrics_data() is None
+        assert metrics_data is None
     else:
-        assert len(sampler.metric_reader.get_metrics_data().resource_metrics) == 1
-        assert len(sampler.metric_reader.get_metrics_data().resource_metrics[0].scope_metrics) == 1
-        scope_metrics_data = sampler.metric_reader.get_metrics_data().resource_metrics[0].scope_metrics[0].metrics
+        assert metrics_data is not None
+        assert len(metrics_data.resource_metrics) == 1
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics
+        sampling_scope_metrics = [
+            sm for sm in scope_metrics if sm.scope.name == "sw.apm.sampling.metrics"
+        ]
+        assert len(sampling_scope_metrics) == 1
+        scope_metrics_data = sampling_scope_metrics[0].metrics
         assert len(counter_names) == len(scope_metrics_data)
         for m in scope_metrics_data:
             assert m.name in counters
