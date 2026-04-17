@@ -120,6 +120,32 @@ class TestSolarWindsApmConfigServiceNameApmProto:
         )
         assert result == "foobar"
 
+    def test__calculate_service_name_apm_proto_malformed_service_key_only_token(
+        self,
+        mocker,
+    ):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "token:",
+        })
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._calculate_service_name_apm_proto(
+            True,
+            Resource.create()  # default is unknown_service
+        )
+        assert result == ""
+
+    def test__calculate_service_name_apm_proto_non_string_service_key(
+        self,
+        mocker,
+    ):
+        test_config = apm_config.SolarWindsApmConfig()
+        test_config._SolarWindsApmConfig__config["service_key"] = 123
+        result = test_config._calculate_service_name_apm_proto(
+            True,
+            Resource.create()  # default is unknown_service
+        )
+        assert result == ""
+
 class TestSolarWindsApmConfigServiceNameLambda:
     def test__calculate_service_name_lambda_no_otel_name(
         self,

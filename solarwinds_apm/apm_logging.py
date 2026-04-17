@@ -148,7 +148,13 @@ def _get_logger() -> logging.Logger:
             )
             _logger.warning("")
         else:
-            log_level = int(envv_val)
+            try:
+                log_level = int(envv_val)
+            except (ValueError, TypeError) as exc:
+                _logger.warning(
+                    "Failed to parse SW_APM_DEBUG_LEVEL, using default: %s",
+                    exc,
+                )
 
     _logger.setLevel(ApmLoggingLevel.logging_map[log_level])
 

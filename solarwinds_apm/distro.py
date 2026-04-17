@@ -122,7 +122,11 @@ class SolarWindsDistro(BaseDistro):
             logger.debug("Missing service key")
             return None
         # Key must be at least one char + ":" + at least one other char
-        key_parts = [p for p in service_key.split(":") if len(p) > 0]
+        try:
+            key_parts = [p for p in service_key.split(":") if len(p) > 0]
+        except AttributeError:
+            logger.debug("Invalid service key format")
+            return None
         if len(key_parts) != 2:
             logger.debug("Incorrect service key format")
             return None
