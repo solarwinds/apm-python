@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-6.0.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-6.1.0...HEAD)
+
+## [6.1.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-6.1.0) - 2026-04-28
+
+### Changed
+- Add more exception handling ([#756](https://github.com/solarwinds/apm-python/pull/756), [#757](https://github.com/solarwinds/apm-python/pull/757))
+- Upgrade to OTel Python 1.41.0/0.62b0 ([#758](https://github.com/solarwinds/apm-python/pull/758))
+- Remove `boto` instrumentation from k8s image ([#759](https://github.com/solarwinds/apm-python/pull/759))
+- Upgrade to OTel Python 1.41.1/0.62b1 ([#762](https://github.com/solarwinds/apm-python/pull/762))
 
 ## [6.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-6.0.0) - 2026-03-25
 
