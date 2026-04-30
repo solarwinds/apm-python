@@ -394,7 +394,8 @@ class SolarWindsDistro(BaseDistro):
     def get_semconv_opt_in(self) -> str:
         """Return semantic convention opt-in configuration.
 
-        Always returns config to opt into new, stable HTTP and database semconv only.
+        Always returns config to opt into new, stable HTTP and database semconv,
+        as well as the latest experimental GenAI semconv (gen_ai_latest_experimental).
 
         Returns:
         str: Semantic convention stability opt-in string.
