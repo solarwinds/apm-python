@@ -229,7 +229,6 @@ class SolarWindsDistro(BaseDistro):
                 ",".join(INTL_SWO_DEFAULT_RESOURCE_DETECTORS),
             )
 
-        # TODO: Support other signal types when available
         # Always opt into new semconv for all instrumentors (if supported)
         environ["OTEL_SEMCONV_STABILITY_OPT_IN"] = self.get_semconv_opt_in()
 
@@ -395,7 +394,8 @@ class SolarWindsDistro(BaseDistro):
     def get_semconv_opt_in(self) -> str:
         """Return semantic convention opt-in configuration.
 
-        Always returns config to opt into new, stable HTTP and database semconv only.
+        Always returns config to opt into new, stable HTTP and database semconv,
+        as well as the latest experimental GenAI semconv (gen_ai_latest_experimental).
 
         Returns:
         str: Semantic convention stability opt-in string.
@@ -403,7 +403,4 @@ class SolarWindsDistro(BaseDistro):
         See also:
         https://github.com/open-telemetry/opentelemetry-python-contrib/blob/0a231e57f9722e6101194c6b38695addf23ab950/opentelemetry-instrumentation/src/opentelemetry/instrumentation/_semconv.py#L93-L99
         """
-        # TODO: Support other signal types when available
-        # return environ.get("OTEL_SEMCONV_STABILITY_OPT_IN")
-
-        return "http,database"
+        return "http,database,gen_ai_latest_experimental"
