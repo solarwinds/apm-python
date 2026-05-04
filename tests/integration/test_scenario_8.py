@@ -110,6 +110,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         new_span_id = traceparent_re_result.group(3)
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
+        assert new_trace_flags == trace_flags
         self.assert_valid_trace_flags(new_trace_flags)
         assert int(new_trace_flags, 16) & 0x01 == int(trace_flags, 16) & 0x01
 
@@ -307,6 +308,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         new_span_id = traceparent_re_result.group(3)
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
+        assert new_trace_flags == trace_flags
         self.assert_valid_trace_flags(new_trace_flags)
         assert int(new_trace_flags, 16) & 0x01 == int(trace_flags, 16) & 0x01
 
@@ -440,6 +442,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         new_span_id = traceparent_re_result.group(3)
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
+        assert new_trace_flags == trace_flags
         self.assert_valid_trace_flags(new_trace_flags)
         assert int(new_trace_flags, 16) & 0x01 == int(trace_flags, 16) & 0x01
 
@@ -637,6 +640,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         new_span_id = traceparent_re_result.group(3)
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
+        assert new_trace_flags == trace_flags
         self.assert_valid_trace_flags(new_trace_flags)
         assert int(new_trace_flags, 16) & 0x01 == int(trace_flags, 16) & 0x01
 
@@ -760,6 +764,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         new_span_id = traceparent_re_result.group(3)
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
+        assert new_trace_flags == "01"
         self.assert_trace_flags_sampled(new_trace_flags)
 
         assert "tracestate" in resp_json
@@ -935,6 +940,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         new_span_id = traceparent_re_result.group(3)
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
+        assert new_trace_flags == "00"
         self.assert_trace_flags_not_sampled(new_trace_flags)
 
         assert "tracestate" in resp_json
