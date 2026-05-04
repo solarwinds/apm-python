@@ -93,7 +93,7 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         new_span_id = traceparent_re_result.group(3)
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
-        assert new_trace_flags == "01"
+        self.assert_trace_flags_sampled(new_trace_flags)
 
         assert "tracestate" in resp_json
         # In this test we know there is only `sw` in tracestate
