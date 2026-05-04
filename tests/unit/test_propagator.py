@@ -57,7 +57,7 @@ class TestSolarWindsPropagator():
         assert actual_xto.options_header == "foo"
         assert actual_xto.signature == "bar"
 
-    def mock_otel_context(self, mocker, valid_span_id=True):
+    def mock_otel_context(self, mocker, valid_span_id=True, trace_flags=0x01):
         """Shared mocks for OTel trace context"""
         # Mock OTel trace API and current span context
         mock_get_span_context = mocker.Mock()
@@ -65,7 +65,7 @@ class TestSolarWindsPropagator():
             mock_get_span_context.configure_mock(
                 **{
                     "span_id": 0x1000100010001000,
-                    "trace_flags": 0x01,
+                    "trace_flags": trace_flags,
                 }
             )
         else:
@@ -133,6 +133,60 @@ class TestSolarWindsPropagator():
                 mock_carrier,
                 "tracestate",
                 TraceState([("sw", "1000100010001000-01")]).to_header(),
+            ),
+        ])
+
+    def test_inject_no_tracestate_new_tracestate_random_not_sampled_flag(
+        self, mocker
+    ):
+        """New tracestate preserves non-sampled random flag 02"""
+        self.mock_otel_context(mocker, True, trace_flags=0x02)
+        mock_carrier = dict()
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "tracestate",
+                TraceState([("sw", "1000100010001000-02")]).to_header(),
+            ),
+        ])
+
+    def test_inject_no_tracestate_new_tracestate_random_sampled_flag(
+        self, mocker
+    ):
+        """New tracestate preserves sampled random flag 03"""
+        self.mock_otel_context(mocker, True, trace_flags=0x03)
+        mock_carrier = dict()
+        mock_context = mocker.Mock()
+        mock_setter = mocker.Mock()
+        mock_set = mocker.Mock()
+        mock_setter.configure_mock(
+            **{
+                "set": mock_set
+            }
+        )
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "tracestate",
+                TraceState([("sw", "1000100010001000-03")]).to_header(),
             ),
         ])
 

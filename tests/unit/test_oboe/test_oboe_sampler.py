@@ -492,6 +492,69 @@ class TestEntrySpanWithValidSwContextSampleThroughAlwaysSet:
             get_current_span(ctxt).get_span_context().span_id, "016x")
         check_counters(sample_through_always_set, ["trace.service.request_count"])
 
+    def test_respects_sw_random_trace_id_not_sampled_02(
+        self, sample_through_always_set
+    ):
+        generator = RandomIdGenerator()
+        trace_id = generator.generate_trace_id()
+        span_id = generator.generate_span_id()
+        trace_state = TraceState([("sw", f"{span_id:016x}-02")])
+        span_context = trace.SpanContext(
+            trace_id=trace_id,
+            span_id=span_id,
+            is_remote=True,
+            trace_flags=TraceFlags.SAMPLED,
+            trace_state=trace_state,
+        )
+        ctxt = trace.set_span_in_context(trace.NonRecordingSpan(span_context))
+        sample = sample_through_always_set.should_sample(
+            ctxt,
+            get_current_span(ctxt).get_span_context().trace_id,
+            "respects_sw_random_trace_id_not_sampled_02",
+        )
+        assert not sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get("sw.tracestate_parent_id") == format(
+            get_current_span(ctxt).get_span_context().span_id, "016x"
+        )
+        assert "-02" in sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE)
+        check_counters(sample_through_always_set, ["trace.service.request_count"])
+
+    def test_respects_sw_random_trace_id_sampled_03(
+        self, sample_through_always_set
+    ):
+        generator = RandomIdGenerator()
+        trace_id = generator.generate_trace_id()
+        span_id = generator.generate_span_id()
+        trace_state = TraceState([("sw", f"{span_id:016x}-03")])
+        span_context = trace.SpanContext(
+            trace_id=trace_id,
+            span_id=span_id,
+            is_remote=True,
+            trace_flags=TraceFlags.DEFAULT,
+            trace_state=trace_state,
+        )
+        ctxt = trace.set_span_in_context(trace.NonRecordingSpan(span_context))
+        sample = sample_through_always_set.should_sample(
+            ctxt,
+            get_current_span(ctxt).get_span_context().trace_id,
+            "respects_sw_random_trace_id_sampled_03",
+        )
+        assert sample.decision.is_sampled()
+        assert sample.decision.is_recording()
+        assert sample.attributes.get("sw.tracestate_parent_id") == format(
+            get_current_span(ctxt).get_span_context().span_id, "016x"
+        )
+        assert "-03" in sample.attributes.get(TRACESTATE_CAPTURE_ATTRIBUTE)
+        check_counters(
+            sample_through_always_set,
+            [
+                "trace.service.request_count",
+                "trace.service.tracecount",
+                "trace.service.through_trace_count",
+            ],
+        )
+
 
 class TestEntrySpanWithValidSwContextSampleThroughAlwaysUnset:
     def test_records_but_does_not_sample_when_SAMPLE_START_set(self):
