@@ -52,18 +52,18 @@ class TestBaseSwHeadersAndAttributes(TestBase):
 
     @staticmethod
     def assert_valid_trace_flags(trace_flags: str):
-        """Assert trace flags are valid two-digit lowercase hex (e.g. 00, 01, 02, 03)."""
-        assert re.match(r"^[0-9a-f]{2}$", trace_flags)
+        """Assert trace flags are one of the explicitly supported lowercase values."""
+        assert trace_flags in {"00", "01", "02", "03"}
 
     def assert_trace_flags_sampled(self, trace_flags: str):
-        """Assert sampled bit is set (bit 0): sampled for 01 and 03; not for 00 or 02."""
+        """Assert trace flags are one of the explicitly sampled values."""
         self.assert_valid_trace_flags(trace_flags)
-        assert int(trace_flags, 16) & 0x01 == 0x01
+        assert trace_flags in {"01", "03"}
 
     def assert_trace_flags_not_sampled(self, trace_flags: str):
-        """Assert sampled bit is clear (bit 0): not sampled for 00 and 02; not for 01 or 03."""
+        """Assert trace flags are one of the explicitly not-sampled values."""
         self.assert_valid_trace_flags(trace_flags)
-        assert int(trace_flags, 16) & 0x01 == 0x00
+        assert trace_flags in {"00", "02"}
 
     @staticmethod
     def _test_trace():
