@@ -10,7 +10,6 @@ import time
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from unittest import mock
 
 from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
 
@@ -112,6 +111,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
         assert new_trace_flags == trace_flags
+        self.assert_valid_trace_flags(new_trace_flags)
+        assert int(new_trace_flags, 16) & 0x01 == int(trace_flags, 16) & 0x01
 
         assert "tracestate" in resp_json
         # In this test we know tracestate will have `sw`
@@ -308,6 +309,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
         assert new_trace_flags == trace_flags
+        self.assert_valid_trace_flags(new_trace_flags)
+        assert int(new_trace_flags, 16) & 0x01 == int(trace_flags, 16) & 0x01
 
         assert "tracestate" in resp_json
         # In this test we know tracestate will have `sw`
@@ -440,6 +443,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
         assert new_trace_flags == trace_flags
+        self.assert_valid_trace_flags(new_trace_flags)
+        assert int(new_trace_flags, 16) & 0x01 == int(trace_flags, 16) & 0x01
 
         assert "tracestate" in resp_json
         # In this test we know there is `sw` in tracestate
@@ -636,6 +641,8 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
         assert new_trace_flags == trace_flags
+        self.assert_valid_trace_flags(new_trace_flags)
+        assert int(new_trace_flags, 16) & 0x01 == int(trace_flags, 16) & 0x01
 
         assert "tracestate" in resp_json
         # In this test we know there is `sw` in tracestate
@@ -758,6 +765,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
         assert new_trace_flags == "01"
+        self.assert_trace_flags_sampled(new_trace_flags)
 
         assert "tracestate" in resp_json
         # In this test we know tracestate will have `sw`
@@ -933,6 +941,7 @@ class TestScenario8(TestBaseSwHeadersAndAttributes):
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
         assert new_trace_flags == "00"
+        self.assert_trace_flags_not_sampled(new_trace_flags)
 
         assert "tracestate" in resp_json
         # In this test we know tracestate will have `sw`

@@ -77,6 +77,7 @@ class TestXtraceoptionsValidation(TestBaseSwHeadersAndAttributes):
         assert new_span_id is not None
         new_trace_flags = traceparent_re_result.group(4)
         assert new_trace_flags == "01"
+        self.assert_trace_flags_sampled(new_trace_flags)
         return new_span_id, new_trace_flags
 
     def check_some_header_ok(self, resp_json):

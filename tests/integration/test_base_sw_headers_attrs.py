@@ -51,6 +51,21 @@ class TestBaseSwHeadersAndAttributes(TestBase):
     ]
 
     @staticmethod
+    def assert_valid_trace_flags(trace_flags: str):
+        """Assert trace flags are one of the explicitly supported lowercase values."""
+        assert trace_flags in {"00", "01", "02", "03"}
+
+    def assert_trace_flags_sampled(self, trace_flags: str):
+        """Assert trace flags are one of the explicitly sampled values."""
+        self.assert_valid_trace_flags(trace_flags)
+        assert trace_flags in {"01", "03"}
+
+    def assert_trace_flags_not_sampled(self, trace_flags: str):
+        """Assert trace flags are one of the explicitly not-sampled values."""
+        self.assert_valid_trace_flags(trace_flags)
+        assert trace_flags in {"00", "02"}
+
+    @staticmethod
     def _test_trace():
         incoming_headers = {}
         for k, v in flask.request.headers.items():
