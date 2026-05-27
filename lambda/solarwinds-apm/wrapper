@@ -22,10 +22,10 @@ END_DOCUMENTATION
 
 
 # Update Lambda PYTHONPATH for auto-instrumentation
-# using previously installed instrumentors and SDK packages
-export LAMBDA_LAYER_PKGS_DIR="/opt/python";
-export PYTHONPATH="$LAMBDA_LAYER_PKGS_DIR:$PYTHONPATH";
-export PYTHONPATH="$LAMBDA_RUNTIME_DIR:$PYTHONPATH";
+# to include /opt/python (packages), Lambda runtime, and user's Lambda function code.
+# In container-based Lambda, packages are in standard site-packages (already in path)
+# This is to ensure the task root is first in PYTHONPATH, which includes otel_wrapper.py
+export PYTHONPATH="${LAMBDA_TASK_ROOT}:${LAMBDA_RUNTIME_DIR}:/opt/python:${PYTHONPATH}"
 
 # Set default endpoints for traces, metrics, and logs else would use regular SWO defaults
 if [ -z "${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT}" ]; then
@@ -55,17 +55,14 @@ fi
 # Disable AWS context propagation by default
 export OTEL_LAMBDA_DISABLE_AWS_CONTEXT_PROPAGATION="true";
 
-# From OpenTelemetry Python:
-# - Use a wrapper because AWS Lambda's `python3 /var/runtime/bootstrap.py` will
-#   use `imp.load_module` to load the function from the `_HANDLER` environment
-#   variable. This RELOADS the module and REMOVES any instrumentation patching
-#   done earlier. So we delay instrumentation until `bootstrap.py` imports
-#   `otel_wrapper.py` at which we know the patching will be picked up.
-#
-#   See more:
-#   https://docs.python.org/3/library/imp.html#imp.load_module
-export ORIG_HANDLER=$_HANDLER;
+# Redirect handler to otel_wrapper for proper Lambda instrumentation
+# Only set ORIG_HANDLER if not already set (container may have set it)
+if [ -z "${ORIG_HANDLER}" ]; then
+    export ORIG_HANDLER=$_HANDLER;
+fi
 export _HANDLER="otel_wrapper.lambda_handler";
 
-# Run with upstream auto-instrumentation entry point script
-exec python3 $LAMBDA_LAYER_PKGS_DIR/bin/opentelemetry-instrument "$@"
+# Use opentelemetry-instrument binary to auto-instrument
+# all other frameworks (boto3, requests, etc.)
+# otel_wrapper.py handles the AWS Lambda instrumentation
+exec python3 /opt/python/bin/opentelemetry-instrument "$@"
