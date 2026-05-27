@@ -58,7 +58,7 @@ export OTEL_LAMBDA_DISABLE_AWS_CONTEXT_PROPAGATION="true";
 # Redirect handler to otel_wrapper for proper Lambda instrumentation
 # Only set ORIG_HANDLER if not already set (container may have set it)
 if [ -z "${ORIG_HANDLER}" ]; then
-    export ORIG_HANDLER=$_HANDLER;
+    export ORIG_HANDLER="${_HANDLER}";
 fi
 export _HANDLER="otel_wrapper.lambda_handler";
 
