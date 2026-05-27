@@ -160,10 +160,16 @@ class TestAwsLambdaInstrumentor(TestBase):
     def setUpClass(cls):
         super().setUpClass()
         sys.path.append(INIT_OTEL_SCRIPTS_DIR)
+        # Replace hardcoded /opt/python path with test environment Python directory
         replace_in_file(
             os.path.join(INIT_OTEL_SCRIPTS_DIR, "solarwinds-apm/wrapper"),
-            'export LAMBDA_LAYER_PKGS_DIR="/opt/python"',
-            f'export LAMBDA_LAYER_PKGS_DIR="{TOX_PYTHON_DIRECTORY}"',
+            'export PYTHONPATH="${LAMBDA_TASK_ROOT}:${LAMBDA_RUNTIME_DIR}:/opt/python:${PYTHONPATH}"',
+            f'export PYTHONPATH="${{LAMBDA_TASK_ROOT}}:${{LAMBDA_RUNTIME_DIR}}:{TOX_PYTHON_DIRECTORY}:${{PYTHONPATH}}"',
+        )
+        replace_in_file(
+            os.path.join(INIT_OTEL_SCRIPTS_DIR, "solarwinds-apm/wrapper"),
+            'exec python3 /opt/python/bin/opentelemetry-instrument "$@"',
+            f'exec python3 {TOX_PYTHON_DIRECTORY}/bin/opentelemetry-instrument "$@"',
         )
 
     def setUp(self):
@@ -187,10 +193,16 @@ class TestAwsLambdaInstrumentor(TestBase):
     def tearDownClass(cls):
         super().tearDownClass()
         sys.path.remove(INIT_OTEL_SCRIPTS_DIR)
+        # Restore original hardcoded paths
         replace_in_file(
             os.path.join(INIT_OTEL_SCRIPTS_DIR, "solarwinds-apm/wrapper"),
-            f'export LAMBDA_LAYER_PKGS_DIR="{TOX_PYTHON_DIRECTORY}"',
-            'export LAMBDA_LAYER_PKGS_DIR="/opt/python"',
+            f'export PYTHONPATH="${{LAMBDA_TASK_ROOT}}:${{LAMBDA_RUNTIME_DIR}}:{TOX_PYTHON_DIRECTORY}:${{PYTHONPATH}}"',
+            'export PYTHONPATH="${LAMBDA_TASK_ROOT}:${LAMBDA_RUNTIME_DIR}:/opt/python:${PYTHONPATH}"',
+        )
+        replace_in_file(
+            os.path.join(INIT_OTEL_SCRIPTS_DIR, "solarwinds-apm/wrapper"),
+            f'exec python3 {TOX_PYTHON_DIRECTORY}/bin/opentelemetry-instrument "$@"',
+            'exec python3 /opt/python/bin/opentelemetry-instrument "$@"',
         )
 
     def test_active_tracing(self):
