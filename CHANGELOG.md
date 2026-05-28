@@ -6,11 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-6.1.1...HEAD)
 
-## [6.1.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-6.1.1) - 2026-05-28
+## [6.1.1](https://github.com/solarwinds/apm-python/releases/tag/rel-6.1.1) - 2026-05-28
 
 ### Changed 
 - Updated test coverage for traceflags 02,03 ([#766](https://github.com/solarwinds/apm-python/pull/766), [#767](https://github.com/solarwinds/apm-python/pull/767))
-- Added requests version constraint for image builds ([#768](https://github.com/solarwinds/apm-python/pull/768))
 - Updated AWS Lambda wrapper to accept existing `_HANDLER` ([#770](https://github.com/solarwinds/apm-python/pull/770))
 
 ## [6.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-6.1.0) - 2026-05-01
