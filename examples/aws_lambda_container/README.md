@@ -1,4 +1,4 @@
-# Example: AWS Lambda container image publish with APM Python auto-instrumentation
+# Example: AWS Lambda container image publishing with APM Python auto-instrumentation
 
 This directory contains an example container image setup for an AWS Lambda Python function with SolarWinds APM Python auto-instrumentation, with instructions for configuration and deployment to AWS ECR and AWS Lambda.
 
