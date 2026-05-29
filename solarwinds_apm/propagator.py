@@ -32,6 +32,7 @@ class SolarWindsPropagator(TraceContextTextMapPropagator):
     """Extract and inject SolarWinds headers and W3C trace context for trace propagation."""
 
     _INVALID_SPAN_ID = 0x0000000000000000
+    _TRACEPARENT_HEADER_NAME = "traceparent"
     _TRACESTATE_HEADER_NAME = "tracestate"
     _XTRACEOPTIONS_HEADER_NAME = "x-trace-options"
     _XTRACEOPTIONS_SIGNATURE_HEADER_NAME = "x-trace-options-signature"
@@ -83,48 +84,48 @@ class SolarWindsPropagator(TraceContextTextMapPropagator):
         context (Context | None): Optional context to inject from. Defaults to None.
         setter (textmap.Setter): Setter for injecting headers into carrier. Defaults to default_setter.
         """
-        super().inject(carrier, context, setter)
-
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
-        sw_value = W3CTransformer.sw_from_context(span_context)
-        trace_state_header = carrier.get(self._TRACESTATE_HEADER_NAME, None)
+        if span_context == trace.INVALID_SPAN_CONTEXT:
+            return
+        if span_context.span_id == self._INVALID_SPAN_ID:
+            return
 
-        # Prepare carrier with carrier's or new tracestate
-        trace_state = None
-        # Note: OTel Propagation API callers (OTel instrumentors) may
-        # inject header values as dictionary, not a string.
-        if isinstance(trace_state_header, dict):
-            trace_state_header = trace_state_header.get("StringValue")
-        if not trace_state_header:
-            # Only create new trace state if valid span_id
-            if span_context.span_id == self._INVALID_SPAN_ID:
-                return
+        traceparent_string = W3CTransformer.traceparent_from_context(
+            span_context
+        )
+        setter.set(carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string)
+
+        # Get sw value to add/update in tracestate
+        sw_value = W3CTransformer.sw_from_context(span_context)
+
+        # Read existing tracestate directly from span_context (not from carrier)
+        # https://opentelemetry.io/docs/specs/otel/context/api-propagators/
+        existing_trace_state = span_context.trace_state
+        if not existing_trace_state:
             logger.debug(
                 "Creating new trace state for injection with %s",
                 sw_value,
             )
             trace_state = TraceState([(INTL_SWO_TRACESTATE_KEY, sw_value)])
         else:
-            trace_state = TraceState.from_header([trace_state_header])
             # Check if trace_state already contains sw KV
-            if INTL_SWO_TRACESTATE_KEY in trace_state:
+            if INTL_SWO_TRACESTATE_KEY in existing_trace_state:
                 # If so, modify current span_id and trace_flags, and move to beginning of list
                 logger.debug(
                     "Updating trace state for injection with %s",
                     sw_value,
                 )
-                trace_state = trace_state.update(
+                trace_state = existing_trace_state.update(
                     INTL_SWO_TRACESTATE_KEY, sw_value
                 )
-
             else:
                 # If not, add sw KV to beginning of list
                 logger.debug(
                     "Adding KV to trace state for injection with %s",
                     sw_value,
                 )
-                trace_state = trace_state.add(
+                trace_state = existing_trace_state.add(
                     INTL_SWO_TRACESTATE_KEY, sw_value
                 )
 

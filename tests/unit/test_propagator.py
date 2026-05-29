@@ -7,6 +7,7 @@
 from unittest.mock import call
 
 from opentelemetry.context.context import Context
+from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
 from solarwinds_apm.apm_constants import INTL_SWO_X_OPTIONS_KEY
@@ -57,22 +58,33 @@ class TestSolarWindsPropagator():
         assert actual_xto.options_header == "foo"
         assert actual_xto.signature == "bar"
 
-    def mock_otel_context(self, mocker, valid_span_id=True, trace_flags=0x01):
-        """Shared mocks for OTel trace context"""
+    def mock_otel_context(self, mocker, valid_span_id=True, trace_flags=0x01, trace_state=None):
+        """Shared mocks for OTel trace context
+        
+        Parameters:
+        mocker: pytest-mock fixture
+        valid_span_id: Whether to use a valid or invalid span_id
+        trace_flags: Trace flags value
+        trace_state: TraceState object or None
+        """
         # Mock OTel trace API and current span context
         mock_get_span_context = mocker.Mock()
         if valid_span_id:
             mock_get_span_context.configure_mock(
                 **{
+                    "trace_id": 0x3A02F8A392478C3700000000DEADBEEF,
                     "span_id": 0x1000100010001000,
                     "trace_flags": trace_flags,
+                    "trace_state": trace_state,
                 }
             )
         else:
             mock_get_span_context.configure_mock(
                 **{
+                    "trace_id": 0x0000000000000000000000000000000,
                     "span_id": 0x0000000000000000,
                     "trace_flags": 0x00,
+                    "trace_state": trace_state,
                 }
             )
         mock_get_current_span = mocker.Mock()
@@ -84,9 +96,12 @@ class TestSolarWindsPropagator():
         mock_trace = mocker.patch(
             "solarwinds_apm.propagator.trace"
         )
+        # Create a unique INVALID_SPAN_CONTEXT sentinel that won't match valid mocks
+        mock_invalid_span_context = mocker.Mock()
         mock_trace.configure_mock(
             **{
                 "get_current_span.return_value": mock_get_current_span,
+                "INVALID_SPAN_CONTEXT": mock_invalid_span_context,
             }
         )
 
@@ -131,6 +146,11 @@ class TestSolarWindsPropagator():
         mock_set.assert_has_calls([
             call(
                 mock_carrier,
+                "traceparent",
+                "00-3a02f8a392478c3700000000deadbeef-1000100010001000-01",
+            ),
+            call(
+                mock_carrier,
                 "tracestate",
                 TraceState([("sw", "1000100010001000-01")]).to_header(),
             ),
@@ -156,6 +176,11 @@ class TestSolarWindsPropagator():
             mock_setter,
         )
         mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "traceparent",
+                "00-3a02f8a392478c3700000000deadbeef-1000100010001000-02",
+            ),
             call(
                 mock_carrier,
                 "tracestate",
@@ -185,6 +210,11 @@ class TestSolarWindsPropagator():
         mock_set.assert_has_calls([
             call(
                 mock_carrier,
+                "traceparent",
+                "00-3a02f8a392478c3700000000deadbeef-1000100010001000-03",
+            ),
+            call(
+                mock_carrier,
                 "tracestate",
                 TraceState([("sw", "1000100010001000-03")]).to_header(),
             ),
@@ -192,10 +222,9 @@ class TestSolarWindsPropagator():
 
     def test_inject_existing_tracestate_no_sw(self, mocker):
         """sw added to start, foo=bar kept, xtrace_options_response removed"""
-        self.mock_otel_context(mocker, True)
-        mock_carrier = {
-            "tracestate": "xtrace_options_response=abc123,foo=bar"
-        }
+        trace_state = TraceState([("xtrace_options_response", "abc123"), ("foo", "bar")])
+        self.mock_otel_context(mocker, True, trace_state=trace_state)
+        mock_carrier = dict()
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
@@ -211,6 +240,11 @@ class TestSolarWindsPropagator():
         )
         # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
         mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "traceparent",
+                "00-3a02f8a392478c3700000000deadbeef-1000100010001000-01",
+            ),
             call(
                 mock_carrier,
                 "tracestate",
@@ -220,10 +254,9 @@ class TestSolarWindsPropagator():
 
     def test_inject_existing_tracestate_existing_sw(self, mocker):
         """sw updated and moved to start, foo=bar kept, xtrace_options_response removed"""
-        self.mock_otel_context(mocker, True)
-        mock_carrier = {
-            "tracestate": "xtrace_options_response=abc123,foo=bar,sw=some-existing-value",
-        }
+        trace_state = TraceState([("xtrace_options_response", "abc123"), ("foo", "bar"), ("sw", "some-existing-value")])
+        self.mock_otel_context(mocker, True, trace_state=trace_state)
+        mock_carrier = dict()
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
@@ -241,19 +274,20 @@ class TestSolarWindsPropagator():
         mock_set.assert_has_calls([
             call(
                 mock_carrier,
+                "traceparent",
+                "00-3a02f8a392478c3700000000deadbeef-1000100010001000-01",
+            ),
+            call(
+                mock_carrier,
                 "tracestate",
                 TraceState([("sw", "1000100010001000-01"), ("foo", "bar")]).to_header(),
             ),
         ])
 
     def test_inject_existing_tracestate_dict_no_stringvalue(self, mocker):
-        """sw added to start, foo=bar kept, xtrace_options_response removed"""
-        self.mock_otel_context(mocker, True)
-        mock_carrier = {
-            "tracestate": {
-                "not-stringvalue": "unused",
-            }
-        }
+        """No tracestate creates new one"""
+        self.mock_otel_context(mocker, True, trace_state=None)
+        mock_carrier = dict()
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
@@ -269,6 +303,11 @@ class TestSolarWindsPropagator():
         )
         # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
         mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "traceparent",
+                "00-3a02f8a392478c3700000000deadbeef-1000100010001000-01",
+            ),
             call(
                 mock_carrier,
                 "tracestate",
@@ -278,12 +317,9 @@ class TestSolarWindsPropagator():
 
     def test_inject_existing_tracestate_dict_no_sw(self, mocker):
         """sw added to start, foo=bar kept, xtrace_options_response removed"""
-        self.mock_otel_context(mocker, True)
-        mock_carrier = {
-            "tracestate": {
-                "StringValue": "xtrace_options_response=abc123,foo=bar",
-            }
-        }
+        trace_state = TraceState([("xtrace_options_response", "abc123"), ("foo", "bar")])
+        self.mock_otel_context(mocker, True, trace_state=trace_state)
+        mock_carrier = dict()
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
@@ -299,6 +335,11 @@ class TestSolarWindsPropagator():
         )
         # OTel context mocked with span_id 0x1000100010001000, trace_flags 0x01
         mock_set.assert_has_calls([
+            call(
+                mock_carrier,
+                "traceparent",
+                "00-3a02f8a392478c3700000000deadbeef-1000100010001000-01",
+            ),
             call(
                 mock_carrier,
                 "tracestate",
@@ -308,12 +349,9 @@ class TestSolarWindsPropagator():
 
     def test_inject_existing_tracestate_dict_existing_sw(self, mocker):
         """sw updated and moved to start, foo=bar kept, xtrace_options_response removed"""
-        self.mock_otel_context(mocker, True)
-        mock_carrier = {
-            "tracestate": {
-                "StringValue": "xtrace_options_response=abc123,foo=bar,sw=some-existing-value",
-            }
-        }
+        trace_state = TraceState([("xtrace_options_response", "abc123"), ("foo", "bar"), ("sw", "some-existing-value")])
+        self.mock_otel_context(mocker, True, trace_state=trace_state)
+        mock_carrier = dict()
         mock_context = mocker.Mock()
         mock_setter = mocker.Mock()
         mock_set = mocker.Mock()
@@ -331,7 +369,237 @@ class TestSolarWindsPropagator():
         mock_set.assert_has_calls([
             call(
                 mock_carrier,
+                "traceparent",
+                "00-3a02f8a392478c3700000000deadbeef-1000100010001000-01",
+            ),
+            call(
+                mock_carrier,
                 "tracestate",
                 TraceState([("sw", "1000100010001000-01"), ("foo", "bar")]).to_header(),
             ),
         ])
+
+
+class TestSolarWindsPropagatorNonDictCarriers:
+    """Test SolarWindsPropagator with non-dict carriers from heterogeneous instrumentors"""
+
+    def mock_otel_context_with_tracestate(self, mocker, trace_state=None):
+        """Mock OTel trace context with optional existing tracestate"""
+        mock_get_span_context = mocker.Mock()
+        mock_get_span_context.configure_mock(
+            **{
+                "trace_id": 0x3A02F8A392478C3700000000DEADBEEF,
+                "span_id": 0x1000100010001000,
+                "trace_flags": 0x01,
+                "trace_state": trace_state,
+            }
+        )
+        mock_get_current_span = mocker.Mock()
+        mock_get_current_span.configure_mock(
+            **{
+                "get_span_context.return_value": mock_get_span_context
+            }
+        )
+        mock_trace = mocker.patch(
+            "solarwinds_apm.propagator.trace"
+        )
+        # Create a unique INVALID_SPAN_CONTEXT sentinel that won't match valid mocks
+        mock_invalid_span_context = mocker.Mock()
+        mock_trace.configure_mock(
+            **{
+                "get_current_span.return_value": mock_get_current_span,
+                "INVALID_SPAN_CONTEXT": mock_invalid_span_context,
+            }
+        )
+
+    def test_inject_list_carrier_no_existing_tracestate(self, mocker):
+        """Test injection into list-based carrier (like ConfluentKafka) with no existing tracestate"""
+        self.mock_otel_context_with_tracestate(mocker, None)
+        mock_carrier = []
+        mock_context = mocker.Mock()
+        # Custom setter for list-based carrier (simulates KafkaContextSetter)
+        class ListSetter(textmap.Setter):
+            def set(self, carrier, key, value):
+                carrier.append((key, value))
+        mock_setter = ListSetter()
+
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+
+        tracestate_entries = [item for item in mock_carrier if item[0] == "tracestate"]
+        assert len(tracestate_entries) == 1
+        assert tracestate_entries[0][1] == "sw=1000100010001000-01"
+
+    def test_inject_list_carrier_with_existing_tracestate(self, mocker):
+        """Test injection into list carrier with existing tracestate in span_context"""
+        existing_trace_state = TraceState([("foo", "bar")])
+        self.mock_otel_context_with_tracestate(mocker, existing_trace_state)
+        mock_carrier = []
+        mock_context = mocker.Mock()
+
+        class ListSetter(textmap.Setter):
+            def set(self, carrier, key, value):
+                carrier.append((key, value))
+
+        mock_setter = ListSetter()
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+
+        tracestate_entries = [item for item in mock_carrier if item[0] == "tracestate"]
+        assert len(tracestate_entries) == 1
+        assert tracestate_entries[0][1] == "sw=1000100010001000-01,foo=bar"
+
+    def test_inject_list_carrier_updates_existing_sw(self, mocker):
+        """Test injection updates existing sw in span_context.trace_state"""
+        existing_trace_state = TraceState([("sw", "old-value"), ("foo", "bar")])
+        self.mock_otel_context_with_tracestate(mocker, existing_trace_state)
+        mock_carrier = []
+        mock_context = mocker.Mock()
+
+        class ListSetter(textmap.Setter):
+            def set(self, carrier, key, value):
+                carrier.append((key, value))
+
+        mock_setter = ListSetter()
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        # Verify sw was updated and moved to front
+        tracestate_entries = [item for item in mock_carrier if item[0] == "tracestate"]
+        assert len(tracestate_entries) == 1
+        assert tracestate_entries[0][1] == "sw=1000100010001000-01,foo=bar"
+
+    def test_inject_list_carrier_no_attributeerror(self, mocker):
+        """Verify that list carrier doesn't raise AttributeError"""
+        self.mock_otel_context_with_tracestate(mocker, None)
+        mock_carrier = []
+        mock_context = mocker.Mock()
+
+        class ListSetter(textmap.Setter):
+            def set(self, carrier, key, value):
+                # Simulates KafkaContextSetter behavior
+                if isinstance(carrier, list):
+                    carrier.append((key, value))
+
+        mock_setter = ListSetter()
+        try:
+            SolarWindsPropagator().inject(
+                mock_carrier,
+                mock_context,
+                mock_setter,
+            )
+            assert True
+        except AttributeError as e:
+            if "'list' object has no attribute 'get'" in str(e):
+                raise AssertionError("Propagator incorrectly called carrier.get() on list carrier")
+            raise
+
+    def test_inject_custom_carrier_type(self, mocker):
+        """Test injection with a completely custom carrier type"""
+        existing_trace_state = TraceState([("existing", "value")])
+        self.mock_otel_context_with_tracestate(mocker, existing_trace_state)
+
+        class CustomCarrier:
+            def __init__(self):
+                self.headers = {}
+
+        mock_carrier = CustomCarrier()
+        mock_context = mocker.Mock()
+
+        class CustomSetter(textmap.Setter):
+            def set(self, carrier, key, value):
+                carrier.headers[key] = value
+
+        mock_setter = CustomSetter()
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        assert "tracestate" in mock_carrier.headers
+        assert mock_carrier.headers["tracestate"] == "sw=1000100010001000-01,existing=value"
+
+    def test_inject_tuple_carrier(self, mocker):
+        """Test that immutable carriers work with appropriate setter"""
+        self.mock_otel_context_with_tracestate(mocker, None)
+        mock_carrier = ()
+        mock_context = mocker.Mock()
+        injected_values = {}
+
+        class TupleSetter(textmap.Setter):
+            def set(self, carrier, key, value):
+                # Since tuples are immutable, store in external dict
+                injected_values[key] = value
+
+        mock_setter = TupleSetter()
+
+        SolarWindsPropagator().inject(
+            mock_carrier,
+            mock_context,
+            mock_setter,
+        )
+        assert "tracestate" in injected_values
+        assert injected_values["tracestate"] == "sw=1000100010001000-01"
+
+    def test_inject_list_carrier_no_duplicate_tracestate(self, mocker):
+        """Verify no duplicate tracestate with real span context"""
+        from opentelemetry import trace as otel_trace
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+        from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+            InMemorySpanExporter,
+        )
+
+        exporter = InMemorySpanExporter()
+        provider = TracerProvider()
+        provider.add_span_processor(SimpleSpanProcessor(exporter))
+        tracer = provider.get_tracer(__name__)
+        existing_trace_state = TraceState([("foo", "bar")])
+
+        with tracer.start_as_current_span(
+            "test_span",
+            attributes={"test": "value"},
+        ) as span:
+            original_context = span.get_span_context()
+            new_span_context = otel_trace.SpanContext(
+                trace_id=original_context.trace_id,
+                span_id=original_context.span_id,
+                is_remote=original_context.is_remote,
+                trace_flags=original_context.trace_flags,
+                trace_state=existing_trace_state,
+            )
+            span._context = new_span_context
+            carrier = []
+
+            class TrackingListSetter(textmap.Setter):
+                def __init__(self):
+                    self.calls = []
+
+                def set(self, carrier, key, value):
+                    self.calls.append((key, value))
+                    carrier.append((key, value))
+
+            tracking_setter = TrackingListSetter()
+            propagator = SolarWindsPropagator()
+            propagator.inject(carrier, setter=tracking_setter)
+            tracestate_writes = [
+                call for call in tracking_setter.calls if call[0] == "tracestate"
+            ]
+            assert (
+                len(tracestate_writes) == 1
+            ), f"Expected 1 tracestate write, got {len(tracestate_writes)}: {tracestate_writes}"
+            tracestate_entries = [item for item in carrier if item[0] == "tracestate"]
+            assert (
+                len(tracestate_entries) == 1
+            ), f"Expected 1 tracestate in carrier, got {len(tracestate_entries)}: {tracestate_entries}"
+            tracestate_value = tracestate_entries[0][1]
+            assert "sw=" in tracestate_value
+            assert "foo=bar" in tracestate_value
