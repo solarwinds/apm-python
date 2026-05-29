@@ -108,26 +108,24 @@ class SolarWindsPropagator(TraceContextTextMapPropagator):
                 sw_value,
             )
             trace_state = TraceState([(INTL_SWO_TRACESTATE_KEY, sw_value)])
+        elif INTL_SWO_TRACESTATE_KEY in existing_trace_state:
+            # If so, modify current span_id and trace_flags, and move to beginning of list
+            logger.debug(
+                "Updating trace state for injection with %s",
+                sw_value,
+            )
+            trace_state = existing_trace_state.update(
+                INTL_SWO_TRACESTATE_KEY, sw_value
+            )
         else:
-            # Check if trace_state already contains sw KV
-            if INTL_SWO_TRACESTATE_KEY in existing_trace_state:
-                # If so, modify current span_id and trace_flags, and move to beginning of list
-                logger.debug(
-                    "Updating trace state for injection with %s",
-                    sw_value,
-                )
-                trace_state = existing_trace_state.update(
-                    INTL_SWO_TRACESTATE_KEY, sw_value
-                )
-            else:
-                # If not, add sw KV to beginning of list
-                logger.debug(
-                    "Adding KV to trace state for injection with %s",
-                    sw_value,
-                )
-                trace_state = existing_trace_state.add(
-                    INTL_SWO_TRACESTATE_KEY, sw_value
-                )
+            # If not, add sw KV to beginning of list
+            logger.debug(
+                "Adding KV to trace state for injection with %s",
+                sw_value,
+            )
+            trace_state = existing_trace_state.add(
+                INTL_SWO_TRACESTATE_KEY, sw_value
+            )
 
         # Remove any xtrace_options_response stored for ResponsePropagator
         trace_state = W3CTransformer.remove_response_from_sw(trace_state)
