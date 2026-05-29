@@ -89,6 +89,7 @@ class TestSolarWindsPropagator():
                     "is_valid": False,
                 }
             )
+        mock_get_span_context.is_valid = bool(valid_span_id) and mock_get_span_context.trace_id != 0
         mock_get_current_span = mocker.Mock()
         mock_get_current_span.configure_mock(
             **{
@@ -396,6 +397,7 @@ class TestSolarWindsPropagatorNonDictCarriers:
                 "trace_state": trace_state,
             }
         )
+        mock_get_span_context.is_valid = True
         mock_get_current_span = mocker.Mock()
         mock_get_current_span.configure_mock(
             **{
@@ -578,7 +580,9 @@ class TestSolarWindsPropagatorNonDictCarriers:
                 trace_flags=original_context.trace_flags,
                 trace_state=existing_trace_state,
             )
-            span._context = new_span_context
+            ctxt = otel_trace.set_span_in_context(
+                otel_trace.NonRecordingSpan(new_span_context)
+            )
             carrier = []
 
             class TrackingListSetter(textmap.Setter):
@@ -591,7 +595,7 @@ class TestSolarWindsPropagatorNonDictCarriers:
 
             tracking_setter = TrackingListSetter()
             propagator = SolarWindsPropagator()
-            propagator.inject(carrier, setter=tracking_setter)
+            propagator.inject(carrier, context=ctxt, setter=tracking_setter)
             tracestate_writes = [
                 call for call in tracking_setter.calls if call[0] == "tracestate"
             ]
