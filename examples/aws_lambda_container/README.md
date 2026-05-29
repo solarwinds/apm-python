@@ -38,7 +38,7 @@ apm-python/
 This downloads `solarwinds_apm_lambda.zip` which can be committed or stored in your artifact registry. APM Python library version `>=6.1.1` is required.
 
 ```bash
-cd <path_to>/apm-python/examples/aws_lambda_container/README.md
+cd <path_to>/apm-python/examples/aws_lambda_container
 
 # Authenticate with your AWS account
 # with permission to call lambda:GetLayerVersionByArn
