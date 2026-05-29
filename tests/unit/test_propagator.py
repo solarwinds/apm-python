@@ -60,7 +60,7 @@ class TestSolarWindsPropagator():
 
     def mock_otel_context(self, mocker, valid_span_id=True, trace_flags=0x01, trace_state=None):
         """Shared mocks for OTel trace context
-        
+
         Parameters:
         mocker: pytest-mock fixture
         valid_span_id: Whether to use a valid or invalid span_id
