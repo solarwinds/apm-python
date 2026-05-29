@@ -2,12 +2,13 @@
 # OpenTelemetry Collector extension, and function definition.
 # Download the layer first: ./download-layer.sh
 
-FROM public.ecr.aws/lambda/python:3.12-arm64
+FROM public.ecr.aws/lambda/python:3.12-arm64@sha256:211bec50ee0bf880deacdb9f3a4a940e03d21bea3e4728488642f4c6ef358232
 
 # Download and extract the latest SolarWinds OTel Lambda extension for ARM64
 ARG SOLARWINDS_OTEL_VERSION=0.0.13
+ARG SOLARWINDS_OTEL_SHA256=a44d6aaebe3e21f54a61dff2b75d73feb9a9a606c518f6184c1fe3f84e3779c0
 ARG LAYER_ZIP=solarwinds_apm_lambda.zip
-ADD https://github.com/solarwinds/opentelemetry-lambda/releases/download/layer-collector/${SOLARWINDS_OTEL_VERSION}/opentelemetry-collector-layer-arm64.zip /tmp/swo-otel-extension.zip
+ADD --checksum=sha256:${SOLARWINDS_OTEL_SHA256} https://github.com/solarwinds/opentelemetry-lambda/releases/download/layer-collector/${SOLARWINDS_OTEL_VERSION}/opentelemetry-collector-layer-arm64.zip /tmp/swo-otel-extension.zip
 RUN python -m zipfile -e /tmp/swo-otel-extension.zip /opt && rm /tmp/swo-otel-extension.zip
 RUN mv /opt/extensions/collector /opt/extensions/otel-extension && chmod +x /opt/extensions/otel-extension
 ENV OPENTELEMETRY_COLLECTOR_CONFIG_URI=file:///opt/collector-config/config.yaml
