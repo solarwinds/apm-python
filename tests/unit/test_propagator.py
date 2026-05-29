@@ -76,6 +76,7 @@ class TestSolarWindsPropagator():
                     "span_id": 0x1000100010001000,
                     "trace_flags": trace_flags,
                     "trace_state": trace_state,
+                    "is_valid": True,
                 }
             )
         else:
@@ -85,6 +86,7 @@ class TestSolarWindsPropagator():
                     "span_id": 0x0000000000000000,
                     "trace_flags": 0x00,
                     "trace_state": trace_state,
+                    "is_valid": False,
                 }
             )
         mock_get_current_span = mocker.Mock()

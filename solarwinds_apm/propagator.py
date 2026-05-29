@@ -86,9 +86,7 @@ class SolarWindsPropagator(TraceContextTextMapPropagator):
         """
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
-            return
-        if span_context.span_id == self._INVALID_SPAN_ID:
+        if not span_context.is_valid:
             return
 
         traceparent_string = W3CTransformer.traceparent_from_context(
