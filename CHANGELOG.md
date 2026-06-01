@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-6.2.0...HEAD)
 
-## [6.2.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-6.2.0) - 2026-05-29
+## [6.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-6.2.0) - 2026-05-29
 
 ### Changed
 - Fixed `SolarWindsPropagator` propagation API adherence ([#773](https://github.com/solarwinds/apm-python/pull/773))
