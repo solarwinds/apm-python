@@ -17,8 +17,8 @@ apm-python/
 ## Prerequisites
 
 ### For APM layer download (once per APM install/upgrade)
-- AWS credentials configured (`~/.aws/credentials`)
 - AWS CLI installed
+- AWS authentication configured (credentials file, SSO, environment variables, etc.)
 - permission to call `lambda:GetLayerVersionByArn`
 
 ### For container build
@@ -40,11 +40,10 @@ This downloads `solarwinds_apm_lambda.zip` which can be committed or stored in y
 ```bash
 cd <path_to>/apm-python/examples/aws_lambda_container
 
-# Authenticate with your AWS account
+# Ensure you are authenticated with your AWS account
 # with permission to call lambda:GetLayerVersionByArn
-# For example:
-aws configure --profile <my-cool-profile>
-export AWS_PROFILE=<my-cool-profile>
+# Verify your authentication:
+aws sts get-caller-identity
 
 ./download-layer.sh
 ```
@@ -75,20 +74,20 @@ This configures environment variables for an existing AWS Lambda function, `my-c
 
 ```bash
 # a valid SolarWinds Observability SaaS API token
-export API_TOKEN=<valid_swo_api_token>
+export SW_APM_API_TOKEN=<valid_swo_api_token>
 # the AWS region of your choice
 export AWS_REGION=us-east-1
 
 # Option 1: only the required and highly recommended variables
 aws lambda update-function-configuration \
     --function-name my-cool-lambda \
-    --environment '{"Variables":{"SW_APM_API_TOKEN":"'"${API_TOKEN}"'","OTEL_SERVICE_NAME":"my-cool-lambda"}}' \
+    --environment '{"Variables":{"SW_APM_API_TOKEN":"'"${SW_APM_API_TOKEN}"'","OTEL_SERVICE_NAME":"my-cool-lambda"}}' \
     --region ${AWS_REGION}
 
 # Option 2: additional options
 aws lambda update-function-configuration \
     --function-name my-cool-lambda \
-    --environment '{"Variables":{"SW_APM_API_TOKEN":"'"${API_TOKEN}"'","OTEL_SERVICE_NAME":"my-cool-lambda","SW_APM_DATA_CENTER":"na-02","SW_APM_TELEMETRY_API_SUBSCRIPTION":"platform,function","OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION":"true","SW_APM_DEBUG_LEVEL":"6"}}' \
+    --environment '{"Variables":{"SW_APM_API_TOKEN":"'"${SW_APM_API_TOKEN}"'","OTEL_SERVICE_NAME":"my-cool-lambda","SW_APM_DATA_CENTER":"na-02","SW_APM_TELEMETRY_API_SUBSCRIPTION":"platform,function","OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION":"true","SW_APM_DEBUG_LEVEL":"6"}}' \
     --region ${AWS_REGION}
 ```
 
