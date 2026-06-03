@@ -184,6 +184,7 @@ jobs:
       - name: Run install test in Amazon Linux 2 container
         run: |
           docker run --rm \
+            --entrypoint sh \
             -v $GITHUB_WORKSPACE:/code/python-solarwinds \
             -w /code/python-solarwinds/tests/docker/install \
             -e MODE="${{ github.event.inputs.install-registry }}" \
@@ -194,4 +195,4 @@ jobs:
             -e SW_APM_SERVICE_KEY_STAGING="${{ secrets.SW_APM_SERVICE_KEY_STAGING }}" \
             -e APM_ROOT=/code/python-solarwinds \
             ${{ matrix.image }} \
-            sh _helper_run_install_tests.sh
+            _helper_run_install_tests.sh
