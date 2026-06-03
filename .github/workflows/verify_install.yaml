@@ -49,8 +49,6 @@ jobs:
           - py3.10-alpine3.13
           - py3.10-alpine3.16
           - py3.10-alpine3.17
-          - py3.10-amazon2-arm64
-          - py3.10-amazon2-x86-64
           - py3.10-debian10
           - py3.10-debian11
           - py3.10-ubuntu22.04
@@ -78,10 +76,6 @@ jobs:
             image: python:3.10-alpine3.16
           - hostname: py3.10-alpine3.17
             image: python:3.10-alpine3.17
-          - hostname: py3.10-amazon2-arm64
-            image: amazon/aws-lambda-python:3.10-arm64
-          - hostname: py3.10-amazon2-x86-64
-            image: amazon/aws-lambda-python:3.10-x86_64
           - hostname: py3.10-debian10
             image: python:3.10-buster
           - hostname: py3.10-debian11
@@ -137,10 +131,6 @@ jobs:
           - hostname: py3.13-alpine3.20
             arch: arm64
           # Mutual excludes for arch-specific Amazon hosts
-          - hostname: py3.10-amazon2-arm64
-            arch: x64
-          - hostname: py3.10-amazon2-x86-64
-            arch: arm64
           - hostname: py3.13-amazon2023-arm64
             arch: x64
           - hostname: py3.13-amazon2023-x86-64
@@ -172,3 +162,36 @@ jobs:
         shell: sh
         env:
           MODE: ${{ github.event.inputs.install-registry }}
+
+  # Amazon Linux 2 (Python 3.10) - uses docker run instead of container job to avoid GLIBC 2.26 issues
+  install-tests-amazon2:
+    runs-on: ${{ matrix.arch == 'arm64' && fromJSON('{"group":"apm-arm-runner"}') || 'ubuntu-latest' }}
+    strategy:
+      matrix:
+        image:
+          - amazon/aws-lambda-python:3.10-arm64
+          - amazon/aws-lambda-python:3.10-x86_64
+        arch:
+          - x64
+          - arm64
+        exclude:
+          - image: amazon/aws-lambda-python:3.10-arm64
+            arch: x64
+          - image: amazon/aws-lambda-python:3.10-x86_64
+            arch: arm64
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run install test in Amazon Linux 2 container
+        run: |
+          docker run --rm \
+            -v $GITHUB_WORKSPACE:/code/python-solarwinds \
+            -w /code/python-solarwinds/tests/docker/install \
+            -e MODE="${{ github.event.inputs.install-registry }}" \
+            -e SOLARWINDS_APM_VERSION="${{ github.event.inputs.solarwinds-version }}" \
+            -e SW_APM_COLLECTOR_PROD="${{ secrets.SW_APM_COLLECTOR_PROD }}" \
+            -e SW_APM_COLLECTOR_STAGING="${{ secrets.SW_APM_COLLECTOR_STAGING }}" \
+            -e SW_APM_SERVICE_KEY_PROD="${{ secrets.SW_APM_SERVICE_KEY_PROD }}" \
+            -e SW_APM_SERVICE_KEY_STAGING="${{ secrets.SW_APM_SERVICE_KEY_STAGING }}" \
+            -e APM_ROOT=/code/python-solarwinds \
+            ${{ matrix.image }} \
+            sh _helper_run_install_tests.sh
