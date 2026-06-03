@@ -151,7 +151,12 @@ jobs:
     steps:
       - if: contains(matrix.image, 'amazonlinux') || contains(matrix.image, 'aws-lambda-python')
         name: Install AmazonLinux deps to use checkout
-        run: dnf install -y tar gzip 
+        run: |
+          if command -v dnf >/dev/null 2>&1; then
+            dnf install -y tar gzip
+          else
+            yum install -y tar gzip
+          fi
       # Use checkout@v4 for Alpine versions < 3.17 that don't support Node.js 24
       - if: contains(matrix.hostname, 'alpine3.13') || contains(matrix.hostname, 'alpine3.14') || contains(matrix.hostname, 'alpine3.15') || contains(matrix.hostname, 'alpine3.16')
         uses: actions/checkout@v4
