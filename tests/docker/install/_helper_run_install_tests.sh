@@ -17,12 +17,16 @@
 # stop on error
 set -e
 
-if [[ "$OSTYPE" == "darwin"* ]];
+if [[ "$OSTYPE" == "darwin"* ]] || [ -n "$PYTHON_VERSION" ];
 then
-    # On macOS, use GitHub Actions environment variable
+    # On macOS or when PYTHON_VERSION is explicitly set, use environment variable
     python_version=$PYTHON_VERSION
     python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
-    pretty_name="macOS $(sw_vers -productVersion)"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        pretty_name="macOS $(sw_vers -productVersion)"
+    else
+        pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
+    fi
 else
     # get Python version from container hostname, e.g. "3.10"
     python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')

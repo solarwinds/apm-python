@@ -188,6 +188,7 @@ jobs:
             -v $GITHUB_WORKSPACE:/code/python-solarwinds \
             -w /code/python-solarwinds/tests/docker/install \
             -e MODE="${{ github.event.inputs.install-registry }}" \
+            -e PYTHON_VERSION="3.10" \
             -e SOLARWINDS_APM_VERSION="${{ github.event.inputs.solarwinds-version }}" \
             -e SW_APM_COLLECTOR_PROD="${{ secrets.SW_APM_COLLECTOR_PROD }}" \
             -e SW_APM_COLLECTOR_STAGING="${{ secrets.SW_APM_COLLECTOR_STAGING }}" \
@@ -195,4 +196,4 @@ jobs:
             -e SW_APM_SERVICE_KEY_STAGING="${{ secrets.SW_APM_SERVICE_KEY_STAGING }}" \
             -e APM_ROOT=/code/python-solarwinds \
             ${{ matrix.image }} \
-            _helper_run_install_tests.sh
+            -c "set -x && ./_helper_run_install_tests.sh"
