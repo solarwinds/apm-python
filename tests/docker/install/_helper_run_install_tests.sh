@@ -12,8 +12,7 @@
 #   * Amazon Linux not having agent install deps
 #   * CentOS 8 being at end-of-life and needing a mirror re-point
 #   * Ubuntu not having agent install deps
-#
-# Note: centos8 can only install Python 3.9
+
 
 # stop on error
 set -e
@@ -42,25 +41,6 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         # agent deps - we install psutil for this test, so Alpine needs more deps
         apk add python3 curl linux-headers gcc musl-dev
 
-        pip install --upgrade pip >/dev/null
-
-    elif grep "CentOS Linux 8" /etc/os-release; then
-        # fix centos8 metadata download failures for repo 'appstream'
-        # https://stackoverflow.com/a/71077606
-        sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-        sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-        # agent and test deps
-        dnf install -y \
-            "python$python_version_no_dot" \
-            unzip \
-            findutils
-        dnf install -y "python$python_version_no_dot-pip" "python$python_version_no_dot-setuptools"
-
-        command -v python ||
-            ln -s "/usr/bin/python$python_version" /usr/local/bin/python
-        command -v pip ||
-            ln -s /usr/bin/pip3 /usr/local/bin/pip
-        
         pip install --upgrade pip >/dev/null
     
     elif grep Ubuntu /etc/os-release; then
