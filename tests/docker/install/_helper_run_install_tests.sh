@@ -92,8 +92,24 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 command -v pip ||
                     ln -s /usr/bin/pip3 /usr/local/bin/pip
             fi
+        elif grep "Amazon Linux 2" /etc/os-release; then
+            yum update -y
+            yum install -y \
+                unzip \
+                findutils \
+                tar \
+                gzip \
+                bash \
+                chkconfig
+
+            # For AWS Lambda images, python3 and pip3 are already installed
+            # Just ensure python and pip symlinks exist
+            command -v python ||
+                ln -s /usr/bin/python3 /usr/local/bin/python
+            command -v pip ||
+                ln -s /usr/bin/pip3 /usr/local/bin/pip
         else
-            echo "ERROR: Testing on Amazon <2023 not supported."
+            echo "ERROR: Testing on Amazon Linux <2 not supported."
             exit 1
         fi
     fi

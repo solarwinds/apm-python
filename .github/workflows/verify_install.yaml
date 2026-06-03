@@ -49,7 +49,8 @@ jobs:
           - py3.10-alpine3.13
           - py3.10-alpine3.16
           - py3.10-alpine3.17
-          - py3.10-amazon2023
+          - py3.10-amazon2-arm64
+          - py3.10-amazon2-x86-64
           - py3.10-debian10
           - py3.10-debian11
           - py3.10-ubuntu22.04
@@ -77,8 +78,10 @@ jobs:
             image: python:3.10-alpine3.16
           - hostname: py3.10-alpine3.17
             image: python:3.10-alpine3.17
-          - hostname: py3.10-amazon2023
-            image: amazonlinux:2023
+          - hostname: py3.10-amazon2-arm64
+            image: amazon/aws-lambda-python:3.10-arm64
+          - hostname: py3.10-amazon2-x86-64
+            image: amazon/aws-lambda-python:3.10-x86_64
           - hostname: py3.10-debian10
             image: python:3.10-buster
           - hostname: py3.10-debian11
@@ -134,6 +137,10 @@ jobs:
           - hostname: py3.13-alpine3.20
             arch: arm64
           # Mutual excludes for arch-specific Amazon hosts
+          - hostname: py3.10-amazon2-arm64
+            arch: x64
+          - hostname: py3.10-amazon2-x86-64
+            arch: arm64
           - hostname: py3.13-amazon2023-arm64
             arch: x64
           - hostname: py3.13-amazon2023-x86-64
