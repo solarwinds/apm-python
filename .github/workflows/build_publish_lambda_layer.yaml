@@ -80,6 +80,6 @@ jobs:
     with:
       artifact-name: solarwinds_apm_lambda.zip
       component-version: ${{ needs.get_apm_python_version.outputs.sw-apm-version }}
-      runtimes: "python3.10 python3.11 python3.12 python3.13"
+      runtimes: "python3.10 python3.11 python3.12 python3.13 python3.14"
       publish-dest: ${{ inputs.publish-dest }}
     secrets: inherit
