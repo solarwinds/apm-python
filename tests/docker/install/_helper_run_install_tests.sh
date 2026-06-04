@@ -17,12 +17,12 @@
 # stop on error
 set -e
 
-if [[ "$OSTYPE" == "darwin"* ]] || [ -n "$PYTHON_VERSION" ];
+if [ "${OSTYPE#darwin}" != "$OSTYPE" ] || [ -n "$PYTHON_VERSION" ];
 then
     # On macOS or when PYTHON_VERSION is explicitly set, use environment variable
     python_version=$PYTHON_VERSION
     python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
-    if [[ "$OSTYPE" == "darwin"* ]]; then
+    if [ "${OSTYPE#darwin}" != "$OSTYPE" ]; then
         pretty_name="macOS $(sw_vers -productVersion)"
     else
         pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
