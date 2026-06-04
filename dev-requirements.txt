@@ -5,6 +5,5 @@ pytest
 pytest-cov
 pytest-mock
 requests
-flask~=3.1; python_version >= '3.10'
-flask~=3.0; python_version < '3.10'
+flask~=3.1
 werkzeug
