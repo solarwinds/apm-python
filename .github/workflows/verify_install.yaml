@@ -173,9 +173,6 @@ jobs:
           else
             yum install -y tar gzip
           fi
-      # Use checkout@v3 for Amazon Linux 2 (GLIBC 2.26, needs Node.js 16)
-      - if: contains(matrix.hostname, 'amazon2-')
-        uses: actions/checkout@v3
       # Use checkout@v4 for Alpine versions < 3.17 that don't support Node.js 24
       - if: contains(matrix.hostname, 'alpine3.13') || contains(matrix.hostname, 'alpine3.14') || contains(matrix.hostname, 'alpine3.15') || contains(matrix.hostname, 'alpine3.16')
         uses: actions/checkout@v4
@@ -191,20 +188,12 @@ jobs:
 
   # Amazon Linux 2 (Python 3.10) - uses docker run instead of container job to avoid GLIBC 2.26 issues
   install-tests-amazon2:
-    runs-on: ${{ matrix.arch == 'arm64' && fromJSON('{"group":"apm-arm-runner"}') || 'ubuntu-latest' }}
+    runs-on: ${{ contains(matrix.image, 'arm64') && fromJSON('{"group":"apm-arm-runner"}') || 'ubuntu-latest' }}
     strategy:
       matrix:
         image:
           - amazon/aws-lambda-python:3.10-arm64
           - amazon/aws-lambda-python:3.10-x86_64
-        arch:
-          - x64
-          - arm64
-        exclude:
-          - image: amazon/aws-lambda-python:3.10-arm64
-            arch: x64
-          - image: amazon/aws-lambda-python:3.10-x86_64
-            arch: arm64
     steps:
       - uses: actions/checkout@v6
       - name: Run install test in Amazon Linux 2 container
