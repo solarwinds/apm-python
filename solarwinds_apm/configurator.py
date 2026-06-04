@@ -223,8 +223,7 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         metric_readers = []
 
         for _, exporter_or_reader_class in exporters_or_readers.items():
-            exporter_args = {
-                "max_export_batch_size": 2000,
+            shared_metric_args = {
                 "preferred_temporality": {
                     Counter: AggregationTemporality.DELTA,
                     UpDownCounter: AggregationTemporality.DELTA,
@@ -237,13 +236,16 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
 
             if issubclass(exporter_or_reader_class, MetricReader):
                 metric_readers.append(
-                    exporter_or_reader_class(**exporter_args)
+                    exporter_or_reader_class(**shared_metric_args)
                 )
             elif self.apm_config.is_lambda:
                 # Inf interval to not invoke periodic collection
                 metric_readers.append(
                     PeriodicExportingMetricReader(
-                        exporter_or_reader_class(**exporter_args),
+                        exporter_or_reader_class(
+                            max_export_batch_size=2000,
+                            **shared_metric_args,
+                        ),
                         export_interval_millis=math.inf,
                     )
                 )
@@ -251,7 +253,10 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
                 # Use default interval 60s else OTEL_METRIC_EXPORT_INTERVAL
                 metric_readers.append(
                     PeriodicExportingMetricReader(
-                        exporter_or_reader_class(**exporter_args),
+                        exporter_or_reader_class(
+                            max_export_batch_size=2000,
+                            **shared_metric_args,
+                        ),
                     )
                 )
 
