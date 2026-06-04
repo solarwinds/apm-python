@@ -39,7 +39,7 @@ check-zip:
 # Create package source distribution archive
 sdist:
 	@echo -e "Generating python agent sdist package"
-	@python3.9 -m build --sdist
+	@python3.10 -m build --sdist
 	@echo -e "\nDone."
 
 # Check local package source distribution archive contents, without install
@@ -48,10 +48,10 @@ check-sdist-local:
 	@cd ./tests/docker/install && MODE=local APM_ROOT=$(CURR_DIR) ./_helper_check_sdist.sh
 	@cd $(CURR_DIR)
 
-# Build the Python library package bdist (wheel) for 64 bit linux systems using Python 3.9
+# Build the Python library package bdist (wheel) for 64 bit linux systems using Python 3.10
 wheel:
 	@echo -e "Generating Python library wheel for 64 bit systems"
-	@/opt/python/cp39-cp39/bin/pip -v wheel . -w ./dist/ --no-deps
+	@/opt/python/cp310-cp310/bin/pip -v wheel . -w ./dist/ --no-deps
 	@echo -e "\nDone."
 
 # Check local package wheel contents, without install
@@ -72,13 +72,13 @@ install-lambda-modules:
 	@echo -e "Creating target directory ${target_dir} for AWS Lambda layer artifacts."
 	mkdir -p ${target_dir}/python
 	@echo -e "Install setuptools"
-	/opt/python/cp39-cp39/bin/pip install setuptools
+	/opt/python/cp310-cp310/bin/pip install setuptools
 	@echo -e "Install upstream dependencies to include in layer"
-	/opt/python/cp39-cp39/bin/pip install -t ${target_dir}/python -r lambda/requirements.txt
+	/opt/python/cp310-cp310/bin/pip install -t ${target_dir}/python -r lambda/requirements.txt
 	@echo -e "Install upstream dependencies without deps to include in layer"
-	@/opt/python/cp39-cp39/bin/pip install -t ${target_dir}/nodeps -r lambda/requirements-nodeps.txt --no-deps
+	@/opt/python/cp310-cp310/bin/pip install -t ${target_dir}/nodeps -r lambda/requirements-nodeps.txt --no-deps
 	@echo -e "Install solarwinds_apm to be packed up in zip archive to target directory."
-	@/opt/python/cp39-cp39/bin/pip install . -t ${target_dir}/nodeps --no-deps
+	@/opt/python/cp310-cp310/bin/pip install . -t ${target_dir}/nodeps --no-deps
 	@echo -e "Moving no-deps dependencies, needed for full opentelemetry/instrumentation path"
 	@cp -r ${target_dir}/nodeps/* ${target_dir}/python
 	@rm -rf ${target_dir}/nodeps
@@ -110,10 +110,10 @@ aws-lambda: check-zip install-lambda-modules check-lambda-modules
 # variable definitions and recipes for testing, linting, cleanup
 #----------------------------------------------------------------------------------------------------------------------#
 
-# Example: make tox OPTIONS="-e py39-test"
+# Example: make tox OPTIONS="-e py310-test"
 # Example: make tox OPTIONS="-e lint -- --check-only"
 tox:
-	@python3.9 -m tox $(OPTIONS)
+	@python3.10 -m tox $(OPTIONS)
 
 format:
 	@echo -e "Not implemented."

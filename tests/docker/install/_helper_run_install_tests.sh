@@ -12,18 +12,21 @@
 #   * Amazon Linux not having agent install deps
 #   * CentOS 8 being at end-of-life and needing a mirror re-point
 #   * Ubuntu not having agent install deps
-#
-# Note: centos8 can only install Python 3.9
+
 
 # stop on error
 set -e
 
-if [[ "$OSTYPE" == "darwin"* ]];
+if [ "${OSTYPE#darwin}" != "$OSTYPE" ] || [ -n "$PYTHON_VERSION" ];
 then
-    # On macOS, use GitHub Actions environment variable
+    # On macOS or when PYTHON_VERSION is explicitly set, use environment variable
     python_version=$PYTHON_VERSION
     python_version_no_dot=$(echo "$python_version" | sed 's/\.//')
-    pretty_name="macOS $(sw_vers -productVersion)"
+    if [ "${OSTYPE#darwin}" != "$OSTYPE" ]; then
+        pretty_name="macOS $(sw_vers -productVersion)"
+    else
+        pretty_name=$(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME="//' | sed 's/"//')
+    fi
 else
     # get Python version from container hostname, e.g. "3.10"
     python_version=$(grep -Eo 'py3.[0-9]+[0-9]*' /etc/hostname | grep -Eo '3.[0-9]+[0-9]*')
@@ -42,25 +45,6 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
         # agent deps - we install psutil for this test, so Alpine needs more deps
         apk add python3 curl linux-headers gcc musl-dev
 
-        pip install --upgrade pip >/dev/null
-
-    elif grep "CentOS Linux 8" /etc/os-release; then
-        # fix centos8 metadata download failures for repo 'appstream'
-        # https://stackoverflow.com/a/71077606
-        sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-        sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-        # agent and test deps
-        dnf install -y \
-            "python$python_version_no_dot" \
-            unzip \
-            findutils
-        dnf install -y "python$python_version_no_dot-pip" "python$python_version_no_dot-setuptools"
-
-        command -v python ||
-            ln -s "/usr/bin/python$python_version" /usr/local/bin/python
-        command -v pip ||
-            ln -s /usr/bin/pip3 /usr/local/bin/pip
-        
         pip install --upgrade pip >/dev/null
     
     elif grep Ubuntu /etc/os-release; then
@@ -112,8 +96,24 @@ echo "Installing test dependencies for Python $python_version on $pretty_name"
                 command -v pip ||
                     ln -s /usr/bin/pip3 /usr/local/bin/pip
             fi
+        elif grep "Amazon Linux 2" /etc/os-release; then
+            yum update -y
+            yum install -y \
+                unzip \
+                findutils \
+                tar \
+                gzip \
+                bash \
+                chkconfig
+
+            # For AWS Lambda images, python3 and pip3 are already installed
+            # Just ensure python and pip symlinks exist
+            command -v python ||
+                ln -s /usr/bin/python3 /usr/local/bin/python
+            command -v pip ||
+                ln -s /usr/bin/pip3 /usr/local/bin/pip
         else
-            echo "ERROR: Testing on Amazon <2023 not supported."
+            echo "ERROR: Testing on Amazon Linux <2 not supported."
             exit 1
         fi
     fi

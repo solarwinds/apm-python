@@ -124,7 +124,7 @@ def solarwinds_ready(
     if isinstance(tracer_provider, SolarwindsTracerProvider):
         if isinstance(
             tracer_provider.sampler,
-            (ParentBasedSwSampler, HttpSampler, JsonSampler),
+            ParentBasedSwSampler | HttpSampler | JsonSampler,
         ):
             return tracer_provider.sampler.wait_until_ready(
                 int(wait_milliseconds / 1000)
