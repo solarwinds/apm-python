@@ -66,6 +66,12 @@ jobs:
           - py3.13-debian12
           - py3.13-alpine3.19
           - py3.13-alpine3.20
+          - py3.14-amazon2023-arm64
+          - py3.14-amazon2023-x86-64
+          - py3.14-debian12
+          - py3.14-debian13
+          - py3.14-alpine3.22
+          - py3.14-alpine3.23
         arch:
           - x64
           - arm64
@@ -110,6 +116,18 @@ jobs:
             image: python:3.13-alpine3.19
           - hostname: py3.13-alpine3.20
             image: python:3.13-alpine3.20
+          - hostname: py3.14-amazon2023-arm64
+            image: amazon/aws-lambda-python:3.14-arm64
+          - hostname: py3.14-amazon2023-x86-64
+            image: amazon/aws-lambda-python:3.14-x86_64
+          - hostname: py3.14-debian12
+            image: python:3.14-bookworm
+          - hostname: py3.14-debian13
+            image: python:3.14-trixie
+          - hostname: py3.14-alpine3.22
+            image: python:3.14-alpine3.22
+          - hostname: py3.14-alpine3.23
+            image: python:3.14-alpine3.23
         exclude:
           # Note: JavaScript Actions (checkout) in Alpine only supported in x64
           - hostname: py3.10-alpine3.13
@@ -130,10 +148,18 @@ jobs:
             arch: arm64
           - hostname: py3.13-alpine3.20
             arch: arm64
+          - hostname: py3.14-alpine3.22
+            arch: arm64
+          - hostname: py3.14-alpine3.23
+            arch: arm64
           # Mutual excludes for arch-specific Amazon hosts
           - hostname: py3.13-amazon2023-arm64
             arch: x64
           - hostname: py3.13-amazon2023-x86-64
+            arch: arm64
+          - hostname: py3.14-amazon2023-arm64
+            arch: x64
+          - hostname: py3.14-amazon2023-x86-64
             arch: arm64
     container:
       image: "${{ matrix.image }}"

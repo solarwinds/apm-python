@@ -205,3 +205,49 @@ services:
     << : [*command-install-test, *workdir, *volumes-codebase]
     environment:
       << : *envvars-install-test
+
+  #--------------------------------------------------------------------
+  # Python 3.14
+  #--------------------------------------------------------------------
+
+  py3.14-install-amazon2023-arm64:
+    hostname: "py3.14-amazon2023-arm64"
+    image: "amazon/aws-lambda-python:3.14-arm64"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.14-install-amazon2023-x86-64:
+    hostname: "py3.14-amazon2023-x86-64"
+    image: "amazon/aws-lambda-python:3.14-x86_64"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.14-install-debian12:
+    hostname: "py3.14-debian12"
+    image: "python:3.14-bookworm"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.14-install-debian13:
+    hostname: "py3.14-debian13"
+    image: "python:3.14-trixie"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.14-install-alpine3.22:
+    hostname: "py3.14-alpine3.22"
+    image: "python:3.14-alpine3.22"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
+
+  py3.14-install-alpine3.23:
+    hostname: "py3.14-alpine3.23"
+    image: "python:3.14-alpine3.23"
+    << : [*command-install-test, *workdir, *volumes-codebase]
+    environment:
+      << : *envvars-install-test
