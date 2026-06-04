@@ -13,7 +13,7 @@ These files provide containers and scripts to test installation of packaged `sol
    * `SW_APM_SERVICE_KEY_PROD`
    * `SW_APM_SERVICE_KEY_STAGING`
 4. Run one of the containers interactively, with service name specified in `docker-compose.yml`:
-   * For Debian / CentOS / Fedora: `docker-compose run --rm <service_name> /bin/bash`
+   * For Debian / Ubuntu: `docker-compose run --rm <service_name> /bin/bash`
    * For Amazon Linux 2 (py3.10) / Amazon Linux 2023 (py3.13): `docker-compose run --rm --entrypoint="" <service_name> /bin/sh`
    * For Alpine: `docker-compose run --rm <service_name> /bin/sh`
 5. `./_helper_run_install_tests.sh`
