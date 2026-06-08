@@ -68,6 +68,8 @@ DOCKER_BUILDKIT=1 docker build --platform linux/arm64 --provenance=false \
   -t my-cool-repo:latest .
 ```
 
+**Note:** Update the Dockerfile to match your target platform (base image tag + extension install block) and remove/comment out the other architecture’s commands (x86_64 vs arm64).
+
 ### (3) Set/Update AWS Lambda environment variables for instrumentation
 
 This configures environment variables for an existing AWS Lambda function, `my-cool-lambda`. For more information, see [SWO AWS Lambda Instrumentation](https://documentation.solarwinds.com/en/success_center/observability/content/intro/services/aws-lambda-overview.htm).
