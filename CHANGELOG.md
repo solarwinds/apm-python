@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-6.2.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-7.0.0...HEAD)
+
+## [7.0.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-7.0.0) - 2026-06-08
+
+### Added
+- Added Lambda container example ([#777](https://github.com/solarwinds/apm-python/pull/777), [#786](https://github.com/solarwinds/apm-python/pull/786))
+- Added Python 3.14 support, testing ([#781](https://github.com/solarwinds/apm-python/pull/781))
+
+### Changed
+- Breaking: upgraded to OTel Python 1.42.1/0.63b1, which drops Python 3.9 support and automatic `otel.sdk.*` generation ([#778](https://github.com/solarwinds/apm-python/pull/778))
+- Narrowed version ranges for urllib3, requests installed at image publish ([#780](https://github.com/solarwinds/apm-python/pull/780))
+- Updated CodeQL CI/CD checks ([#783](https://github.com/solarwinds/apm-python/pull/783))
 
 ## [6.2.0](https://github.com/solarwinds/apm-python/releases/tag/rel-6.2.0) - 2026-05-29
 
