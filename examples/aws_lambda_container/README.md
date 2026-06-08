@@ -68,7 +68,7 @@ DOCKER_BUILDKIT=1 docker build --platform linux/arm64 --provenance=false \
   -t my-cool-repo:latest .
 ```
 
-**Note:** Check the Dockerfile and use only the commands suitable for your container's platform, e.g. x86_64 or arm64 for extension installation.
+**Note:** Update the Dockerfile to match your target platform (base image tag + extension install block) and remove/comment out the other architecture’s commands (x86_64 vs arm64).
 
 ### (3) Set/Update AWS Lambda environment variables for instrumentation
 
