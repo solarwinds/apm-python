@@ -6,14 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-7.0.0...HEAD)
 
-## [7.0.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-7.0.0) - 2026-06-08
+## [7.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-7.0.0) - 2026-06-11
 
 ### Added
 - Added Lambda container example ([#777](https://github.com/solarwinds/apm-python/pull/777), [#786](https://github.com/solarwinds/apm-python/pull/786))
 - Added Python 3.14 support, testing ([#781](https://github.com/solarwinds/apm-python/pull/781))
 
 ### Changed
-- Breaking: upgraded to OTel Python 1.42.1/0.63b1, which drops Python 3.9 support and automatic `otel.sdk.*` generation ([#778](https://github.com/solarwinds/apm-python/pull/778))
+- Breaking: upgraded to OTel Python 1.42.1/0.63b1, which drops Python 3.9 support and automatic `otel.sdk.*` generation, and adds random decision trace flags ([#778](https://github.com/solarwinds/apm-python/pull/778))
 - Narrowed version ranges for urllib3, requests installed at image publish ([#780](https://github.com/solarwinds/apm-python/pull/780))
 - Updated CodeQL CI/CD checks ([#783](https://github.com/solarwinds/apm-python/pull/783))
 
