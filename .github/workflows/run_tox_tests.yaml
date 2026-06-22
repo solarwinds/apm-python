@@ -22,7 +22,7 @@ jobs:
         python-minor: ["10", "11", "12", "13"]
         apm-env: ["test"]
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Setup Python
       uses: actions/setup-python@v6
       with:
