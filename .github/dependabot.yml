@@ -28,8 +28,6 @@ updates:
         - patch
 
     misc:
-      exclude-patterns:
-        - "opentelemetry-*"
       update-types:
         - minor
         - patch
