@@ -2,19 +2,6 @@ version: 2
 
 updates:
 - package-ecosystem: pip
-  directory: "/lambda/tests"
-  schedule:
-    interval: weekly
-
-  groups:
-    otel-dependencies:
-      patterns:
-        - "opentelemetry-*"
-      update-types:
-        - minor
-        - patch
-
-- package-ecosystem: pip
   directory: "/"
   schedule:
     interval: weekly
