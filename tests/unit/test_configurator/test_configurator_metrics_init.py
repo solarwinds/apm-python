@@ -107,6 +107,8 @@ class TestConfiguratorMetricsInit:
         )
         mock_exporter_spy.assert_called_once()
         _, kwargs = mock_exporter_spy.call_args
+        assert "max_export_batch_size" in kwargs
+        assert kwargs["max_export_batch_size"] == 2000
         assert "preferred_temporality" in kwargs
         assert kwargs["preferred_temporality"] == {
             mock_counter: mock_agg_temp.DELTA,
@@ -190,6 +192,8 @@ class TestConfiguratorMetricsInit:
         )
         mock_exporter_spy.assert_called_once()
         _, kwargs = mock_exporter_spy.call_args
+        assert "max_export_batch_size" in kwargs
+        assert kwargs["max_export_batch_size"] == 2000
         assert "preferred_temporality" in kwargs
         assert kwargs["preferred_temporality"] == {
             mock_counter: mock_agg_temp.DELTA,
@@ -271,6 +275,7 @@ class TestConfiguratorMetricsInit:
         )
         mock_reader_spy.assert_called_once()
         _, kwargs = mock_reader_spy.call_args
+        assert "max_export_batch_size" not in kwargs
         assert "preferred_temporality" in kwargs
         assert kwargs["preferred_temporality"] == {
             mock_counter: mock_agg_temp.DELTA,
@@ -350,6 +355,7 @@ class TestConfiguratorMetricsInit:
         )
         mock_reader_spy.assert_called_once()
         _, kwargs = mock_reader_spy.call_args
+        assert "max_export_batch_size" not in kwargs
         assert "preferred_temporality" in kwargs
         assert kwargs["preferred_temporality"] == {
             mock_counter: mock_agg_temp.DELTA,
