@@ -6,6 +6,9 @@
 
 name: Run tox tests
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
   push:
