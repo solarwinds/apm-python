@@ -19,26 +19,26 @@ jobs:
   docker_hub:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Read solarwinds_apm version requirement
         run: echo VERSION=$(head -n 1 image/requirements-nodeps-beta.txt | cut -d '=' -f3) >> $GITHUB_ENV
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
 
       - name: Log into Docker.io (build)
-        uses: docker/login-action@v4
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         with:
           username: ${{ vars.DOCKER_SOLARWINDS_ORG_LOGIN }}
           password: ${{ secrets.ENOPS5919_APM_DOCKER_HUB_CI_OAT }}
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051
         with:
           images: ${{ github.repository_owner }}/autoinstrumentation-python
           tags: |
@@ -50,14 +50,14 @@ jobs:
             org.opencontainers.image.vendor=SolarWinds Worldwide, LLC
 
       - name: Login to GitHub Package Registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push - amd64, arm64
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
         with:
           push: true
           context: image
@@ -68,7 +68,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build locally for scan - amd64
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
         with:
           load: true
           context: image
@@ -78,14 +78,14 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Log into Docker.io (scan)
-        uses: docker/login-action@v4
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         with:
           username: ${{ vars.ENOPS5919_DOCKER_SCOUT_CI_USER }}
           password: ${{ secrets.ENOPS5919_DOCKER_SCOUT_CI_PAT }}
 
       - name: Analyze for critical and high CVEs - tagged image
         id: docker-scout-image-cves
-        uses: docker/scout-action@v1
+        uses: docker/scout-action@bacf462e8d090c09660de30a6ccc718035f961e3
         with:
           command: cves
           image: ${{ steps.meta.outputs.tags[0] }}
@@ -93,33 +93,33 @@ jobs:
           sarif-file: sarif.output.json
 
       - name: Upload SARIF result
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e
         with:
           sarif_file: sarif.output.json
 
   ghcr_io:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Read solarwinds_apm version requirement
         run: echo VERSION=$(head -n 1 image/requirements-nodeps-beta.txt | cut -d '=' -f3) >> $GITHUB_ENV
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
 
       - name: Login to GitHub Package Registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
         with:
           push: true
           context: image
