@@ -17,6 +17,8 @@ env:
   RELEASE_VERSION: ${{ github.event.inputs.version }}
   RELEASE_NAME: rel-${{ github.event.inputs.version }}
 
+permissions: read-all
+
 jobs:
   create_release_pr:
     runs-on: ubuntu-latest

@@ -25,6 +25,8 @@ on:
     #        *  * * * *
   #  - cron: '30 1 * * *'
 
+permissions: read-all
+
 jobs:
   analyze:
     name: Analyze

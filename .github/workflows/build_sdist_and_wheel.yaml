@@ -18,6 +18,8 @@ on:
         description: 'Name of zip archive of sdist and wheels'
         value: ${{ jobs.build_sdist_and_wheel.outputs.artifact-name }}
 
+permissions: read-all
+
 jobs:
   build_sdist_and_wheel:
     name: Build sdist and wheel
