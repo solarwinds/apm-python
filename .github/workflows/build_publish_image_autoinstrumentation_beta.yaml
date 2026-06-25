@@ -97,6 +97,77 @@ jobs:
         with:
           sarif_file: sarif.output.json
 
+      - name: Parse SARIF for Critical/High CVEs
+        id: parse-cves
+        run: |
+          # Extract CVEs from SARIF
+          jq -r '.runs[0].results[] | 
+            select(.level == "error" or .level == "warning") | 
+            @json' sarif.output.json > vulnerabilities.json
+          
+          # Count vulnerabilities
+          echo "count=$(jq -s 'length' vulnerabilities.json)" >> $GITHUB_OUTPUT
+
+      - name: Create Jira tickets with actionable details
+        if: steps.parse-cves.outputs.count > 0
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: |
+          while IFS= read -r vuln; do
+            CVE=$(echo "$vuln" | jq -r '.ruleId')
+            PACKAGE=$(echo "$vuln" | jq -r '.locations[0].physicalLocation.artifactLocation.uri // "unknown"')
+            VERSION=$(echo "$vuln" | jq -r '.locations[0].physicalLocation.region.snippet.text // "unknown"')
+            MESSAGE=$(echo "$vuln" | jq -r '.message.text')
+            SEVERITY=$(echo "$vuln" | jq -r '.level')
+            
+            # Create comprehensive Jira ticket with all context for developer
+            JIRA_DESCRIPTION=$(cat <<EOF
+          h2. Security Vulnerability Detected
+
+          *CVE*: ${CVE}
+          *Package*: ${PACKAGE}
+          *Version*: ${VERSION}
+          *Severity*: $([ "$SEVERITY" = "error" ] && echo "Critical" || echo "High")
+          *Image*: ${{ steps.meta.outputs.tags[0] }}
+
+          h3. Description
+          ${MESSAGE}
+
+          h3. Recommended Action
+          Upgrade the vulnerable dependency to the latest secure version.
+
+          h3. Detection Source
+          *Workflow Run*: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          *Commit*: ${{ github.sha }}
+          *Docker Scout SARIF*: Attached to workflow artifacts
+          EOF
+            )
+            
+            JIRA_RESPONSE=$(curl -s -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
+              -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"fields\": {
+                  \"project\": {\"key\": \"NH\"},
+                  \"summary\": \"${CVE}: Python - ${PACKAGE}\",
+                  \"description\": $(echo "$JIRA_DESCRIPTION" | jq -Rs .),
+                  \"issuetype\": {\"name\": \"Security Vuln\"},
+                  \"components\": [{\"name\": \"Instrument Python\"}],
+                  \"customfield_10001\": {\"value\": \"Instrumentation (APM)\"},
+                  \"labels\": [\"security\", \"cve\", \"docker-scout\", \"autoinstrumentation\"],
+                  \"priority\": {\"name\": \"Critical\"}
+                }
+              }")
+            
+            JIRA_KEY=$(echo "$JIRA_RESPONSE" | jq -r '.key')
+            JIRA_URL="${JIRA_BASE_URL}/browse/${JIRA_KEY}"
+            
+            echo "Created Jira ticket ${JIRA_KEY}: ${JIRA_URL}"
+            
+          done < vulnerabilities.json
+
   ghcr_io:
     runs-on: ubuntu-latest
     steps:
