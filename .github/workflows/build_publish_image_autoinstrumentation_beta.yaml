@@ -292,7 +292,8 @@ jobs:
               echo "$JIRA_REQUEST" > "$TEMP_REQUEST"
               
               # Use write-out to get connection timing and detailed diagnostics
-              JIRA_METRICS=$(curl -v -w "\ntime_namelookup:%{time_namelookup}\ntime_connect:%{time_connect}\ntime_appconnect:%{time_appconnect}\ntime_pretransfer:%{time_pretransfer}\ntime_starttransfer:%{time_starttransfer}\ntime_total:%{time_total}\nhttp_code:%{http_code}\nsize_upload:%{size_upload}" \
+              # Force HTTP/1.1 to avoid HTTP/2 POST body upload issues
+              JIRA_METRICS=$(curl -v --http1.1 -w "\ntime_namelookup:%{time_namelookup}\ntime_connect:%{time_connect}\ntime_appconnect:%{time_appconnect}\ntime_pretransfer:%{time_pretransfer}\ntime_starttransfer:%{time_starttransfer}\ntime_total:%{time_total}\nhttp_code:%{http_code}\nsize_upload:%{size_upload}" \
                 --connect-timeout 30 --max-time 90 \
                 -o "$TEMP_RESPONSE" \
                 -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
@@ -322,10 +323,11 @@ jobs:
               fi
             else
               # Use temp file for request body (subsequent requests)
+              # Force HTTP/1.1 to avoid HTTP/2 POST body upload issues
               TEMP_REQUEST=$(mktemp)
               echo "$JIRA_REQUEST" > "$TEMP_REQUEST"
               
-              JIRA_RESPONSE=$(curl -s -w "\n%{http_code}" --connect-timeout 30 --max-time 90 \
+              JIRA_RESPONSE=$(curl -s --http1.1 -w "\n%{http_code}" --connect-timeout 30 --max-time 90 \
                 -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
                 -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
                 -H "Content-Type: application/json" \
