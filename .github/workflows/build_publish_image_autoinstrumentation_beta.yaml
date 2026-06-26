@@ -289,7 +289,7 @@ jobs:
               # Use temp files for both request and response
               TEMP_REQUEST=$(mktemp)
               TEMP_RESPONSE=$(mktemp)
-              echo "$JIRA_REQUEST" > "$TEMP_REQUEST"
+              printf '%s' "$JIRA_REQUEST" > "$TEMP_REQUEST"
               
               # Use write-out to get connection timing and detailed diagnostics
               # Force HTTP/1.1 to avoid HTTP/2 POST body upload issues
@@ -325,7 +325,7 @@ jobs:
               # Use temp file for request body (subsequent requests)
               # Force HTTP/1.1 to avoid HTTP/2 POST body upload issues
               TEMP_REQUEST=$(mktemp)
-              echo "$JIRA_REQUEST" > "$TEMP_REQUEST"
+              printf '%s' "$JIRA_REQUEST" > "$TEMP_REQUEST"
               
               JIRA_RESPONSE=$(curl -s --http1.1 -w "\n%{http_code}" --connect-timeout 30 --max-time 90 \
                 -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
