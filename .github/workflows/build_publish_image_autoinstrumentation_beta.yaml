@@ -255,47 +255,86 @@ jobs:
                 }')
             fi
             
+            # Validate JSON payload before sending
+            if ! echo "$JIRA_REQUEST" | jq empty 2>/dev/null; then
+              echo "❌ ERROR: Generated invalid JSON payload"
+              echo "First 500 chars of payload:"
+              echo "$JIRA_REQUEST" | head -c 500
+              ((ERROR_COUNT++))
+              continue
+            fi
+            
+            # Show payload size and preview for first request
+            if [ $TICKET_COUNT -eq 0 ] && [ $ERROR_COUNT -eq 0 ]; then
+              PAYLOAD_SIZE=$(echo "$JIRA_REQUEST" | wc -c)
+              echo "Payload size: ${PAYLOAD_SIZE} bytes"
+              echo "Payload preview (first 300 chars):"
+              echo "$JIRA_REQUEST" | head -c 300
+              echo "..."
+              echo ""
+              
+              # Test base64 encoding
+              TEST_BASE64=$(echo -n "test@example.com:token123" | base64)
+              echo "Base64 encoding test successful: ${#TEST_BASE64} chars"
+            fi
+            
             # Attempt Jira API call with additional debugging for first request only
             if [ $TICKET_COUNT -eq 0 ] && [ $ERROR_COUNT -eq 0 ]; then
               echo "First request - showing connection details (auth headers masked)..."
               echo "POST ${JIRA_BASE_URL}/rest/api/3/issue"
               echo "Authorization: Basic ****MASKED****"
               echo "Content-Type: application/json"
+              echo "User-Agent: GitHub-Actions-Docker-Scout-CVE-Reporter/1.0"
               
-              # Show payload structure (not full content to keep logs clean)
-              echo "Payload fields: project, summary, description, issuetype, components, customfield_10001, labels, priority"
+              # Use temp file for response body to avoid mixing with verbose output
+              TEMP_RESPONSE=$(mktemp)
               
-              # Use write-out to get connection timing info (safe - no sensitive data)
-              JIRA_RESPONSE=$(curl -s -w "\ntime_namelookup:%{time_namelookup}\ntime_connect:%{time_connect}\ntime_starttransfer:%{time_starttransfer}\nhttp_code:%{http_code}" \
-                --connect-timeout 30 --max-time 60 \
+              # Use write-out to get connection timing and detailed diagnostics
+              JIRA_METRICS=$(curl -v -w "\ntime_namelookup:%{time_namelookup}\ntime_connect:%{time_connect}\ntime_appconnect:%{time_appconnect}\ntime_pretransfer:%{time_pretransfer}\ntime_starttransfer:%{time_starttransfer}\ntime_total:%{time_total}\nhttp_code:%{http_code}\nsize_upload:%{size_upload}" \
+                --connect-timeout 30 --max-time 90 \
+                -o "$TEMP_RESPONSE" \
                 -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
                 -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
                 -H "Content-Type: application/json" \
-                -d "$JIRA_REQUEST")
+                -H "User-Agent: GitHub-Actions-Docker-Scout-CVE-Reporter/1.0" \
+                -d "$JIRA_REQUEST" 2>&1)
               
-              # Extract and display timing info
-              echo "DNS lookup time: $(echo "$JIRA_RESPONSE" | grep time_namelookup | cut -d: -f2)"
-              echo "Connect time: $(echo "$JIRA_RESPONSE" | grep time_connect | cut -d: -f2)"
-              echo "Time to first byte: $(echo "$JIRA_RESPONSE" | grep time_starttransfer | cut -d: -f2)"
+              # Extract timing info from metrics
+              echo "DNS lookup time: $(echo "$JIRA_METRICS" | grep time_namelookup | cut -d: -f2)"
+              echo "Connect time: $(echo "$JIRA_METRICS" | grep time_connect | cut -d: -f2)"
+              echo "SSL handshake time: $(echo "$JIRA_METRICS" | grep time_appconnect | cut -d: -f2)"
+              echo "Pre-transfer time: $(echo "$JIRA_METRICS" | grep time_pretransfer | cut -d: -f2)"
+              echo "Time to first byte: $(echo "$JIRA_METRICS" | grep time_starttransfer | cut -d: -f2)"
+              echo "Total time: $(echo "$JIRA_METRICS" | grep time_total | cut -d: -f2)"
+              echo "Bytes uploaded: $(echo "$JIRA_METRICS" | grep size_upload | cut -d: -f2)"
+              
+              # Get HTTP code and response body
+              HTTP_CODE=$(echo "$JIRA_METRICS" | grep http_code | cut -d: -f2 | tr -d ' ')
+              RESPONSE_BODY=$(cat "$TEMP_RESPONSE")
+              rm -f "$TEMP_RESPONSE"
+              
+              # Show curl diagnostics if HTTP 000
+              if [ "$HTTP_CODE" = "000" ]; then
+                echo "⚠️  HTTP 000 error - showing curl diagnostics:"
+                echo "$JIRA_METRICS" | head -n 100
+              fi
             else
-              JIRA_RESPONSE=$(curl -s -w "\n%{http_code}" --connect-timeout 30 --max-time 60 \
+              JIRA_RESPONSE=$(curl -s -w "\n%{http_code}" --connect-timeout 30 --max-time 90 \
                 -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
                 -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
                 -H "Content-Type: application/json" \
+                -H "User-Agent: GitHub-Actions-Docker-Scout-CVE-Reporter/1.0" \
                 -d "$JIRA_REQUEST")
-            fi
-            
-            # Parse response - first response has timing info, others are simple
-            if [ $TICKET_COUNT -eq 0 ] && [ $ERROR_COUNT -eq 0 ]; then
-              HTTP_CODE=$(echo "$JIRA_RESPONSE" | grep http_code | cut -d: -f2)
-              # Get response body (everything before timing info lines)
-              RESPONSE_BODY=$(echo "$JIRA_RESPONSE" | sed '/time_namelookup:/,$d')
-            else
+              
               HTTP_CODE=$(echo "$JIRA_RESPONSE" | tail -n1)
               RESPONSE_BODY=$(echo "$JIRA_RESPONSE" | sed '$d')
             fi
             
-            if [[ "$HTTP_CODE" =~ ^2[0-9][0-9]$ ]]; then
+            # Process response (HTTP_CODE and RESPONSE_BODY already set above)
+            if [ "$HTTP_CODE" = "000" ]; then
+              echo "❌ Connection error (curl returned 000) - check curl diagnostics above"
+              ((ERROR_COUNT++))
+            elif [[ "$HTTP_CODE" =~ ^2[0-9][0-9]$ ]]; then
               JIRA_KEY=$(echo "$RESPONSE_BODY" | jq -r '.key // "null"')
               if [ "$JIRA_KEY" != "null" ] && [ -n "$JIRA_KEY" ]; then
                 JIRA_URL="${JIRA_BASE_URL}/browse/${JIRA_KEY}"
