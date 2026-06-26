@@ -142,13 +142,23 @@ jobs:
             CVE=$(echo "$vuln" | jq -r '.ruleId')
             PACKAGE=$(echo "$vuln" | jq -r '.locations[0].physicalLocation.artifactLocation.uri // "unknown"')
             VERSION=$(echo "$vuln" | jq -r '.locations[0].physicalLocation.region.snippet.text // "unknown"')
-            MESSAGE=$(echo "$vuln" | jq -r '.message.text')
+            RAW_MESSAGE=$(echo "$vuln" | jq -r '.message.text')
             SEVERITY=$(echo "$vuln" | jq -r '.level')
+            
+            # Sanitize MESSAGE: remove control characters but keep newlines/tabs
+            MESSAGE=$(echo "$RAW_MESSAGE" | tr -d '\000-\010\013\014\016-\037')
             
             echo "----------------------------------------"
             echo "Processing CVE: ${CVE}"
             echo "Package: ${PACKAGE}"
             echo "Severity: ${SEVERITY}"
+            
+            # Check if sanitization removed characters
+            RAW_LEN=${#RAW_MESSAGE}
+            CLEAN_LEN=${#MESSAGE}
+            if [ "$RAW_LEN" -ne "$CLEAN_LEN" ]; then
+              echo "⚠️  Sanitized message: removed $((RAW_LEN - CLEAN_LEN)) control characters"
+            fi
             
             # Prepare values for Jira ticket
             SEVERITY_TEXT=$([ "$SEVERITY" = "error" ] && echo "Critical" || echo "High")
@@ -273,6 +283,16 @@ jobs:
               echo "..."
               echo ""
               
+              # Check for non-printable characters
+              NON_PRINTABLE=$(echo "$JIRA_REQUEST" | tr -d '[:print:]\n\t' | wc -c)
+              if [ "$NON_PRINTABLE" -gt 0 ]; then
+                echo "⚠️  WARNING: Payload contains $NON_PRINTABLE non-printable characters"
+                echo "First 100 bytes in hex:"
+                echo "$JIRA_REQUEST" | head -c 100 | xxd | head -5
+              else
+                echo "✅ Payload contains only printable characters"
+              fi
+              
               # Test base64 encoding
               TEST_BASE64=$(echo -n "test@example.com:token123" | base64)
               echo "Base64 encoding test successful: ${#TEST_BASE64} chars"
@@ -289,16 +309,18 @@ jobs:
               # Use temp files for both request and response
               TEMP_REQUEST=$(mktemp)
               TEMP_RESPONSE=$(mktemp)
-              printf '%s' "$JIRA_REQUEST" > "$TEMP_REQUEST"
+              printf '%s\n' "$JIRA_REQUEST" > "$TEMP_REQUEST"
               
               # Use write-out to get connection timing and detailed diagnostics
               # Force HTTP/1.1 to avoid HTTP/2 POST body upload issues
+              # Use -u for auth to avoid base64 encoding issues
               JIRA_METRICS=$(curl -v --http1.1 -w "\ntime_namelookup:%{time_namelookup}\ntime_connect:%{time_connect}\ntime_appconnect:%{time_appconnect}\ntime_pretransfer:%{time_pretransfer}\ntime_starttransfer:%{time_starttransfer}\ntime_total:%{time_total}\nhttp_code:%{http_code}\nsize_upload:%{size_upload}" \
                 --connect-timeout 30 --max-time 90 \
                 -o "$TEMP_RESPONSE" \
                 -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
-                -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
-                -H "Content-Type: application/json" \
+                -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+                -H "Content-Type: application/json; charset=utf-8" \
+                -H "Accept: application/json" \
                 -H "User-Agent: GitHub-Actions-Docker-Scout-CVE-Reporter/1.0" \
                 --data-binary @"$TEMP_REQUEST" 2>&1)
               
@@ -325,12 +347,13 @@ jobs:
               # Use temp file for request body (subsequent requests)
               # Force HTTP/1.1 to avoid HTTP/2 POST body upload issues
               TEMP_REQUEST=$(mktemp)
-              printf '%s' "$JIRA_REQUEST" > "$TEMP_REQUEST"
+              printf '%s\n' "$JIRA_REQUEST" > "$TEMP_REQUEST"
               
               JIRA_RESPONSE=$(curl -s --http1.1 -w "\n%{http_code}" --connect-timeout 30 --max-time 90 \
                 -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
-                -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
-                -H "Content-Type: application/json" \
+                -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+                -H "Content-Type: application/json; charset=utf-8" \
+                -H "Accept: application/json" \
                 -H "User-Agent: GitHub-Actions-Docker-Scout-CVE-Reporter/1.0" \
                 --data-binary @"$TEMP_REQUEST")
               
