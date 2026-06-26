@@ -150,96 +150,7 @@ jobs:
             echo "Package: ${PACKAGE}"
             echo "Severity: ${SEVERITY}"
             
-            # Create Jira description in Atlassian Document Format (ADF)
-            # ADF is required for Jira API v3 descriptions
-            JIRA_DESCRIPTION=$(cat <<'EOF'
-{
-  "version": 1,
-  "type": "doc",
-  "content": [
-    {
-      "type": "heading",
-      "attrs": {"level": 2},
-      "content": [{"type": "text", "text": "Security Vulnerability Detected"}]
-    },
-    {
-      "type": "paragraph",
-      "content": [
-        {"type": "text", "text": "CVE: ", "marks": [{"type": "strong"}]},
-        {"type": "text", "text": "CVE_PLACEHOLDER"}
-      ]
-    },
-    {
-      "type": "paragraph",
-      "content": [
-        {"type": "text", "text": "Package: ", "marks": [{"type": "strong"}]},
-        {"type": "text", "text": "PACKAGE_PLACEHOLDER"}
-      ]
-    },
-    {
-      "type": "paragraph",
-      "content": [
-        {"type": "text", "text": "Version: ", "marks": [{"type": "strong"}]},
-        {"type": "text", "text": "VERSION_PLACEHOLDER"}
-      ]
-    },
-    {
-      "type": "paragraph",
-      "content": [
-        {"type": "text", "text": "Severity: ", "marks": [{"type": "strong"}]},
-        {"type": "text", "text": "SEVERITY_PLACEHOLDER"}
-      ]
-    },
-    {
-      "type": "paragraph",
-      "content": [
-        {"type": "text", "text": "Image: ", "marks": [{"type": "strong"}]},
-        {"type": "text", "text": "IMAGE_PLACEHOLDER"}
-      ]
-    },
-    {
-      "type": "heading",
-      "attrs": {"level": 3},
-      "content": [{"type": "text", "text": "Description"}]
-    },
-    {
-      "type": "paragraph",
-      "content": [{"type": "text", "text": "MESSAGE_PLACEHOLDER"}]
-    },
-    {
-      "type": "heading",
-      "attrs": {"level": 3},
-      "content": [{"type": "text", "text": "Recommended Action"}]
-    },
-    {
-      "type": "paragraph",
-      "content": [{"type": "text", "text": "Upgrade the vulnerable dependency to the latest secure version."}]
-    },
-    {
-      "type": "heading",
-      "attrs": {"level": 3},
-      "content": [{"type": "text", "text": "Detection Source"}]
-    },
-    {
-      "type": "paragraph",
-      "content": [
-        {"type": "text", "text": "Workflow Run: ", "marks": [{"type": "strong"}]},
-        {"type": "text", "text": "WORKFLOW_URL_PLACEHOLDER", "marks": [{"type": "link", "attrs": {"href": "WORKFLOW_URL_PLACEHOLDER"}}]}
-      ]
-    },
-    {
-      "type": "paragraph",
-      "content": [
-        {"type": "text", "text": "Commit: ", "marks": [{"type": "strong"}]},
-        {"type": "text", "text": "COMMIT_PLACEHOLDER"}
-      ]
-    }
-  ]
-}
-EOF
-            )
-            
-            # Replace placeholders with actual values and build complete request JSON
+            # Prepare values for Jira ticket
             SEVERITY_TEXT=$([ "$SEVERITY" = "error" ] && echo "Critical" || echo "High")
             WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             
@@ -249,87 +160,99 @@ EOF
             VULN_COMPONENT="${PACKAGE}-${VERSION}"
             
             if [ -n "$TEAM_ID" ]; then
-              # Build with team field
-              JIRA_REQUEST=$(echo "$JIRA_DESCRIPTION" | \
-                jq --arg cve "$CVE" \
-                   --arg pkg "$PACKAGE" \
-                   --arg ver "$VERSION" \
-                   --arg sev "$SEVERITY_TEXT" \
-                   --arg img "${{ steps.meta.outputs.tags[0] }}" \
-                   --arg msg "$MESSAGE" \
-                   --arg url "$WORKFLOW_URL" \
-                   --arg commit "${{ github.sha }}" \
-                   --arg summary "${CVE}: Python - ${PACKAGE}" \
-                   --arg teamId "$TEAM_ID" \
-                   --arg reportDate "$REPORT_DATE" \
-                   --arg vulnComponent "$VULN_COMPONENT" \
-                   '{
-                     fields: {
-                       project: {key: "NH"},
-                       summary: $summary,
-                       description: (
-                         . |
-                         (.content[1].content[1].text = $cve) |
-                         (.content[2].content[1].text = $pkg) |
-                         (.content[3].content[1].text = $ver) |
-                         (.content[4].content[1].text = $sev) |
-                         (.content[5].content[1].text = $img) |
-                         (.content[7].content[0].text = $msg) |
-                         (.content[11].content[1].text = $url) |
-                         (.content[11].content[1].marks[0].attrs.href = $url) |
-                         (.content[12].content[1].text = $commit)
-                       ),
-                       issuetype: {name: "Security Vuln"},
-                       components: [{name: "Instrument Python"}],
-                       customfield_10001: $teamId,
-                       customfield_10369: $reportDate,
-                       customfield_10374: "[" + $cve + "]",
-                       customfield_10392: $vulnComponent,
-                       labels: ["security", "cve", "docker-scout", "autoinstrumentation"],
-                       priority: {name: "Critical"}
-                     }
-                   }'
-              )
+              # Build with team field and ADF description
+              JIRA_REQUEST=$(jq -n \
+                --arg cve "$CVE" \
+                --arg pkg "$PACKAGE" \
+                --arg ver "$VERSION" \
+                --arg sev "$SEVERITY_TEXT" \
+                --arg img "${{ steps.meta.outputs.tags[0] }}" \
+                --arg msg "$MESSAGE" \
+                --arg url "$WORKFLOW_URL" \
+                --arg commit "${{ github.sha }}" \
+                --arg summary "${CVE}: Python - ${PACKAGE}" \
+                --arg teamId "$TEAM_ID" \
+                --arg reportDate "$REPORT_DATE" \
+                --arg vulnComponent "$VULN_COMPONENT" \
+                '{
+                  fields: {
+                    project: {key: "NH"},
+                    summary: $summary,
+                    description: {
+                      version: 1,
+                      type: "doc",
+                      content: [
+                        {type: "heading", attrs: {level: 2}, content: [{type: "text", text: "Security Vulnerability Detected"}]},
+                        {type: "paragraph", content: [{type: "text", text: "CVE: ", marks: [{type: "strong"}]}, {type: "text", text: $cve}]},
+                        {type: "paragraph", content: [{type: "text", text: "Package: ", marks: [{type: "strong"}]}, {type: "text", text: $pkg}]},
+                        {type: "paragraph", content: [{type: "text", text: "Version: ", marks: [{type: "strong"}]}, {type: "text", text: $ver}]},
+                        {type: "paragraph", content: [{type: "text", text: "Severity: ", marks: [{type: "strong"}]}, {type: "text", text: $sev}]},
+                        {type: "paragraph", content: [{type: "text", text: "Image: ", marks: [{type: "strong"}]}, {type: "text", text: $img}]},
+                        {type: "heading", attrs: {level: 3}, content: [{type: "text", text: "Description"}]},
+                        {type: "paragraph", content: [{type: "text", text: $msg}]},
+                        {type: "heading", attrs: {level: 3}, content: [{type: "text", text: "Recommended Action"}]},
+                        {type: "paragraph", content: [{type: "text", text: "Upgrade the vulnerable dependency to the latest secure version."}]},
+                        {type: "heading", attrs: {level: 3}, content: [{type: "text", text: "Detection Source"}]},
+                        {type: "paragraph", content: [{type: "text", text: "Workflow Run: ", marks: [{type: "strong"}]}, {type: "text", text: $url, marks: [{type: "link", attrs: {href: $url}}]}]},
+                        {type: "paragraph", content: [{type: "text", text: "Commit: ", marks: [{type: "strong"}]}, {type: "text", text: $commit}]}
+                      ]
+                    },
+                    issuetype: {name: "Security Vuln"},
+                    components: [{name: "Instrument Python"}],
+                    customfield_10001: $teamId,
+                    customfield_10369: $reportDate,
+                    customfield_10374: ("[" + $cve + "]"),
+                    customfield_10392: $vulnComponent,
+                    labels: ["docker-scout"],
+                    priority: {name: "Critical"}
+                  }
+                }')
             else
-              # Build without team field
-              JIRA_REQUEST=$(echo "$JIRA_DESCRIPTION" | \
-                jq --arg cve "$CVE" \
-                   --arg pkg "$PACKAGE" \
-                   --arg ver "$VERSION" \
-                   --arg sev "$SEVERITY_TEXT" \
-                   --arg img "${{ steps.meta.outputs.tags[0] }}" \
-                   --arg msg "$MESSAGE" \
-                   --arg url "$WORKFLOW_URL" \
-                   --arg commit "${{ github.sha }}" \
-                   --arg summary "${CVE}: Python - ${PACKAGE}" \
-                   --arg reportDate "$REPORT_DATE" \
-                   --arg vulnComponent "$VULN_COMPONENT" \
-                   '{
-                     fields: {
-                       project: {key: "NH"},
-                       summary: $summary,
-                       description: (
-                         . |
-                         (.content[1].content[1].text = $cve) |
-                         (.content[2].content[1].text = $pkg) |
-                         (.content[3].content[1].text = $ver) |
-                         (.content[4].content[1].text = $sev) |
-                         (.content[5].content[1].text = $img) |
-                         (.content[7].content[0].text = $msg) |
-                         (.content[11].content[1].text = $url) |
-                         (.content[11].content[1].marks[0].attrs.href = $url) |
-                         (.content[12].content[1].text = $commit)
-                       ),
-                       issuetype: {name: "Security Vuln"},
-                       components: [{name: "Instrument Python"}],
-                       customfield_10369: $reportDate,
-                       customfield_10374: "[" + $cve + "]",
-                       customfield_10392: $vulnComponent,
-                       labels: ["docker-scout"],
-                       priority: {name: "Critical"}
-                     }
-                   }'
-              )
+              # Build without team field and ADF description
+              JIRA_REQUEST=$(jq -n \
+                --arg cve "$CVE" \
+                --arg pkg "$PACKAGE" \
+                --arg ver "$VERSION" \
+                --arg sev "$SEVERITY_TEXT" \
+                --arg img "${{ steps.meta.outputs.tags[0] }}" \
+                --arg msg "$MESSAGE" \
+                --arg url "$WORKFLOW_URL" \
+                --arg commit "${{ github.sha }}" \
+                --arg summary "${CVE}: Python - ${PACKAGE}" \
+                --arg reportDate "$REPORT_DATE" \
+                --arg vulnComponent "$VULN_COMPONENT" \
+                '{
+                  fields: {
+                    project: {key: "NH"},
+                    summary: $summary,
+                    description: {
+                      version: 1,
+                      type: "doc",
+                      content: [
+                        {type: "heading", attrs: {level: 2}, content: [{type: "text", text: "Security Vulnerability Detected"}]},
+                        {type: "paragraph", content: [{type: "text", text: "CVE: ", marks: [{type: "strong"}]}, {type: "text", text: $cve}]},
+                        {type: "paragraph", content: [{type: "text", text: "Package: ", marks: [{type: "strong"}]}, {type: "text", text: $pkg}]},
+                        {type: "paragraph", content: [{type: "text", text: "Version: ", marks: [{type: "strong"}]}, {type: "text", text: $ver}]},
+                        {type: "paragraph", content: [{type: "text", text: "Severity: ", marks: [{type: "strong"}]}, {type: "text", text: $sev}]},
+                        {type: "paragraph", content: [{type: "text", text: "Image: ", marks: [{type: "strong"}]}, {type: "text", text: $img}]},
+                        {type: "heading", attrs: {level: 3}, content: [{type: "text", text: "Description"}]},
+                        {type: "paragraph", content: [{type: "text", text: $msg}]},
+                        {type: "heading", attrs: {level: 3}, content: [{type: "text", text: "Recommended Action"}]},
+                        {type: "paragraph", content: [{type: "text", text: "Upgrade the vulnerable dependency to the latest secure version."}]},
+                        {type: "heading", attrs: {level: 3}, content: [{type: "text", text: "Detection Source"}]},
+                        {type: "paragraph", content: [{type: "text", text: "Workflow Run: ", marks: [{type: "strong"}]}, {type: "text", text: $url, marks: [{type: "link", attrs: {href: $url}}]}]},
+                        {type: "paragraph", content: [{type: "text", text: "Commit: ", marks: [{type: "strong"}]}, {type: "text", text: $commit}]}
+                      ]
+                    },
+                    issuetype: {name: "Security Vuln"},
+                    components: [{name: "Instrument Python"}],
+                    customfield_10369: $reportDate,
+                    customfield_10374: ("[" + $cve + "]"),
+                    customfield_10392: $vulnComponent,
+                    labels: ["docker-scout"],
+                    priority: {name: "Critical"}
+                  }
+                }')
             fi
             
             # Attempt Jira API call with additional debugging for first request only
