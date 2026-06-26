@@ -116,12 +116,39 @@ jobs:
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         run: |
+          set +e  # Don't exit on error, handle errors explicitly
+          
+          # Validate secrets are set
+          if [ -z "$JIRA_BASE_URL" ] || [ -z "$JIRA_USER_EMAIL" ] || [ -z "$JIRA_API_TOKEN" ]; then
+            echo "❌ ERROR: Required Jira secrets are not set"
+            echo "JIRA_BASE_URL: ${JIRA_BASE_URL:+SET}"
+            echo "JIRA_USER_EMAIL: ${JIRA_USER_EMAIL:+SET}"
+            echo "JIRA_API_TOKEN: ${JIRA_API_TOKEN:+SET}"
+            exit 1
+          fi
+          
+          # Test connectivity to Jira
+          echo "Testing connection to Jira at: ${JIRA_BASE_URL}"
+          HEALTH_CHECK=$(curl -s -w "\n%{http_code}" --max-time 10 "${JIRA_BASE_URL}/status" 2>&1)
+          HEALTH_CODE=$(echo "$HEALTH_CHECK" | tail -n1)
+          echo "Jira connectivity test returned: $HEALTH_CODE"
+          
+          echo "Processing ${{ steps.parse-cves.outputs.count }} vulnerabilities..."
+          
+          TICKET_COUNT=0
+          ERROR_COUNT=0
+          
           while IFS= read -r vuln; do
             CVE=$(echo "$vuln" | jq -r '.ruleId')
             PACKAGE=$(echo "$vuln" | jq -r '.locations[0].physicalLocation.artifactLocation.uri // "unknown"')
             VERSION=$(echo "$vuln" | jq -r '.locations[0].physicalLocation.region.snippet.text // "unknown"')
             MESSAGE=$(echo "$vuln" | jq -r '.message.text')
             SEVERITY=$(echo "$vuln" | jq -r '.level')
+            
+            echo "----------------------------------------"
+            echo "Processing CVE: ${CVE}"
+            echo "Package: ${PACKAGE}"
+            echo "Severity: ${SEVERITY}"
             
             # Create comprehensive Jira ticket with all context for developer
             JIRA_DESCRIPTION=$(cat <<EOF
@@ -146,28 +173,94 @@ jobs:
           EOF
             )
             
-            JIRA_RESPONSE=$(curl -s -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
-              -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
-              -H "Content-Type: application/json" \
-              -d "{
-                \"fields\": {
-                  \"project\": {\"key\": \"NH\"},
-                  \"summary\": \"${CVE}: Python - ${PACKAGE}\",
-                  \"description\": $(echo "$JIRA_DESCRIPTION" | jq -Rs .),
-                  \"issuetype\": {\"name\": \"Security Vuln\"},
-                  \"components\": [{\"name\": \"Instrument Python\"}],
-                  \"customfield_10001\": {\"value\": \"Instrumentation (APM)\"},
-                  \"labels\": [\"security\", \"cve\", \"docker-scout\", \"autoinstrumentation\"],
-                  \"priority\": {\"name\": \"Critical\"}
-                }
-              }")
+            # Attempt Jira API call with additional debugging for first request only
+            if [ $TICKET_COUNT -eq 0 ] && [ $ERROR_COUNT -eq 0 ]; then
+              echo "First request - showing connection details (auth headers masked)..."
+              echo "POST ${JIRA_BASE_URL}/rest/api/3/issue"
+              echo "Authorization: Basic ****MASKED****"
+              echo "Content-Type: application/json"
+              
+              # Show payload structure (not full content to keep logs clean)
+              echo "Payload fields: project, summary, description, issuetype, components, customfield_10001, labels, priority"
+              
+              # Use write-out to get connection timing info (safe - no sensitive data)
+              JIRA_RESPONSE=$(curl -s -w "\ntime_namelookup:%{time_namelookup}\ntime_connect:%{time_connect}\ntime_starttransfer:%{time_starttransfer}\nhttp_code:%{http_code}" \
+                --connect-timeout 30 --max-time 60 \
+                -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
+                -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
+                -H "Content-Type: application/json" \
+                -d "{
+                  \"fields\": {
+                    \"project\": {\"key\": \"NH\"},
+                    \"summary\": \"${CVE}: Python - ${PACKAGE}\",
+                    \"description\": $(echo "$JIRA_DESCRIPTION" | jq -Rs .),
+                    \"issuetype\": {\"name\": \"Security Vuln\"},
+                    \"components\": [{\"name\": \"Instrument Python\"}],
+                    \"customfield_10001\": {\"value\": \"Instrumentation (APM)\"},
+                    \"labels\": [\"security\", \"cve\", \"docker-scout\", \"autoinstrumentation\"],
+                    \"priority\": {\"name\": \"Critical\"}
+                  }
+                }")
+              
+              # Extract and display timing info
+              echo "DNS lookup time: $(echo "$JIRA_RESPONSE" | grep time_namelookup | cut -d: -f2)"
+              echo "Connect time: $(echo "$JIRA_RESPONSE" | grep time_connect | cut -d: -f2)"
+              echo "Time to first byte: $(echo "$JIRA_RESPONSE" | grep time_starttransfer | cut -d: -f2)"
+            else
+              JIRA_RESPONSE=$(curl -s -w "\n%{http_code}" --connect-timeout 30 --max-time 60 \
+                -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
+                -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
+                -H "Content-Type: application/json" \
+                -d "{
+                  \"fields\": {
+                    \"project\": {\"key\": \"NH\"},
+                    \"summary\": \"${CVE}: Python - ${PACKAGE}\",
+                    \"description\": $(echo "$JIRA_DESCRIPTION" | jq -Rs .),
+                    \"issuetype\": {\"name\": \"Security Vuln\"},
+                    \"components\": [{\"name\": \"Instrument Python\"}],
+                    \"customfield_10001\": {\"value\": \"Instrumentation (APM)\"},
+                    \"labels\": [\"security\", \"cve\", \"docker-scout\", \"autoinstrumentation\"],
+                    \"priority\": {\"name\": \"Critical\"}
+                  }
+                }")
+            fi
             
-            JIRA_KEY=$(echo "$JIRA_RESPONSE" | jq -r '.key')
-            JIRA_URL="${JIRA_BASE_URL}/browse/${JIRA_KEY}"
+            # Parse response - first response has timing info, others are simple
+            if [ $TICKET_COUNT -eq 0 ] && [ $ERROR_COUNT -eq 0 ]; then
+              HTTP_CODE=$(echo "$JIRA_RESPONSE" | grep http_code | cut -d: -f2)
+              # Get response body (everything before timing info lines)
+              RESPONSE_BODY=$(echo "$JIRA_RESPONSE" | sed '/time_namelookup:/,$d')
+            else
+              HTTP_CODE=$(echo "$JIRA_RESPONSE" | tail -n1)
+              RESPONSE_BODY=$(echo "$JIRA_RESPONSE" | sed '$d')
+            fi
             
-            echo "Created Jira ticket ${JIRA_KEY}: ${JIRA_URL}"
+            if [[ "$HTTP_CODE" =~ ^2[0-9][0-9]$ ]]; then
+              JIRA_KEY=$(echo "$RESPONSE_BODY" | jq -r '.key // "null"')
+              if [ "$JIRA_KEY" != "null" ] && [ -n "$JIRA_KEY" ]; then
+                JIRA_URL="${JIRA_BASE_URL}/browse/${JIRA_KEY}"
+                echo "✅ Created Jira ticket ${JIRA_KEY}: ${JIRA_URL}"
+                ((TICKET_COUNT++))
+              else
+                echo "❌ Failed to parse Jira key from response"
+                echo "Response: $RESPONSE_BODY"
+                ((ERROR_COUNT++))
+              fi
+            else
+              echo "❌ Jira API returned HTTP $HTTP_CODE"
+              echo "Response: $RESPONSE_BODY"
+              ((ERROR_COUNT++))
+            fi
             
           done < vulnerabilities.json
+          
+          echo "========================================="
+          echo "Summary: Created $TICKET_COUNT tickets, $ERROR_COUNT errors"
+          
+          if [ $ERROR_COUNT -gt 0 ]; then
+            echo "⚠️  Some tickets failed to create. Check logs above."
+            exit 1
+          fi
 
   # TEMP:  ghcr.io job disabled to test Jira ticket creation
   # ghcr_io:
