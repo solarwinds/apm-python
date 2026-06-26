@@ -286,8 +286,10 @@ jobs:
               echo "Content-Type: application/json"
               echo "User-Agent: GitHub-Actions-Docker-Scout-CVE-Reporter/1.0"
               
-              # Use temp file for response body to avoid mixing with verbose output
+              # Use temp files for both request and response
+              TEMP_REQUEST=$(mktemp)
               TEMP_RESPONSE=$(mktemp)
+              echo "$JIRA_REQUEST" > "$TEMP_REQUEST"
               
               # Use write-out to get connection timing and detailed diagnostics
               JIRA_METRICS=$(curl -v -w "\ntime_namelookup:%{time_namelookup}\ntime_connect:%{time_connect}\ntime_appconnect:%{time_appconnect}\ntime_pretransfer:%{time_pretransfer}\ntime_starttransfer:%{time_starttransfer}\ntime_total:%{time_total}\nhttp_code:%{http_code}\nsize_upload:%{size_upload}" \
@@ -297,7 +299,7 @@ jobs:
                 -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
                 -H "Content-Type: application/json" \
                 -H "User-Agent: GitHub-Actions-Docker-Scout-CVE-Reporter/1.0" \
-                -d "$JIRA_REQUEST" 2>&1)
+                -d @"$TEMP_REQUEST" 2>&1)
               
               # Extract timing info from metrics
               echo "DNS lookup time: $(echo "$JIRA_METRICS" | grep time_namelookup | cut -d: -f2)"
@@ -311,7 +313,7 @@ jobs:
               # Get HTTP code and response body
               HTTP_CODE=$(echo "$JIRA_METRICS" | grep http_code | cut -d: -f2 | tr -d ' ')
               RESPONSE_BODY=$(cat "$TEMP_RESPONSE")
-              rm -f "$TEMP_RESPONSE"
+              rm -f "$TEMP_REQUEST" "$TEMP_RESPONSE"
               
               # Show curl diagnostics if HTTP 000
               if [ "$HTTP_CODE" = "000" ]; then
@@ -319,15 +321,20 @@ jobs:
                 echo "$JIRA_METRICS" | head -n 100
               fi
             else
+              # Use temp file for request body (subsequent requests)
+              TEMP_REQUEST=$(mktemp)
+              echo "$JIRA_REQUEST" > "$TEMP_REQUEST"
+              
               JIRA_RESPONSE=$(curl -s -w "\n%{http_code}" --connect-timeout 30 --max-time 90 \
                 -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
                 -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
                 -H "Content-Type: application/json" \
                 -H "User-Agent: GitHub-Actions-Docker-Scout-CVE-Reporter/1.0" \
-                -d "$JIRA_REQUEST")
+                -d @"$TEMP_REQUEST")
               
               HTTP_CODE=$(echo "$JIRA_RESPONSE" | tail -n1)
               RESPONSE_BODY=$(echo "$JIRA_RESPONSE" | sed '$d')
+              rm -f "$TEMP_REQUEST"
             fi
             
             # Process response (HTTP_CODE and RESPONSE_BODY already set above)
