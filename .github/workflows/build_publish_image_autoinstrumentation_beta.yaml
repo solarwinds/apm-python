@@ -135,106 +135,44 @@ jobs:
             echo "Processing ${CVE}..."
             SEVERITY_TEXT=$([ "$SEVERITY" = "error" ] && echo "Critical" || echo "High")
             WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-            # Build request with ADF description using jq; cannot be plain string
             TEAM_ID="${{ secrets.JIRA_TEAM_FIELD_ID }}"
             REPORT_DATE=$(date +%Y-%m-%d)
             VULN_COMPONENT="${PACKAGE}-${VERSION}"
-            if [ -n "$TEAM_ID" ]; then
-              JIRA_REQUEST=$(jq -n \
-                --arg cve "$CVE" \
-                --arg pkg "$PACKAGE" \
-                --arg ver "$VERSION" \
-                --arg sev "$SEVERITY_TEXT" \
-                --arg img "${{ steps.meta.outputs.tags[0] }}" \
-                --arg msg "$MESSAGE" \
-                --arg url "$WORKFLOW_URL" \
-                --arg commit "${{ github.sha }}" \
-                --arg summary "${CVE}: Python - ${PACKAGE}" \
-                --arg teamId "$TEAM_ID" \
-                --arg reportDate "$REPORT_DATE" \
-                --arg vulnComponent "$VULN_COMPONENT" \
-                '{
-                  fields: {
-                    project: {key: "NH"},
-                    summary: $summary,
-                    description: {
-                      version: 1,
-                      type: "doc",
-                      content: [
-                        {type: "heading", attrs: {level: 2}, content: [{type: "text", text: "Security Vulnerability Detected"}]},
-                        {type: "paragraph", content: [{type: "text", text: "CVE: ", marks: [{type: "strong"}]}, {type: "text", text: $cve}]},
-                        {type: "paragraph", content: [{type: "text", text: "Package: ", marks: [{type: "strong"}]}, {type: "text", text: $pkg}]},
-                        {type: "paragraph", content: [{type: "text", text: "Version: ", marks: [{type: "strong"}]}, {type: "text", text: $ver}]},
-                        {type: "paragraph", content: [{type: "text", text: "Severity: ", marks: [{type: "strong"}]}, {type: "text", text: $sev}]},
-                        {type: "paragraph", content: [{type: "text", text: "Image: ", marks: [{type: "strong"}]}, {type: "text", text: $img}]},
-                        {type: "heading", attrs: {level: 3}, content: [{type: "text", text: "Description"}]},
-                        {type: "paragraph", content: [{type: "text", text: $msg}]},
-                        {type: "heading", attrs: {level: 3}, content: [{type: "text", text: "Recommended Action"}]},
-                        {type: "paragraph", content: [{type: "text", text: "Upgrade the vulnerable dependency to the latest secure version."}]},
-                        {type: "heading", attrs: {level: 3}, content: [{type: "text", text: "Detection Source"}]},
-                        {type: "paragraph", content: [{type: "text", text: "Workflow Run: ", marks: [{type: "strong"}]}, {type: "text", text: $url, marks: [{type: "link", attrs: {href: $url}}]}]},
-                        {type: "paragraph", content: [{type: "text", text: "Commit: ", marks: [{type: "strong"}]}, {type: "text", text: $commit}]}
-                      ]
-                    },
-                    issuetype: {name: "Security Vuln"},
-                    components: [{name: "Instrument Python"}],
-                    customfield_10001: $teamId,
-                    customfield_10369: $reportDate,
-                    customfield_10374: ("[" + $cve + "]"),
-                    customfield_10392: $vulnComponent,
-                    labels: ["docker-scout"],
-                    priority: {name: "Critical"}
-                  }
-                }')
-            else
-              # Build without team field and ADF description
-              JIRA_REQUEST=$(jq -n \
-                --arg cve "$CVE" \
-                --arg pkg "$PACKAGE" \
-                --arg ver "$VERSION" \
-                --arg sev "$SEVERITY_TEXT" \
-                --arg img "${{ steps.meta.outputs.tags[0] }}" \
-                --arg msg "$MESSAGE" \
-                --arg url "$WORKFLOW_URL" \
-                --arg commit "${{ github.sha }}" \
-                --arg summary "${CVE}: Python - ${PACKAGE}" \
-                --arg reportDate "$REPORT_DATE" \
-                --arg vulnComponent "$VULN_COMPONENT" \
-                '{
-                  fields: {
-                    project: {key: "NH"},
-                    summary: $summary,
-                    description: {
-                      version: 1,
-                      type: "doc",
-                      content: [
-                        {type: "heading", attrs: {level: 2}, content: [{type: "text", text: "Security Vulnerability Detected"}]},
-                        {type: "paragraph", content: [{type: "text", text: "CVE: ", marks: [{type: "strong"}]}, {type: "text", text: $cve}]},
-                        {type: "paragraph", content: [{type: "text", text: "Package: ", marks: [{type: "strong"}]}, {type: "text", text: $pkg}]},
-                        {type: "paragraph", content: [{type: "text", text: "Version: ", marks: [{type: "strong"}]}, {type: "text", text: $ver}]},
-                        {type: "paragraph", content: [{type: "text", text: "Severity: ", marks: [{type: "strong"}]}, {type: "text", text: $sev}]},
-                        {type: "paragraph", content: [{type: "text", text: "Image: ", marks: [{type: "strong"}]}, {type: "text", text: $img}]},
-                        {type: "heading", attrs: {level: 3}, content: [{type: "text", text: "Description"}]},
-                        {type: "paragraph", content: [{type: "text", text: $msg}]},
-                        {type: "heading", attrs: {level: 3}, content: [{type: "text", text: "Recommended Action"}]},
-                        {type: "paragraph", content: [{type: "text", text: "Upgrade the vulnerable dependency to the latest secure version."}]},
-                        {type: "heading", attrs: {level: 3}, content: [{type: "text", text: "Detection Source"}]},
-                        {type: "paragraph", content: [{type: "text", text: "Workflow Run: ", marks: [{type: "strong"}]}, {type: "text", text: $url, marks: [{type: "link", attrs: {href: $url}}]}]},
-                        {type: "paragraph", content: [{type: "text", text: "Commit: ", marks: [{type: "strong"}]}, {type: "text", text: $commit}]}
-                      ]
-                    },
-                    issuetype: {name: "Security Vuln"},
-                    components: [{name: "Instrument Python"}],
-                    customfield_10369: $reportDate,
-                    customfield_10374: ("[" + $cve + "]"),
-                    customfield_10392: $vulnComponent,
-                    labels: ["docker-scout"],
-                    priority: {name: "Critical"}
-                  }
-                }')
-            fi
 
+            # Build request from template
+            JIRA_REQUEST=$(jq \
+              --arg cve "$CVE" \
+              --arg pkg "$PACKAGE" \
+              --arg ver "$VERSION" \
+              --arg sev "$SEVERITY_TEXT" \
+              --arg img "${{ steps.meta.outputs.tags[0] }}" \
+              --arg msg "$MESSAGE" \
+              --arg url "$WORKFLOW_URL" \
+              --arg commit "${{ github.sha }}" \
+              --arg summary "${CVE}: Python - ${PACKAGE}" \
+              --arg teamId "$TEAM_ID" \
+              --arg reportDate "$REPORT_DATE" \
+              --arg cveArray "[${CVE}]" \
+              --arg vulnComponent "$VULN_COMPONENT" \
+              '
+              walk(if type == "string" then
+                gsub("\\$CVE"; $cve) |
+                gsub("\\$PACKAGE"; $pkg) |
+                gsub("\\$VERSION"; $ver) |
+                gsub("\\$SEVERITY"; $sev) |
+                gsub("\\$IMAGE"; $img) |
+                gsub("\\$MESSAGE"; $msg) |
+                gsub("\\$WORKFLOW_URL"; $url) |
+                gsub("\\$COMMIT"; $commit) |
+                gsub("\\$REPORT_DATE"; $reportDate) |
+                gsub("\\$CVE_ARRAY"; $cveArray) |
+                gsub("\\$VULN_COMPONENT"; $vulnComponent)
+              else . end) |
+              .fields.summary = $summary |
+              if $teamId != "" then
+                .fields.customfield_10001 = $teamId
+              else . end
+              ' .github/templates/jira-security-vuln.json)
 
             TEMP_REQUEST=$(mktemp)
             printf '%s\n' "$JIRA_REQUEST" > "$TEMP_REQUEST"

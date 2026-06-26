@@ -1,0 +1,104 @@
+{
+  "fields": {
+    "project": {
+      "key": "NH"
+    },
+    "summary": "$SUMMARY",
+    "description": {
+      "version": 1,
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {"level": 2},
+          "content": [{"type": "text", "text": "Security Vulnerability Detected"}]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {"type": "text", "text": "CVE: ", "marks": [{"type": "strong"}]},
+            {"type": "text", "text": "$CVE"}
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {"type": "text", "text": "Package: ", "marks": [{"type": "strong"}]},
+            {"type": "text", "text": "$PACKAGE"}
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {"type": "text", "text": "Version: ", "marks": [{"type": "strong"}]},
+            {"type": "text", "text": "$VERSION"}
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {"type": "text", "text": "Severity: ", "marks": [{"type": "strong"}]},
+            {"type": "text", "text": "$SEVERITY"}
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {"type": "text", "text": "Image: ", "marks": [{"type": "strong"}]},
+            {"type": "text", "text": "$IMAGE"}
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": {"level": 3},
+          "content": [{"type": "text", "text": "Description"}]
+        },
+        {
+          "type": "paragraph",
+          "content": [{"type": "text", "text": "$MESSAGE"}]
+        },
+        {
+          "type": "heading",
+          "attrs": {"level": 3},
+          "content": [{"type": "text", "text": "Recommended Action"}]
+        },
+        {
+          "type": "paragraph",
+          "content": [{"type": "text", "text": "Upgrade the vulnerable dependency to the latest secure version."}]
+        },
+        {
+          "type": "heading",
+          "attrs": {"level": 3},
+          "content": [{"type": "text", "text": "Detection Source"}]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {"type": "text", "text": "Workflow Run: ", "marks": [{"type": "strong"}]},
+            {"type": "text", "text": "$WORKFLOW_URL", "marks": [{"type": "link", "attrs": {"href": "$WORKFLOW_URL"}}]}
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {"type": "text", "text": "Commit: ", "marks": [{"type": "strong"}]},
+            {"type": "text", "text": "$COMMIT"}
+          ]
+        }
+      ]
+    },
+    "issuetype": {
+      "name": "Security Vuln"
+    },
+    "components": [
+      {"name": "Instrument Python"}
+    ],
+    "customfield_10369": "$REPORT_DATE",
+    "customfield_10374": "$CVE_ARRAY",
+    "customfield_10392": "$VULN_COMPONENT",
+    "labels": ["docker-scout"],
+    "priority": {
+      "name": "Critical"
+    }
+  }
+}
