@@ -300,7 +300,7 @@ jobs:
                 -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
                 -H "Content-Type: application/json" \
                 -H "User-Agent: GitHub-Actions-Docker-Scout-CVE-Reporter/1.0" \
-                -d @"$TEMP_REQUEST" 2>&1)
+                --data-binary @"$TEMP_REQUEST" 2>&1)
               
               # Extract timing info from metrics
               echo "DNS lookup time: $(echo "$JIRA_METRICS" | grep time_namelookup | cut -d: -f2)"
@@ -332,7 +332,7 @@ jobs:
                 -H "Authorization: Basic $(echo -n ${JIRA_USER_EMAIL}:${JIRA_API_TOKEN} | base64)" \
                 -H "Content-Type: application/json" \
                 -H "User-Agent: GitHub-Actions-Docker-Scout-CVE-Reporter/1.0" \
-                -d @"$TEMP_REQUEST")
+                --data-binary @"$TEMP_REQUEST")
               
               HTTP_CODE=$(echo "$JIRA_RESPONSE" | tail -n1)
               RESPONSE_BODY=$(echo "$JIRA_RESPONSE" | sed '$d')
