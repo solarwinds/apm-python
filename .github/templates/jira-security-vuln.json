@@ -94,7 +94,7 @@
       {"name": "Instrument Python"}
     ],
     "customfield_10369": "$REPORT_DATE",
-    "customfield_10374": "$CVE_ARRAY",
+    "customfield_10374": ["$CVE"],
     "customfield_10392": "$VULN_COMPONENT",
     "labels": ["docker-scout"],
     "priority": {
