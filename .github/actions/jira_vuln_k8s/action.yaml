@@ -47,7 +47,7 @@ runs:
 
     - name: Create Jira tickets with actionable details
       id: create-tickets
-      if: steps.parse-cves.outputs.count > 0
+      if: steps.parse-cves.outputs.count != '0'
       shell: bash
       env:
         JIRA_BASE_URL: ${{ inputs.jira-base-url }}
