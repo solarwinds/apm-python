@@ -108,6 +108,7 @@ runs:
               gsub("\\$VULN_COMPONENT"; $vulnComponent)
             else . end) |
             .fields.summary = $summary |
+            .fields.priority.name = $sev |
             if $teamId != "" then
               .fields.customfield_10001 = $teamId
             else . end
