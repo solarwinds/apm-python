@@ -1,0 +1,159 @@
+name: 'Create JIRA Tickets for Docker Scout CVEs'
+description: 'Parses Docker Scout SARIF output and creates JIRA tickets for critical/high vulnerabilities'
+inputs:
+  image-tag:
+    description: 'Docker image tag that was scanned'
+    required: true
+  workflow-url:
+    description: 'GitHub Actions workflow URL'
+    required: true
+  commit-sha:
+    description: 'Git commit SHA'
+    required: true
+  jira-base-url:
+    description: 'JIRA base URL'
+    required: true
+  jira-user-email:
+    description: 'JIRA user email'
+    required: true
+  jira-api-token:
+    description: 'JIRA API token'
+    required: true
+  jira-team-field-id:
+    description: 'JIRA custom field ID for team'
+    required: false
+    default: ''
+outputs:
+  vulnerability-count:
+    description: 'Number of vulnerabilities found'
+    value: ${{ steps.parse-cves.outputs.count }}
+  ticket-count:
+    description: 'Number of JIRA tickets created'
+    value: ${{ steps.create-tickets.outputs.ticket-count }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Parse SARIF for Critical/High CVEs
+      id: parse-cves
+      shell: bash
+      run: |
+        # Extract CVEs from SARIF
+        jq -r '.runs[0].results[] | 
+          select(.level == "error" or .level == "warning") | 
+          @json' sarif.output.json > vulnerabilities.json
+        
+        # Count vulnerabilities
+        echo "count=$(jq -s 'length' vulnerabilities.json)" >> $GITHUB_OUTPUT
+
+    - name: Create Jira tickets with actionable details
+      id: create-tickets
+      if: steps.parse-cves.outputs.count != '0'
+      shell: bash
+      env:
+        JIRA_BASE_URL: ${{ inputs.jira-base-url }}
+        JIRA_USER_EMAIL: ${{ inputs.jira-user-email }}
+        JIRA_API_TOKEN: ${{ inputs.jira-api-token }}
+        IMAGE_TAG: ${{ inputs.image-tag }}
+        WORKFLOW_URL: ${{ inputs.workflow-url }}
+        COMMIT_SHA: ${{ inputs.commit-sha }}
+        TEAM_ID: ${{ inputs.jira-team-field-id }}
+      run: |
+        set +e
+                  
+        TICKET_COUNT=0
+        ERROR_COUNT=0
+        CREATED_TICKETS=()
+        
+        while IFS= read -r vuln; do
+          CVE=$(echo "$vuln" | jq -r '.ruleId')
+          PACKAGE=$(echo "$vuln" | jq -r '.locations[0].physicalLocation.artifactLocation.uri // "unknown"')
+          VERSION=$(echo "$vuln" | jq -r '.locations[0].physicalLocation.region.snippet.text // "unknown"')
+          RAW_MESSAGE=$(echo "$vuln" | jq -r '.message.text')
+          SEVERITY=$(echo "$vuln" | jq -r '.level')
+          
+          # Sanitize MESSAGE: remove control characters but keep newlines/tabs
+          MESSAGE=$(echo "$RAW_MESSAGE" | tr -d '\000-\010\013\014\016-\037')
+          
+          SEVERITY_TEXT=$([ "$SEVERITY" = "error" ] && echo "Critical" || echo "High")
+          REPORT_DATE=$(date +%Y-%m-%d)
+          VULN_COMPONENT="${PACKAGE}-${VERSION}"
+
+          # Build request from template
+          JIRA_REQUEST=$(jq \
+            --arg cve "$CVE" \
+            --arg pkg "$PACKAGE" \
+            --arg ver "$VERSION" \
+            --arg sev "$SEVERITY_TEXT" \
+            --arg img "$IMAGE_TAG" \
+            --arg msg "$MESSAGE" \
+            --arg url "$WORKFLOW_URL" \
+            --arg commit "$COMMIT_SHA" \
+            --arg summary "${CVE}: Python - ${PACKAGE}" \
+            --arg teamId "$TEAM_ID" \
+            --arg reportDate "$REPORT_DATE" \
+            --arg cveArray "[${CVE}]" \
+            --arg vulnComponent "$VULN_COMPONENT" \
+            '
+            walk(if type == "string" then
+              gsub("\\$CVE"; $cve) |
+              gsub("\\$PACKAGE"; $pkg) |
+              gsub("\\$VERSION"; $ver) |
+              gsub("\\$SEVERITY"; $sev) |
+              gsub("\\$IMAGE"; $img) |
+              gsub("\\$MESSAGE"; $msg) |
+              gsub("\\$WORKFLOW_URL"; $url) |
+              gsub("\\$COMMIT"; $commit) |
+              gsub("\\$REPORT_DATE"; $reportDate) |
+              gsub("\\$CVE_ARRAY"; $cveArray) |
+              gsub("\\$VULN_COMPONENT"; $vulnComponent)
+            else . end) |
+            .fields.summary = $summary |
+            .fields.priority.name = $sev |
+            if $teamId != "" then
+              .fields.customfield_10001 = $teamId
+            else . end
+            ' .github/templates/jira-security-vuln.json)
+
+          TEMP_REQUEST=$(mktemp)
+          printf '%s\n' "$JIRA_REQUEST" > "$TEMP_REQUEST"
+          
+          JIRA_RESPONSE=$(curl -s --http1.1 -w "\n%{http_code}" --connect-timeout 30 --max-time 90 \
+            -X POST "${JIRA_BASE_URL}/rest/api/3/issue" \
+            -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -H "Accept: application/json" \
+            --data-binary @"$TEMP_REQUEST")
+          
+          HTTP_CODE=$(echo "$JIRA_RESPONSE" | tail -n1)
+          RESPONSE_BODY=$(echo "$JIRA_RESPONSE" | sed '$d')
+          rm -f "$TEMP_REQUEST"
+          
+          # Process response
+          if [[ "$HTTP_CODE" =~ ^2[0-9][0-9]$ ]]; then
+            JIRA_KEY=$(echo "$RESPONSE_BODY" | jq -r '.key // "null"')
+            if [ "$JIRA_KEY" != "null" ] && [ -n "$JIRA_KEY" ]; then
+              CREATED_TICKETS+=("$JIRA_KEY")
+              ((TICKET_COUNT++))
+            else
+              echo "❌ ${CVE}: Failed to parse ticket ID (HTTP ${HTTP_CODE})"
+              ((ERROR_COUNT++))
+            fi
+          else
+            echo "❌ ${CVE}: HTTP ${HTTP_CODE}"
+            ((ERROR_COUNT++))
+          fi
+          
+        done < vulnerabilities.json
+        
+        echo "========================================="
+        if [ $TICKET_COUNT -gt 0 ]; then
+          TICKET_LIST=$(IFS=', '; echo "${CREATED_TICKETS[*]}")
+          echo "✅ Created ${TICKET_COUNT} tickets: ${TICKET_LIST}"
+        fi
+        
+        echo "ticket-count=${TICKET_COUNT}" >> $GITHUB_OUTPUT
+        
+        if [ $ERROR_COUNT -gt 0 ]; then
+          echo "❌ Failed to create ${ERROR_COUNT} tickets"
+          exit 1
+        fi
