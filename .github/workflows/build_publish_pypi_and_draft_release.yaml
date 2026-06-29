@@ -25,7 +25,7 @@ jobs:
     name: Check if version valid
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
     - name: Check version
       run: cd .github/scripts && ./is_publishable.sh ${{ github.event.inputs.version }}
 
@@ -64,13 +64,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ${{ needs.build_sdist_and_wheel.outputs.artifact-name }}
       - name: Unzip artifact with dist
         run: unzip ${{ needs.build_sdist_and_wheel.outputs.artifact-name }}
       - name: Publish sdist and wheel to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b
 
   create_release:
     name: Create draft release
@@ -79,12 +79,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: getsentry/action-github-app-token@v3
+      - uses: getsentry/action-github-app-token@d4b5da6c5e37703f8c3b3e43abb5705b46e159cc
         id: github-token
         with:
           app_id: ${{ vars.APPLICATION_ID }}
           private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Initialize git
         run: |
           git config user.name "GitHub Actions"
