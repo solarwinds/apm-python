@@ -97,6 +97,17 @@ jobs:
         with:
           sarif_file: sarif.output.json
 
+      - name: Create JIRA tickets for vulnerabilities
+        uses: ./.github/actions/jira_vuln_k8s
+        with:
+          image-tag: ${{ steps.meta.outputs.tags[0] }}
+          workflow-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          commit-sha: ${{ github.sha }}
+          jira-base-url: ${{ secrets.JIRA_BASE_URL }}
+          jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
+          jira-api-token: ${{ secrets.JIRA_API_TOKEN }}
+          jira-team-field-id: ${{ secrets.JIRA_TEAM_FIELD_ID }}
+
   ghcr_io:
     runs-on: ubuntu-latest
     steps:
