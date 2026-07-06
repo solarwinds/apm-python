@@ -38,8 +38,8 @@ runs:
       shell: bash
       run: |
         # Extract CVEs from SARIF
-        jq -r '.runs[0].results[] | 
-          select(.level == "error" or .level == "warning") | 
+        jq -r '.runs[0].results[]? |
+          select(.level == "error" or .level == "warning") |
           @json' sarif.output.json > vulnerabilities.json
         
         # Count vulnerabilities
