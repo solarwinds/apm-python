@@ -91,7 +91,6 @@ runs:
             --arg summary "${CVE}: Python - ${PACKAGE}" \
             --arg teamId "$TEAM_ID" \
             --arg reportDate "$REPORT_DATE" \
-            --arg cveArray "[${CVE}]" \
             --arg vulnComponent "$VULN_COMPONENT" \
             '
             walk(if type == "string" then
@@ -104,7 +103,6 @@ runs:
               gsub("\\$WORKFLOW_URL"; $url) |
               gsub("\\$COMMIT"; $commit) |
               gsub("\\$REPORT_DATE"; $reportDate) |
-              gsub("\\$CVE_ARRAY"; $cveArray) |
               gsub("\\$VULN_COMPONENT"; $vulnComponent)
             else . end) |
             .fields.summary = $summary |
