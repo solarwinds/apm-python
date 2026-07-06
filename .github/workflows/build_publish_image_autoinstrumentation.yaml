@@ -88,7 +88,7 @@ jobs:
         uses: docker/scout-action@v1
         with:
           command: cves
-          image: ${{ steps.meta.outputs.tags[0] }}
+          image: ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}
           platform: "linux/amd64"
           sarif-file: sarif.output.json
 
@@ -100,7 +100,7 @@ jobs:
       - name: Create JIRA tickets for vulnerabilities
         uses: ./.github/actions/jira_vuln_k8s
         with:
-          image-tag: ${{ steps.meta.outputs.tags[0] }}
+          image-tag: ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}
           workflow-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           commit-sha: ${{ github.sha }}
           jira-base-url: ${{ secrets.JIRA_BASE_URL }}
