@@ -91,15 +91,18 @@ class SolarWindsApmConfig:
 
     def __init__(
         self,
-        otel_resource: Resource = Resource.create(),
+        otel_resource: Resource | None = None,
         **kwargs: int,
     ) -> None:
         """Initialize SolarWinds APM configuration.
 
         Parameters:
-        otel_resource (Resource): OpenTelemetry resource with attributes. Defaults to empty Resource.
+        otel_resource (Resource | None): OpenTelemetry resource with attributes. Defaults to None
         **kwargs (int): Additional configuration keyword arguments.
         """
+        if otel_resource is None:
+            otel_resource = Resource.create()
+
         self.__config = {}
         # Update the config with default values
         self.__config = {
@@ -367,10 +370,11 @@ class SolarWindsApmConfig:
         # Calculate `service.name` by priority system (decreasing):
         # 1. OTEL_SERVICE_NAME
         # 2. service.name in OTEL_RESOURCE_ATTRIBUTES
-        # 3. service name component of SW_APM_SERVICE_KEY
-        # 4. empty string
+        # 3. service.name in OTel Resource set by any Resource Detectors
+        # 4. service name component of SW_APM_SERVICE_KEY
+        # 5. empty string
         #
-        # Note: 1-3 require that SW_APM_SERVICE_KEY exists and is in the correct
+        # Note: 1-4 require that SW_APM_SERVICE_KEY exists and is in the correct
         # format of "<api_token>:<service_name>". Otherwise agent_enabled: False
         # and service.name is empty string.
         #
