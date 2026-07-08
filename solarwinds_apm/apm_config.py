@@ -384,7 +384,7 @@ class SolarWindsApmConfig:
         # user can overwrite/add.
         #
         # See also OTel SDK Resource.create and env vars:
-        # * https://github.com/open-telemetry/opentelemetry-python/blob/f5fb6b1353929cf8039b1d38f97450866357d901/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py#L156-L184
+        # * https://github.com/open-telemetry/opentelemetry-python/blob/0345b41161922543bdda3e8efe589ce846fe1757/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py#L164-L199
         # * https://github.com/open-telemetry/opentelemetry-python/blob/8a0ce154ae27a699598cbf3ccc6396eb012902d6/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L15-L39
         service_name = ""
         if agent_enabled:

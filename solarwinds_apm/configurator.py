@@ -92,6 +92,13 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
     def _create_apm_resource(self) -> Resource:
         """Create new OpenTelemetry Resource for telemetry providers.
 
+        OTel SDK's `merge` prioritizes OTEL_SERVICE_NAME / OTEL_RESOURCE_ATTRIBUTES,
+        then values from Resource detectors including `service.name`.
+
+        See also OTel SDK Resource.create and env vars:
+        * https://github.com/open-telemetry/opentelemetry-python/blob/0345b41161922543bdda3e8efe589ce846fe1757/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py#L164-L199
+        * https://github.com/open-telemetry/opentelemetry-python/blob/8a0ce154ae27a699598cbf3ccc6396eb012902d6/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables.py#L15-L39
+
         Returns:
         Resource: Resource with SolarWinds APM attributes and service information.
         """
