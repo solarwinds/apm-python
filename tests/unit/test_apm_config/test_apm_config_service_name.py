@@ -25,17 +25,19 @@ class TestSolarWindsApmConfigServiceName:
             "solarwinds_apm.apm_config.SolarWindsApmConfig.calculate_is_lambda",
             return_value=True,
         )
-        test_config = apm_config.SolarWindsApmConfig("foo")
+        init_resource = Resource.create()
+        test_resource = Resource.create()
+        test_config = apm_config.SolarWindsApmConfig(init_resource)
         test_config._calculate_service_name(
             True,
-            {},
+            test_resource,
         )
         mock_calc_proto.assert_not_called()
         # called twice because of init, and we call again
         mock_calc_lambda.assert_has_calls(
             [
-                mocker.call("foo"),
-                mocker.call({}),
+                mocker.call(init_resource),
+                mocker.call(test_resource),
             ]
         )
 
@@ -50,16 +52,18 @@ class TestSolarWindsApmConfigServiceName:
             "solarwinds_apm.apm_config.SolarWindsApmConfig.calculate_is_lambda",
             return_value=False,
         )
-        test_config = apm_config.SolarWindsApmConfig("foo")
+        init_resource = Resource.create()
+        test_resource = Resource.create()
+        test_config = apm_config.SolarWindsApmConfig(init_resource)
         test_config._calculate_service_name(
             True,
-            {},
+            test_resource,
         )
         # called twice because of init, and we call again
         mock_calc_proto.assert_has_calls(
             [
-                mocker.call(False, "foo"),
-                mocker.call(True, {}),
+                mocker.call(False, init_resource),
+                mocker.call(True, test_resource),
             ]
         )
         mock_calc_lambda.assert_not_called()
@@ -194,3 +198,73 @@ class TestSolarWindsApmConfigServiceNameLambda:
             Resource.create({"service.name": "foo-service-name"})
         )
         assert result == "foo-service-name"
+
+
+class TestSolarWindsApmConfigLazyResourceEvaluation:
+    """Test lazy evaluation of otel_resource parameter for Resource Detector setting of service name."""
+
+    def test_init_with_none_resource_calls_create(self, mocker, mock_env_vars):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "token:ignored-service-key",
+        })
+        mock_resource = Resource.create({"service.name": "test-service"})
+        mock_create = mocker.patch(
+            "solarwinds_apm.apm_config.Resource.create",
+            return_value=mock_resource
+        )
+        test_config = apm_config.SolarWindsApmConfig()
+        
+        # Verify Resource.create() was called during init
+        mock_create.assert_called_once()
+        # Verify service name was calculated from the created resource
+        assert test_config.service_name == "test-service"
+
+    def test_init_with_explicit_resource_no_create_call(self, mocker, mock_env_vars):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "token:ignored-service-key",
+        })
+        explicit_resource = Resource.create({"service.name": "explicit-service"})
+        mock_create = mocker.patch(
+            "solarwinds_apm.apm_config.Resource.create",
+            return_value=Resource.create()
+        )
+        test_config = apm_config.SolarWindsApmConfig(otel_resource=explicit_resource)
+        
+        # Verify Resource.create() was NOT called
+        mock_create.assert_not_called()
+        # Verify service name was calculated from the explicit resource
+        assert test_config.service_name == "explicit-service"
+
+    def test_init_with_azure_detector_attributes(self, mocker, mock_env_vars):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "token:ignored-service-key",
+        })
+        # Simulate what Azure detector would set
+        azure_resource = Resource.create({
+            "service.name": "my-azure-app-service",
+            "cloud.provider": "azure",
+            "cloud.platform": "azure_app_service",
+            "cloud.resource_id": "/subscriptions/abc/resourceGroups/rg/providers/Microsoft.Web/sites/my-azure-app-service",
+        })
+        test_config = apm_config.SolarWindsApmConfig(otel_resource=azure_resource)
+        
+        # Verify service name came from Azure detector
+        assert test_config.service_name == "my-azure-app-service"
+
+    def test_init_fallback_to_service_key_when_unknown_service(self, mocker, mock_env_vars):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "token:fallback-service-name",
+        })
+        unknown_resource = Resource.create({"service.name": "unknown_service"})
+        test_config = apm_config.SolarWindsApmConfig(otel_resource=unknown_resource)
+        assert test_config.service_name == "fallback-service-name"
+
+    def test_init_no_fallback_when_detector_sets_name(self, mocker, mock_env_vars):
+        mocker.patch.dict(os.environ, {
+            "SW_APM_SERVICE_KEY": "token:should-not-be-used",
+        })
+        detector_resource = Resource.create({"service.name": "detector-set-name"})
+        
+        test_config = apm_config.SolarWindsApmConfig(otel_resource=detector_resource)
+        # Verify service name came from detector, not service key
+        assert test_config.service_name == "detector-set-name"

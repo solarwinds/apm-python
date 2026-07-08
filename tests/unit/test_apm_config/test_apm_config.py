@@ -504,6 +504,7 @@ class TestSolarWindsApmConfig:
         assert result == "weird-key:bar-service"
 
     def test__validate_log_filepath_none(self, mocker):
+        mocker.patch("solarwinds_apm.apm_config.Resource.create", return_value=mocker.MagicMock())
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
 
@@ -515,6 +516,7 @@ class TestSolarWindsApmConfig:
         assert test_config.get("log_filepath") == ""
 
     def test__validate_log_filepath_no_parent_path(self, mocker):
+        mocker.patch("solarwinds_apm.apm_config.Resource.create", return_value=mocker.MagicMock())
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
 
@@ -526,6 +528,7 @@ class TestSolarWindsApmConfig:
         assert test_config.get("log_filepath") == "foo"
 
     def test__validate_log_filepath_path_exists(self, mocker):
+        mocker.patch("solarwinds_apm.apm_config.Resource.create", return_value=mocker.MagicMock())
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=True)
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
 
@@ -537,6 +540,7 @@ class TestSolarWindsApmConfig:
         assert test_config.get("log_filepath") == "/path/to/foo"
 
     def test__validate_log_filepath_create_path(self, mocker):
+        mocker.patch("solarwinds_apm.apm_config.Resource.create", return_value=mocker.MagicMock())
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
 
@@ -548,6 +552,7 @@ class TestSolarWindsApmConfig:
         assert test_config.get("log_filepath") == "/path/to/foo"
 
     def test__validate_log_filepath_cannot_create_reset_settings(self, mocker):
+        mocker.patch("solarwinds_apm.apm_config.Resource.create", return_value=mocker.MagicMock())
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
         mock_makedirs = mocker.patch(
             "solarwinds_apm.apm_config.os.makedirs",
