@@ -19,13 +19,19 @@ class TestSolarWindsApmConfigServiceName:
             "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_service_name_apm_proto"
         )
         mock_calc_lambda = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_service_name_lambda"
+            "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_service_name_lambda",
+            return_value="test-service",
         )
         mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.calculate_is_lambda",
             return_value=True,
         )
-        test_config = apm_config.SolarWindsApmConfig("foo")
+        mocker.patch(
+            "solarwinds_apm.apm_resource.create_apm_resource",
+            return_value=Resource({}),
+        )
+        test_resource = Resource({})
+        test_config = apm_config.SolarWindsApmConfig(test_resource)
         test_config._calculate_service_name(
             True,
             {},
@@ -34,14 +40,15 @@ class TestSolarWindsApmConfigServiceName:
         # called twice because of init, and we call again
         mock_calc_lambda.assert_has_calls(
             [
-                mocker.call("foo"),
+                mocker.call(test_resource),
                 mocker.call({}),
             ]
         )
 
     def test__calculate_service_name_not_is_lambda(self, mocker):
         mock_calc_proto = mocker.patch(
-            "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_service_name_apm_proto"
+            "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_service_name_apm_proto",
+            return_value="test-service",
         )
         mock_calc_lambda = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig._calculate_service_name_lambda"
@@ -50,7 +57,12 @@ class TestSolarWindsApmConfigServiceName:
             "solarwinds_apm.apm_config.SolarWindsApmConfig.calculate_is_lambda",
             return_value=False,
         )
-        test_config = apm_config.SolarWindsApmConfig("foo")
+        mocker.patch(
+            "solarwinds_apm.apm_resource.create_apm_resource",
+            return_value=Resource({}),
+        )
+        test_resource = Resource({})
+        test_config = apm_config.SolarWindsApmConfig(test_resource)
         test_config._calculate_service_name(
             True,
             {},
@@ -58,7 +70,7 @@ class TestSolarWindsApmConfigServiceName:
         # called twice because of init, and we call again
         mock_calc_proto.assert_has_calls(
             [
-                mocker.call(False, "foo"),
+                mocker.call(False, test_resource),
                 mocker.call(True, {}),
             ]
         )
