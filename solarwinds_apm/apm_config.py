@@ -91,17 +91,19 @@ class SolarWindsApmConfig:
 
     def __init__(
         self,
-        otel_resource: Resource = Resource.create(),
+        otel_resource: Resource | None = None,
         **kwargs: int,
     ) -> None:
         """Initialize SolarWinds APM configuration.
 
         Parameters:
-        otel_resource (Resource): OpenTelemetry resource with detector attributes.
-            In normal usage, passed from Configurator after detector resource created.
-            Defaults to Resource.create() for backward compatibility.
+        otel_resource (optional): OpenTelemetry resource with detector attributes.
+            In normal distro usage, passed from Configurator after resource detectors created.
         **kwargs (int): Additional configuration keyword arguments.
         """
+        if otel_resource is None:
+            otel_resource = Resource.create()
+
         self.__config = {}
         # Update the config with default values
         self.__config = {

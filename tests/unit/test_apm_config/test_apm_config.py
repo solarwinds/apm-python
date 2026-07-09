@@ -157,7 +157,7 @@ class TestSolarWindsApmConfig:
             "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
             "OTEL_SERVICE_NAME": "from_otel_env"
         })
-        # Otel picks up os mock if Resource.create here (same as default arg)
+        # Explicitly pass Resource.create() to pick up env vars set above
         test_config = apm_config.SolarWindsApmConfig(Resource.create())
         assert test_config.agent_enabled
         assert test_config.service_name == "from_otel_env"
@@ -504,7 +504,11 @@ class TestSolarWindsApmConfig:
         assert result == "weird-key:bar-service"
 
     def test__validate_log_filepath_none(self, mocker):
-        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
+        mocker.patch(
+            "solarwinds_apm.apm_config.Resource.create",
+            return_value=Resource.get_empty()
+        )
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
 
         test_config = apm_config.SolarWindsApmConfig()
@@ -515,7 +519,11 @@ class TestSolarWindsApmConfig:
         assert test_config.get("log_filepath") == ""
 
     def test__validate_log_filepath_no_parent_path(self, mocker):
-        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists")
+        mocker.patch(
+            "solarwinds_apm.apm_config.Resource.create",
+            return_value=Resource.get_empty()
+        )
+        mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
 
         test_config = apm_config.SolarWindsApmConfig()
@@ -526,6 +534,10 @@ class TestSolarWindsApmConfig:
         assert test_config.get("log_filepath") == "foo"
 
     def test__validate_log_filepath_path_exists(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.apm_config.Resource.create",
+            return_value=Resource.get_empty()
+        )
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=True)
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
 
@@ -537,6 +549,10 @@ class TestSolarWindsApmConfig:
         assert test_config.get("log_filepath") == "/path/to/foo"
 
     def test__validate_log_filepath_create_path(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.apm_config.Resource.create",
+            return_value=Resource.get_empty()
+        )
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
         mock_makedirs = mocker.patch("solarwinds_apm.apm_config.os.makedirs")
 
@@ -548,6 +564,10 @@ class TestSolarWindsApmConfig:
         assert test_config.get("log_filepath") == "/path/to/foo"
 
     def test__validate_log_filepath_cannot_create_reset_settings(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.apm_config.Resource.create",
+            return_value=Resource.get_empty()
+        )
         mock_exists = mocker.patch("solarwinds_apm.apm_config.os.path.exists", return_value=False)
         mock_makedirs = mocker.patch(
             "solarwinds_apm.apm_config.os.makedirs",
