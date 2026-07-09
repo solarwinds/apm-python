@@ -38,7 +38,6 @@ class TestConfiguratorConfigureOtelComponents:
             "solarwinds_apm.apm_resource.create_detector_resource",
             return_value=mock_detector_resource,
         )
-        
         mocker.patch(
             "solarwinds_apm.configurator.SolarWindsApmConfig",
             return_value=mock_apmconfig_enabled,
