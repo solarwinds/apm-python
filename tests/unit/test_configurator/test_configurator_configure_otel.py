@@ -7,7 +7,6 @@
 import logging
 import pytest
 
-from opentelemetry.sdk.resources import Resource
 
 from solarwinds_apm import configurator
 
