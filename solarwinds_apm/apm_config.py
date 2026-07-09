@@ -15,7 +15,7 @@ import logging
 import os
 import re
 from functools import reduce
-from typing import Any, Optional
+from typing import Any
 
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.sdk.resources import Resource
@@ -91,15 +91,14 @@ class SolarWindsApmConfig:
 
     def __init__(
         self,
-        otel_resource: Optional[Resource] = None,  # noqa: UP045
+        otel_resource: Resource | None = None,
         **kwargs: int,
     ) -> None:
         """Initialize SolarWinds APM configuration.
 
         Parameters:
-        otel_resource (Optional[Resource]): OpenTelemetry resource with detector attributes.
-            In normal usage, passed from Configurator after detector resource created.
-            Defaults to None; Resource.create() is called at runtime for backward compatibility.
+        otel_resource (optional): OpenTelemetry resource with detector attributes.
+            In normal distro usage, passed from Configurator after resource detectors created.
         **kwargs (int): Additional configuration keyword arguments.
         """
         if otel_resource is None:
