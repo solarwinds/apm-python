@@ -91,7 +91,7 @@ class SolarWindsApmConfig:
 
     def __init__(
         self,
-        otel_resource: Resource = Resource.create(),
+        otel_resource: Resource | None = None,
         **kwargs: int,
     ) -> None:
         """Initialize SolarWinds APM configuration.
@@ -102,6 +102,9 @@ class SolarWindsApmConfig:
             Defaults to Resource.create() for backward compatibility.
         **kwargs (int): Additional configuration keyword arguments.
         """
+        if otel_resource is None:
+            otel_resource = Resource.create()
+
         self.__config = {}
         # Update the config with default values
         self.__config = {

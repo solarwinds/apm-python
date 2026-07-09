@@ -79,6 +79,17 @@ class TestSolarWindsApmConfig:
         test_config = apm_config.SolarWindsApmConfig()
         assert test_config.get("collector") == apm_config.SolarWindsApmConfig._CONFIG_COLLECTOR_DEFAULT
 
+    def test__init_default_otel_resource_calls_resource_create(self, mocker):
+        mock_resource = Resource.create({"service.name": "resource_service_name"})
+        mock_resource_create = mocker.patch(
+            "solarwinds_apm.apm_config.Resource.create",
+            return_value=mock_resource,
+        )
+
+        apm_config.SolarWindsApmConfig()
+
+        mock_resource_create.assert_called_once_with()
+
     def test__init_collector(self, mocker):
         mocker.patch.dict(os.environ, {
             "SW_APM_COLLECTOR": "apm.collector.eu-02.cloud.solarwinds.com"
