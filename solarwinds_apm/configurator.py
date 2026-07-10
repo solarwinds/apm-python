@@ -11,7 +11,6 @@ from __future__ import annotations
 import logging
 import math
 import os
-import uuid
 
 from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
@@ -59,7 +58,7 @@ from opentelemetry.sdk.trace.sampling import Sampler
 from opentelemetry.trace import NoOpTracerProvider, set_tracer_provider
 from opentelemetry.util._importlib_metadata import entry_points
 
-from solarwinds_apm import apm_logging
+from solarwinds_apm import apm_logging, apm_resource
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.apm_constants import INTL_SWO_DEFAULT_PROPAGATORS
 from solarwinds_apm.response_propagator import (
@@ -71,7 +70,6 @@ from solarwinds_apm.trace import (
     ServiceEntrySpanProcessor,
 )
 from solarwinds_apm.tracer_provider import SolarwindsTracerProvider
-from solarwinds_apm.version import __version__
 
 solarwinds_apm_logger = apm_logging.logger
 logger = logging.getLogger(__name__)
@@ -87,30 +85,8 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         Creates APM configuration instance for SDK initialization.
         """
         super().__init__()
-        self.apm_config = SolarWindsApmConfig()
-
-    def _create_apm_resource(self) -> Resource:
-        """Create new OpenTelemetry Resource for telemetry providers.
-
-        Returns:
-        Resource: Resource with SolarWinds APM attributes and service information.
-        """
-        apm_resource = Resource.create(
-            {
-                "sw.apm.version": __version__,
-                "sw.data.module": "apm",
-                "service.name": self.apm_config.service_name,
-            }
-        )
-        # Prioritize service.instance.id set by any Resource Detectors
-        updated_apm_resource = apm_resource.merge(
-            Resource(
-                {"service.instance.id": str(uuid.uuid4())}
-                if "service.instance.id" not in apm_resource.attributes
-                else {}
-            )
-        )
-        return updated_apm_resource
+        detector_resource = apm_resource.create_detector_resource()
+        self.apm_config = SolarWindsApmConfig(otel_resource=detector_resource)
 
     def _configure(self, **kwargs: int) -> None:
         """Configure SolarWinds APM and OpenTelemetry components.
@@ -143,24 +119,24 @@ class SolarWindsConfigurator(_OTelSDKConfigurator):
         apm_sampler = ParentBasedSwSampler(
             self.apm_config,
         )
-        apm_resource = self._create_apm_resource()
+        resource = self.apm_config.resource
 
         self._custom_init_tracing(
             exporters=span_exporters,
             id_generator=kwargs.get("id_generator"),
             sampler=apm_sampler,
-            resource=apm_resource,
+            resource=resource,
         )
         self._custom_init_metrics(
             exporters_or_readers=metric_exporters,
-            resource=apm_resource,
+            resource=resource,
         )
 
         # Initialize LoggerProvider, log processors, and log exporters.
         # As of OTel 1.40.0, auto-instrumentation of Python logging (setup_logging_handler)
         # is handled by opentelemetry-instrumentation-logging via instrumentation, not by the
         # deprecated LoggingHandler in the SDK. So we pass _init_logging false.
-        _init_logging(log_exporters, apm_resource, setup_logging_handler=False)
+        _init_logging(log_exporters, resource, setup_logging_handler=False)
 
         # Set up additional custom SW components
         self._configure_service_entry_span_processor()
