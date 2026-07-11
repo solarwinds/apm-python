@@ -26,7 +26,10 @@ INTL_SWO_DEFAULT_PROPAGATORS = [
     INTL_SWO_PROPAGATOR,
     INTL_SWO_BAGGAGE_PROPAGATOR,
 ]
+# service_instance is first to set fallback/"default" UUID,
+# instead of being appended by SDK for highest merge priority
 INTL_SWO_DEFAULT_RESOURCE_DETECTORS = [
+    "service_instance",
     "process",
     "os",
     "host",
@@ -41,6 +44,7 @@ INTL_SWO_DEFAULT_RESOURCE_DETECTORS = [
     "uams",
 ]
 INTL_SWO_DEFAULT_RESOURCE_DETECTORS_LAMBDA = [
+    "service_instance",
     "process",
     "os",
     "host",
