@@ -187,6 +187,6 @@ class TestServiceInstanceIdWithCustomDetectors(TestBaseSwHeadersAndAttributes):
             try:
                 uuid.UUID(instance_id)
                 is_valid_uuid = True
-            except (ValueError, AttributeError):
+            except (ValueError, TypeError, AttributeError):
                 is_valid_uuid = False
             assert is_valid_uuid, f"service.instance.id '{instance_id}' is not a valid UUID"
