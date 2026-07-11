@@ -17,7 +17,13 @@ class TestServiceInstanceIdPrecedence1ResourceAttributes(TestBaseSwHeadersAndAtt
 
     def setUp(self):
         os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "service.instance.id=resource-attr-instance-123"
+        # Set a full Azure App Service environment so the azure_app_service detector is active.
+        os.environ["WEBSITE_SITE_NAME"] = "my-azure-app"
+        os.environ["WEBSITE_RESOURCE_GROUP"] = "prod-rg"
+        os.environ["WEBSITE_OWNER_NAME"] = "subscription-id+webspace-name"
         os.environ["WEBSITE_INSTANCE_ID"] = "azure-instance-456"
+        os.environ["WEBSITE_SLOT_NAME"] = "staging"
+        os.environ["REGION_NAME"] = "eastus"
         super().setUp()
 
     def tearDown(self):
