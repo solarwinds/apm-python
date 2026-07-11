@@ -62,8 +62,8 @@ class TestServiceInstanceIdPrecedence1ResourceAttributes(TestBaseSwHeadersAndAtt
             ],
         ):
             resource = self.configurator.apm_config.resource
+            assert resource.attributes.get("cloud.provider") == "azure"
             assert resource.attributes["service.instance.id"] == "resource-attr-instance-123"
-
 
 class TestServiceInstanceIdPrecedence2AzureAppService(TestBaseSwHeadersAndAttributes):
     """Test that Azure App Service WEBSITE_INSTANCE_ID overrides UUID fallback."""
