@@ -31,8 +31,7 @@ def create_apm_resource(
 ) -> Resource:
     """Create final APM Resource by merging SolarWinds attributes into detector resource.
 
-    Adds sw.apm.version, sw.data.module, service.name,
-    and service.instance.id (if not already present from detectors).
+    Adds sw.apm.version, sw.data.module, and service.name.
 
     Args:
         detector_resource: Resource from detectors with all their attributes.
