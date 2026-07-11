@@ -28,7 +28,12 @@ class TestServiceInstanceIdPrecedence1ResourceAttributes(TestBaseSwHeadersAndAtt
 
     def tearDown(self):
         os.environ.pop("OTEL_RESOURCE_ATTRIBUTES", None)
+        os.environ.pop("WEBSITE_SITE_NAME", None)
+        os.environ.pop("WEBSITE_RESOURCE_GROUP", None)
+        os.environ.pop("WEBSITE_OWNER_NAME", None)
         os.environ.pop("WEBSITE_INSTANCE_ID", None)
+        os.environ.pop("WEBSITE_SLOT_NAME", None)
+        os.environ.pop("REGION_NAME", None)
         super().tearDown()
 
     def test_resource_attributes_over_azure_detector(self):
