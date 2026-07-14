@@ -8,8 +8,6 @@
 
 from __future__ import annotations
 
-import uuid
-
 from opentelemetry.sdk.resources import Resource
 
 from solarwinds_apm.version import __version__
@@ -22,7 +20,7 @@ def create_detector_resource() -> Resource:
     Should be called after SolarWindsDistro has configured default detector list.
 
     Returns:
-        Resource: Resource with attributes from process, OS, cloud, k8s, etc. detectors.
+        Resource: Resource with attributes from service_instance, process, OS, cloud, k8s, etc. detectors.
     """
     return Resource.create()
 
@@ -33,8 +31,7 @@ def create_apm_resource(
 ) -> Resource:
     """Create final APM Resource by merging SolarWinds attributes into detector resource.
 
-    Adds sw.apm.version, sw.data.module, service.name,
-    and service.instance.id (if not already present from detectors).
+    Adds sw.apm.version, sw.data.module, and service.name.
 
     Args:
         detector_resource: Resource from detectors with all their attributes.
@@ -54,10 +51,5 @@ def create_apm_resource(
     # This preserves all detector attributes (cloud.*, k8s.*, etc.) while ensuring
     # service.name (calculated via precedence) overrides any service.name from detectors.
     apm_resource = detector_resource.merge(Resource(sw_attributes))
-
-    if "service.instance.id" not in apm_resource.attributes:
-        apm_resource = apm_resource.merge(
-            Resource({"service.instance.id": str(uuid.uuid4())})
-        )
 
     return apm_resource

@@ -104,6 +104,8 @@ class TestCreateApmResource:
         attrs = result.attributes
         assert "service.instance.id" in attrs
         # Should be a UUID string (36 chars with dashes)
+        # service_instance resource detector is always built by SDK
+        # but order in which it's built/run can be configured
         instance_id = attrs["service.instance.id"]
         assert isinstance(instance_id, str)
         assert len(instance_id) == 36
