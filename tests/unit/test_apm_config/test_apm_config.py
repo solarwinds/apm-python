@@ -4,6 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import json
 import logging
 import os
 import re
@@ -326,6 +327,19 @@ class TestSolarWindsApmConfig:
         self._mock_service_key(mocker, "valid-and-long:key")
         assert apm_config.SolarWindsApmConfig()._config_mask_service_key().get("service_key") == "vali...long:key"
 
+    def test_config_lambda(
+        self,
+        mocker,
+        mock_env_vars,
+    ):
+        """Test _config_lambda excludes service_key and collector."""
+        self._mock_service_key(mocker, "valid-and-long:key")
+        config_lambda = apm_config.SolarWindsApmConfig()._config_lambda()
+        assert "service_key" not in config_lambda
+        assert "collector" not in config_lambda
+        assert "tracing_mode" in config_lambda
+        assert "debug_level" in config_lambda
+
     def test_mask_service_key_attribute_error_non_string_key(self):
         test_config = apm_config.SolarWindsApmConfig()
         test_config._SolarWindsApmConfig__config["service_key"] = 123
@@ -341,6 +355,57 @@ class TestSolarWindsApmConfig:
         result = str(apm_config.SolarWindsApmConfig())
         assert "vali...long:key" in result
         assert "agent_enabled" in result
+        assert "is_lambda" in result
+
+    def test_str_non_lambda_environment(
+        self,
+        mocker,
+        mock_env_vars,
+    ):
+        """Test __str__ output in non-Lambda environment shows is_lambda: false, masked service_key, and includes collector."""
+        self._mock_service_key(mocker, "valid-and-long:key")
+        # Ensure Lambda env vars are not set
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "valid-and-long:key",
+            },
+            clear=True,
+        )
+        result = str(apm_config.SolarWindsApmConfig())
+        result_dict = json.loads(result)
+        assert result_dict["is_lambda"] is False
+        # In non-Lambda mode, service_key should be masked and present
+        assert "service_key" in result_dict["__config"]
+        assert result_dict["__config"]["service_key"] == "vali...long:key"
+        assert "vali...long:key" in result
+        assert "collector" in result_dict["__config"]
+        assert "apm.collector" in result
+
+    def test_str_lambda_environment(
+        self,
+        mocker,
+    ):
+        """Test __str__ output in Lambda environment shows is_lambda: true and excludes service_key and collector."""
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "valid-and-long:key",
+                "AWS_LAMBDA_FUNCTION_NAME": "test-function",
+                "LAMBDA_TASK_ROOT": "/var/task",
+            },
+            clear=True,
+        )
+        result = str(apm_config.SolarWindsApmConfig())
+        result_dict = json.loads(result)
+        assert result_dict["is_lambda"] is True
+        # In Lambda mode, service_key should be completely excluded from __config
+        assert "service_key" not in result_dict["__config"]
+        # Verify service_key does not appear in the string at all
+        assert "service_key" not in result
+        assert "vali...long" not in result
+        assert "collector" not in result_dict["__config"]
+        assert "apm.collector" not in result
 
     # pylint:disable=unused-argument
     def test_set_config_value_invalid_key(self, caplog, setup_caplog, mock_env_vars):

@@ -529,6 +529,21 @@ class SolarWindsApmConfig:
             config_masked[cnf_k] = cnf_v
         return config_masked
 
+    def _config_lambda(self) -> dict:
+        """
+        Return new config dictionary for Lambda mode.
+
+        Excludes service_key and collector fields that are not relevant in Lambda.
+
+        Returns:
+        dict: A copy of the config with service_key and collector fields excluded.
+        """
+        config_lambda = {}
+        for cnf_k, cnf_v in self.__config.items():
+            if cnf_k not in ("service_key", "collector"):
+                config_lambda[cnf_k] = cnf_v
+        return config_lambda
+
     def _validate_log_filepath(
         self,
     ) -> None:
@@ -551,15 +566,24 @@ class SolarWindsApmConfig:
                 self.__config["log_filepath"] = ""
 
     def __str__(self) -> str:
-        """Return string representation of ApmConfig with masked service key.
+        """Return string representation of ApmConfig.
+
+        In Lambda mode, service_key and collector are excluded from output.
+        In non-Lambda mode, service_key is masked and collector is included.
 
         Returns:
-        str: JSON string with config, agent_enabled, and service_name.
+        str: JSON string with config, agent_enabled, service_name, and is_lambda.
         """
+        if self.is_lambda:
+            config_dict = self._config_lambda()
+        else:
+            config_dict = self._config_mask_service_key()
+
         apm_config = {
-            "__config": self._config_mask_service_key(),
+            "__config": config_dict,
             "agent_enabled": self.agent_enabled,
             "service_name": self.service_name,
+            "is_lambda": self.is_lambda,
         }
         return json.dumps(apm_config)
 
