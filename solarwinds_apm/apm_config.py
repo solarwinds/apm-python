@@ -793,7 +793,6 @@ class SolarWindsApmConfig:
                 return True
             if val.lower() == "false":
                 return False
-        logger.debug("Received config %s instead of true/false", val)
         return None
 
     # pylint: disable=too-many-branches,too-many-statements
