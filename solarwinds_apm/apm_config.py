@@ -88,6 +88,7 @@ class SolarWindsApmConfig:
     _KEY_MASK_BAD_FORMAT = "{}...<invalid_format>"
     _KEY_MASK_BAD_FORMAT_SHORT = "{}<invalid_format>"
     _SW_PREFIX = "sw_apm_"
+    _logged_no_config_file = False
 
     def __init__(
         self,
@@ -631,7 +632,12 @@ class SolarWindsApmConfig:
         if not cnf_filepath:
             cnf_filepath = cls._CONFIG_FILE_DEFAULT
             if not os.path.isfile(cnf_filepath):
-                logger.debug("No config file at %s; skipping", cnf_filepath)
+                if not cls._logged_no_config_file:
+                    logger.debug(
+                        "No custom configuration file at %s; skipping",
+                        cnf_filepath,
+                    )
+                    cls._logged_no_config_file = True
                 return cnf_dict
 
         try:
