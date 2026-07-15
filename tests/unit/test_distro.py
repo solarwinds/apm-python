@@ -195,6 +195,49 @@ class TestDistro:
         )
         assert distro.SolarWindsDistro()._get_token_from_service_key() == "foo-token"
 
+    def test__get_token_from_service_key_missing_logs_in_non_lambda_mode(
+        self, mocker, caplog
+    ):
+        import logging
+        caplog.set_level(logging.DEBUG, logger="solarwinds_apm.distro")
+        # Non-Lambda environment (no AWS_LAMBDA_FUNCTION_NAME)
+        mocker.patch.dict(
+            os.environ,
+            {},
+            clear=True,
+        )
+
+        assert distro.SolarWindsDistro()._get_token_from_service_key() is None
+        log_messages = [
+            record.message
+            for record in caplog.records
+            if "Missing service key" in record.message
+        ]
+        assert len(log_messages) == 1
+
+    def test__get_token_from_service_key_missing_no_log_in_lambda_mode(
+        self, mocker, caplog
+    ):
+        import logging
+        caplog.set_level(logging.DEBUG, logger="solarwinds_apm.distro")
+        mocker.patch.dict(
+            os.environ,
+            {
+                "AWS_LAMBDA_FUNCTION_NAME": "test-function",
+                "LAMBDA_TASK_ROOT": "/var/task",
+            },
+            clear=True,
+        )
+
+        assert distro.SolarWindsDistro()._get_token_from_service_key() is None
+        # Should NOT log the missing service key message
+        log_messages = [
+            record.message
+            for record in caplog.records
+            if "Missing service key" in record.message
+        ]
+        assert len(log_messages) == 0
+
     def test_configure_no_env(self, mocker):
         os.environ.pop("SW_APM_SERVICE_KEY", "")
         mocker.patch.dict(os.environ, {})

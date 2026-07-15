@@ -66,6 +66,7 @@ class SolarWindsDistro(BaseDistro):
     _cnf_dict = None
     _collector = None
     _instrumentor_metrics_enabled = None
+    _is_lambda = None
 
     _DEFAULT_OTLP_EXPORTER = "otlp"
     _DEFAULT_OTLP_PROTOCOL = "http/protobuf"
@@ -78,6 +79,7 @@ class SolarWindsDistro(BaseDistro):
         cls._instrumentor_metrics_enabled = (
             SolarWindsApmConfig.calculate_metrics_enabled(cls._cnf_dict)
         )
+        cls._is_lambda = SolarWindsApmConfig.calculate_is_lambda()
         cls._meter_provider = None
         if cls._instrumentor_metrics_enabled is False:
             cls._meter_provider = NoOpMeterProvider()
@@ -119,7 +121,9 @@ class SolarWindsDistro(BaseDistro):
         """
         service_key = environ.get("SW_APM_SERVICE_KEY")
         if not service_key:
-            logger.debug("Missing service key")
+            # In Lambda mode, otelcol extension uses token instead of key
+            if not self._is_lambda:
+                logger.debug("Missing service key")
             return None
         # Key must be at least one char + ":" + at least one other char
         try:
