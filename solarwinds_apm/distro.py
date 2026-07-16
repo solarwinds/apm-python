@@ -175,9 +175,12 @@ class SolarWindsDistro(BaseDistro):
                     + match.group()
                     + ".solarwinds.com:443"
                 )
-                logger.debug(
-                    "Using exporter otlp collector endpoint %s", resolved
-                )
+                # See `wrapper` for Lambda settings
+                if not self._is_lambda:
+                    logger.debug(
+                        "Setting default OTEL_EXPORTER_OTLP_ENDPOINT %s",
+                        resolved,
+                    )
                 environ.setdefault(OTEL_EXPORTER_OTLP_ENDPOINT, resolved)
             else:
                 environ.setdefault(
