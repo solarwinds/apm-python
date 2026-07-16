@@ -347,11 +347,11 @@ class TestSolarWindsApmConfigCnfFile:
         caplog.set_level(logging.DEBUG, logger="solarwinds_apm.apm_config")
 
         # Call methods that internally call get_cnf_dict
-        collector1 = apm_config.SolarWindsApmConfig.calculate_collector()
-        collector2 = apm_config.SolarWindsApmConfig.calculate_collector()
-        metrics1 = apm_config.SolarWindsApmConfig.calculate_metrics_enabled()
-        metrics2 = apm_config.SolarWindsApmConfig.calculate_metrics_enabled()
-        direct1 = apm_config.SolarWindsApmConfig.get_cnf_dict()
+        apm_config.SolarWindsApmConfig.calculate_collector()
+        apm_config.SolarWindsApmConfig.calculate_collector()
+        apm_config.SolarWindsApmConfig.calculate_metrics_enabled()
+        apm_config.SolarWindsApmConfig.calculate_metrics_enabled()
+        apm_config.SolarWindsApmConfig.get_cnf_dict()
 
         log_messages = [
             record.message
