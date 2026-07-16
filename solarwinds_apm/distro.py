@@ -203,7 +203,8 @@ class SolarWindsDistro(BaseDistro):
             )
             if match:
                 header_token = self._get_token_from_service_key()
-                if not header_token:
+                if not header_token and not self._is_lambda:
+                    # In Lambda mode, otelcol extension uses token not APM
                     logger.debug(
                         "Setting OTLP export defaults without SWO token"
                     )
