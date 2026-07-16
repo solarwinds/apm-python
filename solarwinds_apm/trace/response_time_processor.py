@@ -196,7 +196,7 @@ class ResponseTimeProcessor(SpanProcessor):
                     status_code = None
             except (ValueError, TypeError):
                 logger.debug(
-                    "Expected HTTP status code as int (RFC 9110), but got %s. Skipping response time attribute.",
+                    "Expected HTTP status code as int (RFC 9110), but got %s. Ignoring invalid value.",
                     type(status_code_new).__name__,
                 )
 
