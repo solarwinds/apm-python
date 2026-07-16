@@ -18,8 +18,6 @@ on:
         - staging
         - production
 
-permissions: read-all
-
 jobs:
   run_tox_tests:
     runs-on: ubuntu-latest

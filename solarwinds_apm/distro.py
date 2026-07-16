@@ -66,6 +66,7 @@ class SolarWindsDistro(BaseDistro):
     _cnf_dict = None
     _collector = None
     _instrumentor_metrics_enabled = None
+    _is_lambda = None
 
     _DEFAULT_OTLP_EXPORTER = "otlp"
     _DEFAULT_OTLP_PROTOCOL = "http/protobuf"
@@ -78,6 +79,7 @@ class SolarWindsDistro(BaseDistro):
         cls._instrumentor_metrics_enabled = (
             SolarWindsApmConfig.calculate_metrics_enabled(cls._cnf_dict)
         )
+        cls._is_lambda = SolarWindsApmConfig.calculate_is_lambda()
         cls._meter_provider = None
         if cls._instrumentor_metrics_enabled is False:
             cls._meter_provider = NoOpMeterProvider()
@@ -119,7 +121,9 @@ class SolarWindsDistro(BaseDistro):
         """
         service_key = environ.get("SW_APM_SERVICE_KEY")
         if not service_key:
-            logger.debug("Missing service key")
+            # In Lambda mode, otelcol extension uses token instead of key
+            if not self._is_lambda:
+                logger.debug("Missing service key")
             return None
         # Key must be at least one char + ":" + at least one other char
         try:
@@ -171,9 +175,12 @@ class SolarWindsDistro(BaseDistro):
                     + match.group()
                     + ".solarwinds.com:443"
                 )
-                logger.debug(
-                    "Using exporter otlp collector endpoint %s", resolved
-                )
+                # See `wrapper` for Lambda settings
+                if not self._is_lambda:
+                    logger.debug(
+                        "Setting default OTEL_EXPORTER_OTLP_ENDPOINT %s",
+                        resolved,
+                    )
                 environ.setdefault(OTEL_EXPORTER_OTLP_ENDPOINT, resolved)
             else:
                 environ.setdefault(
@@ -196,7 +203,8 @@ class SolarWindsDistro(BaseDistro):
             )
             if match:
                 header_token = self._get_token_from_service_key()
-                if not header_token:
+                if not header_token and not self._is_lambda:
+                    # In Lambda mode, otelcol extension uses token not APM
                     logger.debug(
                         "Setting OTLP export defaults without SWO token"
                     )
@@ -218,7 +226,7 @@ class SolarWindsDistro(BaseDistro):
         # APM enables code attributes in logs by default
         environ.setdefault(OTEL_PYTHON_LOG_CODE_ATTRIBUTES, "true")
         # Default for ResourceDetector
-        if SolarWindsApmConfig.calculate_is_lambda():
+        if self._is_lambda:
             environ.setdefault(
                 OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
                 ",".join(INTL_SWO_DEFAULT_RESOURCE_DETECTORS_LAMBDA),
@@ -252,10 +260,7 @@ class SolarWindsDistro(BaseDistro):
         # If we're in Lambda environment, then we skip loading
         # AwsLambdaInstrumentor because we assume the wrapper
         # has done it for us already
-        if (
-            entry_point.name == "aws-lambda"
-            and SolarWindsApmConfig.calculate_is_lambda()
-        ):
+        if entry_point.name == "aws-lambda" and self._is_lambda:
             return
 
         if entry_point.name in _SQLCOMMENTERS:
