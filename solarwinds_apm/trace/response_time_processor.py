@@ -185,17 +185,38 @@ class ResponseTimeProcessor(SpanProcessor):
             self._HTTP_RESPONSE_STATUS_CODE, None
         )
         status_code_old = span.attributes.get(self._HTTP_STATUS_CODE, None)
-        if status_code_new and status_code_new > 0:
-            meter_attrs.update(
-                {self._HTTP_RESPONSE_STATUS_CODE: status_code_new}
-            )
-        elif status_code_old and status_code_old > 0:
-            meter_attrs.update(
-                {self._HTTP_RESPONSE_STATUS_CODE: status_code_old}
-            )
-        # Something went wrong in OTel or instrumented service crashed early
-        # if no status_code, current nor deprecated, in attributes of HTTP span
+
+        # Convert to int (compliant) if str (non-compliant but can happen)
+        # RFC 9110: status-code should be 3-digit (integer)
+        status_code = None
+        if status_code_new is not None:
+            try:
+                status_code = int(status_code_new)
+                if status_code <= 0:
+                    status_code = None
+            except (ValueError, TypeError):
+                logger.debug(
+                    "Expected HTTP status code as int (RFC 9110), but got %s. Skipping response time attribute.",
+                    type(status_code_new).__name__,
+                )
+
+        # Fall back to deprecated attribute if new attribute was invalid/missing
+        if status_code is None and status_code_old is not None:
+            try:
+                status_code = int(status_code_old)
+                if status_code <= 0:
+                    status_code = None
+            except (ValueError, TypeError):
+                logger.debug(
+                    "Expected HTTP status code as int (RFC 9110), but got %s. Skipping response time attribute.",
+                    type(status_code_old).__name__,
+                )
+
+        if status_code is not None and status_code > 0:
+            meter_attrs.update({self._HTTP_RESPONSE_STATUS_CODE: status_code})
         else:
+            # Something went wrong in OTel or instrumented service crashed early
+            # if no status_code, current nor deprecated, in attributes of HTTP span
             meter_attrs.update(
                 {
                     self._HTTP_RESPONSE_STATUS_CODE: self._HTTP_SPAN_STATUS_UNAVAILABLE
@@ -207,9 +228,13 @@ class ResponseTimeProcessor(SpanProcessor):
         )
         request_method_old = span.attributes.get(self._HTTP_METHOD, None)
         if request_method_new:
-            meter_attrs.update({self._HTTP_REQUEST_METHOD: request_method_new})
+            meter_attrs.update(
+                {self._HTTP_REQUEST_METHOD: str(request_method_new)}
+            )
         elif request_method_old:
-            meter_attrs.update({self._HTTP_REQUEST_METHOD: request_method_old})
+            meter_attrs.update(
+                {self._HTTP_REQUEST_METHOD: str(request_method_old)}
+            )
 
         return meter_attrs
 
