@@ -4,7 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-7.0.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-7.1.0...HEAD)
+
+## [7.1.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-7.1.0) - 2026-07-17
+
+### Added
+- Add security agent ([#793](https://github.com/solarwinds/apm-python/pull/793))
+- Add service_instance resource detector default ([#816](https://github.com/solarwinds/apm-python/pull/816))
+
+### Changed
+- Pin action workflow SHAs ([#795](https://github.com/solarwinds/apm-python/pull/795), [#799](https://github.com/solarwinds/apm-python/pull/799))
+- Upgraded to OTel 1.43.0/0.64b0 ([#798](https://github.com/solarwinds/apm-python/pull/798))
+- Fix duplicate Resource creation ([#807](https://github.com/solarwinds/apm-python/pull/807))
+- Update debug logging ([#817](https://github.com/solarwinds/apm-python/pull/817))
+- Fix response time metrics status code attribute ([#818](https://github.com/solarwinds/apm-python/pull/818))
+- Fix dependabot updater ([#791](https://github.com/solarwinds/apm-python/pull/791))
 
 ## [7.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-7.0.0) - 2026-06-11
 
