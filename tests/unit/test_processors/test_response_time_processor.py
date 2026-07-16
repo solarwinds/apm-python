@@ -468,6 +468,131 @@ class TestResponseTimeProcessor:
         assert "http.request.method" not in result
         assert result["existing"] == "value"
 
+    def test_enhance_meter_attrs_with_http_span_attrs_string_status_code_new_attr(self, mocker):
+        """Test that string status codes are converted to int (new attr)"""
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "http.request.method": "GET",
+                "http.response.status_code": "200"  # String instead of int
+            }
+        })
+        
+        meter_attrs = {}
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        assert result["http.response.status_code"] == 200
+        assert result["http.request.method"] == "GET"
+
+    def test_enhance_meter_attrs_with_http_span_attrs_string_status_code_old_attr(self, mocker):
+        """Test that string status codes are converted to int (deprecated attr)"""
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "http.method": "POST",
+                "http.status_code": "404"  # String instead of int
+            }
+        })
+        
+        meter_attrs = {}
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        assert result["http.response.status_code"] == 404
+        assert result["http.request.method"] == "POST"
+
+    def test_enhance_meter_attrs_with_http_span_attrs_invalid_string_status_code(self, mocker):
+        """Test that invalid string status codes fall back to unavailable (0)"""
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "http.request.method": "GET",
+                "http.response.status_code": "invalid"  # Cannot convert to int
+            }
+        })
+        
+        meter_attrs = {}
+        mock_logger = mocker.patch("solarwinds_apm.trace.response_time_processor.logger")
+        
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        assert result["http.response.status_code"] == 0  # Fallback to unavailable
+        assert result["http.request.method"] == "GET"
+        mock_logger.debug.assert_called_once()
+        assert "Expected HTTP status code as int" in mock_logger.debug.call_args[0][0]
+
+    def test_enhance_meter_attrs_with_http_span_attrs_invalid_type_status_code(self, mocker):
+        """Test that non-string/non-int status codes fall back to unavailable (0)"""
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "http.request.method": "GET",
+                "http.response.status_code": ["200"]  # List instead of int
+            }
+        })
+        
+        meter_attrs = {}
+        mock_logger = mocker.patch("solarwinds_apm.trace.response_time_processor.logger")
+        
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        assert result["http.response.status_code"] == 0  # Fallback to unavailable
+        assert result["http.request.method"] == "GET"
+        mock_logger.debug.assert_called_once()
+        assert "Expected HTTP status code as int" in mock_logger.debug.call_args[0][0]
+
+    def test_enhance_meter_attrs_with_http_span_attrs_string_zero_status_code(self, mocker):
+        """Test that string '0' is converted but treated as invalid (fallback to old attr)"""
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "http.request.method": "GET",
+                "http.response.status_code": "0",
+                "http.status_code": 200
+            }
+        })
+        
+        meter_attrs = {}
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        # String "0" converts to int 0, which is <= 0, so falls back to old attr
+        assert result["http.response.status_code"] == 200
+        assert result["http.request.method"] == "GET"
+
+    def test_enhance_meter_attrs_with_http_span_attrs_negative_string_status_code(self, mocker):
+        """Test that negative string status codes are treated as invalid"""
+        mock_apm_config = self.get_mock_apm_config(mocker)
+        processor = ResponseTimeProcessor(mock_apm_config)
+        
+        mock_span = mocker.Mock()
+        mock_span.configure_mock(**{
+            "attributes": {
+                "http.request.method": "GET",
+                "http.response.status_code": "-1"
+            }
+        })
+        
+        meter_attrs = {}
+        result = processor.enhance_meter_attrs_with_http_span_attrs(mock_span, meter_attrs)
+        
+        # Negative values are treated as invalid, fallback to unavailable
+        assert result["http.response.status_code"] == 0
+        assert result["http.request.method"] == "GET"
+
     def test_on_end_valid_local_parent_span(self, mocker):
         """Only scenario to skip OTLP metrics generation (not entry span)"""
         mock_txname_manager, \
