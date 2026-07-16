@@ -222,7 +222,7 @@ class SolarWindsDistro(BaseDistro):
         # APM enables code attributes in logs by default
         environ.setdefault(OTEL_PYTHON_LOG_CODE_ATTRIBUTES, "true")
         # Default for ResourceDetector
-        if SolarWindsApmConfig.calculate_is_lambda():
+        if self._is_lambda:
             environ.setdefault(
                 OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
                 ",".join(INTL_SWO_DEFAULT_RESOURCE_DETECTORS_LAMBDA),
@@ -256,10 +256,7 @@ class SolarWindsDistro(BaseDistro):
         # If we're in Lambda environment, then we skip loading
         # AwsLambdaInstrumentor because we assume the wrapper
         # has done it for us already
-        if (
-            entry_point.name == "aws-lambda"
-            and SolarWindsApmConfig.calculate_is_lambda()
-        ):
+        if entry_point.name == "aws-lambda" and self._is_lambda:
             return
 
         if entry_point.name in _SQLCOMMENTERS:
