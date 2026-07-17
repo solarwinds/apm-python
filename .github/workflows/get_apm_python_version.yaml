@@ -13,7 +13,8 @@ on:
         description: 'APM Python version, e.g. 2.1.0'
         value: ${{ jobs.get_apm_python_version.outputs.SW_APM_VERSION }}
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   get_apm_python_version:
