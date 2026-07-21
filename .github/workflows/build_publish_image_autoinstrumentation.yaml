@@ -88,7 +88,7 @@ jobs:
         uses: docker/scout-action@bacf462e8d090c09660de30a6ccc718035f961e3
         with:
           command: cves
-          image: ${{ steps.meta.outputs.tags[0] }}
+          image: ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}
           platform: "linux/amd64"
           sarif-file: sarif.output.json
 
@@ -96,6 +96,17 @@ jobs:
         uses: github/codeql-action/upload-sarif@7188fc363630916deb702c7fdcf4e481b751f97a
         with:
           sarif_file: sarif.output.json
+
+      - name: Create JIRA tickets for vulnerabilities
+        uses: ./.github/actions/jira_vuln_k8s
+        with:
+          image-tag: ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}
+          workflow-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          commit-sha: ${{ github.sha }}
+          jira-base-url: ${{ secrets.JIRA_BASE_URL }}
+          jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
+          jira-api-token: ${{ secrets.JIRA_API_TOKEN }}
+          jira-team-field-id: ${{ secrets.JIRA_TEAM_FIELD_ID }}
 
   ghcr_io:
     runs-on: ubuntu-latest
