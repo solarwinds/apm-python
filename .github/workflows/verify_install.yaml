@@ -175,10 +175,10 @@ jobs:
           fi
       # Use checkout@v4 for Alpine versions < 3.17 that don't support Node.js 24
       - if: contains(matrix.hostname, 'alpine3.13') || contains(matrix.hostname, 'alpine3.14') || contains(matrix.hostname, 'alpine3.15') || contains(matrix.hostname, 'alpine3.16')
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
       # Else use latest checkout
       - if: ${{ !(contains(matrix.hostname, 'alpine3.13') || contains(matrix.hostname, 'alpine3.14') || contains(matrix.hostname, 'alpine3.15') || contains(matrix.hostname, 'alpine3.16') || contains(matrix.hostname, 'amazon2-')) }}
-        uses: actions/checkout@v7
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Setup and run install test
         working-directory: ./tests/docker/install
         run: APM_ROOT=$GITHUB_WORKSPACE ./_helper_run_install_tests.sh
@@ -195,7 +195,7 @@ jobs:
           - amazon/aws-lambda-python:3.10-arm64
           - amazon/aws-lambda-python:3.10-x86_64
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Run install test in Amazon Linux 2 container
         run: |
           docker run --rm \

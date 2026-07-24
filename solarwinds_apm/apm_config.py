@@ -20,7 +20,7 @@ from typing import Any
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.sdk.resources import Resource
 
-from solarwinds_apm import apm_logging
+from solarwinds_apm import apm_logging, apm_resource
 from solarwinds_apm.apm_constants import (
     INTL_SWO_DEFAULT_PROPAGATORS,
     INTL_SWO_PROPAGATOR,
@@ -88,18 +88,23 @@ class SolarWindsApmConfig:
     _KEY_MASK_BAD_FORMAT = "{}...<invalid_format>"
     _KEY_MASK_BAD_FORMAT_SHORT = "{}<invalid_format>"
     _SW_PREFIX = "sw_apm_"
+    _logged_no_config_file = False
 
     def __init__(
         self,
-        otel_resource: Resource = Resource.create(),
+        otel_resource: Resource | None = None,
         **kwargs: int,
     ) -> None:
         """Initialize SolarWinds APM configuration.
 
         Parameters:
-        otel_resource (Resource): OpenTelemetry resource with attributes. Defaults to empty Resource.
+        otel_resource (optional): OpenTelemetry resource with detector attributes.
+            In normal distro usage, passed from Configurator after resource detectors created.
         **kwargs (int): Additional configuration keyword arguments.
         """
+        if otel_resource is None:
+            otel_resource = Resource.create()
+
         self.__config = {}
         # Update the config with default values
         self.__config = {
@@ -131,6 +136,13 @@ class SolarWindsApmConfig:
         self.__config["service_key"] = self._update_service_key_name(
             self.agent_enabled,
             self.__config["service_key"],
+            self.service_name,
+        )
+
+        # Create final APM resource with SolarWinds attributes
+        # and calculated service name
+        self.resource = apm_resource.create_apm_resource(
+            otel_resource,
             self.service_name,
         )
 
@@ -367,10 +379,11 @@ class SolarWindsApmConfig:
         # Calculate `service.name` by priority system (decreasing):
         # 1. OTEL_SERVICE_NAME
         # 2. service.name in OTEL_RESOURCE_ATTRIBUTES
-        # 3. service name component of SW_APM_SERVICE_KEY
-        # 4. empty string
+        # 3. service.name in OTel Resource set by any Resource Detectors
+        # 4. service name component of SW_APM_SERVICE_KEY
+        # 5. empty string
         #
-        # Note: 1-3 require that SW_APM_SERVICE_KEY exists and is in the correct
+        # Note: 1-4 require that SW_APM_SERVICE_KEY exists and is in the correct
         # format of "<api_token>:<service_name>". Otherwise agent_enabled: False
         # and service.name is empty string.
         #
@@ -516,6 +529,21 @@ class SolarWindsApmConfig:
             config_masked[cnf_k] = cnf_v
         return config_masked
 
+    def _config_lambda(self) -> dict:
+        """
+        Return new config dictionary for Lambda mode.
+
+        Excludes service_key and collector fields that are not relevant in Lambda.
+
+        Returns:
+        dict: A copy of the config with service_key and collector fields excluded.
+        """
+        config_lambda = {}
+        for cnf_k, cnf_v in self.__config.items():
+            if cnf_k not in ("service_key", "collector"):
+                config_lambda[cnf_k] = cnf_v
+        return config_lambda
+
     def _validate_log_filepath(
         self,
     ) -> None:
@@ -538,15 +566,24 @@ class SolarWindsApmConfig:
                 self.__config["log_filepath"] = ""
 
     def __str__(self) -> str:
-        """Return string representation of ApmConfig with masked service key.
+        """Return string representation of ApmConfig.
+
+        In Lambda mode, service_key and collector are excluded from output.
+        In non-Lambda mode, service_key is masked and collector is included.
 
         Returns:
-        str: JSON string with config, agent_enabled, and service_name.
+        str: JSON string with config, agent_enabled, service_name, and is_lambda.
         """
+        if self.is_lambda:
+            config_dict = self._config_lambda()
+        else:
+            config_dict = self._config_mask_service_key()
+
         apm_config = {
-            "__config": self._config_mask_service_key(),
+            "__config": config_dict,
             "agent_enabled": self.agent_enabled,
             "service_name": self.service_name,
+            "is_lambda": self.is_lambda,
         }
         return json.dumps(apm_config)
 
@@ -619,7 +656,12 @@ class SolarWindsApmConfig:
         if not cnf_filepath:
             cnf_filepath = cls._CONFIG_FILE_DEFAULT
             if not os.path.isfile(cnf_filepath):
-                logger.debug("No config file at %s; skipping", cnf_filepath)
+                if not cls._logged_no_config_file:
+                    logger.debug(
+                        "No custom configuration file at %s; skipping",
+                        cnf_filepath,
+                    )
+                    cls._logged_no_config_file = True
                 return cnf_dict
 
         try:
@@ -781,7 +823,6 @@ class SolarWindsApmConfig:
                 return True
             if val.lower() == "false":
                 return False
-        logger.debug("Received config %s instead of true/false", val)
         return None
 
     # pylint: disable=too-many-branches,too-many-statements

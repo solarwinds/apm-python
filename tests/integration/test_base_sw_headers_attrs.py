@@ -117,6 +117,8 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         configurator = SolarWindsConfigurator()
         configurator._configure_propagator()
         configurator._configure_response_propagator()
+        # Store configurator for access to resource in tests
+        self.configurator = configurator
         # This is done because set_tracer_provider cannot override the
         # current tracer provider. Has to be done here.
         reset_trace_globals()
@@ -133,7 +135,11 @@ class TestBaseSwHeadersAndAttributes(TestBase):
             remote_parent_sampled=json_sampler,
             remote_parent_not_sampled=json_sampler,
         )
-        self.tracer_provider = TracerProvider(sampler=sampler)
+        # Pass resource from configurator to TracerProvider so detector attributes are included
+        self.tracer_provider = TracerProvider(
+            sampler=sampler,
+            resource=configurator.apm_config.resource,
+        )
         # Set InMemorySpanExporter for testing
         self.memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleSpanProcessor(self.memory_exporter)

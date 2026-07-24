@@ -97,11 +97,17 @@ class JsonSampler(Sampler):
         try:
             unparsed = self._read()
         except (FileNotFoundError, json.JSONDecodeError) as error:
-            logger.debug("missing or invalid settings file %s", str(error))
+            logger.debug(
+                "missing or invalid settings file %s; is the otelcol extension installed?",
+                str(error),
+            )
             return
 
         if not isinstance(unparsed, list) or len(unparsed) != 1:
-            logger.debug("invalid settings file %s", str(unparsed))
+            logger.debug(
+                "invalid settings file %s; is the otelcol extension installed?",
+                str(unparsed),
+            )
             return
 
         parsed = self.update_settings(unparsed[0])

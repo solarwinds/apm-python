@@ -4,6 +4,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import logging
 import os
 
 from solarwinds_apm import apm_config
@@ -309,3 +310,55 @@ class TestSolarWindsApmConfigCnfFile:
         # Restore old collector
         if old_collector:
             os.environ["SW_APM_COLLECTOR"] = old_collector
+
+    def test_get_cnf_dict_logs_only_once_multiple_calls(
+        self,
+        mocker,
+        caplog,
+        mock_env_vars,
+    ):
+        apm_config.SolarWindsApmConfig._logged_no_config_file = False
+        caplog.set_level(logging.DEBUG, logger="solarwinds_apm.apm_config")
+
+        result1 = apm_config.SolarWindsApmConfig.get_cnf_dict()
+        result2 = apm_config.SolarWindsApmConfig.get_cnf_dict()
+        result3 = apm_config.SolarWindsApmConfig.get_cnf_dict()
+        assert result1 is None
+        assert result2 is None
+        assert result3 is None
+
+        log_messages = [
+            record.message
+            for record in caplog.records
+            if "No custom configuration file at" in record.message
+            and "skipping" in record.message
+        ]
+        # Should only appear once
+        assert len(log_messages) == 1
+        assert "./solarwinds-apm-config.json" in log_messages[0]
+
+    def test_get_cnf_dict_logs_only_once_via_calculate_methods(
+        self,
+        mocker,
+        caplog,
+    ):
+        apm_config.SolarWindsApmConfig._logged_no_config_file = False
+        mocker.patch.dict(os.environ, {}, clear=True)
+        caplog.set_level(logging.DEBUG, logger="solarwinds_apm.apm_config")
+
+        # Call methods that internally call get_cnf_dict
+        apm_config.SolarWindsApmConfig.calculate_collector()
+        apm_config.SolarWindsApmConfig.calculate_collector()
+        apm_config.SolarWindsApmConfig.calculate_metrics_enabled()
+        apm_config.SolarWindsApmConfig.calculate_metrics_enabled()
+        apm_config.SolarWindsApmConfig.get_cnf_dict()
+
+        log_messages = [
+            record.message
+            for record in caplog.records
+            if "No custom configuration file at" in record.message
+            and "skipping" in record.message
+        ]
+        # Should only appear once
+        assert len(log_messages) == 1
+        assert "./solarwinds-apm-config.json" in log_messages[0]
