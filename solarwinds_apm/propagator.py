@@ -11,6 +11,7 @@ import logging
 import typing
 
 from opentelemetry import trace
+from opentelemetry.context import set_value
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace.propagation.tracecontext import (
@@ -66,7 +67,7 @@ class SolarWindsPropagator(TraceContextTextMapPropagator):
             signature_header[0],
         )
 
-        context.update({INTL_SWO_X_OPTIONS_KEY: xtraceoptions})
+        context = set_value(INTL_SWO_X_OPTIONS_KEY, xtraceoptions, context)
         return context
 
     def inject(

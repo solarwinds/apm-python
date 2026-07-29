@@ -36,14 +36,14 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    'opentelemetry-api == 1.43.0',
-    'opentelemetry-sdk == 1.43.0',
-    'opentelemetry-exporter-otlp == 1.43.0',
-    'opentelemetry-instrumentation == 0.64b0',
-    'opentelemetry-instrumentation-logging == 0.64b0',
+    'opentelemetry-api == 1.44.0',
+    'opentelemetry-sdk == 1.44.0',
+    'opentelemetry-exporter-otlp == 1.44.0',
+    'opentelemetry-instrumentation == 0.65b0',
+    'opentelemetry-instrumentation-logging == 0.65b0',
     'opentelemetry-sdk-extension-aws == 2.1.0',
     'opentelemetry-resource-detector-azure == 0.1.5',
-    'opentelemetry-resource-detector-containerid == 0.64b0',
+    'opentelemetry-resource-detector-containerid == 0.65b0',
 ]
 
 [project.urls]
