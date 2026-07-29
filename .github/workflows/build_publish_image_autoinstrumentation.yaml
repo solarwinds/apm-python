@@ -19,7 +19,7 @@ jobs:
   docker_hub:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Read solarwinds_apm version requirement
         run: echo VERSION=$(head -n 1 image/requirements-nodeps.txt | cut -d '=' -f3) >> $GITHUB_ENV
@@ -31,14 +31,14 @@ jobs:
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
 
       - name: Log into Docker.io (build)
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0
         with:
           username: ${{ vars.DOCKER_SOLARWINDS_ORG_LOGIN }}
           password: ${{ secrets.ENOPS5919_APM_DOCKER_HUB_CI_OAT }}
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302
         with:
           images: ${{ github.repository_owner }}/autoinstrumentation-python
           tags: |
@@ -51,7 +51,7 @@ jobs:
             org.opencontainers.image.vendor=SolarWinds Worldwide, LLC
 
       - name: Login to GitHub Package Registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -78,7 +78,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Log into Docker.io (scan)
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0
         with:
           username: ${{ vars.ENOPS5919_DOCKER_SCOUT_CI_USER }}
           password: ${{ secrets.ENOPS5919_DOCKER_SCOUT_CI_PAT }}
@@ -88,19 +88,30 @@ jobs:
         uses: docker/scout-action@bacf462e8d090c09660de30a6ccc718035f961e3
         with:
           command: cves
-          image: ${{ steps.meta.outputs.tags[0] }}
+          image: ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}
           platform: "linux/amd64"
           sarif-file: sarif.output.json
 
       - name: Upload SARIF result
-        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81
         with:
           sarif_file: sarif.output.json
+
+      - name: Create JIRA tickets for vulnerabilities
+        uses: ./.github/actions/jira_vuln_k8s
+        with:
+          image-tag: ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}
+          workflow-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          commit-sha: ${{ github.sha }}
+          jira-base-url: ${{ secrets.JIRA_BASE_URL }}
+          jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
+          jira-api-token: ${{ secrets.JIRA_API_TOKEN }}
+          jira-team-field-id: ${{ secrets.JIRA_TEAM_FIELD_ID }}
 
   ghcr_io:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Read solarwinds_apm version requirement
         run: echo VERSION=$(head -n 1 image/requirements-nodeps.txt | cut -d '=' -f3) >> $GITHUB_ENV
@@ -112,7 +123,7 @@ jobs:
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
 
       - name: Login to GitHub Package Registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}

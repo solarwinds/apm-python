@@ -28,12 +28,12 @@ jobs:
     outputs:
         artifact-name: scan-wheel-${{ inputs.version }}.zip
     steps:
-    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
     - name: Build sdist and wheel
       uses: ./.github/actions/package_solarwinds_apm
     - name: Package sdist and wheels for upload
       run: zip -r scan-wheel-${{ inputs.version }}.zip dist/*
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
       name: Upload zip for scan and publish
       with:
         name: scan-wheel-${{ inputs.version }}.zip
