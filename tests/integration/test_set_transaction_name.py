@@ -34,8 +34,8 @@ from .test_base_sw_headers_attrs import (
 )
 
 
-class TestSetTransactionNameBasic(TestBaseSwHeadersAndAttributes):
-    """Basic functionality tests for set_transaction_name()"""
+class TestBaseTransactionName(TestBaseSwHeadersAndAttributes):
+    """Base class for set_transaction_name() tests with common setup and helpers"""
 
     def setUp(self):
         super().setUp()
@@ -61,6 +61,10 @@ class TestSetTransactionNameBasic(TestBaseSwHeadersAndAttributes):
                             if txn == transaction_name:
                                 matching_data_points.append(data_point)
         return matching_data_points
+
+
+class TestSetTransactionNameBasic(TestBaseTransactionName):
+    """Basic functionality tests for set_transaction_name()"""
 
     def _setup_endpoints(self):
         """Set up test routes before Flask instrumentation"""
@@ -180,33 +184,8 @@ class TestSetTransactionNameBasic(TestBaseSwHeadersAndAttributes):
             assert metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "second"
 
 
-class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
+class TestSetTransactionNameEdgeCases(TestBaseTransactionName):
     """Edge case tests for set_transaction_name()"""
-
-    def setUp(self):
-        super().setUp()
-        self.tracer_provider.add_span_processor(ServiceEntrySpanProcessor())
-        self.tracer_provider.add_span_processor(
-            ResponseTimeProcessor(self.configurator.apm_config)
-        )
-
-    def _get_metrics_for_transaction(self, transaction_name):
-        """Helper to get metrics data filtered by transaction name"""
-        self.metric_reader.collect()
-        metrics_data = self.metric_reader.get_metrics_data()
-        if not metrics_data or not metrics_data.resource_metrics:
-            return []
-        
-        matching_data_points = []
-        for resource_metric in metrics_data.resource_metrics:
-            for scope_metric in resource_metric.scope_metrics:
-                for metric in scope_metric.metrics:
-                    if metric.name == "trace.service.response_time":
-                        for data_point in metric.data.data_points:
-                            txn = data_point.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
-                            if txn == transaction_name:
-                                matching_data_points.append(data_point)
-        return matching_data_points
 
     def _setup_endpoints(self):
         """Set up test routes before Flask instrumentation"""
@@ -392,7 +371,7 @@ class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
             assert metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == txn_name
 
 
-class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
+class TestSetTransactionNameDistributed(TestBaseTransactionName):
     """Distributed trace tests for set_transaction_name()
 
     Tests true distributed tracing by setting up two Flask apps where service A
@@ -401,10 +380,6 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
 
     def setUp(self):
         super().setUp()
-        self.tracer_provider.add_span_processor(ServiceEntrySpanProcessor())
-        self.tracer_provider.add_span_processor(
-            ResponseTimeProcessor(self.configurator.apm_config)
-        )
 
         # Set up a second app in addition to self.app
         # Should be done before service_a set up with call to this one
@@ -443,24 +418,6 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
         self.server.shutdown()
         self.server_thread.join(timeout=1)
         super().tearDown()
-
-    def _get_metrics_for_transaction(self, transaction_name):
-        """Helper to get metrics data filtered by transaction name"""
-        self.metric_reader.collect()
-        metrics_data = self.metric_reader.get_metrics_data()
-        if not metrics_data or not metrics_data.resource_metrics:
-            return []
-        
-        matching_data_points = []
-        for resource_metric in metrics_data.resource_metrics:
-            for scope_metric in resource_metric.scope_metrics:
-                for metric in scope_metric.metrics:
-                    if metric.name == "trace.service.response_time":
-                        for data_point in metric.data.data_points:
-                            txn = data_point.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
-                            if txn == transaction_name:
-                                matching_data_points.append(data_point)
-        return matching_data_points
 
     def _setup_endpoints(self):
         """Set up test routes before Flask instrumentation"""
