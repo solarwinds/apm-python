@@ -50,14 +50,16 @@ class TestBaseTransactionName(TestBaseSwHeadersAndAttributes):
         metrics_data = self.metric_reader.get_metrics_data()
         if not metrics_data or not metrics_data.resource_metrics:
             return []
-        
+
         matching_data_points = []
         for resource_metric in metrics_data.resource_metrics:
             for scope_metric in resource_metric.scope_metrics:
                 for metric in scope_metric.metrics:
                     if metric.name == "trace.service.response_time":
                         for data_point in metric.data.data_points:
-                            txn = data_point.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                            txn = data_point.attributes.get(
+                                INTL_SWO_TRANSACTION_ATTR_KEY
+                            )
                             if txn == transaction_name:
                                 matching_data_points.append(data_point)
         return matching_data_points
@@ -132,7 +134,10 @@ class TestSetTransactionNameBasic(TestBaseTransactionName):
             # Verify metrics also have correct transaction name
             metrics = self._get_metrics_for_transaction("custom-name")
             assert len(metrics) == 1
-            assert metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-name"
+            assert (
+                metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-name"
+            )
 
     def test_multiple_calls_last_wins(self):
         """Test multiple calls to set_transaction_name, last one wins"""
@@ -181,7 +186,10 @@ class TestSetTransactionNameBasic(TestBaseTransactionName):
             # Verify metrics also have correct transaction name
             metrics = self._get_metrics_for_transaction("second")
             assert len(metrics) == 1
-            assert metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "second"
+            assert (
+                metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "second"
+            )
 
 
 class TestSetTransactionNameEdgeCases(TestBaseTransactionName):
@@ -259,7 +267,10 @@ class TestSetTransactionNameEdgeCases(TestBaseTransactionName):
             # Verify metrics also have correct transaction name
             metrics = self._get_metrics_for_transaction("/test_empty_string/")
             assert len(metrics) == 1
-            assert metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "/test_empty_string/"
+            assert (
+                metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "/test_empty_string/"
+            )
 
     def test_none_value_rejected(self):
         """Test None value is rejected and original name preserved"""
@@ -311,7 +322,10 @@ class TestSetTransactionNameEdgeCases(TestBaseTransactionName):
             # Verify metrics also have correct transaction name
             metrics = self._get_metrics_for_transaction(txn_name)
             assert len(metrics) == 1
-            assert metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == txn_name
+            assert (
+                metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == txn_name
+            )
 
     def test_no_active_span_returns_false(self):
         """Test calling set_transaction_name outside request context
@@ -368,7 +382,10 @@ class TestSetTransactionNameEdgeCases(TestBaseTransactionName):
             # Verify metrics also have correct transaction name
             metrics = self._get_metrics_for_transaction(txn_name)
             assert len(metrics) == 1
-            assert metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == txn_name
+            assert (
+                metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == txn_name
+            )
 
 
 class TestSetTransactionNameDistributed(TestBaseTransactionName):
@@ -506,11 +523,17 @@ class TestSetTransactionNameDistributed(TestBaseTransactionName):
             # Verify metrics also have correct transaction names
             metrics_a = self._get_metrics_for_transaction("custom-service-a")
             assert len(metrics_a) == 1
-            assert metrics_a[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-a"
-            
+            assert (
+                metrics_a[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-service-a"
+            )
+
             metrics_b = self._get_metrics_for_transaction("custom-service-b")
             assert len(metrics_b) == 1
-            assert metrics_b[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-b"
+            assert (
+                metrics_b[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-service-b"
+            )
 
     def test_custom_names_across_more_complex_traces(self):
         """Test custom names work correctly when manual spans are created with OTel SDK
@@ -576,8 +599,14 @@ class TestSetTransactionNameDistributed(TestBaseTransactionName):
             # Verify metrics also have correct transaction names
             metrics_a = self._get_metrics_for_transaction("custom-service-a")
             assert len(metrics_a) == 1
-            assert metrics_a[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-a"
-            
+            assert (
+                metrics_a[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-service-a"
+            )
+
             metrics_b = self._get_metrics_for_transaction("custom-service-b")
             assert len(metrics_b) == 1
-            assert metrics_b[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-b"
+            assert (
+                metrics_b[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-service-b"
+            )
