@@ -1,8 +1,15 @@
 # © 2026 SolarWinds Worldwide, LLC. All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License.
 
 import threading
 import time
@@ -15,9 +22,13 @@ from werkzeug.serving import make_server
 
 from solarwinds_apm.api import set_transaction_name
 from solarwinds_apm.apm_constants import INTL_SWO_TRANSACTION_ATTR_KEY
-from solarwinds_apm.trace.serviceentry_processor import ServiceEntrySpanProcessor
+from solarwinds_apm.trace.serviceentry_processor import (
+    ServiceEntrySpanProcessor,
+)
 
-from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
+from .test_base_sw_headers_attrs import (
+    TestBaseSwHeadersAndAttributes,
+)
 
 
 class TestSetTransactionNameBasic(TestBaseSwHeadersAndAttributes):
@@ -30,22 +41,24 @@ class TestSetTransactionNameBasic(TestBaseSwHeadersAndAttributes):
     def _setup_endpoints(self):
         """Set up test routes before Flask instrumentation"""
         super()._setup_endpoints()
-        
+
         def route_single_call():
             set_transaction_name("custom-name")
             return "ok"
-        
+
         def route_multiple_calls():
             set_transaction_name("first")
             set_transaction_name("second")
             return "ok"
-        
+
         # pylint: disable=no-member
         self.app.route("/test_single_call/")(route_single_call)
         self.app.route("/test_multiple_calls/")(route_multiple_calls)
 
     def test_single_call_sets_attribute(self):
-        """Test that single call to set_transaction_name sets sw.transaction attribute"""
+        """Test single call to set_transaction_name sets
+        sw.transaction attribute
+        """
         timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
@@ -75,15 +88,21 @@ class TestSetTransactionNameBasic(TestBaseSwHeadersAndAttributes):
             spans = self.memory_exporter.get_finished_spans()
             assert len(spans) > 0
             entry_spans = [
-                s for s in spans 
-                if not (s.parent and s.parent.is_valid and not s.parent.is_remote)
+                s
+                for s in spans
+                if not (
+                    s.parent and s.parent.is_valid and not s.parent.is_remote
+                )
             ]
             assert len(entry_spans) == 1
             entry_span = entry_spans[0]
-            assert entry_span.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-name"
+            assert (
+                entry_span.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-name"
+            )
 
     def test_multiple_calls_last_wins(self):
-        """Test that multiple calls to set_transaction_name, last one wins"""
+        """Test multiple calls to set_transaction_name, last one wins"""
         timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
@@ -113,12 +132,18 @@ class TestSetTransactionNameBasic(TestBaseSwHeadersAndAttributes):
             spans = self.memory_exporter.get_finished_spans()
             assert len(spans) > 0
             entry_spans = [
-                s for s in spans 
-                if not (s.parent and s.parent.is_valid and not s.parent.is_remote)
+                s
+                for s in spans
+                if not (
+                    s.parent and s.parent.is_valid and not s.parent.is_remote
+                )
             ]
             assert len(entry_spans) == 1
             entry_span = entry_spans[0]
-            assert entry_span.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "second"
+            assert (
+                entry_span.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "second"
+            )
 
 
 class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
@@ -131,29 +156,29 @@ class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
     def _setup_endpoints(self):
         """Set up test routes before Flask instrumentation"""
         super()._setup_endpoints()
-        
+
         def route_empty_string():
             result = set_transaction_name("")
             assert result is False
             return "ok"
-        
+
         def route_none_value():
             result = set_transaction_name(None)
             assert result is False
             return "ok"
-        
+
         def route_long_name():
             long_name = "a" * 300
             set_transaction_name(long_name)
             return "ok"
-        
+
         # pylint: disable=no-member
         self.app.route("/test_empty_string/")(route_empty_string)
         self.app.route("/test_none_value/")(route_none_value)
         self.app.route("/test_long_name/")(route_long_name)
 
     def test_empty_string_rejected(self):
-        """Test that empty string is rejected and original name preserved"""
+        """Test empty string is rejected and original name preserved"""
         timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
@@ -183,19 +208,22 @@ class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
             spans = self.memory_exporter.get_finished_spans()
             assert len(spans) > 0
             entry_spans = [
-                s for s in spans 
-                if not (s.parent and s.parent.is_valid and not s.parent.is_remote)
+                s
+                for s in spans
+                if not (
+                    s.parent and s.parent.is_valid and not s.parent.is_remote
+                )
             ]
             assert len(entry_spans) == 1
-            
+
             entry_span = entry_spans[0]
             txn_name = entry_span.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
             assert txn_name is not None
             assert txn_name != ""
-            assert "/test_empty_string/" == txn_name
+            assert txn_name == "/test_empty_string/"
 
     def test_none_value_rejected(self):
-        """Test that None value is rejected and original name preserved"""
+        """Test None value is rejected and original name preserved"""
         timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
@@ -225,23 +253,31 @@ class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
             spans = self.memory_exporter.get_finished_spans()
             assert len(spans) > 0
             entry_spans = [
-                s for s in spans 
-                if not (s.parent and s.parent.is_valid and not s.parent.is_remote)
+                s
+                for s in spans
+                if not (
+                    s.parent and s.parent.is_valid and not s.parent.is_remote
+                )
             ]
             assert len(entry_spans) == 1
-            
+
             entry_span = entry_spans[0]
             txn_name = entry_span.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
             assert txn_name is not None
-            assert "test_none_value" in txn_name or "/test_none_value/" == txn_name
+            assert (
+                "test_none_value" in txn_name
+                or txn_name == "/test_none_value/"
+            )
 
     def test_no_active_span_returns_false(self):
-        """Test that calling set_transaction_name outside request context returns False"""
+        """Test calling set_transaction_name outside request context
+        returns False
+        """
         result = set_transaction_name("test")
         assert result is False
 
     def test_long_name_truncated(self):
-        """Test that long transaction names are truncated to 256 characters"""
+        """Test long transaction names are truncated to 256 characters"""
         timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
@@ -271,20 +307,24 @@ class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
             spans = self.memory_exporter.get_finished_spans()
             assert len(spans) > 0
             entry_spans = [
-                s for s in spans 
-                if not (s.parent and s.parent.is_valid and not s.parent.is_remote)
+                s
+                for s in spans
+                if not (
+                    s.parent and s.parent.is_valid and not s.parent.is_remote
+                )
             ]
             assert len(entry_spans) == 1
-            
+
             entry_span = entry_spans[0]
             txn_name = entry_span.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
             assert txn_name is not None
             assert len(txn_name) == 256
             assert txn_name == "a" * 256
 
+
 class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
     """Distributed trace tests for set_transaction_name()
-    
+
     Tests true distributed tracing by setting up two Flask apps where service A
     makes an HTTP request to service B, propagating trace context between them.
     """
@@ -292,18 +332,18 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
     def setUp(self):
         super().setUp()
         self.tracer_provider.add_span_processor(ServiceEntrySpanProcessor())
-        
+
         # Set up a second app in addition to self.app
         # Should be done before service_a set up with call to this one
         self.app_b = flask.Flask("service_b")
         self.flask_inst.instrument_app(self.app_b)
-        
+
         def service_b_endpoint():
             set_transaction_name("custom-service-b")
             return "service-b-response"
-        
+
         self.app_b.route("/service_b/")(service_b_endpoint)
-        
+
         self.server = make_server("127.0.0.1", 5001, self.app_b, threaded=True)
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.daemon = True
@@ -317,18 +357,18 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
     def _setup_endpoints(self):
         """Set up test routes before Flask instrumentation"""
         super()._setup_endpoints()
-        
+
         def service_a_endpoint():
             set_transaction_name("custom-service-a")
             resp = requests.get("http://127.0.0.1:5001/service_b/")
             return f"service-a-response: {resp.text}"
-        
+
         # pylint: disable=no-member
         self.app.route("/service_a/")(service_a_endpoint)
 
     def test_custom_names_at_all_entry_spans(self):
         """Test that custom names are set independently for each service entry span
-        
+
         Service A calls service B via HTTP, creating a distributed trace where each
         service sets its own custom transaction name on its respective entry span.
         """
@@ -361,17 +401,26 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
             spans = self.memory_exporter.get_finished_spans()
             assert len(spans) > 0
             entry_spans = [
-                s for s in spans 
-                if not (s.parent and s.parent.is_valid and not s.parent.is_remote)
+                s
+                for s in spans
+                if not (
+                    s.parent and s.parent.is_valid and not s.parent.is_remote
+                )
             ]
             assert len(entry_spans) == 2
             # leaf-most entry span will be first
-            assert entry_spans[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-b"
-            assert entry_spans[1].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-a"
+            assert (
+                entry_spans[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-service-b"
+            )
+            assert (
+                entry_spans[1].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-service-a"
+            )
 
     def test_custom_names_across_more_complex_traces(self):
         """Test custom names work correctly when manual spans are created with OTel SDK
-        
+
         Each service creates manual child spans using start_as_current_span before calling
         set_transaction_name. The entry spans should still get the custom names, and the
         trace should contain additional manual spans.
@@ -401,46 +450,65 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
             ],
         ):
             tracer = trace.get_tracer(__name__)
-            
+
             def service_b_with_manual_spans():
                 with tracer.start_as_current_span("manual-outer-b"):
                     current_span = trace.get_current_span()
-                    current_span.set_attribute("test.custom_attribute", "outer-b")
+                    current_span.set_attribute(
+                        "test.custom_attribute", "outer-b"
+                    )
                     with tracer.start_as_current_span("manual-inner-b"):
                         current_span = trace.get_current_span()
-                        current_span.set_attribute("test.custom_attribute", "inner-b")
+                        current_span.set_attribute(
+                            "test.custom_attribute", "inner-b"
+                        )
                         set_transaction_name("custom-service-b")
                         return "service-b-response"
-            
+
             def service_a_with_manual_spans():
                 with tracer.start_as_current_span("manual-outer-a"):
                     current_span = trace.get_current_span()
-                    current_span.set_attribute("test.custom_attribute", "outer-a")
+                    current_span.set_attribute(
+                        "test.custom_attribute", "outer-a"
+                    )
                     with tracer.start_as_current_span("manual-inner-a"):
                         current_span = trace.get_current_span()
-                        current_span.set_attribute("test.custom_attribute", "inner-a")
+                        current_span.set_attribute(
+                            "test.custom_attribute", "inner-a"
+                        )
                         set_transaction_name("custom-service-a")
-                        resp = requests.get("http://127.0.0.1:5001/service_b_manual/")
+                        resp = requests.get(
+                            "http://127.0.0.1:5001/service_b_manual/"
+                        )
                         return f"service-a-response: {resp.text}"
-            
+
             self.app_b.route("/service_b_manual/")(service_b_with_manual_spans)
             # pylint: disable=no-member
             self.app.route("/service_a_manual/")(service_a_with_manual_spans)
-            
+
             resp_a = self.client.get("/service_a_manual/")
             assert resp_a.status_code == 200
             spans = self.memory_exporter.get_finished_spans()
             assert len(spans) > 0
 
             entry_spans = [
-                s for s in spans 
-                if not (s.parent and s.parent.is_valid and not s.parent.is_remote)
+                s
+                for s in spans
+                if not (
+                    s.parent and s.parent.is_valid and not s.parent.is_remote
+                )
             ]
             assert len(entry_spans) == 2
             # leaf-most entry span will be first
-            assert entry_spans[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-b"
-            assert entry_spans[1].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-a"
-            
+            assert (
+                entry_spans[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-service-b"
+            )
+            assert (
+                entry_spans[1].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-service-a"
+            )
+
             manual_spans = [s for s in spans if s.name.startswith("manual-")]
             assert len(manual_spans) == 4
             assert manual_spans[0].name == "manual-inner-b"
