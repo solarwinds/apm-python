@@ -380,7 +380,7 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
 
         def service_a_endpoint():
             set_transaction_name("custom-service-a")
-            resp = requests.get("http://127.0.0.1:5001/service_b/")
+            resp = requests.get("http://127.0.0.1:5001/service_b/", timeout=5)
             return f"service-a-response: {resp.text}"
 
         def service_a_with_manual_spans():
@@ -394,7 +394,8 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
                     )
                     set_transaction_name("custom-service-a")
                     resp = requests.get(
-                        "http://127.0.0.1:5001/service_b_manual/"
+                        "http://127.0.0.1:5001/service_b_manual/",
+                        timeout=5,
                     )
                     return f"service-a-response: {resp.text}"
 
