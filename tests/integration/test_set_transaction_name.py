@@ -22,6 +22,9 @@ from werkzeug.serving import make_server
 
 from solarwinds_apm.api import set_transaction_name
 from solarwinds_apm.apm_constants import INTL_SWO_TRANSACTION_ATTR_KEY
+from solarwinds_apm.trace.response_time_processor import (
+    ResponseTimeProcessor,
+)
 from solarwinds_apm.trace.serviceentry_processor import (
     ServiceEntrySpanProcessor,
 )
@@ -31,12 +34,39 @@ from .test_base_sw_headers_attrs import (
 )
 
 
-class TestSetTransactionNameBasic(TestBaseSwHeadersAndAttributes):
-    """Basic functionality tests for set_transaction_name()"""
+class TestBaseTransactionName(TestBaseSwHeadersAndAttributes):
+    """Base class for set_transaction_name() tests with common setup and helpers"""
 
     def setUp(self):
         super().setUp()
         self.tracer_provider.add_span_processor(ServiceEntrySpanProcessor())
+        self.tracer_provider.add_span_processor(
+            ResponseTimeProcessor(self.configurator.apm_config)
+        )
+
+    def _get_metrics_for_transaction(self, transaction_name):
+        """Helper to get metrics data filtered by transaction name"""
+        self.metric_reader.collect()
+        metrics_data = self.metric_reader.get_metrics_data()
+        if not metrics_data or not metrics_data.resource_metrics:
+            return []
+
+        matching_data_points = []
+        for resource_metric in metrics_data.resource_metrics:
+            for scope_metric in resource_metric.scope_metrics:
+                for metric in scope_metric.metrics:
+                    if metric.name == "trace.service.response_time":
+                        for data_point in metric.data.data_points:
+                            txn = data_point.attributes.get(
+                                INTL_SWO_TRANSACTION_ATTR_KEY
+                            )
+                            if txn == transaction_name:
+                                matching_data_points.append(data_point)
+        return matching_data_points
+
+
+class TestSetTransactionNameBasic(TestBaseTransactionName):
+    """Basic functionality tests for set_transaction_name()"""
 
     def _setup_endpoints(self):
         """Set up test routes before Flask instrumentation"""
@@ -101,6 +131,14 @@ class TestSetTransactionNameBasic(TestBaseSwHeadersAndAttributes):
                 == "custom-name"
             )
 
+            # Verify metrics also have correct transaction name
+            metrics = self._get_metrics_for_transaction("custom-name")
+            assert len(metrics) == 1
+            assert (
+                metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-name"
+            )
+
     def test_multiple_calls_last_wins(self):
         """Test multiple calls to set_transaction_name, last one wins"""
         timestamp = int(time.time())
@@ -145,13 +183,17 @@ class TestSetTransactionNameBasic(TestBaseSwHeadersAndAttributes):
                 == "second"
             )
 
+            # Verify metrics also have correct transaction name
+            metrics = self._get_metrics_for_transaction("second")
+            assert len(metrics) == 1
+            assert (
+                metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "second"
+            )
 
-class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
+
+class TestSetTransactionNameEdgeCases(TestBaseTransactionName):
     """Edge case tests for set_transaction_name()"""
-
-    def setUp(self):
-        super().setUp()
-        self.tracer_provider.add_span_processor(ServiceEntrySpanProcessor())
 
     def _setup_endpoints(self):
         """Set up test routes before Flask instrumentation"""
@@ -222,6 +264,14 @@ class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
             assert txn_name != ""
             assert txn_name == "/test_empty_string/"
 
+            # Verify metrics also have correct transaction name
+            metrics = self._get_metrics_for_transaction("/test_empty_string/")
+            assert len(metrics) == 1
+            assert (
+                metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "/test_empty_string/"
+            )
+
     def test_none_value_rejected(self):
         """Test None value is rejected and original name preserved"""
         timestamp = int(time.time())
@@ -267,6 +317,14 @@ class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
             assert (
                 "test_none_value" in txn_name
                 or txn_name == "/test_none_value/"
+            )
+
+            # Verify metrics also have correct transaction name
+            metrics = self._get_metrics_for_transaction(txn_name)
+            assert len(metrics) == 1
+            assert (
+                metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == txn_name
             )
 
     def test_no_active_span_returns_false(self):
@@ -321,8 +379,16 @@ class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
             assert len(txn_name) == 255
             assert txn_name == "a" * 255
 
+            # Verify metrics also have correct transaction name
+            metrics = self._get_metrics_for_transaction(txn_name)
+            assert len(metrics) == 1
+            assert (
+                metrics[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == txn_name
+            )
 
-class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
+
+class TestSetTransactionNameDistributed(TestBaseTransactionName):
     """Distributed trace tests for set_transaction_name()
 
     Tests true distributed tracing by setting up two Flask apps where service A
@@ -331,7 +397,6 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
 
     def setUp(self):
         super().setUp()
-        self.tracer_provider.add_span_processor(ServiceEntrySpanProcessor())
 
         # Set up a second app in addition to self.app
         # Should be done before service_a set up with call to this one
@@ -455,6 +520,21 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
                 == "custom-service-a"
             )
 
+            # Verify metrics also have correct transaction names
+            metrics_a = self._get_metrics_for_transaction("custom-service-a")
+            assert len(metrics_a) == 1
+            assert (
+                metrics_a[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-service-a"
+            )
+
+            metrics_b = self._get_metrics_for_transaction("custom-service-b")
+            assert len(metrics_b) == 1
+            assert (
+                metrics_b[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-service-b"
+            )
+
     def test_custom_names_across_more_complex_traces(self):
         """Test custom names work correctly when manual spans are created with OTel SDK
 
@@ -515,3 +595,18 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
             assert manual_spans[1].name == "manual-outer-b"
             assert manual_spans[2].name == "manual-inner-a"
             assert manual_spans[3].name == "manual-outer-a"
+
+            # Verify metrics also have correct transaction names
+            metrics_a = self._get_metrics_for_transaction("custom-service-a")
+            assert len(metrics_a) == 1
+            assert (
+                metrics_a[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-service-a"
+            )
+
+            metrics_b = self._get_metrics_for_transaction("custom-service-b")
+            assert len(metrics_b) == 1
+            assert (
+                metrics_b[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+                == "custom-service-b"
+            )

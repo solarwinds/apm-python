@@ -15,8 +15,10 @@ from werkzeug.wrappers import Response
 from opentelemetry import trace as trace_api
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.metrics import set_meter_provider
 from opentelemetry.propagate import get_global_textmap
 from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
@@ -124,7 +126,9 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         reset_trace_globals()
         reset_metrics_globals()
         # Init parent-based with JsonSampler to guarantee sampling decision for tests
-        self.meter_provider = MeterProvider()
+        self.metric_reader = InMemoryMetricReader()
+        self.meter_provider = MeterProvider(metric_readers=[self.metric_reader])
+        set_meter_provider(self.meter_provider)
         sampler_configuration = SolarWindsApmConfig.to_configuration(apm_config)
         json_sampler = JsonSampler(
             self.meter_provider,
