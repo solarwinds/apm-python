@@ -4,8 +4,13 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+import threading
 import time
 from unittest import mock
+
+import flask
+import requests
+from werkzeug.serving import make_server
 
 from solarwinds_apm.api import set_transaction_name
 from solarwinds_apm.apm_constants import INTL_SWO_TRANSACTION_ATTR_KEY
@@ -275,3 +280,90 @@ class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
             assert txn_name is not None
             assert len(txn_name) == 256
             assert txn_name == "a" * 256
+
+class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
+    """Distributed trace tests for set_transaction_name()
+    
+    Tests true distributed tracing by setting up two Flask apps where service A
+    makes an HTTP request to service B, propagating trace context between them.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.tracer_provider.add_span_processor(ServiceEntrySpanProcessor())
+        
+        # Set up a second app in addition to self.app
+        # Should be done before service_a set up with call to this one
+        self.app_b = flask.Flask("service_b")
+        self.flask_inst.instrument_app(self.app_b)
+        
+        def service_b_endpoint():
+            set_transaction_name("custom-service-b")
+            return "service-b-response"
+        
+        self.app_b.route("/service_b/")(service_b_endpoint)
+        
+        self.server = make_server("127.0.0.1", 5001, self.app_b, threaded=True)
+        self.server_thread = threading.Thread(target=self.server.serve_forever)
+        self.server_thread.daemon = True
+        self.server_thread.start()
+
+    def tearDown(self):
+        self.server.shutdown()
+        self.server_thread.join(timeout=1)
+        super().tearDown()
+
+    def _setup_endpoints(self):
+        """Set up test routes before Flask instrumentation"""
+        super()._setup_endpoints()
+        
+        def service_a_endpoint():
+            set_transaction_name("custom-service-a")
+            resp = requests.get("http://127.0.0.1:5001/service_b/")
+            return f"service-a-response: {resp.text}"
+        
+        # pylint: disable=no-member
+        self.app.route("/service_a/")(service_a_endpoint)
+
+    def test_custom_names_at_all_entry_spans(self):
+        """Test that custom names are set independently for each service entry span
+        
+        Service A calls service B via HTTP, creating a distributed trace where each
+        service sets its own custom transaction name on its respective entry span.
+        """
+        timestamp = int(time.time())
+        with mock.patch(
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 1000000,
+                }
+            ],
+        ):
+            resp_a = self.client.get("/service_a/")
+            assert resp_a.status_code == 200
+            spans = self.memory_exporter.get_finished_spans()
+            assert len(spans) > 0
+            entry_spans = [
+                s for s in spans 
+                if not (s.parent and s.parent.is_valid and not s.parent.is_remote)
+            ]
+            assert len(entry_spans) == 2
+            # leaf-most entry span will be first
+            assert entry_spans[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-b"
+            assert entry_spans[1].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-a"
