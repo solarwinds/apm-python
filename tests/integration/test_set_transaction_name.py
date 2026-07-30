@@ -338,11 +338,28 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
         self.app_b = flask.Flask("service_b")
         self.flask_inst.instrument_app(self.app_b)
 
+        # Get tracer for manual span tests
+        tracer = trace.get_tracer(__name__)
+
         def service_b_endpoint():
             set_transaction_name("custom-service-b")
             return "service-b-response"
 
+        def service_b_with_manual_spans():
+            with tracer.start_as_current_span("manual-outer-b"):
+                current_span = trace.get_current_span()
+                current_span.set_attribute("test.custom_attribute", "outer-b")
+                with tracer.start_as_current_span("manual-inner-b"):
+                    current_span = trace.get_current_span()
+                    current_span.set_attribute(
+                        "test.custom_attribute", "inner-b"
+                    )
+                    set_transaction_name("custom-service-b")
+                    return "service-b-response"
+
+        # Register all routes before starting server
         self.app_b.route("/service_b/")(service_b_endpoint)
+        self.app_b.route("/service_b_manual/")(service_b_with_manual_spans)
 
         self.server = make_server("127.0.0.1", 5001, self.app_b, threaded=True)
         self.server_thread = threading.Thread(target=self.server.serve_forever)
@@ -358,13 +375,32 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
         """Set up test routes before Flask instrumentation"""
         super()._setup_endpoints()
 
+        # Get tracer for manual span tests
+        tracer = trace.get_tracer(__name__)
+
         def service_a_endpoint():
             set_transaction_name("custom-service-a")
             resp = requests.get("http://127.0.0.1:5001/service_b/")
             return f"service-a-response: {resp.text}"
 
+        def service_a_with_manual_spans():
+            with tracer.start_as_current_span("manual-outer-a"):
+                current_span = trace.get_current_span()
+                current_span.set_attribute("test.custom_attribute", "outer-a")
+                with tracer.start_as_current_span("manual-inner-a"):
+                    current_span = trace.get_current_span()
+                    current_span.set_attribute(
+                        "test.custom_attribute", "inner-a"
+                    )
+                    set_transaction_name("custom-service-a")
+                    resp = requests.get(
+                        "http://127.0.0.1:5001/service_b_manual/"
+                    )
+                    return f"service-a-response: {resp.text}"
+
         # pylint: disable=no-member
         self.app.route("/service_a/")(service_a_endpoint)
+        self.app.route("/service_a_manual/")(service_a_with_manual_spans)
 
     def test_custom_names_at_all_entry_spans(self):
         """Test that custom names are set independently for each service entry span
@@ -449,43 +485,6 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
                 }
             ],
         ):
-            tracer = trace.get_tracer(__name__)
-
-            def service_b_with_manual_spans():
-                with tracer.start_as_current_span("manual-outer-b"):
-                    current_span = trace.get_current_span()
-                    current_span.set_attribute(
-                        "test.custom_attribute", "outer-b"
-                    )
-                    with tracer.start_as_current_span("manual-inner-b"):
-                        current_span = trace.get_current_span()
-                        current_span.set_attribute(
-                            "test.custom_attribute", "inner-b"
-                        )
-                        set_transaction_name("custom-service-b")
-                        return "service-b-response"
-
-            def service_a_with_manual_spans():
-                with tracer.start_as_current_span("manual-outer-a"):
-                    current_span = trace.get_current_span()
-                    current_span.set_attribute(
-                        "test.custom_attribute", "outer-a"
-                    )
-                    with tracer.start_as_current_span("manual-inner-a"):
-                        current_span = trace.get_current_span()
-                        current_span.set_attribute(
-                            "test.custom_attribute", "inner-a"
-                        )
-                        set_transaction_name("custom-service-a")
-                        resp = requests.get(
-                            "http://127.0.0.1:5001/service_b_manual/"
-                        )
-                        return f"service-a-response: {resp.text}"
-
-            self.app_b.route("/service_b_manual/")(service_b_with_manual_spans)
-            # pylint: disable=no-member
-            self.app.route("/service_a_manual/")(service_a_with_manual_spans)
-
             resp_a = self.client.get("/service_a_manual/")
             assert resp_a.status_code == 200
             spans = self.memory_exporter.get_finished_spans()
