@@ -90,7 +90,7 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         3. AWS_LAMBDA_FUNCTION_NAME
         4. Any instrumentor-set span attributes for HTTP
         5. Span name (default)
-        6. "other" (when the transaction name pool limit reached)
+        6. "other" (when the transaction name pool limit reached at span _on_ending)
 
         If entry span, caches it in context for custom transaction naming.
 
@@ -159,8 +159,11 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         Finalize transaction name by registering with pool.
 
         This is called before the span becomes immutable, allowing us to update
-        the transaction name attribute with the pool-registered version.
-        Processes all transaction names (both initial and user-set via set_transaction_name).
+        the transaction name attribute with the final pool-registered version.
+
+        See span on_start for order of precendence for transaction name setting.
+        If transaction name pool limit is reached here at _on_ending, then
+        name is set here as "other".
 
         Parameters:
         span (Span): The span that is ending (still mutable).

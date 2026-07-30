@@ -34,7 +34,7 @@ def set_transaction_name(custom_name: str) -> bool:
     Takes precedence over transaction_name set in environment variable or config file.
 
     Any uppercase to lowercase conversions or special character replacements
-    are done by the platform. Name length is limited to 256 characters;
+    are done by the platform. Name length is limited to 255 characters;
     anything longer is truncated by APM library.
 
     Parameters:
