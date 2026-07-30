@@ -10,6 +10,7 @@ from unittest import mock
 
 import flask
 import requests
+from opentelemetry import trace
 from werkzeug.serving import make_server
 
 from solarwinds_apm.api import set_transaction_name
@@ -367,3 +368,82 @@ class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):
             # leaf-most entry span will be first
             assert entry_spans[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-b"
             assert entry_spans[1].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-a"
+
+    def test_custom_names_across_more_complex_traces(self):
+        """Test custom names work correctly when manual spans are created with OTel SDK
+        
+        Each service creates manual child spans using start_as_current_span before calling
+        set_transaction_name. The entry spans should still get the custom names, and the
+        trace should contain additional manual spans.
+        """
+        timestamp = int(time.time())
+        with mock.patch(
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 1000000,
+                }
+            ],
+        ):
+            tracer = trace.get_tracer(__name__)
+            
+            def service_b_with_manual_spans():
+                with tracer.start_as_current_span("manual-outer-b"):
+                    current_span = trace.get_current_span()
+                    current_span.set_attribute("test.custom_attribute", "outer-b")
+                    with tracer.start_as_current_span("manual-inner-b"):
+                        current_span = trace.get_current_span()
+                        current_span.set_attribute("test.custom_attribute", "inner-b")
+                        set_transaction_name("custom-service-b")
+                        return "service-b-response"
+            
+            def service_a_with_manual_spans():
+                with tracer.start_as_current_span("manual-outer-a"):
+                    current_span = trace.get_current_span()
+                    current_span.set_attribute("test.custom_attribute", "outer-a")
+                    with tracer.start_as_current_span("manual-inner-a"):
+                        current_span = trace.get_current_span()
+                        current_span.set_attribute("test.custom_attribute", "inner-a")
+                        set_transaction_name("custom-service-a")
+                        resp = requests.get("http://127.0.0.1:5001/service_b_manual/")
+                        return f"service-a-response: {resp.text}"
+            
+            self.app_b.route("/service_b_manual/")(service_b_with_manual_spans)
+            # pylint: disable=no-member
+            self.app.route("/service_a_manual/")(service_a_with_manual_spans)
+            
+            resp_a = self.client.get("/service_a_manual/")
+            assert resp_a.status_code == 200
+            spans = self.memory_exporter.get_finished_spans()
+            assert len(spans) > 0
+
+            entry_spans = [
+                s for s in spans 
+                if not (s.parent and s.parent.is_valid and not s.parent.is_remote)
+            ]
+            assert len(entry_spans) == 2
+            # leaf-most entry span will be first
+            assert entry_spans[0].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-b"
+            assert entry_spans[1].attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY) == "custom-service-a"
+            
+            manual_spans = [s for s in spans if s.name.startswith("manual-")]
+            assert len(manual_spans) == 4
+            assert manual_spans[0].name == "manual-inner-b"
+            assert manual_spans[1].name == "manual-outer-b"
+            assert manual_spans[2].name == "manual-inner-a"
+            assert manual_spans[3].name == "manual-outer-a"
