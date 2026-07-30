@@ -14,11 +14,10 @@ from opentelemetry.trace import NoOpTracerProvider, get_tracer_provider
 from solarwinds_apm.apm_constants import (
     INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
     INTL_SWO_TRANSACTION_ATTR_KEY,
+    INTL_SWO_TRANSACTION_ATTR_MAX,
 )
-from solarwinds_apm.oboe import get_transaction_name_pool
 from solarwinds_apm.oboe.http_sampler import HttpSampler
 from solarwinds_apm.oboe.json_sampler import JsonSampler
-from solarwinds_apm.oboe.transaction_name_pool import TRANSACTION_NAME_DEFAULT
 from solarwinds_apm.sampler import ParentBasedSwSampler
 from solarwinds_apm.tracer_provider import SolarwindsTracerProvider
 from solarwinds_apm.w3c_transformer import W3CTransformer
@@ -82,19 +81,11 @@ def set_transaction_name(custom_name: str) -> bool:
         custom_name,
     )
 
-    # check limit pool; set as "other" if reached and log debug/warning
-    pool = get_transaction_name_pool()
-    registered_name = pool.registered(custom_name)
-    if registered_name == TRANSACTION_NAME_DEFAULT:
-        logger.warning(
-            "Transaction name pool is full; set as %s for span %s",
-            TRANSACTION_NAME_DEFAULT,
-            W3CTransformer.trace_and_span_id_from_context(
-                current_trace_entry_span.context
-            ),
-        )
+    # Set transaction name attribute (will be finalized via pool in _on_ending)
+    # Truncate to max length
     current_trace_entry_span.set_attribute(
-        INTL_SWO_TRANSACTION_ATTR_KEY, registered_name
+        INTL_SWO_TRANSACTION_ATTR_KEY,
+        custom_name[:INTL_SWO_TRANSACTION_ATTR_MAX],
     )
     return True
 

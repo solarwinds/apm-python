@@ -277,7 +277,7 @@ class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
         assert result is False
 
     def test_long_name_truncated(self):
-        """Test long transaction names are truncated to 256 characters"""
+        """Test long transaction names are truncated to 255 characters"""
         timestamp = int(time.time())
         with mock.patch(
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
@@ -318,8 +318,8 @@ class TestSetTransactionNameEdgeCases(TestBaseSwHeadersAndAttributes):
             entry_span = entry_spans[0]
             txn_name = entry_span.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
             assert txn_name is not None
-            assert len(txn_name) == 256
-            assert txn_name == "a" * 256
+            assert len(txn_name) == 255
+            assert txn_name == "a" * 255
 
 
 class TestSetTransactionNameDistributed(TestBaseSwHeadersAndAttributes):

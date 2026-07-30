@@ -33,8 +33,6 @@ from solarwinds_apm.w3c_transformer import W3CTransformer
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import ReadableSpan
 
-    from solarwinds_apm.oboe.transaction_name_pool import TransactionNamePool
-
 logger = logging.getLogger(__name__)
 
 
@@ -55,30 +53,27 @@ class ServiceEntrySpanProcessor(SpanProcessor):
     def set_default_transaction_name(
         self,
         span: Span,
-        pool: TransactionNamePool,
         attribute_value: str,
         resolve: bool = False,
     ) -> None:
         """
-        Register transaction name in pool and set as span attribute.
+        Set initial transaction name as span attribute.
+
+        Pool registration is deferred to _on_ending() for all transaction names.
 
         Parameters:
         span (Span): The span to set the transaction name on.
-        pool (TransactionNamePool): The transaction name pool for registration.
-        attribute_value (str): The transaction name value to register.
+        attribute_value (str): The transaction name value.
         resolve (bool): Whether to resolve the transaction name (e.g., for URL paths). Defaults to False.
         """
         transaction_name = attribute_value
         if resolve:
             transaction_name = resolve_transaction_name(attribute_value)
-        registered_name = pool.registered(transaction_name)
-        if registered_name == TRANSACTION_NAME_DEFAULT:
-            logger.warning(
-                "Transaction name pool is full; set as %s for span %s",
-                TRANSACTION_NAME_DEFAULT,
-                W3CTransformer.trace_and_span_id_from_context(span.context),
-            )
-        span.set_attribute(INTL_SWO_TRANSACTION_ATTR_KEY, registered_name)
+        # Set attribute without pool registration (finalized in _on_ending)
+        span.set_attribute(
+            INTL_SWO_TRANSACTION_ATTR_KEY,
+            transaction_name[:INTL_SWO_TRANSACTION_ATTR_MAX],
+        )
 
     def on_start(
         self,
@@ -114,31 +109,26 @@ class ServiceEntrySpanProcessor(SpanProcessor):
 
         # Calculate non-custom txn name for entry span if we can retrieve the URL
         # or serverless name. Otherwise, use the span's name
-        pool = get_transaction_name_pool()
-
         sw_apm_txn_name = os.environ.get("SW_APM_TRANSACTION_NAME", None)
         faas_name = span.attributes.get(ResourceAttributes.FAAS_NAME, None)
         lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None)
         http_route = span.attributes.get(SpanAttributes.HTTP_ROUTE, None)
         url_path = span.attributes.get(SpanAttributes.URL_PATH, None)
         if sw_apm_txn_name:
-            self.set_default_transaction_name(span, pool, sw_apm_txn_name)
+            self.set_default_transaction_name(span, sw_apm_txn_name)
         elif faas_name:
-            self.set_default_transaction_name(span, pool, faas_name)
+            self.set_default_transaction_name(span, faas_name)
         elif lambda_function_name:
             self.set_default_transaction_name(
                 span,
-                pool,
                 lambda_function_name[:INTL_SWO_TRANSACTION_ATTR_MAX],
             )
         elif http_route:
-            self.set_default_transaction_name(span, pool, http_route)
+            self.set_default_transaction_name(span, http_route)
         elif url_path:
-            self.set_default_transaction_name(
-                span, pool, url_path, resolve=True
-            )
+            self.set_default_transaction_name(span, url_path, resolve=True)
         else:
-            self.set_default_transaction_name(span, pool, span.name)
+            self.set_default_transaction_name(span, span.name)
 
         # Cache the entry span in current context to use upstream-managed
         # execution scope and handle async tracing, for custom naming
@@ -163,6 +153,42 @@ class ServiceEntrySpanProcessor(SpanProcessor):
             entry_trace_span_id,
         )
         self.context_tokens[entry_trace_span_id] = token
+
+    def _on_ending(self, span: Span) -> None:
+        """
+        Finalize transaction name by registering with pool.
+
+        This is called before the span becomes immutable, allowing us to update
+        the transaction name attribute with the pool-registered version.
+        Processes all transaction names (both initial and user-set via set_transaction_name).
+
+        Parameters:
+        span (Span): The span that is ending (still mutable).
+        """
+        # Only process entry spans
+        parent_span_context = span.parent
+        if (
+            parent_span_context
+            and parent_span_context.is_valid
+            and not parent_span_context.is_remote
+        ):
+            return
+
+        # Read whatever transaction name is set (initial OR user-set)
+        txn_name = span.attributes.get(INTL_SWO_TRANSACTION_ATTR_KEY)
+        if txn_name:
+            pool = get_transaction_name_pool()
+            registered_name = pool.registered(txn_name)
+            if registered_name == TRANSACTION_NAME_DEFAULT:
+                logger.warning(
+                    "Transaction name pool is full; set as %s for span %s",
+                    TRANSACTION_NAME_DEFAULT,
+                    W3CTransformer.trace_and_span_id_from_context(
+                        span.context
+                    ),
+                )
+            # Update with pool-registered name
+            span.set_attribute(INTL_SWO_TRANSACTION_ATTR_KEY, registered_name)
 
     def on_end(self, span: ReadableSpan) -> None:
         """

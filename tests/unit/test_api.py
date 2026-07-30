@@ -24,13 +24,6 @@ class TestSetTransactionName:
         mocker,
         span_ready=True,
     ):
-        mock_pool = mocker.patch(
-            "solarwinds_apm.api.get_transaction_name_pool"
-        )
-        mock_pool_instance = mocker.Mock()
-        mock_pool.return_value = mock_pool_instance
-        mock_pool_instance.registered.return_value = "mock-registered-name"
-
         mocker.patch(
             "solarwinds_apm.w3c_transformer.W3CTransformer.trace_and_span_id_from_context",
             return_value="foo",
@@ -54,39 +47,35 @@ class TestSetTransactionName:
                 "get_value": mock_get_fn
             }
         )
-        return mock_context, mock_pool_instance, mock_current_span
+        return mock_context, mock_current_span
 
     def test_empty_string(self, mocker):
-        mock_context, mock_pool, mock_current_span = self.patch_set_name(mocker)
+        mock_context, mock_current_span = self.patch_set_name(mocker)
         assert set_transaction_name("") == False
         mock_context.get_value.assert_not_called()
-        mock_pool.registered.assert_not_called()
         mock_current_span.set_attribute.assert_not_called()
 
     def test_agent_not_enabled_noop_tracer_provider(self, mocker):
-        mock_context, mock_pool, mock_current_span = self.patch_set_name(mocker)
+        mock_context, mock_current_span = self.patch_set_name(mocker)
         mocker.patch(
             "solarwinds_apm.api.get_tracer_provider",
             return_value=NoOpTracerProvider()
         )
         assert set_transaction_name("foo") == True
         mock_context.get_value.assert_not_called()
-        mock_pool.registered.assert_not_called()
         mock_current_span.set_attribute.assert_not_called()
 
     def test_span_not_started(self, mocker):
-        mock_context, mock_pool, mock_current_span = self.patch_set_name(mocker, span_ready=False)
+        mock_context, mock_current_span = self.patch_set_name(mocker, span_ready=False)
         assert set_transaction_name("foo") == False
         mock_context.get_value.assert_called_once()
-        mock_pool.registered.assert_not_called()
         mock_current_span.set_attribute.assert_not_called()
 
     def test_agent_enabled(self, mocker):
-        mock_context, mock_pool, mock_current_span = self.patch_set_name(mocker)
+        mock_context, mock_current_span = self.patch_set_name(mocker)
         assert set_transaction_name("bar") == True
         mock_context.get_value.assert_called_once_with("sw-current-trace-entry-span")
-        mock_pool.registered.assert_called_once_with("bar")
-        mock_current_span.set_attribute.assert_called_once_with("sw.transaction", "mock-registered-name")
+        mock_current_span.set_attribute.assert_called_once_with("sw.transaction", "bar")
 
 class TestSolarWindsReady:
     def test_parentbasedsw_sampler_ready(self, mocker):
