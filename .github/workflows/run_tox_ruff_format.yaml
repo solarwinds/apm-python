@@ -12,7 +12,7 @@ on:
     branches:
       - main
   pull_request:
-    type: [opened, reopened]
+    types: [opened, reopened]
 
 permissions: read-all
 
