@@ -1,6 +1,6 @@
 # Python solarwinds-apm
 
-[![Minimum Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Minimum Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Release](https://img.shields.io/github/v/release/solarwinds/apm-python?include_prereleases&style=)](https://github.com/solarwinds/apm-python/releases/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?color=red)](https://github.com/solarwinds/apm-python/blob/main/LICENSE)
 
@@ -8,7 +8,7 @@ An [OpenTelemetry Python](https://opentelemetry-python.readthedocs.io/) distribu
 
 ----
 ## Requirements
-All published artifacts support Python 3.9 or higher. A full list of system requirements is available at [SolarWinds Observability System Requirements](https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-sysreqs-python-agent).
+All published artifacts support Python 3.10 or higher. A full list of system requirements is available at [SolarWinds Observability System Requirements](https://documentation.solarwinds.com/en/success_center/observability/default.htm#cshid=app-sysreqs-python-agent).
 
 See [CONTRIBUTING.md](https://github.com/solarwinds/apm-python/blob/main/CONTRIBUTING.md) for how to build for development.
 
