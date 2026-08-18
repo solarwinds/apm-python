@@ -89,9 +89,7 @@ exclude = '''
 (
   /(  # generated files
     .tox|
-    build|
-    scripts|
-    tests
+    build
   )/
 )
 '''
@@ -101,8 +99,6 @@ line-length = 79
 exclude = [
     ".tox",
     "build", 
-    "scripts",
-    "tests",
     "__pycache__",
 ]
 
