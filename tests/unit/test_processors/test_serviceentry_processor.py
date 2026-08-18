@@ -91,6 +91,7 @@ class TestServiceEntrySpanProcessor():
             **{
                 "parent": mock_parent,
                 "attributes.get": mock_attrs_get,
+                "name": "default-span-name",
             }
         )
         processor = ServiceEntrySpanProcessor()
@@ -125,6 +126,7 @@ class TestServiceEntrySpanProcessor():
             **{
                 "parent": mock_parent,
                 "attributes.get": mock_attrs_get,
+                "name": "default-span-name",
             }
         )
         processor = ServiceEntrySpanProcessor()
@@ -159,6 +161,7 @@ class TestServiceEntrySpanProcessor():
             **{
                 "parent": mock_parent,
                 "attributes.get": mock_attrs_get,
+                "name": "default-span-name",
             }
         )
         processor = ServiceEntrySpanProcessor()
@@ -186,6 +189,7 @@ class TestServiceEntrySpanProcessor():
             **{
                 "parent": None,
                 "attributes.get": mock_attrs_get,
+                "name": "default-span-name",
             }
         )
         processor = ServiceEntrySpanProcessor()
@@ -222,7 +226,7 @@ class TestServiceEntrySpanProcessor():
         processor.set_default_transaction_name = mocker.Mock()
         processor.on_start(mock_span, None)
         processor.set_default_transaction_name.assert_called_once_with(
-            mock_span, mock_pool, "sw-apm-transaction"[:INTL_SWO_TRANSACTION_ATTR_MAX]
+            mock_span, "sw-apm-transaction"[:INTL_SWO_TRANSACTION_ATTR_MAX]
         )
 
     def test_on_start_faas_name(self, mocker):
@@ -243,7 +247,7 @@ class TestServiceEntrySpanProcessor():
         processor.set_default_transaction_name = mocker.Mock()
         processor.on_start(mock_span, None)
         processor.set_default_transaction_name.assert_called_once_with(
-            mock_span, mock_pool, "faas-value"
+            mock_span, "faas-value"
         )
 
     def test_on_start_lambda_function_name(self, mocker):
@@ -263,7 +267,7 @@ class TestServiceEntrySpanProcessor():
         processor.set_default_transaction_name = mocker.Mock()
         processor.on_start(mock_span, None)
         processor.set_default_transaction_name.assert_called_once_with(
-            mock_span, mock_pool, "lambda-function"[:INTL_SWO_TRANSACTION_ATTR_MAX]
+            mock_span, "lambda-function"[:INTL_SWO_TRANSACTION_ATTR_MAX]
         )
 
     def test_on_start_http_route(self, mocker):
@@ -284,7 +288,7 @@ class TestServiceEntrySpanProcessor():
         processor.set_default_transaction_name = mocker.Mock()
         processor.on_start(mock_span, None)
         processor.set_default_transaction_name.assert_called_once_with(
-            mock_span, mock_pool, "http-route"
+            mock_span, "http-route"
         )
 
     def test_on_start_url_path(self, mocker):
@@ -305,7 +309,7 @@ class TestServiceEntrySpanProcessor():
         processor.set_default_transaction_name = mocker.Mock()
         processor.on_start(mock_span, None)
         processor.set_default_transaction_name.assert_called_once_with(
-            mock_span, mock_pool, "url-path", resolve=True
+            mock_span, "url-path", resolve=True
         )
 
     def test_on_start_default(self, mocker):
@@ -325,7 +329,7 @@ class TestServiceEntrySpanProcessor():
         processor.set_default_transaction_name = mocker.Mock()
         processor.on_start(mock_span, None)
         processor.set_default_transaction_name.assert_called_once_with(
-            mock_span, mock_pool, "default-span-name"
+            mock_span, "default-span-name"
         )
 
     def test_on_end_valid_local_parent_span(self, mocker):
