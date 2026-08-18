@@ -11,7 +11,7 @@ When generating code for this repository:
 
 ### Technology Stack
 
-- **Python Versions**: 3.9-3.13 (use 3.9-compatible features for maximum compatibility)
+- **Python Versions**: 3.10-3.14 (use 3.10-compatible features for maximum compatibility)
 - **Core Dependencies**: OpenTelemetry [API and SDK](https://github.com/open-telemetry/opentelemetry-python), and [instrumentation](https://github.com/open-telemetry/opentelemetry-python-contrib/) packages (see pyproject.toml)
 - **Purpose**: Custom OpenTelemetry distribution for SolarWinds APM backend
 

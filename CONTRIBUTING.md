@@ -44,18 +44,18 @@ docker-compose run aarch64
 
 ### Regression Tests
 
-Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.9, 3.10, 3.11 and/or 3.12 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Testing can be run inside a build container which provides all dependencies. Here is how to set up then run unit and integration tests locally:
+Automated testing of this repo uses [tox](https://tox.readthedocs.io) and runs in Python 3.10, 3.11, 3.12, 3.13, and/or 3.14 because these are the versions supported by [OTel Python](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini). Testing can be run inside a build container which provides all dependencies. Here is how to set up then run unit and integration tests locally:
 
 1. Create and run a Docker build container as described above.
-2. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.9: `make tox OPTIONS="-e py39-test"`.
+2. To run all tests for a specific version, provide tox options as a string. For example, to run in Python 3.11: `make tox OPTIONS="-e py311-test"`.
 3. To run tests specific to Lambda instrumentation in Python 3.13: `make tox OPTIONS="-e py313-lambda"`.
 4. (WARNING: slow!) To run all tests for all supported Python environments, as well as linting and formatting: `make tox`
 
 Other regular `tox` arguments can be included in `OPTIONS`. Some examples:
 
 ```
-# Recreate tox environment for Python 3.9 tests
-make tox OPTIONS="--recreate -e py39-test"
+# Recreate tox environment for Python 3.11 tests
+make tox OPTIONS="--recreate -e py311-test"
 
 # Run only the Scenario 8 integration test, in all environments
 make tox OPTIONS="-- tests/integration/test_scenario_1.py"
@@ -73,10 +73,10 @@ Code formatting and linting are run using `black`, `isort`, `flake8`, and `pylin
 ./run_docker_dev.sh
 make tox OPTIONS="-e py312-lint -- --check-only"
 
-# Run formatting and linting tools for Python 3.9,
+# Run formatting and linting tools for Python 3.11,
 # and automatically fix issues if possible:
 ./run_docker_dev.sh
-make tox OPTIONS="-e py39-lint"
+make tox OPTIONS="-e py311-lint"
 ```
 
 `ruff` is also available to fix formatting: `make tox OPTIONS="-e ruff"`.
