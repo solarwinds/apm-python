@@ -16,7 +16,6 @@ from opentelemetry.trace import SpanKind, StatusCode
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_TRANSACTION_ATTR_KEY,
-    INTL_SWO_TRANSACTION_ATTR_MAX,
 )
 
 if TYPE_CHECKING:
@@ -128,38 +127,6 @@ class ResponseTimeProcessor(SpanProcessor):
         ms_start_time = int(start_time // time_conversion)
         ms_end_time = int(end_time // time_conversion)
         return ms_end_time - ms_start_time
-
-    def calculate_otlp_transaction_name(
-        self,
-        span_name: str,
-    ) -> str:
-        """
-        Calculate transaction name for OTLP metrics with fallback hierarchy.
-
-        Follows this order of decreasing precedence, truncated to 255 char:
-        1. SW_APM_TRANSACTION_NAME
-        2. AWS_LAMBDA_FUNCTION_NAME
-        3. automated naming from span name
-        4. "unknown" backup, to match core lib
-
-        See also _SwSampler.calculate_otlp_transaction_name
-
-        Parameters:
-        span_name (str): The name of the span to use as fallback.
-
-        Returns:
-        str: The calculated transaction name, truncated to 255 characters.
-        """
-        if self.env_transaction_name:
-            return self.env_transaction_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
-
-        if self.lambda_function_name:
-            return self.lambda_function_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
-
-        if span_name:
-            return span_name[:INTL_SWO_TRANSACTION_ATTR_MAX]
-
-        return "unknown"
 
     def enhance_meter_attrs_with_http_span_attrs(
         self, span: "ReadableSpan", meter_attrs: dict
