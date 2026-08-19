@@ -10,8 +10,6 @@ from opentelemetry.sdk.resources import Resource
 
 from solarwinds_apm import apm_config
 
-# pylint: disable=unused-import
-
 
 class TestSolarWindsApmConfigServiceName:
     def test__calculate_service_name_is_lambda(self, mocker):

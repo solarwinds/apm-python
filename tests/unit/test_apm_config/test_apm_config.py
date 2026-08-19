@@ -15,8 +15,6 @@ from opentelemetry.sdk.resources import Resource
 from solarwinds_apm import apm_config
 from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting
 
-# pylint: disable=unused-import
-
 
 @pytest.fixture
 def setup_caplog():

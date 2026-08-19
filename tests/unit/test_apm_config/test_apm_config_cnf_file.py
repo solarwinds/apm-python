@@ -9,12 +9,6 @@ import os
 
 from solarwinds_apm import apm_config
 
-# pylint: disable=unused-import
-
-# pylint: disable=unused-import
-
-# pylint: disable=unused-import
-
 
 class TestSolarWindsApmConfigCnfFile:
     # pylint:disable=unused-argument

@@ -11,10 +11,6 @@ import pytest
 
 from solarwinds_apm import apm_config
 
-# pylint: disable=unused-import
-
-# pylint: disable=unused-import
-
 
 @pytest.fixture
 def setup_caplog():
