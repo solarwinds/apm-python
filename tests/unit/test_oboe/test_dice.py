@@ -48,8 +48,8 @@ def test_rate_setter_negative_value(dice):
 
 
 def test_roll_zero_rate(dice_zero_rate):
-    assert all(dice_zero_rate.roll() == False for _ in range(1000))
+    assert all(not dice_zero_rate.roll() for _ in range(1000))
 
 
 def test_roll_full_rate(dice_full_rate):
-    assert all(dice_full_rate.roll() == True for _ in range(1000))
+    assert all(dice_full_rate.roll() for _ in range(1000))

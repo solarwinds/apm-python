@@ -12,11 +12,15 @@ from unittest import mock
 from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
 
 
-class TestServiceInstanceIdPrecedence1ResourceAttributes(TestBaseSwHeadersAndAttributes):
+class TestServiceInstanceIdPrecedence1ResourceAttributes(
+    TestBaseSwHeadersAndAttributes
+):
     """Test that OTEL_RESOURCE_ATTRIBUTES service.instance.id has highest priority."""
 
     def setUp(self):
-        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "service.instance.id=resource-attr-instance-123"
+        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = (
+            "service.instance.id=resource-attr-instance-123"
+        )
         # Set a full Azure App Service environment so the azure_app_service detector is active.
         os.environ["WEBSITE_SITE_NAME"] = "my-azure-app"
         os.environ["WEBSITE_RESOURCE_GROUP"] = "prod-rg"
@@ -63,9 +67,15 @@ class TestServiceInstanceIdPrecedence1ResourceAttributes(TestBaseSwHeadersAndAtt
         ):
             resource = self.configurator.apm_config.resource
             assert resource.attributes.get("cloud.provider") == "azure"
-            assert resource.attributes["service.instance.id"] == "resource-attr-instance-123"
+            assert (
+                resource.attributes["service.instance.id"]
+                == "resource-attr-instance-123"
+            )
 
-class TestServiceInstanceIdPrecedence2AzureAppService(TestBaseSwHeadersAndAttributes):
+
+class TestServiceInstanceIdPrecedence2AzureAppService(
+    TestBaseSwHeadersAndAttributes
+):
     """Test that Azure App Service WEBSITE_INSTANCE_ID overrides UUID fallback."""
 
     def setUp(self):
@@ -106,10 +116,15 @@ class TestServiceInstanceIdPrecedence2AzureAppService(TestBaseSwHeadersAndAttrib
             ],
         ):
             resource = self.configurator.apm_config.resource
-            assert resource.attributes["service.instance.id"] == "azure-app-instance-abc123"
+            assert (
+                resource.attributes["service.instance.id"]
+                == "azure-app-instance-abc123"
+            )
 
 
-class TestServiceInstanceIdPrecedence4UUIDFallback(TestBaseSwHeadersAndAttributes):
+class TestServiceInstanceIdPrecedence4UUIDFallback(
+    TestBaseSwHeadersAndAttributes
+):
     """Test that non-platform environments get UUID from ServiceInstanceIdResourceDetector."""
 
     def setUp(self):
@@ -152,7 +167,9 @@ class TestServiceInstanceIdPrecedence4UUIDFallback(TestBaseSwHeadersAndAttribute
                 is_valid_uuid = True
             except (ValueError, TypeError, AttributeError):
                 is_valid_uuid = False
-            assert is_valid_uuid, f"service.instance.id '{instance_id}' is not a valid UUID"
+            assert is_valid_uuid, (
+                f"service.instance.id '{instance_id}' is not a valid UUID"
+            )
 
 
 class TestServiceInstanceIdWithCustomDetectors(TestBaseSwHeadersAndAttributes):
@@ -200,4 +217,6 @@ class TestServiceInstanceIdWithCustomDetectors(TestBaseSwHeadersAndAttributes):
                 is_valid_uuid = True
             except (ValueError, TypeError, AttributeError):
                 is_valid_uuid = False
-            assert is_valid_uuid, f"service.instance.id '{instance_id}' is not a valid UUID"
+            assert is_valid_uuid, (
+                f"service.instance.id '{instance_id}' is not a valid UUID"
+            )

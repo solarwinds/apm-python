@@ -11,8 +11,9 @@ from unittest import mock
 from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
 
 
-class TestServiceNamePrecedence1OtelServiceName(TestBaseSwHeadersAndAttributes):
-
+class TestServiceNamePrecedence1OtelServiceName(
+    TestBaseSwHeadersAndAttributes
+):
     def setUp(self):
         os.environ["OTEL_SERVICE_NAME"] = "otel-override"
         os.environ["WEBSITE_SITE_NAME"] = "azure-app"
@@ -64,12 +65,13 @@ class TestServiceNamePrecedence1OtelServiceName(TestBaseSwHeadersAndAttributes):
             assert resource_attrs["cloud.platform"] == "azure_app_service"
 
 
-class TestServiceNamePrecedence2ResourceAttributes(TestBaseSwHeadersAndAttributes):
-
+class TestServiceNamePrecedence2ResourceAttributes(
+    TestBaseSwHeadersAndAttributes
+):
     def setUp(self):
-        os.environ[
-            "OTEL_RESOURCE_ATTRIBUTES"
-        ] = "service.name=resource-attr-name,deployment.environment=prod"
+        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = (
+            "service.name=resource-attr-name,deployment.environment=prod"
+        )
         os.environ["WEBSITE_SITE_NAME"] = "azure-app"
         super().setUp()
 
@@ -115,7 +117,6 @@ class TestServiceNamePrecedence2ResourceAttributes(TestBaseSwHeadersAndAttribute
 
 
 class TestServiceNamePrecedence3AzureDetector(TestBaseSwHeadersAndAttributes):
-
     def setUp(self):
         os.environ["WEBSITE_SITE_NAME"] = "azure-production-app"
         os.environ["WEBSITE_RESOURCE_GROUP"] = "prod-rg"
@@ -167,7 +168,6 @@ class TestServiceNamePrecedence3AzureDetector(TestBaseSwHeadersAndAttributes):
 
 
 class TestServiceNamePrecedence4SwKeyFallback(TestBaseSwHeadersAndAttributes):
-
     def setUp(self):
         # Base class will set SW_APM_SERVICE_KEY="foo:bar"
         super().setUp()
@@ -212,8 +212,9 @@ class TestServiceNamePrecedence4SwKeyFallback(TestBaseSwHeadersAndAttributes):
             assert isinstance(resource_attrs["host.name"], str)
 
 
-class TestServiceNameAzureDetectorFullEnvironment(TestBaseSwHeadersAndAttributes):
-
+class TestServiceNameAzureDetectorFullEnvironment(
+    TestBaseSwHeadersAndAttributes
+):
     def setUp(self):
         os.environ["WEBSITE_SITE_NAME"] = "my-azure-app"
         os.environ["WEBSITE_RESOURCE_GROUP"] = "production-rg"

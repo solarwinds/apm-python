@@ -133,7 +133,7 @@ def test_concurrent_property_access():
     assert len(errors) == 0
     assert all(c == 50 for c in results["capacity"])
     assert all(r == 5 for r in results["rate"])
-    assert all(isinstance(t, (int, float)) for t in results["tokens"])
+    assert all(isinstance(t, (int | float)) for t in results["tokens"])
 
 
 def test_concurrent_update_and_consume():
@@ -203,6 +203,7 @@ def test_fork_reinitializes_lock():
             os._exit(0)  # Use _exit to avoid cleanup issues
         except Exception as e:
             import traceback
+
             error_msg = f"ERROR:{e}:{traceback.format_exc()}\n".encode()
             os.write(write_fd, error_msg)
             os.close(write_fd)
@@ -224,11 +225,15 @@ def test_fork_reinitializes_lock():
 
         # Verify child exited successfully
         exit_code = os.WEXITSTATUS(status) if os.WIFEXITED(status) else -1
-        assert exit_code == 0, f"Child process failed with exit code {exit_code}, output: {result_str}"
+        assert exit_code == 0, (
+            f"Child process failed with exit code {exit_code}, output: {result_str}"
+        )
 
         # Parse results
         parts = result_str.split(",")
-        assert len(parts) == 3, f"Expected 3 parts but got {len(parts)}: {result_str}"
+        assert len(parts) == 3, (
+            f"Expected 3 parts but got {len(parts)}: {result_str}"
+        )
         result, tokens, child_pid = parts
 
         # Verify fork occurred
@@ -243,7 +248,9 @@ def test_fork_reinitializes_lock():
 
         # Verify parent still has its state (tokens may have replenished slightly with rate=1)
         parent_tokens = bucket.tokens
-        assert 5.0 <= parent_tokens <= 6.0  # Should be close to 5 but may have replenished
+        assert (
+            5.0 <= parent_tokens <= 6.0
+        )  # Should be close to 5 but may have replenished
 
 
 def test_multiple_threads_replenishing_and_consuming():
@@ -275,4 +282,6 @@ def test_multiple_threads_replenishing_and_consuming():
     # With 10 tokens/sec rate and ~1 second of sleep time,
     # we should consume initial capacity plus some replenished tokens
     assert total_consumed[0] >= 50  # At least initial capacity
-    assert total_consumed[0] <= 100  # But not more than initial + 1 sec replenishment
+    assert (
+        total_consumed[0] <= 100
+    )  # But not more than initial + 1 sec replenishment

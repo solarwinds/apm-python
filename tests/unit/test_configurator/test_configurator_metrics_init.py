@@ -59,15 +59,11 @@ class TestConfiguratorMetricsInit:
             "solarwinds_apm.configurator.Resource.create",
             return_value=mock_resource,
         )
-        mock_counter = mocker.patch(
-            "solarwinds_apm.configurator.Counter"
-        )
+        mock_counter = mocker.patch("solarwinds_apm.configurator.Counter")
         mock_updowncounter = mocker.patch(
             "solarwinds_apm.configurator.UpDownCounter"
         )
-        mock_histogram = mocker.patch(
-            "solarwinds_apm.configurator.Histogram"
-        )
+        mock_histogram = mocker.patch("solarwinds_apm.configurator.Histogram")
         mock_observablecounter = mocker.patch(
             "solarwinds_apm.configurator.ObservableCounter"
         )
@@ -89,10 +85,10 @@ class TestConfiguratorMetricsInit:
 
             def export(self):
                 pass
-            
+
             def force_flush(self, *args, **kwargs):
                 pass
-            
+
             def shutdown(self, *args, **kwargs):
                 pass
 
@@ -144,15 +140,11 @@ class TestConfiguratorMetricsInit:
             "solarwinds_apm.configurator.Resource.create",
             return_value=mock_resource,
         )
-        mock_counter = mocker.patch(
-            "solarwinds_apm.configurator.Counter"
-        )
+        mock_counter = mocker.patch("solarwinds_apm.configurator.Counter")
         mock_updowncounter = mocker.patch(
             "solarwinds_apm.configurator.UpDownCounter"
         )
-        mock_histogram = mocker.patch(
-            "solarwinds_apm.configurator.Histogram"
-        )
+        mock_histogram = mocker.patch("solarwinds_apm.configurator.Histogram")
         mock_observablecounter = mocker.patch(
             "solarwinds_apm.configurator.ObservableCounter"
         )
@@ -174,10 +166,10 @@ class TestConfiguratorMetricsInit:
 
             def export(self):
                 pass
-            
+
             def force_flush(self, *args, **kwargs):
                 pass
-            
+
             def shutdown(self, *args, **kwargs):
                 pass
 
@@ -230,15 +222,11 @@ class TestConfiguratorMetricsInit:
             "solarwinds_apm.configurator.Resource.create",
             return_value=mock_resource,
         )
-        mock_counter = mocker.patch(
-            "solarwinds_apm.configurator.Counter"
-        )
+        mock_counter = mocker.patch("solarwinds_apm.configurator.Counter")
         mock_updowncounter = mocker.patch(
             "solarwinds_apm.configurator.UpDownCounter"
         )
-        mock_histogram = mocker.patch(
-            "solarwinds_apm.configurator.Histogram"
-        )
+        mock_histogram = mocker.patch("solarwinds_apm.configurator.Histogram")
         mock_observablecounter = mocker.patch(
             "solarwinds_apm.configurator.ObservableCounter"
         )
@@ -310,15 +298,11 @@ class TestConfiguratorMetricsInit:
             "solarwinds_apm.configurator.Resource.create",
             return_value=mock_resource,
         )
-        mock_counter = mocker.patch(
-            "solarwinds_apm.configurator.Counter"
-        )
+        mock_counter = mocker.patch("solarwinds_apm.configurator.Counter")
         mock_updowncounter = mocker.patch(
             "solarwinds_apm.configurator.UpDownCounter"
         )
-        mock_histogram = mocker.patch(
-            "solarwinds_apm.configurator.Histogram"
-        )
+        mock_histogram = mocker.patch("solarwinds_apm.configurator.Histogram")
         mock_observablecounter = mocker.patch(
             "solarwinds_apm.configurator.ObservableCounter"
         )

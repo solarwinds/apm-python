@@ -22,7 +22,9 @@ class TestConfiguratorTracingInit:
         if otlp_protocol:
             env_vars["OTEL_EXPORTER_OTLP_PROTOCOL"] = otlp_protocol
         if otlp_traces_protocol:
-            env_vars["OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"] = otlp_traces_protocol
+            env_vars["OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"] = (
+                otlp_traces_protocol
+            )
         mocker.patch.dict(os.environ, env_vars, clear=True)
 
         mocker.patch(
@@ -79,7 +81,9 @@ class TestConfiguratorTracingInit:
             resource=mocks["mock_resource"],
         )
         mocks["mock_set_tracer_provider"].assert_called_once()
-        mocks["mock_tracerprovider_instance"].add_span_processor.assert_not_called()
+        mocks[
+            "mock_tracerprovider_instance"
+        ].add_span_processor.assert_not_called()
         mock_bsprocessor.assert_not_called()
         mock_ssprocessor.assert_not_called()
 
@@ -96,7 +100,7 @@ class TestConfiguratorTracingInit:
         )
 
         # Mock span exporter class
-        class MockExporter():
+        class MockExporter:
             def __init__(self, *args, **kwargs):
                 pass
 
@@ -117,7 +121,9 @@ class TestConfiguratorTracingInit:
             resource=mocks["mock_apm_sampler"],
         )
         mocks["mock_set_tracer_provider"].assert_called_once()
-        mocks["mock_tracerprovider_instance"].add_span_processor.assert_called_once_with(
+        mocks[
+            "mock_tracerprovider_instance"
+        ].add_span_processor.assert_called_once_with(
             mock_bsprocessor.return_value,
         )
         mock_exporter_spy.assert_called_once()
@@ -137,7 +143,7 @@ class TestConfiguratorTracingInit:
         )
 
         # Mock span exporter class
-        class MockExporter():
+        class MockExporter:
             def __init__(self, *args, **kwargs):
                 pass
 
@@ -158,7 +164,9 @@ class TestConfiguratorTracingInit:
             resource=mocks["mock_resource"],
         )
         mocks["mock_set_tracer_provider"].assert_called_once()
-        mocks["mock_tracerprovider_instance"].add_span_processor.assert_called_once_with(
+        mocks[
+            "mock_tracerprovider_instance"
+        ].add_span_processor.assert_called_once_with(
             mock_ssprocessor.return_value,
         )
         mock_exporter_spy.assert_called_once()

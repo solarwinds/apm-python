@@ -12,7 +12,9 @@ import sys
 
 
 def parse_args(args=None):
-    parser = argparse.ArgumentParser(description="Lint and format everything, autofixing if possible.")
+    parser = argparse.ArgumentParser(
+        description="Lint and format everything, autofixing if possible."
+    )
     parser.add_argument("--check-only", action="store_true")
     parser.add_argument("--allowexitcodes", action="append", default=[0])
     parser.set_defaults(parser=parser)
@@ -25,7 +27,7 @@ def run_subprocess(args, allowexitcodes):
     result = subprocess.run(args)
     if result is not None and result.returncode not in allowexitcodes:
         print(
-            "'{}' failed with code {}".format(args[0], result.returncode),
+            f"'{args[0]}' failed with code {result.returncode}",
             file=sys.stderr,
         )
         sys.exit(result.returncode)

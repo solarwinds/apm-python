@@ -6,6 +6,7 @@
 
 from solarwinds_apm import apm_logging
 
+
 class TestApmLoggingLevel:
     def test_default_level(self):
         assert apm_logging.ApmLoggingLevel.default_level() == 2
@@ -36,25 +37,21 @@ class TestSetSwLog:
         mocker,
         error=False,
     ):
-        mock_apm_logger = mocker.patch(
-            "solarwinds_apm.apm_logging.logger"
-        )
+        mock_apm_logger = mocker.patch("solarwinds_apm.apm_logging.logger")
         mock_warning = mocker.Mock()
         mock_error = mocker.Mock()
         mock_addhandler = mocker.Mock()
         mock_rmhandler = mocker.Mock()
         mock_apm_logger.configure_mock(
-            **{
-                "addHandler": mock_addhandler,
-                "error": mock_error,
-                "removeHandler": mock_rmhandler,
-                "warning": mock_warning,
-            }
+            addHandler=mock_addhandler,
+            error=mock_error,
+            removeHandler=mock_rmhandler,
+            warning=mock_warning,
         )
         if error:
             mock_rfhandler = mocker.patch(
                 "solarwinds_apm.apm_logging.RotatingFileHandler",
-                side_effect=FileNotFoundError("mock error")
+                side_effect=FileNotFoundError("mock error"),
             )
         else:
             mock_rfhandler = mocker.patch(
@@ -64,7 +61,9 @@ class TestSetSwLog:
         return mock_apm_logger, mock_rfhandler
 
     def test_update_sw_log_handler_no_log_filepath(self, mocker):
-        mock_apm_logger, mock_rfhandler = self.get_mock_logger_and_rfhandler(mocker)
+        mock_apm_logger, mock_rfhandler = self.get_mock_logger_and_rfhandler(
+            mocker
+        )
 
         apm_logging.update_sw_log_handler("")
         mock_rfhandler.assert_not_called()
@@ -81,7 +80,7 @@ class TestSetSwLog:
 
         apm_logging.update_sw_log_handler("foo")
         mock_rfhandler.assert_called_once_with(
-            filename='foo', maxBytes=0, backupCount=0
+            filename="foo", maxBytes=0, backupCount=0
         )
         mock_apm_logger.addHandler.assert_not_called()
         mock_apm_logger.removeHandler.assert_not_called()
@@ -91,11 +90,13 @@ class TestSetSwLog:
         mock_apm_logger.warning.assert_not_called()
 
     def test_update_sw_log_handler_update_handlers(self, mocker):
-        mock_apm_logger, mock_rfhandler = self.get_mock_logger_and_rfhandler(mocker)
+        mock_apm_logger, mock_rfhandler = self.get_mock_logger_and_rfhandler(
+            mocker
+        )
 
         apm_logging.update_sw_log_handler("foo")
         mock_rfhandler.assert_called_once_with(
-            filename='foo', maxBytes=0, backupCount=0
+            filename="foo", maxBytes=0, backupCount=0
         )
         mock_apm_logger.addHandler.assert_called_once()
         mock_apm_logger.removeHandler.assert_called_once()

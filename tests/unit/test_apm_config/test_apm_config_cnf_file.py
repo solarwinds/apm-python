@@ -10,24 +10,21 @@ import os
 from solarwinds_apm import apm_config
 
 # pylint: disable=unused-import
-from .fixtures.cnf_dict import fixture_cnf_dict
+
 # pylint: disable=unused-import
-from .fixtures.cnf_file import (
-    fixture_cnf_file,
-    fixture_cnf_file_invalid_json,
-)
+
 # pylint: disable=unused-import
-from .fixtures.env_vars import fixture_mock_env_vars
+
 
 class TestSolarWindsApmConfigCnfFile:
     # pylint:disable=unused-argument
     def test_get_cnf_dict_default_path_no_file(
-            self,
-            mock_env_vars,
-        ):
+        self,
+        mock_env_vars,
+    ):
         # use key from env var, agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
-        assert resulting_config.agent_enabled == True
+        assert resulting_config.agent_enabled
         assert resulting_config.get("service_key") == "valid:key"
         # cnf_dict is none
         assert resulting_config.get_cnf_dict() is None
@@ -37,13 +34,16 @@ class TestSolarWindsApmConfigCnfFile:
         mocker,
         mock_env_vars,
     ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "valid:key-service-name",
-            "SW_APM_CONFIG_FILE": "nothing-is-here",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "valid:key-service-name",
+                "SW_APM_CONFIG_FILE": "nothing-is-here",
+            },
+        )
         # use key from env var, agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
-        assert resulting_config.agent_enabled == True
+        assert resulting_config.agent_enabled
         assert resulting_config.get("service_key") == "valid:key-service-name"
         # cnf_dict is none
         assert resulting_config.get_cnf_dict() is None
@@ -55,13 +55,16 @@ class TestSolarWindsApmConfigCnfFile:
         fixture_cnf_file_invalid_json,
         mock_env_vars,
     ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "valid:key-service-name",
-            "SW_APM_CONFIG_FILE": "nothing-is-here",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "valid:key-service-name",
+                "SW_APM_CONFIG_FILE": "nothing-is-here",
+            },
+        )
         # use key from env var, agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
-        assert resulting_config.agent_enabled == True
+        assert resulting_config.agent_enabled
         assert resulting_config.get("service_key") == "valid:key-service-name"
         # cnf_dict is none
         assert resulting_config.get_cnf_dict() is None
@@ -73,13 +76,16 @@ class TestSolarWindsApmConfigCnfFile:
         fixture_cnf_file,
         mock_env_vars,
     ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "valid:key-service-name",
-            "SW_APM_CONFIG_FILE": "nothing-is-here",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "valid:key-service-name",
+                "SW_APM_CONFIG_FILE": "nothing-is-here",
+            },
+        )
         # use key from env var, agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
-        assert resulting_config.agent_enabled == True
+        assert resulting_config.agent_enabled
         assert resulting_config.get("service_key") == "valid:key-service-name"
         # cnf_dict is dict with kv from fixture
         assert resulting_config.get_cnf_dict() == {"foo": "bar"}
@@ -96,36 +102,37 @@ class TestSolarWindsApmConfigCnfFile:
         if old_collector:
             del os.environ["SW_APM_COLLECTOR"]
 
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "valid:key-service-name",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "valid:key-service-name",
+            },
+        )
         mock_update_txn_filters = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
         )
         mock_get_cnf_dict = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
         )
-        mock_get_cnf_dict.configure_mock(
-            return_value=fixture_cnf_dict
-        )
+        mock_get_cnf_dict.configure_mock(return_value=fixture_cnf_dict)
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )
         mock_apm_logging.configure_mock(
             **{
                 "set_sw_log_level": mocker.Mock(),
-                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2),
             }
         )
 
         # use key from env var (Python APM only uses key from here),
         # agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
-        assert resulting_config.agent_enabled == True
+        assert resulting_config.agent_enabled
         assert resulting_config.get("service_key") == "valid:key-service-name"
         # config includes snake_case versions of mock's camelCase keys
         # and valid values
-        assert resulting_config.agent_enabled == True
+        assert resulting_config.agent_enabled
         assert resulting_config.get("tracing_mode") == 1
         assert resulting_config.get("trigger_trace") == 1
         assert resulting_config.get("collector") == "foo-bar"
@@ -147,9 +154,12 @@ class TestSolarWindsApmConfigCnfFile:
         if old_collector:
             del os.environ["SW_APM_COLLECTOR"]
 
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "valid:key-service-name",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "valid:key-service-name",
+            },
+        )
         mock_update_txn_filters = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
         )
@@ -167,22 +177,20 @@ class TestSolarWindsApmConfigCnfFile:
         mock_get_cnf_dict = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
         )
-        mock_get_cnf_dict.configure_mock(
-            return_value=mostly_invalid_cnf_dict
-        )
+        mock_get_cnf_dict.configure_mock(return_value=mostly_invalid_cnf_dict)
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )
         mock_apm_logging.configure_mock(
             **{
                 "set_sw_log_level": mocker.Mock(),
-                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2),
             }
         )
         # use key from env var (Python APM only uses key from here),
         # agent enabled, nothing has errored
         resulting_config = apm_config.SolarWindsApmConfig()
-        assert resulting_config.agent_enabled == True
+        assert resulting_config.agent_enabled
         assert resulting_config.get("service_key") == "valid:key-service-name"
         # config includes snake_case versions of mock's camelCase keys
         # and default values because invalid ones ignored
@@ -193,7 +201,9 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("collector") == "False"
 
         # update_transaction_filters was called
-        mock_update_txn_filters.assert_called_once_with(mostly_invalid_cnf_dict)
+        mock_update_txn_filters.assert_called_once_with(
+            mostly_invalid_cnf_dict
+        )
         # Restore old collector
         if old_collector:
             os.environ["SW_APM_COLLECTOR"] = old_collector
@@ -209,30 +219,31 @@ class TestSolarWindsApmConfigCnfFile:
         if old_collector:
             del os.environ["SW_APM_COLLECTOR"]
 
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "valid:key-service-name",
-            "SW_APM_AGENT_ENABLED": "false",
-            "SW_APM_TRACING_MODE": "disabled",
-            "SW_APM_TRIGGER_TRACE": "disabled",
-            "SW_APM_COLLECTOR": "other-foo-bar",
-            "SW_APM_DEBUG_LEVEL": "5",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "valid:key-service-name",
+                "SW_APM_AGENT_ENABLED": "false",
+                "SW_APM_TRACING_MODE": "disabled",
+                "SW_APM_TRIGGER_TRACE": "disabled",
+                "SW_APM_COLLECTOR": "other-foo-bar",
+                "SW_APM_DEBUG_LEVEL": "5",
+            },
+        )
         mock_update_txn_filters = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
         )
         mock_get_cnf_dict = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
         )
-        mock_get_cnf_dict.configure_mock(
-            return_value=fixture_cnf_dict
-        )
+        mock_get_cnf_dict.configure_mock(return_value=fixture_cnf_dict)
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )
         mock_apm_logging.configure_mock(
             **{
                 "set_sw_log_level": mocker.Mock(),
-                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2),
             }
         )
         resulting_config = apm_config.SolarWindsApmConfig()
@@ -243,7 +254,7 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("service_key") == "valid:key-service-name"
 
         # Rest of config prioritizes env_var > cnf_file
-        assert resulting_config.agent_enabled == False
+        assert not resulting_config.agent_enabled
         assert resulting_config.get("tracing_mode") == 0
         assert resulting_config.get("trigger_trace") == 0
         assert resulting_config.get("collector") == "other-foo-bar"
@@ -264,30 +275,31 @@ class TestSolarWindsApmConfigCnfFile:
         if old_collector:
             del os.environ["SW_APM_COLLECTOR"]
 
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "not-valid-and-agent-will-be-disabled",
-            "SW_APM_AGENT_ENABLED": "other-foo-bar",
-            "SW_APM_TRACING_MODE": "other-foo-bar",
-            "SW_APM_TRIGGER_TRACE": "other-foo-bar",
-            "SW_APM_COLLECTOR": "False",
-            "SW_APM_DEBUG_LEVEL": "other-foo-bar",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "not-valid-and-agent-will-be-disabled",
+                "SW_APM_AGENT_ENABLED": "other-foo-bar",
+                "SW_APM_TRACING_MODE": "other-foo-bar",
+                "SW_APM_TRIGGER_TRACE": "other-foo-bar",
+                "SW_APM_COLLECTOR": "False",
+                "SW_APM_DEBUG_LEVEL": "other-foo-bar",
+            },
+        )
         mock_update_txn_filters = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.update_transaction_filters"
         )
         mock_get_cnf_dict = mocker.patch(
             "solarwinds_apm.apm_config.SolarWindsApmConfig.get_cnf_dict"
         )
-        mock_get_cnf_dict.configure_mock(
-            return_value=fixture_cnf_dict
-        )
+        mock_get_cnf_dict.configure_mock(return_value=fixture_cnf_dict)
         mock_apm_logging = mocker.patch(
             "solarwinds_apm.apm_config.apm_logging"
         )
         mock_apm_logging.configure_mock(
             **{
                 "set_sw_log_level": mocker.Mock(),
-                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2)
+                "ApmLoggingLevel.default_level": mocker.Mock(return_value=2),
             }
         )
         resulting_config = apm_config.SolarWindsApmConfig()
@@ -296,8 +308,11 @@ class TestSolarWindsApmConfigCnfFile:
 
         # even if invalid, only service_key from env var used
         # and APM will be disabled
-        assert resulting_config.agent_enabled == False
-        assert resulting_config.get("service_key") == "not-valid-and-agent-will-be-disabled"  # the full key does not print to std out and appears masked
+        assert not resulting_config.agent_enabled
+        assert (
+            resulting_config.get("service_key")
+            == "not-valid-and-agent-will-be-disabled"
+        )  # the full key does not print to std out and appears masked
 
         # cnf_file values from fixture_cnf_dict are kept if same env_var invalid
         assert resulting_config.get("tracing_mode") == 1

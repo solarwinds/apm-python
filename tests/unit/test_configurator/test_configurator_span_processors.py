@@ -8,6 +8,7 @@ import os
 
 from solarwinds_apm import configurator
 
+
 class TestConfiguratorSpanProcessors:
     def test_configure_service_entry_span_processor(
         self,
@@ -18,9 +19,7 @@ class TestConfiguratorSpanProcessors:
             "solarwinds_apm.configurator.trace.get_tracer_provider",
             return_value=mock_tracerprovider,
         )
-        mocker.patch(
-            "solarwinds_apm.configurator.ServiceEntrySpanProcessor"
-        )
+        mocker.patch("solarwinds_apm.configurator.ServiceEntrySpanProcessor")
 
         test_configurator = configurator.SolarWindsConfigurator()
         test_configurator._configure_service_entry_span_processor()
@@ -36,9 +35,12 @@ class TestConfiguratorSpanProcessors:
         old_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
         if old_exporter:
             del os.environ["OTEL_METRICS_EXPORTER"]
-        mocker.patch.dict(os.environ, {
-            "OTEL_METRICS_EXPORTER": "",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "OTEL_METRICS_EXPORTER": "",
+            },
+        )
 
         mock_tracerprovider = mocker.Mock()
         mock_get_tracer_provider = mocker.patch(
@@ -70,9 +72,12 @@ class TestConfiguratorSpanProcessors:
         old_exporter = os.environ.get("OTEL_METRICS_EXPORTER", None)
         if old_exporter:
             del os.environ["OTEL_METRICS_EXPORTER"]
-        mocker.patch.dict(os.environ, {
-            "OTEL_METRICS_EXPORTER": "foo_exporter",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "OTEL_METRICS_EXPORTER": "foo_exporter",
+            },
+        )
 
         mock_tracerprovider = mocker.Mock()
         mock_get_tracer_provider = mocker.patch(

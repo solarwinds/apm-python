@@ -9,9 +9,6 @@ import re
 
 import flask
 import requests
-from werkzeug.test import Client
-from werkzeug.wrappers import Response
-
 from opentelemetry import trace as trace_api
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
@@ -30,13 +27,14 @@ from opentelemetry.test.globals_test import (
 )
 from opentelemetry.test.test_base import TestBase
 from opentelemetry.util._importlib_metadata import entry_points
+from werkzeug.test import Client
+from werkzeug.wrappers import Response
 
 from solarwinds_apm.apm_config import SolarWindsApmConfig
 from solarwinds_apm.configurator import SolarWindsConfigurator
 from solarwinds_apm.distro import SolarWindsDistro
 from solarwinds_apm.oboe.json_sampler import JsonSampler
 from solarwinds_apm.propagator import SolarWindsPropagator
-
 
 
 class TestBaseSwHeadersAndAttributes(TestBase):
@@ -49,7 +47,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         "BucketCapacity",
         "BucketRate",
         "SampleRate",
-        "SampleSource"
+        "SampleSource",
     ]
 
     @staticmethod
@@ -74,7 +72,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
             # WSGI capitalizes incoming HTTP headers
             incoming_headers.update({k.lower(): v.lower()})
 
-        resp = requests.get(f"http://postman-echo.com/headers")
+        resp = requests.get("http://postman-echo.com/headers")
 
         #  The return type must be a string, dict, tuple, Response instance, or WSGI callable
         # (not CaseInsensitiveDict)
@@ -83,7 +81,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
             "tracestate": resp.request.headers["tracestate"],
             "incoming-headers": incoming_headers,
         }
-    
+
     def _setup_endpoints(self):
         # pylint: disable=no-member
         self.app.route("/test_trace/")(self._test_trace)
@@ -96,14 +94,14 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         # Load OTel env vars entry points
         argument_otel_environment_variable = {}
         for entry_point in iter(
-            entry_points(
-                group="opentelemetry_environment_variables"
-            )
+            entry_points(group="opentelemetry_environment_variables")
         ):
             environment_variable_module = entry_point.load()
             for attribute in dir(environment_variable_module):
                 if attribute.startswith("OTEL_"):
-                    argument = re.sub(r"OTEL_(PYTHON_)?", "", attribute).lower()
+                    argument = re.sub(
+                        r"OTEL_(PYTHON_)?", "", attribute
+                    ).lower()
                     argument_otel_environment_variable[argument] = attribute
 
         # Set APM service key - not valid, but we mock anyway
@@ -111,7 +109,9 @@ class TestBaseSwHeadersAndAttributes(TestBase):
 
         # Load Distro
         SolarWindsDistro().configure()
-        assert os.environ["OTEL_PROPAGATORS"] == "solarwinds_propagator,baggage"
+        assert (
+            os.environ["OTEL_PROPAGATORS"] == "solarwinds_propagator,baggage"
+        )
 
         # Load Configurator to Configure SW custom SDK components
         # except use TestBase InMemorySpanExporter
@@ -127,9 +127,13 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         reset_metrics_globals()
         # Init parent-based with JsonSampler to guarantee sampling decision for tests
         self.metric_reader = InMemoryMetricReader()
-        self.meter_provider = MeterProvider(metric_readers=[self.metric_reader])
+        self.meter_provider = MeterProvider(
+            metric_readers=[self.metric_reader]
+        )
         set_meter_provider(self.meter_provider)
-        sampler_configuration = SolarWindsApmConfig.to_configuration(apm_config)
+        sampler_configuration = SolarWindsApmConfig.to_configuration(
+            apm_config
+        )
         json_sampler = JsonSampler(
             self.meter_provider,
             sampler_configuration,
