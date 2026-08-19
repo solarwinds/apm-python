@@ -42,11 +42,8 @@ from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
 
-
 AWS_LAMBDA_EXEC_WRAPPER = "AWS_LAMBDA_EXEC_WRAPPER"
-INIT_OTEL_SCRIPTS_DIR = os.path.join(
-    *(os.path.dirname(__file__), "..")
-)
+INIT_OTEL_SCRIPTS_DIR = os.path.join(*(os.path.dirname(__file__), ".."))
 TOX_PYTHON_DIRECTORY = os.path.dirname(os.path.dirname(which("python3")))
 
 
@@ -89,6 +86,7 @@ MOCK_W3C_TRACE_CONTEXT_SAMPLED = (
 MOCK_W3C_TRACE_STATE_KEY = "vendor_specific_key"
 MOCK_W3C_TRACE_STATE_VALUE = "test_value"
 
+
 def replace_in_file(filename, old_text, new_text):
     with fileinput.FileInput(filename, inplace=True) as file_object:
         for line in file_object:
@@ -122,7 +120,7 @@ def mock_aws_lambda_exec_wrapper():
     )
 
     # NOTE: Like opentelemetry-lambda, `solarwinds-apm/wrapper` cannot affect
-    # this python environment. We parse the stdout produced by our test python 
+    # this python environment. We parse the stdout produced by our test python
     # program to update the environment in this parent python process.
 
     for env_var_line in completed_subprocess.stdout.split("\n"):

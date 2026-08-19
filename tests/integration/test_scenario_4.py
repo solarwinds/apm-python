@@ -4,8 +4,8 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-import re
 import json
+import re
 import time
 from unittest import mock
 
@@ -34,9 +34,9 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         trace_id = "11112222333344445555666677778888"
         span_id = "1000100010001000"
         trace_flags = "01"
-        traceparent = "00-{}-{}-{}".format(trace_id, span_id, trace_flags)
+        traceparent = f"00-{trace_id}-{span_id}-{trace_flags}"
         tracestate_span = "e000baa4e000baa4"
-        tracestate = "sw={}-{}".format(tracestate_span, trace_flags)
+        tracestate = f"sw={tracestate_span}-{trace_flags}"
 
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
@@ -47,23 +47,22 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":4,
-                            "TriggerRelaxedBucketRate":3,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5,
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":1000000
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 1000000,
                 }
             ],
         ):
@@ -73,8 +72,8 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
                 headers={
                     "traceparent": traceparent,
                     "tracestate": tracestate,
-                    "some-header": "some-value"
-                }
+                    "some-header": "some-value",
+                },
             )
         resp_json = json.loads(resp.data)
 
@@ -82,19 +81,19 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         try:
             assert resp_json["incoming-headers"]["some-header"] == "some-value"
         except KeyError as e:
-            self.fail("KeyError was raised at incoming-headers check: {}".format(e))
+            self.fail(f"KeyError was raised at incoming-headers check: {e}")
 
         # Verify trace context injected into test app's outgoing postman-echo call
         # (added to Flask app's response data) includes:
         #    - traceparent with a trace_id, trace_flags from original request
         #    - tracestate from original request
         assert "traceparent" in resp_json
-        _TRACEPARENT_HEADER_FORMAT = (
+        _traceparent_header_format = (
             "^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$"
         )
-        _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
+        _traceparent_header_format_re = re.compile(_traceparent_header_format)
         traceparent_re_result = re.search(
-            _TRACEPARENT_HEADER_FORMAT_RE,
+            _traceparent_header_format_re,
             resp_json["traceparent"],
         )
         new_trace_id = traceparent_re_result.group(2)
@@ -110,22 +109,30 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert "tracestate" in resp_json
         # In this test we know there is only `sw` in tracestate
         # and its value will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+        assert resp_json["tracestate"] == f"sw={new_span_id}-{new_trace_flags}"
 
         # Verify the OTel context extracted from the original request are continued by
         # the trace context injected into test app's outgoing postman-echo call
         try:
             assert resp_json["incoming-headers"]["traceparent"] == traceparent
             assert new_trace_id in resp_json["incoming-headers"]["traceparent"]
-            assert new_span_id not in resp_json["incoming-headers"]["traceparent"]
-            assert new_trace_flags in resp_json["incoming-headers"]["traceparent"]
+            assert (
+                new_span_id not in resp_json["incoming-headers"]["traceparent"]
+            )
+            assert (
+                new_trace_flags in resp_json["incoming-headers"]["traceparent"]
+            )
 
             assert resp_json["incoming-headers"]["tracestate"] == tracestate
             assert "sw=" in resp_json["incoming-headers"]["tracestate"]
-            assert new_span_id not in resp_json["incoming-headers"]["tracestate"]
-            assert new_trace_flags in resp_json["incoming-headers"]["tracestate"]
+            assert (
+                new_span_id not in resp_json["incoming-headers"]["tracestate"]
+            )
+            assert (
+                new_trace_flags in resp_json["incoming-headers"]["tracestate"]
+            )
         except KeyError as e:
-            self.fail("KeyError was raised at continue trace check: {}".format(e))
+            self.fail(f"KeyError was raised at continue trace check: {e}")
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -145,8 +152,8 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
 
         # Check spans' trace_id, which should match traceparent of original request
         # Note: context.trace_id needs a 32-byte hex conversion first.
-        assert "{:032x}".format(span_server.context.trace_id) == trace_id
-        assert "{:032x}".format(span_client.context.trace_id) == trace_id
+        assert f"{span_server.context.trace_id:032x}" == trace_id
+        assert f"{span_client.context.trace_id:032x}" == trace_id
 
         # Check service entry span attributes
         #   :present:
@@ -154,25 +161,34 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         #   :absent:
         #     service entry internal KVs, which not on entry spans if non-root
         #     SWKeys, because no xtraceoptions in otel context
-        assert not any(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert not any(
+            attr_key in span_server.attributes
+            for attr_key in self.SW_SETTINGS_KEYS
+        )
         assert "sw.tracestate_parent_id" in span_server.attributes
-        assert span_server.attributes["sw.tracestate_parent_id"] == tracestate_span
-        assert not "SWKeys" in span_server.attributes
+        assert (
+            span_server.attributes["sw.tracestate_parent_id"]
+            == tracestate_span
+        )
+        assert "SWKeys" not in span_server.attributes
 
         # Check outgoing request span attributes
         #   :absent:
         #     service entry internal KVs, which are only on entry spans
         #     sw.tracestate_parent_id, because cannot be set without attributes at decision
         #     SWKeys, because no xtraceoptions in otel context
-        assert not any(attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert not "sw.tracestate_parent_id" in span_client.attributes
-        assert not "SWKeys" in span_client.attributes
+        assert not any(
+            attr_key in span_client.attributes
+            for attr_key in self.SW_SETTINGS_KEYS
+        )
+        assert "sw.tracestate_parent_id" not in span_client.attributes
+        assert "SWKeys" not in span_client.attributes
 
         # Check span_id of the outgoing request span (client span) matches
         # the span_id portion in the outgoing tracestate header, which
         # is stored in the test app's response body (new_span_id).
         # Note: context.span_id needs a 16-byte hex conversion first.
-        assert "{:016x}".format(span_client.context.span_id) == new_span_id
+        assert f"{span_client.context.span_id:016x}" == new_span_id
 
     def test_scenario_4_not_sampled(self):
         """
@@ -186,9 +202,9 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         trace_id = "11112222333344445555666677778888"
         span_id = "1000100010001000"
         trace_flags = "00"
-        traceparent = "00-{}-{}-{}".format(trace_id, span_id, trace_flags)
+        traceparent = f"00-{trace_id}-{span_id}-{trace_flags}"
         tracestate_span = "e000baa4e000baa4"
-        tracestate = "sw={}-{}".format(tracestate_span, trace_flags)
+        tracestate = f"sw={tracestate_span}-{trace_flags}"
 
         # Use in-process test app client and mock to propagate context
         # and create in-memory trace
@@ -199,23 +215,22 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":4,
-                            "TriggerRelaxedBucketRate":3,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5,
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":0
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 0,
                 }
             ],
         ):
@@ -225,8 +240,8 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
                 headers={
                     "traceparent": traceparent,
                     "tracestate": tracestate,
-                    "some-header": "some-value"
-                }
+                    "some-header": "some-value",
+                },
             )
         resp_json = json.loads(resp.data)
 
@@ -234,19 +249,19 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         try:
             assert resp_json["incoming-headers"]["some-header"] == "some-value"
         except KeyError as e:
-            self.fail("KeyError was raised at incoming-headers check: {}".format(e))
+            self.fail(f"KeyError was raised at incoming-headers check: {e}")
 
         # Verify trace context injected into test app's outgoing postman-echo call
         # (added to Flask app's response data) includes:
         #    - traceparent with a trace_id, trace_flags from original request
         #    - tracestate from original request
         assert "traceparent" in resp_json
-        _TRACEPARENT_HEADER_FORMAT = (
+        _traceparent_header_format = (
             "^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$"
         )
-        _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
+        _traceparent_header_format_re = re.compile(_traceparent_header_format)
         traceparent_re_result = re.search(
-            _TRACEPARENT_HEADER_FORMAT_RE,
+            _traceparent_header_format_re,
             resp_json["traceparent"],
         )
         new_trace_id = traceparent_re_result.group(2)
@@ -262,22 +277,30 @@ class TestScenario4(TestBaseSwHeadersAndAttributes):
         assert "tracestate" in resp_json
         # In this test we know there is only `sw` in tracestate
         # and its value will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+        assert resp_json["tracestate"] == f"sw={new_span_id}-{new_trace_flags}"
 
         # Verify the OTel context extracted from the original request are continued by
         # the trace context injected into test app's outgoing postman-echo call
         try:
             assert resp_json["incoming-headers"]["traceparent"] == traceparent
             assert new_trace_id in resp_json["incoming-headers"]["traceparent"]
-            assert new_span_id not in resp_json["incoming-headers"]["traceparent"]
-            assert new_trace_flags in resp_json["incoming-headers"]["traceparent"]
+            assert (
+                new_span_id not in resp_json["incoming-headers"]["traceparent"]
+            )
+            assert (
+                new_trace_flags in resp_json["incoming-headers"]["traceparent"]
+            )
 
             assert resp_json["incoming-headers"]["tracestate"] == tracestate
             assert "sw=" in resp_json["incoming-headers"]["tracestate"]
-            assert new_span_id not in resp_json["incoming-headers"]["tracestate"]
-            assert new_trace_flags in resp_json["incoming-headers"]["tracestate"]
+            assert (
+                new_span_id not in resp_json["incoming-headers"]["tracestate"]
+            )
+            assert (
+                new_trace_flags in resp_json["incoming-headers"]["tracestate"]
+            )
         except KeyError as e:
-            self.fail("KeyError was raised at continue trace check: {}".format(e))
+            self.fail(f"KeyError was raised at continue trace check: {e}")
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask

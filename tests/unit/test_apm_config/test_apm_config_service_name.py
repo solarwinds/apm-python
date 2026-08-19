@@ -10,8 +10,6 @@ from opentelemetry.sdk.resources import Resource
 
 from solarwinds_apm import apm_config
 
-# pylint: disable=unused-import
-from .fixtures.env_vars import fixture_mock_env_vars
 
 class TestSolarWindsApmConfigServiceName:
     def test__calculate_service_name_is_lambda(self, mocker):
@@ -80,10 +78,7 @@ class TestSolarWindsApmConfigServiceName:
 class TestSolarWindsApmConfigServiceNameApmProto:
     def test__calculate_service_name_apm_proto_agent_disabled(self):
         test_config = apm_config.SolarWindsApmConfig()
-        result = test_config._calculate_service_name_apm_proto(
-            False,
-            {}
-        )
+        result = test_config._calculate_service_name_apm_proto(False, {})
         assert result == ""
 
     def test__calculate_service_name_apm_proto_no_otel_service_name(
@@ -91,13 +86,15 @@ class TestSolarWindsApmConfigServiceNameApmProto:
         mocker,
         mock_env_vars,
     ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
+            },
+        )
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._calculate_service_name_apm_proto(
-            True,
-            Resource.create({"service.name": None})
+            True, Resource.create({"service.name": None})
         )
         assert result == "sw_service_name"
 
@@ -106,14 +103,17 @@ class TestSolarWindsApmConfigServiceNameApmProto:
         mocker,
         mock_env_vars,
     ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
+            },
+        )
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._calculate_service_name_apm_proto(
             True,
             # default is unknown_service
-            Resource.create()
+            Resource.create(),
         )
         assert result == "sw_service_name"
 
@@ -122,13 +122,15 @@ class TestSolarWindsApmConfigServiceNameApmProto:
         mocker,
         mock_env_vars,
     ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "service_key_with:sw_service_name",
+            },
+        )
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._calculate_service_name_apm_proto(
-            True,
-            Resource.create({"service.name": "foobar"})
+            True, Resource.create({"service.name": "foobar"})
         )
         assert result == "foobar"
 
@@ -136,13 +138,16 @@ class TestSolarWindsApmConfigServiceNameApmProto:
         self,
         mocker,
     ):
-        mocker.patch.dict(os.environ, {
-            "SW_APM_SERVICE_KEY": "token:",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "token:",
+            },
+        )
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._calculate_service_name_apm_proto(
             True,
-            Resource.create()  # default is unknown_service
+            Resource.create(),  # default is unknown_service
         )
         assert result == ""
 
@@ -154,18 +159,22 @@ class TestSolarWindsApmConfigServiceNameApmProto:
         test_config._SolarWindsApmConfig__config["service_key"] = 123
         result = test_config._calculate_service_name_apm_proto(
             True,
-            Resource.create()  # default is unknown_service
+            Resource.create(),  # default is unknown_service
         )
         assert result == ""
+
 
 class TestSolarWindsApmConfigServiceNameLambda:
     def test__calculate_service_name_lambda_no_otel_name(
         self,
         mocker,
     ):
-        mocker.patch.dict(os.environ, {
-            "AWS_LAMBDA_FUNCTION_NAME": "foo-fn",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "AWS_LAMBDA_FUNCTION_NAME": "foo-fn",
+            },
+        )
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._calculate_service_name_lambda(
             Resource.create({})
@@ -176,9 +185,12 @@ class TestSolarWindsApmConfigServiceNameLambda:
         self,
         mocker,
     ):
-        mocker.patch.dict(os.environ, {
-            "AWS_LAMBDA_FUNCTION_NAME": "foo-fn",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "AWS_LAMBDA_FUNCTION_NAME": "foo-fn",
+            },
+        )
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._calculate_service_name_lambda(
             Resource.create({"service.name": ""})
@@ -189,9 +201,12 @@ class TestSolarWindsApmConfigServiceNameLambda:
         self,
         mocker,
     ):
-        mocker.patch.dict(os.environ, {
-            "AWS_LAMBDA_FUNCTION_NAME": "foo-fn",
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "AWS_LAMBDA_FUNCTION_NAME": "foo-fn",
+            },
+        )
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._calculate_service_name_lambda(
             Resource.create({"service.name": "unknown_service"})

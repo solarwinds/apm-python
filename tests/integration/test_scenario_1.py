@@ -4,14 +4,15 @@
 #
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-import re
 import json
+import re
 import time
 from unittest import mock
 
 from opentelemetry import trace as trace_api
 
 from .test_base_sw_headers_attrs import TestBaseSwHeadersAndAttributes
+
 
 class TestScenario1(TestBaseSwHeadersAndAttributes):
     """
@@ -40,32 +41,28 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
             target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
             return_value=[
                 {
-                    "arguments":
-                        {
-                            "BucketCapacity":2,
-                            "BucketRate":1,
-                            "MetricsFlushInterval":60,
-                            "SignatureKey":"",
-                            "TriggerRelaxedBucketCapacity":4,
-                            "TriggerRelaxedBucketRate":3,
-                            "TriggerStrictBucketCapacity":6,
-                            "TriggerStrictBucketRate":5,
-                        },
-                    "flags":"SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
-                    "layer":"",
-                    "timestamp":timestamp,
-                    "ttl":120,
-                    "type":0,
-                    "value":1000000
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 1000000,
                 }
             ],
         ):
             # Request to instrumented app, no traceparent/tracestate
             resp = self.client.get(
-                "/test_trace/",
-                headers={
-                    "some-header": "some-value"
-                }
+                "/test_trace/", headers={"some-header": "some-value"}
             )
         resp_json = json.loads(resp.data)
 
@@ -73,19 +70,19 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         try:
             assert resp_json["incoming-headers"]["some-header"] == "some-value"
         except KeyError as e:
-            self.fail("KeyError was raised at incoming-headers check: {}".format(e))
+            self.fail(f"KeyError was raised at incoming-headers check: {e}")
 
         # Verify trace context injected into test app's outgoing postman-echo call
         # (added to Flask app's response data) includes:
         #    - traceparent with a trace_id, span_id, and trace_flags for do_sample
         #    - tracestate with same span_id and trace_flags for do_sample
         assert "traceparent" in resp_json
-        _TRACEPARENT_HEADER_FORMAT = (
+        _traceparent_header_format = (
             "^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$"
         )
-        _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
+        _traceparent_header_format_re = re.compile(_traceparent_header_format)
         traceparent_re_result = re.search(
-            _TRACEPARENT_HEADER_FORMAT_RE,
+            _traceparent_header_format_re,
             resp_json["traceparent"],
         )
         new_trace_id = traceparent_re_result.group(2)
@@ -98,7 +95,7 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         assert "tracestate" in resp_json
         # In this test we know there is only `sw` in tracestate
         # and its value will be new_span_id and new_trace_flags
-        assert resp_json["tracestate"] == "sw={}-{}".format(new_span_id, new_trace_flags)
+        assert resp_json["tracestate"] == f"sw={new_span_id}-{new_trace_flags}"
 
         # Verify x-trace response header has same trace_id
         # though it will have different span ID because of Flask
@@ -119,7 +116,9 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         # Check root span tracestate has no `sw` key
         # because no valid parent context
         expected_trace_state = trace_api.TraceState([])
-        assert span_server.context.trace_state.get("sw") == expected_trace_state.get("sw")  # None
+        assert span_server.context.trace_state.get(
+            "sw"
+        ) == expected_trace_state.get("sw")  # None
 
         # Check root span attributes
         #   :present:
@@ -127,30 +126,38 @@ class TestScenario1(TestBaseSwHeadersAndAttributes):
         #   :absent:
         #     sw.tracestate_parent_id, because cannot be set at root nor without attributes at decision
         #     SWKeys, because no xtraceoptions in otel context
-        assert all(attr_key in span_server.attributes for attr_key in self.SW_SETTINGS_KEYS)
+        assert all(
+            attr_key in span_server.attributes
+            for attr_key in self.SW_SETTINGS_KEYS
+        )
         assert span_server.attributes["BucketCapacity"] == 2
         assert span_server.attributes["BucketRate"] == 1
         assert span_server.attributes["SampleRate"] == 1000000
         assert span_server.attributes["SampleSource"] == 6
-        assert not "sw.tracestate_parent_id" in span_server.attributes
-        assert not "SWKeys" in span_server.attributes
+        assert "sw.tracestate_parent_id" not in span_server.attributes
+        assert "SWKeys" not in span_server.attributes
 
         # Check outgoing request span tracestate has no `sw` key
         # because no valid parent context
         expected_trace_state = trace_api.TraceState([])
-        assert span_client.context.trace_state.get("sw") == expected_trace_state.get("sw")  # None
+        assert span_client.context.trace_state.get(
+            "sw"
+        ) == expected_trace_state.get("sw")  # None
 
         # Check outgoing request span attributes
         #   :absent:
         #     service entry internal KVs, which are only on entry spans
         #     sw.tracestate_parent_id, because cannot be set without attributes at decision
         #     SWKeys, because no xtraceoptions in otel context
-        assert not any(attr_key in span_client.attributes for attr_key in self.SW_SETTINGS_KEYS)
-        assert not "sw.tracestate_parent_id" in span_client.attributes
-        assert not "SWKeys" in span_client.attributes
+        assert not any(
+            attr_key in span_client.attributes
+            for attr_key in self.SW_SETTINGS_KEYS
+        )
+        assert "sw.tracestate_parent_id" not in span_client.attributes
+        assert "SWKeys" not in span_client.attributes
 
         # Check span_id of the outgoing request span (client span) matches
         # the span_id portion in the outgoing tracestate header, which
         # is stored in the test app's response body (new_span_id).
         # Note: context.span_id needs a 16-byte hex conversion first.
-        assert "{:016x}".format(span_client.context.span_id) == new_span_id
+        assert f"{span_client.context.span_id:016x}" == new_span_id

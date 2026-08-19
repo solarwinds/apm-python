@@ -8,17 +8,18 @@
 import os
 import tempfile
 import uuid
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from opentelemetry.semconv.resource import ResourceAttributes
 
-from solarwinds_apm.uams import UamsResourceDetector, ATTR_UAMS_CLIENT_ID
+from solarwinds_apm.uams import ATTR_UAMS_CLIENT_ID, UamsResourceDetector
 
 UAMS_FILE_ID = str(uuid.uuid4())
 UAMS_API_ID = str(uuid.uuid4())
 
 UAMS_FILE = os.path.join(tempfile.gettempdir(), "uamsclientid")
+
 
 @pytest.fixture
 def setup_file():
@@ -28,8 +29,11 @@ def setup_file():
     yield
     os.remove(UAMS_FILE)
 
-@patch('requests.get')
-def test_detects_id_from_file_when_file_present_and_api_running(mock_get, setup_file):
+
+@patch("requests.get")
+def test_detects_id_from_file_when_file_present_and_api_running(
+    mock_get, setup_file
+):
     mock_response = MagicMock()
     mock_response.json.return_value = {
         "uamsclient_id": UAMS_API_ID,
@@ -45,7 +49,10 @@ def test_detects_id_from_file_when_file_present_and_api_running(mock_get, setup_
     # Ensure the API was not called
     mock_get.assert_not_called()
 
-def test_detects_id_from_file_when_file_present_and_api_not_running(setup_file):
+
+def test_detects_id_from_file_when_file_present_and_api_not_running(
+    setup_file,
+):
     detector = UamsResourceDetector(UAMS_FILE)
     resource = detector.detect()
     assert resource.attributes == {
@@ -53,8 +60,11 @@ def test_detects_id_from_file_when_file_present_and_api_not_running(setup_file):
         ResourceAttributes.HOST_ID: UAMS_FILE_ID,
     }
 
-@patch('requests.get')
-def test_detects_id_from_file_when_file_present_and_unrelated_running(mock_get, setup_file):
+
+@patch("requests.get")
+def test_detects_id_from_file_when_file_present_and_unrelated_running(
+    mock_get, setup_file
+):
     mock_response = MagicMock()
     mock_response.json.return_value = {
         "unrelated": "unrelated_value",
@@ -70,7 +80,8 @@ def test_detects_id_from_file_when_file_present_and_unrelated_running(mock_get, 
     # Ensure the API was not called
     mock_get.assert_not_called()
 
-@patch('requests.get')
+
+@patch("requests.get")
 def test_detects_id_from_api_when_file_not_present_and_api_running(mock_get):
     mock_response = MagicMock()
     mock_response.json.return_value = {
@@ -87,12 +98,14 @@ def test_detects_id_from_api_when_file_not_present_and_api_running(mock_get):
     # Ensure the API was called
     mock_get.assert_called_once()
 
+
 def test_detects_nothing_when_file_not_present_and_api_not_running():
     detector = UamsResourceDetector(UAMS_FILE)
     resource = detector.detect()
     assert resource.attributes == {}
 
-@patch('requests.get')
+
+@patch("requests.get")
 def test_detects_nothing_when_file_not_present_and_unrelated_running(mock_get):
     mock_response = MagicMock()
     mock_response.json.return_value = {

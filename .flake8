@@ -12,5 +12,3 @@ exclude =
   .tox
   __pycache__
   build
-  scripts
-  tests
