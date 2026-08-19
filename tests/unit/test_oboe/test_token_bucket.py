@@ -133,7 +133,7 @@ def test_concurrent_property_access():
     assert len(errors) == 0
     assert all(c == 50 for c in results["capacity"])
     assert all(r == 5 for r in results["rate"])
-    assert all(isinstance(t, (int | float)) for t in results["tokens"])
+    assert all(isinstance(t, (int, float)) for t in results["tokens"])
 
 
 def test_concurrent_update_and_consume():

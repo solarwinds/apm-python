@@ -121,6 +121,7 @@ ignore = [
     "E203",
     "B008",  # for Resource.create() test compatibility
     "UP006", # Use `set` instead of `typing.Set` type annotation, for compatibility with upstream SDK state
+    "UP038", # deprecated by Astral for performance
 ]
 
 [tool.ruff.lint.isort]
