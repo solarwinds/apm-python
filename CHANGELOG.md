@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-7.1.0...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-7.2.0...HEAD)
+
+## [7.2.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-7.2.0) - 2026-08-31
+
+### Added
+- Added `set_transaction_name` integration tests ([#832](https://github.com/solarwinds/apm-python/pull/832))
+
+### Changed
+- Upgraded to OTel 1.44.0/0.65b0 ([#825](https://github.com/solarwinds/apm-python/pull/825))
+- Updated transaction name pool management with added ServiceEntrySpanProcessor `_on_ending` ([#833](https://github.com/solarwinds/apm-python/pull/833))
+- Removed dead code former helper `calculate_otlp_transaction_name` ([#847](https://github.com/solarwinds/apm-python/pull/847))
+- Fixed Python version test support and documentation ([#848](https://github.com/solarwinds/apm-python/pull/848))
+- Linted all tests and scripts ([#849](https://github.com/solarwinds/apm-python/pull/849))
+
+### Breaking changes
+- Removed deprecated Events API/SDK and community `opentelemetry-instrumentation-elasticsearch` (use native instrumentation instead) with OTel 1.44.0/0.65b0 ([#825](https://github.com/solarwinds/apm-python/pull/825))
 
 ## [7.1.0](https://github.com/solarwinds/apm-python/releases/tag/rel-7.1.0) - 2026-07-21
 
