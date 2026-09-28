@@ -187,6 +187,9 @@ jobs:
           echo "Applying legacy musl libc symbol hotfix..."
           apk add --no-cache nodejs
           mkdir -p /__e/node24_alpine/bin
+          # Forcefully remove the incompatible binary injected by GitHub
+          rm -f /__e/node24_alpine/bin/node
+          # Establish the working fallback symlink
           ln -sf $(which node) /__e/node24_alpine/bin/node
 
       # Use latest checkout for all containers
