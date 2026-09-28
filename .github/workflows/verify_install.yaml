@@ -173,11 +173,24 @@ jobs:
           else
             yum install -y tar gzip
           fi
-      # Use checkout@v4 for Alpine versions < 3.17 that don't support Node.js 24
-      - if: contains(matrix.hostname, 'alpine3.13') || contains(matrix.hostname, 'alpine3.14') || contains(matrix.hostname, 'alpine3.15') || contains(matrix.hostname, 'alpine3.16')
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
-      # Else use latest checkout
-      - if: ${{ !(contains(matrix.hostname, 'alpine3.13') || contains(matrix.hostname, 'alpine3.14') || contains(matrix.hostname, 'alpine3.15') || contains(matrix.hostname, 'alpine3.16') || contains(matrix.hostname, 'amazon2-')) }}
+
+      # For Alpine versions < 3.17 that we support but don't
+      # support Node.js 24, use workaround
+      # https://github.com/actions/checkout/issues/1681
+      - name: Hotfix GitHub Node Injection for Legacy Alpine
+        if: |
+          contains(matrix.hostname, 'alpine3.13') || 
+          contains(matrix.hostname, 'alpine3.14') || 
+          contains(matrix.hostname, 'alpine3.15') || 
+          contains(matrix.hostname, 'alpine3.16')
+        run: |
+          echo "Applying legacy musl libc symbol hotfix..."
+          apk add --no-cache nodejs
+          mkdir -p /__e/node24_alpine/bin
+          ln -sf $(which node) /__e/node24_alpine/bin/node
+
+      # Use latest checkout for all containers
+      - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Setup and run install test
         working-directory: ./tests/docker/install
