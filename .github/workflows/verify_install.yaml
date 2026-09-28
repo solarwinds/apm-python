@@ -46,60 +46,37 @@ jobs:
     strategy:
       matrix:
         hostname:
-          - py3.10-alpine3.13
-          - py3.10-alpine3.16
-          - py3.10-alpine3.17
           - py3.10-debian10
           - py3.10-debian11
           - py3.10-ubuntu22.04
-          - py3.11-alpine3.16
-          - py3.11-alpine3.17
           - py3.11-debian10
           - py3.11-debian11
-          - py3.12-alpine3.19
-          - py3.12-alpine3.20
           - py3.12-debian11
           - py3.12-debian12
           - py3.13-amazon2023-arm64
           - py3.13-amazon2023-x86-64
           - py3.13-debian11
           - py3.13-debian12
-          - py3.13-alpine3.19
-          - py3.13-alpine3.20
+          - py3.13-alpine3.23
           - py3.14-amazon2023-arm64
           - py3.14-amazon2023-x86-64
           - py3.14-debian12
           - py3.14-debian13
-          - py3.14-alpine3.22
           - py3.14-alpine3.23
         arch:
           - x64
           - arm64
         include:
-          - hostname: py3.10-alpine3.13
-            image: python:3.10-alpine3.13
-          - hostname: py3.10-alpine3.16
-            image: python:3.10-alpine3.16
-          - hostname: py3.10-alpine3.17
-            image: python:3.10-alpine3.17
           - hostname: py3.10-debian10
             image: python:3.10-buster
           - hostname: py3.10-debian11
             image: python:3.10-bullseye
           - hostname: py3.10-ubuntu22.04
             image: ubuntu:22.04
-          - hostname: py3.11-alpine3.16
-            image: python:3.11-alpine3.16
-          - hostname: py3.11-alpine3.17
-            image: python:3.11-alpine3.17
           - hostname: py3.11-debian10
             image: python:3.11-buster
           - hostname: py3.11-debian11
             image: python:3.11-bullseye
-          - hostname: py3.12-alpine3.19
-            image: python:3.12-alpine3.19
-          - hostname: py3.12-alpine3.20
-            image: python:3.12-alpine3.20
           - hostname: py3.12-debian11
             image: python:3.12-bullseye
           - hostname: py3.12-debian12
@@ -112,10 +89,8 @@ jobs:
             image: python:3.13-bullseye
           - hostname: py3.13-debian12
             image: python:3.13-bookworm
-          - hostname: py3.13-alpine3.19
-            image: python:3.13-alpine3.19
-          - hostname: py3.13-alpine3.20
-            image: python:3.13-alpine3.20
+          - hostname: py3.13-alpine3.23
+            image: python:3.13-alpine3.23
           - hostname: py3.14-amazon2023-arm64
             image: amazon/aws-lambda-python:3.14-arm64
           - hostname: py3.14-amazon2023-x86-64
@@ -124,31 +99,11 @@ jobs:
             image: python:3.14-bookworm
           - hostname: py3.14-debian13
             image: python:3.14-trixie
-          - hostname: py3.14-alpine3.22
-            image: python:3.14-alpine3.22
           - hostname: py3.14-alpine3.23
             image: python:3.14-alpine3.23
         exclude:
-          # Note: JavaScript Actions (checkout) in Alpine only supported in x64
-          - hostname: py3.10-alpine3.13
-            arch: arm64
-          - hostname: py3.10-alpine3.16
-            arch: arm64
-          - hostname: py3.10-alpine3.17
-            arch: arm64
-          - hostname: py3.11-alpine3.16
-            arch: arm64
-          - hostname: py3.11-alpine3.17
-            arch: arm64
-          - hostname: py3.12-alpine3.19
-            arch: arm64
-          - hostname: py3.12-alpine3.20
-            arch: arm64
-          - hostname: py3.13-alpine3.19
-            arch: arm64
-          - hostname: py3.13-alpine3.20
-            arch: arm64
-          - hostname: py3.14-alpine3.22
+          # JavaScript Actions (checkout) in Alpine are supported only on x64.
+          - hostname: py3.13-alpine3.23
             arch: arm64
           - hostname: py3.14-alpine3.23
             arch: arm64
@@ -173,12 +128,7 @@ jobs:
           else
             yum install -y tar gzip
           fi
-      # Use checkout@v4 for Alpine versions < 3.17 that don't support Node.js 24
-      - if: contains(matrix.hostname, 'alpine3.13') || contains(matrix.hostname, 'alpine3.14') || contains(matrix.hostname, 'alpine3.15') || contains(matrix.hostname, 'alpine3.16')
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
-      # Else use latest checkout
-      - if: ${{ !(contains(matrix.hostname, 'alpine3.13') || contains(matrix.hostname, 'alpine3.14') || contains(matrix.hostname, 'alpine3.15') || contains(matrix.hostname, 'alpine3.16') || contains(matrix.hostname, 'amazon2-')) }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Setup and run install test
         working-directory: ./tests/docker/install
         run: APM_ROOT=$GITHUB_WORKSPACE ./_helper_run_install_tests.sh
