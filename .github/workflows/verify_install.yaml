@@ -184,13 +184,13 @@ jobs:
           contains(matrix.hostname, 'alpine3.15') || 
           contains(matrix.hostname, 'alpine3.16')
         run: |
-          echo "Applying legacy musl libc symbol hotfix..."
+          echo "Applying legacy musl libc symbol hotfix via PATH injection..."
           apk add --no-cache nodejs
-          mkdir -p /__e/node24_alpine/bin
-          # Forcefully remove the incompatible binary injected by GitHub
-          rm -f /__e/node24_alpine/bin/node
-          # Establish the working fallback symlink
-          ln -sf $(which node) /__e/node24_alpine/bin/node
+          # Create a writeable local directory for our working symlink
+          mkdir -p /opt/actions-node-fix
+          ln -sf $(which node) /opt/actions-node-fix/node
+          # Inject this path to the front of GitHub's environment map
+          echo "PATH=/opt/actions-node-fix:\$PATH" >> $GITHUB_ENV
 
       # Use latest checkout for all containers
       - name: Checkout
