@@ -48,8 +48,7 @@ def _read_from_file(uams_file: str) -> dict:
                 ATTR_UAMS_CLIENT_ID: uams_id,
                 ResourceAttributes.HOST_ID: uams_id,
             }
-    # pylint: disable=broad-except
-    except Exception as error:
+    except Exception as error:  # pylint: disable=broad-exception-caught
         logger.debug("file error", exc_info=error)
         return {}
 
@@ -76,8 +75,7 @@ def _read_from_api() -> dict:
             ATTR_UAMS_CLIENT_ID: id,
             ResourceAttributes.HOST_ID: id,
         }
-    # pylint: disable=broad-except
-    except Exception as error:
+    except Exception as error:  # pylint: disable=broad-exception-caught
         logger.debug("api response error", exc_info=error)
         return {}
 
