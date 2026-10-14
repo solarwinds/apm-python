@@ -57,10 +57,12 @@ def should_skip(relpath: str) -> bool:
 
 
 def check_file(path: str | Path) -> bool:
-    """Check for the exact two-line license header at the start of a file.
+    """Check for an exact two-line license header before the file's content.
 
     Markdown uses HTML comments; other files use hash comments. A leading
     shebang and one following blank line are allowed before the header.
+    Markdown headers may follow a leading YAML front-matter block and
+    separating blank lines. An unclosed front-matter block is rejected.
     Hash-comment headers may name SolarWinds Worldwide, LLC. or The
     OpenTelemetry Authors; both require the Apache-2.0 SPDX identifier.
 
@@ -88,6 +90,16 @@ def check_file(path: str | Path) -> bool:
         start = 1
         # Skip optional blank line after shebang
         if start < len(lines) and lines[start].strip() == "":
+            start += 1
+
+    if Path(path).suffix == ".md" and lines[0].strip() == "---":
+        for index in range(1, len(lines)):
+            if lines[index].strip() == "---":
+                start = index + 1
+                break
+        else:
+            return False
+        while start < len(lines) and not lines[start].strip():
             start += 1
 
     if len(lines) < start + 2:
@@ -143,7 +155,8 @@ def main() -> None:
                 filename.endswith((".py", ".md", ".sh", ".ps1"))
                 or filename.startswith("Dockerfile")
                 or filename == "Makefile"
-                or relpath == os.path.join("lambda", "solarwinds-apm", "wrapper")
+                or relpath
+                == os.path.join("lambda", "solarwinds-apm", "wrapper")
                 or is_selected_yaml
             ):
                 continue
@@ -163,6 +176,7 @@ def main() -> None:
             print(f"    {line.rstrip()}")
         print()
         print("  Expected first two lines for Markdown:")
+        print("  (after any leading YAML front matter and blank lines):")
         for line in EXPECTED_LINES_MD:
             print(f"    {line.rstrip()}")
         print()

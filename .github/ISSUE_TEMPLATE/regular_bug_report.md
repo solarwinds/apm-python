@@ -1,10 +1,11 @@
-<!-- Copyright SolarWinds Worldwide, LLC. -->
-<!-- SPDX-License-Identifier: Apache-2.0 -->
 ---
 name: Regular Bug Report
 about: Report a non-security bug to help us improve
 labels: bug
 ---
+
+<!-- Copyright SolarWinds Worldwide, LLC. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 
 **Environment**
 Please add as much information as you can, such as: Python version, platform, installed dependencies and their version numbers, hosting, code examples or gists, steps to reproduce, stack traces, and logs. SolarWinds project maintainers may ask for clarification or more context after submission.
