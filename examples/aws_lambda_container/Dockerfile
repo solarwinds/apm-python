@@ -1,3 +1,6 @@
+# Copyright SolarWinds Worldwide, LLC.
+# SPDX-License-Identifier: Apache-2.0
+
 # Dockerfile for AWS Lambda container image build with SolarWinds APM Python,
 # OpenTelemetry Collector extension, and function definition.
 # Download the layer first: ./download-layer.sh

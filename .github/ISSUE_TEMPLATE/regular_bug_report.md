@@ -1,3 +1,5 @@
+<!-- Copyright SolarWinds Worldwide, LLC. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 ---
 name: Regular Bug Report
 about: Report a non-security bug to help us improve

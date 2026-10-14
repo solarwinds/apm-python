@@ -1,3 +1,5 @@
+<!-- Copyright SolarWinds Worldwide, LLC. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 ---
 applyTo: "**/*.py"
 description: 'Python coding conventions and guidelines'
