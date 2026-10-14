@@ -142,6 +142,8 @@ def main() -> None:
             if not (
                 filename.endswith((".py", ".md", ".sh", ".ps1"))
                 or filename.startswith("Dockerfile")
+                or filename == "Makefile"
+                or relpath == os.path.join("lambda", "solarwinds-apm", "wrapper")
                 or is_selected_yaml
             ):
                 continue
