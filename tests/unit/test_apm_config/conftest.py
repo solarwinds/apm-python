@@ -1,3 +1,5 @@
+# Copyright SolarWinds Worldwide, LLC.
+# SPDX-License-Identifier: Apache-2.0
 """Pytest configuration and fixtures for test_apm_config tests."""
 
 # Import all fixtures to make them available to tests
