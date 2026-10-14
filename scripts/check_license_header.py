@@ -11,6 +11,10 @@ EXPECTED_LINES = (
     "# Copyright SolarWinds Worldwide, LLC.\n",
     "# SPDX-License-Identifier: Apache-2.0\n",
 )
+EXPECTED_LINES_OTEL = (
+    "# Copyright The OpenTelemetry Authors\n",
+    "# SPDX-License-Identifier: Apache-2.0\n",
+)
 EXPECTED_LINES_MD = (
     "<!-- Copyright SolarWinds Worldwide, LLC. -->\n",
     "<!-- SPDX-License-Identifier: Apache-2.0 -->\n",
@@ -57,6 +61,8 @@ def check_file(path: str | Path) -> bool:
 
     Markdown uses HTML comments; other files use hash comments. A leading
     shebang and one following blank line are allowed before the header.
+    Hash-comment headers may name SolarWinds Worldwide, LLC. or The
+    OpenTelemetry Authors; both require the Apache-2.0 SPDX identifier.
 
     Args:
         path: File to read, as a path string or pathlib.Path.
@@ -87,13 +93,12 @@ def check_file(path: str | Path) -> bool:
     if len(lines) < start + 2:
         return False
 
-    expected_lines = (
-        EXPECTED_LINES_MD if Path(path).suffix == ".md" else EXPECTED_LINES
+    expected_headers = (
+        (EXPECTED_LINES_MD,)
+        if Path(path).suffix == ".md"
+        else (EXPECTED_LINES, EXPECTED_LINES_OTEL)
     )
-    return (
-        lines[start] == expected_lines[0]
-        and lines[start + 1] == expected_lines[1]
-    )
+    return tuple(lines[start : start + 2]) in expected_headers
 
 
 def main() -> None:
@@ -150,6 +155,9 @@ def main() -> None:
         print()
         print("  Expected first two lines for non-Markdown files:")
         for line in EXPECTED_LINES:
+            print(f"    {line.rstrip()}")
+        print("  Or:")
+        for line in EXPECTED_LINES_OTEL:
             print(f"    {line.rstrip()}")
         print()
         print("  Expected first two lines for Markdown:")
