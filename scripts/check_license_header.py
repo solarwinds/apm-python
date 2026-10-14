@@ -118,7 +118,8 @@ def main() -> None:
             continue
 
         dirnames[:] = [
-            d for d in dirnames
+            d
+            for d in dirnames
             if not d.startswith(".") or d in (".github", ".claude")
         ]
 
@@ -127,7 +128,8 @@ def main() -> None:
             relpath = os.path.relpath(path, root)
             is_selected_yaml = filename.endswith((".yml", ".yaml")) and (
                 filename.startswith("docker-compose")
-                or Path(relpath).parts[:2] in (
+                or Path(relpath).parts[:2]
+                in (
                     (".github", "workflows"),
                     (".github", "actions"),
                 )
