@@ -85,8 +85,7 @@ class SolarWindsApmConfig:
     _CONFIG_FILE_DEFAULT = "./solarwinds-apm-config.json"
     _DELIMITER = "."
     _KEY_MASK = "{}...{}:{}"
-    _KEY_MASK_BAD_FORMAT = "{}...<invalid_format>"
-    _KEY_MASK_BAD_FORMAT_SHORT = "{}<invalid_format>"
+    _KEY_MASK_TOKEN_ONLY = "{}...{}"
     _SW_PREFIX = "sw_apm_"
     _logged_no_config_file = False
 
@@ -488,20 +487,18 @@ class SolarWindsApmConfig:
         try:
             if service_key.strip() == "":
                 return service_key
-            key_parts = service_key.split(":")
+            key_parts = service_key.split(":", 1)
         except AttributeError:
             return ""
-        if len(key_parts) < 2:
-            bad_format_key = key_parts[0] if key_parts else ""
-            if len(bad_format_key) < 5:
-                return self._KEY_MASK_BAD_FORMAT_SHORT.format(bad_format_key)
-            return self._KEY_MASK_BAD_FORMAT.format(
-                bad_format_key[0:4],
-            )
 
         api_token = key_parts[0]
         if len(api_token) < 9:
             return service_key
+        if len(key_parts) == 1:
+            return self._KEY_MASK_TOKEN_ONLY.format(
+                api_token[0:4],
+                api_token[-4:],
+            )
         return self._KEY_MASK.format(
             api_token[0:4],
             api_token[-4:],

@@ -336,31 +336,19 @@ class TestSolarWindsApmConfig:
         self._mock_service_key(mocker, " ")
         assert apm_config.SolarWindsApmConfig().mask_service_key() == " "
 
-    def test_mask_service_key_invalid_format_no_colon(self, mocker):
+    def test_mask_service_key_token_only_format(self, mocker):
         self._mock_service_key(mocker, "a")
-        assert (
-            apm_config.SolarWindsApmConfig().mask_service_key()
-            == "a<invalid_format>"
-        )
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "a"
         self._mock_service_key(mocker, "abcd")
-        assert (
-            apm_config.SolarWindsApmConfig().mask_service_key()
-            == "abcd<invalid_format>"
-        )
-        self._mock_service_key(mocker, "abcde")
-        assert (
-            apm_config.SolarWindsApmConfig().mask_service_key()
-            == "abcd...<invalid_format>"
-        )
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcd"
         self._mock_service_key(mocker, "abcdefgh")
         assert (
-            apm_config.SolarWindsApmConfig().mask_service_key()
-            == "abcd...<invalid_format>"
+            apm_config.SolarWindsApmConfig().mask_service_key() == "abcdefgh"
         )
         self._mock_service_key(mocker, "abcd1efgh")
         assert (
             apm_config.SolarWindsApmConfig().mask_service_key()
-            == "abcd...<invalid_format>"
+            == "abcd...efgh"
         )
         self._mock_service_key(
             mocker,
@@ -368,7 +356,7 @@ class TestSolarWindsApmConfig:
         )
         assert (
             apm_config.SolarWindsApmConfig().mask_service_key()
-            == "CyUu...<invalid_format>"
+            == "CyUu...HK6I"
         )
 
     def test_mask_service_key_less_than_9_char_token(
