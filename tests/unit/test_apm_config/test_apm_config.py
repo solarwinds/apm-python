@@ -892,10 +892,10 @@ def test_to_configuration_with_multiple_transaction_filters(apm):
     assert config.transaction_settings[1].tracing is False
 
 
-def test_to_configuration_with_invalid_service_key(apm):
-    apm._set_config_value("service_key", "invalid_format")
+def test_to_configuration_with_token_only_service_key(apm):
+    apm._set_config_value("service_key", "x")
     config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
-    assert config.headers["Authorization"] == "Bearer invalid_format"
+    assert config.headers["Authorization"] == "Bearer x"
 
 
 def test_to_configuration_with_empty_service_key(apm):

@@ -905,10 +905,12 @@ class SolarWindsApmConfig:
         Returns:
         Configuration: Configuration object for sampler initialization.
         """
-        try:
-            token = apm_config.get("service_key").split(":")[0]
-        except (AttributeError, IndexError):
-            token = ""
+        service_key = apm_config.get("service_key")
+        token = (
+            service_key.partition(":")[0]
+            if isinstance(service_key, str)
+            else ""
+        )
         filters = apm_config.get("transaction_filters")
         transaction_settings = []
         for transaction_filter in filters:
