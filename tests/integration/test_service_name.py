@@ -212,8 +212,60 @@ class TestServiceNamePrecedence4SwKeyFallback(TestBaseSwHeadersAndAttributes):
             assert isinstance(resource_attrs["host.name"], str)
 
 
-# class TestServiceNamePrecedence4TokenOnlySwKeyNotUsed(TestBaseSwHeadersAndAttributes):
-#     # TODO - use otel default "unknown_service" because service_key is only a token
+class TestServiceNamePrecedence4TokenOnlySwKeyNotUsed(
+    TestBaseSwHeadersAndAttributes
+):
+    SERVICE_KEY = "token-only-test-key"
+
+    def setUp(self):
+        self._otel_service_name = os.environ.pop("OTEL_SERVICE_NAME", None)
+        self._otel_resource_attributes = os.environ.pop(
+            "OTEL_RESOURCE_ATTRIBUTES", None
+        )
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+        if self._otel_service_name is not None:
+            os.environ["OTEL_SERVICE_NAME"] = self._otel_service_name
+        if self._otel_resource_attributes is not None:
+            os.environ["OTEL_RESOURCE_ATTRIBUTES"] = (
+                self._otel_resource_attributes
+            )
+
+    def test_token_only_key_does_not_set_service_name(self):
+        timestamp = int(time.time())
+        with mock.patch(
+            target="solarwinds_apm.oboe.json_sampler.JsonSampler._read",
+            return_value=[
+                {
+                    "arguments": {
+                        "BucketCapacity": 2,
+                        "BucketRate": 1,
+                        "MetricsFlushInterval": 60,
+                        "SignatureKey": "",
+                        "TriggerRelaxedBucketCapacity": 4,
+                        "TriggerRelaxedBucketRate": 3,
+                        "TriggerStrictBucketCapacity": 6,
+                        "TriggerStrictBucketRate": 5,
+                    },
+                    "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+                    "layer": "",
+                    "timestamp": timestamp,
+                    "ttl": 120,
+                    "type": 0,
+                    "value": 1000000,
+                }
+            ],
+        ):
+            resp = self.client.get("/test_trace/")
+            assert resp.status_code == 200
+            spans = self.memory_exporter.get_finished_spans()
+            assert len(spans) > 0
+
+            service_name = spans[0].resource.attributes["service.name"]
+            assert service_name.startswith("unknown_service")
+            assert service_name != self.SERVICE_KEY
 
 
 class TestServiceNameAzureDetectorFullEnvironment(
