@@ -144,6 +144,8 @@ class SolarWindsApmConfig:
                 self.__config["service_key"],
                 self.service_name,
             )
+        else:
+            _ = self.check_service_name_migration()
 
         # Create final APM resource with SolarWinds attributes
         # and calculated service name
@@ -442,6 +444,26 @@ class SolarWindsApmConfig:
             agent_enabled,
             otel_resource,
         )
+
+    def check_service_name_migration(self) -> bool:
+        """Warn when the OTel default service name is still in use.
+
+        Returns:
+        bool: True if the resolved name uses the OTel unknown default.
+        """
+        if not isinstance(
+            self.service_name, str
+        ) or not self.service_name.startswith("unknown_service"):
+            return False
+
+        logger.warning(
+            "APM is using the service name %s because neither "
+            "OTEL_SERVICE_NAME nor service.name in "
+            "OTEL_RESOURCE_ATTRIBUTES were set. Configure one to set "
+            "the service name.",
+            self.service_name,
+        )
+        return True
 
     def _update_service_key_name(
         self,
