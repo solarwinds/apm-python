@@ -134,22 +134,43 @@ class TestSolarWindsApmConfigServiceNameApmProto:
         )
         assert result == "foobar"
 
-    def test__calculate_service_name_apm_proto_malformed_service_key_only_token(
+    def test__calculate_service_name_apm_proto_token_only_service_key(
         self,
         mocker,
+        mock_env_vars,
     ):
         mocker.patch.dict(
             os.environ,
             {
-                "SW_APM_SERVICE_KEY": "token:",
+                "SW_APM_SERVICE_KEY": "x",
             },
         )
         test_config = apm_config.SolarWindsApmConfig()
+        assert test_config.agent_enabled
         result = test_config._calculate_service_name_apm_proto(
             True,
             Resource.create(),  # default is unknown_service
         )
         assert result == ""
+
+    def test__calculate_service_name_apm_proto_token_only_preserves_otel_name(
+        self,
+        mocker,
+        mock_env_vars,
+    ):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "x",
+            },
+        )
+        test_config = apm_config.SolarWindsApmConfig()
+        result = test_config._calculate_service_name_apm_proto(
+            True,
+            Resource.create({"service.name": "otel-service"}),
+        )
+        assert test_config.agent_enabled
+        assert result == "otel-service"
 
     def test__calculate_service_name_apm_proto_non_string_service_key(
         self,

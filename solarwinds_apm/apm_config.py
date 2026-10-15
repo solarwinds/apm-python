@@ -404,19 +404,13 @@ class SolarWindsApmConfig:
             if otel_service_name and otel_service_name.startswith(
                 "unknown_service"
             ):
-                # When agent_enabled, assume service_key exists and is formatted correctly.
-                # This is a precaution. Validate defensively instead of relying on
-                # exception handling so unexpected non-string values cannot crash
-                # the instrumented application.
-                service_key = self.__config.get("service_key", ":")
-                if isinstance(service_key, str):
-                    service_key_parts = service_key.split(":", 1)
-                    if len(service_key_parts) > 1:
-                        service_name = service_key_parts[1]
-                    else:
-                        service_name = ""
-                else:
-                    service_name = ""
+                # When agent_enabled, assume service_key exists.
+                # This only sets service_name if service_key contains a colon
+                service_key = self.__config.get("service_key")
+                if isinstance(service_key, str) and service_key:
+                    _, separator, key_service_name = service_key.partition(":")
+                    if separator:
+                        service_name = key_service_name
             else:
                 service_name = otel_service_name
         return service_name
