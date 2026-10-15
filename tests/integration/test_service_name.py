@@ -212,6 +212,10 @@ class TestServiceNamePrecedence4SwKeyFallback(TestBaseSwHeadersAndAttributes):
             assert isinstance(resource_attrs["host.name"], str)
 
 
+# class TestServiceNamePrecedence4TokenOnlySwKeyNotUsed(TestBaseSwHeadersAndAttributes):
+#     # TODO - use otel default "unknown_service" because service_key is only a token
+
+
 class TestServiceNameAzureDetectorFullEnvironment(
     TestBaseSwHeadersAndAttributes
 ):
