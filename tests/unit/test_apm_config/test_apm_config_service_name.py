@@ -84,6 +84,9 @@ class TestSolarWindsApmConfigServiceNameMigration:
             os.environ,
             {"SW_APM_SERVICE_KEY": "token-only"},
         )
+        mocker.patch.object(
+            logging.getLogger("solarwinds_apm"), "propagate", True
+        )
         caplog.set_level(
             logging.WARNING,
             logger="solarwinds_apm.apm_config",
