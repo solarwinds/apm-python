@@ -413,10 +413,8 @@ class SolarWindsApmConfig:
                 # This only sets service_name if service_key contains a colon
                 service_key = self.__config.get("service_key")
                 if isinstance(service_key, str) and service_key:
-                    _, separator, key_service_name = service_key.partition(":")
-                    service_name = (
-                        key_service_name if separator else otel_service_name
-                    )
+                    key_service_name = service_key.partition(":")[2]
+                    service_name = key_service_name or otel_service_name
             else:
                 service_name = otel_service_name
         return service_name
