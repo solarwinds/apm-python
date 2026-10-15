@@ -101,7 +101,7 @@ class TestSolarWindsApmConfig:
             },
         )
 
-    def test__init_invalid_service_key_format(self, mocker):
+    def test__init_token_only_service_key_format(self, mocker, mock_env_vars):
         mocker.patch.dict(
             os.environ,
             {
@@ -109,12 +109,14 @@ class TestSolarWindsApmConfig:
             },
         )
         test_config = apm_config.SolarWindsApmConfig()
-        assert not test_config.agent_enabled
+        assert test_config.agent_enabled
         assert test_config.service_name == ""
         assert test_config.get("service_key") == "incorrect_format"
 
-    def test__init_invalid_service_key_format_otel_service_name_and_resource_attrs(
-        self, mocker
+    def test__init_token_only_service_key_format_otel_service_name_and_resource_attrs(
+        self,
+        mocker,
+        mock_env_vars,
     ):
         mocker.patch.dict(
             os.environ,
@@ -125,8 +127,8 @@ class TestSolarWindsApmConfig:
             },
         )
         test_config = apm_config.SolarWindsApmConfig()
-        assert not test_config.agent_enabled
-        assert test_config.service_name == ""
+        assert test_config.agent_enabled
+        assert test_config.service_name == "wont_be_used"
         assert test_config.get("service_key") == "incorrect_format"
 
     def test__init_valid_service_key_format_agent_enabled_false(self, mocker):

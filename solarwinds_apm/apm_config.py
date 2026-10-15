@@ -265,15 +265,6 @@ class SolarWindsApmConfig:
         if not self.__config.get("service_key"):
             logger.error("Missing service key. Tracing disabled.")
             return False
-        # Key must be at least one char + ":" + at least one other char
-        key_parts = [
-            p
-            for p in self.__config.get("service_key", "").split(":")
-            if len(p) > 0
-        ]
-        if len(key_parts) != 2:
-            logger.error("Incorrect service key format. Tracing disabled.")
-            return False
 
         # (2) SW_APM_AGENT_ENABLED
         # At this point it might be false after reading env var or cnf file
