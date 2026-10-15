@@ -353,8 +353,9 @@ class SolarWindsApmConfig:
             return self.lambda_function_name
 
         # e.g. unknown_service:python
-        if otel_service_name == "unknown_service" or otel_service_name.startswith(
-            "unknown_service:"
+        if (
+            otel_service_name == "unknown_service"
+            or otel_service_name.startswith("unknown_service:")
         ):
             # OTEL_SERVICE_NAME was not set
             # and exec wrapper did not wrap instrumentation
