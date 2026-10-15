@@ -147,11 +147,12 @@ class TestSolarWindsApmConfigServiceNameApmProto:
         )
         test_config = apm_config.SolarWindsApmConfig()
         assert test_config.agent_enabled
+        otel_resource = Resource.create()  # default is unknown_service
         result = test_config._calculate_service_name_apm_proto(
             True,
-            Resource.create(),  # default is unknown_service
+            otel_resource,
         )
-        assert result == ""
+        assert result == otel_resource.attributes["service.name"]
 
     def test__calculate_service_name_apm_proto_token_only_preserves_otel_name(
         self,

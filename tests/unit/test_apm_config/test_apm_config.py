@@ -110,7 +110,10 @@ class TestSolarWindsApmConfig:
         )
         test_config = apm_config.SolarWindsApmConfig()
         assert test_config.agent_enabled
-        assert test_config.service_name == ""
+        assert (
+            test_config.service_name
+            == Resource.create().attributes["service.name"]
+        )
         assert test_config.get("service_key") == "incorrect_format"
 
     def test__init_token_only_service_key_format_otel_service_name_and_resource_attrs(

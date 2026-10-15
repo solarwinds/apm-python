@@ -8,6 +8,7 @@ import logging
 import os
 
 import pytest
+from opentelemetry.sdk.resources import Resource
 
 from solarwinds_apm import apm_config
 
@@ -160,7 +161,10 @@ class TestSolarWindsApmConfigAgentEnabled:
         )
         resulting_config = apm_config.SolarWindsApmConfig()
         assert resulting_config._calculate_agent_enabled()
-        assert resulting_config.service_name == ""
+        assert (
+            resulting_config.service_name
+            == Resource.create().attributes["service.name"]
+        )
 
     def test_calculate_agent_enabled_service_key_ok(
         self,
