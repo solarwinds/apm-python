@@ -114,10 +114,10 @@ class SolarWindsDistro(BaseDistro):
 
     def _get_token_from_service_key(self) -> str | None:
         """
-        Extract token portion from service_key environment variable.
+        Extract the token from a legacy or token-only service key.
 
         Returns:
-        str | None: The API token if service_key is valid, None otherwise.
+        str | None: The API token if service_key is present, None otherwise.
         """
         service_key = environ.get("SW_APM_SERVICE_KEY")
         if not service_key:
@@ -125,16 +125,11 @@ class SolarWindsDistro(BaseDistro):
             if not self._is_lambda:
                 logger.debug("Missing service key")
             return None
-        # Key must be at least one char + ":" + at least one other char
         try:
-            key_parts = [p for p in service_key.split(":") if len(p) > 0]
+            return service_key.partition(":")[0]
         except AttributeError:
             logger.debug("Invalid service key format")
             return None
-        if len(key_parts) != 2:
-            logger.debug("Incorrect service key format")
-            return None
-        return key_parts[0]
 
     def _configure(self, **kwargs: dict) -> None:
         """
