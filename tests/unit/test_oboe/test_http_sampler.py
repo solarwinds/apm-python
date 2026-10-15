@@ -124,26 +124,29 @@ def test_valid_token_only_service_key_samples_created_spans(
         ),
         initial=None,
     )
-    memory_exporter = InMemorySpanExporter()
-    tracer_provider = TracerProvider(sampler=sampler)
-    tracer_provider.add_span_processor(
-        span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
-    )
-    tracer = trace.get_tracer("test", tracer_provider=tracer_provider)
-    sampler.wait_until_ready(1)
-    with tracer.start_as_current_span("test") as span:
-        assert span.is_recording()
-    spans = memory_exporter.get_finished_spans()
-    assert len(spans) == 1
-    assert "SampleRate" in spans[0].attributes
-    assert "SampleSource" in spans[0].attributes
-    assert "BucketCapacity" in spans[0].attributes
-    assert "BucketRate" in spans[0].attributes
-    mock_get.assert_any_call(
-        f"https://apm.collector.na-01.cloud.solarwinds.com/v1/settings/{service_name}/{socket.gethostname()}",
-        headers={"Authorization": "Bearer token-only-test-key"},
-        timeout=10,
-    )
+    try:
+        memory_exporter = InMemorySpanExporter()
+        tracer_provider = TracerProvider(sampler=sampler)
+        tracer_provider.add_span_processor(
+            span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+        )
+        tracer = trace.get_tracer("test", tracer_provider=tracer_provider)
+        sampler.wait_until_ready(1)
+        with tracer.start_as_current_span("test") as span:
+            assert span.is_recording()
+        spans = memory_exporter.get_finished_spans()
+        assert len(spans) == 1
+        assert "SampleRate" in spans[0].attributes
+        assert "SampleSource" in spans[0].attributes
+        assert "BucketCapacity" in spans[0].attributes
+        assert "BucketRate" in spans[0].attributes
+        mock_get.assert_any_call(
+            f"https://apm.collector.na-01.cloud.solarwinds.com/v1/settings/{service_name}/{socket.gethostname()}",
+            headers={"Authorization": "Bearer token-only-test-key"},
+            timeout=10,
+        )
+    finally:
+        sampler.shutdown()
 
 
 def test_invalid_service_key_does_not_sample_created_spans():
