@@ -128,16 +128,23 @@ class SolarWindsApmConfig:
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
 
+        self.legacy_service_key = False
+        if not self.is_lambda:
+            self.legacy_service_key = calculate_service_key_format_deprecated(
+                self.__config["service_key"]
+            )
+
         self.agent_enabled = self._calculate_agent_enabled()
         self.service_name = self._calculate_service_name(
             self.agent_enabled,
             otel_resource,
         )
-        self.__config["service_key"] = self._update_service_key_name(
-            self.agent_enabled,
-            self.__config["service_key"],
-            self.service_name,
-        )
+        if self.legacy_service_key:
+            self.__config["service_key"] = self._update_service_key_name(
+                self.agent_enabled,
+                self.__config["service_key"],
+                self.service_name,
+            )
 
         # Create final APM resource with SolarWinds attributes
         # and calculated service name
@@ -380,12 +387,13 @@ class SolarWindsApmConfig:
         # 1. OTEL_SERVICE_NAME
         # 2. service.name in OTEL_RESOURCE_ATTRIBUTES
         # 3. service.name in OTel Resource set by any Resource Detectors
-        # 4. service name component of SW_APM_SERVICE_KEY
+        # 4. (deprecated) service name component of SW_APM_SERVICE_KEY
         # 5. empty string
         #
         # Note: 1-4 require that SW_APM_SERVICE_KEY exists and is in the correct
-        # format of "<api_token>:<service_name>". Otherwise agent_enabled: False
-        # and service.name is empty string.
+        # format of "<api_token>". The legacy format of "<api_token>:<service_name>"
+        # is deprecated and will no longer be supported in a future release.
+        # Otherwise, agent_enabled: False and service.name is empty string.
         #
         # The passed in OTel Resource likely has a `service.name` already calculated
         # by merging OTEL_SERVICE_NAME / OTEL_RESOURCE_ATTRIBUTES with defaults.
@@ -936,3 +944,25 @@ class SolarWindsApmConfig:
             transaction_name=apm_config.get("transaction_name"),
             transaction_settings=transaction_settings,
         )
+
+
+def calculate_service_key_format_deprecated(
+    service_key: str,
+) -> bool:
+    """Check whether a service key uses the deprecated token-and-name format.
+
+    Parameters:
+    service_key (str): The configured service key.
+
+    Returns:
+    bool: True if the service key uses the deprecated format, False otherwise.
+    """
+    if service_key and ":" in service_key:
+        logger.warning(
+            "The service name component of SW_APM_SERVICE_KEY is deprecated "
+            "and will be removed in a future release. Set the service name "
+            "using OTEL_SERVICE_NAME or OTEL_RESOURCE_ATTRIBUTES instead."
+        )
+        return True
+
+    return False
