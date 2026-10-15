@@ -29,9 +29,7 @@ def test_legacy_service_key_is_deprecated_and_logs_warning(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Legacy token-and-name keys return true and log a warning."""
-    monkeypatch.setattr(
-        logging.getLogger("solarwinds_apm"), "propagate", True
-    )
+    monkeypatch.setattr(logging.getLogger("solarwinds_apm"), "propagate", True)
     caplog.set_level(logging.WARNING, logger="solarwinds_apm.apm_config")
 
     assert calculate_service_key_format_deprecated("token:service") is True
