@@ -1,3 +1,6 @@
+# Copyright SolarWinds Worldwide, LLC.
+# SPDX-License-Identifier: Apache-2.0
+
 # To build one auto-instrumentation image for Python, please:
 # - Ensure the packages are installed in the `/autoinstrumentation,{-musl}` directory. This is required as when instrumenting the pod,
 #   one init container will be created to copy all the content in `/autoinstrumentation{,-musl}` directory to your app's container. Then
