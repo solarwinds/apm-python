@@ -101,7 +101,7 @@ class TestSolarWindsApmConfig:
             },
         )
 
-    def test__init_invalid_service_key_format(self, mocker):
+    def test__init_token_only_service_key_format(self, mocker, mock_env_vars):
         mocker.patch.dict(
             os.environ,
             {
@@ -109,12 +109,17 @@ class TestSolarWindsApmConfig:
             },
         )
         test_config = apm_config.SolarWindsApmConfig()
-        assert not test_config.agent_enabled
-        assert test_config.service_name == ""
+        assert test_config.agent_enabled
+        assert (
+            test_config.service_name
+            == Resource.create().attributes["service.name"]
+        )
         assert test_config.get("service_key") == "incorrect_format"
 
-    def test__init_invalid_service_key_format_otel_service_name_and_resource_attrs(
-        self, mocker
+    def test__init_token_only_service_key_format_otel_service_name_and_resource_attrs(
+        self,
+        mocker,
+        mock_env_vars,
     ):
         mocker.patch.dict(
             os.environ,
@@ -125,8 +130,8 @@ class TestSolarWindsApmConfig:
             },
         )
         test_config = apm_config.SolarWindsApmConfig()
-        assert not test_config.agent_enabled
-        assert test_config.service_name == ""
+        assert test_config.agent_enabled
+        assert test_config.service_name == "wont_be_used"
         assert test_config.get("service_key") == "incorrect_format"
 
     def test__init_valid_service_key_format_agent_enabled_false(self, mocker):
@@ -334,31 +339,19 @@ class TestSolarWindsApmConfig:
         self._mock_service_key(mocker, " ")
         assert apm_config.SolarWindsApmConfig().mask_service_key() == " "
 
-    def test_mask_service_key_invalid_format_no_colon(self, mocker):
+    def test_mask_service_key_token_only_format(self, mocker):
         self._mock_service_key(mocker, "a")
-        assert (
-            apm_config.SolarWindsApmConfig().mask_service_key()
-            == "a<invalid_format>"
-        )
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "a"
         self._mock_service_key(mocker, "abcd")
-        assert (
-            apm_config.SolarWindsApmConfig().mask_service_key()
-            == "abcd<invalid_format>"
-        )
-        self._mock_service_key(mocker, "abcde")
-        assert (
-            apm_config.SolarWindsApmConfig().mask_service_key()
-            == "abcd...<invalid_format>"
-        )
+        assert apm_config.SolarWindsApmConfig().mask_service_key() == "abcd"
         self._mock_service_key(mocker, "abcdefgh")
         assert (
-            apm_config.SolarWindsApmConfig().mask_service_key()
-            == "abcd...<invalid_format>"
+            apm_config.SolarWindsApmConfig().mask_service_key() == "abcdefgh"
         )
         self._mock_service_key(mocker, "abcd1efgh")
         assert (
             apm_config.SolarWindsApmConfig().mask_service_key()
-            == "abcd...<invalid_format>"
+            == "abcd...efgh"
         )
         self._mock_service_key(
             mocker,
@@ -366,7 +359,7 @@ class TestSolarWindsApmConfig:
         )
         assert (
             apm_config.SolarWindsApmConfig().mask_service_key()
-            == "CyUu...<invalid_format>"
+            == "CyUu...HK6I"
         )
 
     def test_mask_service_key_less_than_9_char_token(
@@ -890,10 +883,10 @@ def test_to_configuration_with_multiple_transaction_filters(apm):
     assert config.transaction_settings[1].tracing is False
 
 
-def test_to_configuration_with_invalid_service_key(apm):
-    apm._set_config_value("service_key", "invalid_format")
+def test_to_configuration_with_token_only_service_key(apm):
+    apm._set_config_value("service_key", "x")
     config = apm_config.SolarWindsApmConfig.to_configuration(apm_config=apm)
-    assert config.headers["Authorization"] == "Bearer invalid_format"
+    assert config.headers["Authorization"] == "Bearer x"
 
 
 def test_to_configuration_with_empty_service_key(apm):

@@ -6,12 +6,14 @@
 import json
 import os
 import socket
+import time
 from unittest.mock import MagicMock, patch
 
 import pytest
 from opentelemetry import trace
 from opentelemetry.sdk.metrics import AlwaysOnExemplarFilter, MeterProvider
 from opentelemetry.sdk.metrics._internal.export import InMemoryMetricReader
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
@@ -68,6 +70,83 @@ def test_valid_service_key_samples_created_spans():
             assert "SampleSource" in spans[0].attributes
             assert "BucketCapacity" in spans[0].attributes
             assert "BucketRate" in spans[0].attributes
+
+
+@patch("requests.get")
+def test_valid_token_only_service_key_samples_created_spans(
+    mock_get,
+    mocker,
+):
+    mocker.patch.dict(
+        os.environ,
+        {
+            "SW_APM_SERVICE_KEY": "token-only-test-key",
+            "OTEL_SERVICE_NAME": "token-only-service",
+        },
+        clear=True,
+    )
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "value": 1000000,
+        "flags": "SAMPLE_START,SAMPLE_THROUGH_ALWAYS,SAMPLE_BUCKET_ENABLED,TRIGGER_TRACE",
+        "timestamp": int(time.time()),
+        "ttl": 120,
+        "arguments": {
+            "BucketCapacity": 2,
+            "BucketRate": 1,
+            "TriggerRelaxedBucketCapacity": 20,
+            "TriggerRelaxedBucketRate": 1,
+            "TriggerStrictBucketCapacity": 6,
+            "TriggerStrictBucketRate": 0.1,
+            "SignatureKey": "signature",
+        },
+    }
+    mock_get.return_value = mock_response
+
+    service_key = os.environ["SW_APM_SERVICE_KEY"]
+    service_name = Resource.create().attributes["service.name"]
+    meter_provider = MeterProvider(
+        metric_readers=[InMemoryMetricReader()],
+        exemplar_filter=AlwaysOnExemplarFilter(),
+    )
+    sampler = HttpSampler(
+        meter_provider=meter_provider,
+        config=Configuration(
+            collector="https://apm.collector.na-01.cloud.solarwinds.com",
+            service=service_name,
+            headers={"Authorization": f"Bearer {service_key}"},
+            enabled=True,
+            trigger_trace_enabled=True,
+            tracing_mode=None,
+            transaction_settings=[],
+            transaction_name=None,
+        ),
+        initial=None,
+    )
+    try:
+        memory_exporter = InMemorySpanExporter()
+        tracer_provider = TracerProvider(sampler=sampler)
+        tracer_provider.add_span_processor(
+            span_processor=SimpleSpanProcessor(span_exporter=memory_exporter)
+        )
+        tracer = trace.get_tracer("test", tracer_provider=tracer_provider)
+        sampler.wait_until_ready(1)
+        with tracer.start_as_current_span("test") as span:
+            assert span.is_recording()
+        spans = memory_exporter.get_finished_spans()
+        assert len(spans) == 1
+        assert "SampleRate" in spans[0].attributes
+        assert "SampleSource" in spans[0].attributes
+        assert "BucketCapacity" in spans[0].attributes
+        assert "BucketRate" in spans[0].attributes
+        mock_get.assert_any_call(
+            f"https://apm.collector.na-01.cloud.solarwinds.com/v1/settings/{service_name}/{socket.gethostname()}",
+            headers={"Authorization": "Bearer token-only-test-key"},
+            timeout=10,
+        )
+    finally:
+        sampler.shutdown()
 
 
 def test_invalid_service_key_does_not_sample_created_spans():

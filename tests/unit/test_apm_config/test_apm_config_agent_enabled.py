@@ -8,6 +8,7 @@ import logging
 import os
 
 import pytest
+from opentelemetry.sdk.resources import Resource
 
 from solarwinds_apm import apm_config
 
@@ -135,11 +136,17 @@ class TestSolarWindsApmConfigAgentEnabled:
         if old_service_key:
             os.environ["SW_APM_SERVICE_KEY"] = old_service_key
 
-    def test_calculate_agent_enabled_service_key_bad_format(self, mocker):
+    @pytest.mark.parametrize("service_key", ["x", "invalidkey"])
+    def test_calculate_agent_enabled_token_only_service_key(
+        self,
+        mocker,
+        mock_env_vars,
+        service_key,
+    ):
         mocker.patch.dict(
             os.environ,
             {
-                "SW_APM_SERVICE_KEY": "invalidkey",
+                "SW_APM_SERVICE_KEY": service_key,
                 "SW_APM_AGENT_ENABLED": "true",
             },
         )
@@ -153,8 +160,11 @@ class TestSolarWindsApmConfigAgentEnabled:
             }
         )
         resulting_config = apm_config.SolarWindsApmConfig()
-        assert not resulting_config._calculate_agent_enabled()
-        assert resulting_config.service_name == ""
+        assert resulting_config._calculate_agent_enabled()
+        assert (
+            resulting_config.service_name
+            == Resource.create().attributes["service.name"]
+        )
 
     def test_calculate_agent_enabled_service_key_ok(
         self,

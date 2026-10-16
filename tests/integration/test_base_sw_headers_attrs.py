@@ -49,6 +49,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
         "SampleRate",
         "SampleSource",
     ]
+    SERVICE_KEY = "foo:bar"
 
     @staticmethod
     def assert_valid_trace_flags(trace_flags: str):
@@ -105,7 +106,7 @@ class TestBaseSwHeadersAndAttributes(TestBase):
                     argument_otel_environment_variable[argument] = attribute
 
         # Set APM service key - not valid, but we mock anyway
-        os.environ["SW_APM_SERVICE_KEY"] = "foo:bar"
+        os.environ["SW_APM_SERVICE_KEY"] = self.SERVICE_KEY
 
         # Load Distro
         SolarWindsDistro().configure()
