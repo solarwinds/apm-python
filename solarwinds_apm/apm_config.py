@@ -355,7 +355,8 @@ class SolarWindsApmConfig:
         if not otel_service_name:
             return self.lambda_function_name
 
-        if otel_service_name == "unknown_service":
+        # e.g. OTel spec and SDK set as unknown_service:<executable_name> or unknown_service
+        if otel_service_name.startswith("unknown_service"):
             # OTEL_SERVICE_NAME was not set
             # and exec wrapper did not wrap instrumentation
             return self.lambda_function_name
