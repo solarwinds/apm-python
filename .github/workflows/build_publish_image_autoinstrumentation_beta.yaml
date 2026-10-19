@@ -1,8 +1,5 @@
-# © 2025 SolarWinds Worldwide, LLC. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+# Copyright SolarWinds Worldwide, LLC.
+# SPDX-License-Identifier: Apache-2.0
 
 name: "Publish Beta APM Python Auto-Instrumentation"
 
@@ -93,7 +90,7 @@ jobs:
           sarif-file: sarif.output.json
 
       - name: Upload SARIF result
-        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d
         with:
           sarif_file: sarif.output.json
 

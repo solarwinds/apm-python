@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# © 2026 SolarWinds Worldwide, LLC. All rights reserved.
+# Copyright SolarWinds Worldwide, LLC.
+# SPDX-License-Identifier: Apache-2.0
 #
 # Helper script to download APM Python Lambda layer from AWS.
 # Requires AWS CLI and valid AWS_PROFILE for login.

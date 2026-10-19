@@ -1,3 +1,6 @@
+# Copyright SolarWinds Worldwide, LLC.
+# SPDX-License-Identifier: Apache-2.0
+
 from solarwinds_apm.oboe.transaction_name_calculator import (
     resolve_transaction_name,
 )

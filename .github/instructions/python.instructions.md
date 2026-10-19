@@ -3,6 +3,9 @@ applyTo: "**/*.py"
 description: 'Python coding conventions and guidelines'
 ---
 
+<!-- Copyright SolarWinds Worldwide, LLC. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 ## Python Coding Conventions
 
 ### Codebase Patterns to Follow
