@@ -1,6 +1,7 @@
 # Copyright SolarWinds Worldwide, LLC.
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
 import os
 
 from opentelemetry.sdk.resources import Resource
@@ -72,6 +73,55 @@ class TestSolarWindsApmConfigServiceName:
         mock_calc_lambda.assert_not_called()
 
 
+class TestSolarWindsApmConfigServiceNameMigration:
+    def test_unknown_default_service_name_warns(
+        self, mocker, caplog, mock_env_vars
+    ):
+        mocker.patch.dict(
+            os.environ,
+            {"SW_APM_SERVICE_KEY": "token-only"},
+        )
+        mocker.patch.object(
+            logging.getLogger("solarwinds_apm"), "propagate", True
+        )
+        caplog.set_level(
+            logging.WARNING,
+            logger="solarwinds_apm.apm_config",
+        )
+        test_config = apm_config.SolarWindsApmConfig(
+            Resource({"service.name": "unknown_service:python"})
+        )
+
+        assert test_config.check_service_name_migration() is True
+        assert any(
+            "APM is using the service name unknown_service:python"
+            in record.message
+            for record in caplog.records
+        )
+
+    def test_configured_service_name_does_not_warn(
+        self,
+        mocker,
+        caplog,
+        mock_env_vars,
+    ):
+        mocker.patch.dict(
+            os.environ,
+            {"SW_APM_SERVICE_KEY": "token-only"},
+        )
+        caplog.set_level(
+            logging.WARNING,
+            logger="solarwinds_apm.apm_config",
+        )
+        test_config = apm_config.SolarWindsApmConfig(
+            Resource({"service.name": "configured-service"})
+        )
+        caplog.clear()
+
+        assert test_config.check_service_name_migration() is False
+        assert not caplog.records
+
+
 class TestSolarWindsApmConfigServiceNameApmProto:
     def test__calculate_service_name_apm_proto_agent_disabled(self):
         test_config = apm_config.SolarWindsApmConfig()
@@ -131,22 +181,44 @@ class TestSolarWindsApmConfigServiceNameApmProto:
         )
         assert result == "foobar"
 
-    def test__calculate_service_name_apm_proto_malformed_service_key_only_token(
+    def test__calculate_service_name_apm_proto_token_only_service_key(
         self,
         mocker,
+        mock_env_vars,
     ):
         mocker.patch.dict(
             os.environ,
             {
-                "SW_APM_SERVICE_KEY": "token:",
+                "SW_APM_SERVICE_KEY": "x",
+            },
+        )
+        test_config = apm_config.SolarWindsApmConfig()
+        assert test_config.agent_enabled
+        otel_resource = Resource.create()  # default is unknown_service
+        result = test_config._calculate_service_name_apm_proto(
+            True,
+            otel_resource,
+        )
+        assert result == otel_resource.attributes["service.name"]
+
+    def test__calculate_service_name_apm_proto_token_only_preserves_otel_name(
+        self,
+        mocker,
+        mock_env_vars,
+    ):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "x",
             },
         )
         test_config = apm_config.SolarWindsApmConfig()
         result = test_config._calculate_service_name_apm_proto(
             True,
-            Resource.create(),  # default is unknown_service
+            Resource.create({"service.name": "otel-service"}),
         )
-        assert result == ""
+        assert test_config.agent_enabled
+        assert result == "otel-service"
 
     def test__calculate_service_name_apm_proto_non_string_service_key(
         self,

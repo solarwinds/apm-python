@@ -82,8 +82,7 @@ class SolarWindsApmConfig:
     _CONFIG_FILE_DEFAULT = "./solarwinds-apm-config.json"
     _DELIMITER = "."
     _KEY_MASK = "{}...{}:{}"
-    _KEY_MASK_BAD_FORMAT = "{}...<invalid_format>"
-    _KEY_MASK_BAD_FORMAT_SHORT = "{}<invalid_format>"
+    _KEY_MASK_TOKEN_ONLY = "{}...{}"
     _SW_PREFIX = "sw_apm_"
     _logged_no_config_file = False
 
@@ -125,16 +124,25 @@ class SolarWindsApmConfig:
         # TODO Implement in-code config with kwargs after alpha
         # self.update_with_kwargs(kwargs)
 
+        self.legacy_service_key = False
+        if not self.is_lambda:
+            self.legacy_service_key = calculate_service_key_format_deprecated(
+                self.__config["service_key"]
+            )
+
         self.agent_enabled = self._calculate_agent_enabled()
         self.service_name = self._calculate_service_name(
             self.agent_enabled,
             otel_resource,
         )
-        self.__config["service_key"] = self._update_service_key_name(
-            self.agent_enabled,
-            self.__config["service_key"],
-            self.service_name,
-        )
+        if self.legacy_service_key:
+            self.__config["service_key"] = self._update_service_key_name(
+                self.agent_enabled,
+                self.__config["service_key"],
+                self.service_name,
+            )
+        else:
+            _ = self.check_service_name_migration()
 
         # Create final APM resource with SolarWinds attributes
         # and calculated service name
@@ -255,15 +263,6 @@ class SolarWindsApmConfig:
         if not self.__config.get("service_key"):
             logger.error("Missing service key. Tracing disabled.")
             return False
-        # Key must be at least one char + ":" + at least one other char
-        key_parts = [
-            p
-            for p in self.__config.get("service_key", "").split(":")
-            if len(p) > 0
-        ]
-        if len(key_parts) != 2:
-            logger.error("Incorrect service key format. Tracing disabled.")
-            return False
 
         # (2) SW_APM_AGENT_ENABLED
         # At this point it might be false after reading env var or cnf file
@@ -381,12 +380,13 @@ class SolarWindsApmConfig:
         # 1. OTEL_SERVICE_NAME
         # 2. service.name in OTEL_RESOURCE_ATTRIBUTES
         # 3. service.name in OTel Resource set by any Resource Detectors
-        # 4. service name component of SW_APM_SERVICE_KEY
+        # 4. (deprecated) service name component of SW_APM_SERVICE_KEY
         # 5. empty string
         #
         # Note: 1-4 require that SW_APM_SERVICE_KEY exists and is in the correct
-        # format of "<api_token>:<service_name>". Otherwise agent_enabled: False
-        # and service.name is empty string.
+        # format of "<api_token>". The legacy format of "<api_token>:<service_name>"
+        # is deprecated and will no longer be supported in a future release.
+        # Otherwise, agent_enabled: False and service.name is empty string.
         #
         # The passed in OTel Resource likely has a `service.name` already calculated
         # by merging OTEL_SERVICE_NAME / OTEL_RESOURCE_ATTRIBUTES with defaults.
@@ -406,19 +406,12 @@ class SolarWindsApmConfig:
             if otel_service_name and otel_service_name.startswith(
                 "unknown_service"
             ):
-                # When agent_enabled, assume service_key exists and is formatted correctly.
-                # This is a precaution. Validate defensively instead of relying on
-                # exception handling so unexpected non-string values cannot crash
-                # the instrumented application.
-                service_key = self.__config.get("service_key", ":")
-                if isinstance(service_key, str):
-                    service_key_parts = service_key.split(":", 1)
-                    if len(service_key_parts) > 1:
-                        service_name = service_key_parts[1]
-                    else:
-                        service_name = ""
-                else:
-                    service_name = ""
+                # When agent_enabled, assume service_key exists.
+                # This only sets service_name if service_key contains a colon
+                service_key = self.__config.get("service_key")
+                if isinstance(service_key, str) and service_key:
+                    key_service_name = service_key.partition(":")[2]
+                    service_name = key_service_name or otel_service_name
             else:
                 service_name = otel_service_name
         return service_name
@@ -446,6 +439,26 @@ class SolarWindsApmConfig:
             agent_enabled,
             otel_resource,
         )
+
+    def check_service_name_migration(self) -> bool:
+        """Warn when the OTel default service name is still in use.
+
+        Returns:
+        bool: True if the resolved name uses the OTel unknown default.
+        """
+        if not isinstance(
+            self.service_name, str
+        ) or not self.service_name.startswith("unknown_service"):
+            return False
+
+        logger.warning(
+            "APM is using the service name %s because neither "
+            "OTEL_SERVICE_NAME nor service.name in "
+            "OTEL_RESOURCE_ATTRIBUTES were set. Configure one to set "
+            "the service name.",
+            self.service_name,
+        )
+        return True
 
     def _update_service_key_name(
         self,
@@ -496,20 +509,18 @@ class SolarWindsApmConfig:
         try:
             if service_key.strip() == "":
                 return service_key
-            key_parts = service_key.split(":")
+            key_parts = service_key.split(":", 1)
         except AttributeError:
             return ""
-        if len(key_parts) < 2:
-            bad_format_key = key_parts[0] if key_parts else ""
-            if len(bad_format_key) < 5:
-                return self._KEY_MASK_BAD_FORMAT_SHORT.format(bad_format_key)
-            return self._KEY_MASK_BAD_FORMAT.format(
-                bad_format_key[0:4],
-            )
 
         api_token = key_parts[0]
         if len(api_token) < 9:
             return service_key
+        if len(key_parts) == 1:
+            return self._KEY_MASK_TOKEN_ONLY.format(
+                api_token[0:4],
+                api_token[-4:],
+            )
         return self._KEY_MASK.format(
             api_token[0:4],
             api_token[-4:],
@@ -913,10 +924,12 @@ class SolarWindsApmConfig:
         Returns:
         Configuration: Configuration object for sampler initialization.
         """
-        try:
-            token = apm_config.get("service_key").split(":")[0]
-        except (AttributeError, IndexError):
-            token = ""
+        service_key = apm_config.get("service_key")
+        token = (
+            service_key.partition(":")[0]
+            if isinstance(service_key, str)
+            else ""
+        )
         filters = apm_config.get("transaction_filters")
         transaction_settings = []
         for transaction_filter in filters:
@@ -937,3 +950,25 @@ class SolarWindsApmConfig:
             transaction_name=apm_config.get("transaction_name"),
             transaction_settings=transaction_settings,
         )
+
+
+def calculate_service_key_format_deprecated(
+    service_key: str,
+) -> bool:
+    """Check whether a service key uses the deprecated token-and-name format.
+
+    Parameters:
+    service_key (str): The configured service key.
+
+    Returns:
+    bool: True if the service key uses the deprecated format, False otherwise.
+    """
+    if service_key and ":" in service_key:
+        logger.warning(
+            "The service name component of SW_APM_SERVICE_KEY is deprecated "
+            "and will be removed in a future release. Set the service name "
+            "using OTEL_SERVICE_NAME or OTEL_RESOURCE_ATTRIBUTES instead."
+        )
+        return True
+
+    return False

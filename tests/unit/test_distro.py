@@ -129,11 +129,9 @@ class TestDistro:
         os.environ.pop("SW_APM_SERVICE_KEY", None)
         assert distro.SolarWindsDistro()._get_token_from_service_key() is None
 
-    def test__get_token_from_service_key_bad_format(self, mocker):
-        mocker.patch.dict(
-            os.environ, {"SW_APM_SERVICE_KEY": "missing-service-name"}
-        )
-        assert distro.SolarWindsDistro()._get_token_from_service_key() is None
+    def test__get_token_from_service_key_token_only(self, mocker):
+        mocker.patch.dict(os.environ, {"SW_APM_SERVICE_KEY": "x"})
+        assert distro.SolarWindsDistro()._get_token_from_service_key() == "x"
 
     def test__get_token_from_service_key_ok(self, mocker):
         mocker.patch.dict(
@@ -640,6 +638,36 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
+        assert (
+            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
+            == "authorization=Bearer%20foo-token"
+        )
+
+    def test_configure_env_headers_legacy_service_key(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar-name",
+                OTEL_EXPORTER_OTLP_ENDPOINT: "https://otel.collector.na-01.cloud.solarwinds.com:443",
+            },
+            clear=True,
+        )
+        distro.SolarWindsDistro()._configure()
+        assert (
+            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
+            == "authorization=Bearer%20foo-token"
+        )
+
+    def test_configure_env_headers_token_only_service_key(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token",
+                OTEL_EXPORTER_OTLP_ENDPOINT: "https://otel.collector.na-01.cloud.solarwinds.com:443",
+            },
+            clear=True,
+        )
+        distro.SolarWindsDistro()._configure()
         assert (
             os.environ[OTEL_EXPORTER_OTLP_HEADERS]
             == "authorization=Bearer%20foo-token"
