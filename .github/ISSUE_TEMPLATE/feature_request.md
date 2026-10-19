@@ -4,6 +4,9 @@ about: Suggest an idea for this project
 labels: feature-request
 ---
 
+<!-- Copyright SolarWinds Worldwide, LLC. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 **Current feature**
 Describe the current behavior or issue, with steps for how to reproduce and any applicable code sample.
 

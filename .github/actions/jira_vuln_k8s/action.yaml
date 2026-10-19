@@ -1,3 +1,6 @@
+# Copyright SolarWinds Worldwide, LLC.
+# SPDX-License-Identifier: Apache-2.0
+
 name: 'Create JIRA Tickets for Docker Scout CVEs'
 description: 'Parses Docker Scout SARIF output and creates JIRA tickets for critical/high vulnerabilities'
 inputs:

@@ -1,3 +1,6 @@
+# Copyright SolarWinds Worldwide, LLC.
+# SPDX-License-Identifier: Apache-2.0
+
 """Transaction name resolution utilities for URL path processing."""
 
 from __future__ import annotations

@@ -1,3 +1,6 @@
+# Copyright SolarWinds Worldwide, LLC.
+# SPDX-License-Identifier: Apache-2.0
+
 """Transaction name pool with TTL-based expiration using a min-heap."""
 
 import heapq
