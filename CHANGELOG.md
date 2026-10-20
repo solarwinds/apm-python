@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Upgraded to `opentelemetry-resource-detector-azure` 0.2.0 ([#856](https://github.com/solarwinds/apm-python/pull/856))
 - Renamed pylint disable of broad except ([#886](https://github.com/solarwinds/apm-python/pull/886))
-- Upgraded to OTel 1.45.1/0.66b0 ([#884](https://github.com/solarwinds/apm-python/pull/884), [#895](https://github.com/solarwinds/apm-python/pull/895))
+- Upgraded to OTel 1.45.1/0.66b1 ([#884](https://github.com/solarwinds/apm-python/pull/884), [#895](https://github.com/solarwinds/apm-python/pull/895))
 - Updated license headers and add CI/CD header checks ([#888](https://github.com/solarwinds/apm-python/pull/888))
 - Deprecated legacy service key format, added new token format support ([#889](https://github.com/solarwinds/apm-python/pull/889))
 
