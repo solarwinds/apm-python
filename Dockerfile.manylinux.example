@@ -1,0 +1,23 @@
+# Copyright SolarWinds Worldwide, LLC.
+# SPDX-License-Identifier: Apache-2.0
+
+ARG MANYLINUX_IMAGE
+FROM ${MANYLINUX_IMAGE}
+
+# Replace these placeholders with your organization's approved CA source and
+# independently verified SHA-256 checksum before building.
+# Or, comment them out entirely.
+ARG ORGANIZATION_CA_URL=https://example.invalid/path/to/organization-root-ca.pem
+ARG ORGANIZATION_CA_SHA256=replace-with-verified-sha256
+
+ADD --checksum=sha256:${ORGANIZATION_CA_SHA256} ${ORGANIZATION_CA_URL} \
+    /etc/pki/ca-trust/source/anchors/organization-root-ca.crt
+
+RUN update-ca-trust extract \
+    && dnf upgrade -y ca-certificates \
+    && update-ca-trust extract \
+    && dnf clean all
+
+ENV PIP_CERT=/etc/pki/tls/certs/ca-bundle.crt \
+    REQUESTS_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt \
+    SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt

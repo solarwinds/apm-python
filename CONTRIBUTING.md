@@ -33,6 +33,22 @@ A PR is ready to merge when all tests pass, any major feedback has been resolved
 
 The build containers are based on the [PyPA image](https://github.com/pypa/manylinux) for `manylinux_2_28_x86_64` or `manylinux_2_28_aarch64`. Choose what will run best on your setup (e.g. aarch64 for Apple silicon, or x86_64 for Intel).
 
+Compose expects a root-level `Dockerfile.manylinux` for either service. If you do not already have a customized local file, create one from the example:
+
+```bash
+cp Dockerfile.manylinux.example Dockerfile.manylinux
+```
+
+For networks with TLS inspection, edit `Dockerfile.manylinux` to use your organization's approved CA download URL and verified SHA-256 checksum. Keep CA verification enabled.
+
+If your network does not use TLS inspection, remove or comment out the `ORGANIZATION_CA_URL` and `ORGANIZATION_CA_SHA256` arguments and the `ADD --checksum` instruction. Keep the `dnf upgrade -y ca-certificates` step; it refreshes the normal manylinux trust store. If `Dockerfile.manylinux` already exists, edit it rather than copying over your local configuration.
+
+After creating or changing the local Dockerfile, rebuild the selected image before running it; for example:
+
+```bash
+docker-compose build aarch64
+```
+
 To create and run a Docker container for testing and builds, run one of the following:
 ```bash
 docker-compose run x86_64

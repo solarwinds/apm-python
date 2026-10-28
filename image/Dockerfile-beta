@@ -17,6 +17,10 @@ FROM python:3.10 AS build-310
 WORKDIR /operator-build
 ADD requirements-nodeps-beta.txt .
 ADD requirements.txt .
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends ca-certificates \
+	&& rm -rf /var/lib/apt/lists/*
+RUN python -m pip install --no-cache-dir --upgrade "pip>=2026.2.2"
 RUN mkdir workspace
 RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps-beta.txt
 RUN pip install --target workspace -r requirements.txt
@@ -25,7 +29,10 @@ FROM python:3.10-alpine AS build-musl-310
 WORKDIR /operator-build
 ADD requirements-nodeps-beta.txt .
 ADD requirements.txt .
-RUN apk add g++ gcc python3-dev musl-dev linux-headers
+RUN apk update \
+	&& apk add --no-cache ca-certificates g++ gcc python3-dev musl-dev linux-headers \
+	&& apk upgrade ca-certificates
+RUN python -m pip install --no-cache-dir --upgrade "pip>=2026.2.2"
 RUN mkdir workspace
 RUN pip install --no-deps --target workspace --extra-index-url https://test.pypi.org/simple/ -r requirements-nodeps-beta.txt
 RUN pip install --target workspace -r requirements.txt

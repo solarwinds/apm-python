@@ -23,6 +23,9 @@ nothing:
 # check if build deps are installed
 #----------------------------------------------------------------------------------------------------------------------#
 
+upgrade-ca-certificates:
+	@command dnf upgrade ca-certificates -y;
+
 check-zip:
 	@echo -e "Is zip installed?"
 	@command -v zip >/dev/null 2>&1 || \
@@ -68,6 +71,8 @@ install-lambda-modules:
 	rm -rf ${target_dir}
 	@echo -e "Creating target directory ${target_dir} for AWS Lambda layer artifacts."
 	mkdir -p ${target_dir}/python
+	@echo -e "Upgrade pip in the Lambda build environment"
+	/opt/python/cp310-cp310/bin/python -m pip install --no-cache-dir --upgrade "pip>=26.2.2"
 	@echo -e "Install setuptools"
 	/opt/python/cp310-cp310/bin/pip install setuptools
 	@echo -e "Install upstream dependencies to include in layer"
@@ -97,7 +102,7 @@ check-lambda-modules:
 target_dir := "./tmp-lambda"
 aws-lambda: export AWS_LAMBDA_FUNCTION_NAME = set-for-build
 aws-lambda: export LAMBDA_TASK_ROOT = set-for-build
-aws-lambda: check-zip install-lambda-modules check-lambda-modules
+aws-lambda: upgrade-ca-certificates check-zip install-lambda-modules check-lambda-modules
 	@if [[ ! -d dist ]]; then mkdir dist; fi
 	@pushd ${target_dir} && zip -r ../dist/solarwinds_apm_lambda.zip . && popd
 	@rm -rf ${target_dir} ./build
@@ -138,4 +143,4 @@ clean-tox:
 	@rm -rf .tox/
 	@echo -e "Done."
 
-.PHONY: nothing check-zip sdist check-sdist-local wheel check-wheel-local package install-lambda-modules check-lambda-modules aws-lambda tox format lint clean clean-tox
+.PHONY: nothing upgrade-ca-certificates check-zip sdist check-sdist-local wheel check-wheel-local package install-lambda-modules check-lambda-modules aws-lambda tox format lint clean clean-tox
