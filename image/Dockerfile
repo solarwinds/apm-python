@@ -20,7 +20,7 @@ ADD requirements.txt .
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
-RUN python -m pip install --no-cache-dir --upgrade "pip>=2026.2.2"
+RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2.2"
 RUN mkdir workspace
 RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 RUN pip install --target workspace -r requirements.txt
@@ -32,7 +32,7 @@ ADD requirements.txt .
 RUN apk update \
 	&& apk add --no-cache ca-certificates g++ gcc python3-dev musl-dev linux-headers \
 	&& apk upgrade ca-certificates
-RUN python -m pip install --no-cache-dir --upgrade "pip>=2026.2.2"
+RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2.2"
 RUN mkdir workspace
 RUN pip install --no-deps --target workspace -r requirements-nodeps.txt
 RUN pip install --target workspace -r requirements.txt
