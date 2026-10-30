@@ -82,7 +82,7 @@ jobs:
 
       - name: Analyze for critical and high CVEs - tagged image
         id: docker-scout-image-cves
-        uses: docker/scout-action@221e7f4860634eeb1579e3bd7ca232e577bd1864
+        uses: docker/scout-action@4bbf17a9da65a7b5497361bb407e88cc9548f69c
         with:
           command: cves
           image: ${{ github.repository_owner }}/autoinstrumentation-python:${{ env.VERSION }}
