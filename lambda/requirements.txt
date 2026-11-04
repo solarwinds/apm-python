@@ -1,7 +1,7 @@
 opentelemetry-sdk==1.45.1
 opentelemetry-exporter-otlp-proto-http==1.45.1
 # Exclude default opentelemetry-distro
-opentelemetry-instrumentation==0.66b1
+opentelemetry-instrumentation==0.66b2
 opentelemetry-semantic-conventions==0.66b1
 opentelemetry-propagator-aws-xray==1.0.2
 
