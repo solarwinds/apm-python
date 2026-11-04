@@ -57,7 +57,7 @@ opentelemetry-instrumentation-requests==0.66b1
 opentelemetry-instrumentation-sqlalchemy==0.66b1
 opentelemetry-instrumentation-sqlite3==0.66b1
 opentelemetry-instrumentation-starlette==0.66b1
-opentelemetry-instrumentation-threading==0.66b1
+opentelemetry-instrumentation-threading==0.66b2
 opentelemetry-instrumentation-tornado==0.66b1
 opentelemetry-instrumentation-tortoiseorm==0.66b1
 opentelemetry-instrumentation-urllib==0.66b1
