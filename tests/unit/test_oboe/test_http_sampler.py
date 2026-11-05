@@ -7,6 +7,7 @@ import time
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 from opentelemetry import trace
 from opentelemetry.sdk.metrics import AlwaysOnExemplarFilter, MeterProvider
 from opentelemetry.sdk.metrics._internal.export import InMemoryMetricReader
@@ -275,6 +276,30 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
     )
     # one in constructor and one in test case
     assert mock_get.call_count == 2
+
+
+def test_fetch_from_collector_detaches_context_when_request_fails(
+    mocker, config, meter_provider
+):
+    mocker.patch.object(HttpSampler, "_loop")
+    mocker.patch(
+        "solarwinds_apm.oboe.http_sampler.requests.get",
+        side_effect=requests.ConnectionError("collector unavailable"),
+    )
+    mock_attach = mocker.patch(
+        "solarwinds_apm.oboe.http_sampler.attach", return_value="token"
+    )
+    mock_detach = mocker.patch("solarwinds_apm.oboe.http_sampler.detach")
+    sampler = HttpSampler(
+        meter_provider=meter_provider, config=config, initial=None
+    )
+
+    try:
+        with pytest.raises(requests.ConnectionError):
+            sampler._fetch_from_collector()
+        mock_detach.assert_called_once_with(mock_attach.return_value)
+    finally:
+        sampler.shutdown()
 
 
 @pytest.mark.parametrize(

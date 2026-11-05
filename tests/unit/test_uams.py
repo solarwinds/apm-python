@@ -8,16 +8,35 @@ import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 from opentelemetry.semconv._incubating.attributes.host_attributes import (
     HOST_ID,
 )
 
-from solarwinds_apm.uams import ATTR_UAMS_CLIENT_ID, UamsResourceDetector
+from solarwinds_apm.uams import (
+    ATTR_UAMS_CLIENT_ID,
+    UamsResourceDetector,
+    _read_from_api,
+)
 
 UAMS_FILE_ID = str(uuid.uuid4())
 UAMS_API_ID = str(uuid.uuid4())
 
 UAMS_FILE = os.path.join(tempfile.gettempdir(), "uamsclientid")
+
+
+def test_api_request_failure_detaches_instrumentation_context(mocker):
+    mocker.patch(
+        "solarwinds_apm.uams.requests.get",
+        side_effect=requests.ConnectionError("UAMS unavailable"),
+    )
+    mock_attach = mocker.patch(
+        "solarwinds_apm.uams.attach", return_value="token"
+    )
+    mock_detach = mocker.patch("solarwinds_apm.uams.detach")
+
+    assert _read_from_api() == {}
+    mock_detach.assert_called_once_with(mock_attach.return_value)
 
 
 @pytest.fixture
