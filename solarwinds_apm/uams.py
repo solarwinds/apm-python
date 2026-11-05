@@ -12,7 +12,9 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.sdk.resources import Resource, ResourceDetector
-from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.semconv._incubating.attributes.host_attributes import (
+    HOST_ID,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ def _read_from_file(uams_file: str) -> dict:
             uams_id = file.read().strip()
             return {
                 ATTR_UAMS_CLIENT_ID: uams_id,
-                ResourceAttributes.HOST_ID: uams_id,
+                HOST_ID: uams_id,
             }
     except Exception as error:  # pylint: disable=broad-exception-caught
         logger.debug("file error", exc_info=error)
@@ -70,7 +72,7 @@ def _read_from_api() -> dict:
         id = data[UAMS_CLIENT_ID_FIELD]
         return {
             ATTR_UAMS_CLIENT_ID: id,
-            ResourceAttributes.HOST_ID: id,
+            HOST_ID: id,
         }
     except Exception as error:  # pylint: disable=broad-exception-caught
         logger.debug("api response error", exc_info=error)

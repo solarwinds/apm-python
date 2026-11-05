@@ -10,7 +10,11 @@ import uuid
 from contextlib import suppress
 
 import pytest
-from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.semconv.attributes.k8s_attributes import (
+    K8S_NAMESPACE_NAME,
+    K8S_POD_NAME,
+    K8S_POD_UID,
+)
 
 from solarwinds_apm.k8s import K8sResourceDetector
 
@@ -89,9 +93,9 @@ def test_detects_attributes_from_env(mocker):
     resource = k8s_detector.detect()
 
     assert resource.attributes == {
-        ResourceAttributes.K8S_NAMESPACE_NAME: ENV_NAMESPACE,
-        ResourceAttributes.K8S_POD_UID: ENV_UID,
-        ResourceAttributes.K8S_POD_NAME: ENV_NAME,
+        K8S_NAMESPACE_NAME: ENV_NAMESPACE,
+        K8S_POD_UID: ENV_UID,
+        K8S_POD_NAME: ENV_NAME,
     }
 
 
@@ -103,11 +107,11 @@ def test_detects_attributes_from_files():
     resource = k8s_detector.detect()
 
     expected_attributes = {
-        ResourceAttributes.K8S_NAMESPACE_NAME: FILE_NAMESPACE,
-        ResourceAttributes.K8S_POD_NAME: os.uname().nodename,
+        K8S_NAMESPACE_NAME: FILE_NAMESPACE,
+        K8S_POD_NAME: os.uname().nodename,
     }
     if os.name != "nt":
-        expected_attributes[ResourceAttributes.K8S_POD_UID] = FILE_UID
+        expected_attributes[K8S_POD_UID] = FILE_UID
 
     assert resource.attributes == expected_attributes
 
@@ -128,9 +132,9 @@ def test_prefers_env_over_files(mocker):
     resource = k8s_detector.detect()
 
     assert resource.attributes == {
-        ResourceAttributes.K8S_NAMESPACE_NAME: ENV_NAMESPACE,
-        ResourceAttributes.K8S_POD_UID: ENV_UID,
-        ResourceAttributes.K8S_POD_NAME: ENV_NAME,
+        K8S_NAMESPACE_NAME: ENV_NAMESPACE,
+        K8S_POD_UID: ENV_UID,
+        K8S_POD_NAME: ENV_NAME,
     }
 
 

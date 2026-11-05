@@ -8,7 +8,11 @@ import re
 from contextlib import suppress
 
 from opentelemetry.sdk.resources import Resource, ResourceDetector
-from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.semconv.attributes.k8s_attributes import (
+    K8S_NAMESPACE_NAME,
+    K8S_POD_NAME,
+    K8S_POD_UID,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -132,16 +136,16 @@ class K8sResourceDetector(ResourceDetector):
 
         namespace = _pod_namespace(self._namespace)
         if namespace:
-            attributes[ResourceAttributes.K8S_NAMESPACE_NAME] = namespace
+            attributes[K8S_NAMESPACE_NAME] = namespace
         else:
             return Resource.get_empty()
 
         uid = _pod_uid(self._mountinfo)
         if uid:
-            attributes[ResourceAttributes.K8S_POD_UID] = uid
+            attributes[K8S_POD_UID] = uid
 
         name = _pod_name()
         if name:
-            attributes[ResourceAttributes.K8S_POD_NAME] = name
+            attributes[K8S_POD_NAME] = name
 
         return Resource(attributes)
