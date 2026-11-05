@@ -26,6 +26,7 @@ from opentelemetry.semconv.attributes.http_attributes import (
 from opentelemetry.semconv.attributes.server_attributes import SERVER_ADDRESS
 from opentelemetry.semconv.attributes.url_attributes import (
     URL_PATH,
+    URL_QUERY,
     URL_SCHEME,
 )
 from opentelemetry.trace import Link, SpanKind, TraceState, get_current_span
@@ -83,8 +84,15 @@ def http_span_metadata(kind: SpanKind, attributes: Attributes):
             SERVER_ADDRESS, attributes.get(NET_HOST_NAME, "localhost")
         )
     )
-    path = str(attributes.get(URL_PATH, attributes.get(HTTP_TARGET, "")))
+    path = attributes.get(URL_PATH)
+    query = attributes.get(URL_QUERY)
+    if path is None and query is None:
+        path = attributes.get(HTTP_TARGET, "")
+    path = str(path or "")
+    query = str(query or "")
     url = f"{scheme}://{hostname}{path}"
+    if query:
+        url += f"?{query}"
     return {
         "http": True,
         "method": method,

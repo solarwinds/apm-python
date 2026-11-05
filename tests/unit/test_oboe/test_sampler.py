@@ -29,6 +29,7 @@ from opentelemetry.semconv.attributes.http_attributes import (
 from opentelemetry.semconv.attributes.server_attributes import SERVER_ADDRESS
 from opentelemetry.semconv.attributes.url_attributes import (
     URL_PATH,
+    URL_QUERY,
     URL_SCHEME,
 )
 from opentelemetry.trace import SpanKind
@@ -144,6 +145,35 @@ class TestHTTPSpanMetadataName:
             "path": "",
             "url": "https://solarwinds.com",
         }
+
+    def test_handles_http_server_span_with_query_only(self):
+        span = {
+            "kind": SpanKind.SERVER,
+            "attributes": {
+                HTTP_REQUEST_METHOD: "GET",
+                URL_SCHEME: "https",
+                SERVER_ADDRESS: "solarwinds.com",
+                URL_QUERY: "page=2",
+            },
+        }
+        output = http_span_metadata(span["kind"], span["attributes"])
+        assert output["path"] == ""
+        assert output["url"] == "https://solarwinds.com?page=2"
+
+    def test_handles_http_server_span_with_path_and_query(self):
+        span = {
+            "kind": SpanKind.SERVER,
+            "attributes": {
+                HTTP_REQUEST_METHOD: "GET",
+                URL_SCHEME: "https",
+                SERVER_ADDRESS: "solarwinds.com",
+                URL_PATH: "/search",
+                URL_QUERY: "page=2",
+            },
+        }
+        output = http_span_metadata(span["kind"], span["attributes"])
+        assert output["path"] == "/search"
+        assert output["url"] == "https://solarwinds.com/search?page=2"
 
     def test_handles_legacy_http_server_spans_properly(self):
         span = {
