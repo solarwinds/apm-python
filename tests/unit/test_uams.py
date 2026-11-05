@@ -8,7 +8,9 @@ import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
-from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.semconv._incubating.attributes.host_attributes import (
+    HOST_ID,
+)
 
 from solarwinds_apm.uams import ATTR_UAMS_CLIENT_ID, UamsResourceDetector
 
@@ -41,7 +43,7 @@ def test_detects_id_from_file_when_file_present_and_api_running(
     resource = detector.detect()
     assert resource.attributes == {
         ATTR_UAMS_CLIENT_ID: UAMS_FILE_ID,
-        ResourceAttributes.HOST_ID: UAMS_FILE_ID,
+        HOST_ID: UAMS_FILE_ID,
     }
     # Ensure the API was not called
     mock_get.assert_not_called()
@@ -54,7 +56,7 @@ def test_detects_id_from_file_when_file_present_and_api_not_running(
     resource = detector.detect()
     assert resource.attributes == {
         ATTR_UAMS_CLIENT_ID: UAMS_FILE_ID,
-        ResourceAttributes.HOST_ID: UAMS_FILE_ID,
+        HOST_ID: UAMS_FILE_ID,
     }
 
 
@@ -72,7 +74,7 @@ def test_detects_id_from_file_when_file_present_and_unrelated_running(
     resource = detector.detect()
     assert resource.attributes == {
         ATTR_UAMS_CLIENT_ID: UAMS_FILE_ID,
-        ResourceAttributes.HOST_ID: UAMS_FILE_ID,
+        HOST_ID: UAMS_FILE_ID,
     }
     # Ensure the API was not called
     mock_get.assert_not_called()
@@ -90,7 +92,7 @@ def test_detects_id_from_api_when_file_not_present_and_api_running(mock_get):
     resource = detector.detect()
     assert resource.attributes == {
         ATTR_UAMS_CLIENT_ID: UAMS_API_ID,
-        ResourceAttributes.HOST_ID: UAMS_API_ID,
+        HOST_ID: UAMS_API_ID,
     }
     # Ensure the API was called
     mock_get.assert_called_once()

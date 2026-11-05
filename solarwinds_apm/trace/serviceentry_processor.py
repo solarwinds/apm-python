@@ -12,8 +12,11 @@ from typing import TYPE_CHECKING
 
 from opentelemetry import context
 from opentelemetry.sdk.trace import Span, SpanProcessor
-from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.semconv.trace import SpanAttributes
+from opentelemetry.semconv._incubating.attributes.faas_attributes import (
+    FAAS_NAME,
+)
+from opentelemetry.semconv.attributes.http_attributes import HTTP_ROUTE
+from opentelemetry.semconv.attributes.url_attributes import URL_PATH
 
 from solarwinds_apm.apm_constants import (
     INTL_SWO_OTEL_CONTEXT_ENTRY_SPAN,
@@ -107,10 +110,10 @@ class ServiceEntrySpanProcessor(SpanProcessor):
         # Calculate non-custom txn name for entry span if we can retrieve the URL
         # or serverless name. Otherwise, use the span's name
         sw_apm_txn_name = os.environ.get("SW_APM_TRANSACTION_NAME", None)
-        faas_name = span.attributes.get(ResourceAttributes.FAAS_NAME, None)
+        faas_name = span.attributes.get(FAAS_NAME, None)
         lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None)
-        http_route = span.attributes.get(SpanAttributes.HTTP_ROUTE, None)
-        url_path = span.attributes.get(SpanAttributes.URL_PATH, None)
+        http_route = span.attributes.get(HTTP_ROUTE, None)
+        url_path = span.attributes.get(URL_PATH, None)
         if sw_apm_txn_name:
             self.set_default_transaction_name(span, sw_apm_txn_name)
         elif faas_name:

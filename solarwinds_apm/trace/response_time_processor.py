@@ -8,7 +8,14 @@ from typing import TYPE_CHECKING
 
 from opentelemetry.metrics import get_meter
 from opentelemetry.sdk.trace import SpanProcessor
-from opentelemetry.semconv.trace import SpanAttributes
+from opentelemetry.semconv._incubating.attributes.http_attributes import (
+    HTTP_METHOD,
+    HTTP_STATUS_CODE,
+)
+from opentelemetry.semconv.attributes.http_attributes import (
+    HTTP_REQUEST_METHOD,
+    HTTP_RESPONSE_STATUS_CODE,
+)
 from opentelemetry.trace import SpanKind, StatusCode
 
 from solarwinds_apm.apm_constants import (
@@ -32,16 +39,12 @@ class ResponseTimeProcessor(SpanProcessor):
     including response time, error status, and HTTP-specific attributes.
     """
 
-    _HTTP_REQUEST_METHOD = (
-        SpanAttributes.HTTP_REQUEST_METHOD
-    )  # http.request.method
-    _HTTP_RESPONSE_STATUS_CODE = (
-        SpanAttributes.HTTP_RESPONSE_STATUS_CODE
-    )  # "http.response.status_code"
+    _HTTP_REQUEST_METHOD = HTTP_REQUEST_METHOD  # http.request.method
+    _HTTP_RESPONSE_STATUS_CODE = HTTP_RESPONSE_STATUS_CODE
 
     # Deprecated, but potentially still used by some instrumentors
-    _HTTP_METHOD = SpanAttributes.HTTP_METHOD  # "http.method"
-    _HTTP_STATUS_CODE = SpanAttributes.HTTP_STATUS_CODE  # "http.status_code"
+    _HTTP_METHOD = HTTP_METHOD  # "http.method"
+    _HTTP_STATUS_CODE = HTTP_STATUS_CODE  # "http.status_code"
 
     _HTTP_SPAN_STATUS_UNAVAILABLE = 0
 

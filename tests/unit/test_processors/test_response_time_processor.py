@@ -1,6 +1,14 @@
 # Copyright SolarWinds Worldwide, LLC.
 # SPDX-License-Identifier: Apache-2.0
 
+from opentelemetry.semconv._incubating.attributes.http_attributes import (
+    HTTP_METHOD,
+)
+from opentelemetry.semconv.attributes.http_attributes import (
+    HTTP_REQUEST_METHOD,
+)
+from opentelemetry.trace import SpanKind
+
 from solarwinds_apm.trace import ResponseTimeProcessor
 
 
@@ -40,49 +48,28 @@ class TestResponseTimeProcessor:
         assert processor.lambda_function_name == "foo-lambda-name"
 
     def test_is_span_http_true(self, mocker):
-        mock_spankind = mocker.patch(
-            "solarwinds_apm.trace.response_time_processor.SpanKind"
-        )
-        mock_spankind.configure_mock(SERVER="foo")
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.response_time_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(
-            HTTP_REQUEST_METHOD="http.request.method"
-        )
         mock_span = mocker.Mock()
         mock_span.configure_mock(
-            kind="foo", attributes={"http.request.method": "bar"}
+            kind=SpanKind.SERVER,
+            attributes={HTTP_REQUEST_METHOD: "GET"},
         )
         processor = ResponseTimeProcessor(mocker.Mock())
         assert processor.is_span_http(mock_span)
 
     def test_is_span_http_true_old_attr(self, mocker):
-        mock_spankind = mocker.patch(
-            "solarwinds_apm.trace.response_time_processor.SpanKind"
-        )
-        mock_spankind.configure_mock(SERVER="foo")
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.response_time_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(HTTP_METHOD="http.method")
         mock_span = mocker.Mock()
-        mock_span.configure_mock(kind="foo", attributes={"http.method": "bar"})
+        mock_span.configure_mock(
+            kind=SpanKind.SERVER,
+            attributes={HTTP_METHOD: "GET"},
+        )
         processor = ResponseTimeProcessor(mocker.Mock())
         assert processor.is_span_http(mock_span)
 
     def test_is_span_http_false_no_http_method(self, mocker):
-        mock_spankind = mocker.patch(
-            "solarwinds_apm.trace.response_time_processor.SpanKind"
-        )
-        mock_spankind.configure_mock(SERVER="foo")
-        mock_spanattributes = mocker.patch(
-            "solarwinds_apm.trace.response_time_processor.SpanAttributes"
-        )
-        mock_spanattributes.configure_mock(HTTP_METHOD="http.method")
         mock_span = mocker.Mock()
         mock_span.configure_mock(
-            kind="foo", attributes={"NOT.http.method.hehehehe": "bar"}
+            kind=SpanKind.SERVER,
+            attributes={"NOT.http.method.hehehehe": "bar"},
         )
         processor = ResponseTimeProcessor(mocker.Mock())
         assert not processor.is_span_http(mock_span)
