@@ -351,3 +351,15 @@ def test_stringify_trace_options_response():
 def test_validate_signature(header, signature, key, timestamp, expected):
     result = validate_signature(header, signature, key, timestamp)
     assert result == expected
+
+
+def test_validate_signature_uses_constant_time_comparison(mocker):
+    compare_digest = mocker.patch(
+        "solarwinds_apm.oboe.trace_options.hmac.compare_digest",
+        return_value=True,
+    )
+
+    result = validate_signature("header", "signature", "key", int(time.time()))
+
+    compare_digest.assert_called_once()
+    assert result == Auth.OK
