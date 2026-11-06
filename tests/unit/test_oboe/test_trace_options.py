@@ -368,7 +368,9 @@ def test_validate_signature_uses_constant_time_comparison(mocker):
 @pytest.mark.parametrize(
     "signature", ["", "not-a-digest", "é", None, b"signature", 123]
 )
-def test_validate_signature_rejects_malformed_signatures(signature: object) -> None:
+def test_validate_signature_rejects_malformed_signatures(
+    signature: object,
+) -> None:
     """Reject malformed signatures without propagating comparison errors."""
     result = validate_signature("header", signature, "key", int(time.time()))
     assert result == Auth.BAD_SIGNATURE
