@@ -97,6 +97,14 @@ class ApmLoggingLevel:
             return False
 
 
+class _SingleLineFormatter(logging.Formatter):
+    """Escapes line breaks"""
+
+    def format(self, record: logging.LogRecord) -> str:
+        formatted = super().format(record)
+        return formatted.replace("\r", r"\r").replace("\n", r"\n")
+
+
 def _create_stream_handler() -> logging.StreamHandler:
     """
     Create stream handler reporting to stderr.
@@ -105,7 +113,7 @@ def _create_stream_handler() -> logging.StreamHandler:
     logging.StreamHandler: Configured stream handler with custom format.
     """
     sh = logging.StreamHandler()  # get stream handler to custom logging prefix
-    fm = logging.Formatter(
+    fm = _SingleLineFormatter(
         "%(asctime)s [ %(name)s %(levelname)-8s p#%(process)d.%(thread)d] %(message)s"
     )
     sh.setFormatter(fm)
@@ -198,7 +206,7 @@ def update_sw_log_handler(log_filepath: str) -> None:
                 maxBytes=0,
                 backupCount=0,
             )
-            file_formatter = logging.Formatter(
+            file_formatter = _SingleLineFormatter(
                 "%(asctime)s [ %(name)s %(levelname)-8s p#%(process)d.%(thread)d] %(message)s"
             )
             file_handler.setFormatter(file_formatter)

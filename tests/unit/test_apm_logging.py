@@ -1,6 +1,8 @@
 # Copyright SolarWinds Worldwide, LLC.
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
+
 from solarwinds_apm import apm_logging
 
 
@@ -26,6 +28,20 @@ class TestApmLoggingLevel:
         assert not apm_logging.ApmLoggingLevel.is_valid_level(-2)
         assert not apm_logging.ApmLoggingLevel.is_valid_level(7)
         assert not apm_logging.ApmLoggingLevel.is_valid_level(9999)
+
+    def test_single_line_formatter_escapes_carriage_returns_and_newlines(self):
+        formatter = apm_logging._SingleLineFormatter("%(message)s")
+        record = logging.LogRecord(
+            "test",
+            logging.WARNING,
+            __file__,
+            1,
+            "first\r\nsecond",
+            (),
+            None,
+        )
+
+        assert formatter.format(record) == r"first\r\nsecond"
 
 
 class TestSetSwLog:
