@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import re
+import stat
 from functools import reduce
 from typing import Any
 
@@ -663,9 +664,11 @@ class SolarWindsApmConfig:
         Any: Configuration dictionary or None if no config file exists.
         """
         cnf_filepath = os.environ.get("SW_APM_CONFIG_FILE")
+        is_default_config = not cnf_filepath
         cnf_dict = None
+        trusted_default_config = False
 
-        if not cnf_filepath:
+        if is_default_config:
             cnf_filepath = cls._CONFIG_FILE_DEFAULT
             if not os.path.isfile(cnf_filepath):
                 if not cls._logged_no_config_file:
@@ -678,6 +681,11 @@ class SolarWindsApmConfig:
 
         try:
             with open(cnf_filepath, encoding="utf-8") as cnf_file:
+                if is_default_config:
+                    config_stat = os.fstat(cnf_file.fileno())
+                    trusted_default_config = cls._is_trusted_default_config(
+                        config_stat
+                    )
                 try:
                     file_content = cnf_file.read()
                     cnf_dict = json.loads(file_content)
@@ -688,7 +696,33 @@ class SolarWindsApmConfig:
                     )
         except FileNotFoundError as ex:
             logger.error("Invalid config file path. Ignoring: %s", ex)
+
+        if (
+            is_default_config
+            and not trusted_default_config
+            and isinstance(cnf_dict, dict)
+        ):
+            for key in ("collector", "logFilepath"):
+                if key in cnf_dict:
+                    logger.warning(
+                        "Ignoring %s from the default working-directory config "
+                        "because it is not owned by the current user or is "
+                        "group/world writable.",
+                        key,
+                    )
+                    cnf_dict.pop(key)
+
         return cnf_dict
+
+    @staticmethod
+    def _is_trusted_default_config(config_stat: os.stat_result) -> bool:
+        """Return whether the default config is protected"""
+        if not hasattr(os, "geteuid"):
+            return False
+        return (
+            config_stat.st_uid == os.geteuid()
+            and not config_stat.st_mode & (stat.S_IWGRP | stat.S_IWOTH)
+        )
 
     def update_with_cnf_file(self) -> None:
         """Update configuration settings from config file (JSON), if any."""

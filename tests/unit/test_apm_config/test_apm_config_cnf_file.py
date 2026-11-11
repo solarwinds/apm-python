@@ -1,13 +1,88 @@
 # Copyright SolarWinds Worldwide, LLC.
 # SPDX-License-Identifier: Apache-2.0
 
+import json
 import logging
 import os
+
+import pytest
 
 from solarwinds_apm import apm_config
 
 
 class TestSolarWindsApmConfigCnfFile:
+    def test_default_cwd_config_accepts_sensitive_fields_from_private_owned_file(
+        self, tmp_path, monkeypatch
+    ):
+        config_data = {
+            "collector": "trusted.example",
+            "logFilepath": str(tmp_path / "trusted.log"),
+            "debugLevel": 6,
+        }
+        config_path = tmp_path / "solarwinds-apm-config.json"
+        config_path.write_text(json.dumps(config_data), encoding="utf-8")
+        config_path.chmod(0o600)
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("SW_APM_CONFIG_FILE", "")
+
+        config = apm_config.SolarWindsApmConfig.get_cnf_dict()
+
+        assert config == config_data
+
+    def test_default_cwd_config_ignores_sensitive_fields_if_group_writable(
+        self, tmp_path, monkeypatch
+    ):
+        config_path = tmp_path / "solarwinds-apm-config.json"
+        config_path.write_text(
+            json.dumps({"collector": "attacker.example", "debugLevel": 6}),
+            encoding="utf-8",
+        )
+        config_path.chmod(0o620)
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("SW_APM_CONFIG_FILE", "")
+
+        config = apm_config.SolarWindsApmConfig.get_cnf_dict()
+
+        assert config == {"debugLevel": 6}
+
+    def test_default_cwd_config_ignores_sensitive_fields_if_owned_by_other_user(
+        self, tmp_path, monkeypatch
+    ):
+        if not hasattr(os, "geteuid"):
+            pytest.skip("effective user IDs are only available on POSIX")
+
+        config_path = tmp_path / "solarwinds-apm-config.json"
+        config_path.write_text(
+            json.dumps({"collector": "attacker.example", "debugLevel": 6}),
+            encoding="utf-8",
+        )
+        config_path.chmod(0o600)
+        effective_uid = os.geteuid()
+        monkeypatch.setattr(
+            apm_config.os, "geteuid", lambda: effective_uid + 1
+        )
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("SW_APM_CONFIG_FILE", "")
+
+        config = apm_config.SolarWindsApmConfig.get_cnf_dict()
+
+        assert config == {"debugLevel": 6}
+
+    def test_explicit_config_path_can_set_collector_and_log_filepath(
+        self, tmp_path, monkeypatch
+    ):
+        config_data = {
+            "collector": "trusted.example",
+            "logFilepath": str(tmp_path / "trusted.log"),
+        }
+        config_path = tmp_path / "trusted-config.json"
+        config_path.write_text(json.dumps(config_data), encoding="utf-8")
+        monkeypatch.setenv("SW_APM_CONFIG_FILE", str(config_path))
+
+        config = apm_config.SolarWindsApmConfig.get_cnf_dict()
+
+        assert config == config_data
+
     # pylint:disable=unused-argument
     def test_get_cnf_dict_default_path_no_file(
         self,
