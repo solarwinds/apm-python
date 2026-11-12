@@ -35,7 +35,6 @@ from __future__ import annotations
 
 import logging
 import os
-from logging.handlers import RotatingFileHandler
 
 
 class ApmLoggingLevel:
@@ -182,35 +181,6 @@ def disable_logger(disable: bool = True) -> None:
         logger.addHandler(_stream_handler)
         logger.removeHandler(logging.NullHandler())
         logger.propagate = True
-
-
-def update_sw_log_handler(log_filepath: str) -> None:
-    """
-    Swap stream handler with rotating file handler if log_filepath is provided.
-
-    Parameters:
-    log_filepath (str): Path to the log file.
-    """
-    if log_filepath:
-        try:
-            file_handler = RotatingFileHandler(
-                filename=log_filepath,
-                maxBytes=0,
-                backupCount=0,
-            )
-            file_formatter = logging.Formatter(
-                "%(asctime)s [ %(name)s %(levelname)-8s p#%(process)d.%(thread)d] %(message)s"
-            )
-            file_handler.setFormatter(file_formatter)
-            logger.propagate = False
-            logger.addHandler(file_handler)
-            # stop logging to stream
-            logger.removeHandler(_stream_handler)
-        except FileNotFoundError:
-            # path should be checked first by ApmConfig._validate_log_filepath
-            logger.error(
-                "Could not write logs to file; please check configured SW_APM_LOG_FILEPATH / logFilepath."
-            )
 
 
 def set_sw_log_level(level: int) -> None:
