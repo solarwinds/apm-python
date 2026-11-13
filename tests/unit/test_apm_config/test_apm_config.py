@@ -82,12 +82,12 @@ class TestSolarWindsApmConfig:
     def test__init_collector(self, mocker):
         mocker.patch.dict(
             os.environ,
-            {"SW_APM_COLLECTOR": "apm.collector.eu-01.cloud.solarwinds.com"},
+            {"SW_APM_COLLECTOR": "apm.collector.eu-02.cloud.solarwinds.com"},
         )
         test_config = apm_config.SolarWindsApmConfig()
         assert (
             test_config.get("collector")
-            == "apm.collector.eu-01.cloud.solarwinds.com"
+            == "apm.collector.eu-02.cloud.solarwinds.com"
         )
 
     def _mock_service_key(self, mocker, service_key):
