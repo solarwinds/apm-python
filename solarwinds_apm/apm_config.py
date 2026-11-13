@@ -28,6 +28,10 @@ from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting
 logger = logging.getLogger(__name__)
 
 
+def _escape_log_linebreaks(value: object) -> str:
+    return str(value).replace("\r", "\\r").replace("\n", "\\n")
+
+
 class OboeTracingMode:
     """Provide an interface to translate string representation of tracing_mode to Oboe equivalent."""
 
@@ -686,8 +690,11 @@ class SolarWindsApmConfig:
                         "Invalid config file, must be valid json. Ignoring: %s",
                         ex,
                     )
-        except FileNotFoundError as ex:
-            logger.error("Invalid config file path. Ignoring: %s", ex)
+        except (OSError, ValueError) as ex:
+            logger.error(
+                "Invalid config file path. Ignoring: %s",
+                _escape_log_linebreaks(ex),
+            )
         return cnf_dict
 
     def update_with_cnf_file(self) -> None:
