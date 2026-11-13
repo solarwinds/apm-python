@@ -13,6 +13,7 @@ import os
 import re
 from functools import reduce
 from typing import Any
+from urllib.parse import urlsplit
 
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.sdk.resources import Resource
@@ -79,6 +80,10 @@ class SolarWindsApmConfig:
     """
 
     _CONFIG_COLLECTOR_DEFAULT = "apm.collector.na-01.cloud.solarwinds.com"
+    _APM_COLLECTOR_PATTERN = re.compile(
+        r"apm\.collector\.[a-z]{2}-\d{2}\."
+        r"(?:cloud|dev-ssp|st-ssp)\.solarwinds\.com"
+    )
     _CONFIG_FILE_DEFAULT = "./solarwinds-apm-config.json"
     _DELIMITER = "."
     _KEY_MASK = "{}...{}:{}"
@@ -190,14 +195,61 @@ class SolarWindsApmConfig:
         Returns:
         str: The collector endpoint URL.
         """
-        collector = cls._CONFIG_COLLECTOR_DEFAULT
         if cnf_dict is None:
             cnf_dict = cls.get_cnf_dict()
-        if cnf_dict:
-            cnf_collector = cnf_dict.get("collector")
-            collector = cnf_collector if cnf_collector else collector
+        collector = cnf_dict.get("collector") if cnf_dict else None
         env_collector = os.environ.get("SW_APM_COLLECTOR")
-        return env_collector if env_collector else collector
+        if env_collector:
+            collector = env_collector
+        if collector is None or collector == "":
+            collector = cls._CONFIG_COLLECTOR_DEFAULT
+        return cls._validate_collector(collector)
+
+    @classmethod
+    def _validate_collector(cls, collector: Any) -> str:
+        """Return a canonical, supported HTTPS APM sampler collector host."""
+        if not isinstance(collector, str):
+            logger.warning(
+                "Invalid APM sampler collector; using the default collector."
+            )
+            return cls._CONFIG_COLLECTOR_DEFAULT
+
+        collector_url = (
+            collector if "://" in collector else f"https://{collector}"
+        )
+        try:
+            parsed = urlsplit(collector_url)
+            hostname = parsed.hostname
+            port = parsed.port
+        except ValueError:
+            parsed = None
+            hostname = None
+            port = None
+
+        if hostname:
+            hostname = hostname.lower().removesuffix(".")
+
+        valid = (
+            parsed is not None
+            and parsed.scheme.lower() == "https"
+            and hostname is not None
+            and cls._APM_COLLECTOR_PATTERN.fullmatch(hostname) is not None
+            and parsed.username is None
+            and parsed.password is None
+            and port in {None, 443}
+            and not parsed.netloc.endswith(":")
+            and parsed.path in {"", "/"}
+            and not parsed.query
+            and not parsed.fragment
+            and "?" not in collector_url
+            and "#" not in collector_url
+        )
+        if not valid or hostname is None:
+            logger.warning(
+                "Unsupported APM sampler collector; using the default collector."
+            )
+            return cls._CONFIG_COLLECTOR_DEFAULT
+        return hostname
 
     @classmethod
     def calculate_metrics_enabled(
@@ -943,7 +995,7 @@ class SolarWindsApmConfig:
         return Configuration(
             enabled=apm_config.agent_enabled,
             service=apm_config.service_name,
-            collector=apm_config.get("collector"),
+            collector=cls._validate_collector(apm_config.get("collector")),
             headers={"Authorization": f"Bearer {token}"},
             tracing_mode=apm_config.get("tracing_mode") != 0,
             trigger_trace_enabled=apm_config.get("trigger_trace") == 1,

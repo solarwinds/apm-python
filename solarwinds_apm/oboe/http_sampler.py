@@ -150,9 +150,16 @@ class HttpSampler(Sampler):
         logger.debug("retrieving sampling settings from %s", url)
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         response = requests.get(
-            url, headers=self._headers, timeout=REQUEST_TIMEOUT
+            url,
+            headers=self._headers,
+            timeout=REQUEST_TIMEOUT,
+            allow_redirects=False,
         )
         detach(token)
+        if 300 <= response.status_code < 400:
+            raise requests.HTTPError(
+                "Collector returned an HTTP redirect; refusing to forward credentials."
+            )
         response.raise_for_status()
         logger.debug("received sampling settings response %s", response.text)
         try:
