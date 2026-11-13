@@ -10,6 +10,7 @@ import platform
 import re
 import sys
 from os import environ
+from urllib.parse import urlsplit
 
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
@@ -31,8 +32,14 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
+    OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_PROTOCOL,
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+    OTEL_EXPORTER_OTLP_TRACES_HEADERS,
 )
 from opentelemetry.sdk.version import __version__ as sdk_version
 from opentelemetry.util._importlib_metadata import EntryPoint
@@ -53,6 +60,10 @@ _SQLCOMMENTERS = [
     "psycopg2",
     "sqlalchemy",
 ]
+
+_SWO_OTLP_HOST_PATTERN = re.compile(
+    r"otel\.collector\.[a-z0-9-]+\.[a-z0-9-]+\.solarwinds\.com"
+)
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +139,24 @@ class SolarWindsDistro(BaseDistro):
             logger.debug("Invalid service key format")
             return None
 
+    @staticmethod
+    def _is_swo_otlp_endpoint(endpoint: str) -> bool:
+        try:
+            parsed_endpoint = urlsplit(endpoint)
+            port = parsed_endpoint.port
+        except ValueError:
+            return False
+
+        hostname = parsed_endpoint.hostname
+        return (
+            parsed_endpoint.scheme.lower() == "https"
+            and parsed_endpoint.username is None
+            and parsed_endpoint.password is None
+            and hostname is not None
+            and _SWO_OTLP_HOST_PATTERN.fullmatch(hostname.lower()) is not None
+            and port in {None, 443}
+        )
+
     def _configure(self, **kwargs: dict) -> None:
         """
         Configure default OpenTelemetry exporters and propagators for SolarWinds.
@@ -185,24 +214,46 @@ class SolarWindsDistro(BaseDistro):
                 INTL_SWO_DEFAULT_OTLP_COLLECTOR,
             )
 
-        # Set default headers if export endpoint is a SWO one
-        # (default or configured and resolved by above)
-        endpoint = environ.get(OTEL_EXPORTER_OTLP_ENDPOINT)
-        if endpoint is not None:
-            match = re.search(
-                r"https://otel.collector.\b[a-z]{2}-\d{2}(?:\.\w+(?:-\w+)*)?\b.solarwinds.com",
-                endpoint,
+        # Per-signal headers take precedence over general headers in the OTLP exporters.
+        if OTEL_EXPORTER_OTLP_HEADERS not in environ:
+            signal_endpoints_and_headers = (
+                (
+                    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+                    OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+                ),
+                (
+                    OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+                    OTEL_EXPORTER_OTLP_METRICS_HEADERS,
+                ),
+                (
+                    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+                    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+                ),
             )
-            if match:
-                header_token = self._get_token_from_service_key()
-                if not header_token and not self._is_lambda:
-                    # In Lambda mode, otelcol extension uses token not APM
-                    logger.debug(
-                        "Setting OTLP export defaults without SWO token"
-                    )
-                environ.setdefault(
-                    OTEL_EXPORTER_OTLP_HEADERS,
-                    f"authorization=Bearer%20{header_token}",
+            header_token = self._get_token_from_service_key()
+            missing_token_logged = False
+            for (
+                endpoint_env_var,
+                headers_env_var,
+            ) in signal_endpoints_and_headers:
+                endpoint = environ.get(endpoint_env_var) or environ.get(
+                    OTEL_EXPORTER_OTLP_ENDPOINT
+                )
+                if (
+                    headers_env_var in environ
+                    or not endpoint
+                    or not self._is_swo_otlp_endpoint(endpoint)
+                ):
+                    continue
+                if not header_token:
+                    if not self._is_lambda and not missing_token_logged:
+                        logger.debug(
+                            "Setting OTLP export defaults without SWO token"
+                        )
+                        missing_token_logged = True
+                    continue
+                environ[headers_env_var] = (
+                    f"authorization=Bearer%20{header_token}"
                 )
 
         environ.setdefault(
