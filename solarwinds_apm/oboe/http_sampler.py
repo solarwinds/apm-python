@@ -144,7 +144,8 @@ class HttpSampler(Sampler):
         dict: The JSON response containing sampling settings.
 
         Raises:
-        requests.RequestException: If the HTTP request fails.
+        requests.RequestException: If the request fails or the collector responds
+            with a 3xx redirect.
         """
         url = f"{self._url}/v1/settings/{self._service}/{self._hostname}"
         logger.debug("retrieving sampling settings from %s", url)

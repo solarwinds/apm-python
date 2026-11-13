@@ -184,8 +184,9 @@ class SolarWindsApmConfig:
     ) -> str:
         """Return default or configured collector endpoint.
 
+        Use the configured collector when valid; otherwise default to the
+        SWO NA-01 collector URL.
         Order of precedence: Environment Variable > config file > default.
-        Default is SWO NA-01.
         Optional cnf_dict is presumably already from a config file, else a call
         to get_cnf_dict() is made for a fresh read.
 
@@ -229,6 +230,8 @@ class SolarWindsApmConfig:
         if hostname:
             hostname = hostname.lower().removesuffix(".")
 
+        # Restrict to supported HTTPS hosts; reject credentials, non-443 ports,
+        # extra paths, query parameters, and fragments.
         valid = (
             parsed is not None
             and parsed.scheme.lower() == "https"
