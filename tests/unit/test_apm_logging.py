@@ -1,10 +1,41 @@
 # Copyright SolarWinds Worldwide, LLC.
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
+
 from solarwinds_apm import apm_logging
 
 
 class TestApmLoggingLevel:
+    def test_single_line_formatter_escapes_record_and_exception_newlines(self):
+        try:
+            raise ValueError("untrusted\r\nexception")
+        except ValueError as error:
+            exc_info = (type(error), error, error.__traceback__)
+
+        record = logging.LogRecord(
+            "solarwinds_apm",
+            logging.ERROR,
+            __file__,
+            1,
+            "untrusted\r\nmessage",
+            (),
+            exc_info,
+        )
+        formatter = apm_logging._SingleLineFormatter("%(message)s")
+
+        formatted = formatter.format(record)
+
+        assert "\r" not in formatted
+        assert "\n" not in formatted
+        assert r"untrusted\r\nmessage" in formatted
+        assert r"untrusted\r\nexception" in formatted
+
+    def test_stream_handler_uses_single_line_formatter(self):
+        handler = apm_logging._create_stream_handler()
+
+        assert isinstance(handler.formatter, apm_logging._SingleLineFormatter)
+
     def test_default_level(self):
         assert apm_logging.ApmLoggingLevel.default_level() == 2
 
@@ -95,6 +126,10 @@ class TestSetSwLog:
         mock_rfhandler.assert_called_once_with(
             filename="foo", maxBytes=0, backupCount=0
         )
+        file_formatter = (
+            mock_rfhandler.return_value.setFormatter.call_args.args[0]
+        )
+        assert isinstance(file_formatter, apm_logging._SingleLineFormatter)
         mock_apm_logger.addHandler.assert_called_once()
         mock_apm_logger.removeHandler.assert_called_once()
         mock_apm_logger.error.assert_not_called()
