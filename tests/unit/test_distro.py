@@ -1450,6 +1450,39 @@ class TestDistro:
             },
         }
 
+    @pytest.mark.parametrize(
+        "env_var, config_key, invalid_value, default",
+        [
+            (
+                "SW_APM_ENABLED_SQLCOMMENT",
+                "enable_commenter",
+                "django=true\r\n",
+                False,
+            ),
+            (
+                "SW_APM_ENABLED_SQLCOMMENT_ATTRIBUTE",
+                "enable_attribute_commenter",
+                "django=false\r\n",
+                True,
+            ),
+        ],
+    )
+    def test_get_enable_commenter_env_map_rejects_linebreaks(
+        self, mocker, env_var, config_key, invalid_value, default
+    ):
+        mocker.patch.dict(os.environ, {env_var: invalid_value}, clear=True)
+        mock_logger = mocker.patch("solarwinds_apm.distro.logger")
+
+        result = distro.SolarWindsDistro().get_enable_commenter_env_map()
+
+        assert result["django"][config_key] is default
+        assert mock_logger.warning.called
+        assert not any(
+            isinstance(arg, str) and ("\r" in arg or "\n" in arg)
+            for call in mock_logger.warning.call_args_list
+            for arg in call.args
+        )
+
     def test_get_enable_commenter_env_map_valid_mixed_case(self, mocker):
         mocker.patch.dict(
             os.environ,
@@ -1582,6 +1615,25 @@ class TestDistro:
         mocker.patch.dict(os.environ, {})
         result = distro.SolarWindsDistro().detect_commenter_options()
         assert result == {}
+
+    def test_detect_commenter_options_rejects_linebreaks(self, mocker):
+        invalid_value = "foo=true\r\n"
+        mocker.patch.dict(
+            os.environ,
+            {"SW_APM_OPTIONS_SQLCOMMENT": invalid_value},
+            clear=True,
+        )
+        mock_logger = mocker.patch("solarwinds_apm.distro.logger")
+
+        result = distro.SolarWindsDistro().detect_commenter_options()
+
+        assert result == {}
+        assert mock_logger.warning.called
+        assert not any(
+            isinstance(arg, str) and ("\r" in arg or "\n" in arg)
+            for call in mock_logger.warning.call_args_list
+            for arg in call.args
+        )
 
     def test_detect_commenter_options_strip_mixed(self, mocker):
         mocker.patch.dict(

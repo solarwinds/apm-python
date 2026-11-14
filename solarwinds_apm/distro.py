@@ -326,29 +326,42 @@ class SolarWindsDistro(BaseDistro):
         }
 
         def parse_env_items(env_var, key_name):
-            env_items = environ.get(env_var, "")
-            if env_items:
-                for item in env_items.split(","):
-                    try:
-                        key, value = item.split("=", maxsplit=1)
-                    except ValueError as exc:
-                        logger.warning(
-                            "Invalid sqlcommenter key value at pair %s: %s",
-                            item,
-                            exc,
-                        )
-                        continue
+            env_items = environ.get(env_var)
+            if env_items is None:
+                return
+            if not env_items:
+                return
+            if "\r" in env_items or "\n" in env_items:
+                logger.warning(
+                    "Ignoring %s value containing a line break", env_var
+                )
+                return
 
-                    instrumentor_name = key.strip().lower()
-                    if instrumentor_name in _SQLCOMMENTERS:
-                        env_v_bool = SolarWindsApmConfig.convert_to_bool(
-                            value.strip()
-                        )
-                        if env_v_bool is not None:
-                            instrumentor_config = env_commenter_map[
-                                instrumentor_name
-                            ]
-                            instrumentor_config[key_name] = env_v_bool
+            for item in env_items.split(","):
+                try:
+                    key, value = item.split("=", maxsplit=1)
+                except ValueError:
+                    logger.warning(
+                        "Invalid key-value pair in %s; ignoring", env_var
+                    )
+                    continue
+
+                instrumentor_name = key.strip().lower()
+                if instrumentor_name not in _SQLCOMMENTERS:
+                    logger.warning(
+                        "Ignoring unsupported instrumentor in %s", env_var
+                    )
+                    continue
+
+                env_v_bool = SolarWindsApmConfig.convert_to_bool(value.strip())
+                if env_v_bool is None:
+                    logger.warning(
+                        "Invalid boolean value in %s; ignoring", env_var
+                    )
+                    continue
+
+                instrumentor_config = env_commenter_map[instrumentor_name]
+                instrumentor_config[key_name] = env_v_bool
 
         parse_env_items("SW_APM_ENABLED_SQLCOMMENT", "enable_commenter")
         parse_env_items(
@@ -365,26 +378,37 @@ class SolarWindsDistro(BaseDistro):
         commenter_opts = {}
         commenter_opts_env = environ.get("SW_APM_OPTIONS_SQLCOMMENT")
 
-        opt_items = []
-        if commenter_opts_env:
-            opt_items = commenter_opts_env.split(",")
-        else:
+        if commenter_opts_env is None:
+            return commenter_opts
+        if not isinstance(commenter_opts_env, str):
+            logger.warning(
+                "Ignoring invalid value for SW_APM_OPTIONS_SQLCOMMENT; expected a string"
+            )
+            return commenter_opts
+        if not commenter_opts_env:
+            return commenter_opts
+        if "\r" in commenter_opts_env or "\n" in commenter_opts_env:
+            logger.warning(
+                "Ignoring SW_APM_OPTIONS_SQLCOMMENT value containing a line break"
+            )
             return commenter_opts
 
-        for opt_item in opt_items:
-            opt_k = ""
-            opt_v = ""
+        for opt_item in commenter_opts_env.split(","):
             try:
                 opt_k, opt_v = opt_item.split("=", maxsplit=1)
-            except ValueError as exc:
+            except ValueError:
                 logger.warning(
-                    "Invalid key-value pair for sqlcommenter option %s: %s",
-                    opt_item,
-                    exc,
+                    "Invalid key-value pair in SW_APM_OPTIONS_SQLCOMMENT; ignoring"
                 )
+                continue
+            opt_k = opt_k.strip()
             opt_v_bool = SolarWindsApmConfig.convert_to_bool(opt_v.strip())
-            if opt_v_bool is not None:
-                commenter_opts[opt_k.strip()] = opt_v_bool
+            if not opt_k or opt_v_bool is None:
+                logger.warning(
+                    "Invalid option in SW_APM_OPTIONS_SQLCOMMENT; ignoring"
+                )
+                continue
+            commenter_opts[opt_k] = opt_v_bool
 
         return commenter_opts
 

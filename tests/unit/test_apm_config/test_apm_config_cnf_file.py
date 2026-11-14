@@ -1,6 +1,7 @@
 # Copyright SolarWinds Worldwide, LLC.
 # SPDX-License-Identifier: Apache-2.0
 
+import io
 import logging
 import os
 
@@ -38,6 +39,41 @@ class TestSolarWindsApmConfigCnfFile:
         assert resulting_config.get("service_key") == "valid:key-service-name"
         # cnf_dict is none
         assert resulting_config.get_cnf_dict() is None
+
+    def test_get_cnf_dict_rejects_invalid_path(self, mocker):
+        mocker.patch(
+            "solarwinds_apm.apm_config.os.environ",
+            {"SW_APM_CONFIG_FILE": "invalid\0path"},
+        )
+        mock_logger = mocker.patch("solarwinds_apm.apm_config.logger")
+
+        assert apm_config.SolarWindsApmConfig.get_cnf_dict() is None
+
+        mock_logger.error.assert_called_once()
+
+    def test_get_cnf_dict_escapes_newlines_in_path_error(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {"SW_APM_CONFIG_FILE": "missing\r\nforged"},
+            clear=True,
+        )
+        log_output = io.StringIO()
+        handler = logging.StreamHandler(log_output)
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        logger = apm_config.logger
+        propagate = logger.propagate
+        logger.addHandler(handler)
+        logger.propagate = False
+        try:
+            assert apm_config.SolarWindsApmConfig.get_cnf_dict() is None
+        finally:
+            logger.removeHandler(handler)
+            logger.propagate = propagate
+
+        formatted_log = log_output.getvalue().removesuffix("\n")
+        assert "\r" not in formatted_log
+        assert "\n" not in formatted_log
+        assert r"\r\n" in formatted_log
 
     # pylint:disable=unused-argument
     def test_get_cnf_dict_not_valid_json(
