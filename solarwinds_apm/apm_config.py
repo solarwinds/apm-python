@@ -225,7 +225,6 @@ class SolarWindsApmConfig:
         except ValueError:
             parsed = None
             hostname = None
-            port = None
 
         if hostname:
             hostname = hostname.lower().removesuffix(".")
