@@ -149,10 +149,12 @@ class HttpSampler(Sampler):
         url = f"{self._url}/v1/settings/{self._service}/{self._hostname}"
         logger.debug("retrieving sampling settings from %s", url)
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-        response = requests.get(
-            url, headers=self._headers, timeout=REQUEST_TIMEOUT
-        )
-        detach(token)
+        try:
+            response = requests.get(
+                url, headers=self._headers, timeout=REQUEST_TIMEOUT
+            )
+        finally:
+            detach(token)
         response.raise_for_status()
         logger.debug("received sampling settings response %s", response.text)
         try:
