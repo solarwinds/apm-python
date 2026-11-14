@@ -382,6 +382,10 @@ def validate_signature(header, signature, key, timestamp):
             "Failed to encode key or header for signature validation: %s", exc
         )
         return Auth.BAD_SIGNATURE
-    if signature == digest:
+    try:
+        signature_matches = hmac.compare_digest(signature, digest)
+    except (TypeError, ValueError):
+        return Auth.BAD_SIGNATURE
+    if signature_matches:
         return Auth.OK
     return Auth.BAD_SIGNATURE
