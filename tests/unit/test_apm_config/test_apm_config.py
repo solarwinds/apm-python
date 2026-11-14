@@ -821,7 +821,10 @@ def test_to_configuration_default(apm):
     assert isinstance(config, Configuration)
     assert config.enabled == apm.agent_enabled
     assert config.service == apm.service_name
-    assert config.collector == apm.get("collector")
+    assert (
+        config.collector
+        == apm_config.SolarWindsApmConfig._CONFIG_COLLECTOR_DEFAULT
+    )
     assert config.headers["Authorization"].startswith("Bearer ")
     assert config.tracing_mode == (apm.get("tracing_mode") != 0)
     assert config.trigger_trace_enabled == (apm.get("trigger_trace") == 1)
