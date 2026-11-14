@@ -1,13 +1,78 @@
 # Copyright SolarWinds Worldwide, LLC.
 # SPDX-License-Identifier: Apache-2.0
 
+import json
 import logging
 import os
+
+import pytest
 
 from solarwinds_apm import apm_config
 
 
 class TestSolarWindsApmConfigCnfFile:
+    def test_default_config_is_trusted_for_current_owner_and_private_mode(
+        self, tmp_path, monkeypatch
+    ):
+        if not hasattr(os, "geteuid"):
+            pytest.skip("effective user IDs are only available on POSIX")
+
+        config_data = {"collector": "trusted.example", "debugLevel": 6}
+        config_path = tmp_path / "solarwinds-apm-config.json"
+        config_path.write_text(json.dumps(config_data), encoding="utf-8")
+        config_path.chmod(0o600)
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("SW_APM_CONFIG_FILE", "")
+
+        assert apm_config.SolarWindsApmConfig.get_cnf_dict() == config_data
+
+    @pytest.mark.parametrize("mode", [0o620, 0o602, 0o666])
+    def test_default_config_ignores_all_values_if_group_or_world_writable(
+        self, tmp_path, monkeypatch, mode
+    ):
+        if not hasattr(os, "geteuid"):
+            pytest.skip("effective user IDs are only available on POSIX")
+
+        config_data = {"collector": "untrusted.example", "debugLevel": 6}
+        config_path = tmp_path / "solarwinds-apm-config.json"
+        config_path.write_text(json.dumps(config_data), encoding="utf-8")
+        config_path.chmod(mode)
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("SW_APM_CONFIG_FILE", "")
+
+        assert apm_config.SolarWindsApmConfig.get_cnf_dict() is None
+
+    def test_default_config_ignores_all_values_if_owned_by_other_user(
+        self, tmp_path, monkeypatch, mocker
+    ):
+        if not hasattr(os, "geteuid"):
+            pytest.skip("effective user IDs are only available on POSIX")
+
+        config_data = {"collector": "untrusted.example", "debugLevel": 6}
+        config_path = tmp_path / "solarwinds-apm-config.json"
+        config_path.write_text(json.dumps(config_data), encoding="utf-8")
+        config_path.chmod(0o600)
+        effective_uid = os.geteuid()
+        mocker.patch(
+            "solarwinds_apm.apm_config.os.geteuid",
+            return_value=effective_uid + 1,
+        )
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("SW_APM_CONFIG_FILE", "")
+
+        assert apm_config.SolarWindsApmConfig.get_cnf_dict() is None
+
+    def test_explicit_config_path_is_not_treated_as_default(
+        self, tmp_path, monkeypatch
+    ):
+        config_data = {"collector": "explicit.example", "debugLevel": 6}
+        config_path = tmp_path / "explicit-config.json"
+        config_path.write_text(json.dumps(config_data), encoding="utf-8")
+        config_path.chmod(0o666)
+        monkeypatch.setenv("SW_APM_CONFIG_FILE", str(config_path))
+
+        assert apm_config.SolarWindsApmConfig.get_cnf_dict() == config_data
+
     # pylint:disable=unused-argument
     def test_get_cnf_dict_default_path_no_file(
         self,
