@@ -18,8 +18,13 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
+    OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_PROTOCOL,
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+    OTEL_EXPORTER_OTLP_TRACES_HEADERS,
 )
 
 from solarwinds_apm import distro
@@ -36,6 +41,26 @@ class TestDistro:
         # Restore the original environment
         os.environ.clear()
         os.environ.update(original_env)
+
+    def assert_signal_headers(
+        self,
+        token=None,
+        signals=("traces", "metrics", "logs"),
+        general_headers=None,
+    ):
+        assert os.environ.get(OTEL_EXPORTER_OTLP_HEADERS) == general_headers
+        signal_headers = {
+            "traces": OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+            "metrics": OTEL_EXPORTER_OTLP_METRICS_HEADERS,
+            "logs": OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+        }
+        for signal, env_var in signal_headers.items():
+            expected = (
+                f"authorization=Bearer%20{token}"
+                if token and signal in signals
+                else None
+            )
+            assert os.environ.get(env_var) == expected
 
     def test_new_initializes_class_variables(self, mocker):
         mock_get_cnf_dict = mocker.patch(
@@ -202,10 +227,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20None"
-        )
+        self.assert_signal_headers()
         assert (
             os.environ[
                 OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
@@ -239,10 +261,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
         assert os.environ[OTEL_PYTHON_LOG_AUTO_INSTRUMENTATION] == "false"
         assert os.environ[OTEL_PYTHON_LOG_CODE_ATTRIBUTES] == "true"
         assert (
@@ -267,10 +286,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
@@ -297,10 +313,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
@@ -329,10 +342,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
@@ -362,10 +372,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
         assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
         assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
         assert os.environ[OTEL_LOGS_EXPORTER] == "qux"
@@ -395,10 +402,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
         assert os.environ[OTEL_TRACES_EXPORTER] == "foobar"
         assert os.environ[OTEL_METRICS_EXPORTER] == "baz"
         assert os.environ[OTEL_LOGS_EXPORTER] == "qux"
@@ -425,7 +429,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://foo.bar.com:443"
         )
-        assert os.environ.get(OTEL_EXPORTER_OTLP_HEADERS) is None
+        self.assert_signal_headers()
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
@@ -620,10 +624,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
 
     def test_configure_env_headers_otel_endpoint_default(self, mocker):
         mocker.patch.dict(
@@ -638,10 +639,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
 
     def test_configure_env_headers_legacy_service_key(self, mocker):
         mocker.patch.dict(
@@ -653,10 +651,7 @@ class TestDistro:
             clear=True,
         )
         distro.SolarWindsDistro()._configure()
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
 
     def test_configure_env_headers_token_only_service_key(self, mocker):
         mocker.patch.dict(
@@ -668,10 +663,7 @@ class TestDistro:
             clear=True,
         )
         distro.SolarWindsDistro()._configure()
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
 
     def test_configure_env_headers_otel_endpoint_resolved(self, mocker):
         mocker.patch.dict(
@@ -686,10 +678,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.eu-01.st-ssp.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
 
     def test_configure_env_headers_otel_endpoint_non_swo(self, mocker):
         mocker.patch.dict(
@@ -703,7 +692,7 @@ class TestDistro:
         assert (
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://my-collector/"
         )
-        assert os.environ.get(OTEL_EXPORTER_OTLP_HEADERS) is None
+        self.assert_signal_headers()
 
     def test_configure_env_headers_otel_endpoint_fake_swo(self, mocker):
         mocker.patch.dict(
@@ -718,7 +707,34 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.solarwinds.com"
         )
-        assert os.environ.get(OTEL_EXPORTER_OTLP_HEADERS) is None
+        self.assert_signal_headers()
+
+    @pytest.mark.parametrize(
+        "endpoint",
+        [
+            "http://otel.collector.na-01.cloud.solarwinds.com:443",
+            "https://otel.collector.na-01.cloud.solarwinds.com.evil.example",
+            "https://otel.collector.na-01.cloud.solarwinds.com@evil.example",
+            "https://user@otel.collector.na-01.cloud.solarwinds.com",
+            "https://otel.collector.na-01.cloud.solarwinds.com:4318",
+            "not a url",
+        ],
+    )
+    def test_configure_env_headers_rejects_untrusted_endpoint(
+        self, mocker, endpoint
+    ):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar",
+                OTEL_EXPORTER_OTLP_ENDPOINT: endpoint,
+            },
+            clear=True,
+        )
+        distro.SolarWindsDistro()._configure()
+
+        assert os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == endpoint
+        self.assert_signal_headers()
 
     def test_configure_env_headers_otel_headers(self, mocker):
         mocker.patch.dict(
@@ -736,6 +752,7 @@ class TestDistro:
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "foo=bar,baz=qux"
+        self.assert_signal_headers(general_headers="foo=bar,baz=qux")
         assert os.environ[OTEL_TRACES_EXPORTER] == "otlp"
         assert os.environ[OTEL_METRICS_EXPORTER] == "otlp"
         assert os.environ[OTEL_LOGS_EXPORTER] == "otlp"
@@ -761,6 +778,7 @@ class TestDistro:
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "foo=bar,baz=qux"
+        self.assert_signal_headers(general_headers="foo=bar,baz=qux")
 
     def test_configure_env_headers_otel_headers_endpoint_resolved(
         self, mocker
@@ -779,6 +797,7 @@ class TestDistro:
             == "https://otel.collector.eu-01.st-ssp.solarwinds.com:443"
         )
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "foo=bar,baz=qux"
+        self.assert_signal_headers(general_headers="foo=bar,baz=qux")
 
     def test_configure_env_headers_otel_headers_endpoint_non_swo(self, mocker):
         mocker.patch.dict(
@@ -794,6 +813,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "https://my-collector/"
         )
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "foo=bar,baz=qux"
+        self.assert_signal_headers(general_headers="foo=bar,baz=qux")
 
     def test_configure_env_headers_swo_collector_invalid(self, mocker):
         mocker.patch.dict(
@@ -808,10 +828,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
 
     def test_configure_env_headers_swo_collector_invalid_not_apm(self, mocker):
         mocker.patch.dict(
@@ -826,10 +843,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
 
     def test_configure_env_headers_swo_collector_valid_resolved(self, mocker):
         mocker.patch.dict(
@@ -844,10 +858,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.eu-01.st-ssp.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
 
     def test_configure_env_headers_otel_headers_swo_collector_invalid(
         self, mocker
@@ -866,6 +877,7 @@ class TestDistro:
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "foo=bar,baz=qux"
+        self.assert_signal_headers(general_headers="foo=bar,baz=qux")
 
     def test_configure_env_headers_otel_headers_swo_collector_invalid_not_apm(
         self, mocker
@@ -884,6 +896,7 @@ class TestDistro:
             == "https://otel.collector.na-01.cloud.solarwinds.com:443"
         )
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "foo=bar,baz=qux"
+        self.assert_signal_headers(general_headers="foo=bar,baz=qux")
 
     def test_configure_env_headers_otel_headers_swo_collector_valid_resolved(
         self, mocker
@@ -902,6 +915,7 @@ class TestDistro:
             == "https://otel.collector.eu-01.st-ssp.solarwinds.com:443"
         )
         assert os.environ[OTEL_EXPORTER_OTLP_HEADERS] == "foo=bar,baz=qux"
+        self.assert_signal_headers(general_headers="foo=bar,baz=qux")
 
     def test_configure_env_headers_otel_endpoint_vs_swo_collector_both_valid(
         self, mocker
@@ -919,10 +933,7 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "https://otel.collector.jp-01.st-dev.solarwinds.com:443"
         )
-        assert (
-            os.environ[OTEL_EXPORTER_OTLP_HEADERS]
-            == "authorization=Bearer%20foo-token"
-        )
+        self.assert_signal_headers("foo-token")
 
     def test_configure_env_headers_otel_endpoint_non_swo_vs_swo_collector(
         self, mocker
@@ -940,7 +951,98 @@ class TestDistro:
             os.environ[OTEL_EXPORTER_OTLP_ENDPOINT]
             == "http://my-export-endpoint"
         )
-        assert os.environ.get(OTEL_EXPORTER_OTLP_HEADERS) is None
+        self.assert_signal_headers()
+
+    def test_configure_env_headers_signal_custom_endpoint(self, mocker):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar",
+                OTEL_EXPORTER_OTLP_ENDPOINT: (
+                    "https://otel.collector.na-01.cloud.solarwinds.com:443"
+                ),
+                OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: (
+                    "http://localhost:4318/v1/metrics"
+                ),
+            },
+            clear=True,
+        )
+        distro.SolarWindsDistro()._configure()
+
+        assert (
+            os.environ[OTEL_EXPORTER_OTLP_METRICS_ENDPOINT]
+            == "http://localhost:4318/v1/metrics"
+        )
+        self.assert_signal_headers("foo-token", signals=("traces", "logs"))
+
+    def test_configure_env_headers_swo_signal_endpoint_with_custom_general(
+        self, mocker
+    ):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar",
+                OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:4318",
+                OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: (
+                    "https://otel.collector.na-01.dev-ssp.solarwinds.com/v1/traces"
+                ),
+            },
+            clear=True,
+        )
+        distro.SolarWindsDistro()._configure()
+
+        assert (
+            os.environ[OTEL_EXPORTER_OTLP_ENDPOINT] == "http://localhost:4318"
+        )
+        self.assert_signal_headers("foo-token", signals=("traces",))
+
+    @pytest.mark.parametrize("configured_headers", ["x-lab=control", ""])
+    def test_configure_env_headers_preserves_signal_headers(
+        self, mocker, configured_headers
+    ):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar",
+                OTEL_EXPORTER_OTLP_ENDPOINT: (
+                    "https://otel.collector.na-01.cloud.solarwinds.com:443"
+                ),
+                OTEL_EXPORTER_OTLP_TRACES_HEADERS: configured_headers,
+            },
+            clear=True,
+        )
+        distro.SolarWindsDistro()._configure()
+
+        assert (
+            os.environ[OTEL_EXPORTER_OTLP_TRACES_HEADERS] == configured_headers
+        )
+        assert (
+            os.environ[OTEL_EXPORTER_OTLP_METRICS_HEADERS]
+            == "authorization=Bearer%20foo-token"
+        )
+        assert (
+            os.environ[OTEL_EXPORTER_OTLP_LOGS_HEADERS]
+            == "authorization=Bearer%20foo-token"
+        )
+        assert OTEL_EXPORTER_OTLP_HEADERS not in os.environ
+
+    def test_configure_env_headers_preserves_empty_general_headers(
+        self, mocker
+    ):
+        mocker.patch.dict(
+            os.environ,
+            {
+                "SW_APM_SERVICE_KEY": "foo-token:bar",
+                OTEL_EXPORTER_OTLP_ENDPOINT: (
+                    "https://otel.collector.na-01.cloud.solarwinds.com:443"
+                ),
+                OTEL_EXPORTER_OTLP_HEADERS: "",
+            },
+            clear=True,
+        )
+        distro.SolarWindsDistro()._configure()
+
+        self.assert_signal_headers(general_headers="")
 
     def test_configure_env_metrics_default_histogram_aggregation(self, mocker):
         mocker.patch.dict(
