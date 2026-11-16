@@ -68,6 +68,9 @@ class TestSolarWindsApmConfigCnfFile:
             "_logged_untrusted_default_config",
             False,
         )
+        monkeypatch.setattr(
+            logging.getLogger("solarwinds_apm"), "propagate", True
+        )
         caplog.set_level(logging.WARNING, logger="solarwinds_apm.apm_config")
 
         assert apm_config.SolarWindsApmConfig.get_cnf_dict() is None
