@@ -95,6 +95,7 @@ class SolarWindsApmConfig:
     _KEY_MASK_TOKEN_ONLY = "{}...{}"
     _SW_PREFIX = "sw_apm_"
     _logged_no_config_file = False
+    _logged_untrusted_default_config = False
 
     def __init__(
         self,
@@ -715,10 +716,13 @@ class SolarWindsApmConfig:
                 if is_default_config and not cls._is_trusted_default_config(
                     os.fstat(cnf_file.fileno())
                 ):
-                    logger.warning(
-                        "Ignoring default config file because it is not owned "
-                        "by the current user or is group/world writable."
-                    )
+                    if not cls._logged_untrusted_default_config:
+                        logger.warning(
+                            "Ignoring default config file because it is not "
+                            "owned by the current user or is group/world "
+                            "writable."
+                        )
+                        cls._logged_untrusted_default_config = True
                     return cnf_dict
                 try:
                     file_content = cnf_file.read()

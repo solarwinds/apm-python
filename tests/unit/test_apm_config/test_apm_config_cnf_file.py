@@ -50,6 +50,37 @@ class TestSolarWindsApmConfigCnfFile:
 
         assert apm_config.SolarWindsApmConfig.get_cnf_dict() is None
 
+    def test_untrusted_default_config_warning_logged_only_once(
+        self, tmp_path, monkeypatch, caplog
+    ):
+        # The default-config trust check relies on POSIX effective UIDs.
+        if not hasattr(os, "geteuid"):
+            pytest.skip("effective user IDs are only available on POSIX")
+
+        config_path = tmp_path / "solarwinds-apm-config.json"
+        config_path.write_text(json.dumps({"debugLevel": 6}), encoding="utf-8")
+        # World-write access makes this current-owner file untrusted.
+        config_path.chmod(0o666)
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("SW_APM_CONFIG_FILE", "")
+        monkeypatch.setattr(
+            apm_config.SolarWindsApmConfig,
+            "_logged_untrusted_default_config",
+            False,
+        )
+        caplog.set_level(logging.WARNING, logger="solarwinds_apm.apm_config")
+
+        assert apm_config.SolarWindsApmConfig.get_cnf_dict() is None
+        assert apm_config.SolarWindsApmConfig.get_cnf_dict() is None
+        assert apm_config.SolarWindsApmConfig.get_cnf_dict() is None
+
+        warning_messages = [
+            record.message
+            for record in caplog.records
+            if "Ignoring default config file because" in record.message
+        ]
+        assert len(warning_messages) == 1
+
     def test_default_config_ignores_all_values_if_owned_by_other_user(
         self, tmp_path, monkeypatch, mocker
     ):
