@@ -13,6 +13,7 @@ import os
 import re
 from functools import reduce
 from typing import Any
+from urllib.parse import urlsplit
 
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.sdk.resources import Resource
@@ -26,6 +27,10 @@ from solarwinds_apm.apm_constants import (
 from solarwinds_apm.oboe.configuration import Configuration, TransactionSetting
 
 logger = logging.getLogger(__name__)
+
+
+def _escape_log_linebreaks(value: object) -> str:
+    return str(value).replace("\r", "\\r").replace("\n", "\\n")
 
 
 class OboeTracingMode:
@@ -79,6 +84,10 @@ class SolarWindsApmConfig:
     """
 
     _CONFIG_COLLECTOR_DEFAULT = "apm.collector.na-01.cloud.solarwinds.com"
+    _APM_COLLECTOR_PATTERN = re.compile(
+        r"apm\.collector\.[a-z]{2}-\d{2}\."
+        r"(?:cloud|dev-ssp|st-ssp)\.solarwinds\.com"
+    )
     _CONFIG_FILE_DEFAULT = "./solarwinds-apm-config.json"
     _DELIMITER = "."
     _KEY_MASK = "{}...{}:{}"
@@ -114,7 +123,6 @@ class SolarWindsApmConfig:
             "transaction_filters": [],
             "transaction_name": None,
             "export_metrics_enabled": True,
-            "log_filepath": "",
         }
         self.is_lambda = self.calculate_is_lambda()
         self.lambda_function_name = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
@@ -151,11 +159,7 @@ class SolarWindsApmConfig:
             self.service_name,
         )
 
-        # Update and apply logging settings to Python logger
-        self._validate_log_filepath()
-        apm_logging.update_sw_log_handler(
-            self.__config["log_filepath"],
-        )
+        # Apply logging settings to Python logger
         apm_logging.set_sw_log_level(self.__config["debug_level"])
 
         logger.debug("Set ApmConfig as: %s", self)
@@ -179,8 +183,9 @@ class SolarWindsApmConfig:
     ) -> str:
         """Return default or configured collector endpoint.
 
+        Use the configured collector when valid; otherwise default to the
+        SWO NA-01 collector URL.
         Order of precedence: Environment Variable > config file > default.
-        Default is SWO NA-01.
         Optional cnf_dict is presumably already from a config file, else a call
         to get_cnf_dict() is made for a fresh read.
 
@@ -190,14 +195,62 @@ class SolarWindsApmConfig:
         Returns:
         str: The collector endpoint URL.
         """
-        collector = cls._CONFIG_COLLECTOR_DEFAULT
         if cnf_dict is None:
             cnf_dict = cls.get_cnf_dict()
-        if cnf_dict:
-            cnf_collector = cnf_dict.get("collector")
-            collector = cnf_collector if cnf_collector else collector
+        collector = cnf_dict.get("collector") if cnf_dict else None
         env_collector = os.environ.get("SW_APM_COLLECTOR")
-        return env_collector if env_collector else collector
+        if env_collector:
+            collector = env_collector
+        if collector is None or collector == "":
+            collector = cls._CONFIG_COLLECTOR_DEFAULT
+        return cls._validate_collector(collector)
+
+    @classmethod
+    def _validate_collector(cls, collector: Any) -> str:
+        """Return a canonical, supported HTTPS APM sampler collector host."""
+        if not isinstance(collector, str):
+            logger.warning(
+                "Invalid APM sampler collector; using the default collector."
+            )
+            return cls._CONFIG_COLLECTOR_DEFAULT
+
+        collector_url = (
+            collector if "://" in collector else f"https://{collector}"
+        )
+        try:
+            parsed = urlsplit(collector_url)
+            hostname = parsed.hostname
+            port = parsed.port
+        except ValueError:
+            parsed = None
+            hostname = None
+
+        if hostname:
+            hostname = hostname.lower().removesuffix(".")
+
+        # Restrict to supported HTTPS hosts; reject credentials, non-443 ports,
+        # extra paths, query parameters, and fragments.
+        valid = (
+            parsed is not None
+            and parsed.scheme.lower() == "https"
+            and hostname is not None
+            and cls._APM_COLLECTOR_PATTERN.fullmatch(hostname) is not None
+            and parsed.username is None
+            and parsed.password is None
+            and port in {None, 443}
+            and not parsed.netloc.endswith(":")
+            and parsed.path in {"", "/"}
+            and not parsed.query
+            and not parsed.fragment
+            and "?" not in collector_url
+            and "#" not in collector_url
+        )
+        if not valid or hostname is None:
+            logger.warning(
+                "Unsupported APM sampler collector; using the default collector."
+            )
+            return cls._CONFIG_COLLECTOR_DEFAULT
+        return hostname
 
     @classmethod
     def calculate_metrics_enabled(
@@ -556,27 +609,6 @@ class SolarWindsApmConfig:
                 config_lambda[cnf_k] = cnf_v
         return config_lambda
 
-    def _validate_log_filepath(
-        self,
-    ) -> None:
-        """Check logFilepath validity and create directory if needed.
-
-        Creates directory for log file if path does not exist.
-        Resets to default empty logFilepath if directory creation fails.
-        """
-        log_filepath = os.path.dirname(self.__config["log_filepath"])
-        if log_filepath and not os.path.exists(log_filepath):
-            try:
-                os.makedirs(log_filepath)
-                logger.debug(
-                    "Created directory path from provided SW_APM_LOG_FILEPATH / logFilepath."
-                )
-            except FileNotFoundError:
-                logger.error(
-                    "Could not create log file directory path from provided SW_APM_LOG_FILEPATH / logFilepath. Using default log settings."
-                )
-                self.__config["log_filepath"] = ""
-
     def __str__(self) -> str:
         """Return string representation of ApmConfig.
 
@@ -686,8 +718,11 @@ class SolarWindsApmConfig:
                         "Invalid config file, must be valid json. Ignoring: %s",
                         ex,
                     )
-        except FileNotFoundError as ex:
-            logger.error("Invalid config file path. Ignoring: %s", ex)
+        except (OSError, ValueError) as ex:
+            logger.error(
+                "Invalid config file path. Ignoring: %s",
+                _escape_log_linebreaks(ex),
+            )
         return cnf_dict
 
     def update_with_cnf_file(self) -> None:
@@ -943,7 +978,7 @@ class SolarWindsApmConfig:
         return Configuration(
             enabled=apm_config.agent_enabled,
             service=apm_config.service_name,
-            collector=apm_config.get("collector"),
+            collector=cls._validate_collector(apm_config.get("collector")),
             headers={"Authorization": f"Bearer {token}"},
             tracing_mode=apm_config.get("tracing_mode") != 0,
             trigger_trace_enabled=apm_config.get("trigger_trace") == 1,

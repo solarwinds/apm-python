@@ -7,6 +7,7 @@ import time
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 from opentelemetry import trace
 from opentelemetry.sdk.metrics import AlwaysOnExemplarFilter, MeterProvider
 from opentelemetry.sdk.metrics._internal.export import InMemoryMetricReader
@@ -141,6 +142,7 @@ def test_valid_token_only_service_key_samples_created_spans(
             f"https://apm.collector.na-01.cloud.solarwinds.com/v1/settings/{service_name}/{socket.gethostname()}",
             headers={"Authorization": "Bearer token-only-test-key"},
             timeout=10,
+            allow_redirects=False,
         )
     finally:
         sampler.shutdown()
@@ -272,6 +274,7 @@ def test_fetch_from_collector_success(mock_get, config, meter_provider):
         f"https://apm.collector.na-01.cloud.solarwinds.com/v1/settings/test_service/{socket.gethostname()}",
         headers={"Authorization": "Bearer test_token"},
         timeout=10,
+        allow_redirects=False,
     )
     # one in constructor and one in test case
     assert mock_get.call_count == 2
@@ -303,6 +306,39 @@ def test_fetch_from_collector_invalid_json_returns_empty_dict_and_thread_survive
         # Verify parse failures in periodic work do not terminate the daemon thread.
         sampler._task()
         assert sampler._daemon_thread.is_alive()
+    finally:
+        sampler.shutdown()
+
+
+@patch("requests.get")
+def test_fetch_from_collector_refuses_redirects(
+    mock_get, config, meter_provider
+):
+    mock_response = MagicMock()
+    mock_response.status_code = 302
+    mock_response.headers = {"Location": "https://collector.example"}
+    mock_get.return_value = mock_response
+
+    sampler = HttpSampler(
+        meter_provider=meter_provider, config=config, initial=None
+    )
+    try:
+        with pytest.raises(
+            requests.HTTPError,
+            match="refusing to forward credentials",
+        ):
+            sampler._fetch_from_collector()
+
+        assert all(
+            call.kwargs["allow_redirects"] is False
+            for call in mock_get.call_args_list
+        )
+        assert all(
+            call.args[0].startswith(
+                "https://apm.collector.na-01.cloud.solarwinds.com/"
+            )
+            for call in mock_get.call_args_list
+        )
     finally:
         sampler.shutdown()
 
