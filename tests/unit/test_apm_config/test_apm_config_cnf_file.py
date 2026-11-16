@@ -15,29 +15,36 @@ class TestSolarWindsApmConfigCnfFile:
     def test_default_config_is_trusted_for_current_owner_and_private_mode(
         self, tmp_path, monkeypatch
     ):
+        # The default-config trust check relies on POSIX effective UIDs.
         if not hasattr(os, "geteuid"):
             pytest.skip("effective user IDs are only available on POSIX")
 
         config_data = {"collector": "trusted.example", "debugLevel": 6}
         config_path = tmp_path / "solarwinds-apm-config.json"
         config_path.write_text(json.dumps(config_data), encoding="utf-8")
+        # Use a private mode to satisfy the default-config trust policy.
         config_path.chmod(0o600)
+        # An empty override selects the implicit file in the current directory.
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("SW_APM_CONFIG_FILE", "")
 
         assert apm_config.SolarWindsApmConfig.get_cnf_dict() == config_data
 
+    # Cover group-write only, world-write only, and both permission bits.
     @pytest.mark.parametrize("mode", [0o620, 0o602, 0o666])
     def test_default_config_ignores_all_values_if_group_or_world_writable(
         self, tmp_path, monkeypatch, mode
     ):
+        # The default-config trust check relies on POSIX effective UIDs.
         if not hasattr(os, "geteuid"):
             pytest.skip("effective user IDs are only available on POSIX")
 
         config_data = {"collector": "untrusted.example", "debugLevel": 6}
         config_path = tmp_path / "solarwinds-apm-config.json"
         config_path.write_text(json.dumps(config_data), encoding="utf-8")
+        # Give the fixture the writable mode selected by the parameter.
         config_path.chmod(mode)
+        # Exercise default-file discovery instead of an explicit override.
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("SW_APM_CONFIG_FILE", "")
 
@@ -46,18 +53,22 @@ class TestSolarWindsApmConfigCnfFile:
     def test_default_config_ignores_all_values_if_owned_by_other_user(
         self, tmp_path, monkeypatch, mocker
     ):
+        # The default-config trust check relies on POSIX effective UIDs.
         if not hasattr(os, "geteuid"):
             pytest.skip("effective user IDs are only available on POSIX")
 
         config_data = {"collector": "untrusted.example", "debugLevel": 6}
         config_path = tmp_path / "solarwinds-apm-config.json"
         config_path.write_text(json.dumps(config_data), encoding="utf-8")
+        # Keep permissions trusted so only the simulated owner mismatch matters.
         config_path.chmod(0o600)
         effective_uid = os.geteuid()
+        # Simulate another owner without requiring filesystem chown privileges.
         mocker.patch(
             "solarwinds_apm.apm_config.os.geteuid",
             return_value=effective_uid + 1,
         )
+        # Exercise default-file discovery instead of an explicit override.
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("SW_APM_CONFIG_FILE", "")
 

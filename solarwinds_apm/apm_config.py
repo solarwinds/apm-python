@@ -738,8 +738,11 @@ class SolarWindsApmConfig:
     @staticmethod
     def _is_trusted_default_config(config_stat: os.stat_result) -> bool:
         """Check that the default config file is owned and not group/world writable."""
+        # Without an effective UID, ownership cannot be checked safely.
         if not hasattr(os, "geteuid"):
             return False
+        # The file owner UID must exactly match this process's effective UID.
+        # Reject group/other write access even when the owner matches.
         return (
             config_stat.st_uid == os.geteuid()
             and not config_stat.st_mode & (stat.S_IWGRP | stat.S_IWOTH)
