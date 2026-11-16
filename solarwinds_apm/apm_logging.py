@@ -104,11 +104,17 @@ def _create_stream_handler() -> logging.StreamHandler:
     logging.StreamHandler: Configured stream handler with custom format.
     """
     sh = logging.StreamHandler()  # get stream handler to custom logging prefix
-    fm = logging.Formatter(
+    fm = _SingleLineFormatter(
         "%(asctime)s [ %(name)s %(levelname)-8s p#%(process)d.%(thread)d] %(message)s"
     )
     sh.setFormatter(fm)
     return sh
+
+
+class _SingleLineFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        formatted = super().format(record)
+        return formatted.replace("\r", "\\r").replace("\n", "\\n")
 
 
 _stream_handler = _create_stream_handler()
