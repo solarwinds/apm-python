@@ -4,7 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-7.3.1...HEAD)
+## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-8.0.0...HEAD)
+
+## [8.0.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-8.0.0) - 2027-11-16
+
+### Changed
+- Upgraded to OTel Python 1.45.2/0.66b2 ([#918](https://github.com/solarwinds/apm-python/pull/918))
+- Fixed check of instrumentation-set `URL_QUERY` attributes; removed dead code ([#919](https://github.com/solarwinds/apm-python/pull/919))
+- Modernized imports of OTel span/resource attributes ([#920](https://github.com/solarwinds/apm-python/pull/920))
+- Breaking: removed `SW_APM_LOG_FILEPATH` support ([#928](https://github.com/solarwinds/apm-python/pull/928))
+- Fixed collector validation, HTTP sampler redirect rejection ([#934](https://github.com/solarwinds/apm-python/pull/934))
+- Fixed signal-specific exporter endpoint leaking headers ([#935](https://github.com/solarwinds/apm-python/pull/935))
+- Added explicit log line escapes ([#936](https://github.com/solarwinds/apm-python/pull/936))
+- Added validation for `SW_APM_CONFIG_FILE` and sqlcomment configuration ([#937](https://github.com/solarwinds/apm-python/pull/937))
 
 ## [7.3.1](https://github.com/solarwinds/apm-python/releases/tag/rel-7.3.1) - 2026-10-28
 
