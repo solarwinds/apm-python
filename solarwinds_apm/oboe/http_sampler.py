@@ -144,15 +144,23 @@ class HttpSampler(Sampler):
         dict: The JSON response containing sampling settings.
 
         Raises:
-        requests.RequestException: If the HTTP request fails.
+        requests.RequestException: If the request fails or the collector responds
+            with a 3xx redirect.
         """
         url = f"{self._url}/v1/settings/{self._service}/{self._hostname}"
         logger.debug("retrieving sampling settings from %s", url)
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         response = requests.get(
-            url, headers=self._headers, timeout=REQUEST_TIMEOUT
+            url,
+            headers=self._headers,
+            timeout=REQUEST_TIMEOUT,
+            allow_redirects=False,
         )
         detach(token)
+        if 300 <= response.status_code < 400:
+            raise requests.HTTPError(
+                "Collector returned an HTTP redirect; refusing to forward credentials."
+            )
         response.raise_for_status()
         logger.debug("received sampling settings response %s", response.text)
         try:
