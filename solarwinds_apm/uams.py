@@ -61,8 +61,10 @@ def _read_from_api() -> dict:
     """
     try:
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-        response = requests.get(UAMS_CLIENT_URL, timeout=1)
-        detach(token)
+        try:
+            response = requests.get(UAMS_CLIENT_URL, timeout=1)
+        finally:
+            detach(token)
         response.raise_for_status()
         data = response.json()
 
