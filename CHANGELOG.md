@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/solarwinds/apm-python/compare/rel-8.0.0...HEAD)
 
-## [8.0.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-8.0.0) - 2027-11-16
+## [8.0.0](https://github.com/solarwinds/apm-python/releases/tag/rel-8.0.0) - 2027-11-17
 
 ### Changed
 - Upgraded to OTel Python 1.45.2/0.66b2 ([#918](https://github.com/solarwinds/apm-python/pull/918))
